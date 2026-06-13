@@ -29,7 +29,7 @@ export const UsersTable = (props: UsersTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('bg-card border ui-border rounded-lg', className)}
+      className={classnames('bg-card ui-border rounded-lg border', className)}
       data-testid="UsersTable"
     >
       <DataTable<UserRowFragment, string | number | null | undefined>
@@ -52,7 +52,7 @@ UsersTable.buildTable = (): ColumnDef<
         return (
           <Link
             aria-label={`View user: ${user.githubUsername}`}
-            className="font-medium underline underline-offset-2 hover:text-primary"
+            className="hover:text-primary font-medium underline underline-offset-2"
             to={`/users/${user.id}`}
             viewTransition={true}
           >

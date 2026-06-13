@@ -57,10 +57,10 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
 
   return (
     <footer
-      className="border-t border-border bg-card sm:px-6 lg:px-8"
+      className="border-border bg-card border-t sm:px-6 lg:px-8"
       data-testid="GlobalFooter"
     >
-      <div className="border-t border-border p-8 pb-2 text-center text-sm text-muted-foreground">
+      <div className="border-border text-muted-foreground border-t p-8 pb-2 text-center text-sm">
         <p>
           Built by engineers &bull; Open source &bull; Run locally &bull; No
           Commitment
@@ -68,7 +68,7 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
       </div>
 
       <Link
-        className="flex items-center justify-center gap-2 text-muted-foreground text-sm mb-8"
+        className="text-muted-foreground mb-8 flex items-center justify-center gap-2 text-sm"
         target="_blank"
         to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
       >

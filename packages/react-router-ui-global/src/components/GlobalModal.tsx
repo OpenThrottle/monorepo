@@ -18,7 +18,7 @@ export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="data-[state=closed]:slide-out-to-top-[0%] max-w-5xl max-h-svh overflow-y-auto">
+      <DialogContent className="data-[state=closed]:slide-out-to-top-[0%] max-h-svh max-w-5xl overflow-y-auto">
         {children}
       </DialogContent>
     </Dialog>

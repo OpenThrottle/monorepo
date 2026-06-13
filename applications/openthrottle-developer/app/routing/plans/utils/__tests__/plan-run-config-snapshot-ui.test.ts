@@ -44,8 +44,8 @@ describe('buildPlanRunSnapshotDiffLabels', () => {
     expect(labels.some((line) => line.startsWith('Backend:'))).toBe(true);
     expect(labels.some((line) => line.includes('Iterations: 3'))).toBe(true);
     expect(labels.some((line) => line.startsWith('Workspace:'))).toBe(true);
-    expect(labels.some((line) => line.includes(String(DEFAULT_RALPH_ITERATIONS)))).toBe(
-      true,
-    );
+    expect(
+      labels.some((line) => line.includes(String(DEFAULT_RALPH_ITERATIONS))),
+    ).toBe(true);
   });
 });

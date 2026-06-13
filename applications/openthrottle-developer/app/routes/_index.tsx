@@ -45,21 +45,21 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-col flex-1 p-4 md:p-8 lg:p-12">
+    <GlobalScreen className="flex flex-1 flex-col p-4 md:p-8 lg:p-12">
       {/* <HomeHeroV1 className="my-20 items-center scale-75" /> */}
       {/* <OpenThrottleProductFeatures features={FEATURES} /> */}
 
       <div className="flex flex-1 flex-col items-center justify-center">
-        <h1 className="text-2xl text-center">
+        <h1 className="text-center text-2xl">
           What would you like to build today?
         </h1>
-        <p className="text-muted-foreground text-sm mt-2">
+        <p className="text-muted-foreground mt-2 text-sm">
           OpenThrottle is a platform for building applications based on best
           practices for Agentic development.
         </p>
       </div>
 
-      <div className="max-w-3xl w-full mx-auto">
+      <div className="mx-auto w-full max-w-3xl">
         <ChatThread emptyStateLabel="" messages={[]} />
         <ChatComposer
           className="border-t-0"

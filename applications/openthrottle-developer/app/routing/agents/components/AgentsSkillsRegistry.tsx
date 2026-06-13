@@ -95,13 +95,13 @@ export const AgentsSkillsRegistry = (
         <li key={`${entry.layout}-${entry.slug}-${entry.repoRelativePath}`}>
           <Card className="h-full bg-transparent">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-mono">
+              <CardTitle className="font-mono text-base">
                 {entry.slug}
               </CardTitle>
               <CardDescription className="text-sm">
                 {entry.summary}
               </CardDescription>
-              <p className="font-mono text-xs text-muted-foreground break-all pt-1">
+              <p className="text-muted-foreground pt-1 font-mono text-xs break-all">
                 {entry.repoRelativePath}
               </p>
             </CardHeader>
@@ -143,12 +143,12 @@ export const AgentsSkillsRegistry = (
           <CardTitle className="text-base">Skill paths vs repo</CardTitle>
           <CardDescription>
             This table lists{' '}
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {layoutCounts.agents} skills under{' '}
               <code className="text-xs">.agents/skills</code>
             </span>{' '}
             and{' '}
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {layoutCounts.cursor} under{' '}
               <code className="text-xs">.cursor/skills</code>
             </span>{' '}
@@ -169,7 +169,7 @@ export const AgentsSkillsRegistry = (
         </CardHeader>
         <CardContent className="space-y-2 pt-0">
           <Label
-            className="text-xs text-muted-foreground"
+            className="text-muted-foreground text-xs"
             htmlFor="skills-registry-filter"
           >
             Filter by slug, path, or summary
@@ -190,14 +190,14 @@ export const AgentsSkillsRegistry = (
           <h2 className="mb-1 text-sm font-semibold tracking-tight">
             .agents/skills (OpenThrottle / Ralph)
           </h2>
-          <p className="mb-3 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-3 text-sm">
             Primary registry for automation tied to this monorepo—use when a
             model picks the wrong skill slug or path.
           </p>
           {agents.length > 0 ? (
             renderGrid(agents)
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No matching entries in this section.
             </p>
           )}
@@ -207,7 +207,7 @@ export const AgentsSkillsRegistry = (
           <h2 className="mb-1 text-sm font-semibold tracking-tight">
             .cursor/skills (Cursor IDE, in-repo)
           </h2>
-          <p className="mb-3 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-3 text-sm">
             Smaller mirror for Cursor&rsquo;s skill routing; overlapping slugs
             may exist in both trees—compare paths when debugging which file was
             loaded.
@@ -215,7 +215,7 @@ export const AgentsSkillsRegistry = (
           {cursor.length > 0 ? (
             renderGrid(cursor)
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No matching entries in this section.
             </p>
           )}

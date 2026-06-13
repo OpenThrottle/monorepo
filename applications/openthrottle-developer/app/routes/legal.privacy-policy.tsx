@@ -60,7 +60,7 @@ export default function Component(
           title="Privacy policy"
         />
 
-        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+        <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
             This site is a personal portfolio and developer playground operated
             by Matthew Scholta. It exists to showcase open source work and
@@ -145,7 +145,7 @@ export default function Component(
             Questions, requests, or concerns about this privacy policy can be
             directed to the maintainer at{' '}
             <Link
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"
               to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}
             >

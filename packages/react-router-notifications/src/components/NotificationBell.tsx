@@ -79,7 +79,7 @@ export const NotificationBell = (
 
           {unreadCount > 0 ? (
             <Badge
-              className="absolute -right-1 -top-1 size-4 rounded-full p-0 text-[10px]"
+              className="absolute -top-1 -right-1 size-4 rounded-full p-0 text-[10px]"
               color="orange"
               data-testid="notification-bell-badge"
               size="xs"
@@ -92,7 +92,7 @@ export const NotificationBell = (
 
       <DropdownMenuContent
         align="end"
-        className="w-80 max-h-[min(24rem,70vh)] overflow-y-auto"
+        className="max-h-[min(24rem,70vh)] w-80 overflow-y-auto"
         sideOffset={8}
       >
         <DropdownMenuLabel className="flex items-center justify-between">
@@ -150,7 +150,7 @@ export const NotificationBell = (
               >
                 {requesting ? 'Requesting…' : 'Enable desktop notifications'}
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Allow in the browser prompt to receive notifications when the
                 tab is in the background.
               </p>
@@ -181,7 +181,7 @@ export const NotificationBell = (
               {preference.enabled ? (
                 <div className="flex items-center justify-between gap-2 pl-1">
                   <Label
-                    className="cursor-pointer text-sm font-normal text-muted-foreground"
+                    className="text-muted-foreground cursor-pointer text-sm font-normal"
                     htmlFor="system-notifications-only-background"
                   >
                     Only when tab in background

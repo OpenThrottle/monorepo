@@ -110,7 +110,7 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
     >
       {groups.map((group) => (
         <div className="flex flex-col gap-0.5" key={group.path}>
-          <p className="px-3 text-xs font-medium text-muted-foreground">
+          <p className="text-muted-foreground px-3 text-xs font-medium">
             {group.path}
           </p>
           {group.symbols.map((symbol) => (
@@ -124,7 +124,7 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
         </div>
       ))}
       {result.truncated ? (
-        <p className="px-3 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground px-3 text-center text-xs">
           Symbols truncated — narrow the workspace to see more.
         </p>
       ) : null}

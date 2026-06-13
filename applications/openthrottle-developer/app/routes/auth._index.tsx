@@ -56,11 +56,11 @@ export default function Component(
 
   return (
     <GlobalScreen
-      className="mx-auto flex-1 max-w-xl w-full flex flex-col justify-center p-4 md:p-8 lg:p-12"
+      className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
       onClick={onIncrementCount}
     >
-      <div className="flex flex-col justify-center gap-8 flex-1 h-full items-center">
-        <OpenThrottleLogo className="text-2xl mx-auto" name={SITE_SUBDOMAIN} />
+      <div className="flex h-full flex-1 flex-col items-center justify-center gap-8">
+        <OpenThrottleLogo className="mx-auto text-2xl" name={SITE_SUBDOMAIN} />
         {isFormEnabled ? <OpenThrottleAuthForm action="/" /> : null}
       </div>
     </GlobalScreen>

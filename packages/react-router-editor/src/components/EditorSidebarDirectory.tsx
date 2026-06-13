@@ -40,8 +40,8 @@ export const EditorSidebarDirectory = (
     <div data-testid="EditorSidebarDirectory">
       <div
         className={classnames(
-          'py-1 px-2 flex items-center gap-1 cursor-pointer rounded-sm',
-          'hover:bg-white/10 transition-colors',
+          'flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1',
+          'transition-colors hover:bg-white/10',
           {
             'text-gray-500': isHidden,
           },

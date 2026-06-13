@@ -27,9 +27,9 @@ export const NotificationActions = (
   // 🔌 Short Circuit
 
   return (
-    <div className="flex gap-1 w-full" data-testid="NotificationActions">
+    <div className="flex w-full gap-1" data-testid="NotificationActions">
       <Button
-        className={classnames('flex-1 h-7 text-xs', { 'opacity-25!': !hasAny })}
+        className={classnames('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
         disabled={!hasAny}
         onClick={markAllAsRead}
         size="sm"
@@ -38,7 +38,7 @@ export const NotificationActions = (
         Mark all read
       </Button>
       <Button
-        className={classnames('flex-1 h-7 text-xs', { 'opacity-25!': !hasAny })}
+        className={classnames('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
         disabled={!hasAny}
         onClick={() => {
           dismissAll();

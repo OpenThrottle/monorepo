@@ -60,7 +60,7 @@ export const EditorTabs = (
 
   return (
     <div
-      className={classnames('flex mt-1 overflow-y-auto max-w-full', className)}
+      className={classnames('mt-1 flex max-w-full overflow-y-auto', className)}
       data-testid="EditorTabs"
     >
       {tabs.map((file) => (

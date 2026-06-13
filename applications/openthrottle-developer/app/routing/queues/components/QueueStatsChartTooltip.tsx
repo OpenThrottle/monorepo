@@ -56,8 +56,8 @@ export const QueueStatsChartTooltip = (
   const labelValue = label ?? row.name;
 
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-      <p className="mb-1.5 font-medium leading-none">{String(labelValue)}</p>
+    <div className="bg-popover text-popover-foreground rounded-lg border px-3 py-2 text-sm shadow-md">
+      <p className="mb-1.5 leading-none font-medium">{String(labelValue)}</p>
       <div className="flex flex-col gap-1.5">
         {QUEUE_STATS_CHART_SERIES.map((seriesKey) => {
           const seriesConfig = QUEUE_STATS_CHART_CONFIG[seriesKey];
@@ -69,7 +69,7 @@ export const QueueStatsChartTooltip = (
                 className="h-2 w-2 shrink-0 rounded-[2px]"
                 style={{ backgroundColor: `var(--color-${seriesKey})` }}
               />
-              <span className="flex-1 text-muted-foreground">{name}</span>
+              <span className="text-muted-foreground flex-1">{name}</span>
               <span className="font-medium tabular-nums">{row[seriesKey]}</span>
             </div>
           );

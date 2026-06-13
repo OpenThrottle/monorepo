@@ -67,9 +67,9 @@ export default function Component(
           icon={BookOpenIcon}
           title="About"
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           <Link
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="hover:text-foreground underline underline-offset-4 transition-colors"
             target="_blank"
             to="https://github.com/OpenThrottle?ref=openthrottle"
           >
@@ -87,7 +87,7 @@ export default function Component(
               <Link key={url} target="_blank" to={url}>
                 <img
                   alt={name}
-                  className="size-10 grayscale hover:grayscale-0 hover:rotate-12 hover:scale-125 cursor-pointer transition-all duration-300 bg-muted rounded-full p-1"
+                  className="bg-muted size-10 cursor-pointer rounded-full p-1 grayscale transition-all duration-300 hover:scale-125 hover:rotate-12 hover:grayscale-0"
                   src={image}
                 />
               </Link>
@@ -96,7 +96,7 @@ export default function Component(
         </div>
 
         <div className="mt-6 mb-2">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Created by{' '}
             <strong>
               <Link target="_blank" to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}>
@@ -110,21 +110,21 @@ export default function Component(
         </div>
       </div>
 
-      <div className="py-8 relative flex flex-col gap-8">
-        <Avatar className="size-24 md:size-32 mx-auto m-4">
+      <div className="relative flex flex-col gap-8 py-8">
+        <Avatar className="m-4 mx-auto size-24 md:size-32">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback className="text-3xl">MS</AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col items-center-">
-          <h2 className="text-xl font-bold mb-4">Matthew Scholta</h2>
-          <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+        <div className="items-center- flex flex-col">
+          <h2 className="mb-4 text-xl font-bold">Matthew Scholta</h2>
+          <h3 className="text-muted-foreground hover:text-foreground cursor-pointer text-sm transition-colors">
             <OpenThrottleClipboard
               label={OPENTHROTTLE_CONTACT_EMAIL}
               text={OPENTHROTTLE_CONTACT_EMAIL}
             />
           </h3>
-          <div className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+          <div className="text-muted-foreground hover:text-foreground cursor-pointer text-sm transition-colors">
             <Link target="_blank" to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}>
               {OPENTHROTTLE_CONTACT_PORTFOLIO}
             </Link>

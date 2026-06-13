@@ -27,7 +27,7 @@ export const PullRequestsIntroduction = (
         icon={GitPullRequestIcon}
         title="Pull requests"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Open a pull request to browse commits, checks, and conversation.
       </p>
     </div>

@@ -88,14 +88,14 @@ export default function Component(
         />
 
         {generator.description !== '' ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {generator.description}
           </p>
         ) : null}
       </div>
 
       <Tabs className="w-full" defaultValue="documentation">
-        <TabsList className="mb-8 gap-4 w-full justify-start" variant="line">
+        <TabsList className="mb-8 w-full justify-start gap-4" variant="line">
           <TabsTrigger className="flex-0 cursor-pointer" value="documentation">
             <BookIcon />
             Documentation

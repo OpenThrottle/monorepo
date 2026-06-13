@@ -20,7 +20,7 @@ export const PersonasIntroduction = (
         icon={BookOpenIcon}
         title="Personas"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Disk-backed Ralph prompt profiles from{' '}
         <code className="text-xs">.agents/personas/*.md</code> —{' '}
         {entries.length} discovered. Semantic search and in-app editing are out

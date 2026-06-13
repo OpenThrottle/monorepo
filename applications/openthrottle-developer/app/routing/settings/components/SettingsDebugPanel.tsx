@@ -87,9 +87,9 @@ export const SettingsDebugPanel = (
           icon={BugIcon}
           title="Debug"
         />
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mb-6 text-sm">
           Client-side diagnostics for this shell: public{' '}
-          <code className="rounded bg-muted px-1 py-0.5 text-xs">
+          <code className="bg-muted rounded px-1 py-0.5 text-xs">
             window.env
           </code>{' '}
           shape, GraphQL health, and browser storage previews. Values here are
@@ -112,12 +112,12 @@ export const SettingsDebugPanel = (
         id="server-metrics-definitions"
         legend="Server metrics definitions"
       >
-        <div className="space-y-4 text-sm text-muted-foreground">
+        <div className="text-muted-foreground space-y-4 text-sm">
           <p>
             When the footer{' '}
             <strong className="text-foreground">Server metrics</strong> strip is
             visible, each poll calls the GraphQL{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+            <code className="bg-muted rounded px-1 py-0.5 text-xs">
               serverMetrics
             </code>{' '}
             field on{' '}
@@ -127,11 +127,11 @@ export const SettingsDebugPanel = (
             profile, settings, prompts, and create routes.
           </p>
           <div>
-            <p className="mb-2 font-medium text-foreground">Stat cards</p>
+            <p className="text-foreground mb-2 font-medium">Stat cards</p>
             <ul className="list-inside list-disc space-y-2">
               {GLOBAL_METRICS_STAT_CARD_DOCS.map((doc) => (
                 <li key={doc.title}>
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     {doc.title}
                   </span>
                   {' — '}
@@ -141,7 +141,7 @@ export const SettingsDebugPanel = (
             </ul>
           </div>
           <div>
-            <p className="mb-2 font-medium text-foreground">
+            <p className="text-foreground mb-2 font-medium">
               Chart legend (metrics over time)
             </p>
             <ul className="list-inside list-disc space-y-2">
@@ -152,7 +152,7 @@ export const SettingsDebugPanel = (
 
                   return (
                     <li key={key}>
-                      <span className="font-medium text-foreground">
+                      <span className="text-foreground font-medium">
                         {chartEntry.label}
                       </span>
                       {' — '}
@@ -207,11 +207,11 @@ const SettingsGraphQLHealthCard = (
     >
       {graphQL.status === 'ok' ? (
         <>
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-4">
             <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">getRootHealth</span>{' '}
+              <span className="text-foreground font-medium">getRootHealth</span>{' '}
               succeeded in{' '}
-              <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
+              <code className="bg-accent-foreground rounded-lg px-1.5 py-0.5 text-xs">
                 {graphQL.latencyMs} ms
               </code>
               .
@@ -228,7 +228,7 @@ const SettingsGraphQLHealthCard = (
             </button>
           </div>
 
-          <ul className="list-inside list-disc space-y-1 font-mono text-xs text-muted-foreground">
+          <ul className="text-muted-foreground list-inside list-disc space-y-1 font-mono text-xs">
             <li>api: {graphQL.serverHealth.api}</li>
             <li>database: {graphQL.serverHealth.database}</li>
             <li>redis: {graphQL.serverHealth.redis}</li>
@@ -241,7 +241,7 @@ const SettingsGraphQLHealthCard = (
             <span className="font-medium">Request failed</span> after{' '}
             <code className="text-xs">{graphQL.latencyMs} ms</code>.
           </p>
-          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 text-xs">
+          <pre className="bg-muted max-h-40 overflow-auto rounded-md border p-3 text-xs break-words whitespace-pre-wrap">
             {graphQL.error}
           </pre>
         </>

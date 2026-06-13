@@ -84,7 +84,7 @@ export const TypeMultiSelect = (
           <Button
             aria-expanded={open}
             className={cn(
-              'justify-between font-normal text-muted-foreground',
+              'text-muted-foreground justify-between font-normal',
               compact ? 'min-w-20 shrink-0' : 'w-full min-w-40',
             )}
             role="combobox"
@@ -108,7 +108,7 @@ export const TypeMultiSelect = (
 
                   return (
                     <CommandItem
-                      className="pr-4! pl-4! py-2! h-auto!"
+                      className="h-auto! py-2! pr-4! pl-4!"
                       key={opt.value}
                       onSelect={() => toggle(opt.value)}
                       value={opt.label}
@@ -141,7 +141,7 @@ export const TypeMultiSelect = (
                   {label}
                   <button
                     aria-label={`Remove ${label}`}
-                    className="rounded-full p-0.5 hover:bg-muted-foreground/20 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="hover:bg-muted-foreground/20 focus:ring-ring rounded-full p-0.5 focus:ring-2 focus:outline-none"
                     onClick={(e) => {
                       e.preventDefault();
                       remove(v);

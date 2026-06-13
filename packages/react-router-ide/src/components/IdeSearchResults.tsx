@@ -96,7 +96,7 @@ export const IdeSearchResults = (
         />
       ))}
       {result.truncated ? (
-        <p className="px-3 py-2 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground px-3 py-2 text-center text-xs">
           Results truncated — refine your query to narrow them.
         </p>
       ) : null}

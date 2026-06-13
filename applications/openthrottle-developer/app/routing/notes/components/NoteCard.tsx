@@ -36,7 +36,7 @@ export const NoteCard = (props: NoteCardProps): React.ReactElement => {
       data-testid="NoteCard"
       key={note.id}
     >
-      <CardContent className="overflow-hidden text-sm text-muted-foreground hover:text-foreground/80 transition-colors flex-1 p-4">
+      <CardContent className="text-muted-foreground hover:text-foreground/80 flex-1 overflow-hidden p-4 text-sm transition-colors">
         {/* <p
           className="line-clamp-3 text-sm text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: note.content }}

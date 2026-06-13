@@ -74,7 +74,7 @@ export const WorkspaceFilePalette = (
       />
       <CommandList>
         {trimmed === '' ? (
-          <div className="p-4 text-sm text-muted-foreground">
+          <div className="text-muted-foreground p-4 text-sm">
             Type to filter {listing.paths.length} files in{' '}
             {listing.repository.displayName}.
           </div>
@@ -94,7 +94,7 @@ export const WorkspaceFilePalette = (
           </CommandGroup>
         )}
         {hiddenCount > 0 ? (
-          <div className="p-2 text-center text-xs text-muted-foreground">
+          <div className="text-muted-foreground p-2 text-center text-xs">
             Showing {visible.length} of {matches.length} — narrow your filter to
             see more.
           </div>

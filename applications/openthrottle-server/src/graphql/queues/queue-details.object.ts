@@ -22,7 +22,8 @@ export class JobsResultObject {
 @ObjectType()
 export class QueueDetailsObject extends QueueStatsObject {
   @Field(() => JobsResultObject, {
-    description: 'Paginated jobs for this queue (optional; omit for stats-only).',
+    description:
+      'Paginated jobs for this queue (optional; omit for stats-only).',
     nullable: true,
   })
   jobs!: JobsResultObject | null;

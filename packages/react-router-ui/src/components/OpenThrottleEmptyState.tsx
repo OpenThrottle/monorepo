@@ -30,11 +30,11 @@ export const OpenThrottleEmptyState = (
       className={classnames('p-4', className)}
       data-testid="OpenThrottleEmptyState"
     >
-      <h2 className="text-base text-foreground mb-4">{title}</h2>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <h2 className="text-foreground mb-4 text-base">{title}</h2>
+      <p className="text-muted-foreground text-sm">{description}</p>
 
-      <div className="w-full flex">
-        <pre className="text-[6px] md:text-xs text-muted-foreground/50 my-8 mx-auto">
+      <div className="flex w-full">
+        <pre className="text-muted-foreground/50 mx-auto my-8 text-[6px] md:text-xs">
           {ARTWORK_YODA}
         </pre>
       </div>

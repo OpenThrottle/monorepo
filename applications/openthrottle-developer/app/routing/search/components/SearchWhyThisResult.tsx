@@ -50,7 +50,7 @@ export const SearchWhyThisResult = (
     result.source !== 'documentation' &&
     (result.planId != null ||
       (result.taskId != null && result.taskId !== '')) ? (
-      <p className="font-mono text-[11px] text-muted-foreground/90">
+      <p className="text-muted-foreground/90 font-mono text-[11px]">
         {[
           result.planId != null && result.planId !== ''
             ? `Plan id: ${result.planId}`
@@ -89,7 +89,7 @@ export const SearchWhyThisResult = (
         data-testid="SearchWhyThisResult-quickOpen"
       >
         <a
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="text-primary font-medium underline-offset-4 hover:underline"
           data-testid="SearchWhyThisResult-docGithubLink"
           href={githubBlobHref(
             result.sourceRepo,
@@ -108,7 +108,7 @@ export const SearchWhyThisResult = (
         data-testid="SearchWhyThisResult-quickOpen"
       >
         <Link
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="text-primary font-medium underline-offset-4 hover:underline"
           data-testid="SearchWhyThisResult-planJumpLink"
           to={`/plans/${result.planId}`}
         >
@@ -116,7 +116,7 @@ export const SearchWhyThisResult = (
         </Link>
         {hasTaskJump ? (
           <Link
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="text-primary font-medium underline-offset-4 hover:underline"
             data-testid="SearchWhyThisResult-taskJumpLink"
             to={planOrTaskDetailHref(result.planId!, result.taskId)}
           >
@@ -136,21 +136,21 @@ export const SearchWhyThisResult = (
       data-testid="SearchWhyThisResult"
       open={defaultOpen === true}
     >
-      <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+      <summary className="text-muted-foreground cursor-pointer text-xs font-medium">
         Why this result?
       </summary>
-      <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+      <div className="border-border bg-muted/40 text-muted-foreground mt-2 space-y-2 rounded-md border p-3 text-xs">
         {rankMeta != null ? (
-          <p className="text-[11px] text-foreground/90">
+          <p className="text-foreground/90 text-[11px]">
             {formatRankSummary(rankMeta)}
           </p>
         ) : null}
         <p>{explanationBody}</p>
-        <p className="font-mono text-[11px] text-muted-foreground/90">{`Chunk id: ${result.id}`}</p>
+        <p className="text-muted-foreground/90 font-mono text-[11px]">{`Chunk id: ${result.id}`}</p>
         {entityIds}
         {quickOpenLinks != null ? (
           <div className="space-y-1">
-            <p className="text-[11px] font-medium text-foreground/90">
+            <p className="text-foreground/90 text-[11px] font-medium">
               Quick open
             </p>
             {quickOpenLinks}
@@ -158,7 +158,7 @@ export const SearchWhyThisResult = (
         ) : null}
         {result.source === 'documentation' &&
           (result.sourceRepo != null || result.sourcePath != null) && (
-            <p className="font-mono text-[11px] text-muted-foreground/90">
+            <p className="text-muted-foreground/90 font-mono text-[11px]">
               {[
                 result.sourceRepo != null && result.sourceRepo !== ''
                   ? `Repo: ${result.sourceRepo}`
@@ -174,8 +174,8 @@ export const SearchWhyThisResult = (
                 .join(' · ')}
             </p>
           )}
-        <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
-          <strong className="font-medium text-foreground/90">Tuning:</strong>{' '}
+        <p className="border-border text-muted-foreground border-t pt-2 text-[11px]">
+          <strong className="text-foreground/90 font-medium">Tuning:</strong>{' '}
           the API returns the strongest matches first. Use a tighter query for
           fewer off-topic hits; lower{' '}
           <strong className="font-medium">Results per page</strong> in filters

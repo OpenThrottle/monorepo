@@ -35,7 +35,7 @@ export const DashboardIntroduction = (
         icon={GaugeIcon}
         title="Dashboard"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Get a pulse of all your Plans, Tasks, PR's, Prompts, Skills, and more
         coming soon.
       </p>

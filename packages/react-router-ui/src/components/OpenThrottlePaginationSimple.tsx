@@ -47,7 +47,7 @@ export const OpenThrottlePaginationSimple = (
       className="mt-8 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between"
       data-testid="queue-jobs-pagination"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Page {page} of {total} · {limit} per page
       </p>
       <div className="flex flex-wrap gap-2">

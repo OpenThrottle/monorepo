@@ -28,13 +28,13 @@ export const DocumentUploadProgress = (
       aria-busy={true}
       aria-live="polite"
       className={classnames(
-        'flex flex-col gap-2 rounded-md border border-border bg-muted/40 p-3',
+        'border-border bg-muted/40 flex flex-col gap-2 rounded-md border p-3',
         className,
       )}
       data-testid="DocumentUploadProgress"
       role="status"
     >
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex items-center gap-2 text-sm">
         <Spinner aria-hidden={true} className="size-4 shrink-0" />
         <span>{state.message}</span>
       </div>

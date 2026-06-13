@@ -36,7 +36,7 @@ export const ProjectTasksTable = (
 
   return (
     <div
-      className={classnames('bg-card border ui-border rounded-lg', className)}
+      className={classnames('bg-card ui-border rounded-lg border', className)}
       data-testid="ProjectTasksTable"
     >
       <DataTable<ProjectTaskRow, string | number | null | undefined>
@@ -117,7 +117,7 @@ ProjectTasksTable.buildTable = (): ColumnDef<
         return (
           <Link
             aria-label={`View plan for task: ${task.title ?? 'Untitled'}`}
-            className="text-xs underline underline-offset-2 hover:text-primary"
+            className="hover:text-primary text-xs underline underline-offset-2"
             to={`/plans/${planId}`}
             viewTransition={true}
           >

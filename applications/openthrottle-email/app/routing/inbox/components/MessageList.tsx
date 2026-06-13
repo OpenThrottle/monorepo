@@ -190,10 +190,10 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
       {/* Bulk actions bar when 1+ rows selected. Wire Mark read / Delete to API when backend exists. */}
       {selectionEnabled && hasSelection && (
         <div
-          className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 px-3 py-2"
+          className="bg-muted/50 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2"
           data-testid="MessageList-bulkActions"
         >
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {selectedSet.size} selected
           </span>
           <Button
@@ -260,7 +260,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
                 <input
                   aria-label="Select all"
                   checked={isAllSelected}
-                  className="h-4 w-4 rounded border-input"
+                  className="border-input h-4 w-4 rounded"
                   onChange={(e) => handleSelectAll(e.target.checked)}
                   ref={selectAllRef}
                   type="checkbox"
@@ -293,7 +293,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
                     <input
                       aria-label={`Select ${msg.subject}`}
                       checked={isSelected}
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                       onChange={(e) =>
                         handleSelectOne(msg.id, e.target.checked)
                       }
@@ -303,7 +303,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
                 )}
                 <TableCell>
                   <Link
-                    className="text-primary hover:underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:rounded"
+                    className="text-primary focus-visible:ring-ring hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline"
                     to={mailInboxMessagePath(msg.id)}
                     viewTransition={true}
                   >

@@ -62,7 +62,7 @@ export const DashboardPrTimeInStateCard = (
   if (isEmpty) {
     return (
       <div
-        className={classnames('text-sm text-muted-foreground', className)}
+        className={classnames('text-muted-foreground text-sm', className)}
         data-testid="DashboardPrTimeInStateCard"
       >
         No PR time in state summary.
@@ -72,11 +72,11 @@ export const DashboardPrTimeInStateCard = (
 
   return (
     <div
-      className={classnames('-ml-1 text-sm overflow-auto', className)}
+      className={classnames('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardPrTimeInStateCard"
     >
       <ChartContainer
-        className="min-h-[240px] mt-4 w-full"
+        className="mt-4 min-h-[240px] w-full"
         config={CHART_CONFIG}
       >
         <BarChart

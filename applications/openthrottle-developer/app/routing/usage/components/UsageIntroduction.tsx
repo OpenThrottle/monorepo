@@ -32,7 +32,7 @@ export const UsageIntroduction = (
         icon={ChartAreaIcon}
         title="Usage"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Usage metrics for this portal over the last {rangeDays} days.
       </p>
     </div>

@@ -65,7 +65,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
         <h2 className="text-md" id="queues-stats-heading">
           Job counts by queue
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           No queues to chart. When workers register Bull queues with the API,
           job counts appear here.
         </p>
@@ -81,7 +81,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="w-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-md" id="queues-stats-heading">
               Job counts by queue
             </h2>
@@ -99,7 +99,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
               </Label>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {showCompleted
               ? 'All five table fields including completed history. Hover a bar for exact counts.'
               : 'Waiting, delayed, in flight, and failed — backlog and active work. Hover for all five table counts. Toggle to include completed history.'}
@@ -113,7 +113,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
         style={{ minHeight: `${chartHeight}px` }}
       >
         <ChartContainer
-          className="min-h-[340px] mt-8 w-full"
+          className="mt-8 min-h-[340px] w-full"
           config={QUEUE_STATS_CHART_CONFIG}
           style={{ minHeight: `${chartHeight}px` }}
         >

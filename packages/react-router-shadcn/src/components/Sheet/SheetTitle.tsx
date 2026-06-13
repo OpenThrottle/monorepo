@@ -26,7 +26,7 @@ export const SheetTitle = React.forwardRef<
 
   return (
     <SheetPrimitive.Title
-      className={cn('text-lg text-foreground', className)}
+      className={cn('text-foreground text-lg', className)}
       ref={ref}
       {...rest}
     />

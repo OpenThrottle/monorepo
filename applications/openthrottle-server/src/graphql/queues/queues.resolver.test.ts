@@ -22,9 +22,7 @@ describe('QueuesResolver', () => {
   const mockQueuesService = createMock<QueuesService>({
     createQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     duplicateJob: vi.fn().mockResolvedValue({ error: 'not implemented' }),
-    enqueueAgenticTest: vi
-      .fn()
-      .mockResolvedValue({ error: 'not implemented' }),
+    enqueueAgenticTest: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     enqueueDocIngestion: vi
       .fn()
       .mockResolvedValue({ error: 'not implemented' }),

@@ -51,7 +51,7 @@ const WorkspaceRepositoriesProjectSelect = (
 
   return (
     <select
-      className="border-input bg-background focus:ring-ring h-10 w-full rounded-md border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
+      className="border-input bg-background focus:ring-ring h-10 w-full rounded-md border px-3 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none"
       defaultValue={currentProjectId ?? NONE_PROJECT_VALUE}
       name={name}
     >
@@ -99,7 +99,7 @@ const WorkspaceRepositoriesLocalRepositoryRow = (
 
   return (
     <Card
-      className="border-dashed bg-background"
+      className="bg-background border-dashed"
       data-testid={`workspace-repo-${repo.id}`}
     >
       <CardContent className="space-y-3 pt-6">

@@ -30,11 +30,11 @@ indent_size = 4
 
 [*.yaml]
 insert_final_newline = true
-quote_type = double
+quote_type = single
 
 [*.yml]
 insert_final_newline = true
-quote_type = double
+quote_type = single
 
 # Tab indentation (no size specified)
 [Makefile]

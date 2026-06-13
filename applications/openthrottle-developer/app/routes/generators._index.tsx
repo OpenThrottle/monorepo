@@ -68,7 +68,7 @@ export default function Component(
           icon={BotIcon}
           title="Generators"
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Nx commands run in your monorepo clone (see{' '}
           <a
             className="text-primary underline-offset-4 hover:underline"
@@ -92,7 +92,7 @@ export default function Component(
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
         {generators.map((generator) => (
           <GeneratorCard generator={generator} key={generator.name} />
         ))}

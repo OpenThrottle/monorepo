@@ -65,7 +65,7 @@ export const QueueJobsTable = (
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="QueueJobsTable"
     >
       <DataTable<QueueJobsTableJob, string | number | null | undefined>
@@ -144,7 +144,7 @@ function buildQueueJobsTableColumns(
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <Link
-                  className="block font-mono text-xs text-primary underline-offset-2 hover:underline"
+                  className="text-primary block font-mono text-xs underline-offset-2 hover:underline"
                   data-testid={`job-id-link-${job.id}`}
                   title={job.id}
                   to={detailHref}
@@ -154,7 +154,7 @@ function buildQueueJobsTableColumns(
                 </Link>
                 {job.name != null && job.name !== '' && (
                   <p
-                    className="mt-0.5 line-clamp-1 text-xs text-muted-foreground"
+                    className="text-muted-foreground mt-0.5 line-clamp-1 text-xs"
                     title={job.name}
                   >
                     {job.name}
@@ -173,7 +173,7 @@ function buildQueueJobsTableColumns(
       header: () => (
         <div className="px-3 py-2">
           <div className="text-sm font-medium">Job</div>
-          <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 text-xs font-normal">
             BullMQ id and name
           </p>
         </div>
@@ -187,14 +187,14 @@ function buildQueueJobsTableColumns(
 
         if (parsed.planId == null || parsed.planId === '') {
           return (
-            <span className="px-3 py-2 text-xs text-muted-foreground">—</span>
+            <span className="text-muted-foreground px-3 py-2 text-xs">—</span>
           );
         }
 
         return (
           <div className="min-w-0 space-y-0.5 px-3 py-2 text-xs">
             <Link
-              className="line-clamp-1 font-mono text-primary underline-offset-2 hover:underline"
+              className="text-primary line-clamp-1 font-mono underline-offset-2 hover:underline"
               data-testid={`queue-jobs-table-plan-${job.id}`}
               title={parsed.planId}
               to={`/plans/${parsed.planId}`}
@@ -204,7 +204,7 @@ function buildQueueJobsTableColumns(
             </Link>
             {parsed.taskId != null && parsed.taskId !== '' && (
               <Link
-                className="line-clamp-1 font-mono text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
+                className="text-muted-foreground hover:text-primary line-clamp-1 font-mono underline-offset-2 hover:underline"
                 data-testid={`queue-jobs-table-task-${job.id}`}
                 title={parsed.taskId}
                 to={`/plans/${parsed.planId}/tasks/${parsed.taskId}`}
@@ -232,7 +232,7 @@ function buildQueueJobsTableColumns(
 
         return (
           <span
-            className="block max-w-[10rem] truncate px-3 py-2 text-xs text-muted-foreground"
+            className="text-muted-foreground block max-w-[10rem] truncate px-3 py-2 text-xs"
             title={runLabel || undefined}
           >
             {runLabel !== '' ? runLabel : '—'}
@@ -242,7 +242,7 @@ function buildQueueJobsTableColumns(
       header: () => (
         <div className="px-3 py-2">
           <div className="text-sm font-medium">Run</div>
-          <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 text-xs font-normal">
             kind · mode
           </p>
         </div>
@@ -252,7 +252,7 @@ function buildQueueJobsTableColumns(
     {
       accessorFn: (row) => row.timestamp,
       cell: ({ row }) => (
-        <span className="block whitespace-nowrap px-3 py-2 font-mono text-[11px] text-muted-foreground tabular-nums">
+        <span className="text-muted-foreground block px-3 py-2 font-mono text-[11px] whitespace-nowrap tabular-nums">
           {formatTs(row.original.timestamp)}
         </span>
       ),
@@ -266,7 +266,7 @@ function buildQueueJobsTableColumns(
     {
       accessorFn: (row) => row.finishedOn,
       cell: ({ row }) => (
-        <span className="block whitespace-nowrap px-3 py-2 font-mono text-[11px] text-muted-foreground tabular-nums">
+        <span className="text-muted-foreground block px-3 py-2 font-mono text-[11px] whitespace-nowrap tabular-nums">
           {formatTs(row.original.finishedOn)}
         </span>
       ),
@@ -283,7 +283,7 @@ function buildQueueJobsTableColumns(
         const reason = row.original.failedReason;
         if (reason == null || reason === '') {
           return (
-            <span className="px-3 py-2 text-xs text-muted-foreground">—</span>
+            <span className="text-muted-foreground px-3 py-2 text-xs">—</span>
           );
         }
 
@@ -291,7 +291,7 @@ function buildQueueJobsTableColumns(
 
         return (
           <p
-            className="max-w-[14rem] px-3 py-2 text-xs text-destructive break-words"
+            className="text-destructive max-w-[14rem] px-3 py-2 text-xs break-words"
             data-testid={`job-failedReason-${row.original.id}`}
             title={reason}
           >
@@ -302,7 +302,7 @@ function buildQueueJobsTableColumns(
       header: () => (
         <div className="px-3 py-2">
           <div className="text-sm font-medium">Failed</div>
-          <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 text-xs font-normal">
             reason
           </p>
         </div>

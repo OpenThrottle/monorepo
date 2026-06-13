@@ -33,11 +33,11 @@ export const PlanTasksTableCellTitle = (
   // 🔌 Short Circuit
 
   return (
-    <div className="overflow-hidden space-y-1">
-      <h2 className="text-sm line-clamp-1 text-ellipsis font-medium">
+    <div className="space-y-1 overflow-hidden">
+      <h2 className="line-clamp-1 text-sm font-medium text-ellipsis">
         <Link
           aria-label={`Scroll to task: ${title}`}
-          className="underline underline-offset-2 hover:text-primary"
+          className="hover:text-primary underline underline-offset-2"
           to={anchor}
           viewTransition={true}
         >
@@ -46,14 +46,14 @@ export const PlanTasksTableCellTitle = (
       </h2>
 
       {task.assignee ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Assigned to {task.assignee}
         </p>
       ) : null}
 
       {description ? (
         <p
-          className="text-xs text-muted-foreground line-clamp-2"
+          className="text-muted-foreground line-clamp-2 text-xs"
           title={
             description.length > TASK_TITLE_CONTEXT_TRUNCATE
               ? description
@@ -68,7 +68,7 @@ export const PlanTasksTableCellTitle = (
 
       {summary ? (
         <p
-          className="text-xs text-muted-foreground line-clamp-1"
+          className="text-muted-foreground line-clamp-1 text-xs"
           title={
             summary.length > TASK_TITLE_CONTEXT_TRUNCATE ? summary : undefined
           }

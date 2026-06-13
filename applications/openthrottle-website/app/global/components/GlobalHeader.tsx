@@ -28,18 +28,18 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
   return (
     <nav
       className={classnames(
-        'border-b border-border',
+        'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
-        'px-4 sticky w-full top-0 z-50',
+        'sticky top-0 z-50 w-full px-4',
         className,
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
         <OpenThrottleLogo className="text-lg" name={SITE_SUBDOMAIN} to="/" />
 
         <div
           className={classnames(
-            'hidden md:flex items-center gap-2',
+            'hidden items-center gap-2 md:flex',
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}
         >
@@ -49,7 +49,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
             to={OPENTHROTTLE_GITHUB_URL}
           >
             <GithubLogoIcon
-              className="border rounded-full p-2 text-color-copy hover:text-color-copy transition-colors"
+              className="text-color-copy hover:text-color-copy rounded-full border p-2 transition-colors"
               size={32}
               weight="fill"
             />

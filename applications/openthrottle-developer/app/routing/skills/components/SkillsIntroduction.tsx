@@ -35,7 +35,7 @@ export const SkillsIntroduction = (
           title="Skills"
         />
       </SkillsOverviewDialog>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Discovered <code className="text-xs">SKILL.md</code> paths in this
         monorepo — compare with disk and Cursor routing when debugging skill
         picks.

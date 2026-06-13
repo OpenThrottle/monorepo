@@ -33,7 +33,7 @@ export const ProjectsTable = (
 
   return (
     <div
-      className={classnames('bg-card border ui-border rounded-lg', className)}
+      className={classnames('bg-card ui-border rounded-lg border', className)}
       data-testid="ProjectsTable"
     >
       <DataTable<ProjectCardFragment, string | null | undefined>
@@ -58,18 +58,18 @@ ProjectsTable.buildTable = (): ColumnDef<
         const name = project.name ?? 'Untitled';
 
         return (
-          <div className="p-4 py-2 w-full flex-1 overflow-hidden">
-            <h2 className="text-xs line-clamp-1 text-ellipsis font-medium mb-1">
+          <div className="w-full flex-1 overflow-hidden p-4 py-2">
+            <h2 className="mb-1 line-clamp-1 text-xs font-medium text-ellipsis">
               <Link
                 aria-label={`View project: ${name}`}
-                className="underline underline-offset-2 hover:text-primary"
+                className="hover:text-primary underline underline-offset-2"
                 to={projectHref}
                 viewTransition={true}
               >
                 {name}
               </Link>
             </h2>
-            <p className="text-xs text-muted-foreground line-clamp-2">
+            <p className="text-muted-foreground line-clamp-2 text-xs">
               {project.description ?? ''}
             </p>
           </div>

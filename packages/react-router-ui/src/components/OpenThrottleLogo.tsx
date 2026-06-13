@@ -43,7 +43,7 @@ export const OpenThrottleLogo = (
   if (!to) {
     return (
       <div className={containerClasses}>
-        <SpeedometerIcon className="shrink-0 text-accent" />
+        <SpeedometerIcon className="text-accent shrink-0" />
         <div className="flex gap-2" data-testid="OpenThrottleLogo">
           {logoText}
         </div>
@@ -53,8 +53,8 @@ export const OpenThrottleLogo = (
 
   return (
     <Link className={containerClasses} to={to}>
-      <SpeedometerIcon className="shrink-0 text-accent" />
-      <div className="truncate tracking-wide group-data-[collapsible=icon]:hidden flex gap-2">
+      <SpeedometerIcon className="text-accent shrink-0" />
+      <div className="flex gap-2 truncate tracking-wide group-data-[collapsible=icon]:hidden">
         {logoText}
       </div>
     </Link>

@@ -153,7 +153,7 @@ export const MailSidebar = (props: MailSidebarProps): React.ReactElement => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <span className="px-2 py-1.5 text-sm text-muted-foreground">
+                <span className="text-muted-foreground px-2 py-1.5 text-sm">
                   No custom folders
                 </span>
               </SidebarMenuItem>

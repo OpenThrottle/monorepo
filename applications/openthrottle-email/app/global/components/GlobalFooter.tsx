@@ -21,10 +21,10 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
 
   return (
     <footer
-      className="border-t border-border bg-card sm:px-6 lg:px-8"
+      className="border-border bg-card border-t sm:px-6 lg:px-8"
       data-testid="GlobalFooter"
     >
-      <div className="border-t border-border p-8 text-center text-sm text-muted-foreground">
+      <div className="border-border text-muted-foreground border-t p-8 text-center text-sm">
         <p>Built by engineers. Open source. No lock-in.</p>
       </div>
     </footer>

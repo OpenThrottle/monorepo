@@ -33,7 +33,7 @@ export const PermissionsTable = (
 
   return (
     <div
-      className={classnames('bg-card border ui-border rounded-lg', className)}
+      className={classnames('bg-card ui-border rounded-lg border', className)}
       data-testid="PermissionsTable"
     >
       <DataTable<PermissionRowFragment, string | number | null | undefined>
@@ -56,7 +56,7 @@ PermissionsTable.buildTable = (): ColumnDef<
         return (
           <Link
             aria-label={`View roles with permission: ${permission.name}`}
-            className="font-medium underline underline-offset-2 hover:text-primary"
+            className="hover:text-primary font-medium underline underline-offset-2"
             to="/roles"
             viewTransition={true}
           >
@@ -78,7 +78,7 @@ PermissionsTable.buildTable = (): ColumnDef<
     {
       accessorKey: 'id',
       cell: ({ row }) => (
-        <span className="font-mono text-muted-foreground text-xs">
+        <span className="text-muted-foreground font-mono text-xs">
           {row.original.id}
         </span>
       ),

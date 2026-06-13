@@ -80,7 +80,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
       <div
-        className="flex flex-col max-w-full w-full overflow-auto max-h-screen relative"
+        className="relative flex max-h-screen w-full max-w-full flex-col overflow-auto"
         ref={refScrollableContent}
       >
         <SidebarInset>{children}</SidebarInset>

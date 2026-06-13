@@ -51,11 +51,11 @@ export const SearchFilters = (
       className={classnames('flex flex-wrap items-center gap-4 p-4', className)}
       data-testid="SearchFilters"
     >
-      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+      <label className="text-muted-foreground flex items-center gap-2 text-sm">
         <span>Results per page</span>
         <select
           aria-label="Results per page"
-          className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+          className="border-input bg-background rounded-md border px-2 py-1 text-sm"
           onChange={handleLimitChange}
           value={
             SEARCH_LIMIT_OPTIONS.includes(

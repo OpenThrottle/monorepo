@@ -31,14 +31,14 @@ export const OpenThrottleFieldset = (
     <fieldset
       aria-labelledby={id}
       className={classnames(
-        '--bg-card border border-border rounded-md transition-colors',
+        '--bg-card border-border rounded-md border transition-colors',
         'space-y-4 p-4 md:p-8',
         className,
       )}
       data-testid="OpenThrottleFieldset"
     >
       <legend
-        className="px-1 mb-0 text-base font-medium text-foreground flex gap-2 items-center"
+        className="text-foreground mb-0 flex items-center gap-2 px-1 text-base font-medium"
         id={id}
       >
         {Icon ? <Icon className="size-4" /> : null}

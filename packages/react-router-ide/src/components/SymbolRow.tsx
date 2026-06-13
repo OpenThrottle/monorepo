@@ -36,7 +36,7 @@ export const SymbolRow = (props: SymbolRowProps): React.ReactElement => {
     <button
       aria-pressed={selected}
       className={cn(
-        'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted',
+        'hover:bg-muted focus-visible:bg-muted flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm',
         selected && 'bg-muted',
         className,
       )}
@@ -49,7 +49,7 @@ export const SymbolRow = (props: SymbolRowProps): React.ReactElement => {
       <Badge color="slate" size="xs">
         {symbol.kind}
       </Badge>
-      <span className="text-xs text-muted-foreground">:{symbol.line}</span>
+      <span className="text-muted-foreground text-xs">:{symbol.line}</span>
     </button>
   );
 };

@@ -169,9 +169,7 @@ describe('PlansTable Component', () => {
         plans: [mockPlans[1]],
       });
 
-      await user.hover(
-        getByRole('link', { name: customConfigLabel }),
-      );
+      await user.hover(getByRole('link', { name: customConfigLabel }));
 
       await waitFor(() => {
         const tooltip = container.ownerDocument.querySelector(

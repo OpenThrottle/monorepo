@@ -29,10 +29,10 @@ export const personasTableColumns: ColumnDef<
     accessorKey: 'summary',
     cell: ({ row }) => (
       <div className="p-2">
-        <h3 className="mb-2 line-clamp-1 text-foreground">
+        <h3 className="text-foreground mb-2 line-clamp-1">
           /{row.original.slug}
         </h3>
-        <p className="text-xs text-muted-foreground line-clamp-2">
+        <p className="text-muted-foreground line-clamp-2 text-xs">
           {row.original.summary}
         </p>
       </div>
@@ -42,7 +42,7 @@ export const personasTableColumns: ColumnDef<
   {
     accessorKey: 'actions',
     cell: ({ row }) => (
-      <div className="p-2 flex gap-2">
+      <div className="flex gap-2 p-2">
         <OpenThrottleClipboard
           label="Copy path"
           text={row.original.repoRelativePath}

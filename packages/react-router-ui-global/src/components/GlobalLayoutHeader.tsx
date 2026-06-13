@@ -99,11 +99,11 @@ export const GlobalLayoutHeader = (
 
   const searchField = onSearchChromeEvent ? (
     <form
-      className="max-w-52 relative"
+      className="relative max-w-52"
       data-testid="GlobalLayoutHeaderSearch"
       onSubmit={handleSearchSubmit}
     >
-      <CommandShortcut className="flex text-sm p-2 items-center justify-center absolute opacity-100 top-1/2 right-4 transform -translate-y-1/2 gap-0.5 w-auto z-10">
+      <CommandShortcut className="absolute top-1/2 right-4 z-10 flex w-auto -translate-y-1/2 transform items-center justify-center gap-0.5 p-2 text-sm opacity-100">
         <span>⌘</span>
         <span>+</span>
         <span>k</span>
@@ -133,10 +133,10 @@ export const GlobalLayoutHeader = (
     <nav
       className={classnames(
         'bg-card/50 backdrop-blur-sm',
-        'border-b border-border',
+        'border-border border-b',
         'flex items-center justify-between',
-        'py-2 px-4 md:px-8 lg:px-12 gap-4',
-        'sticky w-full top-0 z-10',
+        'gap-4 px-4 py-2 md:px-8 lg:px-12',
+        'sticky top-0 z-10 w-full',
         className,
       )}
     >

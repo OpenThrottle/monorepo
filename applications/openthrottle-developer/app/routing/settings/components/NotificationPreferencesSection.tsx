@@ -52,7 +52,7 @@ export const NotificationPreferencesSection = (
     <>
       <div
         className={classnames(
-          'space-y-0 bg-card rounded-lg border border-card-border p-4',
+          'bg-card border-card-border space-y-0 rounded-lg border p-4',
           className,
         )}
       >
@@ -67,7 +67,7 @@ export const NotificationPreferencesSection = (
                 <Label htmlFor={`notification-pref-${row.id}`}>
                   {row.label}
                 </Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {row.description}
                 </p>
               </div>

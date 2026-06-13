@@ -60,7 +60,7 @@ export default function Component(
           title="Terms of use"
         />
 
-        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+        <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <h2 className="text-foreground font-medium">Acceptance of terms</h2>
           <p>
             By accessing or using this site you agree to these terms of use. If
@@ -99,7 +99,7 @@ export default function Component(
             licensed under a proprietary End User License Agreement (EULA). You
             can read the full license at{' '}
             <Link
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              className="hover:text-foreground underline underline-offset-4 transition-colors"
               to="/legal/license"
             >
               /legal/license
@@ -169,7 +169,7 @@ export default function Component(
             Questions or concerns about these terms can be directed to the
             maintainer at{' '}
             <Link
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"
               to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}
             >

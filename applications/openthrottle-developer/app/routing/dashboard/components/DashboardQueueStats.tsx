@@ -74,7 +74,7 @@ export const DashboardQueueStats = (
     <div className={className} data-testid="DashboardQueueStats">
       <h2 className="mb-4">Queue Stats</h2>
       {isEmpty ? (
-        <p className="mt-2 text-sm text-muted-foreground">No queues</p>
+        <p className="text-muted-foreground mt-2 text-sm">No queues</p>
       ) : (
         <div
           aria-label="Queue stats list"
@@ -87,13 +87,13 @@ export const DashboardQueueStats = (
                 <Tooltip>
                   <TooltipTrigger asChild={true}>
                     <div
-                      className="flex cursor-default items-center justify-between gap-2 rounded py-0.5 px-1 hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex cursor-default items-center justify-between gap-2 rounded px-1 py-0.5"
                       tabIndex={0}
                     >
                       <span className="truncate font-medium">{queue.name}</span>
                       <span
                         aria-hidden={true}
-                        className="shrink-0 tabular-nums text-muted-foreground"
+                        className="text-muted-foreground shrink-0 tabular-nums"
                       >
                         {formatCompactSummary(queue)}
                       </span>

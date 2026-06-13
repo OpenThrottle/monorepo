@@ -52,7 +52,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="PlansTable"
     >
       <DataTable<PlanCardFragment, string | number | null | undefined>
@@ -109,7 +109,7 @@ PlansTable.buildTable = (
         return (
           <div
             aria-label={`${count} tasks`}
-            className="p-2 text-center w-full tabular-nums"
+            className="w-full p-2 text-center tabular-nums"
           >
             {count}
           </div>
@@ -143,23 +143,23 @@ PlansTable.buildTable = (
 
         return (
           <div className="overflow-hidden p-2">
-            <h2 className="text-sm line-clamp-1 text-ellipsis font-medium mb-2">
+            <h2 className="mb-2 line-clamp-1 text-sm font-medium text-ellipsis">
               <Link
                 aria-label={`View plan: ${title}`}
-                className="underline underline-offset-2 hover:text-primary"
+                className="hover:text-primary underline underline-offset-2"
                 to={planHref}
                 viewTransition={true}
               >
                 {title}
               </Link>
             </h2>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
               {plan.hasCustomRunConfig ? (
                 <Tooltip>
                   <TooltipTrigger asChild={true}>
                     <Link
                       aria-label="Custom workflow run configuration (differs from defaults)"
-                      className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
                       to={configurationHref}
                       viewTransition={true}
                     >
@@ -187,7 +187,7 @@ PlansTable.buildTable = (
               ) : plan.project != null && plan.project !== '' ? (
                 <span
                   aria-label={`Project: ${plan.project}`}
-                  className="rounded border border-border px-1.5 py-0.5"
+                  className="border-border rounded border px-1.5 py-0.5"
                 >
                   {plan.project}
                 </span>

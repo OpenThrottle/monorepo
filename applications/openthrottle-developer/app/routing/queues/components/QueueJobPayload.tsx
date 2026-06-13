@@ -37,7 +37,7 @@ export const QueueJobPayload = (
       id="job-payload-data"
       legend="Job payload (data)"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Raw JSON stored on the job. May include `ralph` tuning; treat as
         sensitive in shared environments.
       </p>
@@ -45,17 +45,17 @@ export const QueueJobPayload = (
       <div className="relative">
         {parsed.prettyJson != null ? (
           <>
-            <pre className="max-h-80 overflow-auto rounded-md border bg-muted/40 p-3 text-xs">
+            <pre className="bg-muted/40 max-h-80 overflow-auto rounded-md border p-3 text-xs">
               {parsed.prettyJson}
             </pre>
             <OpenThrottleClipboard
-              className="h-8 absolute right-3 top-1 shrink-0 text-sm"
+              className="absolute top-1 right-3 h-8 shrink-0 text-sm"
               label="Copy JSON"
               text={parsed.prettyJson}
             />
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No payload on this job.
           </p>
         )}

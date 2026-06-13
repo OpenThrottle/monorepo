@@ -85,7 +85,7 @@ export const PullRequestPreviewSheet = (
             </div>
             <h3 className="text-lg leading-snug">{prPreviewPull.title}</h3>
             <p className="text-muted-foreground text-sm">
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 {prPreviewPull.author}
               </span>{' '}
               · Created {formatDate(prPreviewPull.createdAt, 'MM/dd/yyyy')} —

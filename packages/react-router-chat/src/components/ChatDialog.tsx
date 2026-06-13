@@ -114,7 +114,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
 
   const headerTitle = (
     <span className="flex min-w-0 flex-1 items-center gap-4">
-      <BotIcon aria-hidden={true} className="shrink-0 text-muted-foreground" />
+      <BotIcon aria-hidden={true} className="text-muted-foreground shrink-0" />
       <span className="truncate">{title}</span>
     </span>
   );

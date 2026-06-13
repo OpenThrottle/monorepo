@@ -14,7 +14,7 @@ export const PersonasStats = (
 
   return (
     <div
-      className="p-4 text-sm text-muted-foreground"
+      className="text-muted-foreground p-4 text-sm"
       data-testid="PersonasStats"
     >
       <span>
