@@ -226,8 +226,8 @@ With `OPENTHROTTLE_WORKSPACES_DIR` pointing at a directory containing a real che
 
 `applications/openthrottle/docker-compose.yml` stays the consumer artifact: **images only, never builds**, now updated to the §5 networking and §6 bridge:
 
-- `.env` bootstrap from a committed `.env.example` with the minimal var set (ports, postgres credentials, `JWT_SECRET`, `OPENTHROTTLE_WORKSPACES_DIR`). No `GITHUB_TOKEN`/`NX_KEY` at runtime — those are build-time-only and consumers don't build.
-- **First boot:** a one-shot `migrations` init service (small image with the `databases/` migration runner) runs against `postgres:5432` on the compose network and exits; `server` `depends_on` it with `service_completed_successfully`. Idempotent re-runs make upgrades safe.
+- `.env` bootstrap from a committed `.env.default` (the repo convention; `.env.example` is gitignored) with the minimal var set (ports, postgres credentials, `JWT_SECRET`, `OPENTHROTTLE_WORKSPACES_DIR`). No `GITHUB_TOKEN`/`NX_KEY` at runtime — those are build-time-only and consumers don't build.
+- **First boot:** the seeded `openthrottle/postgres` image applies `databases/seed.sql` via `docker-entrypoint-initdb.d` on a clean volume (full current schema). A one-shot `migrations` init service then applies incremental migrations and exits; `server` `depends_on` it with `service_completed_successfully`. The migrations image is a tiny standalone runner — `Dockerfile.Migrations` bakes `databases/run-migrations.mjs` (no workspace import, only `pg`) plus `databases/migrations/*.sql`. Idempotent re-runs make upgrades safe.
 - **Pinning/upgrade:** image tags from `OPENTHROTTLE_VERSION` (default `latest`); upgrade = `docker compose pull && docker compose up -d`.
 - One documented command from a clean machine: `docker compose up -d` with only the compose file + `.env` present.
 
@@ -238,4 +238,20 @@ With `OPENTHROTTLE_WORKSPACES_DIR` pointing at a directory containing a real che
 3. Compose dev profile + watch + debug ports (task `7b50e65f`) — §2, §4, §5 networking for the dev services.
 4. Host execution bridge (task `d9507f65`) — §6.
 5. Consumer install polish (task `c61bdc5f`) — §7.
-6. End-to-end verification of all three modes + docs (task `ded37231`).
+6. End-to-end verification of all three modes + docs (task `ded37231`) — §9.
+
+## 9. Verification
+
+`scripts/docker-smoke-test.sh [prod|dev|consumer]` orchestrates the smoke matrix (reads ports from the repo-root `.env`; `dev` starts `watch` in the background and tears it down on exit):
+
+| Mode       | Command                                            | Asserts                                                                  |
+| ---------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| `prod`     | `docker compose --profile prod up --build`         | server `/health` 200, developer `/` 200                                  |
+| `dev`      | `docker compose --profile dev watch`               | server-dev `/health` 200, developer-dev `/` 200 (then edit → hot reload) |
+| `consumer` | `applications/openthrottle` `docker compose up -d` | first-boot migrate/seed, then server `/health` 200, developer `/` 200    |
+
+Verified during implementation (this branch):
+
+- **Dev profile:** server-dev `/health` 200 in-container with watchers live; full dev stack confirmed running by the maintainer. Cold-start fixes (remote-cache off, package `dist` prebuild, `procps`/`git`, healthcheck-gated startup + heap cap) baked into the dev image stages.
+- **Consumer migrate/seed:** the migrations image, built from `Dockerfile.Migrations` and run against the live compose Postgres, applied all 52 `databases/migrations/*.sql` idempotently to "Migrations completed."; consumer compose `config` resolves clean.
+- **Production parity:** prod and dev compose `config` both resolve clean; the prod-service changes are additive (a `prod` profile label, the identity-by-default bridge env, and the workspace mount). A fresh `up --build` prod smoke is the one item left for a clean environment (it collides with a developer's already-running stack on the shared published ports) — run `scripts/docker-smoke-test.sh prod` on a free machine to confirm.
