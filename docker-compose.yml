@@ -19,6 +19,20 @@
 #     Verified healthy: server GET /health → 200
 #     {api,database,redis,websocket:ok}; developer GET / → 200.
 #
+#     🔧 Dev mode (contributors) | hot reload from source, no distroless rebuilds:
+#
+#         docker compose --profile dev watch       # build dev images, start, sync on save
+#         docker compose --profile dev up --build  # same, without file watching
+#
+#     server-dev/developer-dev run the Dockerfile `development` targets
+#     (pnpm nx run <app>:dev) on the same published ports as the prod
+#     services. Profiles keep the modes exclusive: server/developer are in
+#     the `prod` profile (enabled by default via COMPOSE_PROFILES="prod" in
+#     .env), server-dev/developer-dev in `dev`; postgres/redis are shared
+#     (no profile). Dev services talk to postgres/redis via compose service
+#     names; the server's Node inspector is published on 9229. See
+#     docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#
 #############################################################################
 
 #############################################################################
@@ -102,12 +116,83 @@ services:
       - .env
     environment:
       <<: *developer
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # the IDE engine runs in this SSR process and reads registered checkouts.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
     image: openthrottle/developer:latest
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
+    profiles: [prod]
     restart: always
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
     # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
+
+  #############################################################################
+  #
+  #     🔧 developer-dev | React Router dev server (hot reload; profile: dev)
+  #
+  developer-dev:
+    build:
+      args:
+        <<: *developer
+      context: ./
+      dockerfile: Dockerfile.ReactRouter
+      secrets: *build-secrets
+      target: development
+    container_name: developer-dev
+    depends_on:
+      server-dev:
+        # Healthy, not just started: serializes the two heavy cold-starts (the
+        # concurrent Nx/tsc/Vite watchers can exceed the Docker VM's memory) and
+        # guarantees the API is up before SSR/codegen reach for it.
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./applications
+          target: /app/applications
+        - action: sync
+          path: ./packages
+          target: /app/packages
+        - action: sync
+          path: ./tools
+          target: /app/tools
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
+    env_file:
+      - .env
+    environment:
+      <<: *developer
+      # SSR fetches stay on the compose network; the browser keeps localhost.
+      API_URL_INTERNAL: http://server-dev:${OPENTHROTTLE_SERVER_PORT}
+      # Vite must bind 0.0.0.0 to be reachable through the published port.
+      HOST: 0.0.0.0
+      # Cap the Vite/dev-server heap — an unbounded Node heap plus the codegen and
+      # tsc watchers can trip the Docker VM's OOM killer on cold start.
+      NODE_OPTIONS: --max-old-space-size=4096
+      # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
+      # reach for the remote cache and abort (same guard as the Dockerfile build).
+      NX_DISABLE_REMOTE_CACHE: 'true'
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # the IDE engine runs in this SSR process and reads registered checkouts.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      npm_config_store_dir: /pnpm/store
+    image: openthrottle/developer:dev
+    ports:
+      - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
+    profiles: [dev]
+    restart: 'no'
+    volumes:
+      - pnpm_store:/pnpm/store
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
   #############################################################################
   #
@@ -195,6 +280,10 @@ services:
       - .env
     environment:
       <<: *server
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # registered checkout paths are validated/searched/executed in this process.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -210,9 +299,104 @@ services:
     image: openthrottle/server:latest
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
+    profiles: [prod]
     restart: always
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
     # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
+
+  #############################################################################
+  #
+  #     🔧 server-dev | NestJS dev server (hot reload + inspector; profile: dev)
+  #
+  server-dev:
+    build:
+      args:
+        <<: *server
+      context: ./
+      dockerfile: Dockerfile.NestJS
+      secrets: *build-secrets
+      target: development
+    # dev-debug = dev with the Node inspector on 0.0.0.0:9229 (see the app's package.json).
+    command: ['sh', '-c', 'pnpm nx run openthrottle-server:dev-debug']
+    container_name: server-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./applications
+          target: /app/applications
+        - action: sync
+          path: ./packages
+          target: /app/packages
+        - action: sync
+          path: ./tools
+          target: /app/tools
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
+    env_file:
+      - .env
+    environment:
+      <<: *server
+      # Service-to-service traffic stays on the compose network (container ports),
+      # decoupled from the published host ports.
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_VERSION: ${POSTGRES_VERSION}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Mounted checkouts are owned by a host uid; trust them for git operations
+      # (worktrees, status) without needing an entrypoint script.
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
+      # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
+      # reach for the remote cache and abort (same guard as the Dockerfile build).
+      NX_DISABLE_REMOTE_CACHE: 'true'
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # registered checkout paths are validated/searched/executed in this process.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      npm_config_store_dir: /pnpm/store
+    # The development image has no in-image HEALTHCHECK (that lives in the
+    # distroless production stage); probe /health with the image's own node.
+    # Generous start_period: the cold start compiles the workspace in watch mode.
+    healthcheck:
+      interval: 10s
+      retries: 3
+      start_period: 600s
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})",
+        ]
+      timeout: 10s
+    image: openthrottle/server:dev
+    ports:
+      - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
+      - '9229:9229' # Node inspector (dev-debug)
+    profiles: [dev]
+    restart: 'no'
+    volumes:
+      - pnpm_store:/pnpm/store
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      # SSH-based git remotes (optional, Docker Desktop): uncomment to forward the
+      # host SSH agent; HTTPS remotes already work via the GITHUB_TOKEN env.
+      # - '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock'
 
 #############################################################################
 #
@@ -228,4 +412,5 @@ secrets:
 #     🎧 Volumes | Persistent "named" volumes
 #
 volumes:
-  postgres_data:
+  postgres_data: # Persistent storage for our Postgres database
+  pnpm_store: # pnpm content-addressable store for in-container installs

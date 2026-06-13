@@ -10,7 +10,11 @@ import {
   jobRunHooksForJobPayload,
   resolveJobRunHooksForEnqueue,
 } from './enqueue-plan-job-run-hooks';
-import { parseWorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  getWorkspacePathMapping,
+  parseWorkflowRunnerId,
+  toContainerPath,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type {
   ChildJobInput,
   RalphNestedRunTuningInput,
@@ -86,10 +90,17 @@ const MAX_WORKING_DIRECTORY_LEN = 4096;
  */
 const getAllowedWorkingDirPrefixes = (): readonly string[] => {
   const raw = process.env.OPENTHROTTLE_ALLOWED_WORKING_DIRS;
-  if (!raw || raw.trim() === '') return [];
+  if (!raw || raw.trim() === '') {
+    // Containerized with the workspace bridge mounted: contain to the mount by
+    // default rather than "anything that exists" (the container fs is not the
+    // user's machine). Host runs keep the permissive default.
+    const mapping = getWorkspacePathMapping();
+    return mapping === undefined ? [] : [mapping.containerDir];
+  }
+  // Entries may be written in the host view; compare in this process's view.
   return raw
     .split(',')
-    .map((p) => p.trim())
+    .map((p) => toContainerPath(p.trim()))
     .filter((p) => p.length > 0 && isAbsolute(p));
 };
 
@@ -114,12 +125,17 @@ export const validateWorkingDirectory = (
     throw new Error('workingDirectory must be an absolute path');
   }
 
-  if (!existsSync(trimmed)) {
+  // Validate against where the path lives in THIS process (host-truthful input,
+  // container view when the Docker workspace bridge is active). The returned
+  // value stays the caller's host-truthful form.
+  const resolved = toContainerPath(trimmed);
+
+  if (!existsSync(resolved)) {
     throw new Error(`workingDirectory does not exist: ${trimmed}`);
   }
 
   try {
-    const stat = statSync(trimmed);
+    const stat = statSync(resolved);
     if (!stat.isDirectory()) {
       throw new Error(`workingDirectory is not a directory: ${trimmed}`);
     }
@@ -136,7 +152,7 @@ export const validateWorkingDirectory = (
   const prefixes = getAllowedWorkingDirPrefixes();
   if (prefixes.length > 0) {
     const allowed = prefixes.some(
-      (prefix) => trimmed === prefix || trimmed.startsWith(prefix + '/'),
+      (prefix) => resolved === prefix || resolved.startsWith(prefix + '/'),
     );
     if (!allowed) {
       throw new Error(

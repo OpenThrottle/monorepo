@@ -1,0 +1,32 @@
+# OpenThrottle database migrations — one-shot runner image for the consumer install.
+#
+# Tiny image (node + pg + databases/migrations) that applies incremental SQL
+# migrations against the compose Postgres on the network, then exits. Wired into
+# applications/openthrottle/docker-compose.yml as the `migrations` init service
+# (server depends_on it with service_completed_successfully). On a clean volume the
+# seeded openthrottle/postgres image already applies seed.sql; this runner covers
+# UPGRADES of an existing volume (migrations are written idempotent).
+#
+# Build (from repo root): docker build -f Dockerfile.Migrations -t openthrottle/migrations:local .
+# Published as openthrottle/migrations:<tag> alongside server/developer.
+###########################################################################
+ARG NODE_VERSION="22"
+FROM node:${NODE_VERSION}-bookworm-slim AS production
+
+WORKDIR /app
+
+ENV NODE_ENV="production"
+
+# Only runtime dep is `pg`; install it standalone so the image carries no
+# workspace, no pnpm, and no build toolchain.
+RUN npm install --no-save --omit=dev pg@8
+
+# The runner resolves migrations relative to itself (databases/migrations/).
+COPY ./databases/run-migrations.mjs ./databases/run-migrations.mjs
+COPY ./databases/migrations ./databases/migrations
+
+# Non-root.
+RUN useradd --system --uid 1001 appuser && chown -R appuser /app
+USER appuser
+
+CMD ["node", "databases/run-migrations.mjs"]

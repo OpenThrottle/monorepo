@@ -377,15 +377,25 @@ function toExportedSymbol(
   declaration: ExportedDeclarations,
   resolved: ResolvedWorkspaceConfig,
 ): ExportedSymbol {
-  const isDefault = exportName === 'default';
+  // Derived from the declaration, not the export name: a barrel's
+  // `export { default as Foo }` must produce the same entry as the declaring
+  // module's `default`, so the two dedupe instead of racing on file order.
+  const isDefault = exportName === 'default' || isDefaultExport(declaration);
 
   return {
     isDefault,
     kind: resolveKind(declaration),
     line: declaration.getStartLineNumber(),
-    name: isDefault ? (getDeclaredName(declaration) ?? 'default') : exportName,
+    name:
+      exportName === 'default'
+        ? (getDeclaredName(declaration) ?? 'default')
+        : exportName,
     path: toRelativePath(declaration.getSourceFile().getFilePath(), resolved),
   };
+}
+
+function isDefaultExport(declaration: ExportedDeclarations): boolean {
+  return Node.isExportable(declaration) && declaration.isDefaultExport();
 }
 
 function resolveKind(node: Node): string {

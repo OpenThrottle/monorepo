@@ -1,23 +1,42 @@
 #############################################################################
 #
-#     🚀 Verified run | from the repo root:
+#     🚀 OpenThrottle — consumer install (published images, one command)
 #
 #       - Docker Hub: https://hub.docker.com/u/openthrottle
 #       - GitHub: https://github.com/OpenThrottle
 #
+#     From a clean machine you need only THIS file + a `.env` (copy
+#     `.env.default`). No repo checkout, no build, no GITHUB_TOKEN/NX_KEY:
+#
+#         cp .env.default .env      # then edit OPENTHROTTLE_WORKSPACES_DIR etc.
+#         docker compose up -d
+#
+#     First boot: the seeded `openthrottle/postgres` image applies the schema +
+#     seed on a clean volume; the one-shot `migrations` service then applies any
+#     incremental migrations and exits before the server starts.
+#
+#     Upgrade: bump OPENTHROTTLE_VERSION (or keep `latest`) then
+#         docker compose pull && docker compose up -d
+#     `migrations` re-runs (idempotent) so an existing volume reaches the new schema.
+#
+#     Host execution bridge: point OPENTHROTTLE_WORKSPACES_DIR at the directory
+#     holding your local checkouts; it is mounted at /workspaces so registered
+#     repositories resolve inside the containers (see
+#     docs/openthrottle/docker-dev-workflow-and-host-bridge.md).
+#
+#     Networking: services talk to each other over the compose network by name
+#     (postgres:5432, redis:6379, http://server:<port>); only the browser-facing
+#     URLs use localhost:<published port>.
+#
 #############################################################################
 x-common: &common
-  GITHUB_TOKEN: ${GITHUB_TOKEN}
-  NODE_ENV: ${NODE_ENV}
-  NODE_VERSION: ${NODE_VERSION}
-  NX_KEY: ${NX_KEY}
-  NX_VERSION: ${NX_VERSION}
-  PNPM_VERSION: ${PNPM_VERSION}
+  NODE_ENV: ${NODE_ENV:-production}
 
 x-developer: &developer
   <<: *common
-  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
+  # Browser → server (published localhost); SSR → server (compose network).
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
+  API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
   APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
   APP_NAME_SHORT: ${OPENTHROTTLE_DEVELOPER_APP_NAME_SHORT}
@@ -29,30 +48,59 @@ x-developer: &developer
   APP_URL_SERVER: ${OPENTHROTTLE_DEVELOPER_APP_URL_SERVER}
   APP_URL_WEBSITE: ${OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE}
   APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
+  # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
+  OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
   PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
 
 x-server: &server
   <<: *common
-  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
+  API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
   APP_ENV: ${OPENTHROTTLE_SERVER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_SERVER_APP_NAME}
   APP_NAME_SHORT: ${OPENTHROTTLE_SERVER_APP_NAME_SHORT}
   APP_URL: ${OPENTHROTTLE_SERVER_APP_URL}
-  APP_URL_INTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
-  APP_URL_EXTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
   APP_VERSION: ${OPENTHROTTLE_SERVER_APP_VERSION}
-  BULLMQ_BOARD_ADMIN_PASSWORD: 'admin'
-  BULLMQ_BOARD_ADMIN_USERNAME: 'admin'
+  BULLMQ_BOARD_ADMIN_PASSWORD: ${OPENTHROTTLE_SERVER_BULLMQ_BOARD_ADMIN_PASSWORD:-admin}
+  BULLMQ_BOARD_ADMIN_USERNAME: ${OPENTHROTTLE_SERVER_BULLMQ_BOARD_ADMIN_USERNAME:-admin}
   CORS_CREDENTIALS: ${OPENTHROTTLE_SERVER_CORS_CREDENTIALS}
   CORS_ORIGINS: ${OPENTHROTTLE_SERVER_CORS_ORIGINS}
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
+  # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
+  OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+  # Service-to-service over the compose network (container ports).
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
 name: 'OpenThrottle'
 
 services:
+  #############################################################################
+  #
+  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #
+  migrations:
+    image: openthrottle/migrations:${OPENTHROTTLE_VERSION:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+    restart: 'no'
+
   developer:
+    image: openthrottle/developer:${OPENTHROTTLE_VERSION:-latest}
     container_name: developer
     depends_on:
       server:
@@ -61,14 +109,14 @@ services:
       - .env
     environment:
       <<: *developer
-    image: openthrottle/developer:latest
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
-    # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
-    # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
   postgres:
+    image: openthrottle/postgres:${OPENTHROTTLE_VERSION:-latest}
     container_name: postgres
     env_file:
       - .env
@@ -83,7 +131,6 @@ services:
       retries: 10
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       timeout: 5s
-    image: pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
     ports:
       - ${POSTGRES_PORT}:5432
     restart: always
@@ -92,20 +139,23 @@ services:
       - postgres_data:/var/lib/postgresql
 
   redis:
+    image: redis:${REDIS_VERSION}-alpine
     container_name: redis
     healthcheck:
       interval: 10s
       retries: 3
       test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
-    image: redis:${REDIS_VERSION}-alpine
     ports:
       - ${REDIS_PORT}:6379
     restart: always
 
   server:
+    image: openthrottle/server:${OPENTHROTTLE_VERSION:-latest}
     container_name: server
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -114,22 +164,16 @@ services:
       - .env
     environment:
       <<: *server
-      POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_VERSION: ${POSTGRES_VERSION}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-
-    # Healthcheck is provided by the image
-    image: openthrottle/server:latest
+    # Healthcheck is provided by the image (distroless in-image probe on /health).
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
-    # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
-    # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
 volumes:
   postgres_data:
