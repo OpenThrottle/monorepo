@@ -8,6 +8,12 @@
 # Or via Nx: pnpm nx run openthrottle-server:docker-build
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
+# Targets: `production` (default — distroless, pruned), `production-debian` (shell + git
+# for the host execution bridge), and `development` (builder-based, shell + full
+# workspace, runs `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose
+# `dev` profile with `develop.watch`). See
+# docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
@@ -79,6 +85,40 @@ RUN pnpm install --frozen-lockfile
 
 ################################################################################
 #
+#   DEVELOPMENT - Shell-capable dev image running the Nx dev target (hot reload)
+#
+################################################################################
+# Not distroless, no pruning: full workspace install retained so `nest start --watch`
+# can rebuild on source changes synced in by `docker compose watch`. `production`
+# (last stage) remains the default target, so builds without --target are unaffected.
+FROM builder AS development
+
+ENV NODE_ENV="development"
+ENV NX_DAEMON="false"
+
+# procps: nx/dev-server process management spawns `ps` (pidtree) — absent from
+# bookworm-slim. git: common dev tooling shells out to it.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git procps \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Workspace packages/tools resolve from their dist/ outputs, which only the
+# production `build` stage produces — build them once here so the dev server
+# starts clean; the dev target's ^dev watchers keep them fresh afterwards.
+# No GCS credentials in this stage: force the remote cache off. NODE_ENV=production
+# for this command only — the codegen-graphql configs read the committed schema.gql
+# but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
+RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool
+
+CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
+
+################################################################################
+#
 #   BUILD - Nx build + pnpm deploy pruned runtime tree
 #
 ################################################################################
@@ -116,6 +156,34 @@ RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
 # (same pattern as Dockerfile.ReactRouter.v3 — avoids copying the full monorepo node_modules,
 # packages/, tools/). The production node_modules is resolved from the app's declared deps.
 RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
+
+################################################################################
+#
+#   PRODUCTION-DEBIAN ~ Debian slim + shell + git (host-execution-bridge friendly)
+#
+################################################################################
+# Use when the container must run git against mounted host checkouts (the
+# consumer host execution bridge) — distroless `production` has no shell or git:
+#   docker build -f Dockerfile.NestJS --target production-debian ...
+FROM base AS production-debian
+
+ENV NODE_ENV="production"
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git procps \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /app/pruned/. /app/
+
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# Same probe as the distroless image, via the base image's node binary.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD ["node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
+
+CMD ["node", "-r", "dotenv/config", "build/src/main.js"]
 
 ################################################################################
 #

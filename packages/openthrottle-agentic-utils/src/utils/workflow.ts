@@ -9,6 +9,7 @@ import {
   WORKFLOW_RALPH_VERBOSE_ENV,
   WORKFLOW_RUNNER_IDS,
 } from '../config/index.js';
+import { toContainerPath } from './workspace-paths.js';
 
 /**
  * Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root.
@@ -137,14 +138,16 @@ export function getWorkflowConfigCwd(
   workingDirectory: string | undefined,
   env: NodeJS.ProcessEnv = process.env,
 ): string {
+  // Job data stores host-truthful paths; the bridge mapping (identity outside
+  // Docker) translates them to where the workspace mount lives in this process.
   const fromJob = workingDirectory?.trim();
   if (fromJob !== undefined && fromJob !== '') {
-    return fromJob;
+    return toContainerPath(fromJob, env);
   }
 
   const workspaceRoot = env.WORKSPACE_ROOT?.trim();
   if (workspaceRoot !== undefined && workspaceRoot !== '') {
-    return workspaceRoot;
+    return toContainerPath(workspaceRoot, env);
   }
 
   return process.cwd();

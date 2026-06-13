@@ -8,6 +8,11 @@
 # Or via Nx: pnpm nx run openthrottle-developer:docker-build
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
+# Targets: `production` (default — distroless, pruned), `production-debian` (shell-capable
+# production), and `development` (builder-based, shell + full workspace, runs
+# `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose `dev` profile
+# with `develop.watch`). See docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
@@ -69,6 +74,40 @@ COPY ./packages ./packages
 COPY ./tools ./tools
 
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+################################################################################
+#
+#   DEVELOPMENT - Shell-capable dev image running the Nx dev target (hot reload)
+#
+################################################################################
+# Not distroless, no pruning: full workspace install retained so the React Router/Vite
+# dev server can HMR on source changes synced in by `docker compose watch`. `production`
+# (last stage) remains the default target, so builds without --target are unaffected.
+FROM builder AS development
+
+ENV NODE_ENV="development"
+ENV NX_DAEMON="false"
+
+# procps: nx/dev-server process management spawns `ps` (pidtree) — absent from
+# bookworm-slim. git: common dev tooling shells out to it.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git procps \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Built (non-source-first) workspace packages, e.g. @openthrottle/nodejs-graphql and
+# @openthrottle/openthrottle-ide, resolve from their dist/ outputs — build them once
+# here so Vite can resolve them; the dev target's ^dev watchers keep them fresh.
+# No GCS credentials in this stage: force the remote cache off. NODE_ENV=production
+# for this command only — the codegen-graphql configs read the committed schema.gql
+# but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
+RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool
+
+CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
 ################################################################################
 #

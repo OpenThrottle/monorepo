@@ -355,6 +355,11 @@
         "^codegen-graphql",
         "codegen-graphql",
         "codegen-react-router"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.d.ts",
+        "{projectRoot}/dist/**/*.d.ts.map",
+        "{projectRoot}/tsconfig.tsbuildinfo"
       ]
     },
     "typecheck-tests": {
