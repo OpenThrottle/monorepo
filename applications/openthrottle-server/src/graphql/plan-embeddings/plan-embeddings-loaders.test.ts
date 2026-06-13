@@ -1,0 +1,36 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { type Plan, PlansService } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
+
+describe('PlanEmbeddingsLoaders', () => {
+  const findPlans = vi.fn();
+  const plansService = createMock<PlansService>({
+    getRepository: vi.fn().mockReturnValue({ find: findPlans }),
+  });
+
+  let loaders: PlanEmbeddingsLoaders;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    loaders = new PlanEmbeddingsLoaders(plansService);
+  });
+
+  test('planLoader batches many load() calls into one find and maps to key order', async () => {
+    findPlans.mockResolvedValue([
+      { id: 'p2', title: 'Two' },
+      { id: 'p1', title: 'One' },
+    ] as Plan[]);
+
+    const [a, b, missing] = await Promise.all([
+      loaders.planLoader.load('p1'),
+      loaders.planLoader.load('p2'),
+      loaders.planLoader.load('p3'),
+    ]);
+
+    expect(findPlans).toHaveBeenCalledTimes(1);
+    expect(a?.id).toBe('p1');
+    expect(b?.id).toBe('p2');
+    expect(missing).toBeNull();
+  });
+});

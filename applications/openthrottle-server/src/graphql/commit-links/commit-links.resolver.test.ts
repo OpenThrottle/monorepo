@@ -1,12 +1,9 @@
 import type { CommitLink } from '@openthrottle/nestjs-repositories';
-import {
-  CommitLinksService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { CommitLinksService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { describe, expect, beforeAll, beforeEach, test, vi } from 'vitest';
+import { CommitLinksLoaders } from './commit-links-loaders';
 import { CommitLinksResolver } from './commit-links.resolver';
 
 describe('CommitLinksResolver', () => {
@@ -45,11 +42,17 @@ describe('CommitLinksResolver', () => {
   const mockCommitLinksService = createMock<CommitLinksService>({
     getRepository: vi.fn().mockReturnValue(commitLinksRepo),
   });
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue({ find: vi.fn(), findOne: vi.fn() }),
-  });
-  const mockTasksService = createMock<TasksService>({
-    getRepository: vi.fn().mockReturnValue({ find: vi.fn(), findOne: vi.fn() }),
+
+  const mockPlanLoad = vi.fn().mockResolvedValue(null);
+  const mockTaskLoad = vi.fn().mockResolvedValue(null);
+  const mockLoaders: CommitLinksLoaders = {
+    planLoader: { load: mockPlanLoad },
+    taskLoader: { load: mockTaskLoad },
+  } as unknown as CommitLinksLoaders;
+
+  beforeEach(() => {
+    mockPlanLoad.mockReset().mockResolvedValue(null);
+    mockTaskLoad.mockReset().mockResolvedValue(null);
   });
 
   beforeAll(async () => {
@@ -57,8 +60,7 @@ describe('CommitLinksResolver', () => {
       providers: [
         CommitLinksResolver,
         { provide: CommitLinksService, useValue: mockCommitLinksService },
-        { provide: PlansService, useValue: mockPlansService },
-        { provide: TasksService, useValue: mockTasksService },
+        { provide: CommitLinksLoaders, useValue: mockLoaders },
       ],
     }).compile();
 
@@ -107,6 +109,20 @@ describe('CommitLinksResolver', () => {
       const result = await resolver.commitLinks();
 
       expect(result).toEqual([]);
+    });
+
+    test('applies a default take cap and honors an explicit clamped limit', async () => {
+      vi.mocked(commitLinksRepo.find).mockResolvedValue([]);
+
+      await resolver.commitLinks();
+      expect(commitLinksRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100 }),
+      );
+
+      await resolver.commitLinks(10000);
+      expect(commitLinksRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 500 }),
+      );
     });
   });
 
@@ -164,7 +180,7 @@ describe('CommitLinksResolver', () => {
   });
 
   describe('plan (ResolveField)', () => {
-    test('returns null when parent has no planId', async () => {
+    test('returns null without hitting the loader when parent has no planId', async () => {
       const parent = new (
         await import('./commit-link.object')
       ).CommitLinkObject();
@@ -173,105 +189,38 @@ describe('CommitLinksResolver', () => {
       const result = await resolver.plan(parent);
 
       expect(result).toBeNull();
+      expect(mockPlanLoad).not.toHaveBeenCalled();
     });
 
-    test('returns PlanObject when plan exists', async () => {
+    test('resolves the plan through planLoader when planId is set', async () => {
       const { CommitLinkObject } = await import('./commit-link.object');
-      const plansRepo = { findOne: vi.fn() };
-      const mockPlans = createMock<PlansService>({
-        getRepository: vi.fn().mockReturnValue(plansRepo),
-      });
-      const app = await Test.createTestingModule({
-        providers: [
-          CommitLinksResolver,
-          {
-            provide: CommitLinksService,
-            useValue: createMock<CommitLinksService>({
-              getRepository: vi.fn().mockReturnValue(commitLinksRepo),
-            }),
-          },
-          { provide: PlansService, useValue: mockPlans },
-          {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
-          },
-        ],
-      }).compile();
-      const r = app.get<CommitLinksResolver>(CommitLinksResolver);
-
-      const mockPlan = {
-        assignee: null,
-        author: 'visormatt',
-        category: 'feature',
-        createdAt: new Date(),
-        description: null,
-        id: mockCommitLink.planId,
-        project: null,
-        projectId: null,
-        status: 'IN_PROGRESS',
-        summary: null,
-        title: 'Test plan',
-        updatedAt: new Date(),
-      };
-      vi.mocked(plansRepo.findOne).mockResolvedValue(mockPlan);
+      const mockPlan = { id: mockCommitLink.planId, title: 'Test plan' };
+      mockPlanLoad.mockResolvedValueOnce(mockPlan);
 
       const parent = new CommitLinkObject();
       parent.planId = mockCommitLink.planId;
 
-      const result = await r.plan(parent);
+      const result = await resolver.plan(parent);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockCommitLink.planId);
-      expect(result?.title).toBe('Test plan');
+      expect(mockPlanLoad).toHaveBeenCalledWith(mockCommitLink.planId);
+      expect(result).toBe(mockPlan);
     });
 
-    test('returns null when plan not found', async () => {
+    test('returns null when planLoader resolves null', async () => {
       const { CommitLinkObject } = await import('./commit-link.object');
-      const plansRepo = { findOne: vi.fn().mockResolvedValue(null) };
-      const app = await Test.createTestingModule({
-        providers: [
-          CommitLinksResolver,
-          {
-            provide: CommitLinksService,
-            useValue: createMock<CommitLinksService>({
-              getRepository: vi.fn().mockReturnValue(commitLinksRepo),
-            }),
-          },
-          {
-            provide: PlansService,
-            useValue: createMock<PlansService>({
-              getRepository: vi.fn().mockReturnValue(plansRepo),
-            }),
-          },
-          {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
-          },
-        ],
-      }).compile();
-      const r = app.get<CommitLinksResolver>(CommitLinksResolver);
+      mockPlanLoad.mockResolvedValueOnce(null);
 
       const parent = new CommitLinkObject();
       parent.planId = 'missing-plan-id';
 
-      const result = await r.plan(parent);
+      const result = await resolver.plan(parent);
 
       expect(result).toBeNull();
     });
   });
 
   describe('task (ResolveField)', () => {
-    test('returns null when parent has no taskId', async () => {
+    test('returns null without hitting the loader when parent has no taskId', async () => {
       const parent = new (
         await import('./commit-link.object')
       ).CommitLinkObject();
@@ -280,101 +229,31 @@ describe('CommitLinksResolver', () => {
       const result = await resolver.task(parent);
 
       expect(result).toBeNull();
+      expect(mockTaskLoad).not.toHaveBeenCalled();
     });
 
-    test('returns TaskObject when task exists', async () => {
+    test('resolves the task through taskLoader when taskId is set', async () => {
       const { CommitLinkObject } = await import('./commit-link.object');
-      const tasksRepo = { findOne: vi.fn() };
-      const app = await Test.createTestingModule({
-        providers: [
-          CommitLinksResolver,
-          {
-            provide: CommitLinksService,
-            useValue: createMock<CommitLinksService>({
-              getRepository: vi.fn().mockReturnValue(commitLinksRepo),
-            }),
-          },
-          {
-            provide: PlansService,
-            useValue: createMock<PlansService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
-          },
-          {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue(tasksRepo),
-            }),
-          },
-        ],
-      }).compile();
-      const r = app.get<CommitLinksResolver>(CommitLinksResolver);
-
-      const mockTask = {
-        assignee: null,
-        category: 'general',
-        createdAt: new Date(),
-        description: null,
-        id: mockCommitLink.taskId,
-        planId: mockCommitLink.planId,
-        project: null,
-        projectId: null,
-        requirements: [],
-        status: 'pending',
-        summary: null,
-        title: 'Test task',
-        updatedAt: new Date(),
-      };
-      vi.mocked(tasksRepo.findOne).mockResolvedValue(mockTask);
+      const mockTask = { id: mockCommitLink.taskId, title: 'Test task' };
+      mockTaskLoad.mockResolvedValueOnce(mockTask);
 
       const parent = new CommitLinkObject();
       parent.taskId = mockCommitLink.taskId;
 
-      const result = await r.task(parent);
+      const result = await resolver.task(parent);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockCommitLink.taskId);
-      expect(result?.title).toBe('Test task');
+      expect(mockTaskLoad).toHaveBeenCalledWith(mockCommitLink.taskId);
+      expect(result).toBe(mockTask);
     });
 
-    test('returns null when task not found', async () => {
+    test('returns null when taskLoader resolves null', async () => {
       const { CommitLinkObject } = await import('./commit-link.object');
-      const tasksRepo = { findOne: vi.fn().mockResolvedValue(null) };
-      const app = await Test.createTestingModule({
-        providers: [
-          CommitLinksResolver,
-          {
-            provide: CommitLinksService,
-            useValue: createMock<CommitLinksService>({
-              getRepository: vi.fn().mockReturnValue(commitLinksRepo),
-            }),
-          },
-          {
-            provide: PlansService,
-            useValue: createMock<PlansService>({
-              getRepository: vi.fn().mockReturnValue({
-                find: vi.fn(),
-                findOne: vi.fn(),
-              }),
-            }),
-          },
-          {
-            provide: TasksService,
-            useValue: createMock<TasksService>({
-              getRepository: vi.fn().mockReturnValue(tasksRepo),
-            }),
-          },
-        ],
-      }).compile();
-      const r = app.get<CommitLinksResolver>(CommitLinksResolver);
+      mockTaskLoad.mockResolvedValueOnce(null);
 
       const parent = new CommitLinkObject();
       parent.taskId = 'missing-task-id';
 
-      const result = await r.task(parent);
+      const result = await resolver.task(parent);
 
       expect(result).toBeNull();
     });

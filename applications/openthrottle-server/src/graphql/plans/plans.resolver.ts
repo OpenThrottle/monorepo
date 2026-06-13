@@ -29,7 +29,6 @@ import {
   PlansService,
   PlanRunsService,
   planRunConfigFromPlanStorage,
-  ProjectsService,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   TasksService,
@@ -50,6 +49,7 @@ import { PlanCreationService } from '../../services/plan-creation/plan-creation.
 import { ProjectObject } from '../projects/project.object';
 import { QueuesService } from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
+import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
@@ -85,6 +85,10 @@ import {
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;
 const MAX_PLAN_RUNS_LIMIT = 100;
+/** Default cap for the unpaginated plans() list query so it never full-table-scans. */
+const DEFAULT_PLANS_LIMIT = 100;
+/** Hard ceiling for plans() even when an explicit limit is supplied. */
+const MAX_PLANS_LIMIT = 500;
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
 /** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
@@ -116,12 +120,12 @@ function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
+    private readonly loaders: PlansLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planCreationService: PlanCreationService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
-    private readonly projectsService: ProjectsService,
     private readonly queuesService: QueuesService,
     private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
@@ -136,9 +140,7 @@ export class PlansResolver {
   async projectRelation(@Parent() parent: PlanObject): Promise<Project | null> {
     if (!parent.projectId) return null;
 
-    const project = await this.projectsService.findById(parent.projectId);
-
-    return project;
+    return this.loaders.projectLoader.load(parent.projectId);
   }
 
   @ResolveField(() => String, {
@@ -179,9 +181,7 @@ export class PlansResolver {
     description: 'Number of tasks belonging to this plan',
   })
   async taskCount(@Parent() parent: PlanObject): Promise<number> {
-    return this.tasksService
-      .getRepository()
-      .count({ where: { planId: parent.id } });
+    return this.loaders.taskCountByPlanIdLoader.load(parent.id);
   }
 
   private mapPlanRunObject(planRun: PlanRun): PlanRunObject {
@@ -239,11 +239,19 @@ export class PlansResolver {
 
   // @ProfileResponseTime('PlansResolver.plans')
   @Query(() => [PlanObject], {
-    description: `List all plans`,
+    description: `List plans, newest first. Capped at ${DEFAULT_PLANS_LIMIT} by default (max ${MAX_PLANS_LIMIT}); pass limit to override. Use listPlansByStatus for full pagination/filtering.`,
   })
-  async plans(): Promise<PlanObject[]> {
+  async plans(
+    @Args('limit', { nullable: true, type: () => Int })
+    limit?: number | null,
+  ): Promise<PlanObject[]> {
+    const effectiveLimit = Math.min(
+      Math.max(1, limit ?? DEFAULT_PLANS_LIMIT),
+      MAX_PLANS_LIMIT,
+    );
     const entities = await this.plansService.getRepository().find({
       order: { createdAt: 'DESC' },
+      take: effectiveLimit,
     });
 
     return entities;

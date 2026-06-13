@@ -1,22 +1,20 @@
 import type { Plan, PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  PlanEmbeddingsService,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
+import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 import { PlanEmbeddingsResolver } from './plan-embeddings.resolver';
 
 const planEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
-const plansRepo = { findOne: vi.fn() };
 
 const mockPlanEmbeddingsService = createMock<PlanEmbeddingsService>({
   getRepository: vi.fn().mockReturnValue(planEmbeddingsRepo),
 });
-const mockPlansService = createMock<PlansService>({
-  getRepository: vi.fn().mockReturnValue(plansRepo),
-});
+const mockPlanLoad = vi.fn().mockResolvedValue(null);
+const mockLoaders: PlanEmbeddingsLoaders = {
+  planLoader: { load: mockPlanLoad },
+} as unknown as PlanEmbeddingsLoaders;
 
 describe('PlanEmbeddingsResolver', () => {
   let resolver: PlanEmbeddingsResolver;
@@ -81,10 +79,7 @@ describe('PlanEmbeddingsResolver', () => {
           provide: PlanEmbeddingsService,
           useValue: mockPlanEmbeddingsService,
         },
-        {
-          provide: PlansService,
-          useValue: mockPlansService,
-        },
+        { provide: PlanEmbeddingsLoaders, useValue: mockLoaders },
       ],
     }).compile();
 
@@ -146,8 +141,8 @@ describe('PlanEmbeddingsResolver', () => {
   });
 
   describe('plan (ResolveField)', () => {
-    test('returns PlanObject when plan exists', async () => {
-      vi.mocked(plansRepo.findOne).mockResolvedValue(mockPlan);
+    test('resolves the plan through planLoader when planId is set', async () => {
+      mockPlanLoad.mockResolvedValueOnce(mockPlan);
 
       const parent = {
         content: mockPlanEmbedding.content,
@@ -160,13 +155,13 @@ describe('PlanEmbeddingsResolver', () => {
 
       const result = await resolver.plan(parent);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockPlan.id);
-      expect(result?.title).toBe(mockPlan.title);
-      expect(result?.author).toBe(mockPlan.author);
+      expect(mockPlanLoad).toHaveBeenCalledWith(mockPlanEmbedding.planId);
+      expect(result).toBe(mockPlan);
     });
 
-    test('returns null when planId is missing', async () => {
+    test('returns null without hitting the loader when planId is missing', async () => {
+      mockPlanLoad.mockClear();
+
       const parent = {
         content: mockPlanEmbedding.content,
         createdAt: mockPlanEmbedding.createdAt,
@@ -179,10 +174,11 @@ describe('PlanEmbeddingsResolver', () => {
       const result = await resolver.plan(parent);
 
       expect(result).toBeNull();
+      expect(mockPlanLoad).not.toHaveBeenCalled();
     });
 
-    test('returns null when plan does not exist', async () => {
-      vi.mocked(plansRepo.findOne).mockResolvedValue(null);
+    test('returns null when planLoader resolves null', async () => {
+      mockPlanLoad.mockResolvedValueOnce(null);
 
       const parent = {
         content: mockPlanEmbedding.content,

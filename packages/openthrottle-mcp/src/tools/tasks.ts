@@ -43,6 +43,13 @@ import { runTool } from '../utils/tool-result.js';
 
 export type TaskListItem = GetTasksQuery['tasks'][number];
 
+/**
+ * Upper bound requested from the capped root tasks() query when fetching the
+ * full list to filter client-side. Matches the server-side MAX_TASKS_LIMIT so
+ * we get as many rows as the query allows in one round trip.
+ */
+const GET_TASKS_FETCH_LIMIT = 500;
+
 type CreateTaskResult = GenericResult<{
   task: CreateTaskMutation['createTask'];
 }>;
@@ -335,7 +342,9 @@ export async function listTasksByCategoryToolHandler(
     'list_tasks_by_category',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, GetTasksDocument, {});
+      const result = await executeGraphqlWithAuth(token, GetTasksDocument, {
+        limit: GET_TASKS_FETCH_LIMIT,
+      });
 
       const allTasks = result?.tasks ?? [];
       const tasks = filterTasksByCategory(

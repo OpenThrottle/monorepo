@@ -3,10 +3,7 @@
  */
 
 import type { PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  PlanEmbeddingsService,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
+import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { PlanObject } from '../plans/plan.object';
 import {
@@ -14,12 +11,13 @@ import {
   PlanEmbeddingsByPlanInput,
 } from './plan-embedding.input';
 import { PlanEmbeddingObject } from './plan-embedding.object';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 
 @Resolver(() => PlanEmbeddingObject)
 export class PlanEmbeddingsResolver {
   constructor(
+    private readonly loaders: PlanEmbeddingsLoaders,
     private readonly planEmbeddingsService: PlanEmbeddingsService,
-    private readonly plansService: PlansService,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -31,11 +29,7 @@ export class PlanEmbeddingsResolver {
   ): Promise<PlanObject | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 
   @Query(() => PlanEmbeddingObject, {

@@ -8,7 +8,6 @@ import type {
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
-  ProjectsService,
   UserWorkspaceSettingsService,
   WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
@@ -47,6 +46,7 @@ import {
   validateEnabledEditors,
 } from './user-workspace-profile.validation';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 import { WorkspaceSettingsObject } from './workspace-settings.object';
 import {
   validateAndNormalizeFilesystemPath,
@@ -62,7 +62,7 @@ export class WorkspaceSettingsResolver {
     private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
     private readonly workspaceLocalRepositoriesService: WorkspaceLocalRepositoriesService,
     private readonly workspaceEditorConfigService: WorkspaceEditorConfigService,
-    private readonly projectsService: ProjectsService,
+    private readonly loaders: WorkspaceSettingsLoaders,
     private readonly configService: ConfigService,
   ) {}
 
@@ -127,7 +127,7 @@ export class WorkspaceSettingsResolver {
     @Parent() parent: WorkspaceLocalRepositoryObject,
   ): Promise<Project | null> {
     if (!parent.projectId) return null;
-    return this.projectsService.findById(parent.projectId);
+    return this.loaders.projectLoader.load(parent.projectId);
   }
 
   @Query(() => WorkspaceLocalRepositoryObject, {
