@@ -94,6 +94,21 @@ docker compose -f docker-compose.yml -f docker-compose.worktree.yml up          
 docker compose -f docker-compose.yml -f docker-compose.worktree.yml --profile dev up # hot reload
 ```
 
+## Service-account tokens
+
+`setup_environment.sh` resets every `.env` from `.env.default`, which ships
+**placeholder** service-account tokens (`ot_sa_xxx…`). The `.mcp.json` launcher
+does `source ./.env` from the worktree root, so a placeholder
+`OPENTHROTTLE_MCP_AUTH_TOKEN` makes every authenticated `openthrottle-mcp` call
+return `Unauthorized`.
+
+So at the end of setup, `setup_worktree.sh` copies the real (non-placeholder)
+`OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` from
+the **source checkout** (the repo the worktree was created from — exported as
+`OT_SOURCE_REPO`, or derived via `git --git-common-dir` for a standalone run)
+into the worktree's root `.env` and `applications/openthrottle-server/.env`.
+Empty/placeholder source values are skipped, and the secret is never echoed.
+
 ## Files
 
 - `scripts/worktree_ports.sh` — allocation helper (sourced, not executed).

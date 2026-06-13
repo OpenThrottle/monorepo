@@ -89,6 +89,49 @@ if [ -n "${OT_PORT_BASE:-}" ] && [ "$OT_PORT_BASE" != "6020" ]; then
   echo "🔌 worktree app ports → block ${OT_PORT_BASE}-$((OT_PORT_BASE + 5))"
 fi
 
+# 1c. setup_environment.sh reset every .env back to .env.default, which ships
+#     PLACEHOLDER service-account tokens (ot_sa_xxx). The .mcp.json launcher does
+#     `source ./.env` from the worktree root, so without the real token every
+#     authed openthrottle-mcp call 401s. Carry the real tokens over from the
+#     source checkout (a known-good session) into the worktree's .env files.
+#     Values are passed to perl via the environment, never interpolated into a
+#     logged command line.
+sync_secrets_from_source() {
+  _src=${OT_SOURCE_REPO:-}
+  if [ -z "$_src" ]; then
+    # Standalone run: the main working tree is the parent of the common git dir.
+    _src=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || _src=""
+    [ -n "$_src" ] && _src=$(dirname "$_src")
+  fi
+  # Nothing to copy when there's no distinct source checkout.
+  [ -n "$_src" ] && [ -d "$_src" ] && [ "$_src" != "$PWD" ] || return 0
+
+  _synced=0
+  for _rel in .env applications/openthrottle-server/.env; do
+    _from="$_src/$_rel"
+    [ -f "$_from" ] && [ -f "$_rel" ] || continue
+    for _key in OPENTHROTTLE_MCP_AUTH_TOKEN OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN; do
+      _val=$(sed -n "s/^${_key}=//p" "$_from" | head -n1)
+      # Skip empty and placeholder (ot_sa_xxx...) source values.
+      case "$_val" in
+        '' | *xxxxxx*) continue ;;
+      esac
+      if grep -qE "^${_key}=" "$_rel"; then
+        OT_SYNC_KEY="$_key" OT_SYNC_VAL="$_val" \
+          perl -i -pe 's/^\Q$ENV{OT_SYNC_KEY}\E=.*/$ENV{OT_SYNC_KEY}."=".$ENV{OT_SYNC_VAL}/e' "$_rel"
+      else
+        OT_SYNC_KEY="$_key" OT_SYNC_VAL="$_val" \
+          sh -c 'printf "%s=%s\n" "$OT_SYNC_KEY" "$OT_SYNC_VAL"' >>"$_rel"
+      fi
+      _synced=1
+    done
+  done
+  [ "$_synced" = "1" ] && echo "🔑 synced service-account token(s) from source checkout"
+  return 0
+}
+
+sync_secrets_from_source
+
 # 2. Install the dependencies
 pnpm install
 

@@ -83,7 +83,9 @@ fi
 if [ "${CLAUDE_WORKTREE_SETUP:-1}" != "0" ]; then
   (
     cd "$WTREE"
-    ./scripts/setup_worktree.sh </dev/null >&2
+    # Let setup copy real service-account tokens from this (known-good) checkout
+    # into the worktree's reset-to-default .env files.
+    OT_SOURCE_REPO="$REPO_ROOT" ./scripts/setup_worktree.sh </dev/null >&2
   )
 else
   log "⏭️  CLAUDE_WORKTREE_SETUP=0 — skipping setup_worktree.sh"
