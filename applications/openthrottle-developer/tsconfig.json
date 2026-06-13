@@ -20,6 +20,12 @@
       "path": "../../packages/nestjs-repositories"
     },
     {
+      "path": "../../packages/react-router-markdown"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-utils"
+    },
+    {
       "path": "../../packages/openthrottle-ide"
     },
     {
@@ -48,9 +54,6 @@
     },
     {
       "path": "../../packages/react-router-graphql"
-    },
-    {
-      "path": "../../packages/react-router-markdown"
     },
     {
       "path": "../../packages/react-router-ui"

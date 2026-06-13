@@ -52,3 +52,7 @@ tools/**/node_modules/
 # Includes
 #############################################################################
 !databases/seed.sql
+# Migrations runner image (Dockerfile.Migrations) needs these from the context.
+!databases/migrations
+!databases/migrations/**
+!databases/run-migrations.mjs

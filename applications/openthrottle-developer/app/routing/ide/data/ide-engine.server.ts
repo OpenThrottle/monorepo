@@ -9,6 +9,7 @@ import type {
   SymbolTarget,
   WorkspaceConfig,
 } from '@openthrottle/openthrottle-ide';
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   IdeExportsResult,
   IdeRepositoryRef,
@@ -22,18 +23,26 @@ import type {
  * ONLY place the Node engine runtime is imported; it is dynamically `import()`-ed
  * inside loaders/resource routes (its `.server.ts` suffix keeps it out of the
  * client bundle). Every function is root-parameterized — it takes a resolved
- * `WorkspaceConfig`; it never resolves the root itself.
+ * `WorkspaceConfig`; it never resolves the root itself, but it does translate
+ * the host-truthful root into this process's view when the Docker workspace
+ * bridge is active (identity otherwise).
  */
 
 /** Cap on text-search matches returned to the client. */
 export const MAX_SEARCH_RESULTS = 200;
+
+/** Repository roots are stored as host paths; the engine needs the local view. */
+const toEngineConfig = (config: WorkspaceConfig): WorkspaceConfig => ({
+  ...config,
+  root: toContainerPath(config.root),
+});
 
 /** Cheap (ripgrep) tier: enumerate the workspace's tracked files. */
 export const listFilesVM = async (
   config: WorkspaceConfig,
   repository: IdeRepositoryRef,
 ): Promise<IdeWorkspaceListing> => {
-  const paths = await listFiles(config);
+  const paths = await listFiles(toEngineConfig(config));
 
   return { paths, repository, truncated: false };
 };
@@ -50,7 +59,7 @@ export const searchVM = async (
     return { matches: [], query, repository, truncated: false };
   }
 
-  const matches = await searchText(trimmed, config, {
+  const matches = await searchText(trimmed, toEngineConfig(config), {
     maxResults: MAX_SEARCH_RESULTS,
   });
 
@@ -67,7 +76,7 @@ export const exportsVM = async (
   config: WorkspaceConfig,
   repository: IdeRepositoryRef,
 ): Promise<IdeExportsResult> => {
-  const symbols = await listExports(config);
+  const symbols = await listExports(toEngineConfig(config));
 
   return { repository, symbols, truncated: false };
 };
@@ -90,9 +99,10 @@ export const symbolTargetVM = async (
       ? { name: input.name }
       : { column: 1, line: input.line ?? 1, path: input.path ?? '' };
 
+  const engineConfig = toEngineConfig(config);
   const [definitions, references] = await Promise.all([
-    findDefinition(config, target),
-    findReferences(config, target),
+    findDefinition(engineConfig, target),
+    findReferences(engineConfig, target),
   ]);
 
   return {

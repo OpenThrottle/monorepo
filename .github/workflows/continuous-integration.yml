@@ -35,16 +35,13 @@ env:
 
   # FIXME: Currently we're only making use of the staging project and resources
   GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_STAGING || secrets.GOOGLE_CREDENTIALS_STAGING }}
-
-  # FIXME: Currently we're only making use of the staging project and resources
   GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_STAGING || vars.GOOGLE_PROJECT_ID_STAGING }}
-
-  # FIXME: Currently we're only making use of the staging project and resources
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
 
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
   NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
+  OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
   RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
@@ -62,18 +59,18 @@ jobs:
     # if: ${{ (github.head_ref != 'main') && (github.ref_name != 'main') }}
 
     # FIXME: 💰 Re-enable when we want to spend more
-    # concurrency:
-    #   cancel-in-progress: true
-    #   group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
+    concurrency:
+      cancel-in-progress: true
+      group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
       jobCount: 1 # must be in sync with "jobIndex"
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
 
-    # FIXME: 💰 Re-enable when we want to spend more
-    # strategy:
-    #   matrix:
-    #     jobIndex: [1] # must be in sync with "jobCount"
-    #     target: ["lint", "typecheck"] # the test suite is just disabled right now
+    # FIXME: 💰 Increase as needed - balance with cost and time to completion
+    strategy:
+      matrix:
+        jobIndex: [1] # must be in sync with "jobCount"
+        target: ['lint,typecheck,typecheck-tests', 'test'] # One box for each item in the matrix
 
     # 30 instead of 15: openthrottle-developer:test alone needs ~12 CPU-minutes
     # (264 jsdom test files), which exceeds the old budget on 4-vCPU runners.
@@ -90,6 +87,7 @@ jobs:
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
@@ -108,11 +106,14 @@ jobs:
 
       - name: '🧩 Codegen Tasks'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel --verbose
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,test,typecheck,typecheck-tests --parallel --verbose
+        run: |
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
+        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
+        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=test --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
@@ -157,7 +158,7 @@ jobs:
 
   nx-circular-dependencies:
     if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     timeout-minutes: 10
 
     steps:
@@ -184,7 +185,7 @@ jobs:
     # FIXME: 💰 Re-enable when we want to spend more
     # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
     if: false
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     timeout-minutes: 10
 
     steps:
@@ -218,7 +219,7 @@ jobs:
 
   # nx-release:
   #   if: ${{ github.actor != 'dependabot[bot]' }}
-  #   runs-on: ubuntu-latest
+  #   runs-on: blacksmith-4vcpu-ubuntu-2204
   #   timeout-minutes: 15
   #   steps:
   #     - name: "📦 Checkout the code"

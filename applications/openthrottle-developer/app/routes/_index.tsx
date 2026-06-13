@@ -53,6 +53,10 @@ export default function Component(
         <h1 className="text-2xl text-center">
           What would you like to build today?
         </h1>
+        <p className="text-muted-foreground text-sm mt-2">
+          OpenThrottle is a platform for building applications based on best
+          practices for Agentic development.
+        </p>
       </div>
 
       <div className="max-w-3xl w-full mx-auto">

@@ -80,9 +80,12 @@ describe('listExports', () => {
 
   it('marks default exports and reports the declared name', async () => {
     const exports = await listExports({ root });
-    const widget = exports.find((symbol) => symbol.name === 'Widget');
+    const widgetEntries = exports.filter((symbol) => symbol.name === 'Widget');
 
-    expect(widget).toMatchObject({
+    // The declaring module's `default` and the barrel's `default as Widget`
+    // must collapse to a single entry, not race on enumeration order.
+    expect(widgetEntries).toHaveLength(1);
+    expect(widgetEntries[0]).toMatchObject({
       isDefault: true,
       kind: 'class',
       path: 'src/widget.ts',

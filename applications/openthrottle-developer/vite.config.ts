@@ -46,6 +46,9 @@ export default (config: ConfigEnv) => {
     root: __dirname,
     server: {
       allowedHosts: ['developer.local'],
+      // Unset on the host (Vite default: localhost). The compose dev profile sets
+      // HOST=0.0.0.0 so the dev server is reachable through the published port.
+      host: process.env.HOST,
       port: process.env.PORT ? Number(process.env.PORT) : 3000,
     },
     ssr: {

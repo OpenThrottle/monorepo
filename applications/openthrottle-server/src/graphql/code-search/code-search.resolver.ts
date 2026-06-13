@@ -9,6 +9,7 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { InjectQueue } from '@nestjs/bullmq';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
@@ -160,7 +161,9 @@ export class CodeSearchResolver {
         `No registered repository ${id} found for the current user.`,
       );
     }
-    return repository.filesystemPath;
+    // Stored host-truthful; translated to this process's view when the Docker
+    // workspace bridge is active (identity otherwise).
+    return toContainerPath(repository.filesystemPath);
   }
 
   /** True when a code-index job for the repository is queued or running. */
