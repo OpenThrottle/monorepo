@@ -2,13 +2,11 @@ import type {
   Plan,
   PlanOutputStreamChunk,
 } from '@openthrottle/nestjs-repositories';
-import {
-  PlanOutputStreamService,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 
 const planOutputStreamRepo = {
@@ -17,14 +15,14 @@ const planOutputStreamRepo = {
   findOne: vi.fn(),
   save: vi.fn(),
 };
-const plansRepo = { findOne: vi.fn() };
 
 const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
   getRepository: vi.fn().mockReturnValue(planOutputStreamRepo),
 });
-const mockPlansService = createMock<PlansService>({
-  getRepository: vi.fn().mockReturnValue(plansRepo),
-});
+const mockPlanLoad = vi.fn().mockResolvedValue(null);
+const mockLoaders: PlanOutputStreamLoaders = {
+  planLoader: { load: mockPlanLoad },
+} as unknown as PlanOutputStreamLoaders;
 
 describe('PlanOutputStreamResolver', () => {
   let resolver: PlanOutputStreamResolver;
@@ -60,10 +58,7 @@ describe('PlanOutputStreamResolver', () => {
           provide: PlanOutputStreamService,
           useValue: mockPlanOutputStreamService,
         },
-        {
-          provide: PlansService,
-          useValue: mockPlansService,
-        },
+        { provide: PlanOutputStreamLoaders, useValue: mockLoaders },
       ],
     }).compile();
 
@@ -174,8 +169,8 @@ describe('PlanOutputStreamResolver', () => {
   });
 
   describe('plan (ResolveField)', () => {
-    test('returns PlanObject when plan exists', async () => {
-      vi.mocked(plansRepo.findOne).mockResolvedValue(mockPlan);
+    test('resolves the plan through planLoader when planId is set', async () => {
+      mockPlanLoad.mockResolvedValueOnce(mockPlan);
 
       const parent = {
         content: mockChunk.content,
@@ -188,13 +183,13 @@ describe('PlanOutputStreamResolver', () => {
 
       const result = await resolver.plan(parent);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockPlan.id);
-      expect(result?.title).toBe(mockPlan.title);
-      expect(result?.author).toBe(mockPlan.author);
+      expect(mockPlanLoad).toHaveBeenCalledWith(mockChunk.planId);
+      expect(result).toBe(mockPlan);
     });
 
-    test('returns null when planId is missing', async () => {
+    test('returns null without hitting the loader when planId is missing', async () => {
+      mockPlanLoad.mockClear();
+
       const parent = {
         content: mockChunk.content,
         createdAt: mockChunk.createdAt,
@@ -207,10 +202,11 @@ describe('PlanOutputStreamResolver', () => {
       const result = await resolver.plan(parent);
 
       expect(result).toBeNull();
+      expect(mockPlanLoad).not.toHaveBeenCalled();
     });
 
-    test('returns null when plan does not exist', async () => {
-      vi.mocked(plansRepo.findOne).mockResolvedValue(null);
+    test('returns null when planLoader resolves null', async () => {
+      mockPlanLoad.mockResolvedValueOnce(null);
 
       const parent = {
         content: mockChunk.content,

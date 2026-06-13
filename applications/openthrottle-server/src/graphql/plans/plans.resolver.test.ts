@@ -37,6 +37,7 @@ import {
   SetPlanStatusInput,
   UpdatePlanInput,
 } from './plan.input';
+import { PlansLoaders } from './plans-loaders';
 import { PlansResolver } from './plans.resolver';
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
@@ -111,6 +112,13 @@ describe('PlansResolver', () => {
     findById: vi.fn(),
   });
 
+  const mockProjectLoad = vi.fn().mockResolvedValue(null);
+  const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
+  const mockPlansLoaders: PlansLoaders = {
+    projectLoader: { load: mockProjectLoad },
+    taskCountByPlanIdLoader: { load: mockTaskCountLoad },
+  } as unknown as PlansLoaders;
+
   const mockAdd = vi.fn().mockResolvedValue({ id: 'job-1', name: 'run-plan' });
   const mockGetWaitingCount = vi.fn().mockResolvedValue(1);
   const mockGetJobs = vi
@@ -158,6 +166,7 @@ describe('PlansResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         PlansResolver,
+        { provide: PlansLoaders, useValue: mockPlansLoaders },
         {
           provide: PlanCreationService,
           useValue: mockPlanCreationService,
@@ -245,6 +254,83 @@ describe('PlansResolver', () => {
       const result = await resolver.plans();
 
       expect(result).toEqual([]);
+    });
+
+    test('applies a default take cap when no limit is provided', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.find).mockResolvedValue([]);
+
+      await resolver.plans();
+
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100 }),
+      );
+    });
+
+    test('honors an explicit limit', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.find).mockResolvedValue([]);
+
+      await resolver.plans(5);
+
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5 }),
+      );
+    });
+
+    test('clamps an oversized limit to the max', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.find).mockResolvedValue([]);
+
+      await resolver.plans(10000);
+
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 500 }),
+      );
+    });
+
+    test('clamps a non-positive limit to at least 1', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.find).mockResolvedValue([]);
+
+      await resolver.plans(0);
+
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 1 }),
+      );
+    });
+  });
+
+  describe('relation fields (batched via loaders)', () => {
+    test('projectRelation resolves through projectLoader when projectId is set', async () => {
+      const project = { id: 'proj-1', name: 'Demo' };
+      mockProjectLoad.mockResolvedValueOnce(project);
+
+      const result = await resolver.projectRelation({
+        ...mockPlan,
+        projectId: 'proj-1',
+      } as Plan);
+
+      expect(mockProjectLoad).toHaveBeenCalledWith('proj-1');
+      expect(result).toBe(project);
+    });
+
+    test('projectRelation returns null without hitting the loader when projectId is unset', async () => {
+      mockProjectLoad.mockClear();
+
+      const result = await resolver.projectRelation(mockPlan);
+
+      expect(result).toBeNull();
+      expect(mockProjectLoad).not.toHaveBeenCalled();
+    });
+
+    test('taskCount resolves through taskCountByPlanIdLoader', async () => {
+      mockTaskCountLoad.mockResolvedValueOnce(7);
+
+      const result = await resolver.taskCount(mockPlan);
+
+      expect(mockTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toBe(7);
     });
   });
 

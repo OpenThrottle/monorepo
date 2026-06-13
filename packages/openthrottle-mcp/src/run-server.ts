@@ -1,7 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.js';
-import { getServerName, SERVER_VERSION } from './config/index.js';
+import {
+  getServerName,
+  SERVER_INSTRUCTIONS,
+  SERVER_VERSION,
+} from './config/index.js';
 import {
   registerActivityTools,
   registerAgentConversationTools,
@@ -23,6 +27,7 @@ import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.js';
 export async function runServer(): Promise<void> {
   const options: NestjsMcpDeveloperBootstrapOptions = {
     capabilities: { resources: {}, tools: {} },
+    instructions: SERVER_INSTRUCTIONS,
     name: getServerName(),
     transport: McpTransportType.STDIO,
     version: SERVER_VERSION,
@@ -34,7 +39,10 @@ export async function runServer(): Promise<void> {
 export async function runServerLocal(): Promise<void> {
   const server = new McpServer(
     { name: getServerName(), version: SERVER_VERSION },
-    { capabilities: { resources: {}, tools: {} } },
+    {
+      capabilities: { resources: {}, tools: {} },
+      instructions: SERVER_INSTRUCTIONS,
+    },
   );
 
   registerActivityTools(server);
