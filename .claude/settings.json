@@ -40,5 +40,18 @@
     "deny": []
   },
   "enabledMcpjsonServers": [],
-  "skillOverrides": {}
+  "skillOverrides": {},
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/setup_worktree.sh",
+            "statusMessage": "Setting up worktree..."
+          }
+        ]
+      }
+    ]
+  }
 }
