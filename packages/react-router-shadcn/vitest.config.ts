@@ -1,8 +1,5 @@
 import path from 'node:path';
-import {
-  createVitestConfigJsdom,
-  getDirname,
-} from '@tools/dotfiles/vitest-config';
+import { createVitestConfigJsdom, getDirname } from '@tools/dotfiles';
 
 export default createVitestConfigJsdom({
   overrides: {
