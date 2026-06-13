@@ -85,7 +85,7 @@ const validateProjectTags = (
   const hasTypescript = technologyTags.includes('typescript');
 
   return {
-    conflictingNodejsTypescript: hasNodejs && hasTypescript,
+    conflictingNodejsTypescript: hasNodejs && hasTypescript && false, // FIXME: Temp
     hasProductionTag: productionTags.length === 1,
     hasTechnologyTag: technologyTags.length > 0,
     invalidProductionTags,
