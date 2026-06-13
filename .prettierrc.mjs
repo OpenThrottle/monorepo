@@ -1,3 +1,3 @@
-import { prettierConfig } from '@tools/dotfiles/prettier-config';
+import { prettierConfig } from '@tools/dotfiles';
 
 export default prettierConfig;

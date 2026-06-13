@@ -44,12 +44,6 @@
       "require": "./dist/src/config.js",
       "default": "./dist/src/config.js"
     },
-    "./prettier-config": {
-      "types": "./src/prettier-config.ts",
-      "import": "./dist/src/prettier-config.js",
-      "require": "./dist/src/prettier-config.js",
-      "default": "./dist/src/prettier-config.js"
-    },
     "./vite-config": {
       "types": "./src/vite-config.ts",
       "import": "./dist/src/vite-config.js",

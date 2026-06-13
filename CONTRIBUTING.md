@@ -228,7 +228,7 @@ For rules, symlink each new `.mdc` from `.agents/rules/` into the matching `.cur
 
 ### Formatting (Prettier)
 
-Prettier configuration lives in **one place**: `prettierConfig` in [`@tools/dotfiles`](tools/dotfiles/README.md) (subpath `@tools/dotfiles/prettier-config`). The repo's single root `.prettierrc.mjs` re-exports it, and Prettier resolves that root config from every directory — **do not add per-app `.prettierrc.mjs` files**. The shared config wires `prettier-plugin-tailwindcss` and pins YAML to **single quotes**; the root `.editorconfig` matches with `quote_type = single` so editors and Prettier never fight over YAML quotes.
+Prettier configuration lives in **one place**: `prettierConfig` from [`@tools/dotfiles`](tools/dotfiles/README.md). The repo's single root `.prettierrc.mjs` re-exports it, and Prettier resolves that root config from every directory — **do not add per-app `.prettierrc.mjs` files**. The shared config wires `prettier-plugin-tailwindcss` and pins YAML to **single quotes**; the root `.editorconfig` matches with `quote_type = single` so editors and Prettier never fight over YAML quotes.
 
 Format the whole repo with **`pnpm format`** and check it with **`pnpm format:check`** (these wrap `pnpm nx run monorepo:format-write` / `monorepo:format-check`). `format:check` also runs as part of `pnpm run check:local`.
 

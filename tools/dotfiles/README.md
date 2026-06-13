@@ -32,7 +32,7 @@ The monorepo's single `.prettierrc.mjs` (at the repo root) re-exports this confi
 
 ```javascript
 // .prettierrc.mjs
-import { prettierConfig } from '@tools/dotfiles/prettier-config';
+import { prettierConfig } from '@tools/dotfiles';
 
 export default prettierConfig;
 ```
@@ -62,7 +62,7 @@ export default createVitestConfigJsdom({
 ## Exports
 
 - `eslintConfig` - ESLint flat config with TypeScript, React, and Nx rules
-- `prettierConfig` - Shared Prettier options (also available at the `@tools/dotfiles/prettier-config` subpath)
+- `prettierConfig` - Shared Prettier options
 - `createViteConfig` - Create Vite configuration
 - `defineViteConfig` - Define Vite configuration
 - `createVitestConfig` - Create Vitest configuration
