@@ -2,7 +2,7 @@
 
 Composite action that intersects `nx show projects --affected` with a **caller-defined** list of Nx project names. Use it in Docker (or other per-app) workflows so you only build images for apps that actually changed.
 
-**Location:** `.github/actions/nx-affected-docker-apps`  
+**Location:** `.github/actions/nx-affected-docker-apps`
 **Workflow example:** [`openthrottle-docker.yml`](../../workflows/openthrottle-docker.yml)
 
 ## Prerequisites
@@ -87,11 +87,11 @@ If `include` is empty, GitHub Actions skips matrix jobs that would have zero com
 
 ## Adding another app (e.g. `openthrottle-foo`)
 
-1. **Extend `apps`** — include the Nx project name:  
+1. **Extend `apps`** — include the Nx project name:
    `openthrottle-server,openthrottle-developer,openthrottle-foo`
 2. **Branch on affected** — either:
-   - **`build-flags-json`:**  
-     `if: fromJSON(steps.affected.outputs.build-flags-json)['openthrottle-foo']`  
+   - **`build-flags-json`:**
+     `if: fromJSON(steps.affected.outputs.build-flags-json)['openthrottle-foo']`
      (boolean from JSON; bracket form when the name contains `-`)
    - **Or** compare against `affected-apps-json` with `contains()` / a small script if you prefer list semantics.
 3. **Optional:** add a dedicated entry under `outputs:` in `action.yml` mapping `build-openthrottle-foo` to `${{ steps.compute.outputs.build-openthrottle-foo }}` if you want `steps.<id>.outputs.build-openthrottle-foo` without using `fromJSON(build-flags-json)`.
