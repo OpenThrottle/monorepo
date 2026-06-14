@@ -1,38 +1,33 @@
 #
 #     https://pnpm.io/docker
 #
+
+# 🏗️ pnpm 11 requires an explicit build-script decision per dependency
+# (https://pnpm.io/settings#allowbuilds). All are `false` to preserve the
+# pnpm 10 behavior, under which these were "Ignored build scripts" and the
+# workspace worked off prebuilt binaries. Flip one to `true` only if a build
+# is proven necessary.
+allowBuilds:
+  '@apollo/protobufjs': false
+  '@nestjs/core': false
+  '@parcel/watcher': false
+  '@scarf/scarf': false
+  '@swc/core': false
+  '@vscode/vsce-sign': false
+  bcrypt: false
+  core-js: false
+  esbuild: false
+  keytar: false
+  less: false
+  msgpackr-extract: false
+  msw: false
+  nx: false
+  unrs-resolver: false
+  zeromq: false
+
 # injectWorkspacePackages: true
 # syncInjectedDepsAfterScripts:
 # - build
-
-# 🔐 💂 👀 https://pnpm.io/settings#minimumreleaseage 👀 💂 🔐
-minimumReleaseAge: 10080 # 7 days (in minutes)
-minimumReleaseAgeExclude:
-  - '@openthrottle/*'
-
-packages:
-  - 'applications/*'
-  - 'infra/'
-  - 'packages/*'
-  - 'tools/*'
-  - '!packages/*/dist/**/*'
-  - '!services/**/*'
-
-# 🔧 Dependency overrides | https://pnpm.io/settings#overrides
-# Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
-# `$name` reuses the version declared for that dependency in the root manifest.
-overrides:
-  '@radix-ui/react-slot': '$@radix-ui/react-slot'
-  '@tanstack/query-sync-storage-persister': '$@tanstack/query-sync-storage-persister'
-  '@tanstack/react-query': '$@tanstack/react-query'
-  '@tanstack/react-query-persist-client': '$@tanstack/react-query-persist-client'
-  'graphql-request': '$graphql-request'
-  'react': '$react'
-  'react-dom': '$react-dom'
-  'react-test-renderer': '$react-test-renderer'
-  'shadcn>zod': '3.25.76'
-  'zod': '$zod'
-  'zod-to-json-schema': '$zod-to-json-schema'
 
 # 📚 Catalog | https://pnpm.io/catalogs
 #
@@ -344,25 +339,31 @@ catalog:
 # exception, add it to the "legacy" named catalog below instead.
 catalogMode: strict
 
-# 🏗️ pnpm 11 requires an explicit build-script decision per dependency
-# (https://pnpm.io/settings#allowbuilds). All are `false` to preserve the
-# pnpm 10 behavior, under which these were "Ignored build scripts" and the
-# workspace worked off prebuilt binaries. Flip one to `true` only if a build
-# is proven necessary.
-allowBuilds:
-  '@apollo/protobufjs': false
-  '@nestjs/core': false
-  '@parcel/watcher': false
-  '@scarf/scarf': false
-  '@swc/core': false
-  '@vscode/vsce-sign': false
-  bcrypt: false
-  core-js: false
-  esbuild: false
-  keytar: false
-  less: false
-  msgpackr-extract: false
-  msw: false
-  nx: false
-  unrs-resolver: false
-  zeromq: false
+# 🔐 💂 👀 https://pnpm.io/settings#minimumreleaseage 👀 💂 🔐
+minimumReleaseAge: 10080 # 7 days (in minutes)
+minimumReleaseAgeExclude:
+  - '@openthrottle/*'
+
+# 🔧 Dependency overrides | https://pnpm.io/settings#overrides
+# Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
+# `$name` reuses the version declared for that dependency in the root manifest.
+overrides:
+  '@radix-ui/react-slot': '$@radix-ui/react-slot'
+  '@tanstack/query-sync-storage-persister': '$@tanstack/query-sync-storage-persister'
+  '@tanstack/react-query': '$@tanstack/react-query'
+  '@tanstack/react-query-persist-client': '$@tanstack/react-query-persist-client'
+  'graphql-request': '$graphql-request'
+  'react': '$react'
+  'react-dom': '$react-dom'
+  'react-test-renderer': '$react-test-renderer'
+  'shadcn>zod': '3.25.76'
+  'zod': '$zod'
+  'zod-to-json-schema': '$zod-to-json-schema'
+
+packages:
+  - 'applications/*'
+  - 'infra/'
+  - 'packages/*'
+  - 'tools/*'
+  - '!packages/*/dist/**/*'
+  - '!services/**/*'
