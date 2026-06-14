@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Info } from 'lucide-react';
 import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../config';
-import { useUrlSyncedOverlay } from '../hooks/use-url-synced-overlay';
+import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
 import { GlobalModal } from './GlobalModal';
 
 export interface GlobalMetricsInfoModalProps {

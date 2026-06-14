@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { MeshGradient } from '@paper-design/shaders-react';
 import { cn } from '@openthrottle/react-router-shadcn';
-import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 /**
  * Default color spots for the mesh. WebGL cannot read CSS variables, so these

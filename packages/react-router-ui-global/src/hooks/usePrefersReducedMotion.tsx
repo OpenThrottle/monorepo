@@ -8,10 +8,18 @@ const QUERY = '(prefers-reduced-motion: reduce)';
  * the server, resolves on mount).
  * @publicApi
  */
-export function usePrefersReducedMotion(): boolean {
+export const usePrefersReducedMotion = (): boolean => {
+  // Hooks
   const [prefersReducedMotion, setPrefersReducedMotion] =
     React.useState<boolean>(false);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     const mql = window.matchMedia(QUERY);
     const onChange = (): void => {
@@ -25,5 +33,7 @@ export function usePrefersReducedMotion(): boolean {
     return () => mql.removeEventListener('change', onChange);
   }, []);
 
+  // 🔌 Short Circuit
+
   return prefersReducedMotion;
-}
+};
