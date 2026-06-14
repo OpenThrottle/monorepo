@@ -35,6 +35,7 @@ export class ModelDiscoveryResolver {
         provider: endpoint.provider,
       }),
     );
+
     return {
       endpoints,
       scannedAt: result.scannedAt,

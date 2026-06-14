@@ -19,8 +19,8 @@ import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
 import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
 import { getCalendarEventById } from '~/routing/calendar/utils/events';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/calendar.$eventId';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import type { Route } from '@/app/routes/+types/calendar.$eventId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
