@@ -4,7 +4,7 @@ import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { PlusIcon } from 'lucide-react';
 
-export interface CalendarToolbarProps {
+export interface ScheduleToolbarProps {
   className?: string;
 }
 
@@ -12,8 +12,8 @@ export interface CalendarToolbarProps {
  * @description Compact toolbar: URL-driven search (q) and Create event link.
  * Preserves role=search, data-testid, and URL-driven state.
  */
-export const CalendarToolbar = (
-  props: CalendarToolbarProps,
+export const ScheduleToolbar = (
+  props: ScheduleToolbarProps,
 ): React.ReactElement => {
   const { className } = props;
 
@@ -57,7 +57,7 @@ export const CalendarToolbar = (
   return (
     <div
       className={classnames('w-full', className)}
-      data-testid="CalendarToolbar"
+      data-testid="ScheduleToolbar"
     >
       <form onSubmit={handleSearchSubmit} role="search">
         <div
@@ -77,7 +77,7 @@ export const CalendarToolbar = (
           </Button>
           <div className="min-w-0 flex-1" />
           <Button asChild={true} className="shrink-0" variant="outline">
-            <Link to="/calendar/create" viewTransition={true}>
+            <Link to="/schedule/create" viewTransition={true}>
               <PlusIcon className="h-4 w-4" /> Create event
             </Link>
           </Button>

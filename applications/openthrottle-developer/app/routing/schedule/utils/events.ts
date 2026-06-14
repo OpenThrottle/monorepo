@@ -1,10 +1,10 @@
-import type { CalendarEvent } from '~/routing/calendar/types';
+import type { ScheduleEvent } from '~/routing/schedule/types';
 
-/** Client-side filter until the calendar list supports server-side search. */
-export const filterCalendarEventsBySearch = (
-  events: CalendarEvent[],
+/** Client-side filter until the schedule list supports server-side search. */
+export const filterScheduleEventsBySearch = (
+  events: ScheduleEvent[],
   search: string,
-): CalendarEvent[] => {
+): ScheduleEvent[] => {
   const q = search.trim().toLowerCase();
 
   if (q.length === 0) {
@@ -21,9 +21,9 @@ export const filterCalendarEventsBySearch = (
 };
 
 /** Look up a single stubbed event by id; null when not found. */
-export const getCalendarEventById = (
-  events: CalendarEvent[],
+export const getScheduleEventById = (
+  events: ScheduleEvent[],
   id: string,
-): CalendarEvent | null => {
+): ScheduleEvent | null => {
   return events.find((event) => event.id === id) ?? null;
 };

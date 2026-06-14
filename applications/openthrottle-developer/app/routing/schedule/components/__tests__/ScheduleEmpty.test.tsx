@@ -3,23 +3,23 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { CalendarEmpty } from '../CalendarEmpty';
-import type { CalendarEmptyProps } from '../CalendarEmpty';
+import { ScheduleEmpty } from '../ScheduleEmpty';
+import type { ScheduleEmptyProps } from '../ScheduleEmpty';
 
-describe('CalendarEmpty Component', () => {
+describe('ScheduleEmpty Component', () => {
   let component: RenderResult;
-  let props: CalendarEmptyProps;
+  let props: ScheduleEmptyProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <CalendarEmpty {...props} />;
+    const Component = () => <ScheduleEmpty {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
   test('should render the component name', () => {
-    expect(component.getByTestId('CalendarEmpty')).toBeInTheDocument();
+    expect(component.getByTestId('ScheduleEmpty')).toBeInTheDocument();
   });
 });

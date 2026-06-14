@@ -1,12 +1,12 @@
-import type { CalendarEvent } from '~/routing/calendar/types';
+import type { ScheduleEvent } from '~/routing/schedule/types';
 
 /**
- * @description Stubbed calendar events backing the calendar routes until a
+ * @description Stubbed schedule events backing the schedule routes until a
  * GraphQL source exists. Components and specs import from here so the sample
  * data lives in one place (see component-data boundaries). Replace with a
  * loader-fed fetch when the backend lands (plan 26594427).
  */
-export const CALENDAR_EVENTS: CalendarEvent[] = [
+export const SCHEDULE_EVENTS: ScheduleEvent[] = [
   {
     allDay: false,
     description: 'Daily team sync to align on priorities and blockers.',

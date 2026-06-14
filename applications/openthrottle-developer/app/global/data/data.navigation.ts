@@ -29,11 +29,6 @@ import {
 export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   Workspace: [
     {
-      children: 'Calendar',
-      icon: CalendarDaysIcon,
-      to: '/calendar',
-    },
-    {
       children: 'Dashboard',
       icon: GaugeIcon,
       to: '/dashboard',
@@ -62,6 +57,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Queues',
       icon: ListOrderedIcon,
       to: '/queues',
+    },
+    {
+      children: 'Schedule',
+      icon: CalendarDaysIcon,
+      to: '/schedule',
     },
     {
       children: 'Search',
