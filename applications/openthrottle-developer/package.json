@@ -68,7 +68,7 @@
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.0.0",
-            "NX_VERSION": "22.6.4",
+            "NX_VERSION": "22.7.4",
             "PNPM_VERSION": "11.6.0"
           }
         },
