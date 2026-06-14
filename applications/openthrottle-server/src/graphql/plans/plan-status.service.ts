@@ -43,7 +43,7 @@ function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
 }
 
 /** @description Outcome of a cancel-plan-run request (mapped to CancelPlanRunResultObject by the resolver). */
-export interface CancelRunOutcome {
+interface CancelRunOutcome {
   readonly activeJobIdsCouldNotCancel: string[];
   readonly noMatchingJob: boolean;
   readonly planId: string;

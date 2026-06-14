@@ -54,7 +54,7 @@ const ENQUEUE_TASK_STATUSES_TO_RESET = [
 type ExecutionBackend = 'claude' | 'cursor' | 'opencode';
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
-export interface EnqueueSpawnParams {
+interface EnqueueSpawnParams {
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly planId: string;
@@ -64,7 +64,7 @@ export interface EnqueueSpawnParams {
 }
 
 /** @description Validated parameters for an in-process orchestrator plan-run enqueue. */
-export interface EnqueueOrchestratorParams {
+interface EnqueueOrchestratorParams {
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
