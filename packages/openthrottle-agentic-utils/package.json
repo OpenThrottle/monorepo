@@ -50,7 +50,7 @@
     }
   },
   "peerDependencies": {
-    "nx": "^22.0.0",
+    "nx": "catalog:",
     "pg": "catalog:",
     "pidusage": "catalog:"
   },

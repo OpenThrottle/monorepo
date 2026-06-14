@@ -52,8 +52,8 @@ query getRemainingTasksByPlanId($input: RemainingTasksByPlanIdInput!) {
   }
 }
 
-query getTasks {
-  tasks {
+query getTasks($limit: Int) {
+  tasks(limit: $limit) {
     ...Task
   }
 }

@@ -50,7 +50,7 @@ The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches r
 
 To fix execution order without delete-and-recreate, use GraphQL `reorderPlanTasks` or MCP `reorder_plan_tasks` (renumbers `1000, 2000, …` in the given task-id order). Batch `create_tasks` appends new tasks after the plan max when `sortOrder` is omitted per item.
 
-The CLI injects the chosen task ID into the agent prompt with a reminder to output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` via Postgres. **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
+The CLI injects the chosen task ID into the agent prompt with a reminder to output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` in OpenThrottle (through its configured transport — GraphQL by default). **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
 
 ## Max iterations and task cleanup
 
@@ -69,7 +69,7 @@ The CLI sets the plan to `IN_PROGRESS` at run start when Cortex is configured (p
 
 ## Cortex required; no ref file
 
-Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Startup uses a **direct Cortex Postgres** check (`ensureDatabaseReachableOrExit`), not the GraphQL `getServerHealth` query; see **`tools/workflows/README.md`** § Workflow Ralph → **`getServerHealth` vs workflow GraphQL transport errors** for when health complements thrown HTTP/GraphQL client errors in other tooling. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
+Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Startup uses a **direct Cortex Postgres** check (`ensureDatabaseReachableOrExit`), not the GraphQL `getServerHealth` query — a transitional Postgres-direct exception flagged for removal in [`graphql-only-transport-boundary.md`](./graphql-only-transport-boundary.md); see **`tools/workflows/README.md`** § Workflow Ralph → **`getServerHealth` vs workflow GraphQL transport errors** for when health complements thrown HTTP/GraphQL client errors in other tooling. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
 
 ## References
 

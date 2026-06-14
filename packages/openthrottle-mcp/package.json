@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/openthrottle-mcp",
-  "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -19,6 +16,7 @@
     "@rekog/mcp-nest": "catalog:",
     "zod": "catalog:"
   },
+  "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "devDependencies": {},
   "exports": {
     ".": {
@@ -49,6 +47,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -89,6 +88,7 @@
         "dependsOn": [
           "build"
         ],
+        "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build.",
         "executor": "nx:run-commands",
         "options": {
           "command": "node ./dist/src/bin.js",
@@ -100,6 +100,7 @@
       "typecheck-tests": {},
       "verify-graphql-codegen": {
         "cache": false,
+        "description": "Regenerate openthrottle-mcp GraphQL types and fail if the committed src/__generated__ output drifts.",
         "executor": "nx:run-commands",
         "options": {
           "command": "(cd packages/openthrottle-mcp && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-mcp/src/__generated__",
@@ -116,5 +117,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

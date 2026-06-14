@@ -1,109 +1,9 @@
 {
-  "name": "openthrottle-server",
-  "description": "NestJS GraphQL API for OpenThrottle plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
-  "version": "1.3.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://openthrottle.ai"
   },
-  "engines": {
-    "node": ">=22"
-  },
-  "main": "./src/main.ts",
-  "module": "./src/main.ts",
-  "nx": {
-    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
-    "projectType": "application",
-    "sourceRoot": "./",
-    "tags": [
-      "name:openthrottle-server",
-      "production:true",
-      "technology:nestjs",
-      "type:application"
-    ],
-    "targets": {
-      "build": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "nest build --path {projectRoot}/tsconfig.app.json"
-        },
-        "dependsOn": [
-          "^build",
-          "^build-package"
-        ]
-      },
-      "docker-build": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-server:local .",
-          "cwd": "{workspaceRoot}",
-          "env": {
-            "APP_VERSION": "1.3.0",
-            "NX_VERSION": "22.7.4",
-            "PNPM_VERSION": "11.6.0"
-          }
-        },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
-      },
-      "dev": {
-        "continuous": true,
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json --watch"
-        },
-        "dependsOn": [
-          "^dev"
-        ]
-      },
-      "dev-debug": {
-        "continuous": true,
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json --debug 0.0.0.0:9229 --watch"
-        },
-        "dependsOn": [
-          "^dev"
-        ],
-        "description": "dev with the Node inspector bound to 0.0.0.0:9229 (used by the compose dev profile so a host debugger can attach; --debug flags only the Nest app process, unlike NODE_OPTIONS)."
-      },
-      "lint": {
-        "options": {
-          "command": "pnpm exec eslint -c ./eslint.config.mts .",
-          "cwd": "{projectRoot}"
-        }
-      },
-      "start": {
-        "continuous": true,
-        "dependsOn": [
-          "^build"
-        ],
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json"
-        }
-      },
-      "test": {},
-      "typecheck": {},
-      "verify-graphql-schema-sync": {
-        "cache": false,
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "pnpm exec tsx ./scripts/verify-graphql-schema-sync.ts",
-          "cwd": "{workspaceRoot}"
-        }
-      }
-    }
-  },
-  "private": true,
-  "repository": "git://github.com/OpenThrottle/server.git",
-  "scripts": {
-    "langgraph": "npx @langchain/langgraph-cli dev",
-    "start:docker": "node -r dotenv/config ./build/src/main.js"
-  },
-  "sideEffects": false,
-  "type": "commonjs",
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
     "@langchain/core": "catalog:",
@@ -157,5 +57,107 @@
     "ts-morph": "catalog:",
     "typeorm": "catalog:",
     "zod": "catalog:"
-  }
+  },
+  "description": "NestJS GraphQL API for OpenThrottle plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./src/main.ts",
+  "module": "./src/main.ts",
+  "name": "openthrottle-server",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "application",
+    "sourceRoot": "./",
+    "tags": [
+      "name:openthrottle-server",
+      "production:true",
+      "technology:nestjs",
+      "type:application"
+    ],
+    "targets": {
+      "build": {
+        "dependsOn": [
+          "^build",
+          "^build-package"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest build --path {projectRoot}/tsconfig.app.json"
+        }
+      },
+      "docker-build": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-server:local .",
+          "cwd": "{workspaceRoot}",
+          "env": {
+            "APP_VERSION": "1.3.0",
+            "NX_VERSION": "22.7.4",
+            "PNPM_VERSION": "11.6.0"
+          }
+        },
+        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
+      },
+      "dev": {
+        "continuous": true,
+        "dependsOn": [
+          "^dev"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path {projectRoot}/tsconfig.app.json --watch"
+        }
+      },
+      "dev-debug": {
+        "continuous": true,
+        "dependsOn": [
+          "^dev"
+        ],
+        "description": "dev with the Node inspector bound to 0.0.0.0:9229 (used by the compose dev profile so a host debugger can attach; --debug flags only the Nest app process, unlike NODE_OPTIONS).",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path {projectRoot}/tsconfig.app.json --debug 0.0.0.0:9229 --watch"
+        }
+      },
+      "lint": {
+        "options": {
+          "command": "pnpm exec eslint -c ./eslint.config.mts .",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "start": {
+        "continuous": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path {projectRoot}/tsconfig.app.json"
+        }
+      },
+      "test": {},
+      "typecheck": {},
+      "verify-graphql-schema-sync": {
+        "cache": false,
+        "description": "Verify the committed root schema.gql matches the server code-first schema; fails on drift.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm exec tsx ./scripts/verify-graphql-schema-sync.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      }
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/server.git",
+  "scripts": {
+    "langgraph": "npx @langchain/langgraph-cli dev",
+    "start:docker": "node -r dotenv/config ./build/src/main.js"
+  },
+  "sideEffects": false,
+  "type": "commonjs",
+  "version": "1.3.0"
 }

@@ -99,7 +99,7 @@
   "description": "VS Code and Cursor extension for OpenThrottle plans and tasks, backed by openthrottle-server GraphQL.",
   "devDependencies": {},
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "catalog:"
   },
   "exports": {
     ".": {
@@ -152,6 +152,7 @@
         "dependsOn": [
           "project:typescript"
         ],
+        "description": "Package the VS Code extension into openthrottle.vsix via vsce (after project:typescript).",
         "executor": "nx:run-commands",
         "options": {
           "command": "pnpm exec vsce package --allow-package-env-file --no-dependencies --out openthrottle.vsix --skip-license",
@@ -162,6 +163,7 @@
         "dependsOn": [
           "project:build"
         ],
+        "description": "Install the packaged openthrottle.vsix into Cursor (after project:build).",
         "executor": "nx:run-commands",
         "options": {
           "command": "cursor --install-extension ./packages/vscode-openthrottle/openthrottle.vsix",
@@ -169,7 +171,8 @@
         }
       },
       "project:typescript": {
-        "executor": "@nx/js:tsc"
+        "executor": "@nx/js:tsc",
+        "description": "Compile the VS Code extension TypeScript with @nx/js:tsc."
       },
       "test": {},
       "typecheck": {},
