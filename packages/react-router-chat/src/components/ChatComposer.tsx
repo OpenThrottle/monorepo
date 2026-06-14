@@ -5,21 +5,42 @@ import classnames from 'classnames';
 export interface ChatComposerProps {
   readonly className?: string;
   readonly disabled?: boolean;
+  /**
+   * When true, the Send button is replaced by a Stop button wired to
+   * {@link onStop}, and Enter/submit is blocked. NOTE: this is a presentational
+   * in-flight affordance — the package performs no real cancellation; the
+   * consumer's {@link onStop} decides what (if anything) stopping does.
+   */
+  readonly isStreaming?: boolean;
+  /** Invoked when the Stop button is pressed while {@link isStreaming}. */
+  readonly onStop?: () => void;
   readonly onSubmit: (message: string) => void;
   readonly placeholder?: string;
+  readonly stopLabel?: string;
   readonly submitLabel?: string;
+  /**
+   * Optional controls (e.g. {@link ChatComposerToolbar}) docked into the
+   * composer's footer bar, left of the Send/Stop button. Omit for the plain
+   * composer — the rendered output is unchanged when this is not supplied.
+   */
+  readonly toolbar?: React.ReactNode;
 }
 
 /**
  * @description Message input with submit button; Enter sends, Shift+Enter inserts a newline.
+ * Optionally docks a {@link toolbar} into its footer and swaps Send for Stop while streaming.
  */
 export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   const {
     className,
     disabled = false,
+    isStreaming = false,
+    onStop,
     onSubmit,
     placeholder = 'Type a message…',
+    stopLabel = 'Stop',
     submitLabel = 'Send',
+    toolbar,
   } = props;
 
   // Hooks
@@ -30,7 +51,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   // Handlers
   const submitDraft = (): void => {
     const trimmed = draft.trim();
-    if (!trimmed || disabled) {
+    if (!trimmed || disabled || isStreaming) {
       return;
     }
     onSubmit(trimmed);
@@ -54,6 +75,19 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   };
 
   // Markup
+  const sendOrStop = isStreaming ? (
+    <Button onClick={onStop} size="sm" type="button" variant="secondary">
+      {stopLabel}
+    </Button>
+  ) : (
+    <Button
+      disabled={disabled || draft.trim().length === 0}
+      size="sm"
+      type="submit"
+    >
+      {submitLabel}
+    </Button>
+  );
 
   // Life Cycle
 
@@ -77,15 +111,15 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         rows={3}
         value={draft}
       />
-      <div className="flex justify-end">
-        <Button
-          disabled={disabled || draft.trim().length === 0}
-          size="sm"
-          type="submit"
-        >
-          {submitLabel}
-        </Button>
-      </div>
+      {toolbar == null ? (
+        <div className="flex justify-end">{sendOrStop}</div>
+      ) : (
+        <div className="flex items-center gap-2">
+          {toolbar}
+          <div className="flex-1" />
+          {sendOrStop}
+        </div>
+      )}
     </form>
   );
 };
