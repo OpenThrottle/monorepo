@@ -71,5 +71,5 @@ Routes under `/dashboard`, `/plans`, `/projects`, `/roles`, `/users` are wrapped
 | Payments research (providers, models)     | [payments-research-providers-and-models.md](./payments-research-providers-and-models.md)     |
 | Admin app                                 | `applications/openthrottle-admin`                                                            |
 | Backend                                   | `applications/openthrottle-server`                                                           |
-| Shared UI                                 | `@openthrottle/react-router-shadcn` (monorepo package)                                        |
+| Shared UI                                 | `@openthrottle/react-router-shadcn` (monorepo package)                                       |
 | shadcn-ui components                      | https://ui.shadcn.com/docs/components                                                        |

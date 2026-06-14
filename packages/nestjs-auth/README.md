@@ -52,10 +52,10 @@ The module registers the `jwt` strategy with Passport. The validated user is att
 
 ### 4. Environment variables
 
-| Variable     | Purpose                    |
-| ------------ | -------------------------- |
+| Variable     | Purpose                                |
+| ------------ | -------------------------------------- |
 | `JWT_SECRET` | Required. Secret for JWT verification. |
-| `JWT_ISSUER` | Optional. JWT issuer claim. |
+| `JWT_ISSUER` | Optional. JWT issuer claim.            |
 
 ### Exports
 

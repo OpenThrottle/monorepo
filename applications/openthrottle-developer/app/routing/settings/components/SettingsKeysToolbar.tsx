@@ -96,7 +96,7 @@ export const SettingsKeysToolbar = (
           </Select>
         </div>
       ) : (
-        <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+        <div className="text-muted-foreground min-w-0 flex-1 text-sm">
           {noAccounts ? (
             <p data-testid="SettingsKeysToolbar-no-accounts">
               No service accounts are available. Bootstrap accounts via{' '}
@@ -107,7 +107,7 @@ export const SettingsKeysToolbar = (
             </p>
           ) : (
             <p>
-              <span className="font-medium text-foreground">Account:</span>{' '}
+              <span className="text-foreground font-medium">Account:</span>{' '}
               {enabledAccounts[0]?.name ?? '—'}
             </p>
           )}

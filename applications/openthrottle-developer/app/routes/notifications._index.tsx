@@ -57,7 +57,7 @@ export default function Component(
           icon={BellIcon}
           title="Notifications"
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Choose how we reach you about plans, tasks, and system activity. These
           choices are not saved yet.
         </p>
@@ -73,7 +73,7 @@ export default function Component(
           icon={BellRingIcon}
           title="Event subscriptions"
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Choose which real-time notification events you want to receive in the
           app. Preferences are saved in this browser and stay in sync if you
           change them in another tab.

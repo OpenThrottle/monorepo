@@ -102,15 +102,15 @@ Recommendation: have the processor set the job’s return value (or progress) to
 
 ## 8. Summary
 
-| Concern            | Recommendation |
-|--------------------|----------------|
-| **Trigger**        | Extend GraphQL `enqueuePlanRun` with optional `taskId`, `worktreeId`, `idempotencyKey`, `iterations`. Optional REST `POST /api/plans/:planId/run` mirror. |
-| **Spawn**          | Keep BullMQ + PlansProcessor; extend job data and processor to support task-centric and worktree preference. |
-| **Status**         | Use existing `job(queueName, jobId)` (and notifications) for status; optionally store workflow result in job return value for verification outcome. |
-| **Streaming**      | Out of scope for this design; would require process-model changes (spawn + streams or side-channel). |
-| **Auth**           | Reuse existing API auth; no new auth for “run Ralph.” |
-| **Idempotency**    | Optional client `idempotencyKey` with Redis (or in-memory) store and TTL; return existing job id when key is reused. |
-| **Concurrency**    | Keep processor concurrency 1; document and optionally add “max waiting” and “single run per plan” later. |
-| **Verification**   | Already in lifecycle; report back via job return value exposed by job query. |
+| Concern          | Recommendation                                                                                                                                            |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Trigger**      | Extend GraphQL `enqueuePlanRun` with optional `taskId`, `worktreeId`, `idempotencyKey`, `iterations`. Optional REST `POST /api/plans/:planId/run` mirror. |
+| **Spawn**        | Keep BullMQ + PlansProcessor; extend job data and processor to support task-centric and worktree preference.                                              |
+| **Status**       | Use existing `job(queueName, jobId)` (and notifications) for status; optionally store workflow result in job return value for verification outcome.       |
+| **Streaming**    | Out of scope for this design; would require process-model changes (spawn + streams or side-channel).                                                      |
+| **Auth**         | Reuse existing API auth; no new auth for “run Ralph.”                                                                                                     |
+| **Idempotency**  | Optional client `idempotencyKey` with Redis (or in-memory) store and TTL; return existing job id when key is reused.                                      |
+| **Concurrency**  | Keep processor concurrency 1; document and optionally add “max waiting” and “single run per plan” later.                                                  |
+| **Verification** | Already in lifecycle; report back via job return value exposed by job query.                                                                              |
 
 Implementing this design requires: (1) extending `EnqueuePlanRunInput` and `RunPlanJobData`, (2) updating PlansProcessor to pass task/worktree/iterations and to set job result, (3) optional idempotency in the resolver and Redis, (4) optional REST route that enqueues the same job. No change to the core spawn model in `@tools/workflows` is strictly required for task/worktree options if the processor builds the Ralph args and calls the same `runChildJob`/workflow.

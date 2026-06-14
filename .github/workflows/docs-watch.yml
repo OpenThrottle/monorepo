@@ -1,13 +1,13 @@
 # When docs/ changes land on main (e.g. after PR merge), output the squash commit SHA
 # and changed paths under docs/ for the documentation ingest pipeline.
 # See plan "Docs folder watch and re-index on main"
-name: "📚 Docs watch (main)"
+name: '📚 Docs watch (main)'
 on:
   push:
     branches:
       - main
     paths:
-      - "docs/**"
+      - 'docs/**'
 
 jobs:
   docs-changed:
@@ -18,12 +18,12 @@ jobs:
       sha: ${{ steps.vars.outputs.sha }}
       paths: ${{ steps.vars.outputs.paths }}
     steps:
-      - name: "📦 Checkout"
+      - name: '📦 Checkout'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
-      - name: "📤 Set SHA and changed paths"
+      - name: '📤 Set SHA and changed paths'
         id: vars
         run: |
           SHA="${{ github.sha }}"

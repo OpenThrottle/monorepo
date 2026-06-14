@@ -41,21 +41,21 @@ export const OpenThrottleProductFeatures = (
 
         return (
           <div
-            className="bg-card p-4 flex flex-col border border-border rounded-lg h-full"
+            className="bg-card border-border flex h-full flex-col rounded-lg border p-4"
             key={feature.title}
           >
             <h2 className="mb-4 flex items-center gap-4">
               <Icon className="size-4" />
               <span>{feature.title}</span>
             </h2>
-            <p className="text-xs flex-1 text-muted-foreground">
+            <p className="text-muted-foreground flex-1 text-xs">
               {feature.description}
             </p>
 
             <div className="flex justify-end">
               <Link target="_blank" to={feature.link}>
                 <Button
-                  className="mt-4 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground mt-4"
                   size="xs"
                   variant="link"
                 >

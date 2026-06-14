@@ -113,7 +113,7 @@ export const MessageDetail = (
   if (message == null && !loading) {
     return (
       <div
-        className={classnames('p-4 text-muted-foreground', className)}
+        className={classnames('text-muted-foreground p-4', className)}
         data-testid="MessageDetail"
       >
         Select a message
@@ -177,7 +177,7 @@ export const MessageDetail = (
         {/* Actions bar: Reply, Reply all, Forward (Link to compose); Archive, Delete (confirm modals); More (DropdownMenu). Tooltips on each action. */}
         <div
           aria-label="Message actions"
-          className="flex flex-wrap items-center gap-1 border-b border-border px-6 pb-3"
+          className="border-border flex flex-wrap items-center gap-1 border-b px-6 pb-3"
           role="toolbar"
         >
           <Tooltip>
@@ -332,15 +332,15 @@ export const MessageDetail = (
 
         <CardContent className="pt-4">
           {/* Body: plain text with preserved line breaks; safe HTML can be wired when API provides it. */}
-          <div className="whitespace-pre-wrap text-sm">{msg.body}</div>
+          <div className="text-sm whitespace-pre-wrap">{msg.body}</div>
 
           {/* Attachments placeholder: list names with Badge; wire to download/API when backend exists. */}
           {hasAttachments ? (
             <div
-              className="mt-4 border-t border-border pt-4"
+              className="border-border mt-4 border-t pt-4"
               data-testid="MessageDetail-attachments"
             >
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
+              <p className="text-muted-foreground mb-2 text-xs font-medium">
                 Attachments
               </p>
               <ul className="flex flex-wrap gap-2">

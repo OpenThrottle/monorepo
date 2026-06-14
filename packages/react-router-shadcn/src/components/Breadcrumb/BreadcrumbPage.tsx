@@ -24,7 +24,7 @@ export const BreadcrumbPage = React.forwardRef<
   return (
     <span
       aria-current="page"
-      className={cn('font-normal text-foreground', className)}
+      className={cn('text-foreground font-normal', className)}
       ref={ref}
       role="link"
       {...rest}

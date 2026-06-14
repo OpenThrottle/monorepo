@@ -13,9 +13,7 @@ describe('PlanWorkflowConfigHooks', () => {
     );
 
     expect(getByTestId('PlanWorkflowConfigHooks')).toBeInTheDocument();
-    expect(
-      getByText(/No hooks configured/i),
-    ).toBeInTheDocument();
+    expect(getByText(/No hooks configured/i)).toBeInTheDocument();
 
     await userEvent.click(getByTestId('job-run-hooks-add'));
     expect(onChange).toHaveBeenCalledWith([

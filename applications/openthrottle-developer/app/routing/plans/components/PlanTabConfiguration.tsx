@@ -198,7 +198,7 @@ export const PlanTabConfiguration = (
 
   return (
     <TabsContent value="configuration">
-      <div className="flex flex-col gap-4 md:gap-8 max-w-3xl">
+      <div className="flex max-w-3xl flex-col gap-4 md:gap-8">
         <Card className="p-4">
           <PlanWorkflowCommand
             command={command}
@@ -210,10 +210,10 @@ export const PlanTabConfiguration = (
         </Card>
 
         <div className="space-y-4 md:space-y-8">
-          <CardContent className="flex flex-col flex-1 gap-4">
+          <CardContent className="flex flex-1 flex-col gap-4">
             {!validation.ok ? (
               <div
-                className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
                 data-testid="workflow-run-validation"
                 role="alert"
               >

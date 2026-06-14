@@ -41,7 +41,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
       <>
         {headerNavigation.map((item) => (
           <NavLink
-            className="text-sm h-full hover:text-accent p-4 transition"
+            className="hover:text-accent h-full p-4 text-sm transition"
             key={item.to.toString()}
             to={item.to}
             viewTransition={true}
@@ -60,13 +60,13 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
   return (
     <nav
       className={classnames(
-        'border-b border-border',
+        'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
-        'px-4 sticky w-full top-0 z-50',
+        'sticky top-0 z-50 w-full px-4',
         className,
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
         <OpenThrottleLogo
           className="text-lg"
           name="Email"
@@ -75,11 +75,11 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
 
         <div
           className={classnames(
-            'hidden md:flex items-center gap-2',
+            'hidden items-center gap-2 md:flex',
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}
         >
-          <div className="flex gap-1 mr-8 h-full">{renderNavItems()}</div>
+          <div className="mr-8 flex h-full gap-1">{renderNavItems()}</div>
 
           <Button
             asChild={true}

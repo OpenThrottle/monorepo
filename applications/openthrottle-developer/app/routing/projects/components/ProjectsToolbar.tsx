@@ -110,7 +110,7 @@ export const ProjectsToolbar = (
     >
       <form
         action="/projects"
-        className="flex flex-wrap items-center gap-2 w-full"
+        className="flex w-full flex-wrap items-center gap-2"
         method="get"
         onSubmit={handleSearchSubmit}
         role="search"
@@ -118,7 +118,7 @@ export const ProjectsToolbar = (
         <div className="flex shrink-0 items-center gap-2">
           <Input
             aria-label="Search projects"
-            className="min-w-[100px] h-9 w-[140px] shrink-0"
+            className="h-9 w-[140px] min-w-[100px] shrink-0"
             name="q"
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search projects..."
@@ -136,7 +136,7 @@ export const ProjectsToolbar = (
           sortOrder={sortOrder as ProjectsSortOrder}
         />
 
-        <div className="flex-1 min-w-0" />
+        <div className="min-w-0 flex-1" />
       </form>
     </div>
   );

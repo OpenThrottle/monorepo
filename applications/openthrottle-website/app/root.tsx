@@ -119,7 +119,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="flex min-h-screen flex-col">
         {children}
         <ScrollRestoration />
 

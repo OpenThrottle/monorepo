@@ -195,7 +195,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (user == null) {
     return (
-      <main className="mx-auto max-w-7xl w-full p-4 md:p-8 lg:p-12">
+      <main className="mx-auto w-full max-w-7xl p-4 md:p-8 lg:p-12">
         <p className="text-muted-foreground">User not found.</p>
       </main>
     );
@@ -378,7 +378,7 @@ export default function Component(
                 {rolesForUser.map((r) => (
                   <li className="flex items-center gap-1" key={r.id}>
                     <Link
-                      className="font-medium underline underline-offset-2 hover:text-primary"
+                      className="hover:text-primary font-medium underline underline-offset-2"
                       to={`/roles/${r.id}`}
                       viewTransition={true}
                     >

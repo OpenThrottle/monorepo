@@ -80,12 +80,12 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           aria-haspopup="listbox"
           aria-label={placeholder}
           className={cn(
-            'flex flex-wrap gap-2 items-center w-full',
-            'bg-background border border-input',
-            'text-sm px-3 py-2',
-            'rounded-md ring-offset-background',
+            'flex w-full flex-wrap items-center gap-2',
+            'bg-background border-input border',
+            'px-3 py-2 text-sm',
+            'ring-offset-background rounded-md',
             'placeholder:text-muted-foreground',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
           )}
           onClick={() => setOpen((prev) => !prev)}
@@ -109,7 +109,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
         {open && (
           <div
             className={cn(
-              'absolute top-full left-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
+              'bg-popover text-popover-foreground absolute top-full left-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border p-1 shadow-md',
             )}
             role="listbox"
           >
@@ -119,7 +119,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                 <div
                   aria-selected={selected}
                   className={cn(
-                    'relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+                    'focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                     'hover:bg-accent hover:text-white',
                   )}
                   key={opt.value}

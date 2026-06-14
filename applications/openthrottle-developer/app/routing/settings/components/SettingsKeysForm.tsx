@@ -172,12 +172,12 @@ export const SettingsKeysForm = (
               </div>
 
               {successPayload.credential.label?.trim() ? (
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Label:</span>{' '}
+                <p className="text-muted-foreground text-sm">
+                  <span className="text-foreground font-medium">Label:</span>{' '}
                   {successPayload.credential.label}
                 </p>
               ) : null}
-              <p className="font-mono text-xs text-muted-foreground">
+              <p className="text-muted-foreground font-mono text-xs">
                 Prefix: {successPayload.credential.prefix}
               </p>
             </div>

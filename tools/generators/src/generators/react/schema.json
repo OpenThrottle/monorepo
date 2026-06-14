@@ -37,9 +37,7 @@
     {
       "description": "Allow invocation without subGenerator (e.g. to support CLI-driven prompting).",
       "not": {
-        "required": [
-          "subGenerator"
-        ]
+        "required": ["subGenerator"]
       }
     },
     {
@@ -48,14 +46,10 @@
           "const": true
         }
       },
-      "required": [
-        "describe"
-      ]
+      "required": ["describe"]
     },
     {
-      "required": [
-        "list"
-      ]
+      "required": ["list"]
     },
     {
       "properties": {
@@ -63,11 +57,7 @@
           "const": "component"
         }
       },
-      "required": [
-        "subGenerator",
-        "destination",
-        "name"
-      ]
+      "required": ["subGenerator", "destination", "name"]
     },
     {
       "properties": {
@@ -75,11 +65,7 @@
           "const": "hook"
         }
       },
-      "required": [
-        "subGenerator",
-        "destination",
-        "name"
-      ]
+      "required": ["subGenerator", "destination", "name"]
     },
     {
       "properties": {
@@ -87,11 +73,7 @@
           "const": "util"
         }
       },
-      "required": [
-        "subGenerator",
-        "destination",
-        "name"
-      ]
+      "required": ["subGenerator", "destination", "name"]
     }
   ]
 }

@@ -45,7 +45,7 @@ export const Editor = (props: EditorProps): React.ReactElement | null => {
   }
 
   return (
-    <div className="flex flex-col flex-1" data-testid="Editor">
+    <div className="flex flex-1 flex-col" data-testid="Editor">
       {showToolbar && (
         <EditorToolbar
           basePath={basePath}
@@ -55,7 +55,7 @@ export const Editor = (props: EditorProps): React.ReactElement | null => {
       )}
 
       <div className="flex flex-1">
-        <div className="flex flex-col flex-1 w-full">
+        <div className="flex w-full flex-1 flex-col">
           {showTabs && <EditorTabs basePath={basePath} />}
           <div className="flex-1">
             <EditorWindow {...editorProps} className="h-full" />

@@ -27,15 +27,15 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
 
   return (
     <section className={classnames(className)} data-testid="HomeHeroV1">
-      <div className="max-w-7xl mx-auto">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-normal font-sans leading-tight">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <h1 className="font-sans text-5xl leading-tight font-normal sm:text-6xl lg:text-7xl">
             Stop <span className="text-highlight-red font-black">losing</span>{' '}
             the <span className="text-accent font-black">plan</span>
             <br />
             in{' '}
             <span
-              className="tracking-tighter font-thin text-current/60"
+              className="font-thin tracking-tighter text-current/60"
               style={{
                 marginLeft: '-10px',
                 marginRight: '-8px',
@@ -48,10 +48,10 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
             tools.
           </h1>
 
-          <div className="flex flex-col justify-center sm:flex-row gap-4 mt-8">
+          <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
             <Button
               asChild={true}
-              className="bg-accent hover:bg-accent/90 flex items-center gap-4 p-4 rounded-xl text-white cursor-pointer"
+              className="bg-accent hover:bg-accent/90 flex cursor-pointer items-center gap-4 rounded-xl p-4 text-white"
               size="lg"
             >
               <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
@@ -62,7 +62,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
 
             <Button
               asChild={true}
-              className="border-border flex items-center gap-4 hover:bg-secondary p-4 rounded-xl text-white cursor-pointer bg-transparent"
+              className="border-border hover:bg-secondary flex cursor-pointer items-center gap-4 rounded-xl bg-transparent p-4 text-white"
               size="lg"
               variant="outline"
             >

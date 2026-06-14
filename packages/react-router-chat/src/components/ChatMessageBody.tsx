@@ -25,12 +25,12 @@ export const ChatMessageBody = (
   }
 
   if (role === 'user') {
-    return <p className="whitespace-pre-wrap break-words">{body}</p>;
+    return <p className="break-words whitespace-pre-wrap">{body}</p>;
   }
 
   return (
     <Markdown
-      className="break-words text-sm [&_pre]:whitespace-pre-wrap"
+      className="text-sm break-words [&_pre]:whitespace-pre-wrap"
       content={body}
     />
   );

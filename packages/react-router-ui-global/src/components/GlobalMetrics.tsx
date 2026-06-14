@@ -170,7 +170,7 @@ export const GlobalMetrics = (
   return (
     <div
       className={classnames(
-        'flex flex-col w-full',
+        'flex w-full flex-col',
         'gap-4 md:gap-8 lg:gap-12',
         'p-4 md:p-8 lg:p-12',
         className,
@@ -228,19 +228,19 @@ export const GlobalMetrics = (
             data-testid="GlobalMetrics-data"
           >
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1 bg-transparent"
+              className="flex-1 bg-transparent p-4 md:p-8"
               subValue={formatMb(serverMetrics.externalMb)}
               title="RSS / External (MB)"
               value={formatMb(serverMetrics.rssMb)}
             />
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1 bg-transparent"
+              className="flex-1 bg-transparent p-4 md:p-8"
               subValue={formatMb(serverMetrics.heapTotalMb)}
               title="Heap (MB)"
               value={formatMb(serverMetrics.heapUsedMb)}
             />
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1 bg-transparent"
+              className="flex-1 bg-transparent p-4 md:p-8"
               subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
               title="CPU (ms) user / system"
               value={formatCpuMs(serverMetrics.cpuUserMs)}
@@ -255,7 +255,7 @@ export const GlobalMetrics = (
           data-testid="GlobalMetrics-chart-card"
         >
           <ChartContainer
-            className="min-h-[160px] w-full -ml-1 text-sm overflow-visible"
+            className="-ml-1 min-h-[160px] w-full overflow-visible text-sm"
             config={GLOBAL_METRICS_CHART_CONFIG}
           >
             <LineChart

@@ -106,14 +106,14 @@ export default function Component(
       ) : (
         <>
           <div className="mb-6">
-            <h1 className="text-xl text-accent font-semibold leading-snug">
+            <h1 className="text-accent text-xl leading-snug font-semibold">
               {pull.title}{' '}
               <span className="text-muted-foreground font-normal">
                 #{pull.number}
               </span>
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              <span className="font-medium text-foreground">{pull.author}</span>
+              <span className="text-foreground font-medium">{pull.author}</span>
               {' · '}
               State {pull.state} · Created{' '}
               {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
@@ -137,7 +137,7 @@ export default function Component(
           </div>
 
           <Card className="p-4 lg:p-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
               Merge &amp; CI on GitHub
             </h2>
             <p className="text-muted-foreground mb-4 text-sm">
@@ -147,7 +147,7 @@ export default function Component(
               branch, and workflow sources.
             </p>
 
-            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+            <h3 className="text-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
               Checks and commit status
             </h3>
             <div className="mb-6 flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ export default function Component(
               ) : null}
             </div>
 
-            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+            <h3 className="text-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
               Workflow runs (Actions)
             </h3>
             <div className="mb-6 flex flex-wrap gap-2">
@@ -265,7 +265,7 @@ export default function Component(
               </Button>
             </div>
 
-            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+            <h3 className="text-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
               Diff, conversation, and repo
             </h3>
             <div className="mb-6 flex flex-wrap gap-2">

@@ -29,7 +29,7 @@ export const HomeBuiltWith = (
 
   return (
     <div className={classnames('p-4', className)} data-testid="HomeBuiltWith">
-      <h2 className="text-2xl text-center">
+      <h2 className="text-center text-2xl">
         Everything is built on OpenSource work
       </h2>
       {technologies.map((technology) => {

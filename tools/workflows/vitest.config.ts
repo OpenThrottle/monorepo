@@ -1,25 +1,25 @@
-import { ConfigEnv, defineConfig } from "vitest/config";
+import { ConfigEnv, defineConfig } from 'vitest/config';
 
 export default (_config: ConfigEnv) => {
   // const { mode } = _config;
 
   const env = {
-    NODE_ENV: "test",
-    TZ: "UTC",
+    NODE_ENV: 'test',
+    TZ: 'UTC',
   };
 
   const configuration = defineConfig({
     test: {
       coverage: {
-        provider: "v8",
+        provider: 'v8',
         reportsDirectory: `../../coverage/tools/workflows`,
       },
       env,
-      environment: "node",
+      environment: 'node',
       globals: true,
-      include: ["**/*.test.(ts|tsx)"],
-      reporters: ["default"],
-      silent: process.env.DEBUG !== "true",
+      include: ['**/*.test.(ts|tsx)'],
+      reporters: ['default'],
+      silent: process.env.DEBUG !== 'true',
     },
   });
 

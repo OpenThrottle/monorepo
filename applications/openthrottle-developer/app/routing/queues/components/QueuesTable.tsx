@@ -53,7 +53,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="QueuesTable"
     >
       <DataTable<QueueCardFragment, string | number | undefined>
@@ -78,10 +78,10 @@ const queuesTableColumns: ColumnDef<
 
       return (
         <div className="overflow-hidden p-4 py-2">
-          <div className="text-sm font-medium leading-tight text-foreground">
+          <div className="text-foreground text-sm leading-tight font-medium">
             <Link
               aria-label={`View queue: ${displayName}`}
-              className="line-clamp-1 text-ellipsis underline underline-offset-2 hover:text-primary"
+              className="hover:text-primary line-clamp-1 text-ellipsis underline underline-offset-2"
               to={href}
               viewTransition={true}
             >
@@ -94,7 +94,7 @@ const queuesTableColumns: ColumnDef<
     header: () => (
       <div className="p-4 py-2">
         <div className="text-sm font-medium">Queue</div>
-        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs font-normal">
           Name and drill-down
         </p>
       </div>
@@ -112,7 +112,7 @@ const queuesTableColumns: ColumnDef<
           <span aria-label={label} title={label}>
             {backlog}
           </span>
-          <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+          <span className="text-muted-foreground mt-0.5 block text-[11px] font-normal">
             {queue.waitingCount} wait · {queue.delayedCount} delayed
           </span>
         </div>
@@ -121,7 +121,7 @@ const queuesTableColumns: ColumnDef<
     header: () => (
       <div className="py-2 text-right" title="Waiting plus delayed jobs">
         <div className="text-sm font-medium">Backlog</div>
-        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs font-normal">
           waiting + delayed
         </p>
       </div>
@@ -145,7 +145,7 @@ const queuesTableColumns: ColumnDef<
     header: () => (
       <div className="py-2 text-right" title="Jobs currently processing">
         <div className="text-sm font-medium">In flight</div>
-        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs font-normal">
           active workers
         </p>
       </div>
@@ -166,7 +166,7 @@ const queuesTableColumns: ColumnDef<
     header: () => (
       <div className="py-2 text-right">
         <div className="text-sm font-medium">Completed</div>
-        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs font-normal">
           finished OK
         </p>
       </div>
@@ -192,7 +192,7 @@ const queuesTableColumns: ColumnDef<
           ) : (
             <span
               aria-label="0 failed"
-              className="tabular-nums text-muted-foreground"
+              className="text-muted-foreground tabular-nums"
             >
               {count}
             </span>
@@ -206,7 +206,7 @@ const queuesTableColumns: ColumnDef<
         title="Jobs that failed or exceeded retries"
       >
         <div className="text-sm font-medium">Failed</div>
-        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs font-normal">
           needs attention
         </p>
       </div>

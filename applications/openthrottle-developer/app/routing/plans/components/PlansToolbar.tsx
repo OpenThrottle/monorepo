@@ -154,11 +154,11 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
     <div className={classnames('w-full', className)} data-testid="PlansToolbar">
       <form onSubmit={handleSearchSubmit} role="search">
         <div
-          className={classnames('flex flex-wrap items-center w-full', 'gap-2')}
+          className={classnames('flex w-full flex-wrap items-center', 'gap-2')}
         >
           <Input
             aria-label="Search plans"
-            className="min-w-[100px] w-[170px] border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-[170px] min-w-[100px] border px-2.5 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
             name="q"
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search plans & tasks"
@@ -186,15 +186,15 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
             sortBy={sortBy}
             sortOrder={sortOrder}
           />
-          <div className="flex-1 min-w-0" />
+          <div className="min-w-0 flex-1" />
           <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/plans/upload-decompose">
-              <FileUpIcon className="w-4 h-4" /> Upload document
+              <FileUpIcon className="h-4 w-4" /> Upload document
             </Link>
           </Button>
           <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/plans/create">
-              <PlusIcon className="w-4 h-4" /> Create plan
+              <PlusIcon className="h-4 w-4" /> Create plan
             </Link>
           </Button>
         </div>

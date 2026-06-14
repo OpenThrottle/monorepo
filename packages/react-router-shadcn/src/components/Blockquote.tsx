@@ -27,7 +27,7 @@ export const Blockquote = React.forwardRef<HTMLQuoteElement, BlockquoteProps>(
 
     return (
       <blockquote
-        className={cn('mt-6 border-l-2 border-primary pl-6 italic', className)}
+        className={cn('border-primary mt-6 border-l-2 pl-6 italic', className)}
         ref={ref}
         {...rest}
       />

@@ -25,10 +25,7 @@
     },
     "folder": {
       "type": "string",
-      "enum": [
-        "routing",
-        "services"
-      ],
+      "enum": ["routing", "services"],
       "description": "Which folder area to create under."
     },
     "name": {

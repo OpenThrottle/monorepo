@@ -23,7 +23,7 @@ export const NotificationPermissionUnsupported = (
 
   return (
     <p
-      className="text-xs text-muted-foreground"
+      className="text-muted-foreground text-xs"
       data-testid="NotificationPermissionUnsupported"
     >
       Desktop notifications require HTTPS or a supported browser.

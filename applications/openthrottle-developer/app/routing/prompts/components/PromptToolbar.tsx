@@ -128,13 +128,13 @@ export const PromptToolbar = (
       data-testid="PromptToolbar"
     >
       <form
-        className="flex flex-wrap items-center gap-2 w-full"
+        className="flex w-full flex-wrap items-center gap-2"
         onSubmit={handleSearchSubmit}
         role="search"
       >
         <Input
           aria-label="Search prompts"
-          className="min-w-[100px] w-[180px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-[180px] min-w-[100px] shrink-0 rounded-md border px-2.5 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
           data-testid="PromptToolbar-search-input"
           name="q"
           onChange={onSearchInputChange}
@@ -170,7 +170,7 @@ export const PromptToolbar = (
             Clear filters
           </Button>
         ) : null}
-        <div className="flex-1 min-w-0" />
+        <div className="min-w-0 flex-1" />
 
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>

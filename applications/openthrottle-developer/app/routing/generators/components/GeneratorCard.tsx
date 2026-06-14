@@ -38,8 +38,8 @@ export const GeneratorCard = (
       key={generator.name}
     >
       <CardContent className="p-4">
-        <h2 className="text-lg font-bold mb-2">{generator.name}</h2>
-        <p className="text-sm text-muted-foreground mb-0">
+        <h2 className="mb-2 text-lg font-bold">{generator.name}</h2>
+        <p className="text-muted-foreground mb-0 text-sm">
           {generator.description}
         </p>
       </CardContent>

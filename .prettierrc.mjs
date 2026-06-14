@@ -1,9 +1,3 @@
-// const { prettierConfig } = require('dotfiles');
+import { prettierConfig } from '@tools/dotfiles';
 
-export default {
-  arrowParens: 'always',
-  printWidth: 80,
-  singleQuote: true,
-  tabWidth: 2,
-  trailingComma: 'all',
-};
+export default prettierConfig;

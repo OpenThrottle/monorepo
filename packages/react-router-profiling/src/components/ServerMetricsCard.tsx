@@ -94,7 +94,7 @@ export function ServerMetricsCard(
         )}
         {error != null && (
           <p
-            className="text-sm text-destructive"
+            className="text-destructive text-sm"
             data-testid="ServerMetricsCard-error"
             role="alert"
           >

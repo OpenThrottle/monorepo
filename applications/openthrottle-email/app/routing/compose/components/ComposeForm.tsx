@@ -65,7 +65,7 @@ export const ComposeForm = (props: ComposeFormProps): React.ReactElement => {
       <FocusError formik={formik} />
       {errorList.length > 0 && (
         <ul
-          className="list-inside list-disc text-destructive text-sm"
+          className="text-destructive list-inside list-disc text-sm"
           role="alert"
         >
           {errorList.map((err, i) => (

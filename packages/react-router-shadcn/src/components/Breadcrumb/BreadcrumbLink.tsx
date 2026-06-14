@@ -27,7 +27,7 @@ export const BreadcrumbLink = React.forwardRef<
 
   return (
     <Component
-      className={cn('transition-colors hover:text-foreground', className)}
+      className={cn('hover:text-foreground transition-colors', className)}
       ref={ref}
       {...rest}
     />

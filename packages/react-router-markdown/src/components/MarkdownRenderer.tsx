@@ -67,7 +67,7 @@ export const MarkdownRenderer = (
 
   return (
     <div
-      className={classnames('markdown overflow-auto max-w-full', className)}
+      className={classnames('markdown max-w-full overflow-auto', className)}
       data-testid="MarkdownRenderer"
     >
       <MDXProvider components={components}>

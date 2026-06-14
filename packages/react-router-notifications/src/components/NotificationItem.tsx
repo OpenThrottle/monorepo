@@ -66,10 +66,10 @@ export const NotificationItem = (
           >
             {payload.message}
           </p>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             {payload.link ? (
               <Link
-                className="mt-1 text-xs font-medium text-primary underline underline-offset-2 hover:no-underline"
+                className="text-primary mt-1 text-xs font-medium underline underline-offset-2 hover:no-underline"
                 data-testid={`notification-item-link-${notification.id}`}
                 onClick={(e) => e.stopPropagation()}
                 to={payload.link}
@@ -77,7 +77,7 @@ export const NotificationItem = (
                 View plan
               </Link>
             ) : null}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formatRelativeTime(notification.createdAt)}
             </p>
           </div>

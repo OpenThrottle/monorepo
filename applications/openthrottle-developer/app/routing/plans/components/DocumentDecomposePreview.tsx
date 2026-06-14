@@ -26,7 +26,7 @@ export const DocumentDecomposePreview = (
     return (
       <div
         className={classnames(
-          'rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground',
+          'border-border text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm',
           className,
         )}
         data-testid="DocumentDecomposePreview"
@@ -60,7 +60,7 @@ export const DocumentDecomposePreview = (
                 <CardTitle className="text-base">{task.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                   Requirements
                 </p>
                 <ul className="list-disc space-y-1 pl-5 text-sm">

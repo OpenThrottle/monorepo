@@ -123,7 +123,7 @@ export default function Component(
           icon={ListOrderedIcon}
           title={`Task: ${task.title}`}
         />
-        <div className="text-sm text-muted-foreground line-clamp-3">
+        <div className="text-muted-foreground line-clamp-3 text-sm">
           <Badge color={color} size="xs">
             {task.status}
           </Badge>

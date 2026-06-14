@@ -31,7 +31,7 @@ export const DashboardQuickNavigation = (
   return (
     <section className={className} data-testid="DashboardQuickNavigation">
       <h3 className="mb-2">Jump to</h3>
-      <p className="text-muted-foreground text-sm mb-3">
+      <p className="text-muted-foreground mb-3 text-sm">
         Quick paths across plans, search, queues, and tooling—same destinations
         as the command palette navigation items.
       </p>

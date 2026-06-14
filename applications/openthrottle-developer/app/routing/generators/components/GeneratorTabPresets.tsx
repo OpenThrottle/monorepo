@@ -44,7 +44,7 @@ export const GeneratorTabPresets = (
           <CardDescription>
             Copy commands into your terminal from the repository root. Replace
             list keys or sub-generator names using output from{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+            <code className="bg-muted rounded px-1 py-0.5 text-xs">
               --describe
             </code>
             .
@@ -55,7 +55,7 @@ export const GeneratorTabPresets = (
             <div className="space-y-2" key={preset.id}>
               <p className="text-sm font-medium">{preset.description}</p>
               <div className="flex flex-wrap items-start gap-2">
-                <pre className="max-w-full flex-1 overflow-x-auto rounded-md bg-muted p-3 text-xs leading-relaxed">
+                <pre className="bg-muted max-w-full flex-1 overflow-x-auto rounded-md p-3 text-xs leading-relaxed">
                   <code>{preset.command}</code>
                 </pre>
                 <OpenThrottleClipboard

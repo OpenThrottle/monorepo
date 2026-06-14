@@ -27,13 +27,13 @@ export const OpenThrottleProductTestimonials = (
   // 🔌 Short Circuit
 
   return (
-    <div className="flex flex-col gap-4 justify-center items-center my-20">
-      <blockquote className="text-foreground/40 font-normal max-w-3xl leading-relaxed mx-auto">
+    <div className="my-20 flex flex-col items-center justify-center gap-4">
+      <blockquote className="text-foreground/40 mx-auto max-w-3xl leading-relaxed font-normal">
         <p className="text-foreground/40 hover:text-foreground/80 transition-colors">
           {isUsedByTeam ? copyA : copyB}
         </p>
-        <footer className="text-sm mt-4 text-right">
-          <cite className="font-medium block">~ Matthew Scholta</cite>
+        <footer className="mt-4 text-right text-sm">
+          <cite className="block font-medium">~ Matthew Scholta</cite>
           <span className="text-xs">Creator of OpenThrottle</span>
         </footer>
       </blockquote>

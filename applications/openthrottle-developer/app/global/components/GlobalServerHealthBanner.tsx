@@ -44,7 +44,7 @@ export const GlobalServerHealthBanner = (
   return (
     <div
       className={classnames(
-        'flex w-full items-center justify-center gap-2 px-4 py-2 text-sm text-center',
+        'flex w-full items-center justify-center gap-2 px-4 py-2 text-center text-sm',
         isUnreachable
           ? 'bg-destructive/90 text-destructive-foreground'
           : 'bg-amber-500/90 text-amber-950',
@@ -60,7 +60,7 @@ export const GlobalServerHealthBanner = (
       <Button
         aria-label="Dismiss banner"
         className={classnames(
-          'shrink-0 size-8 p-0',
+          'size-8 shrink-0 p-0',
           isUnreachable
             ? 'text-destructive-foreground hover:bg-destructive-foreground/20'
             : 'text-amber-950 hover:bg-amber-950/20',

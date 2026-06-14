@@ -103,15 +103,15 @@ export const PlanWorkflowRunTransparency = (
                 tools/workflows/README.md
               </span>
               .{' '}
-              <strong className="font-medium text-foreground">Required</strong>{' '}
+              <strong className="text-foreground font-medium">Required</strong>{' '}
               CLI target (one of):{' '}
               <code className="text-[0.65rem]">--plan &lt;uuid&gt;</code> or{' '}
               <code className="text-[0.65rem]">--task &lt;uuid&gt;</code>.
               Toolbar “Add to Queue” enqueues a{' '}
-              <span className="font-medium text-foreground">plan-scoped</span>{' '}
+              <span className="text-foreground font-medium">plan-scoped</span>{' '}
               worker job with one execution backend for the whole run (Cursor or
               Claude Code).{' '}
-              <strong className="font-medium text-foreground">
+              <strong className="text-foreground font-medium">
                 Precedence
               </strong>
               : {WORKFLOW_RALPH_CONFIG_PRECEDENCE}. Configuration tab values and
@@ -119,7 +119,7 @@ export const PlanWorkflowRunTransparency = (
               <code className="text-[0.65rem]">.workflow-ralph.json</code> in
               the worktree or repo root.
             </CardDescription>
-            <div className="flex flex-wrap gap-2 my-4">
+            <div className="my-4 flex flex-wrap gap-2">
               <Badge color="accent">
                 <OpenThrottleClipboard
                   label="Copy canonical workflow-ralph command"
@@ -144,11 +144,11 @@ export const PlanWorkflowRunTransparency = (
           </div>
 
           <div className="space-y-2">
-            <p className="text-muted-foreground text-[0.65rem] font-medium uppercase tracking-wide">
+            <p className="text-muted-foreground text-[0.65rem] font-medium tracking-wide uppercase">
               Canonical argv (local CLI)
             </p>
             <pre
-              className="bg-background text-foreground border-border max-h-36 overflow-x-auto overflow-y-auto rounded border p-2 font-mono text-[0.65rem] leading-relaxed whitespace-pre-wrap break-all"
+              className="bg-background text-foreground border-border max-h-36 overflow-x-auto overflow-y-auto rounded border p-2 font-mono text-[0.65rem] leading-relaxed break-all whitespace-pre-wrap"
               data-testid="PlanWorkflowRunTransparency-canonical-cli"
             >
               {canonicalWorkflowCommand}
@@ -156,7 +156,7 @@ export const PlanWorkflowRunTransparency = (
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-muted-foreground text-[0.65rem] font-medium uppercase tracking-wide">
+            <p className="text-muted-foreground text-[0.65rem] font-medium tracking-wide uppercase">
               vs Configuration reset (CLI argv)
             </p>
             {tuningDiffLabels.length === 0 ? (
@@ -177,7 +177,7 @@ export const PlanWorkflowRunTransparency = (
           </div>
 
           <div className="overflow-x-auto">
-            <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs mt-8">
+            <table className="text-muted-foreground mt-8 w-full min-w-[28rem] border-collapse text-xs">
               <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
                 Queued run audit (persisted plan_runs rows). Snapshot diff
                 compares enqueue-time config to current Configuration tab
@@ -255,7 +255,7 @@ export const PlanWorkflowRunTransparency = (
           </div>
 
           <div className="overflow-x-auto">
-            <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs mt-8">
+            <table className="text-muted-foreground mt-8 w-full min-w-[28rem] border-collapse text-xs">
               <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
                 Recent enqueue history (completed jobs for this plan). Each row
                 shows which runner executed that run (one backend per job).

@@ -49,15 +49,15 @@ export default function Component(
 
   return (
     <div className="flex h-full items-center justify-center">
-      <div className="p-12 relative flex flex-col gap-8">
-        <Avatar className="size-24 md:size-32 mx-auto mb-4 md:mb-4">
+      <div className="relative flex flex-col gap-8 p-12">
+        <Avatar className="mx-auto mb-4 size-24 md:mb-4 md:size-32">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback className="text-3xl">MS</AvatarFallback>
         </Avatar>
 
         <div className="flex flex-col items-center">
           <h2 className="text-xl font-bold">Matthew Scholta</h2>
-          <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+          <h3 className="text-muted-foreground hover:text-foreground cursor-pointer text-sm transition-colors">
             <OpenThrottleClipboard
               label={OPENTHROTTLE_CONTACT_EMAIL}
               text={OPENTHROTTLE_CONTACT_EMAIL}

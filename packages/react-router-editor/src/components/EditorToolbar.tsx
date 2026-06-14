@@ -94,7 +94,7 @@ export const EditorToolbar = (
     <>
       <div
         className={classnames(
-          'flex justify-between items-center p-4 border-b border-gray-700 bg-gray-900',
+          'flex items-center justify-between border-b border-gray-700 bg-gray-900 p-4',
           className,
         )}
         data-testid="EditorToolbar"

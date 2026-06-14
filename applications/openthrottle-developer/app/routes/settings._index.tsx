@@ -57,7 +57,7 @@ export default function Component(
           icon={CogIcon}
           title="Settings"
         />
-        <p className="max-w-2xl text-sm text-muted-foreground">
+        <p className="text-muted-foreground max-w-2xl text-sm">
           Controls for the OpenThrottle Developer portal.
         </p>
       </div>

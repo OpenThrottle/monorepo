@@ -31,9 +31,9 @@ export const SettingsBuildTools = (
       id="react-router-vite-devtools"
       legend="React Router / Vite devtools"
     >
-      <div className="space-y-3 text-sm text-muted-foreground">
+      <div className="text-muted-foreground space-y-3 text-sm">
         <p>
-          <span className="font-medium text-foreground">When to open:</span> Use
+          <span className="text-foreground font-medium">When to open:</span> Use
           the bundle analyzer for chunk overlap, duplicate packages, or split
           issues. Use React Router DevTools when debugging routes, loaders, and
           actions. For slow production builds, use Vite{' '}
@@ -75,8 +75,8 @@ export const SettingsBuildTools = (
           </Badge>
         </div>
         <p>
-          <span className="font-medium text-foreground">Clone path:</span>{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+          <span className="text-foreground font-medium">Clone path:</span>{' '}
+          <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
             docs/monorepo/openthrottle-developer-vite-devtools.md
           </code>
         </p>

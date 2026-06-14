@@ -48,7 +48,7 @@ export const SearchDocumentationCard = (
   const similarityBlock =
     result.similarity != null ? (
       <p
-        className="text-xs text-muted-foreground"
+        className="text-muted-foreground text-xs"
         data-testid="SearchDocumentationCard-similarity"
       >
         Relevance: {Math.round(result.similarity * 100)}%
@@ -58,7 +58,7 @@ export const SearchDocumentationCard = (
   const blobLink =
     hasBlobLink && result.sourceRepo != null && result.sourcePath != null ? (
       <a
-        className="text-sm text-primary underline-offset-4 hover:underline"
+        className="text-primary text-sm underline-offset-4 hover:underline"
         data-testid="SearchDocumentationCard-blobLink"
         href={githubBlobHref(
           result.sourceRepo,
@@ -92,8 +92,8 @@ export const SearchDocumentationCard = (
       </CardHeader>
       <Separator />
       <CardContent className="space-y-3 pt-4">
-        <pre className="text-sm text-muted-foreground leading-relaxed overflow-auto line-clamp-6">
-          <p className="text-sm text-muted-foreground leading-relaxed">
+        <pre className="text-muted-foreground line-clamp-6 overflow-auto text-sm leading-relaxed">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             {result.content}
           </p>
         </pre>

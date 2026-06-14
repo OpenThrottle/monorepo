@@ -48,7 +48,7 @@ export const PullRequestsTable = (
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="PullRequestsTable"
     >
       <DataTable<PullRequestCardFragment, PullRequestsTableColumnValue>

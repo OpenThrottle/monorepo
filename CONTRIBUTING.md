@@ -226,6 +226,12 @@ For rules, symlink each new `.mdc` from `.agents/rules/` into the matching `.cur
 - Update documentation when adding new features
 - See [MONOREPO.md](./MONOREPO.md) for project structure and organization guidelines
 
+### Formatting (Prettier)
+
+Prettier configuration lives in **one place**: `prettierConfig` from [`@tools/dotfiles`](tools/dotfiles/README.md). The repo's single root `.prettierrc.mjs` re-exports it, and Prettier resolves that root config from every directory — **do not add per-app `.prettierrc.mjs` files**. The shared config wires `prettier-plugin-tailwindcss` and pins YAML to **single quotes**; the root `.editorconfig` matches with `quote_type = single` so editors and Prettier never fight over YAML quotes.
+
+Format the whole repo with **`pnpm format`** and check it with **`pnpm format:check`** (these wrap `pnpm nx run monorepo:format-write` / `monorepo:format-check`). `format:check` also runs as part of `pnpm run check:local`.
+
 ### Knip and public exports
 
 When you add or keep an export that is part of a **package public API** (see `package.json` → `exports`) or a documented cross-workspace helper, tag it with JSDoc **`@publicApi`** so Knip does not report or auto-remove it. Component prop types (`*Props`, `*Options`) do not need this tag; intentional `export` on those types is expected. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md) for the full report-vs-fix workflow. Run **`pnpm nx run monorepo:knip`** for reports only—do not run **`knip --fix-type exports`** on application UI. **`knip --fix-type dependencies`** is optional and only after reviewing the `package.json` diff.

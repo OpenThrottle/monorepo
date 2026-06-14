@@ -64,7 +64,7 @@ export const GlobalSidebar = (
         return (
           <SidebarGroup key={section}>
             <SidebarGroupContent>
-              <SidebarMenu className="h-full flex flex-col gap-4">
+              <SidebarMenu className="flex h-full flex-col gap-4">
                 <div className="bg-muted">{items.map(renderLink)}</div>
               </SidebarMenu>
             </SidebarGroupContent>

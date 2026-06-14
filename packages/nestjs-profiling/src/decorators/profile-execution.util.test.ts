@@ -5,7 +5,10 @@ import { profileExecution } from './profile-execution.util';
 
 describe('profileExecution', () => {
   it('returns result and execution for sync fn', async () => {
-    const { execution, result } = await profileExecution('sync-label', () => 42);
+    const { execution, result } = await profileExecution(
+      'sync-label',
+      () => 42,
+    );
     expect(result).toBe(42);
     expect(execution.label).toBe('sync-label');
     expect(execution.output).toBe(42);
@@ -13,18 +16,20 @@ describe('profileExecution', () => {
   });
 
   it('returns result and execution for async fn', async () => {
-    const { execution, result } = await profileExecution('async-label', async () => 'ok');
+    const { execution, result } = await profileExecution(
+      'async-label',
+      async () => 'ok',
+    );
     expect(result).toBe('ok');
     expect(execution.label).toBe('async-label');
     expect(execution.output).toBe('ok');
   });
 
   it('accepts options.inputs and options.metadata', async () => {
-    const { execution } = await profileExecution(
-      'with-options',
-      () => true,
-      { inputs: [1, 2], metadata: { query: 'SELECT 1' } },
-    );
+    const { execution } = await profileExecution('with-options', () => true, {
+      inputs: [1, 2],
+      metadata: { query: 'SELECT 1' },
+    });
     expect(execution.inputs).toEqual([1, 2]);
     expect(execution.metadata).toEqual({ query: 'SELECT 1' });
   });

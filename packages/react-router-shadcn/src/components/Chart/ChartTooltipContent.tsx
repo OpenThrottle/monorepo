@@ -74,9 +74,9 @@ export const ChartTooltipContent = (
     : label;
 
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+    <div className="bg-popover text-popover-foreground rounded-lg border px-3 py-2 text-sm shadow-md">
       {!hideLabel && labelValue != null && (
-        <p className="mb-1.5 font-medium leading-none">{String(labelValue)}</p>
+        <p className="mb-1.5 leading-none font-medium">{String(labelValue)}</p>
       )}
       <div className="flex flex-col gap-1.5">
         {payload.map((item, index) => {
@@ -101,7 +101,7 @@ export const ChartTooltipContent = (
                   }}
                 />
               )}
-              <span className="flex-1 text-muted-foreground">{name}</span>
+              <span className="text-muted-foreground flex-1">{name}</span>
               <span className="font-medium">{value}</span>
             </div>
           );

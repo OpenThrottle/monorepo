@@ -43,7 +43,7 @@ export const PlanTabOutput = (
   if (chunks.length === 0) {
     return (
       <TabsContent
-        className="bg-card rounded-lg border border-card-border text-muted-foreground p-4 md:p-8 w-full"
+        className="bg-card border-card-border text-muted-foreground w-full rounded-lg border p-4 md:p-8"
         data-testid="PlanLoggerOutput"
         value="output"
       >

@@ -30,7 +30,7 @@ export const QueueJobMetrics = (
       id="job-metrics"
       legend="Process RSS (task metrics)"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Present when the worker recorded task-run metrics for this job.
       </p>
       <div className="text-sm">

@@ -23,14 +23,14 @@ export const PersonasTable = (
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="PersonasTable"
     >
       <DataTable<RepoPersonaEntry, PersonasTableColumnValue>
         columns={personasTableColumns}
         data={data}
         emptyState={
-          <p className="p-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground p-4 text-sm">
             No personas found under <code>.agents/personas/</code>.
           </p>
         }
