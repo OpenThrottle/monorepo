@@ -108,10 +108,19 @@ const createBaseVitestConfig = (
   const coverageDir =
     coverageDirectory ?? calculateCoverageDirectory(packagePath);
 
+  // Coverage is opt-in. The v8 provider writes raw coverage to
+  // `${reportsDirectory}/.tmp`; when the same project's test task runs
+  // concurrently from one checkout, the runs race on that shared directory and
+  // one fails with `ENOENT: lstat .../.tmp`. Since nothing in CI consumes the
+  // coverage output, default it off and enable it explicitly via
+  // `VITEST_COVERAGE=true` (or vitest's own `--coverage` flag, which overrides
+  // this). `coverageEnabled: false` (e.g. React Native) remains a hard off.
+  const coverageRequested = process.env.VITEST_COVERAGE === 'true';
+
   return defineConfig({
     test: {
       coverage: {
-        enabled: coverageEnabled,
+        enabled: coverageEnabled && coverageRequested,
         exclude: ['dist'],
         provider: 'v8',
         reportsDirectory: coverageDir,
