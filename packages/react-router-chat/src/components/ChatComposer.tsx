@@ -5,7 +5,14 @@ import classnames from 'classnames';
 export interface ChatComposerProps {
   readonly className?: string;
   readonly disabled?: boolean;
+  /**
+   * When true, the Send button is replaced by a Stop button wired to
+   * {@link onStop}, and Enter/submit is blocked. NOTE: this is a presentational
+   * in-flight affordance — the package performs no real cancellation; the
+   * consumer's {@link onStop} decides what (if anything) stopping does.
+   */
   readonly isStreaming?: boolean;
+  /** Invoked when the Stop button is pressed while {@link isStreaming}. */
   readonly onStop?: () => void;
   readonly onSubmit: (message: string) => void;
   readonly placeholder?: string;
@@ -15,7 +22,8 @@ export interface ChatComposerProps {
 }
 
 /**
- * @description Message input with submit button; Enter sends, Shift+Enter inserts a newline. While streaming, the Send button is replaced by a Stop button and Enter no longer submits.
+ * @description Message input with submit button; Enter sends, Shift+Enter inserts a newline.
+ * Optionally docks a {@link toolbar} into its footer and swaps Send for Stop while streaming.
  */
 export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   const {

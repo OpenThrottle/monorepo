@@ -98,6 +98,7 @@
     "@openthrottle/react-router-ide": "workspace:^",
     "@openthrottle/react-router-notifications": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-testing": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-ui-global": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",

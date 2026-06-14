@@ -1,0 +1,52 @@
+{
+  "name": "@openthrottle/react-router-testing",
+  "description": "Shared Vitest setup, jsdom polyfills, and window.env fixture for OpenThrottle React Router applications.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/react-router-utils": "workspace:*",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "jsdom": "catalog:",
+    "vitest": "catalog:"
+  },
+  "devDependencies": {},
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/react-router-testing",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

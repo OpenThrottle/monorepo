@@ -78,7 +78,7 @@ All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators
 - `const` over `let`; `async/await` over `.then()`.
 - Alphabetize arrays and object keys when order doesn't matter.
 - UI: use components from `@openthrottle/react-router-shadcn` (source in `packages/react-router-shadcn/src/components`).
-- Tests: use `component`, not `screen`, to get elements; `userEvent` instead of `fireEvent`.
+- Tests: use `component`, not `screen`, to get elements; `userEvent` instead of `fireEvent`. React Router apps share one Vitest setup — `tests/setup.ts` is a single `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from `@openthrottle/react-router-testing` (jsdom polyfills + `window.env` fixture + baked-in `afterEach(cleanup)`); don't re-add those shared shims per app.
 - Exports that are package public API need a JSDoc `@publicApi` tag so Knip keeps them.
 
 ## Git and agent behavior
