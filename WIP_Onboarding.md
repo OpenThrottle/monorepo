@@ -18,6 +18,9 @@ docker compose --profile dev watch
 cd /Users/matt/Development/odysseus
 
 ./start-macos.sh
+
+http://127.0.0.1:7860
+# admin/admin
 ```
 
 🤖 Claude:
