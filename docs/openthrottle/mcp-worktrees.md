@@ -30,3 +30,26 @@ Using this repo with custom MCPs (openthrottle-mcp, docs-mcp) across git worktre
 | **memory**           | No            | Stateless in-process; no identity.                                                                                                                                  |
 
 **Cortex/Postgres per worktree:** If you want a separate Cortex DB per worktree, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree’s `.env` (e.g. different ports or DB names). openthrottle-server and docs-mcp read those env vars at runtime. openthrottle-mcp talks to Cortex via GraphQL (openthrottle-server), so point it at the correct API URL per worktree if needed.
+
+## Resolving a live server URL ("fetch failed" in worktrees)
+
+Worktree setup (`scripts/setup_worktree.sh` via the `WorktreeCreate` hook) rewrites the canonical ports `6020–6025` in `.env` to a per-worktree block (e.g. `OPENTHROTTLE_SERVER_APP_URL=http://localhost:7011`). But **worktrees do not start their own `openthrottle-server`** — they share the main checkout's server, Postgres, and Redis. So the rewritten URL points at a port with nothing listening, and every openthrottle-mcp call returns `fetch failed`. If a worktree's `.env` is missing entirely, the old launcher died at `source ./.env` and registered **zero** tools.
+
+`scripts/run-openthrottle-mcp.sh` resolves a **live** server at launch instead of trusting the configured port. It probes `GET <url>/health` against candidates, in order, and uses the first that responds:
+
+1. This worktree's own `.env` `OPENTHROTTLE_SERVER_APP_URL` (if present and listening — preserves a genuine per-worktree server).
+2. The main/root checkout's `.env` `OPENTHROTTLE_SERVER_APP_URL` (resolved via `git rev-parse --git-common-dir`). This is the shared canonical server.
+3. A running docker `server` container's published host port (`docker ps`).
+4. Canonical fallback `http://localhost:6021`.
+
+The chosen URL is exported as `API_URL` / `API_URL_INTERNAL`. Reading `.env` is now optional (parsed without `source`), so a missing/partial worktree `.env` no longer aborts the launcher. If **no** candidate is reachable, the launcher exits non-zero with an actionable message instead of silently launching into a `fetch failed` loop:
+
+```
+❌ openthrottle-mcp: no reachable OpenThrottle server found.
+   Start it from the main checkout:
+       pnpm run database:start && pnpm nx run openthrottle-server:dev
+```
+
+`.mcp.json` invokes the script directly (`"args": ["scripts/run-openthrottle-mcp.sh"]`); it no longer prefixes `set -a && source ./.env && …`. To debug resolution without starting the server, run `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` — it prints the resolved URL and exits.
+
+**Note:** MCP servers register at session start, so this fix takes effect for *new* sessions/worktrees. For a session already running with broken tools, drive GraphQL directly against the live server with `curl` (bearer `OPENTHROTTLE_MCP_AUTH_TOKEN`) as a stopgap.
