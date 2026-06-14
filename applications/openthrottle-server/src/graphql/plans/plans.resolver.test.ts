@@ -1,6 +1,3 @@
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   getDefaultPlanRunConfigStorage,
@@ -13,25 +10,16 @@ import { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
-import {
-  afterEach,
-  describe,
-  expect,
-  beforeAll,
-  test,
-  vi,
-  beforeEach,
-} from 'vitest';
+import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import { QueuesService } from '../queues/queues.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
+import { PlanEnqueueService } from './plan-enqueue.service';
 import {
   CreatePlanInput,
-  EnqueuePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   SetPlanStatusInput,
@@ -184,12 +172,22 @@ describe('PlansResolver', () => {
     recordQueuedRun: mockRecordQueuedRun,
   });
 
-  const mockEnqueuePlanRalphOrchestrator = vi
+  // Enqueue mechanics now live in PlanEnqueueService (covered by plan-enqueue.service.test.ts);
+  // the resolver only validates input, delegates, and maps the outcome — so mock the service here.
+  const sampleEnqueueOutcome = {
+    executionBackend: 'cursor' as const,
+    jobId: 'job-enqueue-1',
+    planId: mockPlan.id,
+    queuePosition: 1,
+    queueTotal: 1,
+  };
+  const mockEnqueueSpawn = vi.fn().mockResolvedValue(sampleEnqueueOutcome);
+  const mockEnqueueOrchestrator = vi
     .fn()
-    .mockResolvedValue({ jobId: 'job-orch-1' });
-
-  const mockQueuesService = createMock<QueuesService>({
-    enqueuePlanRalphOrchestrator: mockEnqueuePlanRalphOrchestrator,
+    .mockResolvedValue(sampleEnqueueOutcome);
+  const mockPlanEnqueueService = createMock<PlanEnqueueService>({
+    enqueueOrchestrator: mockEnqueueOrchestrator,
+    enqueueSpawn: mockEnqueueSpawn,
   });
 
   beforeAll(async () => {
@@ -209,10 +207,10 @@ describe('PlansResolver', () => {
           provide: PlanRunCancellationService,
           useValue: { abort: mockPlanRunCancellationAbort },
         },
+        { provide: PlanEnqueueService, useValue: mockPlanEnqueueService },
         { provide: PlanRunsService, useValue: mockPlanRunsService },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
-        { provide: QueuesService, useValue: mockQueuesService },
         { provide: TasksService, useValue: mockTasksService },
         {
           provide: getQueueToken(PLANS_QUEUE_NAME),
@@ -540,614 +538,61 @@ describe('PlansResolver', () => {
     });
   });
 
-  describe('enqueuePlanRun (legacy spawn default)', () => {
-    let prevDefaultRunKind: string | undefined;
-
+  describe('enqueuePlanRun', () => {
     beforeEach(() => {
-      // These assertions cover the spawn path; force spawn so the orchestrator-by-default flip
-      // (resolveDefaultPlanRunKind) does not reroute them. Stage (a) rollback flag.
-      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
-      taskRepo.find.mockReset();
-      taskRepo.find.mockResolvedValue([]);
-      taskRepo.update.mockClear();
-      mockEmitTaskStatusChanged.mockClear();
+      mockEnqueueSpawn.mockClear();
+      mockEnqueueSpawn.mockResolvedValue(sampleEnqueueOutcome);
     });
 
-    afterEach(() => {
-      if (prevDefaultRunKind === undefined) {
-        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      } else {
-        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
-      }
-    });
-
-    test('returns job id, plan id, and queue position when plan exists', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockRecordQueuedRun.mockClear();
-      mockAdd.mockClear();
-
+    test('delegates to PlanEnqueueService.enqueueSpawn and maps the outcome', async () => {
       const result = await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      // jobId is client-generated and passed to queue.add; the run record and result echo it.
-      const addJobId = (mockAdd.mock.calls[0]?.[2] as { jobId: string }).jobId;
-      expect(result).not.toBeNull();
-      expect(result.executionBackend).toBe('cursor');
-      expect(addJobId).toEqual(expect.any(String));
-      expect(result.jobId).toBe(addJobId);
-      expect(result.planId).toBe(mockPlan.id);
-      expect(result.queuePosition).toBe(1);
-      expect(result.queueTotal).toBe(1);
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bullmqJobId: addJobId,
-          executionBackend: 'cursor',
-          planId: mockPlan.id,
-          queueName: PLANS_QUEUE_NAME,
-          runConfigSnapshot: expect.objectContaining({
-            ralph: { executionBackend: 'cursor' },
-            target: { mode: 'plan', taskId: '' },
-          }),
-          runKind: 'spawn',
-        }),
-        // recordQueuedRun now receives the transactional EntityManager as its second argument.
-        expect.anything(),
-      );
-    });
-
-    test('uses the caller idempotency key as the BullMQ jobId so re-enqueue dedupes to one job', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      const first = await resolver.enqueuePlanRun({
-        idempotencyKey: 'plan-run-key-1',
+        idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,
-        priority: null,
-        ralph: null,
-        workingDirectory: null,
-      });
-      const second = await resolver.enqueuePlanRun({
-        idempotencyKey: 'plan-run-key-1',
-        jobRunHooksJson: null,
-        planId: mockPlan.id,
-        priority: null,
+        priority: 5,
         ralph: null,
         workingDirectory: null,
       });
 
-      // Both calls pass the SAME jobId to BullMQ; BullMQ dedupes adds by jobId, so a re-enqueue
-      // returns the existing job rather than creating a duplicate (parity with the orchestrator).
-      expect(first.jobId).toBe('plan-run-key-1');
-      expect(second.jobId).toBe('plan-run-key-1');
-      expect(mockAdd).toHaveBeenNthCalledWith(
-        1,
-        'run-plan',
-        expect.objectContaining({ planId: mockPlan.id }),
-        expect.objectContaining({ jobId: 'plan-run-key-1' }),
-      );
-      expect(mockAdd).toHaveBeenNthCalledWith(
-        2,
-        'run-plan',
-        expect.objectContaining({ planId: mockPlan.id }),
-        expect.objectContaining({ jobId: 'plan-run-key-1' }),
-      );
-    });
-
-    test('rejects an invalid idempotency key before any enqueue', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await expect(
-        resolver.enqueuePlanRun({
-          idempotencyKey: 'bad key with spaces',
-          jobRunHooksJson: null,
-          planId: mockPlan.id,
-          priority: null,
-          ralph: null,
-          workingDirectory: null,
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-      expect(mockAdd).not.toHaveBeenCalled();
-    });
-
-    test('throws NotFoundException when plan does not exist', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
-
-      const input: EnqueuePlanRunInput = {
-        planId: 'non-existent-id',
-        priority: null,
-        workingDirectory: null,
-      };
-      await expect(resolver.enqueuePlanRun(input)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
-    });
-
-    test('sets non-completed tasks to QUEUED (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED)', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockTaskUpdateExecute.mockResolvedValueOnce({
-        affected: 2,
-        generatedMaps: [],
-        raw: [{ id: 'task-a' }, { id: 'task-b' }],
-      });
-      mockTaskUpdateQueryBuilder.set.mockClear();
-      mockTaskUpdateQueryBuilder.andWhere.mockClear();
-
-      await resolver.enqueuePlanRun({
+      expect(mockEnqueueSpawn).toHaveBeenCalledWith({
+        idempotencyKey: 'caller-key',
+        jobRunHooksJson: null,
         planId: mockPlan.id,
-        priority: null,
+        priority: 5,
+        ralph: null,
         workingDirectory: null,
       });
-
-      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
-        status: 'QUEUED',
-      });
-      expect(mockTaskUpdateQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'status IN (:...fromStatuses)',
-        {
-          fromStatuses: [
-            'PENDING',
-            'IN_PROGRESS',
-            'BLOCKED',
-            'BACKLOG',
-            'SKIPPED',
-            'CANCELED',
-          ],
-        },
-      );
-      expect(mockEmitTaskStatusChanged).toHaveBeenCalledTimes(2);
-      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
-        planId: mockPlan.id,
-        status: 'QUEUED',
-        taskId: 'task-a',
-      });
-      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
-        planId: mockPlan.id,
-        status: 'QUEUED',
-        taskId: 'task-b',
-      });
-    });
-
-    test('does not update COMPLETED tasks to QUEUED', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockTaskUpdateQueryBuilder.andWhere.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      const andWhereArgs = mockTaskUpdateQueryBuilder.andWhere.mock
-        .calls[0]?.[1] as {
-        fromStatuses: readonly string[];
-      };
-      expect(andWhereArgs.fromStatuses).not.toContain('COMPLETED');
-    });
-
-    test('re-queue runs the task update again (idempotent behavior)', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockTaskUpdateExecute.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      // The atomic UPDATE ... RETURNING runs once per enqueue.
-      expect(mockTaskUpdateExecute).toHaveBeenCalledTimes(2);
-    });
-
-    test('passes priority to queue.add when priority is provided', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: 1,
-        workingDirectory: null,
-      });
-
-      expect(mockAdd).toHaveBeenCalledWith(
-        'run-plan',
-        { executionBackend: 'cursor', planId: mockPlan.id },
-        expect.objectContaining({ priority: 1 }),
-      );
-    });
-
-    test('uses default priority (10) when priority is null', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      expect(mockAdd).toHaveBeenCalledWith(
-        'run-plan',
-        { executionBackend: 'cursor', planId: mockPlan.id },
-        expect.objectContaining({ priority: 10 }),
-      );
-    });
-
-    test('omits ralph from queue job data when ralph input is not provided', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      const jobData = mockAdd.mock.calls[0]?.[1];
-      expect(jobData).toEqual({
-        executionBackend: 'cursor',
-        planId: mockPlan.id,
-      });
-      expect(jobData).not.toHaveProperty('ralph');
-    });
-
-    test('accepts batch priority (100)', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: 100,
-        workingDirectory: null,
-      });
-
-      expect(mockAdd).toHaveBeenCalledWith(
-        'run-plan',
-        { executionBackend: 'cursor', planId: mockPlan.id },
-        expect.objectContaining({ priority: 100 }),
-      );
-    });
-
-    test('passes ralph tuning into queue job data when provided', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        ralph: {
-          backend: 'cursor',
-          iterationTimeoutSeconds: 120,
-          iterations: 5,
-          model: null,
-          project: 'applications/openthrottle-server',
-          prompt: null,
-          promptFile: null,
-          ralphDebugCli: 'verbose',
-          skipWorktreeSetup: null,
-          worktree: 'target-one',
-          worktreeBase: null,
-        },
-        workingDirectory: null,
-      });
-
-      expect(mockAdd).toHaveBeenCalledWith(
-        'run-plan',
+      expect(result).toEqual(
         expect.objectContaining({
           executionBackend: 'cursor',
+          jobId: sampleEnqueueOutcome.jobId,
           planId: mockPlan.id,
-          ralph: expect.objectContaining({
-            backend: 'cursor',
-            debug: 'verbose',
-            iterationTimeoutSeconds: 120,
-            iterations: 5,
-            project: 'applications/openthrottle-server',
-            worktree: 'target-one',
-          }),
-        }),
-        expect.objectContaining({ priority: 10 }),
-      );
-    });
-
-    /**
-     * @description Enqueue with a real directory outside the OT tree so `buildRunPlanJobData` validation
-     * passes; BullMQ payload must carry `workingDirectory` for the processor spawn cwd (regression:
-     * nested CLI must still use worker POSTGRES / canonical OpenThrottle URL).
-     */
-    test('includes external workingDirectory in queue job data (enqueue → processor contract)', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-
-      const externalDir = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'ot-external-wd-'),
-      );
-      try {
-        await resolver.enqueuePlanRun({
-          planId: mockPlan.id,
-          priority: null,
-          workingDirectory: externalDir,
-        });
-
-        expect(mockAdd).toHaveBeenCalledWith(
-          'run-plan',
-          {
-            executionBackend: 'cursor',
-            planId: mockPlan.id,
-            workingDirectory: externalDir,
-          },
-          expect.objectContaining({ priority: 10 }),
-        );
-      } finally {
-        fs.rmSync(externalDir, { force: true, recursive: true });
-      }
-    });
-
-    test('throws BadRequestException when ralph tuning is invalid', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-
-      await expect(
-        resolver.enqueuePlanRun({
-          planId: mockPlan.id,
-          priority: null,
-          ralph: {
-            backend: 'not-a-real-backend',
-            iterationTimeoutSeconds: null,
-            iterations: null,
-            model: null,
-            project: null,
-            prompt: null,
-            promptFile: null,
-            ralphDebugCli: null,
-          },
-          workingDirectory: null,
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
-
-    /**
-     * @description After kill/cancel, plan is PENDING and queue job is gone; a new Run plan must
-     * enqueue successfully (no stuck state blocking a follow-up run).
-     */
-    test('enqueuePlanRun succeeds after cancelPlanRun left plan PENDING (regression: new run after kill)', async () => {
-      mockPlanRunCancellationAbort.mockReturnValue(false);
-      const remove = vi.fn().mockResolvedValue(undefined);
-      mockGetJobs.mockResolvedValueOnce([
-        {
-          data: { planId: mockPlan.id },
-          getState: vi.fn(),
-          id: 'job-99',
-          name: 'run-plan',
-          remove,
-        },
-      ]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne)
-        .mockResolvedValueOnce(mockPlan)
-        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
-
-      await resolver.cancelPlanRun({ planId: mockPlan.id });
-
-      expect(remove).toHaveBeenCalledOnce();
-
-      vi.mocked(repo.findOne).mockResolvedValue({
-        ...mockPlan,
-        status: 'PENDING',
-      });
-      mockAdd.mockClear();
-      vi.mocked(repo.update).mockClear();
-
-      const enqueueResult = await resolver.enqueuePlanRun({
-        planId: mockPlan.id,
-        priority: null,
-        workingDirectory: null,
-      });
-
-      expect(enqueueResult.planId).toBe(mockPlan.id);
-      expect(mockAdd).toHaveBeenCalledTimes(1);
-      expect(repo.update).toHaveBeenCalledWith(
-        { id: mockPlan.id },
-        { status: 'QUEUED' },
-      );
-    });
-  });
-
-  describe('enqueuePlanRun (orchestrator by default)', () => {
-    let prevDefaultRunKind: string | undefined;
-
-    beforeEach(() => {
-      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      taskRepo.find.mockReset();
-      taskRepo.find.mockResolvedValue([]);
-      mockAdd.mockClear();
-      mockEnqueuePlanRalphOrchestrator.mockClear();
-      mockEnqueuePlanRalphOrchestrator.mockResolvedValue({
-        jobId: 'job-orch-1',
-      });
-    });
-
-    afterEach(() => {
-      if (prevDefaultRunKind === undefined) {
-        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      } else {
-        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
-      }
-    });
-
-    test('routes to the orchestrator path (no spawn) when default run kind is orchestrator', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-
-      const result = await resolver.enqueuePlanRun({
-        jobRunHooksJson: null,
-        planId: mockPlan.id,
-        priority: null,
-        ralph: null,
-        workingDirectory: null,
-      });
-
-      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledTimes(1);
-      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
-        expect.objectContaining({
-          jobData: expect.objectContaining({
-            planId: mockPlan.id,
-            runKind: 'orchestrator',
-          }),
+          queuePosition: sampleEnqueueOutcome.queuePosition,
+          queueTotal: sampleEnqueueOutcome.queueTotal,
         }),
       );
-      expect(mockAdd).not.toHaveBeenCalled();
-      expect(result.jobId).toBe('job-orch-1');
     });
 
-    test('OPENTHROTTLE_DEFAULT_RUN_KIND=spawn reverts to the spawn path (rollback flag)', async () => {
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-
+    test('maps an omitted idempotency key to null when delegating', async () => {
       await resolver.enqueuePlanRun({
-        jobRunHooksJson: null,
         planId: mockPlan.id,
         priority: null,
-        ralph: null,
         workingDirectory: null,
       });
 
-      expect(mockAdd).toHaveBeenCalledTimes(1);
-      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
-    });
-  });
-
-  // Atomic-enqueue behavior (Plan ca6e3ecb): the run record, plan status, and task resets run in a
-  // single transaction and the BullMQ job is enqueued only AFTER it commits. A DB failure mid-write
-  // therefore rolls the transaction back AND leaves no orphaned job, because the queue add is never
-  // reached. (Replaces the earlier pre-transaction characterization tests.)
-  describe('enqueue partial-failure is atomic (no orphaned job, no divergence)', () => {
-    let prevDefaultRunKind: string | undefined;
-
-    beforeEach(() => {
-      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      taskRepo.find.mockReset();
-      taskRepo.find.mockResolvedValue([{ id: 'task-a' }]);
-      taskRepo.update.mockClear();
-      mockAdd.mockClear();
-      mockRecordQueuedRun.mockClear();
-      mockEnqueuePlanRalphOrchestrator.mockClear();
-      mockEnqueuePlanRalphOrchestrator.mockResolvedValue({
-        jobId: 'job-orch-1',
-      });
-      mockEmitTaskStatusChanged.mockClear();
-    });
-
-    afterEach(() => {
-      if (prevDefaultRunKind === undefined) {
-        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      } else {
-        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
-      }
-      // Restore the shared repo.update mock for subsequent suites.
-      vi.mocked(repo.update).mockResolvedValue(undefined);
-    });
-
-    test('spawn: a failure during the DB transaction rolls back and never enqueues a job', async () => {
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
-      vi.mocked(repo.update).mockRejectedValueOnce(new Error('db down'));
-
-      await expect(
-        resolver.enqueuePlanRun({
-          jobRunHooksJson: null,
-          planId: mockPlan.id,
-          priority: null,
-          ralph: null,
-          workingDirectory: null,
-        }),
-      ).rejects.toThrow('db down');
-
-      // The queue add runs only after the transaction commits, so a DB failure leaves no orphaned
-      // job — the key fix over the previous add-first ordering.
-      expect(mockAdd).not.toHaveBeenCalled();
-    });
-
-    test('orchestrator: a failure during the DB transaction rolls back and never enqueues a job', async () => {
-      vi.mocked(repo.update).mockRejectedValueOnce(new Error('db down'));
-
-      await expect(
-        resolver.enqueuePlanRalphOrchestrator({
-          idempotencyKey: null,
-          jobRunHooksJson: null,
-          mode: null,
-          planId: mockPlan.id,
-          priority: null,
-          ralph: null,
-          taskId: null,
-          workingDirectory: null,
-        }),
-      ).rejects.toThrow('db down');
-
-      // enqueuePlanRalphOrchestrator (the BullMQ add) runs only after the transaction commits.
-      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+        expect.objectContaining({ idempotencyKey: null, planId: mockPlan.id }),
+      );
     });
   });
 
   describe('workflowPlanRun', () => {
-    let prevDefaultRunKind: string | undefined;
-
     beforeEach(() => {
-      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
+      mockEnqueueSpawn.mockClear();
+      mockEnqueueSpawn.mockResolvedValue(sampleEnqueueOutcome);
     });
 
-    afterEach(() => {
-      if (prevDefaultRunKind === undefined) {
-        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-      } else {
-        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
-      }
-    });
-
-    test('throws NotFoundException when plan does not exist', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
-
-      await expect(
-        resolver.workflowPlanRun({
-          planId: 'non-existent-id',
-          priority: null,
-          workingDirectory: null,
-        }),
-      ).rejects.toBeInstanceOf(NotFoundException);
-    });
-
-    test('delegates to enqueuePlanRun with identical result', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockAdd.mockClear();
-      mockRecordQueuedRun.mockClear();
-
+    test('delegates to enqueuePlanRun (enqueueSpawn) with an equivalent result', async () => {
       const input = {
         jobRunHooksJson: null,
         planId: mockPlan.id,
@@ -1157,47 +602,23 @@ describe('PlansResolver', () => {
       };
 
       const viaCanonical = await resolver.enqueuePlanRun(input);
-      mockAdd.mockClear();
-      mockRecordQueuedRun.mockClear();
-
       const viaAlias = await resolver.workflowPlanRun(input);
 
-      // jobId is a per-call generated UUID, so compare the rest of the result and assert both are
-      // well-formed rather than deep-equal.
-      expect(viaAlias.executionBackend).toBe(viaCanonical.executionBackend);
+      expect(mockEnqueueSpawn).toHaveBeenCalledTimes(2);
+      expect(viaAlias.jobId).toBe(viaCanonical.jobId);
       expect(viaAlias.planId).toBe(viaCanonical.planId);
-      expect(viaAlias.queuePosition).toBe(viaCanonical.queuePosition);
-      expect(viaAlias.queueTotal).toBe(viaCanonical.queueTotal);
-      expect(viaAlias.jobId).toEqual(expect.any(String));
-      expect(mockAdd).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('enqueuePlanRalphOrchestrator', () => {
-    test('throws NotFoundException when plan does not exist', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
-
-      await expect(
-        resolver.enqueuePlanRalphOrchestrator({
-          idempotencyKey: null,
-          mode: null,
-          planId: 'non-existent-id',
-          priority: null,
-          ralph: null,
-          taskId: null,
-          workingDirectory: null,
-        }),
-      ).rejects.toBeInstanceOf(NotFoundException);
+    beforeEach(() => {
+      mockEnqueueOrchestrator.mockClear();
+      mockEnqueueOrchestrator.mockResolvedValue(sampleEnqueueOutcome);
+      taskRepo.findOne.mockReset();
+      taskRepo.findOne.mockResolvedValue(null);
     });
 
-    test('delegates to QueuesService with orchestrator job data', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      mockEnqueuePlanRalphOrchestrator.mockClear();
-      mockAdd.mockClear();
-      mockRecordQueuedRun.mockClear();
-
+    test('delegates to PlanEnqueueService.enqueueOrchestrator and maps the outcome', async () => {
       const result = await resolver.enqueuePlanRalphOrchestrator({
         idempotencyKey: null,
         mode: null,
@@ -1208,52 +629,36 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      expect(result.executionBackend).toBe('cursor');
-      expect(result.jobId).toBe('job-orch-1');
-      // Absent a caller idempotency key, the resolver generates one (a UUID) that doubles as the
-      // BullMQ jobId AND the run record's bullmqJobId, so the two writes agree.
-      const enqueueArg = mockEnqueuePlanRalphOrchestrator.mock
-        .calls[0]?.[0] as {
-        idempotencyKey: string;
-      };
-      expect(enqueueArg.idempotencyKey).toEqual(expect.any(String));
-      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
-        idempotencyKey: enqueueArg.idempotencyKey,
-        jobData: {
-          executionBackend: 'cursor',
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mode: null,
           planId: mockPlan.id,
-          runKind: 'orchestrator',
-        },
-        priority: 10,
-      });
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
-        {
-          bullmqJobId: enqueueArg.idempotencyKey,
-          executionBackend: 'cursor',
-          planId: mockPlan.id,
-          queueName: PLANS_QUEUE_NAME,
-          runConfigSnapshot: expect.objectContaining({
-            ralph: { executionBackend: 'cursor' },
-            target: { mode: 'plan', taskId: '' },
-            version: 1,
-            workspace: { workingDirectory: '' },
-          }),
-          runKind: 'orchestrator',
-        },
-        // recordQueuedRun now receives the transactional EntityManager as its second argument.
-        expect.anything(),
+          taskId: null,
+        }),
       );
-      expect(mockAdd).not.toHaveBeenCalled();
+      expect(result.jobId).toBe(sampleEnqueueOutcome.jobId);
     });
 
-    test('task mode validates task belongs to plan', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+    test('requires taskId when mode is task (no delegation)', async () => {
+      await expect(
+        resolver.enqueuePlanRalphOrchestrator({
+          idempotencyKey: null,
+          mode: PlanRalphWorkflowModeGraphQL.task,
+          planId: mockPlan.id,
+          priority: null,
+          ralph: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockEnqueueOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('validates the task belongs to the plan and forwards task mode', async () => {
       taskRepo.findOne.mockResolvedValueOnce({
         id: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
         planId: mockPlan.id,
       } as never);
-      mockEnqueuePlanRalphOrchestrator.mockClear();
 
       await resolver.enqueuePlanRalphOrchestrator({
         idempotencyKey: null,
@@ -1271,20 +676,15 @@ describe('PlansResolver', () => {
           planId: mockPlan.id,
         },
       });
-      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith(
         expect.objectContaining({
-          jobData: expect.objectContaining({
-            mode: 'task',
-            runKind: 'orchestrator',
-            taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
-          }),
+          mode: 'task',
+          taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
         }),
       );
     });
 
-    test('throws when task not found for task mode', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+    test('throws when the task is not found for task mode (no delegation)', async () => {
       taskRepo.findOne.mockResolvedValueOnce(null);
 
       await expect(
@@ -1298,6 +698,7 @@ describe('PlansResolver', () => {
           workingDirectory: null,
         }),
       ).rejects.toThrow(/Task not found for this plan/);
+      expect(mockEnqueueOrchestrator).not.toHaveBeenCalled();
     });
   });
 

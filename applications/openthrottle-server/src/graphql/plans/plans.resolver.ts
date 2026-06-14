@@ -7,7 +7,6 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
-import { randomUUID } from 'node:crypto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
@@ -26,14 +25,12 @@ import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
-  Plan,
   planHasCustomRunConfig,
   PlansService,
   PlanRunsService,
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
-  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
@@ -41,31 +38,21 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import type { Project } from '@openthrottle/nestjs-repositories';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
-import {
-  PLAN_JOB_PRIORITY_DEFAULT,
-  PLANS_QUEUE_NAME,
-  RUN_PLAN_SPAWN_JOB_NAME,
-} from '../../queues/plans/plans.constants';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { ProjectObject } from '../projects/project.object';
-import {
-  normalizeIdempotencyKey,
-  QueuesService,
-} from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
+import {
+  type EnqueueOutcome,
+  PlanEnqueueService,
+} from './plan-enqueue.service';
 import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
 } from './enqueue-plan-job-run-hooks';
-import {
-  buildRunPlanJobData,
-  buildRunPlanOrchestratorJobData,
-  resolveDefaultPlanRunKind,
-} from './enqueue-plan-ralph-tuning';
-import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
@@ -97,16 +84,6 @@ const DEFAULT_PLANS_LIMIT = 100;
 const MAX_PLANS_LIMIT = 500;
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
-/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
-const ENQUEUE_TASK_STATUSES_TO_RESET = [
-  'PENDING',
-  'IN_PROGRESS',
-  'BLOCKED',
-  'BACKLOG',
-  'SKIPPED',
-  'CANCELED',
-] as const;
-
 /**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
  */
@@ -129,14 +106,26 @@ export class PlansResolver {
     private readonly loaders: PlansLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planCreationService: PlanCreationService,
+    private readonly planEnqueueService: PlanEnqueueService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
-    private readonly queuesService: QueuesService,
     private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
   ) {}
+
+  private toEnqueueResult(outcome: EnqueueOutcome): EnqueuePlanRunResultObject {
+    const result = new EnqueuePlanRunResultObject();
+
+    result.executionBackend = outcome.executionBackend;
+    result.jobId = outcome.jobId;
+    result.planId = outcome.planId;
+    result.queuePosition = outcome.queuePosition;
+    result.queueTotal = outcome.queueTotal;
+
+    return result;
+  }
 
   // @ProfileResponseTime('PlansResolver.projectRelation')
   @ResolveField(() => ProjectObject, {
@@ -717,124 +706,16 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const {
-      idempotencyKey,
-      jobRunHooksJson,
-      planId,
-      priority,
-      ralph,
-      workingDirectory,
-    } = input;
-
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-
-    if (!plan) {
-      throw new NotFoundException(`🟡 3 - Plan not found: ${planId}`);
-    }
-
-    // Orchestrator-by-default: queued runs use the in-process GraphQL orchestrator (resolved as
-    // AgenticWorkflowRalph through the AgenticWorkflowBase registry) unless the deployment opts back
-    // into spawn via OPENTHROTTLE_DEFAULT_RUN_KIND=spawn (Stage (a) rollback flag).
-    if (resolveDefaultPlanRunKind() === 'orchestrator') {
-      const orchestratorInput = new EnqueuePlanRalphOrchestratorInput();
-      orchestratorInput.idempotencyKey = idempotencyKey ?? null;
-      orchestratorInput.jobRunHooksJson = jobRunHooksJson;
-      orchestratorInput.mode = null;
-      orchestratorInput.planId = planId;
-      orchestratorInput.priority = priority;
-      orchestratorInput.ralph = ralph;
-      orchestratorInput.taskId = null;
-      orchestratorInput.workingDirectory = workingDirectory;
-
-      return this.enqueuePlanRalphOrchestrator(orchestratorInput);
-    }
-
-    let jobData: RunPlanJobData;
-    try {
-      jobData = buildRunPlanJobData({
-        jobRunHooksJson,
-        planId,
-        planJobRunHooks: plan.jobRunHooks,
-        ralph,
-        workingDirectory,
-      });
-    } catch (error) {
-      const isError = error instanceof Error;
-      const message = isError ? error.message : String(error);
-
-      throw new BadRequestException(message);
-    }
-
-    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    // Validate any caller idempotency key before the transaction so we never commit then fail.
-    // The key (when supplied) doubles as the BullMQ jobId, so a re-enqueue with the same key
-    // dedupes to one job; otherwise we generate one so the run record can be written inside the
-    // transaction BEFORE the BullMQ job exists. See the atomicity invariant below.
-    const normalizedKey = normalizeIdempotencyKey(idempotencyKey);
-    if ('error' in normalizedKey) {
-      throw new BadRequestException(normalizedKey.error);
-    }
-    const jobId = normalizedKey.key ?? randomUUID();
-    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
-
-    // Atomicity invariant: the run record, plan status, and task resets commit together or not at
-    // all. The BullMQ add cannot join a DB transaction, so we enqueue AFTER the transaction commits
-    // (enqueue-after-commit). A DB failure therefore leaves NO orphaned job; the narrow
-    // "committed but add threw" window leaves a QUEUED plan with no job, which a retry re-enqueues
-    // and the processor's onModuleInit reconciliation (reconcilePlanStatusOnStartup) tolerates.
-    await repo.manager.transaction(async (manager) => {
-      await this.planRunsService.recordQueuedRun(
-        {
-          bullmqJobId: jobId,
-          executionBackend: jobData.executionBackend ?? 'cursor',
-          planId,
-          queueName: PLANS_QUEUE_NAME,
-          runConfigSnapshot,
-          runKind: 'spawn',
-        },
-        manager,
-      );
-
-      await manager
-        .getRepository(Plan)
-        .update({ id: planId }, { status: 'QUEUED' });
-
-      await updateMatchingTasksAndEmitStatusChanged({
-        fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
-        notifications: this.notificationsService,
-        planId,
-        taskRepo: manager.getRepository(Task),
-        toStatus: 'QUEUED',
-      });
+    const outcome = await this.planEnqueueService.enqueueSpawn({
+      idempotencyKey: input.idempotencyKey ?? null,
+      jobRunHooksJson: input.jobRunHooksJson,
+      planId: input.planId,
+      priority: input.priority,
+      ralph: input.ralph,
+      workingDirectory: input.workingDirectory,
     });
 
-    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
-      jobId,
-      priority: jobPriority,
-    });
-
-    const waitingCount = await this.plansQueue.getWaitingCount();
-    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
-    const jobIndex = waitingJobs.findIndex((j) => j.id === job.id);
-    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
-    const queueTotal = waitingCount;
-
-    this.notificationsService.emitPlanEnqueued({
-      planId,
-      queuePosition,
-      queueTotal,
-    });
-
-    const result = new EnqueuePlanRunResultObject();
-
-    result.executionBackend = jobData.executionBackend ?? 'cursor';
-    result.jobId = jobId;
-    result.planId = planId;
-    result.queuePosition = queuePosition;
-    result.queueTotal = queueTotal;
-
-    return result;
+    return this.toEnqueueResult(outcome);
   }
 
   /** Timing is captured by {@link PlansResolver.enqueuePlanRun} (this alias delegates there). */
@@ -880,30 +761,12 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
     input: EnqueuePlanRalphOrchestratorInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const {
-      idempotencyKey,
-      jobRunHooksJson,
-      planId,
-      priority,
-      ralph,
-      taskId,
-      workingDirectory,
-    } = input;
-    const modeGraphql = input.mode;
-
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-
-    if (!plan) {
-      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
-    }
-
-    const taskRepo = this.tasksService.getRepository();
+    const { planId, taskId } = input;
 
     const mode =
-      modeGraphql === PlanRalphWorkflowModeGraphQL.task
+      input.mode === PlanRalphWorkflowModeGraphQL.task
         ? ('task' as const)
-        : modeGraphql === PlanRalphWorkflowModeGraphQL.plan
+        : input.mode === PlanRalphWorkflowModeGraphQL.plan
           ? ('plan' as const)
           : null;
 
@@ -912,7 +775,7 @@ export class PlansResolver {
     }
 
     if (mode === 'task' && taskId != null) {
-      const task = await taskRepo.findOne({
+      const task = await this.tasksService.getRepository().findOne({
         where: { id: taskId.trim(), planId },
       });
       if (!task) {
@@ -922,101 +785,18 @@ export class PlansResolver {
       }
     }
 
-    let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
-    try {
-      jobData = buildRunPlanOrchestratorJobData({
-        jobRunHooksJson,
-        mode,
-        planId,
-        planJobRunHooks: plan.jobRunHooks,
-        ralph,
-        taskId,
-        workingDirectory,
-      });
-    } catch (error) {
-      const isError = error instanceof Error;
-      const message = isError ? error.message : String(error);
-
-      throw new BadRequestException(message);
-    }
-
-    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-
-    // Validate the idempotency key up front so we never commit DB writes and then fail to enqueue.
-    // The validated key doubles as the BullMQ jobId; absent a caller key we generate one so the run
-    // record can be written before the job exists (enqueue-after-commit, see invariant below).
-    const normalizedKey = normalizeIdempotencyKey(idempotencyKey);
-    if ('error' in normalizedKey) {
-      throw new BadRequestException(normalizedKey.error);
-    }
-    const effectiveJobId = normalizedKey.key ?? randomUUID();
-    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
-
-    // Atomicity invariant (mirrors enqueuePlanRun): the run record, plan status, and task resets
-    // commit together or not at all; the orchestrator job is enqueued AFTER the transaction commits.
-    // A DB failure leaves no orphaned job; a duplicate idempotency key dedupes at the BullMQ layer
-    // (queuesService passes effectiveJobId as the jobId). The committed-but-add-failed window is
-    // tolerated by the processor's onModuleInit reconciliation.
-    await repo.manager.transaction(async (manager) => {
-      await this.planRunsService.recordQueuedRun(
-        {
-          bullmqJobId: effectiveJobId,
-          executionBackend: jobData.executionBackend ?? 'cursor',
-          planId,
-          queueName: PLANS_QUEUE_NAME,
-          runConfigSnapshot,
-          runKind: 'orchestrator',
-        },
-        manager,
-      );
-
-      await manager
-        .getRepository(Plan)
-        .update({ id: planId }, { status: 'QUEUED' });
-
-      await updateMatchingTasksAndEmitStatusChanged({
-        fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
-        notifications: this.notificationsService,
-        planId,
-        taskRepo: manager.getRepository(Task),
-        toStatus: 'QUEUED',
-      });
-    });
-
-    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
-      {
-        idempotencyKey: effectiveJobId,
-        jobData,
-        priority: jobPriority,
-      },
-    );
-
-    if ('error' in enqueueResult) {
-      throw new BadRequestException(enqueueResult.error);
-    }
-
-    const waitingCount = await this.plansQueue.getWaitingCount();
-    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
-    const jobIndex = waitingJobs.findIndex(
-      (j) => String(j.id) === enqueueResult.jobId,
-    );
-    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
-    const queueTotal = waitingCount;
-
-    this.notificationsService.emitPlanEnqueued({
+    const outcome = await this.planEnqueueService.enqueueOrchestrator({
+      idempotencyKey: input.idempotencyKey ?? null,
+      jobRunHooksJson: input.jobRunHooksJson,
+      mode,
       planId,
-      queuePosition,
-      queueTotal,
+      priority: input.priority,
+      ralph: input.ralph,
+      taskId,
+      workingDirectory: input.workingDirectory,
     });
 
-    const result = new EnqueuePlanRunResultObject();
-    result.executionBackend = jobData.executionBackend ?? 'cursor';
-    result.jobId = enqueueResult.jobId;
-    result.planId = planId;
-    result.queuePosition = queuePosition;
-    result.queueTotal = queueTotal;
-
-    return result;
+    return this.toEnqueueResult(outcome);
   }
 
   // @ProfileResponseTime('PlansResolver.cancelPlanRun')
