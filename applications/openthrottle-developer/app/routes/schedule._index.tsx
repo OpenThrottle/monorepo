@@ -5,18 +5,18 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { CalendarIntroduction } from '~/routing/calendar/components/CalendarIntroduction';
-import { CalendarTable } from '~/routing/calendar/components/CalendarTable';
-import { CalendarToolbar } from '~/routing/calendar/components/CalendarToolbar';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { filterCalendarEventsBySearch } from '~/routing/calendar/utils/events';
+import { ScheduleIntroduction } from '~/routing/schedule/components/ScheduleIntroduction';
+import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
+import { ScheduleToolbar } from '~/routing/schedule/components/ScheduleToolbar';
+import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
+import { filterScheduleEventsBySearch } from '~/routing/schedule/utils/events';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/calendar._index';
+import type { Route } from '@/app/routes/+types/schedule._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Calendar',
+  breadcrumb: (_match) => 'Schedule',
   links: (_match) => [],
 };
 
@@ -25,7 +25,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const searchParams = url?.searchParams ?? new URLSearchParams();
   const search = searchParams.get('q')?.trim() ?? '';
 
-  const events = filterCalendarEventsBySearch(CALENDAR_EVENTS, search);
+  const events = filterScheduleEventsBySearch(SCHEDULE_EVENTS, search);
 
   return { events, search };
 };
@@ -35,7 +35,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Calendar | ${SITE_TITLE}` }];
+  return [{ title: `Schedule | ${SITE_TITLE}` }];
 });
 
 export default function Component(
@@ -58,11 +58,11 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <CalendarIntroduction />
+      <ScheduleIntroduction />
 
       <div className="flex flex-col gap-4">
-        <CalendarToolbar />
-        <CalendarTable className="bg-card" events={events} />
+        <ScheduleToolbar />
+        <ScheduleTable className="bg-card" events={events} />
       </div>
     </GlobalScreen>
   );

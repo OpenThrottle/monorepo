@@ -9,23 +9,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
-import type { CalendarEvent } from '~/routing/calendar/types';
+import { formatScheduleRange } from '~/routing/schedule/utils/formatters';
+import type { ScheduleEvent } from '~/routing/schedule/types';
 
-export interface CalendarEventDetailsProps {
+export interface ScheduleEventDetailsProps {
   className?: string;
-  event: CalendarEvent;
+  event: ScheduleEvent;
 }
 
-export const CalendarEventDetails = (
-  props: CalendarEventDetailsProps,
+export const ScheduleEventDetails = (
+  props: ScheduleEventDetailsProps,
 ): React.ReactElement => {
   const { className, event } = props;
 
   // Hooks
 
   // Setup
-  const when = formatCalendarRange(event.startsAt, event.endsAt, event.allDay);
+  const when = formatScheduleRange(event.startsAt, event.endsAt, event.allDay);
   const location = event.location.trim();
 
   // Handlers
@@ -39,7 +39,7 @@ export const CalendarEventDetails = (
   return (
     <Card
       className={classnames('w-full', className)}
-      data-testid="CalendarEventDetails"
+      data-testid="ScheduleEventDetails"
     >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
