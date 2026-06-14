@@ -39,6 +39,12 @@ runs:
         cache-dependency-path: 'pnpm-lock.yaml'
         node-version-file: '.nvmrc'
 
+    # pnpm 11 no longer expands ${GITHUB_TOKEN} from the committed .npmrc, so
+    # write the GitHub Packages credential to the trusted user-level config first.
+    - name: '🔐 Authenticate GitHub Packages'
+      run: pnpm config set "//npm.pkg.github.com/:_authToken" "${GITHUB_TOKEN}"
+      shell: bash
+
     - name: '📦 Install packages'
       run: pnpm install --frozen-lockfile
       shell: bash

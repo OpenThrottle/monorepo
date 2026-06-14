@@ -220,6 +220,16 @@ For rules, symlink each new `.mdc` from `.agents/rules/` into the matching `.cur
 
 ## General Guidelines
 
+### GitHub Packages auth (one-time local setup)
+
+The workspace pulls `@openthrottle/*` packages from GitHub Packages, which needs an auth token. As of **pnpm 11**, the token can **not** live in the committed `.npmrc` — pnpm refuses to expand `${ENV}` in a committed project file (it could leak a secret to an attacker-controlled registry). The committed `.npmrc` keeps only the registry mapping; set the credential once in your trusted user-level config (token needs the `packages:read` scope):
+
+```bash
+pnpm config set "//npm.pkg.github.com/:_authToken" "$GITHUB_TOKEN"
+```
+
+CI ([`.github/actions/node-setup`](.github/actions/node-setup/action.yml)) and the Docker build stages ([`Dockerfile.NestJS`](Dockerfile.NestJS), [`Dockerfile.ReactRouter`](Dockerfile.ReactRouter)) do the equivalent from their `GITHUB_TOKEN` secret/arg before `pnpm install`.
+
 - **Code style and preferences:** Follow the coding conventions defined in [`.agents/rules/`](.agents/rules/). See [.agents/rules/README.md](.agents/rules/README.md) for the full style guide: `coding/` holds TypeScript/JS and structure rules; `commands/` holds rules for OpenThrottle (OT), GitHub, and agents. Cursor loads the same bodies via `.cursor/rules/` symlinks — edit `.agents/rules/` only.
 - Use conventional commits for commit messages
 - Ensure all tests pass before submitting changes
