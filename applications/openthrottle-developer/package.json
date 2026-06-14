@@ -103,5 +103,8 @@
   "scripts": {
     "start:docker": "react-router-serve ./build/server/index.js"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
+  }
 }

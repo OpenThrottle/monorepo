@@ -14,7 +14,13 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
+      "path": "../../packages/react-router-testing"
+    },
+    {
       "path": "../../tools/dotfiles"
+    },
+    {
+      "path": "../../packages/react-router-ui-global"
     },
     {
       "path": "../../packages/react-router-ui"
@@ -24,9 +30,6 @@
     },
     {
       "path": "../../packages/react-router-utils"
-    },
-    {
-      "path": "../../packages/react-router-ui-global"
     }
   ]
 }

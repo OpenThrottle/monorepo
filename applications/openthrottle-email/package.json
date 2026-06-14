@@ -7,8 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://openthrottle-email.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
+  },
   "engines": {
     "node": ">=22"
   },

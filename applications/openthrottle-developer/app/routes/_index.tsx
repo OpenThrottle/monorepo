@@ -1,11 +1,21 @@
 import * as React from 'react';
-import { ChatComposer, ChatThread } from '@openthrottle/react-router-chat';
+import {
+  ChatComposer,
+  ChatComposerMode,
+  ChatComposerToolbar,
+  ChatThread,
+} from '@openthrottle/react-router-chat';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  CHAT_TOOLBAR_CONTEXT_SOURCES,
+  CHAT_TOOLBAR_MODELS,
+  CHAT_TOOLBAR_PERSONAS,
+} from '~/routing/home/data/chat-toolbar';
 import type { Route } from '@/app/routes/+types/_index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -33,12 +43,46 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
+  const [modelId, setModelId] = React.useState<string | undefined>(
+    CHAT_TOOLBAR_MODELS[0]?.id,
+  );
+  const [personaId, setPersonaId] = React.useState<string | undefined>(
+    CHAT_TOOLBAR_PERSONAS[0]?.id,
+  );
+  const [mode, setMode] = React.useState<ChatComposerMode>(
+    ChatComposerMode.plan,
+  );
+  const [isStreaming, setIsStreaming] = React.useState(false);
 
   // Setup
 
   // Handlers
+  // Mock wiring: a submit fakes an in-flight turn so Send↔Stop is exercisable;
+  // Stop just clears it. Real send/cancel land when the route is wired to the
+  // agents chat fetcher.
+  const onSubmit = (_message: string): void => {
+    setIsStreaming(true);
+  };
+
+  const onStop = (): void => {
+    setIsStreaming(false);
+  };
 
   // Markup
+  const toolbar = (
+    <ChatComposerToolbar
+      contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
+      mode={mode}
+      modelId={modelId}
+      models={CHAT_TOOLBAR_MODELS}
+      onAddContext={() => {}}
+      onModeChange={setMode}
+      onModelChange={setModelId}
+      onPersonaChange={setPersonaId}
+      personaId={personaId}
+      personas={CHAT_TOOLBAR_PERSONAS}
+    />
+  );
 
   // Life Cycle
 
@@ -46,9 +90,6 @@ export default function Component(
 
   return (
     <GlobalScreen className="flex flex-1 flex-col p-4 md:p-8 lg:p-12">
-      {/* <HomeHeroV1 className="my-20 items-center scale-75" /> */}
-      {/* <OpenThrottleProductFeatures features={FEATURES} /> */}
-
       <div className="flex flex-1 flex-col items-center justify-center">
         <h1 className="text-center text-2xl">
           What would you like to build today?
@@ -64,7 +105,10 @@ export default function Component(
         <ChatComposer
           className="border-t-0"
           disabled={false}
-          onSubmit={() => {}}
+          isStreaming={isStreaming}
+          onStop={onStop}
+          onSubmit={onSubmit}
+          toolbar={toolbar}
         />
       </div>
     </GlobalScreen>

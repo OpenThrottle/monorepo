@@ -19,3 +19,21 @@ if (globalThis.ResizeObserver === undefined) {
 if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = (): void => {};
 }
+
+/**
+ * @description jsdom lacks the Pointer Capture API; Radix Select/ToggleGroup
+ * call it when opening, so userEvent interactions throw without these stubs.
+ */
+if (typeof Element !== 'undefined') {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = (): boolean => false;
+  }
+
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = (): void => {};
+  }
+
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = (): void => {};
+  }
+}
