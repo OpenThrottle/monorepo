@@ -11,12 +11,12 @@
 #   Summary output: Job summary (Summary tab) for each run; see docs/workflows/daily-merged-prs-summary.md.
 #
 ################################################################################
-name: 'Daily merged PRs summary'
+name: "Daily merged PRs summary"
 
 on:
   schedule:
     # Daily at 6:00 AM UTC
-    - cron: '0 6 * * *'
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -31,10 +31,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: '📦 Checkout'
+      - name: "📦 Checkout"
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
-      - name: 'Query merged PRs'
+      - name: "Query merged PRs"
         id: query
         run: |
           # Yesterday in UTC (workflow runs at 6 AM UTC; full previous day of merges)
@@ -54,7 +54,7 @@ jobs:
           echo "count=$COUNT" >> $GITHUB_OUTPUT
           echo "Merged PRs count: $COUNT"
 
-      - name: 'Produce summary'
+      - name: "Produce summary"
         run: |
           COUNT="${{ steps.query.outputs.count }}"
           DATE_START="${{ steps.query.outputs.date_start }}"

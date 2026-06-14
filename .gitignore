@@ -27,6 +27,9 @@ tmp
 *.cpuprofile
 *.d.ts.map
 *.tsbuildinfo
+# Per-worktree generated artifacts (see scripts/worktree_ports.sh, setup_worktree.sh)
+.worktree-ports
+docker-compose.worktree.yml
 **/__generated__/**/*
 databases/backups/**/*.sql
 databases/backups/**/*.zip

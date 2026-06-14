@@ -10,6 +10,10 @@ This document lists local development services and their ports so they can be ex
 | **openthrottle-developer** | **6020** (template) | React Router + Vite frontend. Connects to openthrottle-server for API and WebSocket.                   | `applications/openthrottle-developer/.env.default`: `PORT="6020"`, `API_URL_*` → `http://localhost:6021`. If `PORT` is unset, Vite defaults to **3000**. |
 | **Ollama**                 | **11434**           | Local LLM/embedding server. Used by `cortex:import`, LangChain, openthrottle-server, and other agents. | `OLLAMA_BASE_URL` default `http://localhost:11434`. See `scripts/ollama.sh`, `databases/README.md`, `.env.default`.                                      |
 
+> **Worktrees:** these `6010`–`6025` ports are the main checkout's. Git worktrees
+> get their own app-port block in the `7000` range (Postgres/Redis stay shared) —
+> see [worktree-port-allocation.md](worktree-port-allocation.md).
+
 ## Optional / related services
 
 - **Postgres (OpenThrottle)** — `localhost:6010` (from `applications/openthrottle-server/.env.default`: `POSTGRES_PORT`). Typically not exposed through Caddy; used by openthrottle-server and Cortex tooling.
