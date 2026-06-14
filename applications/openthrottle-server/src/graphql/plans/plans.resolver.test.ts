@@ -7,7 +7,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
@@ -18,11 +18,11 @@ import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancella
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
+import { PlanStatusService } from './plan-status.service';
 import {
   CreatePlanInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
-  SetPlanStatusInput,
   UpdatePlanInput,
 } from './plan.input';
 import { PlansLoaders } from './plans-loaders';
@@ -208,6 +208,10 @@ describe('PlansResolver', () => {
           useValue: { abort: mockPlanRunCancellationAbort },
         },
         { provide: PlanEnqueueService, useValue: mockPlanEnqueueService },
+        // Real PlanStatusService wired to the existing mocks: updatePlan's merge + transition
+        // policy orchestration is exercised end-to-end here; the focused setStatus/cancelRun/policy
+        // unit coverage lives in plan-status.service.test.ts.
+        PlanStatusService,
         { provide: PlanRunsService, useValue: mockPlanRunsService },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
@@ -743,152 +747,6 @@ describe('PlansResolver', () => {
     });
   });
 
-  describe('cancelPlanRun', () => {
-    beforeEach(() => {
-      mockPlanRunCancellationAbort.mockReturnValue(false);
-      taskRepo.find.mockResolvedValue([]);
-      mockEmitTaskStatusChanged.mockClear();
-    });
-
-    test('throws NotFoundException when plan does not exist', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
-
-      await expect(
-        resolver.cancelPlanRun({ planId: 'missing-id' }),
-      ).rejects.toBeInstanceOf(NotFoundException);
-    });
-
-    test('returns noMatchingJob when queue has no matching jobs', async () => {
-      mockGetJobs.mockResolvedValueOnce([]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-
-      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
-
-      expect(result.noMatchingJob).toBe(true);
-      expect(result.removedJobIds).toEqual([]);
-      expect(result.activeJobIdsCouldNotCancel).toEqual([]);
-      expect(result.planStatusAfter).toBeNull();
-      expect(result.signaledActiveRunToStop).toBe(false);
-    });
-
-    test('removes waiting run-plan job and sets plan and tasks to PENDING', async () => {
-      const remove = vi.fn().mockResolvedValue(undefined);
-      mockGetJobs.mockResolvedValueOnce([
-        {
-          data: { planId: mockPlan.id },
-          getState: vi.fn(),
-          id: 'job-99',
-          name: 'run-plan',
-          remove,
-        },
-      ]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne)
-        .mockResolvedValueOnce(mockPlan)
-        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
-      mockTaskUpdateExecute.mockResolvedValueOnce({
-        affected: 1,
-        generatedMaps: [],
-        raw: [{ id: 'task-queued' }],
-      });
-      mockTaskUpdateQueryBuilder.set.mockClear();
-
-      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
-
-      expect(remove).toHaveBeenCalledOnce();
-      expect(result.removedJobIds).toEqual(['job-99']);
-      expect(result.noMatchingJob).toBe(false);
-      expect(result.planStatusAfter).toBe('PENDING');
-      expect(result.signaledActiveRunToStop).toBe(false);
-      expect(repo.update).toHaveBeenCalledWith(
-        { id: mockPlan.id },
-        { status: 'PENDING' },
-      );
-      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
-        status: 'PENDING',
-      });
-      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
-        planId: mockPlan.id,
-        status: 'PENDING',
-        taskId: 'task-queued',
-      });
-    });
-
-    test('reports active job ids when remove fails for locked job', async () => {
-      const remove = vi.fn().mockRejectedValue(new Error('locked'));
-      const getState = vi.fn().mockResolvedValue('active');
-      mockGetJobs.mockResolvedValueOnce([
-        {
-          data: { planId: mockPlan.id },
-          getState,
-          id: 'job-a',
-          name: 'run-plan',
-          remove,
-        },
-      ]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.update).mockClear();
-      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-
-      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
-
-      expect(result.removedJobIds).toEqual([]);
-      expect(result.activeJobIdsCouldNotCancel).toEqual(['job-a']);
-      expect(result.noMatchingJob).toBe(false);
-      expect(result.planStatusAfter).toBeNull();
-      expect(result.signaledActiveRunToStop).toBe(false);
-      expect(mockPlanRunCancellationAbort).toHaveBeenCalledWith(mockPlan.id);
-      expect(repo.update).not.toHaveBeenCalled();
-    });
-
-    test('when active job cannot be removed but abort succeeds, sets plan and tasks to PENDING', async () => {
-      mockPlanRunCancellationAbort.mockReturnValue(true);
-      const remove = vi.fn().mockRejectedValue(new Error('locked'));
-      const getState = vi.fn().mockResolvedValue('active');
-      mockGetJobs.mockResolvedValueOnce([
-        {
-          data: { planId: mockPlan.id },
-          getState,
-          id: 'job-a',
-          name: 'run-plan',
-          remove,
-        },
-      ]);
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne)
-        .mockResolvedValueOnce(mockPlan)
-        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
-      mockTaskUpdateExecute.mockResolvedValueOnce({
-        affected: 1,
-        generatedMaps: [],
-        raw: [{ id: 'task-queued' }],
-      });
-      mockTaskUpdateQueryBuilder.set.mockClear();
-      vi.mocked(repo.update).mockClear();
-
-      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
-
-      expect(result.removedJobIds).toEqual([]);
-      expect(result.activeJobIdsCouldNotCancel).toEqual(['job-a']);
-      expect(result.signaledActiveRunToStop).toBe(true);
-      expect(result.planStatusAfter).toBe('PENDING');
-      expect(repo.update).toHaveBeenCalledWith(
-        { id: mockPlan.id },
-        { status: 'PENDING' },
-      );
-      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
-        status: 'PENDING',
-      });
-      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
-        planId: mockPlan.id,
-        status: 'PENDING',
-        taskId: 'task-queued',
-      });
-    });
-  });
-
   describe('createPlan', () => {
     test('creates plan from input and returns PlanObject', async () => {
       const input: CreatePlanInput = {
@@ -948,103 +806,6 @@ describe('PlansResolver', () => {
         input,
       );
       expect(result?.projectId).toBeNull();
-    });
-  });
-
-  describe('setPlanStatus', () => {
-    test('returns updated plan when plan exists', async () => {
-      const repo = plansService.getRepository();
-      const planToUpdate = { ...mockPlan, status: 'PENDING' } as Plan;
-      const saved = { ...planToUpdate, status: 'COMPLETED' } as Plan;
-      vi.mocked(repo.findOne).mockResolvedValue(planToUpdate);
-      vi.mocked(repo.save).mockResolvedValue(saved);
-
-      const input: SetPlanStatusInput = {
-        planId: mockPlan.id,
-        status: 'COMPLETED',
-      };
-
-      const result = await resolver.setPlanStatus(input);
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockPlan.id);
-      expect(result?.status).toBe('COMPLETED');
-      expect(repo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: mockPlan.id,
-          status: 'COMPLETED',
-        }),
-      );
-    });
-
-    test('normalizes status to uppercase', async () => {
-      const repo = plansService.getRepository();
-      const planToUpdate = { ...mockPlan, status: 'pending' } as Plan;
-      const saved = { ...planToUpdate, status: 'IN_PROGRESS' } as Plan;
-      vi.mocked(repo.findOne).mockResolvedValue(planToUpdate);
-      vi.mocked(repo.save).mockResolvedValue(saved);
-
-      const result = await resolver.setPlanStatus({
-        planId: mockPlan.id,
-        status: 'in_progress',
-      });
-
-      expect(result?.status).toBe('IN_PROGRESS');
-      expect(repo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'IN_PROGRESS' }),
-      );
-    });
-
-    test('transitions QUEUED to IN_PROGRESS and persists', async () => {
-      const repo = plansService.getRepository();
-      const queued = { ...mockPlan, status: 'QUEUED' } as Plan;
-      const saved = { ...queued, status: 'IN_PROGRESS' } as Plan;
-      vi.mocked(repo.findOne).mockResolvedValue(queued);
-      vi.mocked(repo.save).mockResolvedValue(saved);
-
-      const result = await resolver.setPlanStatus({
-        planId: mockPlan.id,
-        status: 'IN_PROGRESS',
-      });
-
-      expect(result?.status).toBe('IN_PROGRESS');
-      expect(repo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: mockPlan.id,
-          status: 'IN_PROGRESS',
-        }),
-      );
-    });
-
-    test('throws BadRequestException when COMPLETED plan requests IN_PROGRESS', async () => {
-      const repo = plansService.getRepository();
-      const completed = { ...mockPlan, status: 'COMPLETED' } as Plan;
-      vi.mocked(repo.findOne).mockResolvedValue(completed);
-      vi.mocked(repo.save).mockClear();
-
-      await expect(
-        resolver.setPlanStatus({
-          planId: mockPlan.id,
-          status: 'IN_PROGRESS',
-        }),
-      ).rejects.toMatchObject({
-        message: IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE,
-      });
-      expect(repo.save).not.toHaveBeenCalled();
-    });
-
-    test('returns null when plan does not exist', async () => {
-      const repo = plansService.getRepository();
-      vi.mocked(repo.findOne).mockResolvedValue(null);
-      vi.mocked(repo.save).mockClear();
-
-      const result = await resolver.setPlanStatus({
-        planId: 'non-existent-id',
-        status: 'COMPLETED',
-      });
-
-      expect(result).toBeNull();
-      expect(repo.save).not.toHaveBeenCalled();
     });
   });
 

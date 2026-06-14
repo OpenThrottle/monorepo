@@ -9,6 +9,7 @@ import { PlansQueueModule } from '../../queues/plans/plans-queue.module';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
 import { PlanEnqueueService } from './plan-enqueue.service';
+import { PlanStatusService } from './plan-status.service';
 import { PlansLoaders } from './plans-loaders';
 import { PlansResolver } from './plans.resolver';
 
@@ -20,6 +21,11 @@ import { PlansResolver } from './plans.resolver';
     PlansQueueModule,
     QueuesGraphqlModule,
   ],
-  providers: [PlanEnqueueService, PlansLoaders, PlansResolver],
+  providers: [
+    PlanEnqueueService,
+    PlanStatusService,
+    PlansLoaders,
+    PlansResolver,
+  ],
 })
 export class PlansGraphqlModule {}

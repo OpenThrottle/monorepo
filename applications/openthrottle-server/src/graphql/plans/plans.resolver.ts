@@ -7,9 +7,7 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { BadRequestException } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -36,18 +34,13 @@ import {
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project } from '@openthrottle/nestjs-repositories';
-import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { ProjectObject } from '../projects/project.object';
-import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 import {
   type EnqueueOutcome,
   PlanEnqueueService,
 } from './plan-enqueue.service';
+import { PlanStatusService } from './plan-status.service';
 import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
@@ -82,37 +75,17 @@ const MAX_PLAN_RUNS_LIMIT = 100;
 const DEFAULT_PLANS_LIMIT = 100;
 /** Hard ceiling for plans() even when an explicit limit is supplied. */
 const MAX_PLANS_LIMIT = 500;
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
-
-/**
- * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
- */
-function normalizePlanStatusForPolicy(status: string): string {
-  return status.trim().toUpperCase();
-}
-
-/**
- * @description openthrottle-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
- * Allows `PENDING`, `QUEUED`, and idempotent `IN_PROGRESS` → `IN_PROGRESS`.
- */
-function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
-  const s = normalizePlanStatusForPolicy(currentStatus);
-  return s === 'PENDING' || s === 'IN_PROGRESS' || s === 'QUEUED';
-}
 
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
     private readonly loaders: PlansLoaders,
-    private readonly notificationsService: NotificationsService,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
-    private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunsService: PlanRunsService,
+    private readonly planStatusService: PlanStatusService,
     private readonly plansService: PlansService,
     private readonly tasksService: TasksService,
-    @InjectQueue(PLANS_QUEUE_NAME)
-    private readonly plansQueue: Queue<RunPlanJobData, void>,
   ) {}
 
   private toEnqueueResult(outcome: EnqueueOutcome): EnqueuePlanRunResultObject {
@@ -503,11 +476,10 @@ export class PlansResolver {
 
     if (!entity) return null;
 
-    const requestedInProgress =
-      input.status != null &&
-      normalizePlanStatusForPolicy(input.status) === 'IN_PROGRESS';
-    const inProgressBlocked =
-      requestedInProgress && !canApplyInProgressAsTargetStatus(entity.status);
+    const inProgressBlocked = this.planStatusService.isInProgressBlocked(
+      entity.status,
+      input.status,
+    );
 
     let touched = false;
 
@@ -520,14 +492,12 @@ export class PlansResolver {
       touched = true;
     }
     if (input.status != null) {
-      const nextStatus = normalizePlanStatusForPolicy(input.status);
-      if (
-        nextStatus === 'IN_PROGRESS' &&
-        !canApplyInProgressAsTargetStatus(entity.status)
-      ) {
-        // Invalid transition: leave entity.status unchanged (openthrottle-ralph conditional UPDATE).
-      } else if (normalizePlanStatusForPolicy(entity.status) !== nextStatus) {
-        entity.status = nextStatus;
+      const change = this.planStatusService.resolveStatusChange(
+        entity.status,
+        input.status,
+      );
+      if (change) {
+        entity.status = change.nextStatus;
         touched = true;
       }
     }
@@ -598,7 +568,9 @@ export class PlansResolver {
     }
 
     if (!touched && inProgressBlocked) {
-      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
+      throw new BadRequestException(
+        this.planStatusService.forbiddenTransitionMessage,
+      );
     }
 
     if (!touched) {
@@ -640,26 +612,7 @@ export class PlansResolver {
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
   ): Promise<PlanObject | null> {
-    const repo = this.plansService.getRepository();
-    const entity = await repo.findOne({ where: { id: input.planId } });
-
-    if (!entity) return null;
-
-    const nextStatus = input.status.trim().toUpperCase();
-    if (
-      nextStatus === 'IN_PROGRESS' &&
-      !canApplyInProgressAsTargetStatus(entity.status)
-    ) {
-      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
-    }
-
-    if (normalizePlanStatusForPolicy(entity.status) === nextStatus) {
-      return entity;
-    }
-
-    entity.status = nextStatus;
-
-    return repo.save(entity);
+    return this.planStatusService.setStatus(input.planId, input.status);
   }
 
   // @ProfileResponseTime('PlansResolver.deletePlan')
@@ -842,48 +795,15 @@ export class PlansResolver {
     @Args('input', { type: () => CancelPlanRunInput })
     input: CancelPlanRunInput,
   ): Promise<CancelPlanRunResultObject> {
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: input.planId } });
-
-    if (!plan) {
-      throw new NotFoundException(`🟡 2 - Plan not found: ${input.planId}`);
-    }
-
-    const queueResult = await cancelPlanRunJobsForPlan(
-      this.plansQueue,
-      input.planId,
-    );
-
-    const signaledActiveRunToStop = this.planRunCancellation.abort(
-      input.planId,
-    );
+    const outcome = await this.planStatusService.cancelRun(input.planId);
 
     const out = new CancelPlanRunResultObject();
-    out.planId = input.planId;
-    out.removedJobIds = [...queueResult.removedJobIds];
-    out.activeJobIdsCouldNotCancel = [...queueResult.lockedActiveJobIds];
-    out.noMatchingJob = queueResult.matchingJobCount === 0;
-    out.planStatusAfter = null;
-    out.signaledActiveRunToStop = signaledActiveRunToStop;
-
-    const shouldSetPlanPending =
-      queueResult.removedJobIds.length > 0 || signaledActiveRunToStop;
-
-    if (shouldSetPlanPending) {
-      await repo.update({ id: input.planId }, { status: 'PENDING' });
-
-      const taskRepo = this.tasksService.getRepository();
-      await updateMatchingTasksAndEmitStatusChanged({
-        fromStatuses: ['QUEUED'],
-        notifications: this.notificationsService,
-        planId: input.planId,
-        taskRepo,
-        toStatus: 'PENDING',
-      });
-
-      const refreshed = await repo.findOne({ where: { id: input.planId } });
-      out.planStatusAfter = refreshed?.status ?? 'PENDING';
-    }
+    out.activeJobIdsCouldNotCancel = outcome.activeJobIdsCouldNotCancel;
+    out.noMatchingJob = outcome.noMatchingJob;
+    out.planId = outcome.planId;
+    out.planStatusAfter = outcome.planStatusAfter;
+    out.removedJobIds = outcome.removedJobIds;
+    out.signaledActiveRunToStop = outcome.signaledActiveRunToStop;
 
     return out;
   }
