@@ -73,6 +73,18 @@ while IFS= read -r -d '' rule; do
   fi
 done < <(find .agents/rules -name '*.mdc' -print0 2>/dev/null)
 
+# --- OpenCode mirror: copies, not symlinks (partial parity — plan 1.5). Any
+# .opencode/skills/<slug>/SKILL.md that has a .agents counterpart must match it byte-for-byte. ---
+for skill_md in .opencode/skills/*/SKILL.md; do
+  [[ -f "$skill_md" ]] || continue
+  slug="$(basename "$(dirname "$skill_md")")"
+  ssot=".agents/skills/$slug/SKILL.md"
+  [[ -f "$ssot" ]] || continue
+  if ! cmp -s "$ssot" "$skill_md"; then
+    fail "$skill_md drifted from $ssot (re-copy from .agents; OpenCode mirrors are not symlinked yet — plan 1.5)"
+  fi
+done
+
 if [[ "$errors" -gt 0 ]]; then
   echo "check-agent-assets-ssot: $errors violation(s). Edit .agents/skills/ and .agents/rules/ only; recreate editor symlinks." >&2
   exit 1

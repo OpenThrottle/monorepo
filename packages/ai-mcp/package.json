@@ -69,7 +69,8 @@
         "options": {
           "command": "node ./dist/src/bin.js",
           "cwd": "{projectRoot}"
-        }
+        },
+        "description": "Run the built ai-mcp server entrypoint (dist/src/bin.js) after build."
       },
       "test": {},
       "typecheck": {},

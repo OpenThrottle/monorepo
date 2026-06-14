@@ -120,7 +120,8 @@
         "outputPath": "{projectRoot}/dist",
         "rootDir": "{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
-      }
+      },
+      "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen)."
     },
     "@nx/vite:build": {
       "executor": "@nx/vite:build",
@@ -132,7 +133,8 @@
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{options.outputPath}"],
+      "description": "Shared @nx/vite:build defaults: bundle the library with its vite.config.ts to {projectRoot}/dist (libs built from source, tsconfig.lib.json)."
     },
     "build": {
       "cache": true,
@@ -149,7 +151,8 @@
         "emptyOutDir": true,
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
-      }
+      },
+      "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck."
     },
     "build-package": {
       "cache": true,
@@ -159,7 +162,8 @@
         "cwd": "{workspaceRoot}",
         "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
       },
-      "outputs": ["{projectRoot}/dist/package.json"]
+      "outputs": ["{projectRoot}/dist/package.json"],
+      "description": "Generate the publishable {projectRoot}/dist/package.json via scripts/pnpm-package.ts (runs after build)."
     },
     "codegen": {
       "executor": "nx:run-commands",
@@ -185,14 +189,16 @@
       },
       "options": {
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Run code generation for the project (configurations: graphql, graphql-watch, react-router, react-router-watch)."
     },
     "codegen-graphql": {
       "executor": "nx:run-commands",
       "options": {
         "command": "graphql-codegen",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Generate GraphQL types and typed operations for the project with graphql-codegen."
     },
     "codegen-graphql-watch": {
       "continuous": true,
@@ -200,14 +206,16 @@
       "options": {
         "command": "graphql-codegen --watch",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change."
     },
     "codegen-react-router": {
       "executor": "nx:run-commands",
       "options": {
         "command": "react-router typegen",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Generate React Router route types with `react-router typegen`."
     },
     "codegen-react-router-watch": {
       "continuous": true,
@@ -215,7 +223,8 @@
       "options": {
         "command": "react-router typegen --watch",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Watch mode for `react-router typegen` — regenerate route types on change."
     },
     "dev": {
       "dependsOn": [
@@ -225,7 +234,8 @@
         "^codegen-react-router-watch",
         "codegen-graphql-watch",
         "codegen-react-router-watch"
-      ]
+      ],
+      "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies."
     },
     "check-agent-assets-ssot": {
       "cache": true,
@@ -233,7 +243,8 @@
       "options": {
         "command": "bash ./scripts/check-agent-assets-ssot.sh",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh."
     },
     "validate-agent-assets-frontmatter": {
       "cache": true,
@@ -241,7 +252,8 @@
       "options": {
         "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts."
     },
     "check-migration-table-comments": {
       "cache": true,
@@ -249,7 +261,8 @@
       "options": {
         "command": "tsx ./scripts/check-migration-table-comments.ts",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts."
     },
     "format-write": {
       "cache": false,
@@ -257,7 +270,8 @@
       "options": {
         "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Format the workspace in place with Prettier (css/html/js/json/md/ts/yaml and more)."
     },
     "format-check": {
       "cache": true,
@@ -265,7 +279,8 @@
       "options": {
         "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Check workspace formatting with Prettier without writing — CI parity for format-write."
     },
     "ingest-agent-assets": {
       "cache": false,
@@ -273,7 +288,8 @@
       "options": {
         "command": "tsx ./scripts/openthrottle-ingest-agent-assets.ts",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts."
     },
     "knip___DISABLED_ON_PURPOSE___": {
       "cache": true,
@@ -294,7 +310,8 @@
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Lint the project with ESLint using the workspace eslint.config.ts."
     },
     "nestjs": {
       "executor": "nx:run-commands",
@@ -322,14 +339,16 @@
       },
       "options": {
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start)."
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",
       "dependsOn": ["build-package", "^build-package"],
       "options": {
         "packageRoot": "{projectRoot}/dist"
-      }
+      },
+      "description": "Publish the package to the registry via Nx release (@nx/js:release-publish)."
     },
     "test": {
       "cache": true,
@@ -348,7 +367,8 @@
         "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
         "watch": false
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "description": "Run the project Vitest suite; the `coverage` configuration adds CI coverage reporting."
     },
     "test-e2e": {
       "configurations": {
@@ -367,7 +387,8 @@
       "options": {
         "command": "maestro test --config tests/maestro.yml",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Run the project end-to-end suite (configurations: record, studio, watch)."
     },
     "typecheck": {
       "cache": true,
@@ -383,7 +404,8 @@
         "{projectRoot}/dist/**/*.d.ts",
         "{projectRoot}/dist/**/*.d.ts.map",
         "{projectRoot}/tsconfig.tsbuildinfo"
-      ]
+      ],
+      "description": "Type-check the project with tsc, emitting declarations to dist; runs after build and codegen."
     },
     "typecheck-tests": {
       "cache": true,
@@ -399,7 +421,8 @@
       "options": {
         "command": "pnpm exec tsc --noEmit -p tsconfig.test.json",
         "cwd": "{projectRoot}"
-      }
+      },
+      "description": "Type-check test files only with `tsc --noEmit -p tsconfig.test.json` — does not execute tests."
     }
   },
   "tui": {

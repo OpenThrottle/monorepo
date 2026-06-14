@@ -93,7 +93,8 @@
         "options": {
           "command": "node ./dist/src/bin.js",
           "cwd": "{projectRoot}"
-        }
+        },
+        "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build."
       },
       "test": {},
       "typecheck": {},
@@ -104,7 +105,8 @@
         "options": {
           "command": "(cd packages/openthrottle-mcp && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-mcp/src/__generated__",
           "cwd": "{workspaceRoot}"
-        }
+        },
+        "description": "Regenerate openthrottle-mcp GraphQL types and fail if the committed src/__generated__ output drifts."
       }
     }
   },

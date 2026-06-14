@@ -156,7 +156,8 @@
         "options": {
           "command": "pnpm exec vsce package --allow-package-env-file --no-dependencies --out openthrottle.vsix --skip-license",
           "cwd": "{projectRoot}"
-        }
+        },
+        "description": "Package the VS Code extension into openthrottle.vsix via vsce (after project:typescript)."
       },
       "project:install": {
         "dependsOn": [
@@ -166,10 +167,12 @@
         "options": {
           "command": "cursor --install-extension ./packages/vscode-openthrottle/openthrottle.vsix",
           "cwd": "{workspaceRoot}"
-        }
+        },
+        "description": "Install the packaged openthrottle.vsix into Cursor (after project:build)."
       },
       "project:typescript": {
-        "executor": "@nx/js:tsc"
+        "executor": "@nx/js:tsc",
+        "description": "Compile the VS Code extension TypeScript with @nx/js:tsc."
       },
       "test": {},
       "typecheck": {},

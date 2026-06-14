@@ -42,7 +42,8 @@
           "outputPath": "{projectRoot}/dist",
           "rootDir": "{projectRoot}/src",
           "tsConfig": "{projectRoot}/tsconfig.lib.json"
-        }
+        },
+        "description": "Compile @tools/ollama-proxy to dist with @nx/js:tsc (src rootDir, tsconfig.lib.json)."
       },
       "e2e": {
         "cache": false,
@@ -52,7 +53,8 @@
           "commands": [
             "node scripts/e2e.mjs"
           ]
-        }
+        },
+        "description": "Run the @tools/ollama-proxy end-to-end check via scripts/e2e.mjs."
       },
       "lint": {},
       "serve": {
@@ -65,7 +67,8 @@
             "node --env-file=.env.default --env-file=.env ./dist/server.js"
           ],
           "parallel": false
-        }
+        },
+        "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded."
       },
       "typecheck-tests": {}
     }

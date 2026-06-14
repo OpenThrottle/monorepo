@@ -82,7 +82,8 @@
         "executor": "nx:run-commands",
         "options": {
           "command": "nest start --path {projectRoot}/tsconfig.app.json"
-        }
+        },
+        "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build."
       },
       "test": {},
       "typecheck": {},
@@ -92,7 +93,8 @@
         "options": {
           "command": "pnpm exec tsx ./scripts/verify-graphql-schema-sync.ts",
           "cwd": "{workspaceRoot}"
-        }
+        },
+        "description": "Verify the committed root schema.gql matches the server code-first schema; fails on drift."
       }
     }
   },

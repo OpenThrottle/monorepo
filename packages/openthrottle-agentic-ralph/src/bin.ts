@@ -39,8 +39,6 @@ const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
 
   const configMerged = Object.assign({}, config, values);
 
-  console.log('🔴 🔴 🔴 ', { configMerged });
-
   return configMerged;
 };
 

@@ -62,7 +62,8 @@
       },
       "build:tsc": {
         "cache": false,
-        "executor": "@nx/js:tsc"
+        "executor": "@nx/js:tsc",
+        "description": "Compile @tools/workflows to dist with @nx/js:tsc."
       },
       "dev": {
         "continuous": true,

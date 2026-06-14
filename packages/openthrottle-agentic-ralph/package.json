@@ -57,7 +57,8 @@
         "options": {
           "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
           "cwd": "{workspaceRoot}"
-        }
+        },
+        "description": "Regenerate agentic-ralph GraphQL types and fail if the committed src/__generated__ output drifts."
       },
       "typecheck-tests": {}
     }
