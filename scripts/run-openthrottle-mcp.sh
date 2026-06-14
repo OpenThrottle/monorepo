@@ -90,6 +90,19 @@ fi
 export API_URL
 export API_URL_INTERNAL="$API_URL"
 
+# Load the OT GraphQL auth token the same way we resolve the server: from this worktree's
+# .env, falling back to the main/root checkout's .env. The old launcher exported this via
+# `set -a && source ./.env`; the targeted-read rewrite dropped it, leaving the MCP server
+# unauthenticated ("Auth token required for OpenThrottle (OT) GraphQL"). Don't fail if it
+# is absent — the server may inject it another way.
+if [ -z "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
+  if tok=$(read_env_var "./.env" OPENTHROTTLE_MCP_AUTH_TOKEN) && [ -n "$tok" ]; then
+    export OPENTHROTTLE_MCP_AUTH_TOKEN="$tok"
+  elif [ -n "${root_repo:-}" ] && tok=$(read_env_var "$root_repo/.env" OPENTHROTTLE_MCP_AUTH_TOKEN) && [ -n "$tok" ]; then
+    export OPENTHROTTLE_MCP_AUTH_TOKEN="$tok"
+  fi
+fi
+
 # Resolve-only mode: print the chosen server and exit (used by tests / health checks).
 if [ -n "${OT_MCP_RESOLVE_ONLY:-}" ]; then
   echo "$API_URL"
