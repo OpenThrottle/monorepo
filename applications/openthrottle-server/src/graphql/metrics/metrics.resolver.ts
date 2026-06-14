@@ -15,6 +15,7 @@ import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object';
 const METRICS_DEFAULT_RECENT_PLAN_RUNS_LIMIT = 10;
 const METRICS_MAX_RECENT_PLAN_RUNS_LIMIT = 100;
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => MetricsObject)
 export class MetricsResolver {
   constructor(

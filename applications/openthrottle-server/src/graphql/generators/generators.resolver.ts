@@ -11,6 +11,7 @@ import {
 import { GetGeneratorInput } from './generator.input';
 import { GeneratorDetailObject, GeneratorObject } from './generator.object';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver()
 export class GeneratorsResolver {
   @Query(() => [GeneratorObject], {

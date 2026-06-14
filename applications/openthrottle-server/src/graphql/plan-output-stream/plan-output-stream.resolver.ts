@@ -24,6 +24,7 @@ import {
   ListPlanOutputStreamChunksInput,
 } from './plan-output-stream.input';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => PlanOutputStreamChunkObject)
 export class PlanOutputStreamResolver {
   constructor(

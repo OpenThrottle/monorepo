@@ -13,6 +13,7 @@ import {
 import { PlanEmbeddingObject } from './plan-embedding.object';
 import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => PlanEmbeddingObject)
 export class PlanEmbeddingsResolver {
   constructor(

@@ -29,6 +29,7 @@ const DEFAULT_COMMIT_LINKS_LIMIT = 100;
 /** Hard ceiling for commitLinks() even when an explicit limit is supplied. */
 const MAX_COMMIT_LINKS_LIMIT = 500;
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => CommitLinkObject)
 export class CommitLinksResolver {
   constructor(

@@ -16,6 +16,7 @@ import {
 } from './custom-prompt.input';
 import { CustomPromptObject } from './custom-prompt.object';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => CustomPromptObject)
 export class CustomPromptsResolver {
   constructor(

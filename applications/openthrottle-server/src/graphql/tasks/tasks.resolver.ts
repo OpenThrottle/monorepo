@@ -53,6 +53,7 @@ const isSortOrderUniqueViolation = (error: unknown): boolean => {
   return driverError?.code === '23505';
 };
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => TaskObject)
 export class TasksResolver {
   constructor(
