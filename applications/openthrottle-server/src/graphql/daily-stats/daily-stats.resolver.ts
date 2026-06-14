@@ -37,6 +37,7 @@ function toDailyStatsObject(row: {
   return obj;
 }
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver()
 export class DailyStatsResolver {
   constructor(private readonly dailyStatsService: DailyStatsService) {}

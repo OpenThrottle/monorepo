@@ -352,14 +352,8 @@
     },
     "test": {
       "cache": true,
-      "configurations": {
-        "coverage": {
-          "ci": true,
-          "coverage": true
-        }
-      },
       "dependsOn": ["^build"],
-      "description": "Run the project Vitest suite; the `coverage` configuration adds CI coverage reporting.",
+      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}.",
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^default", "^production"],
       "options": {

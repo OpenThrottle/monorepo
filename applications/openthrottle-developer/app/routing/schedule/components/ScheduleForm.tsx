@@ -7,16 +7,16 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { toDatetimeLocalValue } from '~/routing/calendar/utils/formatters';
-import type { CalendarEvent } from '~/routing/calendar/types';
+import { toDatetimeLocalValue } from '~/routing/schedule/utils/formatters';
+import type { ScheduleEvent } from '~/routing/schedule/types';
 
-export interface CalendarFormProps {
+export interface ScheduleFormProps {
   action: 'create' | 'update';
   className?: string;
-  event?: CalendarEvent;
+  event?: ScheduleEvent;
 }
 
-export const CalendarForm = (props: CalendarFormProps): React.ReactElement => {
+export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
   const { action, className, event } = props;
 
   // Hooks
@@ -36,7 +36,7 @@ export const CalendarForm = (props: CalendarFormProps): React.ReactElement => {
     <div>
       <Form
         className={classnames('w-full', className)}
-        data-testid="CalendarForm"
+        data-testid="ScheduleForm"
         method="post"
       >
         <div className="w-full space-y-4">
@@ -110,7 +110,7 @@ export const CalendarForm = (props: CalendarFormProps): React.ReactElement => {
             {isCreate ? 'Create event' : 'Update event'}
           </Button>
           <Button asChild={true} variant="outline">
-            <Link to="/calendar">Cancel</Link>
+            <Link to="/schedule">Cancel</Link>
           </Button>
         </div>
       </Form>

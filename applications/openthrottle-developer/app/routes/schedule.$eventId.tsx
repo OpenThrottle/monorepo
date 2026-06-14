@@ -14,13 +14,13 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { CalendarSearchIcon } from 'lucide-react';
-import { CalendarEventDetails } from '~/routing/calendar/components/CalendarEventDetails';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
-import { getCalendarEventById } from '~/routing/calendar/utils/events';
+import { ScheduleEventDetails } from '~/routing/schedule/components/ScheduleEventDetails';
+import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
+import { SCHEDULE_NOT_FOUND_COPY } from '~/routing/schedule/data/data.copy';
+import { getScheduleEventById } from '~/routing/schedule/utils/events';
 import { SITE_TITLE } from '~/global/config/settings';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import type { Route } from '@/app/routes/+types/calendar.$eventId';
+import type { Route } from '@/app/routes/+types/schedule.$eventId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -32,12 +32,12 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
       text={match.params.eventId ?? 'not-found'}
     />
   ),
-  links: (_match) => [{ children: 'Calendar', to: '/calendar' }],
+  links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
   const eventId = args.params.eventId;
-  const event = getCalendarEventById(CALENDAR_EVENTS, eventId ?? '');
+  const event = getScheduleEventById(SCHEDULE_EVENTS, eventId ?? '');
 
   return { event };
 };
@@ -74,12 +74,12 @@ export default function Component(
           <EmptyMedia variant="icon">
             <CalendarSearchIcon className="size-6" />
           </EmptyMedia>
-          <EmptyTitle>{CALENDAR_NOT_FOUND_COPY.title}</EmptyTitle>
+          <EmptyTitle>{SCHEDULE_NOT_FOUND_COPY.title}</EmptyTitle>
           <EmptyDescription>
-            {CALENDAR_NOT_FOUND_COPY.description}
+            {SCHEDULE_NOT_FOUND_COPY.description}
           </EmptyDescription>
           <Button asChild={true} variant="secondary">
-            <Link to="/calendar">Back to calendar</Link>
+            <Link to="/schedule">Back to schedule</Link>
           </Button>
         </Empty>
       </GlobalScreen>
@@ -88,7 +88,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <CalendarEventDetails event={event} />
+      <ScheduleEventDetails event={event} />
     </GlobalScreen>
   );
 }

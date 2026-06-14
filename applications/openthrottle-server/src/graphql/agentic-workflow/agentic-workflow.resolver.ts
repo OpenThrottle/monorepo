@@ -6,6 +6,7 @@ import { Mutation, Resolver } from '@nestjs/graphql';
 import { AgenticWorkflowService } from './agentic-workflow.service';
 import { EnqueueAgenticWorkflowMockResultObject } from './enqueue-agentic-workflow-mock-result.object';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver()
 export class AgenticWorkflowResolver {
   constructor(
