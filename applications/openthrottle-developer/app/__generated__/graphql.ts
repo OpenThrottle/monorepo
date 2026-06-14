@@ -646,6 +646,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
 };
 
 export type EnqueuePlanRunInput = {
+  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
   jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
   /** Plan id to enqueue a run for */
