@@ -5,21 +5,29 @@ import classnames from 'classnames';
 export interface ChatComposerProps {
   readonly className?: string;
   readonly disabled?: boolean;
+  readonly isStreaming?: boolean;
+  readonly onStop?: () => void;
   readonly onSubmit: (message: string) => void;
   readonly placeholder?: string;
+  readonly stopLabel?: string;
   readonly submitLabel?: string;
+  readonly toolbar?: React.ReactNode;
 }
 
 /**
- * @description Message input with submit button; Enter sends, Shift+Enter inserts a newline.
+ * @description Message input with submit button; Enter sends, Shift+Enter inserts a newline. While streaming, the Send button is replaced by a Stop button and Enter no longer submits.
  */
 export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   const {
     className,
     disabled = false,
+    isStreaming = false,
+    onStop,
     onSubmit,
     placeholder = 'Type a message…',
+    stopLabel = 'Stop',
     submitLabel = 'Send',
+    toolbar,
   } = props;
 
   // Hooks
@@ -30,7 +38,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   // Handlers
   const submitDraft = (): void => {
     const trimmed = draft.trim();
-    if (!trimmed || disabled) {
+    if (!trimmed || disabled || isStreaming) {
       return;
     }
     onSubmit(trimmed);
@@ -77,14 +85,26 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         rows={3}
         value={draft}
       />
-      <div className="flex justify-end">
-        <Button
-          disabled={disabled || draft.trim().length === 0}
-          size="sm"
-          type="submit"
-        >
-          {submitLabel}
-        </Button>
+      <div
+        className={classnames(
+          'flex',
+          toolbar ? 'justify-between' : 'justify-end',
+        )}
+      >
+        {toolbar}
+        {isStreaming ? (
+          <Button onClick={onStop} size="sm" type="button">
+            {stopLabel}
+          </Button>
+        ) : (
+          <Button
+            disabled={disabled || draft.trim().length === 0}
+            size="sm"
+            type="submit"
+          >
+            {submitLabel}
+          </Button>
+        )}
       </div>
     </form>
   );
