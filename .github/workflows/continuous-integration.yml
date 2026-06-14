@@ -12,7 +12,8 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    types: [opened, synchronize]
+    # ready_for_review: ensures CI fires when a draft PR is marked ready (see draft-skip `if`s below)
+    types: [opened, ready_for_review, synchronize]
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
@@ -56,7 +57,9 @@ permissions:
 
 jobs:
   build:
-    # if: ${{ (github.head_ref != 'main') && (github.ref_name != 'main') }}
+    # 💰 Skip CI on draft PRs — push freely while iterating; CI fires when marked
+    # "Ready for review". Always runs for merge_group and push (no PR payload there).
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
 
     # FIXME: 💰 Re-enable when we want to spend more
     concurrency:
@@ -70,6 +73,8 @@ jobs:
     strategy:
       matrix:
         jobIndex: [1] # must be in sync with "jobCount"
+        # 💰 No merge queue on this plan, so the ready PR is the gate: drafts run
+        # nothing (see job `if` above); every ready-PR push runs the full suite.
         target: ['lint,typecheck,typecheck-tests,test'] # One box per target
 
     # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
@@ -111,6 +116,13 @@ jobs:
           pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
+
+      # 💰 Folded in from a separate job to avoid spinning a second runner per push.
+      # Placed before the affected run so structural breakage fails fast.
+      - name: '🔍 Check for circular dependencies'
+        if: github.actor != 'dependabot[bot]'
+        run: |
+          pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
@@ -156,31 +168,6 @@ jobs:
       #         echo "🧠 Running for $tags | $target";
       #         pnpm dlx nx@${{ env.NX_VERSION }} affected --exclude="*,$tags" --target=$target --parallel --verbose
       #     done
-
-  nx-circular-dependencies:
-    if: github.actor != 'dependabot[bot]'
-    runs-on: blacksmith-4vcpu-ubuntu-2204
-    timeout-minutes: 10
-
-    steps:
-      - name: '📦 Checkout the code'
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
-        with:
-          fetch-depth: 0
-
-      - name: '🤖 Node Setup'
-        uses: ./.github/actions/node-setup
-
-      - name: '🌥️ Google Cloud Provider (GCP)'
-        uses: ./.github/actions/google-cloud
-        with:
-          branch: ${{ env.BRANCH_NAME }}
-          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
-          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
-
-      - name: '🔍 Check for circular dependencies'
-        run: |
-          pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
   nx-dependency-graph:
     # FIXME: 💰 Re-enable when we want to spend more
