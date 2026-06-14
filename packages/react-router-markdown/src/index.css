@@ -4,9 +4,9 @@
 }
 
 /**
-* Markdown content styles.
-* Uses style-guide theme tokens (--color-*, --font-*, --text-* from theme-v4.css).
-*/
+ * Markdown content styles.
+ * Uses style-guide theme tokens (--color-*, --font-*, --text-* from theme-v4.css).
+ */
 .markdown h1,
 .markdown h2,
 .markdown h3,

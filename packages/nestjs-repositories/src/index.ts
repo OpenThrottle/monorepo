@@ -1,5 +1,13 @@
 export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
 export { codeEmbeddingsFactory } from './modules/code-embeddings/code-embeddings.factory';
+export {
+  createCollectionByColumnLoader,
+  createEntityByIdLoader,
+  createGroupedCountLoader,
+  type CollectionByColumnLoaderOptions,
+  type GroupedCountLoaderOptions,
+  type RepositoryAccessor,
+} from './common/entity-loaders';
 export { CommitLink } from './modules/commit-links/commit-link.entity';
 export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
