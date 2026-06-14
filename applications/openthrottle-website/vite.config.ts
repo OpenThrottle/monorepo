@@ -17,7 +17,7 @@ export default (config: ConfigEnv) => {
    */
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const shouldAnalyze = process.env.ANALYZE === 'true';
   const useReactRouterDevTools = process.env.REACT_ROUTER_DEV_TOOLS === 'true';
 
   return defineConfig({
@@ -32,7 +32,7 @@ export default (config: ConfigEnv) => {
       include: [],
     },
     plugins: [
-      isDevelopment && analyzer(),
+      shouldAnalyze && analyzer({ analyzerPort: 'auto' }),
       devtoolsJson(),
       useReactRouterDevTools && reactRouterDevTools(), // NOTE: Must come before reactRouter()
       reactRouter(),

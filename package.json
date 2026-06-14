@@ -397,6 +397,7 @@
   "scripts": {
     "audit:templates-compliance": "tsx ./scripts/audit-templates-compliance.ts",
     "build": "pnpm run build:packages",
+    "build:all": "nx run-many --target=build,typecheck --all --parallel=2",
     "build:docker": "pnpm nx run openthrottle-server:docker-build",
     "build:graphql": "pnpm nx run-many --target=codegen-graphql,codegen-react-router --projects tag:production:true --parallel",
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",

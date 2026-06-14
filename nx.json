@@ -137,7 +137,12 @@
     "build": {
       "cache": true,
       "executor": "@nx/vite:build",
-      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router",
+        "^typecheck"
+      ],
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "buildLibsFromSource": true,
@@ -367,7 +372,10 @@
     "typecheck": {
       "cache": true,
       "dependsOn": [
+        "^build",
         "^codegen-graphql",
+        "^typecheck",
+        "build",
         "codegen-graphql",
         "codegen-react-router"
       ],
