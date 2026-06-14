@@ -6,6 +6,7 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { ChatComposerToolbar } from '../ChatComposerToolbar';
 import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
+import { ChatComposerMode } from '../../types';
 import type { ChatModelOption, ChatPersonaOption } from '../../types';
 
 const MODELS: readonly ChatModelOption[] = [
@@ -91,6 +92,35 @@ describe('ChatComposerToolbar Component', () => {
       await user.click(component.getByRole('option', { name: 'Builder' }));
 
       expect(onPersonaChange).toHaveBeenCalledWith('builder');
+    });
+  });
+
+  describe('mode toggle', () => {
+    test('renders Plan and Build when a mode is supplied', () => {
+      const component = renderToolbar({ mode: ChatComposerMode.plan });
+
+      expect(
+        component.getByTestId('ChatComposerToolbar-mode-toggle'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('ChatComposerToolbar-mode-plan'),
+      ).toHaveTextContent('Plan');
+      expect(
+        component.getByTestId('ChatComposerToolbar-mode-build'),
+      ).toHaveTextContent('Build');
+    });
+
+    test('calls onModeChange when the other mode is pressed', async () => {
+      const onModeChange = vi.fn();
+      const component = renderToolbar({
+        mode: ChatComposerMode.plan,
+        onModeChange,
+      });
+
+      const user = userEvent.setup();
+      await user.click(component.getByTestId('ChatComposerToolbar-mode-build'));
+
+      expect(onModeChange).toHaveBeenCalledWith(ChatComposerMode.build);
     });
   });
 });

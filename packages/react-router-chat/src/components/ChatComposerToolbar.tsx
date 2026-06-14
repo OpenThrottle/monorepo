@@ -5,13 +5,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  ToggleGroup,
+  ToggleGroupItem,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import classnames from 'classnames';
+import { ChatComposerMode } from '../types';
 import type {
-  ChatComposerMode,
   ChatContextSource,
   ChatModelOption,
   ChatPersonaOption,
@@ -50,8 +52,10 @@ export const ChatComposerToolbar = (
 ): React.ReactElement => {
   const {
     className,
+    mode,
     modelId,
     models,
+    onModeChange,
     onModelChange,
     onPersonaChange,
     personaId,
@@ -65,6 +69,11 @@ export const ChatComposerToolbar = (
   const hasPersonas = personas != null && personas.length > 0;
 
   // Handlers
+  const onModeValueChange = (value: string): void => {
+    if (value === ChatComposerMode.build || value === ChatComposerMode.plan) {
+      onModeChange?.(value);
+    }
+  };
 
   // Markup
   const modelControl = hasModels ? (
@@ -115,6 +124,44 @@ export const ChatComposerToolbar = (
     </Select>
   ) : null;
 
+  const modeControl =
+    mode != null ? (
+      <ToggleGroup
+        aria-label="Mode"
+        data-testid="ChatComposerToolbar-mode-toggle"
+        onValueChange={onModeValueChange}
+        size="sm"
+        type="single"
+        value={mode}
+        variant="outline"
+      >
+        <Tooltip delayDuration={500}>
+          <TooltipTrigger asChild={true}>
+            <ToggleGroupItem
+              data-testid="ChatComposerToolbar-mode-plan"
+              value={ChatComposerMode.plan}
+            >
+              Plan
+            </ToggleGroupItem>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            Plan — describe intent to get a decomposed plan
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip delayDuration={500}>
+          <TooltipTrigger asChild={true}>
+            <ToggleGroupItem
+              data-testid="ChatComposerToolbar-mode-build"
+              value={ChatComposerMode.build}
+            >
+              Build
+            </ToggleGroupItem>
+          </TooltipTrigger>
+          <TooltipContent side="top">Build — agentic execution</TooltipContent>
+        </Tooltip>
+      </ToggleGroup>
+    ) : null;
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -126,6 +173,7 @@ export const ChatComposerToolbar = (
     >
       {modelControl}
       {personaControl}
+      {modeControl}
     </div>
   );
 };
