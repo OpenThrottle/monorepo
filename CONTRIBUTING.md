@@ -260,7 +260,7 @@ Most no-build packages are **`technology:react-router`** workspace libraries und
 
 Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
 
-### All projects without `build` (16)
+### All projects without `build` (17)
 
 | Nx project                                     | Role                                                                    |
 | ---------------------------------------------- | ----------------------------------------------------------------------- |
@@ -271,6 +271,7 @@ Do **not** add a standalone `build` target to these libraries unless you are del
 | `@openthrottle/react-router-notifications`     | Notifications UI                                                        |
 | `@openthrottle/react-router-profiling`         | Profiling utilities                                                     |
 | `@openthrottle/react-router-shadcn`            | shadcn-based primitives for OpenThrottle apps                           |
+| `@openthrottle/react-router-testing`           | Shared Vitest setup: jsdom polyfills + `window.env` fixture             |
 | `@openthrottle/react-router-ui`                | Shared UI components                                                    |
 | `@openthrottle/react-router-ui-global`         | Global UI shell pieces                                                  |
 | `@openthrottle/react-router-utils`             | Config, env, logging, metadata utilities                                |
@@ -281,7 +282,7 @@ Do **not** add a standalone `build` target to these libraries unless you are del
 | `@openthrottle/openthrottle-vscode`            | VS Code extension sources (built via extension tooling, not Nx `build`) |
 | `infra`                                        | Terraform (`type:infrastructure`); no application bundle                |
 
-The **12** projects tagged `technology:react-router` in this list are the shared UI/library layer for OpenThrottle React Router apps.
+The **13** projects tagged `technology:react-router` in this list are the shared UI/library layer for OpenThrottle React Router apps.
 
 ### What to run when you change these projects
 
@@ -413,6 +414,19 @@ Nx exposes two different targets for test-related work. They are **not** interch
 **`typecheck-tests` does not run Vitest and does not execute test bodies.** A green `typecheck-tests` result only means test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution.
 
 CI runs both at different priorities: P0 affected **`lint`**, **`typecheck`**, and **`typecheck-tests`** on every PR; P2 runs **`test`** only for phased projects (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck-tests` and affected `test` as separate steps.
+
+### Shared React Router test setup
+
+React Router apps share a single Vitest setup via **`@openthrottle/react-router-testing`** instead of hand-rolling jsdom polyfills and the `window.env` fixture in each `tests/setup.ts`. Keep `vitest.config.ts` `setupFiles` at `['./tests/setup.ts']` and reduce that file to one line plus the app's `APP_NAME`:
+
+```ts
+// tests/setup.ts
+import { setupReactRouterTest } from '@openthrottle/react-router-testing';
+
+setupReactRouterTest({ env: { APP_NAME: 'openthrottle-developer' } });
+```
+
+`setupReactRouterTest` registers the jest-dom matchers, bakes in `afterEach(cleanup)`, installs the jsdom polyfills (matchMedia, ResizeObserver, scrollIntoView, pointer capture), and populates `window.env`. Do **not** re-add those shared blocks to an app's setup file. Only genuinely app-specific shims belong there (e.g. openthrottle-developer's WebGL / GradientMesh stubs). See the package README for the granular escape hatches.
 
 ## Additional Resources
 

@@ -192,6 +192,9 @@
     },
     {
       "path": "./packages/nestjs-model-discovery"
+    },
+    {
+      "path": "./packages/react-router-testing"
     }
   ]
 }
