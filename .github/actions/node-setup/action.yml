@@ -23,7 +23,7 @@ runs:
     - name: '📦 Enable PNPM (Corepack)'
       run: |
         corepack enable
-        corepack prepare pnpm@10.33.4 --activate
+        corepack prepare pnpm@11.6.0 --activate
       shell: bash
 
     # Cache the pnpm content-addressable store (NOT node_modules). pnpm's isolated

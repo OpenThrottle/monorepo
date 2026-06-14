@@ -74,7 +74,7 @@ pnpm nx run openthrottle-server:docker-build       # -> Dockerfile.NestJS.v3,   
 pnpm nx run openthrottle-developer:docker-build    # -> Dockerfile.ReactRouter.v3, -t openthrottle-developer:local
 ```
 
-Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=10.33.4`) and passes `--target production`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and the Nx remote cache (both optional for a local build).
+Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=11.6.0`) and passes `--target production`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and the Nx remote cache (both optional for a local build).
 
 - **Manual build from repo root** (server shown; developer is identical with `-f Dockerfile.ReactRouter.v3` and `APP_NAME=openthrottle-developer`):
 
@@ -83,13 +83,13 @@ Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=
     --build-arg APP_NAME=openthrottle-server \
     --build-arg APP_VERSION=1.3.0 \
     --build-arg NX_VERSION=22.6.4 \
-    --build-arg PNPM_VERSION=10.33.4 \
+    --build-arg PNPM_VERSION=11.6.0 \
     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN:-} \
     --build-arg NX_KEY=${NX_KEY:-} \
     -t openthrottle-server:local .
   ```
 
-- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, **`PNPM_VERSION`** (no usable default — must be passed; use the root `packageManager` pin, currently `10.33.4`).
+- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, **`PNPM_VERSION`** (no usable default — must be passed; use the root `packageManager` pin, currently `11.6.0`).
 - **Docker Compose:** the repo-root `docker-compose.yml` builds the server with `dockerfile: Dockerfile.NestJS.v3` and the developer with `dockerfile: Dockerfile.ReactRouter.v3` (`context: ./`).
 
 ---
@@ -124,7 +124,7 @@ Both apps define a `start:docker` script used outside the distroless images (the
 
 ### 8.1. Verification
 
-1. **Server image (Nx target):** `pnpm nx run openthrottle-server:docker-build` — builds `openthrottle-server:local` from `Dockerfile.NestJS.v3`. Pass `PNPM_VERSION` via the target (defaulted to `10.33.4`); pnpm@9/@11 placeholders will fail.
+1. **Server image (Nx target):** `pnpm nx run openthrottle-server:docker-build` — builds `openthrottle-server:local` from `Dockerfile.NestJS.v3`. Pass `PNPM_VERSION` via the target (defaulted to `11.6.0`).
 2. **Developer image (Nx target):** `pnpm nx run openthrottle-developer:docker-build` — builds `openthrottle-developer:local` from `Dockerfile.ReactRouter.v3`.
 3. **Full stack:** from the repo root, `docker compose up --build` brings up postgres + redis + server + developer. Expect the server `/health` to return `200 {"api":"ok","database":"ok","redis":"ok","websocket":"ok"}` and the developer to serve `/`.
 
