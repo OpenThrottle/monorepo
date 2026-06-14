@@ -6,15 +6,15 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import { CalendarForm } from '~/routing/calendar/components/CalendarForm';
+import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/calendar.create';
+import type { Route } from '@/app/routes/+types/schedule.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
-  links: (_match) => [{ children: 'Calendar', to: '/calendar' }],
+  links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
@@ -48,7 +48,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <CalendarForm action="create" />
+      <ScheduleForm action="create" />
     </GlobalScreen>
   );
 }
@@ -67,10 +67,10 @@ export const action = async (args: Route.ActionArgs) => {
     return { error: 'Start time is required.' };
   }
 
-  // NOTE: calendar data is stubbed, so there is nothing to persist yet — redirect
-  // back to the list. Swap for a create mutation + redirect to /calendar/:eventId
+  // NOTE: schedule data is stubbed, so there is nothing to persist yet — redirect
+  // back to the list. Swap for a create mutation + redirect to /schedule/:eventId
   // once the backend lands (plan 26594427).
-  return redirect('/calendar');
+  return redirect('/schedule');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -46,9 +46,9 @@ export function useCommanderOptions(): CommanderGroup[] {
       items: [
         {
           icon: <CalendarDaysIcon className="h-3! w-3!" />,
-          id: 'nav-calendar',
-          label: 'Calendar',
-          onSelect: nav('/calendar'),
+          id: 'nav-schedule',
+          label: 'Schedule',
+          onSelect: nav('/schedule'),
         },
         {
           icon: <HomeIcon className="h-3! w-3!" />,

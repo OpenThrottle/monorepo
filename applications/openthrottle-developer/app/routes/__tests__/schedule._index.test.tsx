@@ -2,23 +2,23 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../calendar._index';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import Component from '../schedule._index';
+import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
 
-describe('routes/calendar._index.tsx', () => {
-  test('renders the calendar heading', () => {
+describe('routes/schedule._index.tsx', () => {
+  test('renders the schedule heading', () => {
     const view = render(
       <MemoryRouter>
         <Component
           actionData={undefined}
-          loaderData={{ events: CALENDAR_EVENTS, search: '' }}
+          loaderData={{ events: SCHEDULE_EVENTS, search: '' }}
           matches={[] as never}
           params={{}}
         />
       </MemoryRouter>,
     );
 
-    expect(view.getByRole('heading', { name: 'Calendar' })).toBeInTheDocument();
+    expect(view.getByRole('heading', { name: 'Schedule' })).toBeInTheDocument();
   });
 
   test('lists the provided events', () => {
@@ -26,7 +26,7 @@ describe('routes/calendar._index.tsx', () => {
       <MemoryRouter>
         <Component
           actionData={undefined}
-          loaderData={{ events: CALENDAR_EVENTS, search: '' }}
+          loaderData={{ events: SCHEDULE_EVENTS, search: '' }}
           matches={[] as never}
           params={{}}
         />
@@ -50,6 +50,6 @@ describe('routes/calendar._index.tsx', () => {
       </MemoryRouter>,
     );
 
-    expect(view.getByTestId('CalendarEmpty')).toBeInTheDocument();
+    expect(view.getByTestId('ScheduleEmpty')).toBeInTheDocument();
   });
 });

@@ -3,18 +3,18 @@ import classnames from 'classnames';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
-import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
-import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
-import type { CalendarEvent } from '~/routing/calendar/types';
+import { ScheduleEmpty } from '~/routing/schedule/components/ScheduleEmpty';
+import { formatScheduleRange } from '~/routing/schedule/utils/formatters';
+import type { ScheduleEvent } from '~/routing/schedule/types';
 import type { ColumnDef } from '@tanstack/react-table';
 
-export interface CalendarTableProps {
+export interface ScheduleTableProps {
   className?: string;
-  events: CalendarEvent[];
+  events: ScheduleEvent[];
 }
 
-export const CalendarTable = (
-  props: CalendarTableProps,
+export const ScheduleTable = (
+  props: ScheduleTableProps,
 ): React.ReactElement => {
   const { className, events } = props;
 
@@ -23,7 +23,7 @@ export const CalendarTable = (
 
   // Setup
   const search = searchParams.get('q') ?? '';
-  const columns = React.useMemo(() => CalendarTable.buildTable(), [events]);
+  const columns = React.useMemo(() => ScheduleTable.buildTable(), [events]);
 
   // Handlers
 
@@ -36,19 +36,19 @@ export const CalendarTable = (
   return (
     <div
       className={classnames('ui-border rounded-lg border', className)}
-      data-testid="CalendarTable"
+      data-testid="ScheduleTable"
     >
-      <DataTable<CalendarEvent, string | number | null | undefined>
+      <DataTable<ScheduleEvent, string | number | null | undefined>
         columns={columns}
         data={events}
-        emptyState={<CalendarEmpty search={search} />}
+        emptyState={<ScheduleEmpty search={search} />}
       />
     </div>
   );
 };
 
-CalendarTable.buildTable = (): ColumnDef<
-  CalendarEvent,
+ScheduleTable.buildTable = (): ColumnDef<
+  ScheduleEvent,
   string | number | null | undefined
 >[] => {
   return [
@@ -56,7 +56,7 @@ CalendarTable.buildTable = (): ColumnDef<
       accessorKey: 'title',
       cell: ({ row }) => {
         const event = row.original;
-        const eventHref = `/calendar/${event.id}`;
+        const eventHref = `/schedule/${event.id}`;
 
         return (
           <div className="overflow-hidden p-2">
@@ -99,7 +99,7 @@ CalendarTable.buildTable = (): ColumnDef<
       accessorKey: 'startsAt',
       cell: ({ row }) => {
         const event = row.original;
-        const when = formatCalendarRange(
+        const when = formatScheduleRange(
           event.startsAt,
           event.endsAt,
           event.allDay,
@@ -127,7 +127,7 @@ CalendarTable.buildTable = (): ColumnDef<
             >
               <Link
                 aria-label={`View event: ${event.title}`}
-                to={`/calendar/${event.id}`}
+                to={`/schedule/${event.id}`}
                 viewTransition={true}
               >
                 <ArrowRightIcon className="size-4" />
