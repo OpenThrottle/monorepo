@@ -12,6 +12,14 @@ pnpm run database:start
 docker compose --profile dev watch
 ```
 
+🔮 Odysseus:
+
+```bash
+cd /Users/matt/Development/odysseus
+
+./start-macos.sh
+```
+
 🤖 Claude:
 
 ```bash
