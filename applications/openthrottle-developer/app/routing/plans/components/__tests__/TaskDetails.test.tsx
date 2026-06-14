@@ -54,8 +54,11 @@ describe('TaskDetails Component', () => {
     expect(component.getByText('Updated')).toBeInTheDocument();
   });
 
-  test('should show description and summary', () => {
-    expect(component.getByText('Task description')).toBeInTheDocument();
-    expect(component.getByText('Task summary')).toBeInTheDocument();
+  test('should show description and summary', async () => {
+    // Description/summary render through MarkdownRenderer, which resolves its
+    // output asynchronously — use findByText so the assertion waits (inside act)
+    // for the rendered markdown rather than querying before it mounts.
+    expect(await component.findByText('Task description')).toBeInTheDocument();
+    expect(await component.findByText('Task summary')).toBeInTheDocument();
   });
 });

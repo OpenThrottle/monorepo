@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PlanDetailIndexLoaderQuery } from '@openthrottle/openthrottle-developer-codegen';
-import { TabsContent } from '@openthrottle/react-router-shadcn';
-import { EditorWindow } from '@openthrottle/react-router-editor';
+import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 
 type Chunk = PlanDetailIndexLoaderQuery['planOutputStreamChunks'][number];
 
@@ -62,8 +62,12 @@ export const PlanTabOutput = (
       data-testid="PlanLoggerOutput"
       value="output"
     >
-      <EditorWindow className="h-96" language="markdown" value={markdown} />
-      {/* <Markdown className="text-xs text-muted-foreground" content={markdown} /> */}
+      <Card className="p-4 md:p-8">
+        <MarkdownRenderer
+          className="text-muted-foreground text-xs"
+          source={markdown}
+        />
+      </Card>
     </TabsContent>
   );
 };
