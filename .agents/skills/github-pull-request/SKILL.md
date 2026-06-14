@@ -4,7 +4,7 @@ description: Analyze branch commits and diff, then create or update a Pull Reque
 disable-model-invocation: true
 ---
 
-Your job is to look at all commits on the current branch and summarize them into a great Pull Request.
+Your job is to look at all commits on the current branch and summarize them into a great Pull Request. Start the Pull Request in `draft` mode.
 
 ## Process
 
