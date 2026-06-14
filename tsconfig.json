@@ -189,6 +189,9 @@
     },
     {
       "path": "./packages/react-router-ide"
+    },
+    {
+      "path": "./packages/nestjs-model-discovery"
     }
   ]
 }

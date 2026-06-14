@@ -12,6 +12,7 @@ import {
   registerCommitTools,
   registerHealthTool,
   registerKnowledgeBaseResource,
+  registerModelDiscoveryTool,
   registerNoteTools,
   registerOutputTools,
   registerPlanTools,
@@ -50,6 +51,7 @@ export async function runServerLocal(): Promise<void> {
   registerCommitTools(server);
   registerHealthTool(server);
   registerKnowledgeBaseResource(server);
+  registerModelDiscoveryTool(server);
   registerNoteTools(server);
   registerOutputTools(server);
   registerPlanTools(server);

@@ -7,6 +7,7 @@ export * from './tools/activity.js';
 export * from './tools/agent-conversations.js';
 export * from './tools/commit.js';
 export * from './tools/health.js';
+export * from './tools/model-discovery.js';
 export * from './tools/notes.js';
 export * from './tools/output.js';
 export * from './tools/plans.js';
