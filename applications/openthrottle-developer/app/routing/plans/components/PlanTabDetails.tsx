@@ -1,17 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { Button, TabsContent } from '@openthrottle/react-router-shadcn';
+import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
+  PlanTaskRowFragment,
 } from '~/__generated__/graphql';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
-import {
-  DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
-  DEFAULT_PLAN_SUMMARY_PREVIEW_LINES,
-} from '~/routing/plans/config/defaults';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
@@ -32,6 +30,7 @@ export interface PlanTabDetailsProps {
   ralphTuningJson: string;
   recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
+  tasks: PlanTaskRowFragment[];
   workflowInput: WorkflowRalphRunOptionsInput;
   workflowTimeout: string;
   workingDirectory?: string;
@@ -49,15 +48,16 @@ export const PlanTabDetails = (
     planRunAuditRows,
     ralphTuningJson,
     recentPlanRuns,
-    setFullscreen,
+    // setFullscreen,
+    tasks,
     workingDirectory,
     workflowInput,
     workflowTimeout,
   } = props;
 
   // Hooks
-  const [summary, _setSummary] = React.useState(false);
 
+  // Setup
   const canonicalWorkflowCommand = React.useMemo(() => {
     const merged: WorkflowRalphRunOptionsInput = {
       ...workflowInput,
@@ -84,22 +84,12 @@ export const PlanTabDetails = (
     : !workflowValidation.ok
       ? workflowValidation.issues[0]?.message
       : workspacePathError;
-
-  // Setup
-  // const isExpanded = isWorkflowOptionsExpanded(searchParams);
-  const hasDescription = plan.description != null && plan.description !== '';
   const hasSummary = plan.summary != null && plan.summary !== '';
-  // const status = isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
-
-  const summaryLines = hasSummary ? (plan.summary!.split('\n').length ?? 0) : 0;
-  const descriptionLines = hasDescription
-    ? plan.description!.split('\n').length
-    : 0;
-
-  const isLongSummary = summaryLines > DEFAULT_PLAN_SUMMARY_PREVIEW_LINES;
-
-  const _isLongDescription = descriptionLines > DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES; // prettier-ignore
-  const _showSummaryPreview = hasSummary && isLongSummary && !summary;
+  const requirements = React.useMemo(() => {
+    return tasks
+      .map((task) => JSON.parse(task.requirementsJson))
+      .filter((requirement) => requirement.length > 0);
+  }, [tasks]);
 
   // Handlers
 
@@ -132,15 +122,6 @@ export const PlanTabDetails = (
             relative: !fullscreen,
           })}
         >
-          <Button
-            className="absolute top-4 right-4 z-10"
-            onClick={() => {
-              setFullscreen((prev) => !prev);
-            }}
-          >
-            Full Screen
-          </Button>
-
           {fullscreen ? (
             <EditorWindow
               className="flex-1 transition-all duration-300"
@@ -159,20 +140,31 @@ export const PlanTabDetails = (
               {hasSummary && (
                 <div>
                   <h2 className="mb-4">Summary</h2>
-                  <MarkdownRenderer
-                    className="text-wrap text-sm text-muted-foreground whitespace-normal"
-                    source={plan.summary ?? ''}
-                  />
+                  <MarkdownRenderer source={plan.summary ?? ''} />
                 </div>
               )}
 
               <div>
                 <h2 className="mb-4">Description</h2>
-                <MarkdownRenderer
-                  className="text-wrap text-sm text-muted-foreground whitespace-normal"
-                  source={plan.description ?? ''}
-                />
+                <MarkdownRenderer source={plan.description ?? ''} />
               </div>
+
+              {requirements.length > 0 ? (
+                <>
+                  <h2 className="mb-4">Requirements</h2>
+                  <MarkdownRenderer
+                    source={requirements
+                      .map((requirement) => `- ${requirement}`)
+                      .join('\n')}
+                  />
+                </>
+              ) : (
+                <OpenThrottleEmptyState
+                  className="p-0!"
+                  description="This plan and its tasks have no requirements. Modify the plan and its tasks to add requirements."
+                  title="No Requirements"
+                />
+              )}
             </div>
           )}
         </div>

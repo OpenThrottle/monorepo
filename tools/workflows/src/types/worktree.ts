@@ -223,6 +223,10 @@ export interface ChildJobSuccess {
   readonly ok: true;
   /** True if all tasks were completed/skipped and plan was set to COMPLETED. */
   readonly planCompleted: boolean;
+  /** First plan-output append error message when {@link planOutputStreamFailures} > 0. */
+  readonly planOutputStreamFailureReason?: string;
+  /** Count of plan-output chunks that failed every retry and were dropped; omitted when none were lost. Set so a successful run still surfaces silently-lost iteration logs. */
+  readonly planOutputStreamFailures?: number;
   /** Wall-clock vs CPU time metrics for determining CPU/I/O bound behavior. */
   readonly wallClockMetrics?: WallClockMetrics;
 }
