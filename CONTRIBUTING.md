@@ -309,6 +309,29 @@ pnpm nx show projects --with-target=build
 pnpm nx show projects
 ```
 
+## Full builds under `--parallel` (reliability)
+
+Most projects compile through TypeScript **project references** (`composite: true`). Under a cold, high-parallelism full build — e.g. `nx run-many --target=build,typecheck --all --parallel=4 --skip-nx-cache` — multiple `tsc --build` processes can each independently (re)build the **same shared dependency**, because `tsc --build` resolves and rebuilds references on its own, outside Nx's task scheduling. Two processes writing the same `dist/*.d.ts` at once surface as flaky, non-deterministic failures even though every project passes in isolation:
+
+- `TS6305` — `Output file '…/dist/src/index.d.ts' has not been built from source file …`
+- `TS2307` / `TS7016` — a dependency's declarations are momentarily missing (or `.js` exists without `.d.ts`) while another process rewrites them.
+
+Two hardening changes reduce this (see `nx.json` `targetDefaults` and the app `vite.config.ts` files):
+
+- **Ordered declaration writes.** `typecheck` depends on `^build`, its own `build`, and `^typecheck`; `build` depends on `^typecheck`. For any project its own build precedes its own typecheck, and a dependent waits for each dependency's build **and** typecheck — so within Nx's scheduling no `dist` is read while another task writes it. This eliminated the `TS6305`/`TS2307` signatures across repeated cold `--parallel=4` runs.
+- **No fixed-port build server.** `vite-bundle-analyzer` is gated behind `ANALYZE=true` (and uses `analyzerPort: 'auto'`), so app builds no longer start a server on the fixed port `8888` and collide under `--parallel` (`EADDRINUSE`).
+
+These remove the named signatures, but `tsc --build`'s autonomous reference rebuilds can still occasionally collide at high parallelism. **For a trustworthy cold full build, lower the parallelism:**
+
+```bash
+# Reliable full-build lane (validated repeatably green across cold runs)
+pnpm run build:all
+# equivalent to:
+pnpm nx run-many --target=build,typecheck --all --parallel=2
+```
+
+`--parallel=2` was repeatably green across cold, cache-purged runs; `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
+
 ## GraphQL schema and codegen
 
 The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`schema.gql` at the repo root**. CI fails when schema or generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.
