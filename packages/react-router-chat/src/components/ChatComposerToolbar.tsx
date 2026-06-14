@@ -1,4 +1,14 @@
 import * as React from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
 import classnames from 'classnames';
 import type {
   ChatComposerMode,
@@ -38,15 +48,39 @@ export interface ChatComposerToolbarProps {
 export const ChatComposerToolbar = (
   props: ChatComposerToolbarProps,
 ): React.ReactElement => {
-  const { className } = props;
+  const { className, modelId, models, onModelChange } = props;
 
   // Hooks
 
   // Setup
+  const hasModels = models != null && models.length > 0;
 
   // Handlers
 
   // Markup
+  const modelControl = hasModels ? (
+    <Select onValueChange={onModelChange} value={modelId}>
+      <Tooltip delayDuration={500}>
+        <TooltipTrigger asChild={true}>
+          <SelectTrigger
+            aria-label="Model"
+            className="h-8 w-auto min-w-32 gap-1"
+            data-testid="ChatComposerToolbar-model-select"
+          >
+            <SelectValue placeholder="Model" />
+          </SelectTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">Model</TooltipContent>
+      </Tooltip>
+      <SelectContent>
+        {models.map((model) => (
+          <SelectItem key={model.id} value={model.id}>
+            {model.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : null;
 
   // Life Cycle
 
@@ -56,6 +90,8 @@ export const ChatComposerToolbar = (
     <div
       className={classnames('flex flex-wrap items-center gap-2', className)}
       data-testid="ChatComposerToolbar"
-    />
+    >
+      {modelControl}
+    </div>
   );
 };
