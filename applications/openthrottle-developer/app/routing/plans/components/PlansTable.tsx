@@ -184,6 +184,13 @@ PlansTable.buildTable = (
                 >
                   {plan.projectRelation.name}
                 </Link>
+              ) : plan.project != null && plan.project !== '' ? (
+                <span
+                  aria-label={`Project: ${plan.project}`}
+                  className="rounded border border-border px-1.5 py-0.5"
+                >
+                  {plan.project}
+                </span>
               ) : null}
               {plan.author ? (
                 <span aria-label={`Author: ${plan.author}`}>

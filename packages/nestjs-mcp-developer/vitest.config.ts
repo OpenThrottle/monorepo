@@ -1,8 +1,5 @@
 import path from 'node:path';
-import {
-  createVitestConfigNode,
-  getDirname,
-} from '@tools/dotfiles/vitest-config';
+import { createVitestConfigNode, getDirname } from '@tools/dotfiles';
 
 export default createVitestConfigNode({
   overrides: {

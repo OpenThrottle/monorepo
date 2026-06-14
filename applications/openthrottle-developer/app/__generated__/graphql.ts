@@ -3202,6 +3202,7 @@ export type PlanDetailsFragment = {
   id: string;
   jobRunHooksJson: string;
   runConfigJson: string;
+  project?: string | null;
   projectId?: string | null;
   status: string;
   summary?: string | null;
@@ -3230,6 +3231,7 @@ export type GetPlanByIdQuery = {
     id: string;
     jobRunHooksJson: string;
     runConfigJson: string;
+    project?: string | null;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -3391,6 +3393,7 @@ export type PlanDetailIndexLoaderQuery = {
     id: string;
     jobRunHooksJson: string;
     runConfigJson: string;
+    project?: string | null;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -3582,6 +3585,7 @@ export type PlanCardFragment = {
   description?: string | null;
   hasCustomRunConfig: boolean;
   id: string;
+  project?: string | null;
   status: string;
   summary?: string | null;
   taskCount: number;
@@ -3642,6 +3646,7 @@ export type GetPlansByStatusQuery = {
       description?: string | null;
       hasCustomRunConfig: boolean;
       id: string;
+      project?: string | null;
       status: string;
       summary?: string | null;
       taskCount: number;
@@ -4783,6 +4788,7 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -4844,6 +4850,7 @@ export const PlanCardFragmentDoc = {
             name: { kind: 'Name', value: 'hasCustomRunConfig' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'projectRelation' },
@@ -6826,6 +6833,7 @@ export const GetPlanByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -7605,6 +7613,7 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -8185,6 +8194,7 @@ export const GetPlansByStatusDocument = {
             name: { kind: 'Name', value: 'hasCustomRunConfig' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'projectRelation' },
