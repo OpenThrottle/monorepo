@@ -10,6 +10,7 @@
   "dependencies": {
     "@openthrottle/react-router-chat": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "@paper-design/shaders-react": "catalog:",
     "rollbar": "catalog:"
   },
   "main": "./src/index.ts",

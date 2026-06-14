@@ -213,6 +213,9 @@ catalogs:
     '@nx/webpack':
       specifier: 22.7.4
       version: 22.7.4
+    '@paper-design/shaders-react':
+      specifier: ^0.0.76
+      version: 0.0.76
     '@parcel/watcher':
       specifier: ^2.5.4
       version: 2.5.6
@@ -2914,6 +2917,9 @@ importers:
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
+      '@paper-design/shaders-react':
+        specifier: 'catalog:'
+        version: 0.0.76(@types/react@19.2.7)(react@19.2.4)
       rollbar:
         specifier: 'catalog:'
         version: 3.1.0
@@ -7641,6 +7647,18 @@ packages:
 
   '@package-json/types@0.0.12':
     resolution: {integrity: sha512-uu43FGU34B5VM9mCNjXCwLaGHYjXdNincqKLaraaCW+7S2+SmiBg1Nv8bPnmschrIfZmfKNY9f3fC376MRrObw==}
+
+  '@paper-design/shaders-react@0.0.76':
+    resolution: {integrity: sha512-uPJWrYRf6cJdO2H+fuXlahaqz0QjYglNAyUTaRfIInpzCa/d6guxBIK003soAZQFuQ035yg9FhtfFzKNWm+a5A==}
+    peerDependencies:
+      '@types/react': ^18 || ^19
+      react: 19.2.4
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@paper-design/shaders@0.0.76':
+    resolution: {integrity: sha512-AcNDY4J66YQHUfQYFInkCP7M9VOje0od7wLpOR7LtCmc532opJy6ll+h1W9zBovz8tt9U7OADUmJ/qKEXyOX/A==}
 
   '@parcel/watcher-android-arm64@2.5.6':
     resolution: {integrity: sha512-YQxSS34tPF/6ZG7r/Ih9xy+kP/WwediEUsqmtf0cuCV5TPPKw/PQHRhueUo6JdeFJaqV3pyjm0GdYjZotbRt/A==}
@@ -25652,6 +25670,15 @@ snapshots:
     optional: true
 
   '@package-json/types@0.0.12': {}
+
+  '@paper-design/shaders-react@0.0.76(@types/react@19.2.7)(react@19.2.4)':
+    dependencies:
+      '@paper-design/shaders': 0.0.76
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.7
+
+  '@paper-design/shaders@0.0.76': {}
 
   '@parcel/watcher-android-arm64@2.5.6':
     optional: true
