@@ -22,6 +22,7 @@ export interface GlobalLayoutProps {
 
   readonly overrides?: {
     readonly footer?: boolean;
+    readonly header?: boolean;
     readonly rail?: boolean;
   };
 }
