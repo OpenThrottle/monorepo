@@ -48,12 +48,21 @@ export interface ChatComposerToolbarProps {
 export const ChatComposerToolbar = (
   props: ChatComposerToolbarProps,
 ): React.ReactElement => {
-  const { className, modelId, models, onModelChange } = props;
+  const {
+    className,
+    modelId,
+    models,
+    onModelChange,
+    onPersonaChange,
+    personaId,
+    personas,
+  } = props;
 
   // Hooks
 
   // Setup
   const hasModels = models != null && models.length > 0;
+  const hasPersonas = personas != null && personas.length > 0;
 
   // Handlers
 
@@ -82,6 +91,30 @@ export const ChatComposerToolbar = (
     </Select>
   ) : null;
 
+  const personaControl = hasPersonas ? (
+    <Select onValueChange={onPersonaChange} value={personaId}>
+      <Tooltip delayDuration={500}>
+        <TooltipTrigger asChild={true}>
+          <SelectTrigger
+            aria-label="Agent"
+            className="h-8 w-auto min-w-32 gap-1"
+            data-testid="ChatComposerToolbar-persona-select"
+          >
+            <SelectValue placeholder="Agent" />
+          </SelectTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">Agent</TooltipContent>
+      </Tooltip>
+      <SelectContent>
+        {personas.map((persona) => (
+          <SelectItem key={persona.id} value={persona.id}>
+            {persona.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : null;
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -92,6 +125,7 @@ export const ChatComposerToolbar = (
       data-testid="ChatComposerToolbar"
     >
       {modelControl}
+      {personaControl}
     </div>
   );
 };
