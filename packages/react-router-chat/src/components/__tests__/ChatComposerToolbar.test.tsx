@@ -123,4 +123,39 @@ describe('ChatComposerToolbar Component', () => {
       expect(onModeChange).toHaveBeenCalledWith(ChatComposerMode.build);
     });
   });
+
+  describe('attach / add-context control', () => {
+    test('calls onAddContext with the chosen source', async () => {
+      const onAddContext = vi.fn();
+      const component = renderToolbar({
+        contextSources: [
+          { id: 'file', label: 'File' },
+          { id: 'project', label: 'Project' },
+        ],
+        onAddContext,
+      });
+
+      const user = userEvent.setup();
+      await user.click(component.getByTestId('ChatComposerToolbar-attach'));
+      await user.click(component.getByRole('menuitem', { name: 'Project' }));
+
+      expect(onAddContext).toHaveBeenCalledWith('project');
+    });
+
+    test('is disabled when no context sources are supplied', () => {
+      const component = renderToolbar({ onAddContext: vi.fn() });
+
+      expect(
+        component.getByTestId('ChatComposerToolbar-attach'),
+      ).toBeDisabled();
+    });
+
+    test('is hidden when no onAddContext callback is supplied', () => {
+      const component = renderToolbar({});
+
+      expect(
+        component.queryByTestId('ChatComposerToolbar-attach'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

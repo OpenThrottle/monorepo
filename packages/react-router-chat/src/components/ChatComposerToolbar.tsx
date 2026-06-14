@@ -1,5 +1,10 @@
 import * as React from 'react';
 import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -11,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { Paperclip } from 'lucide-react';
 import classnames from 'classnames';
 import { ChatComposerMode } from '../types';
 import type {
@@ -52,9 +58,11 @@ export const ChatComposerToolbar = (
 ): React.ReactElement => {
   const {
     className,
+    contextSources,
     mode,
     modelId,
     models,
+    onAddContext,
     onModeChange,
     onModelChange,
     onPersonaChange,
@@ -67,6 +75,8 @@ export const ChatComposerToolbar = (
   // Setup
   const hasModels = models != null && models.length > 0;
   const hasPersonas = personas != null && personas.length > 0;
+  const hasContextSources = contextSources != null && contextSources.length > 0;
+  const showAttach = onAddContext != null;
 
   // Handlers
   const onModeValueChange = (value: string): void => {
@@ -162,6 +172,53 @@ export const ChatComposerToolbar = (
       </ToggleGroup>
     ) : null;
 
+  const attachControl = !showAttach ? null : hasContextSources ? (
+    <DropdownMenu>
+      <Tooltip delayDuration={500}>
+        <TooltipTrigger asChild={true}>
+          <DropdownMenuTrigger asChild={true}>
+            <Button
+              aria-label="Add context"
+              data-testid="ChatComposerToolbar-attach"
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <Paperclip className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">Add context</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="start">
+        {contextSources.map((source) => (
+          <DropdownMenuItem
+            key={source.id}
+            onSelect={() => onAddContext(source.id)}
+          >
+            {source.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <Tooltip delayDuration={500}>
+      <TooltipTrigger asChild={true}>
+        <Button
+          aria-label="Add context"
+          data-testid="ChatComposerToolbar-attach"
+          disabled={true}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <Paperclip className="size-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">No context sources available</TooltipContent>
+    </Tooltip>
+  );
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -174,6 +231,7 @@ export const ChatComposerToolbar = (
       {modelControl}
       {personaControl}
       {modeControl}
+      {attachControl}
     </div>
   );
 };
