@@ -35,7 +35,7 @@ See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build
 
 ## 3. Baseline: image size per stage (measured)
 
-Recorded on **2026-05-14** on **Docker Desktop (linux/amd64 or arm64 per daemon)**, `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`, `PNPM_VERSION=10`. Sizes vary by engine architecture and layer cache.
+Recorded on **2026-05-14** on **Docker Desktop (linux/amd64 or arm64 per daemon)**, `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.7.4`, `PNPM_VERSION=10`. Sizes vary by engine architecture and layer cache.
 
 **Note:** Rows below were captured when intermediate stages still tracked an **Alpine**-based builder; **Dockerfile.NestJS.v2** now uses **bookworm-slim** through **build** for glibc alignment with distroless. Re-run §5 after pulls succeed and replace this table with bookworm numbers.
 
@@ -84,7 +84,7 @@ echo '{}' > /tmp/gcs-empty.json
 
 export APP_NAME=openthrottle-server
 export APP_VERSION=1.3.0
-export NX_VERSION=22.6.4
+export NX_VERSION=22.7.4
 export PNPM_VERSION=10
 export GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 export NX_KEY="${NX_KEY:-}"

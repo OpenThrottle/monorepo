@@ -1,0 +1,15 @@
+ARG POSTGRES_VERSION=18
+
+# Official prebuilt pgvector image (postgres base + tested vector.so).
+# Replaces the previous source build, whose -march=native compile produced a
+# vector.so that segfaulted on load under the Docker Desktop VM on Apple Silicon.
+# -trixie matches the Debian 13 / glibc 2.41 base the postgres_data volume was
+# initialized with (the default tag is Debian 12 and triggers a collation
+# version mismatch warning).
+FROM pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
+
+# The wildcards make the seed optional: a glob matching zero files copies
+# nothing instead of failing the build. `database[s]` must be a glob too:
+# .dockerignore only re-includes seed.sql, so without it the databases/
+# folder is absent from the context and a literal path would fail to lstat.
+COPY ./database[s]/seed.sql* /docker-entrypoint-initdb.d/
