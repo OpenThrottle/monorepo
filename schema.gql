@@ -1474,8 +1474,10 @@ type Query {
   """Get a commit link by ID"""
   commitLink(input: GetCommitLinkInput!): CommitLinkObject
 
-  """List all commit links, ordered by createdAt descending"""
-  commitLinks: [CommitLinkObject!]!
+  """
+  List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.
+  """
+  commitLinks(limit: Int): [CommitLinkObject!]!
 
   """
   List commit links for a plan (plan-level and task-level), ordered by createdAt descending
@@ -1611,8 +1613,10 @@ type Query {
   """Get a plan by ID"""
   plan(id: ID!): PlanObject
 
-  """List all plans"""
-  plans: [PlanObject!]!
+  """
+  List plans, newest first. Capped at 100 by default (max 500); pass limit to override. Use listPlansByStatus for full pagination/filtering.
+  """
+  plans(limit: Int): [PlanObject!]!
 
   """
   List plans filtered by status(es), assignee(s), project, title; sorted and paginated. Pass statuses/assignees arrays; empty or "all" in statuses means no status filter.
@@ -1706,9 +1710,9 @@ type Query {
   task(id: ID!): TaskObject
 
   """
-  List all tasks, ordered by planId then sortOrder then createdAt ascending
+  List tasks, ordered by planId then sortOrder then createdAt ascending. Capped at 100 by default (max 500); pass limit to override. Use tasksByPlanId/tasksByProjectId for scoped lists.
   """
-  tasks: [TaskObject!]!
+  tasks(limit: Int): [TaskObject!]!
 
   """
   List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending

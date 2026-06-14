@@ -1674,7 +1674,7 @@ export type Query = {
   codeSemanticSearch: CodeSemanticSearchResult;
   /** Get a commit link by ID */
   commitLink?: Maybe<CommitLinkObject>;
-  /** List all commit links, ordered by createdAt descending */
+  /** List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists. */
   commitLinks: Array<CommitLinkObject>;
   /** List commit links for a plan (plan-level and task-level), ordered by createdAt descending */
   commitLinksByPlanId: Array<CommitLinkObject>;
@@ -1756,7 +1756,7 @@ export type Query = {
   planOutputStreamChunks: Array<PlanOutputStreamChunkObject>;
   /** Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend. */
   planRunsByPlanId: Array<PlanRunObject>;
-  /** List all plans */
+  /** List plans, newest first. Capped at 100 by default (max 500); pass limit to override. Use listPlansByStatus for full pagination/filtering. */
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
   prCountByLabel: Array<PrCountByLabelObject>;
@@ -1810,7 +1810,7 @@ export type Query = {
   taskEmbedding?: Maybe<TaskEmbeddingObject>;
   /** List task embeddings by task ID, ordered by createdAt ascending */
   taskEmbeddings: Array<TaskEmbeddingObject>;
-  /** List all tasks, ordered by planId then sortOrder then createdAt ascending */
+  /** List tasks, ordered by planId then sortOrder then createdAt ascending. Capped at 100 by default (max 500); pass limit to override. Use tasksByPlanId/tasksByProjectId for scoped lists. */
   tasks: Array<TaskObject>;
   /** List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending */
   tasksByPlanId: Array<TaskObject>;
@@ -1846,6 +1846,10 @@ export type QueryCodeSemanticSearchArgs = {
 
 export type QueryCommitLinkArgs = {
   input: GetCommitLinkInput;
+};
+
+export type QueryCommitLinksArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryCommitLinksByPlanIdArgs = {
@@ -1958,6 +1962,10 @@ export type QueryPlanRunsByPlanIdArgs = {
   input: PlanRunsByPlanIdInput;
 };
 
+export type QueryPlansArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type QueryPrCountByLabelArgs = {
   input: PrCountByLabelInput;
 };
@@ -2036,6 +2044,10 @@ export type QueryTaskEmbeddingArgs = {
 
 export type QueryTaskEmbeddingsArgs = {
   input: TaskEmbeddingsByTaskInput;
+};
+
+export type QueryTasksArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryTasksByPlanIdArgs = {

@@ -5,10 +5,11 @@
  */
 
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import { PlansService } from '@openthrottle/nestjs-repositories';
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
+import { ActivityLoaders } from './activity-loaders';
 import {
   ActivityByDateResultObject,
   ActivityCommitRowObject,
@@ -37,10 +38,7 @@ function getTimestamp(row: ActivityRow): Date {
 
 @Resolver(() => ActivityCommitRowObject)
 export class ActivityCommitRowResolver {
-  constructor(
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
-  ) {}
+  constructor(private readonly loaders: ActivityLoaders) {}
 
   @ResolveField(() => Plan, {
     description: `Resolved plan entity when planId is set`,
@@ -49,11 +47,7 @@ export class ActivityCommitRowResolver {
   async plan(@Parent() parent: ActivityCommitRowObject): Promise<Plan | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 
   @ResolveField(() => TaskObject, {
@@ -63,17 +57,13 @@ export class ActivityCommitRowResolver {
   async task(@Parent() parent: ActivityCommitRowObject): Promise<Task | null> {
     if (!parent.taskId) return null;
 
-    const result = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: parent.taskId } });
-
-    return result;
+    return this.loaders.taskLoader.load(parent.taskId);
   }
 }
 
 @Resolver(() => ActivityOutputChunkRowObject)
 export class ActivityOutputChunkRowResolver {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(private readonly loaders: ActivityLoaders) {}
 
   @ResolveField(() => PlanObject, {
     description: `Resolved plan entity when planId is set`,
@@ -84,20 +74,13 @@ export class ActivityOutputChunkRowResolver {
   ): Promise<Plan | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 }
 
 @Resolver(() => ActivityTaskUpdatedRowObject)
 export class ActivityTaskUpdatedRowResolver {
-  constructor(
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
-  ) {}
+  constructor(private readonly loaders: ActivityLoaders) {}
 
   @ResolveField(() => PlanObject, {
     description: `Resolved plan entity when planId is set`,
@@ -108,11 +91,7 @@ export class ActivityTaskUpdatedRowResolver {
   ): Promise<Plan | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 
   @ResolveField(() => TaskObject, {
@@ -124,11 +103,7 @@ export class ActivityTaskUpdatedRowResolver {
   ): Promise<Task | null> {
     if (!parent.id) return null;
 
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: parent.id } });
-
-    return task;
+    return this.loaders.taskLoader.load(parent.id);
   }
 }
 

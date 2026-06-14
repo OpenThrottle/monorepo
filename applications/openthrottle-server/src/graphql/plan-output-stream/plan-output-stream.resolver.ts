@@ -6,10 +6,7 @@ import type {
   Plan,
   PlanOutputStreamChunk,
 } from '@openthrottle/nestjs-repositories';
-import {
-  PlanOutputStreamService,
-  PlansService,
-} from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
 import {
   Args,
   Mutation,
@@ -20,6 +17,7 @@ import {
 } from '@nestjs/graphql';
 import { PlanObject } from '../plans/plan.object';
 import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
+import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import {
   AppendPlanOutputInput,
   GetPlanOutputStreamChunkInput,
@@ -29,8 +27,8 @@ import {
 @Resolver(() => PlanOutputStreamChunkObject)
 export class PlanOutputStreamResolver {
   constructor(
+    private readonly loaders: PlanOutputStreamLoaders,
     private readonly planOutputStreamService: PlanOutputStreamService,
-    private readonly plansService: PlansService,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -42,11 +40,7 @@ export class PlanOutputStreamResolver {
   ): Promise<Plan | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 
   @Query(() => PlanOutputStreamChunkObject, {

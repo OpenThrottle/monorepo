@@ -177,6 +177,7 @@ describe('TasksResolver', () => {
 
       expect(repo.find).toHaveBeenCalledWith({
         order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+        take: 100,
       });
     });
 
@@ -186,6 +187,20 @@ describe('TasksResolver', () => {
       const result = await resolver.tasks();
 
       expect(result).toEqual([]);
+    });
+
+    test('honors an explicit limit, clamped to the max', async () => {
+      vi.mocked(repo.find).mockResolvedValue([]);
+
+      await resolver.tasks(5);
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5 }),
+      );
+
+      await resolver.tasks(10000);
+      expect(repo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 500 }),
+      );
     });
   });
 

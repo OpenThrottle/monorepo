@@ -12,10 +12,15 @@ import './workspace-settings.object';
 import './workspace-settings.input';
 import './apply-workspace-editor-configuration.input';
 import './workspace-editor-config-application.object';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
 
 @Module({
   imports: [NestjsRepositoriesModule],
-  providers: [GqlPermissionsGuard, WorkspaceSettingsResolver],
+  providers: [
+    GqlPermissionsGuard,
+    WorkspaceSettingsLoaders,
+    WorkspaceSettingsResolver,
+  ],
 })
 export class WorkspaceSettingsGraphqlModule {}
