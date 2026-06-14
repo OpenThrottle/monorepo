@@ -356,6 +356,17 @@ catalog:
 # exception, add it to the "legacy" named catalog below instead.
 catalogMode: strict
 
+# 🌐 Global Virtual Store (pnpm 11) — symlinks the per-worktree node_modules
+# out to the shared store (~/Library/pnpm/store/v11/links), shrinking each
+# worktree's .pnpm from ~2.2G to ~1.8M. Trade-off: the symlinked layout breaks
+# packages that import undeclared/hoisted deps. The config dependency below
+# (@pnpm/plugin-esm-node-path) registers an ESM loader so ESM imports honor
+# NODE_PATH (CJS already does), closing most of that gap.
+enableGlobalVirtualStore: true
+
+configDependencies:
+  '@pnpm/plugin-esm-node-path': 0.1.2
+
 # 🔐 💂 👀 https://pnpm.io/settings#minimumreleaseage 👀 💂 🔐
 minimumReleaseAge: 10080 # 7 days (in minutes)
 minimumReleaseAgeExclude:
@@ -376,6 +387,100 @@ overrides:
   'shadcn>zod': '3.25.76'
   'zod': 'catalog:'
   'zod-to-json-schema': 'catalog:'
+
+# 🩹 Global Virtual Store hoisting fixes | https://pnpm.io/settings#packageextensions
+# The GVS symlinked layout breaks packages that require()/import an UNDECLARED
+# dependency (they relied on the flat layout's hoisting). The ESM cases are
+# handled by the @pnpm/plugin-esm-node-path config dependency above; the
+# entries here cover CJS `require()` of undeclared deps, which the ESM loader
+# does not intercept — plus the occasional ESM import the loader can't reach
+# because the target dep is never hoisted to a NODE_PATH location on a clean
+# install (see react-router-devtools below). Keep this list minimal — each
+# entry is a third-party package reaching for an ambient dep. The Nx executor
+# toolchain ambiently requires `nx` (daemon client) and `typescript`
+# (tsc/lint executors).
+packageExtensions:
+  # Runtime CJS hoisting (NOT covered by the ESM plugin): @bull-board/api's
+  # bullMQ queue adapter does `require('bullmq')` but declares bullmq nowhere.
+  # This is the breakage that blocked the NestJS server boot in the prior plan.
+  '@bull-board/api':
+    dependencies:
+      bullmq: '*'
+  # Runtime CJS hoisting: @rekog/mcp-nest's JWT token service does
+  # `require('jsonwebtoken')` but declares it in neither dependencies nor
+  # peerDependencies (only @nestjs/jwt). Broke openthrottle-mcp /
+  # openthrottle-server test suites under GVS.
+  '@rekog/mcp-nest':
+    dependencies:
+      jsonwebtoken: '*'
+  # Test-tooling ESM phantom deps: both import `vitest` but declare it nowhere
+  # (no dep, no peer), so under GVS the import isn't resolvable from the
+  # package's own node_modules — vitest test suites failed in CI. Declaring it
+  # symlinks the workspace vitest into each package's node_modules.
+  '@golevelup/ts-vitest':
+    dependencies:
+      vitest: '*'
+  '@testing-library/jest-dom':
+    dependencies:
+      vitest: '*'
+  # ESM import NOT reliably reachable via the loader: react-router-devtools
+  # imports vite-node/{client,server,source-map} (its vite plugin) but declares
+  # vite-node in neither dependencies nor peerDependencies. vite-node is only a
+  # transitive of @react-router/dev and isn't hoisted to a NODE_PATH location,
+  # so a clean GVS install can't resolve it during `react-router typegen` /
+  # vite config load (broke codegen-react-router in CI). Declaring it here
+  # symlinks vite-node into react-router-devtools' own node_modules.
+  'react-router-devtools':
+    dependencies:
+      vite-node: '*'
+  '@nx/devkit':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/eslint-plugin':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/js':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/nest':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/node':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/react':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/vite':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/vitest':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/web':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  '@nx/webpack':
+    dependencies:
+      nx: '*'
+      typescript: '*'
+  'nx':
+    dependencies:
+      typescript: '*'
+  # Type-space hoisting: published .d.ts references @types/react via
+  # ComponentPropsWithoutRef but the package only declares `react` as a peer.
+  '@phosphor-icons/react':
+    dependencies:
+      '@types/react': '*'
 
 packages:
   - 'applications/*'
