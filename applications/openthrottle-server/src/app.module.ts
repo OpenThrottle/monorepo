@@ -47,6 +47,7 @@ import { HealthModule } from './modules/health/health.module';
 import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery-graphql.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
@@ -135,6 +136,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     GithubGraphqlModule,
     HealthGraphqlModule,
     MetricsGraphqlModule,
+    ModelDiscoveryGraphqlModule,
     NotesGraphqlModule,
     PlanEmbeddingsGraphqlModule,
     PlanOutputStreamGraphqlModule,
