@@ -73,6 +73,12 @@ COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.
 COPY ./packages ./packages
 COPY ./tools ./tools
 
+# pnpm 11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
+# GitHub Packages credential to the trusted user-level config. Confined to the
+# build stages (builder and the development/build stages that derive from it) —
+# the distroless production stage only copies the pruned tree, never this .npmrc.
+RUN pnpm config set "//npm.pkg.github.com/:_authToken" "${GITHUB_TOKEN}"
+
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
 ################################################################################

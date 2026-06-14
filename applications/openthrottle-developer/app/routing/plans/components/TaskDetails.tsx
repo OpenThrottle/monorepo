@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import { format } from 'date-fns';
 import {
   Button,
@@ -10,6 +9,7 @@ import {
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 export interface TaskDetailsProps {
@@ -53,9 +53,6 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
   const summaryLines = hasSummary ? (task.summary!.split('\n').length ?? 0) : 0;
   const isLongDescription = descriptionLines > DESCRIPTION_PREVIEW_LINES;
   const isLongSummary = summaryLines > SUMMARY_PREVIEW_LINES;
-  const showDescriptionPreview =
-    hasDescription && isLongDescription && !descriptionExpanded;
-  const showSummaryPreview = hasSummary && isLongSummary && !summaryExpanded;
 
   // Handlers
   const handleToggleDescription = (): void => {
@@ -130,14 +127,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                <p
-                  className={classnames(
-                    'text-muted-foreground text-sm',
-                    showDescriptionPreview && 'line-clamp-4',
-                  )}
-                >
-                  {task.description}
-                </p>
+                <MarkdownRenderer source={task.description ?? ''} />
                 {isLongDescription && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
@@ -152,14 +142,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
             {hasDescription && hasSummary && <Separator />}
             {hasSummary && (
               <div className="space-y-1">
-                <blockquote
-                  className={classnames(
-                    'border-muted-foreground/30 text-muted-foreground border-l-4 pl-4 text-sm italic',
-                    showSummaryPreview && 'line-clamp-3',
-                  )}
-                >
-                  {task.summary}
-                </blockquote>
+                <MarkdownRenderer source={task.summary ?? ''} />
                 {isLongSummary && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
