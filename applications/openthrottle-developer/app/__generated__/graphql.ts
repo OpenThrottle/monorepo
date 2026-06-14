@@ -550,6 +550,18 @@ export type DeleteTaskInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DiscoverLocalModelsResult = {
+  __typename?: 'DiscoverLocalModelsResult';
+  /** De-duplicated reachable endpoints, stably sorted by (host, port). */
+  endpoints: Array<ModelEndpointObject>;
+  /** ISO-8601 timestamp of when this snapshot was scanned. */
+  scannedAt: Scalars['String']['output'];
+  /** Hosts probed during this scan, in resolution order. */
+  scannedHosts: Array<Scalars['String']['output']>;
+  /** Number of discovered endpoints. */
+  totalCount: Scalars['Int']['output'];
+};
+
 export type DuplicateJobInput = {
   /** BullMQ job id to duplicate. */
   jobId: Scalars['ID']['input'];
@@ -993,6 +1005,20 @@ export type MetricsObject = {
 export type MetricsObjectRecentPlanRunsMetricsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   planId: Scalars['ID']['input'];
+};
+
+export type ModelEndpointObject = {
+  __typename?: 'ModelEndpointObject';
+  /** OpenAI-compatible /v1 base URL, e.g. http://localhost:11434/v1. Reflects the server's network vantage point. */
+  baseUrl: Scalars['String']['output'];
+  /** Host the endpoint was reached on, e.g. localhost or host.docker.internal. */
+  host: Scalars['String']['output'];
+  /** Sorted, de-duplicated model ids advertised by /v1/models (empty when the server is idle). */
+  models: Array<Scalars['String']['output']>;
+  /** Port the endpoint was reached on. */
+  port: Scalars['Int']['output'];
+  /** Best-effort provider label (ollama, lmstudio) or null when not fingerprinted. */
+  provider?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
@@ -1694,6 +1720,8 @@ export type Query = {
   databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
+  /** Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request. */
+  discoverLocalModels: DiscoverLocalModelsResult;
   /** Get a generator by name (includes schema JSON) */
   generator?: Maybe<GeneratorDetailObject>;
   /** List available NX generators from @tools/generators */

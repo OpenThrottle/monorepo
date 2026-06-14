@@ -260,6 +260,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.discoverLocalModelsToolDescription,
+    name: 'discover_local_models',
+    parameters: asMcpParameters(Th.discoverLocalModelsToolParameters),
+  })
+  discoverLocalModels(
+    args: Parameters<typeof Th.discoverLocalModelsToolHandler>[0],
+  ): ReturnType<typeof Th.discoverLocalModelsToolHandler> {
+    return Th.discoverLocalModelsToolHandler(args);
+  }
+
+  @Tool({
     description: Th.linkCommitToolDescription,
     name: 'link_commit',
     parameters: asMcpParameters(Th.linkCommitToolParameters),

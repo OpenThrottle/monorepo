@@ -1056,6 +1056,9 @@ importers:
       '@openthrottle/nestjs-logging':
         specifier: workspace:^
         version: link:packages/nestjs-logging
+      '@openthrottle/nestjs-model-discovery':
+        specifier: workspace:^
+        version: link:packages/nestjs-model-discovery
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:packages/nestjs-modules
@@ -2072,6 +2075,9 @@ importers:
       '@openthrottle/nestjs-logging':
         specifier: workspace:^
         version: link:../../packages/nestjs-logging
+      '@openthrottle/nestjs-model-discovery':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-model-discovery
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../../packages/nestjs-modules
@@ -2417,6 +2423,24 @@ importers:
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:^
         version: link:../openthrottle-mcp
+
+  packages/nestjs-model-discovery:
+    dependencies:
+      '@nestjs/common':
+        specifier: '>=10.0.0'
+        version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: 'catalog:'
+        version: 4.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
+      joi:
+        specifier: 'catalog:'
+        version: 18.2.1
 
   packages/nestjs-modules:
     dependencies:
