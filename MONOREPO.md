@@ -421,6 +421,16 @@ CI P0 runs affected `typecheck-tests` on every PR; phased Vitest runs use the `t
 - `test` - Run tests
 - `typecheck` - TypeScript type checking
 
+## Building the full workspace
+
+Build a single project with `pnpm nx run <project>:build`. To build everything at once, use the reliable full-build lane:
+
+```bash
+pnpm run build:all   # nx run-many --target=build,typecheck --all --parallel=2
+```
+
+A cold, high-parallelism full build (`--parallel=4 --skip-nx-cache`) is **not** reliably green: TypeScript project-reference (`tsc --build`) processes can concurrently rebuild shared dependencies and race on `dist/*.d.ts`, producing intermittent `TS6305`/`TS2307`/`TS7016` failures even though each project passes in isolation. `--parallel=2` is the validated trustworthy setting. See [CONTRIBUTING.md → Full builds under `--parallel`](./CONTRIBUTING.md#full-builds-under---parallel-reliability) for the root cause, the `nx.json`/analyzer hardening, and the Nx Cloud flaky-task-retry option.
+
 ## Additional Resources
 
 ### Documentation
