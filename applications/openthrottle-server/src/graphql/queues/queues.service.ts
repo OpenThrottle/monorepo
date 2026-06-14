@@ -52,6 +52,39 @@ const MIN_IDEMPOTENCY_KEY_LENGTH = 1;
 const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
 const IDEMPOTENCY_KEY_REGEX = /^[a-zA-Z0-9_.:-]+$/;
 
+/**
+ * @description Validate and normalize an optional idempotency key (used as a BullMQ `jobId`).
+ * Returns `{ key: undefined }` when no key was supplied, the trimmed key when valid, or `{ error }`.
+ * Exported so callers can validate BEFORE committing related DB writes (atomic enqueue path).
+ */
+export function normalizeIdempotencyKey(
+  raw: string | null | undefined,
+): { readonly key: string | undefined } | { readonly error: string } {
+  if (raw === undefined || raw === null || raw === '') {
+    return { key: undefined };
+  }
+
+  const trimmed = raw.trim();
+
+  if (trimmed.length < MIN_IDEMPOTENCY_KEY_LENGTH) {
+    return { error: 'idempotencyKey cannot be empty when provided' };
+  }
+
+  if (trimmed.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+    return {
+      error: `idempotencyKey must be at most ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
+    };
+  }
+
+  if (!IDEMPOTENCY_KEY_REGEX.test(trimmed)) {
+    return {
+      error: 'idempotencyKey must contain only letters, digits, and ._:-',
+    };
+  }
+
+  return { key: trimmed };
+}
+
 /** @description Union of all queue job data types for methods that work across static and dynamic queues. */
 type AnyJobData =
   | AgenticTestJobPayload
@@ -475,27 +508,11 @@ export class QueuesService implements OnModuleDestroy {
       return { error: 'jobData.runKind must be orchestrator' };
     }
 
-    let idempotencyKey: string | undefined;
-    if (input.idempotencyKey !== undefined && input.idempotencyKey !== '') {
-      const raw = input.idempotencyKey.trim();
-      if (raw.length < MIN_IDEMPOTENCY_KEY_LENGTH) {
-        return { error: 'idempotencyKey cannot be empty when provided' };
-      }
-
-      if (raw.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
-        return {
-          error: `idempotencyKey must be at most ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
-        };
-      }
-
-      if (!IDEMPOTENCY_KEY_REGEX.test(raw)) {
-        return {
-          error: 'idempotencyKey must contain only letters, digits, and ._:-',
-        };
-      }
-
-      idempotencyKey = raw;
+    const normalizedKey = normalizeIdempotencyKey(input.idempotencyKey);
+    if ('error' in normalizedKey) {
+      return { error: normalizedKey.error };
     }
+    const idempotencyKey = normalizedKey.key;
 
     const priority = input.priority;
     const opts =

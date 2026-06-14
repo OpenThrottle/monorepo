@@ -1,8 +1,4 @@
 {
-  "name": "@tools/workflows",
-  "description": "[DEPRECATED] Legacy workflow CLIs and re-exports. New code should use @openthrottle/nestjs-agentic-workflow (queued runs), @openthrottle/nestjs-worktrees (worktrees), and @openthrottle/openthrottle-agentic-workflow (contracts). workflow-ralph remains a thin local CLI shim; workflow-link-merge and workflow-lighthouse stay here until relocated.",
-  "version": "1.0.0",
-  "deprecated": "Use @openthrottle/nestjs-agentic-workflow for BullMQ agentic workflows. See tools/workflows/README.md.",
   "bin": {
     "workflow-link-merge": "./dist/src/bin/link-merge.js",
     "workflow-lighthouse": "./dist/src/bin/lighthouse.js",
@@ -17,6 +13,11 @@
     "commander": "catalog:",
     "pg": "catalog:",
     "pidusage": "catalog:"
+  },
+  "deprecated": "Use @openthrottle/nestjs-agentic-workflow for BullMQ agentic workflows. See tools/workflows/README.md.",
+  "description": "[DEPRECATED] Legacy workflow CLIs and re-exports. New code should use @openthrottle/nestjs-agentic-workflow (queued runs), @openthrottle/nestjs-worktrees (worktrees), and @openthrottle/openthrottle-agentic-workflow (contracts). workflow-ralph remains a thin local CLI shim; workflow-link-merge and workflow-lighthouse stay here until relocated.",
+  "devDependencies": {
+    "@types/pidusage": "catalog:"
   },
   "exports": {
     ".": {
@@ -35,6 +36,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@tools/workflows",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -62,6 +64,7 @@
       },
       "build:tsc": {
         "cache": false,
+        "description": "Compile @tools/workflows to dist with @nx/js:tsc.",
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -83,7 +86,5 @@
     "postbuild": "chmod +x ./dist/src/bin/*.js"
   },
   "types": "./src/index.ts",
-  "devDependencies": {
-    "@types/pidusage": "catalog:"
-  }
+  "version": "1.0.0"
 }

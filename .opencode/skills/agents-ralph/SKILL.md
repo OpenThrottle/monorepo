@@ -6,10 +6,10 @@ description: >-
   plan_output_stream; link_commit only after merge squash. USE WHEN running
   /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
   executing OT plan tasks with Plan-Id and Task-Id traceability.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
-**Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 ./skills/agents-ralph - v1.0.3 🌟 🤗 🚀".
+**Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 .agents/skills/agents-ralph - v1.0.4 🌟 🤗 🚀".
 
 **Ralph** is a technique: run a loop (read prompt → execute one step → repeat). You tune the prompt and docs when the agent goes wrong ([ghuntley.com/ralph](https://ghuntley.com/ralph)). This prompt defines our single workflow: start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a Postgres Database)_, then **execute one task at a time** (add tasks as the work reveals more work) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.
 
@@ -21,10 +21,12 @@ disable-model-invocation: true
 
 ## Rules
 
-- **Plan and tasks context.** Ralph injects the plan and task list into the prompt from Postgres (you will see a block like "--- OpenThrottle plan (injected by Ralph from Postgres)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—they are often unavailable in the agent session. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
+- **Plan and tasks context (reads come from the injected block).** Ralph injects the plan and task list into the prompt from OpenThrottle (you will see a block like "--- OpenThrottle plan (injected by Ralph from OpenThrottle)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—agent-session MCP reads are often unavailable. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
+- **Reads vs writes (by design).** Reads come from the injected block above; **writes go through MCP** (`update_task` / `update_plan` / `append_plan_output`). Rationale: prompt injection is reliable in-session, but status mutations need a live call. Your MCP writes and the Ralph CLI's own reconciliation (it parses `<ralph:task-complete>` and writes through its configured transport — GraphQL by default) both reach the **same OpenThrottle server**; they are not separate datastores.
 - Follow [agents.mdc](../../rules/commands/agents.mdc) and [github.mdc](../../rules/commands/github.mdc).
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `SKIPPED`
-- **One task at a time.** Resume any `IN_PROGRESS` first; otherwise pick highest-priority `PENDING`.
+- **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
+- **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
 - **Commit frequently.** Run `/github/commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
 
 ### Status updates
@@ -34,7 +36,7 @@ Always keep plan and task status in OpenThrottle up to date:
 - **At run start:** The workflow CLI sets the plan to `IN_PROGRESS` at run start when OpenThrottle is configured (plan- and task-centric). The agent can still set the plan to `IN_PROGRESS` when starting a task as redundancy.
 - **When starting work on a task:** Set the task to `IN_PROGRESS` via MCP `update_task(taskId, { status: 'IN_PROGRESS' })`. If the plan is still `PENDING`, set the plan to `IN_PROGRESS` (MCP `update_plan(planId, { status: 'IN_PROGRESS' })`).
 - **When completing a task:** Set the task to `COMPLETED` via MCP `update_task` when available. **Always** output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` (one per completed task) so the Ralph CLI can mark it completed in OpenThrottle even if MCP was not used or failed.
-- **When all tasks for the plan are completed:** Set the plan to `COMPLETED` (MCP `update_plan`
+- **When all tasks for the plan are completed:** Set the plan to `COMPLETED` (MCP `update_plan(planId, { status: 'COMPLETED' })`).
 
 ## Signals
 

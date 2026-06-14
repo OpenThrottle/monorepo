@@ -9,7 +9,7 @@ import {
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan } from '@openthrottle/nestjs-repositories';
+import { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
@@ -96,6 +96,22 @@ describe('PlansResolver', () => {
     createQueryBuilder: vi.fn(),
     find: vi.fn(),
     findOne: vi.fn(),
+    // Mirrors repo.manager.transaction: runs the callback with a manager whose getRepository
+    // routes Plan -> plans repo and Task -> taskRepo. Rejections propagate so the enqueue tests can
+    // assert rollback (the BullMQ add, which runs after the transaction, is never reached).
+    manager: {
+      transaction: vi.fn(
+        async (
+          cb: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          cb({
+            getRepository: (entity: unknown) =>
+              entity === Task ? taskRepo : repo,
+          }),
+      ),
+    },
     save: vi.fn(),
     update: vi.fn().mockResolvedValue(undefined),
   };
@@ -131,7 +147,21 @@ describe('PlansResolver', () => {
     getWaitingCount: mockGetWaitingCount,
   });
 
+  // updateMatchingTasksAndEmitStatusChanged now runs a single `UPDATE ... RETURNING id` query
+  // builder; mock the chain and let tests drive what RETURNING yields via mockTaskUpdateExecute.
+  const mockTaskUpdateExecute = vi
+    .fn()
+    .mockResolvedValue({ affected: 0, generatedMaps: [], raw: [] });
+  const mockTaskUpdateQueryBuilder = {
+    andWhere: vi.fn().mockReturnThis(),
+    execute: mockTaskUpdateExecute,
+    returning: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+  };
   const taskRepo = {
+    createQueryBuilder: vi.fn(() => mockTaskUpdateQueryBuilder),
     find: vi.fn().mockResolvedValue([]),
     findOne: vi.fn().mockResolvedValue(null),
     update: vi.fn().mockResolvedValue(undefined),
@@ -536,6 +566,7 @@ describe('PlansResolver', () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockRecordQueuedRun.mockClear();
+      mockAdd.mockClear();
 
       const result = await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -543,15 +574,18 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
+      // jobId is client-generated and passed to queue.add; the run record and result echo it.
+      const addJobId = (mockAdd.mock.calls[0]?.[2] as { jobId: string }).jobId;
       expect(result).not.toBeNull();
       expect(result.executionBackend).toBe('cursor');
-      expect(result.jobId).toBe('job-1');
+      expect(addJobId).toEqual(expect.any(String));
+      expect(result.jobId).toBe(addJobId);
       expect(result.planId).toBe(mockPlan.id);
       expect(result.queuePosition).toBe(1);
       expect(result.queueTotal).toBe(1);
       expect(mockRecordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({
-          bullmqJobId: 'job-1',
+          bullmqJobId: addJobId,
           executionBackend: 'cursor',
           planId: mockPlan.id,
           queueName: PLANS_QUEUE_NAME,
@@ -561,7 +595,67 @@ describe('PlansResolver', () => {
           }),
           runKind: 'spawn',
         }),
+        // recordQueuedRun now receives the transactional EntityManager as its second argument.
+        expect.anything(),
       );
+    });
+
+    test('uses the caller idempotency key as the BullMQ jobId so re-enqueue dedupes to one job', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      const first = await resolver.enqueuePlanRun({
+        idempotencyKey: 'plan-run-key-1',
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      });
+      const second = await resolver.enqueuePlanRun({
+        idempotencyKey: 'plan-run-key-1',
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      });
+
+      // Both calls pass the SAME jobId to BullMQ; BullMQ dedupes adds by jobId, so a re-enqueue
+      // returns the existing job rather than creating a duplicate (parity with the orchestrator).
+      expect(first.jobId).toBe('plan-run-key-1');
+      expect(second.jobId).toBe('plan-run-key-1');
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        1,
+        'run-plan',
+        expect.objectContaining({ planId: mockPlan.id }),
+        expect.objectContaining({ jobId: 'plan-run-key-1' }),
+      );
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        2,
+        'run-plan',
+        expect.objectContaining({ planId: mockPlan.id }),
+        expect.objectContaining({ jobId: 'plan-run-key-1' }),
+      );
+    });
+
+    test('rejects an invalid idempotency key before any enqueue', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      await expect(
+        resolver.enqueuePlanRun({
+          idempotencyKey: 'bad key with spaces',
+          jobRunHooksJson: null,
+          planId: mockPlan.id,
+          priority: null,
+          ralph: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockAdd).not.toHaveBeenCalled();
     });
 
     test('throws NotFoundException when plan does not exist', async () => {
@@ -581,8 +675,13 @@ describe('PlansResolver', () => {
     test('sets non-completed tasks to QUEUED (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED)', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      taskRepo.find.mockResolvedValueOnce([{ id: 'task-a' }, { id: 'task-b' }]);
-      taskRepo.update.mockClear();
+      mockTaskUpdateExecute.mockResolvedValueOnce({
+        affected: 2,
+        generatedMaps: [],
+        raw: [{ id: 'task-a' }, { id: 'task-b' }],
+      });
+      mockTaskUpdateQueryBuilder.set.mockClear();
+      mockTaskUpdateQueryBuilder.andWhere.mockClear();
 
       await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -590,23 +689,22 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      expect(taskRepo.find).toHaveBeenCalledOnce();
-      expect(taskRepo.update).toHaveBeenCalledTimes(1);
-      const [criteria, set] = taskRepo.update.mock.calls[0] as [
-        { planId: string; status: { value: readonly string[] } },
-        { status: string },
-      ];
-      expect(criteria.planId).toBe(mockPlan.id);
-      expect(set).toEqual({ status: 'QUEUED' });
-      const statusesToReset = criteria.status.value;
-      expect(statusesToReset).toEqual([
-        'PENDING',
-        'IN_PROGRESS',
-        'BLOCKED',
-        'BACKLOG',
-        'SKIPPED',
-        'CANCELED',
-      ]);
+      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
+        status: 'QUEUED',
+      });
+      expect(mockTaskUpdateQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'status IN (:...fromStatuses)',
+        {
+          fromStatuses: [
+            'PENDING',
+            'IN_PROGRESS',
+            'BLOCKED',
+            'BACKLOG',
+            'SKIPPED',
+            'CANCELED',
+          ],
+        },
+      );
       expect(mockEmitTaskStatusChanged).toHaveBeenCalledTimes(2);
       expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
         planId: mockPlan.id,
@@ -623,8 +721,7 @@ describe('PlansResolver', () => {
     test('does not update COMPLETED tasks to QUEUED', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      taskRepo.find.mockResolvedValueOnce([]);
-      taskRepo.find.mockClear();
+      mockTaskUpdateQueryBuilder.andWhere.mockClear();
 
       await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -632,19 +729,17 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      expect(taskRepo.find).toHaveBeenCalledOnce();
-      const findArgs = taskRepo.find.mock.calls[0]?.[0] as {
-        where: { planId: string; status: { value: readonly string[] } };
+      const andWhereArgs = mockTaskUpdateQueryBuilder.andWhere.mock
+        .calls[0]?.[1] as {
+        fromStatuses: readonly string[];
       };
-      expect(findArgs.where.status.value).not.toContain('COMPLETED');
+      expect(andWhereArgs.fromStatuses).not.toContain('COMPLETED');
     });
 
-    test('re-queue calls task update again (idempotent behavior)', async () => {
+    test('re-queue runs the task update again (idempotent behavior)', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      taskRepo.find.mockResolvedValue([{ id: 'task-1' }]);
-      taskRepo.update.mockClear();
-      taskRepo.find.mockClear();
+      mockTaskUpdateExecute.mockClear();
 
       await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -657,18 +752,8 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      expect(taskRepo.find).toHaveBeenCalledTimes(2);
-      expect(taskRepo.update).toHaveBeenCalledTimes(2);
-      expect(taskRepo.update).toHaveBeenNthCalledWith(
-        1,
-        expect.objectContaining({ planId: mockPlan.id }),
-        { status: 'QUEUED' },
-      );
-      expect(taskRepo.update).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({ planId: mockPlan.id }),
-        { status: 'QUEUED' },
-      );
+      // The atomic UPDATE ... RETURNING runs once per enqueue.
+      expect(mockTaskUpdateExecute).toHaveBeenCalledTimes(2);
     });
 
     test('passes priority to queue.add when priority is provided', async () => {
@@ -685,7 +770,7 @@ describe('PlansResolver', () => {
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
         { executionBackend: 'cursor', planId: mockPlan.id },
-        { priority: 1 },
+        expect.objectContaining({ priority: 1 }),
       );
     });
 
@@ -703,7 +788,7 @@ describe('PlansResolver', () => {
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
         { executionBackend: 'cursor', planId: mockPlan.id },
-        { priority: 10 },
+        expect.objectContaining({ priority: 10 }),
       );
     });
 
@@ -740,7 +825,7 @@ describe('PlansResolver', () => {
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
         { executionBackend: 'cursor', planId: mockPlan.id },
-        { priority: 100 },
+        expect.objectContaining({ priority: 100 }),
       );
     });
 
@@ -782,7 +867,7 @@ describe('PlansResolver', () => {
             worktree: 'target-one',
           }),
         }),
-        { priority: 10 },
+        expect.objectContaining({ priority: 10 }),
       );
     });
 
@@ -813,7 +898,7 @@ describe('PlansResolver', () => {
             planId: mockPlan.id,
             workingDirectory: externalDir,
           },
-          { priority: 10 },
+          expect.objectContaining({ priority: 10 }),
         );
       } finally {
         fs.rmSync(externalDir, { force: true, recursive: true });
@@ -956,6 +1041,78 @@ describe('PlansResolver', () => {
     });
   });
 
+  // Atomic-enqueue behavior (Plan ca6e3ecb): the run record, plan status, and task resets run in a
+  // single transaction and the BullMQ job is enqueued only AFTER it commits. A DB failure mid-write
+  // therefore rolls the transaction back AND leaves no orphaned job, because the queue add is never
+  // reached. (Replaces the earlier pre-transaction characterization tests.)
+  describe('enqueue partial-failure is atomic (no orphaned job, no divergence)', () => {
+    let prevDefaultRunKind: string | undefined;
+
+    beforeEach(() => {
+      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      taskRepo.find.mockReset();
+      taskRepo.find.mockResolvedValue([{ id: 'task-a' }]);
+      taskRepo.update.mockClear();
+      mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
+      mockEnqueuePlanRalphOrchestrator.mockClear();
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValue({
+        jobId: 'job-orch-1',
+      });
+      mockEmitTaskStatusChanged.mockClear();
+    });
+
+    afterEach(() => {
+      if (prevDefaultRunKind === undefined) {
+        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      } else {
+        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
+      }
+      // Restore the shared repo.update mock for subsequent suites.
+      vi.mocked(repo.update).mockResolvedValue(undefined);
+    });
+
+    test('spawn: a failure during the DB transaction rolls back and never enqueues a job', async () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
+      vi.mocked(repo.update).mockRejectedValueOnce(new Error('db down'));
+
+      await expect(
+        resolver.enqueuePlanRun({
+          jobRunHooksJson: null,
+          planId: mockPlan.id,
+          priority: null,
+          ralph: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toThrow('db down');
+
+      // The queue add runs only after the transaction commits, so a DB failure leaves no orphaned
+      // job — the key fix over the previous add-first ordering.
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    test('orchestrator: a failure during the DB transaction rolls back and never enqueues a job', async () => {
+      vi.mocked(repo.update).mockRejectedValueOnce(new Error('db down'));
+
+      await expect(
+        resolver.enqueuePlanRalphOrchestrator({
+          idempotencyKey: null,
+          jobRunHooksJson: null,
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          ralph: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toThrow('db down');
+
+      // enqueuePlanRalphOrchestrator (the BullMQ add) runs only after the transaction commits.
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+  });
+
   describe('workflowPlanRun', () => {
     let prevDefaultRunKind: string | undefined;
 
@@ -1005,7 +1162,13 @@ describe('PlansResolver', () => {
 
       const viaAlias = await resolver.workflowPlanRun(input);
 
-      expect(viaAlias).toEqual(viaCanonical);
+      // jobId is a per-call generated UUID, so compare the rest of the result and assert both are
+      // well-formed rather than deep-equal.
+      expect(viaAlias.executionBackend).toBe(viaCanonical.executionBackend);
+      expect(viaAlias.planId).toBe(viaCanonical.planId);
+      expect(viaAlias.queuePosition).toBe(viaCanonical.queuePosition);
+      expect(viaAlias.queueTotal).toBe(viaCanonical.queueTotal);
+      expect(viaAlias.jobId).toEqual(expect.any(String));
       expect(mockAdd).toHaveBeenCalledTimes(1);
     });
   });
@@ -1047,8 +1210,15 @@ describe('PlansResolver', () => {
 
       expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe('job-orch-1');
+      // Absent a caller idempotency key, the resolver generates one (a UUID) that doubles as the
+      // BullMQ jobId AND the run record's bullmqJobId, so the two writes agree.
+      const enqueueArg = mockEnqueuePlanRalphOrchestrator.mock
+        .calls[0]?.[0] as {
+        idempotencyKey: string;
+      };
+      expect(enqueueArg.idempotencyKey).toEqual(expect.any(String));
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
-        idempotencyKey: undefined,
+        idempotencyKey: enqueueArg.idempotencyKey,
         jobData: {
           executionBackend: 'cursor',
           planId: mockPlan.id,
@@ -1056,19 +1226,23 @@ describe('PlansResolver', () => {
         },
         priority: 10,
       });
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith({
-        bullmqJobId: 'job-orch-1',
-        executionBackend: 'cursor',
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runConfigSnapshot: expect.objectContaining({
-          ralph: { executionBackend: 'cursor' },
-          target: { mode: 'plan', taskId: '' },
-          version: 1,
-          workspace: { workingDirectory: '' },
-        }),
-        runKind: 'orchestrator',
-      });
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+        {
+          bullmqJobId: enqueueArg.idempotencyKey,
+          executionBackend: 'cursor',
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: expect.objectContaining({
+            ralph: { executionBackend: 'cursor' },
+            target: { mode: 'plan', taskId: '' },
+            version: 1,
+            workspace: { workingDirectory: '' },
+          }),
+          runKind: 'orchestrator',
+        },
+        // recordQueuedRun now receives the transactional EntityManager as its second argument.
+        expect.anything(),
+      );
       expect(mockAdd).not.toHaveBeenCalled();
     });
 
@@ -1213,8 +1387,12 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne)
         .mockResolvedValueOnce(mockPlan)
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
-      taskRepo.find.mockResolvedValueOnce([{ id: 'task-queued' }]);
-      taskRepo.update.mockClear();
+      mockTaskUpdateExecute.mockResolvedValueOnce({
+        affected: 1,
+        generatedMaps: [],
+        raw: [{ id: 'task-queued' }],
+      });
+      mockTaskUpdateQueryBuilder.set.mockClear();
 
       const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
 
@@ -1227,13 +1405,9 @@ describe('PlansResolver', () => {
         { id: mockPlan.id },
         { status: 'PENDING' },
       );
-      expect(taskRepo.update).toHaveBeenCalledOnce();
-      const [criteria, set] = taskRepo.update.mock.calls[0] as [
-        { planId: string; status: unknown },
-        { status: string },
-      ];
-      expect(criteria.planId).toBe(mockPlan.id);
-      expect(set).toEqual({ status: 'PENDING' });
+      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
+        status: 'PENDING',
+      });
       expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
         planId: mockPlan.id,
         status: 'PENDING',
@@ -1285,8 +1459,12 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne)
         .mockResolvedValueOnce(mockPlan)
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
-      taskRepo.find.mockResolvedValueOnce([{ id: 'task-queued' }]);
-      taskRepo.update.mockClear();
+      mockTaskUpdateExecute.mockResolvedValueOnce({
+        affected: 1,
+        generatedMaps: [],
+        raw: [{ id: 'task-queued' }],
+      });
+      mockTaskUpdateQueryBuilder.set.mockClear();
       vi.mocked(repo.update).mockClear();
 
       const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
@@ -1299,12 +1477,9 @@ describe('PlansResolver', () => {
         { id: mockPlan.id },
         { status: 'PENDING' },
       );
-      expect(taskRepo.update).toHaveBeenCalledOnce();
-      const [, set] = taskRepo.update.mock.calls[0] as [
-        { planId: string; status: unknown },
-        { status: string },
-      ];
-      expect(set).toEqual({ status: 'PENDING' });
+      expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
+        status: 'PENDING',
+      });
       expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
         planId: mockPlan.id,
         status: 'PENDING',

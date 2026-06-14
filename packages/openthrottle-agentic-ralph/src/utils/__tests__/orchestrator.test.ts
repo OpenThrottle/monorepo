@@ -39,6 +39,7 @@ const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
   createdAt: ISO,
   description: null,
   id: PLAN_ID,
+  jobRunHooksJson: '{"hooks":[]}',
   project: null,
   projectId: null,
   status: 'IN_PROGRESS',

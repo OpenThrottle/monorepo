@@ -260,6 +260,12 @@ export class RalphPlanRunTuningInput {
 /** Input for {@link PlansResolver.enqueuePlanRun} (canonical spawn enqueue). Also accepted by deprecated `workflowPlanRun`. */
 @InputType()
 export class EnqueuePlanRunInput {
+  @Field(() => String, {
+    description: `Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.`,
+    nullable: true,
+  })
+  idempotencyKey?: string | null;
+
   @Field(() => ID, { description: `Plan id to enqueue a run for` })
   planId!: string;
 

@@ -59,11 +59,11 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "@nestjs/common": "^11.0.0",
-    "@nestjs/config": "^4.0.0",
-    "@nestjs/core": "^11.0.0",
-    "@nestjs/graphql": "^13.0.0",
-    "graphql": "^16.11.0"
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/graphql": "catalog:",
+    "graphql": "catalog:"
   },
   "private": true,
   "publishConfig": {

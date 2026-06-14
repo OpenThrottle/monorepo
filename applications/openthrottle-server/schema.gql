@@ -2657,6 +2657,11 @@ input DeletePlanInput {
 }
 
 input EnqueuePlanRunInput {
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.
+  """
+  idempotencyKey: String
+
   """Plan id to enqueue a run for"""
   planId: ID!
 
