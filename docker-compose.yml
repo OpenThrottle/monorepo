@@ -210,7 +210,7 @@ services:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_VERSION: ${POSTGRES_VERSION}
       context: ./
-      dockerfile: Dockerfile.Postgres
+      dockerfile: applications/openthrottle/Dockerfile.Postgres
     container_name: ${OT_CONTAINER_PREFIX:-}postgres
     env_file:
       - .env
@@ -248,7 +248,7 @@ services:
       args:
         REDIS_VERSION: ${REDIS_VERSION}
       context: ./
-      dockerfile: Dockerfile.Redis
+      dockerfile: applications/openthrottle/Dockerfile.Redis
     healthcheck:
       interval: 10s
       retries: 3

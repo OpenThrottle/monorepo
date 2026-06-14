@@ -74,7 +74,7 @@ pnpm nx run openthrottle-server:docker-build       # -> Dockerfile.NestJS.v3,   
 pnpm nx run openthrottle-developer:docker-build    # -> Dockerfile.ReactRouter.v3, -t openthrottle-developer:local
 ```
 
-Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=11.6.0`) and passes `--target production`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and the Nx remote cache (both optional for a local build).
+Each target sets default env (`APP_VERSION`, `NX_VERSION=22.7.4`, `PNPM_VERSION=11.6.0`) and passes `--target production`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and the Nx remote cache (both optional for a local build).
 
 - **Manual build from repo root** (server shown; developer is identical with `-f Dockerfile.ReactRouter.v3` and `APP_NAME=openthrottle-developer`):
 
@@ -82,7 +82,7 @@ Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=
   docker build -f Dockerfile.NestJS.v3 --target production \
     --build-arg APP_NAME=openthrottle-server \
     --build-arg APP_VERSION=1.3.0 \
-    --build-arg NX_VERSION=22.6.4 \
+    --build-arg NX_VERSION=22.7.4 \
     --build-arg PNPM_VERSION=11.6.0 \
     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN:-} \
     --build-arg NX_KEY=${NX_KEY:-} \

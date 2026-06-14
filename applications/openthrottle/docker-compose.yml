@@ -117,7 +117,15 @@ services:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
   postgres:
-    image: openthrottle/postgres:${OPENTHROTTLE_VERSION:-latest}
+    build:
+      args:
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_PORT: ${POSTGRES_PORT}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_VERSION: ${POSTGRES_VERSION}
+      context: ./
+      dockerfile: Dockerfile.Postgres
     container_name: postgres
     env_file:
       - .env
@@ -132,6 +140,7 @@ services:
       retries: 10
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       timeout: 5s
+    image: openthrottle/postgres:${OPENTHROTTLE_VERSION:-latest}
     ports:
       - ${POSTGRES_PORT}:5432
     restart: always
@@ -140,13 +149,18 @@ services:
       - postgres_data:/var/lib/postgresql
 
   redis:
-    image: redis:${REDIS_VERSION}-alpine
+    build:
+      args:
+        REDIS_VERSION: ${REDIS_VERSION}
+      context: ./
+      dockerfile: Dockerfile.Redis
     container_name: redis
     healthcheck:
       interval: 10s
       retries: 3
       test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
+    image: redis:${REDIS_VERSION}-alpine
     ports:
       - ${REDIS_PORT}:6379
     restart: always
