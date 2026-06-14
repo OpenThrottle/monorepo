@@ -7,6 +7,7 @@ import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 import { redirect } from 'react-router';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { GradientMesh } from '@openthrottle/react-router-ui-global';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
@@ -56,12 +57,30 @@ export default function Component(
 
   return (
     <GlobalScreen
-      className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
+      className="relative isolate flex w-full flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
       onClick={onIncrementCount}
     >
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-8">
+      <GradientMesh
+        className="bg-black opacity-50"
+        distortion={0.5}
+        grainOverlay={0.15}
+        speed={0.1}
+      />
+      {/* <GradientMesh
+        className="bg-black opacity-50"
+        // colors={['#990000', '#8A0000', '#7A0000', '#6B0000', '#4D0000']}
+        // colors={['#13171B', '#0F1216', '#0B0E10', '#060708', '#13171B']}
+        // colors={['#13171B', '#2B2E32', '#424549']}
+        colors={['#13171B', '#0F1216', '#343739', '#0F1216', '#13171B']}
+        speed={0.8}
+      /> */}
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8">
         <OpenThrottleLogo className="mx-auto text-2xl" name={SITE_SUBDOMAIN} />
-        {isFormEnabled ? <OpenThrottleAuthForm action="/" /> : null}
+        {isFormEnabled ? (
+          <div className="shimmer-border w-full max-w-md">
+            <OpenThrottleAuthForm action="/" className="w-full" />
+          </div>
+        ) : null}
       </div>
     </GlobalScreen>
   );

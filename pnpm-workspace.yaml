@@ -104,6 +104,7 @@ catalog:
   '@nx/vitest': '22.7.4'
   '@nx/web': '22.7.4'
   '@nx/webpack': '22.7.4'
+  '@paper-design/shaders-react': '^0.0.76'
   '@parcel/watcher': '^2.5.4'
   '@phosphor-icons/react': '^2.1.10'
   '@pnpm/exportable-manifest': '^1000.4.2'
