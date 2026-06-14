@@ -49,27 +49,36 @@ export const NotificationItem = (
 
   return (
     <DropdownMenuItem
-      className="flex flex-col items-start gap-1 py-2"
+      className={cn(
+        'group/notification-item flex flex-col items-start gap-1 py-2',
+        'focus:bg-secondary/80',
+      )}
       onSelect={(e) => e.preventDefault()}
     >
-      <div className="flex w-full items-start gap-2">
-        <div
-          className={cn('mt-1.5 size-2 shrink-0 rounded-full', severityColor)}
-        />
+      <div className="flex w-full flex-1 items-start items-stretch py-1">
         <div className="min-w-0 flex-1 text-left">
           <p
             className={classnames(
-              // 'line-clamp-2',
+              'mb-1 line-clamp-2 text-xs',
+              'text-muted-foreground group-hover/notification-item:text-foreground transition-colors',
               read ? 'text-muted-foreground' : 'font-medium',
             )}
             data-testid={`notification-item-${notification.id}`}
           >
             {payload.message}
           </p>
-          <div className="flex items-center justify-between">
+
+          <div className="flex items-baseline justify-between gap-2">
+            <div
+              className={cn(
+                'mt-1.5 size-2 shrink-0 rounded-full',
+                severityColor,
+              )}
+            />
+
             {payload.link ? (
               <Link
-                className="text-primary mt-1 text-xs font-medium underline underline-offset-2 hover:no-underline"
+                className="text-muted-foreground mt-1 flex-1 text-xs font-medium"
                 data-testid={`notification-item-link-${notification.id}`}
                 onClick={(e) => e.stopPropagation()}
                 to={payload.link}
@@ -81,32 +90,39 @@ export const NotificationItem = (
               {formatRelativeTime(notification.createdAt)}
             </p>
           </div>
-
-          <div className="text-xs">{JSON.stringify(notification)}</div>
         </div>
 
-        <div className="flex shrink-0 gap-0.5">
-          {!read ? (
-            <Button
-              aria-label="Mark as read"
-              className="size-7"
-              onClick={onMarkRead}
-              size="icon"
-              variant="ghost"
-            >
-              <Check className="size-4" />
-            </Button>
-          ) : null}
+        <div
+          className={classnames(
+            'space-between flex justify-between',
+            '-mr-4 ml-4 w-0 gap-0.5 overflow-hidden transition-all',
+            'group-hover/notification-item:mr-0',
+            'group-hover/notification-item:w-auto',
+          )}
+        >
+          <div className="flex flex-col justify-between gap-2">
+            {!read ? (
+              <Button
+                aria-label="Mark as read"
+                className="text-muted-foreground hover:text-foreground size-5"
+                onClick={onMarkRead}
+                size="icon"
+                variant="link"
+              >
+                <Check className="size-4" />
+              </Button>
+            ) : null}
 
-          <Button
-            aria-label="Dismiss"
-            className="size-7"
-            onClick={onDismiss}
-            size="icon"
-            variant="ghost"
-          >
-            <X className="size-4" />
-          </Button>
+            <Button
+              aria-label="Dismiss"
+              className="text-muted-foreground hover:text-foreground size-5"
+              onClick={onDismiss}
+              size="icon"
+              variant="link"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </DropdownMenuItem>
