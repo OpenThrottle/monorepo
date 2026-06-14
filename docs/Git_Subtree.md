@@ -23,3 +23,7 @@ git subtree add --prefix=applications/openthrottle \
   main \
   --squash
 ```
+
+```bash
+git push `git subtree split --prefix applications/openthrottle main`:main --force
+```
