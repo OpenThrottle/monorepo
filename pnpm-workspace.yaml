@@ -104,6 +104,7 @@ catalog:
   '@nx/vitest': '22.7.4'
   '@nx/web': '22.7.4'
   '@nx/webpack': '22.7.4'
+  '@paper-design/shaders-react': '^0.0.76'
   '@parcel/watcher': '^2.5.4'
   '@phosphor-icons/react': '^2.1.10'
   '@pnpm/exportable-manifest': '^1000.4.2'
@@ -348,17 +349,17 @@ minimumReleaseAgeExclude:
 # Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
 # `$name` reuses the version declared for that dependency in the root manifest.
 overrides:
-  '@radix-ui/react-slot': '$@radix-ui/react-slot'
-  '@tanstack/query-sync-storage-persister': '$@tanstack/query-sync-storage-persister'
-  '@tanstack/react-query': '$@tanstack/react-query'
-  '@tanstack/react-query-persist-client': '$@tanstack/react-query-persist-client'
-  'graphql-request': '$graphql-request'
-  'react': '$react'
-  'react-dom': '$react-dom'
-  'react-test-renderer': '$react-test-renderer'
+  '@radix-ui/react-slot': 'catalog:'
+  '@tanstack/query-sync-storage-persister': 'catalog:'
+  '@tanstack/react-query': 'catalog:'
+  '@tanstack/react-query-persist-client': 'catalog:'
+  'graphql-request': 'catalog:'
+  'react': 'catalog:'
+  'react-dom': 'catalog:'
+  'react-test-renderer': 'catalog:'
   'shadcn>zod': '3.25.76'
-  'zod': '$zod'
-  'zod-to-json-schema': '$zod-to-json-schema'
+  'zod': 'catalog:'
+  'zod-to-json-schema': 'catalog:'
 
 packages:
   - 'applications/*'

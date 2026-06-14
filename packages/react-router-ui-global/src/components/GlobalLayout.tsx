@@ -11,7 +11,7 @@ import { GlobalSidebarContent } from './GlobalSidebarContent';
 import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
 import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
-import { useScrollContainerRestoration } from '../hooks/use-scroll-container-restoration';
+import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
 
 export interface GlobalLayoutProps {
   readonly authenticated?: boolean;
@@ -22,6 +22,7 @@ export interface GlobalLayoutProps {
 
   readonly overrides?: {
     readonly footer?: boolean;
+    readonly header?: boolean;
     readonly rail?: boolean;
   };
 }

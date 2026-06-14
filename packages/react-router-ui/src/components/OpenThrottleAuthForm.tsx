@@ -71,7 +71,7 @@ export const OpenThrottleAuthForm = (
   return (
     <>
       <Card
-        className={cn('mx-auto w-full max-w-sm', className)}
+        className={cn('mx-auto w-full', className)}
         data-testid="OpenThrottleAuthForm"
       >
         <form action={action} method="POST" onSubmit={handleSubmit}>

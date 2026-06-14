@@ -98,4 +98,43 @@ describe('ChatComposer Component', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
   });
+
+  describe('when a toolbar is provided', () => {
+    test('renders the toolbar node alongside the Send button', () => {
+      mountComposer({
+        toolbar: <div data-testid="composer-toolbar-slot" />,
+      });
+      expect(
+        component!.getByTestId('composer-toolbar-slot'),
+      ).toBeInTheDocument();
+      expect(
+        component!.getByRole('button', { name: 'Send' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when isStreaming is true', () => {
+    test('shows Stop in place of Send and calls onStop', async () => {
+      const onStop = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ isStreaming: true, onStop });
+
+      expect(
+        component!.queryByRole('button', { name: 'Send' }),
+      ).not.toBeInTheDocument();
+      const stop = component!.getByRole('button', { name: 'Stop' });
+      expect(stop).toHaveAttribute('type', 'button');
+
+      await user.click(stop);
+      expect(onStop).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not submit on Enter while streaming', async () => {
+      const user = userEvent.setup();
+      mountComposer({ isStreaming: true, onStop: vi.fn() });
+      await user.type(component!.getByLabelText('Message'), 'mid-stream');
+      await user.keyboard('{Enter}');
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+  });
 });

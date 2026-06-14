@@ -3,6 +3,7 @@ import type { CommanderGroup } from '@openthrottle/react-router-ui';
 import { useCallback } from 'react';
 import {
   BotIcon,
+  CalendarDaysIcon,
   ChartLineIcon,
   FolderIcon,
   FolderPlusIcon,
@@ -43,6 +44,12 @@ export function useCommanderOptions(): CommanderGroup[] {
     {
       heading: 'Navigation',
       items: [
+        {
+          icon: <CalendarDaysIcon className="h-3! w-3!" />,
+          id: 'nav-calendar',
+          label: 'Calendar',
+          onSelect: nav('/calendar'),
+        },
         {
           icon: <HomeIcon className="h-3! w-3!" />,
           id: 'nav-dashboard',

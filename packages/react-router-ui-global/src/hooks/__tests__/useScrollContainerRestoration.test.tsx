@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Link, Outlet, createRoutesStub, useNavigate } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { useScrollContainerRestoration } from '../use-scroll-container-restoration';
+import { useScrollContainerRestoration } from '../useScrollContainerRestoration';
 
 function ScrollLayout(): React.ReactElement {
   const containerRef = React.useRef<HTMLDivElement>(null);

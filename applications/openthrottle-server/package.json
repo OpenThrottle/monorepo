@@ -125,6 +125,7 @@
     "@openthrottle/nestjs-github": "workspace:^",
     "@openthrottle/nestjs-graphql": "workspace:^",
     "@openthrottle/nestjs-logging": "workspace:^",
+    "@openthrottle/nestjs-model-discovery": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-openthrottle-mcp": "workspace:^",
     "@openthrottle/nestjs-profiling": "workspace:^",

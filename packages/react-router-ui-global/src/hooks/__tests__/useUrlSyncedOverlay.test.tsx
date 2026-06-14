@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { useUrlSyncedOverlay } from '../use-url-synced-overlay';
+import { useUrlSyncedOverlay } from '../useUrlSyncedOverlay';
 
 function ClosedHarness(): React.ReactElement {
   const { onOpenChange, open, setOpen } = useUrlSyncedOverlay({
