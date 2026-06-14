@@ -22,7 +22,11 @@ if (isDevelopment && !url) {
 
 const config: CodegenConfig = {
   documents: [
-    'src/*.graphql',
+    // Phase 1 codegen dedupe: shared plan/task/note/project/commit operations + fragments
+    // are consumed from the canonical agentic-ralph set rather than duplicated here.
+    // See docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md.
+    '../openthrottle-agentic-ralph/src/graphql/ralph/**/*.graphql',
+    // MCP-only documents (agent-conversation feature).
     'src/**/*.graphql',
     'src/**/*.ts',
     '!src/__generated__/**/*',

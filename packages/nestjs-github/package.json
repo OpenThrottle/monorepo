@@ -13,14 +13,6 @@
     "graphql": "catalog:"
   },
   "devDependencies": {},
-  "peerDependencies": {
-    "@nestjs/common": "^11.0.0",
-    "@nestjs/config": "^4.0.0",
-    "@nestjs/core": "^11.0.0",
-    "graphql": "^16.11.0",
-    "reflect-metadata": "^0.1.13 || ^0.2.0",
-    "rxjs": "^7.8.0"
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -64,6 +56,14 @@
       "typecheck": {},
       "typecheck-tests": {}
     }
+  },
+  "peerDependencies": {
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
+    "graphql": "catalog:",
+    "reflect-metadata": "catalog:",
+    "rxjs": "catalog:"
   },
   "private": true,
   "publishConfig": {

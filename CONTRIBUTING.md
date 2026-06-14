@@ -333,6 +333,22 @@ pnpm nx run-many --target=build,typecheck --all --parallel=2
 
 `--parallel=2` was repeatably green across cold, cache-purged runs; `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
 
+## Nx target descriptions
+
+Every Nx target we declare carries a `description` so `nx show project <p>` and Nx Console explain what each target does. A regression guard enforces this:
+
+```bash
+pnpm run check:target-descriptions   # also runs as part of pnpm run check:local
+# report (no failures): pnpm exec tsx ./scripts/audit-target-descriptions.ts
+```
+
+When you add a target, give it a description in one of two places:
+
+- **A whole family of targets** (e.g. `lint`, `test`, `build`) — set the `description` once on the matching `nx.json` `targetDefaults` entry (by target name, or by executor key like `@nx/js:tsc`). It cascades into every project's resolved target of that name/executor.
+- **A single project-specific target** (e.g. `docker-build`, `verify-graphql-schema-sync`) — set `description` on the target in that project's `package.json` under `nx.targets`.
+
+Style: imperative, one sentence, what it does plus any key flag/gotcha (mirror `openthrottle-server`'s `docker-build` / `dev-debug`). The guard skips plugin-**inferred** targets (not editable here — they carry the plugin's own description) and intentionally-**disabled** marker targets (`__`-prefixed, `__DISABLED__`, padded underscores).
+
 ## GraphQL schema and codegen
 
 The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`schema.gql` at the repo root**. CI fails when schema or generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.

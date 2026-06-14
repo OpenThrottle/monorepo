@@ -36,7 +36,7 @@
     }
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": "catalog:"
   },
   "private": true,
   "publishConfig": {

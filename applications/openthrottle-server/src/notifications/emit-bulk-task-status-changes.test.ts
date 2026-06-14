@@ -1,6 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { Task } from '@openthrottle/nestjs-repositories';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Repository } from 'typeorm';
 import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes';
 import type { NotificationsService } from './notifications.service';
@@ -11,13 +11,28 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
     emitTaskStatusChanged,
   });
 
+  // The helper runs a single `UPDATE ... RETURNING id` query builder; mock the chain and let each
+  // test drive what RETURNING yields.
+  const execute = vi.fn();
+  const queryBuilder = {
+    andWhere: vi.fn().mockReturnThis(),
+    execute,
+    returning: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+  };
   const taskRepo = {
-    find: vi.fn(),
-    update: vi.fn().mockResolvedValue(undefined),
+    createQueryBuilder: vi.fn(() => queryBuilder),
   } as unknown as Repository<Task>;
 
-  test('returns 0 and skips update when no tasks match', async () => {
-    vi.mocked(taskRepo.find).mockResolvedValueOnce([]);
+  beforeEach(() => {
+    emitTaskStatusChanged.mockClear();
+    execute.mockReset();
+  });
+
+  test('returns 0 and emits nothing when no rows are updated', async () => {
+    execute.mockResolvedValueOnce({ affected: 0, generatedMaps: [], raw: [] });
 
     const count = await updateMatchingTasksAndEmitStatusChanged({
       fromStatuses: ['PENDING', 'IN_PROGRESS'],
@@ -28,15 +43,15 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
     });
 
     expect(count).toBe(0);
-    expect(taskRepo.update).not.toHaveBeenCalled();
     expect(emitTaskStatusChanged).not.toHaveBeenCalled();
   });
 
-  test('updates matching tasks and emits one event per task', async () => {
-    vi.mocked(taskRepo.find).mockResolvedValueOnce([
-      { id: 'task-a' },
-      { id: 'task-b' },
-    ] as Task[]);
+  test('updates matching tasks and emits one event per updated row', async () => {
+    execute.mockResolvedValueOnce({
+      affected: 2,
+      generatedMaps: [],
+      raw: [{ id: 'task-a' }, { id: 'task-b' }],
+    });
 
     const count = await updateMatchingTasksAndEmitStatusChanged({
       fromStatuses: ['PENDING', 'IN_PROGRESS'],
@@ -47,7 +62,6 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
     });
 
     expect(count).toBe(2);
-    expect(taskRepo.update).toHaveBeenCalledOnce();
     expect(emitTaskStatusChanged).toHaveBeenCalledTimes(2);
     expect(emitTaskStatusChanged).toHaveBeenCalledWith({
       planId: 'plan-1',
@@ -58,6 +72,33 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
       planId: 'plan-1',
       status: 'QUEUED',
       taskId: 'task-b',
+    });
+  });
+
+  // Atomicity (Plan ca6e3ecb): events come from the rows the UPDATE actually changed (its RETURNING
+  // output), not from an earlier SELECT. The previous SELECT-then-UPDATE could emit for rows a
+  // concurrent writer changed between the two statements; now it cannot.
+  test('emits for exactly the rows the atomic UPDATE ... RETURNING changed', async () => {
+    execute.mockResolvedValueOnce({
+      affected: 1,
+      generatedMaps: [],
+      raw: [{ id: 'task-a' }],
+    });
+
+    const count = await updateMatchingTasksAndEmitStatusChanged({
+      fromStatuses: ['PENDING', 'IN_PROGRESS'],
+      notifications,
+      planId: 'plan-1',
+      taskRepo,
+      toStatus: 'QUEUED',
+    });
+
+    expect(count).toBe(1);
+    expect(emitTaskStatusChanged).toHaveBeenCalledTimes(1);
+    expect(emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId: 'plan-1',
+      status: 'QUEUED',
+      taskId: 'task-a',
     });
   });
 });

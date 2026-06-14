@@ -452,6 +452,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
+    idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
     planId: z.string(),
     priority: z.number().nullish(),

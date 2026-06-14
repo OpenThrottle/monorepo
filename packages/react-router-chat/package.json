@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-chat",
-  "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,8 +9,10 @@
     "@openthrottle/react-router-ui": "workspace:^",
     "classnames": "catalog:"
   },
+  "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-chat",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -37,9 +36,9 @@
     }
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "react-router": ">=7.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:"
   },
   "private": true,
   "publishConfig": {
@@ -64,5 +63,6 @@
   "scripts": {},
   "style": "./src/index.css",
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

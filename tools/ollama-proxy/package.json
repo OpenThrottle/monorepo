@@ -1,17 +1,14 @@
 {
-  "name": "@tools/ollama-proxy",
-  "description": "Local OpenAI-compatible HTTP proxy for Cursor and other clients: rewrites chat model names and forwards requests to Ollama.",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
   "bin": {
     "ollama-proxy": "./dist/server.js"
   },
-  "scripts": {
-    "start": "node ./dist/server.js",
-    "build": "nx run @tools/ollama-proxy:build:tsc",
-    "e2e": "node scripts/e2e.mjs"
-  },
+  "description": "Local OpenAI-compatible HTTP proxy for Cursor and other clients: rewrites chat model names and forwards requests to Ollama.",
+  "name": "@tools/ollama-proxy",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -37,6 +34,7 @@
       },
       "build:tsc": {
         "cache": false,
+        "description": "Compile @tools/ollama-proxy to dist with @nx/js:tsc (src rootDir, tsconfig.lib.json).",
         "executor": "@nx/js:tsc",
         "options": {
           "outputPath": "{projectRoot}/dist",
@@ -46,6 +44,7 @@
       },
       "e2e": {
         "cache": false,
+        "description": "Run the @tools/ollama-proxy end-to-end check via scripts/e2e.mjs.",
         "executor": "nx:run-commands",
         "options": {
           "cwd": "{projectRoot}",
@@ -57,6 +56,7 @@
       "lint": {},
       "serve": {
         "cache": false,
+        "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded.",
         "executor": "nx:run-commands",
         "options": {
           "cwd": "{projectRoot}",
@@ -69,5 +69,18 @@
       },
       "typecheck-tests": {}
     }
-  }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {
+    "start": "node ./dist/server.js",
+    "build": "nx run @tools/ollama-proxy:build:tsc",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

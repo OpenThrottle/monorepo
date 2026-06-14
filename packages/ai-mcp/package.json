@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/ai-mcp",
-  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/openthrottle-mcp for new use.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -20,6 +17,7 @@
     "typeorm": "catalog:",
     "zod": "catalog:"
   },
+  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/openthrottle-mcp for new use.",
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -34,6 +32,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/ai-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -65,6 +64,7 @@
         "dependsOn": [
           "build"
         ],
+        "description": "Run the built ai-mcp server entrypoint (dist/src/bin.js) after build.",
         "executor": "nx:run-commands",
         "options": {
           "command": "node ./dist/src/bin.js",
@@ -83,5 +83,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

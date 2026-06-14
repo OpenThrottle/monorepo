@@ -3,13 +3,17 @@
  */
 
 import type { Task } from '@openthrottle/nestjs-repositories';
-import { In } from 'typeorm';
 import type { Repository } from 'typeorm';
 import type { NotificationsService } from './notifications.service';
 
 /**
  * @description Updates tasks matching `fromStatuses` to `toStatus` and emits one
  * `task.status_changed` event per affected task so the developer app revalidates without refresh.
+ *
+ * The update is a single atomic `UPDATE ... RETURNING id` (no check-then-act SELECT first), so the
+ * emitted events correspond to exactly the rows this statement changed — a task that was changed by
+ * a concurrent writer between a SELECT and UPDATE can no longer be emitted-but-not-updated or
+ * updated-but-not-emitted. Returns the number of rows updated.
  */
 export async function updateMatchingTasksAndEmitStatusChanged(params: {
   readonly fromStatuses: readonly string[];
@@ -18,33 +22,28 @@ export async function updateMatchingTasksAndEmitStatusChanged(params: {
   readonly taskRepo: Repository<Task>;
   readonly toStatus: string;
 }): Promise<number> {
-  const tasks = await params.taskRepo.find({
-    select: ['id'],
-    where: {
-      planId: params.planId,
-      status: In([...params.fromStatuses]),
-    },
-  });
+  const result = await params.taskRepo
+    .createQueryBuilder()
+    .update()
+    .set({ status: params.toStatus })
+    .where('plan_id = :planId', { planId: params.planId })
+    .andWhere('status IN (:...fromStatuses)', {
+      fromStatuses: [...params.fromStatuses],
+    })
+    .returning(['id'])
+    .execute();
 
-  if (tasks.length === 0) {
-    return 0;
-  }
-
-  await params.taskRepo.update(
-    {
-      planId: params.planId,
-      status: In([...params.fromStatuses]),
-    },
-    { status: params.toStatus },
+  const updatedIds = (result.raw as ReadonlyArray<{ readonly id: string }>).map(
+    (row) => row.id,
   );
 
-  for (const task of tasks) {
+  for (const id of updatedIds) {
     params.notifications.emitTaskStatusChanged({
       planId: params.planId,
       status: params.toStatus,
-      taskId: task.id,
+      taskId: id,
     });
   }
 
-  return tasks.length;
+  return updatedIds.length;
 }

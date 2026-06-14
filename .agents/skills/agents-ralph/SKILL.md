@@ -9,7 +9,7 @@ description: >-
 disable-model-invocation: false
 ---
 
-**Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 ./.cursor/skills/agents-ralph - v1.0.3 🌟 🤗 🚀".
+**Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 .agents/skills/agents-ralph - v1.0.4 🌟 🤗 🚀".
 
 **Ralph** is a technique: run a loop (read prompt → execute one step → repeat). You tune the prompt and docs when the agent goes wrong ([ghuntley.com/ralph](https://ghuntley.com/ralph)). This prompt defines our single workflow: start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a Postgres Database)_, then **execute one task at a time** (add tasks as the work reveals more work) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.
 
@@ -21,7 +21,8 @@ disable-model-invocation: false
 
 ## Rules
 
-- **Plan and tasks context.** Ralph injects the plan and task list into the prompt from Postgres (you will see a block like "--- OpenThrottle plan (injected by Ralph from Postgres)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—they are often unavailable in the agent session. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
+- **Plan and tasks context (reads come from the injected block).** Ralph injects the plan and task list into the prompt from OpenThrottle (you will see a block like "--- OpenThrottle plan (injected by Ralph from OpenThrottle)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—agent-session MCP reads are often unavailable. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
+- **Reads vs writes (by design).** Reads come from the injected block above; **writes go through MCP** (`update_task` / `update_plan` / `append_plan_output`). Rationale: prompt injection is reliable in-session, but status mutations need a live call. Your MCP writes and the Ralph CLI's own reconciliation (it parses `<ralph:task-complete>` and writes through its configured transport — GraphQL by default) both reach the **same OpenThrottle server**; they are not separate datastores.
 - Follow [agents.mdc](../../rules/commands/agents.mdc) and [github.mdc](../../rules/commands/github.mdc).
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `SKIPPED`
 - **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.

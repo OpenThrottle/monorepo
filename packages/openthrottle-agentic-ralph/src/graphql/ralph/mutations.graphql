@@ -54,6 +54,12 @@ mutation deleteTask($input: DeleteTaskInput!) {
   deleteTask(input: $input)
 }
 
+mutation reorderPlanTasks($input: ReorderPlanTasksInput!) {
+  reorderPlanTasks(input: $input) {
+    ...Task
+  }
+}
+
 mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   appendPlanOutput(input: $input) {
     content

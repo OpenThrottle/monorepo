@@ -89,7 +89,7 @@ export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
     // worktreeSkipSetup: false,
   };
 
-  const { positionals, values } = parseArgs({
+  const { positionals: _positionals, values } = parseArgs({
     allowPositionals: true,
     options: {
       cwdTarget: { type: 'string' },
@@ -115,8 +115,6 @@ export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
   }
 
   const configMerged = Object.assign({}, config, values);
-
-  console.log('🔴 🔴 🔴 ', { configMerged, positionals });
 
   return configMerged;
 };
