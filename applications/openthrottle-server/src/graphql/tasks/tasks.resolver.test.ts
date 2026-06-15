@@ -45,6 +45,7 @@ describe('TasksResolver', () => {
   };
 
   const mockTasksService = createMock<TasksService>({
+    completeParentPlanIfTasksDone: vi.fn().mockResolvedValue(false),
     getRepository: vi.fn().mockReturnValue(repo),
     resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
     syncParentPlanStatus: vi.fn().mockResolvedValue(false),
@@ -117,6 +118,10 @@ describe('TasksResolver', () => {
   beforeEach(() => {
     vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
     vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+    vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockReset();
+    vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockResolvedValue(
+      false,
+    );
     vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
     vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
@@ -578,6 +583,112 @@ describe('TasksResolver', () => {
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateTask — parent plan COMPLETED reconcile', () => {
+    test('completes the plan and emits when the last task completes', async () => {
+      const planId = mockTask.planId as string;
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).mockResolvedValue(true);
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'COMPLETED',
+        summary: undefined,
+        title: undefined,
+      });
+
+      expect(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).toHaveBeenCalledWith(planId);
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).toHaveBeenCalledWith({
+        planId,
+        status: 'COMPLETED',
+      });
+    });
+
+    test('reconciles but does not emit when tasks remain (plan unchanged)', async () => {
+      const planId = mockTask.planId as string;
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).mockResolvedValue(false);
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'COMPLETED',
+        summary: undefined,
+        title: undefined,
+      });
+
+      expect(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).toHaveBeenCalledWith(planId);
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
+    });
+
+    test('does not reconcile when task was already COMPLETED', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'COMPLETED',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'completed',
+        summary: undefined,
+        title: undefined,
+      });
+
+      expect(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).not.toHaveBeenCalled();
     });
   });
 
