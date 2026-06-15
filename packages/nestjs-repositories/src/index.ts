@@ -107,6 +107,7 @@ export {
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from './modules/tasks/tasks.service';
+export type { CreateTaskBatchItem } from './modules/tasks/tasks.service';
 export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,

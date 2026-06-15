@@ -3,11 +3,16 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { In, Not } from 'typeorm';
+import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
+import { EntityManager, In, Not, Repository } from 'typeorm';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 import { tasksFactory } from './tasks.factory';
-import { TASK_SORT_ORDER_GAP, TasksService } from './tasks.service';
+import {
+  TASK_SORT_ORDER_GAP,
+  TasksService,
+  type CreateTaskBatchItem,
+} from './tasks.service';
 
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;
@@ -112,6 +117,86 @@ describe('TasksService', () => {
       const next = await service.resolveNextSortOrder(planId);
 
       expect(next).toBe(5000 + TASK_SORT_ORDER_GAP);
+    });
+  });
+
+  describe('createTasksBatch', () => {
+    const planId = '66666666-6666-6666-6666-666666666666';
+
+    const baseItem: Omit<CreateTaskBatchItem, 'sortOrder' | 'title'> = {
+      assignee: null,
+      category: null,
+      description: null,
+      project: null,
+      projectId: null,
+      requirements: [],
+      status: 'PENDING',
+      summary: null,
+    };
+
+    const txQueryBuilder = {
+      getRawOne: vi.fn(),
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+    };
+    const txRepo = createMock<Repository<Task>>({
+      create: vi.fn((entity) => entity),
+      createQueryBuilder: vi.fn().mockReturnValue(txQueryBuilder),
+      save: vi.fn((entities) => Promise.resolve(entities)),
+    });
+    const txManager = createMock<EntityManager>({
+      getRepository: () => txRepo,
+    });
+
+    beforeEach(() => {
+      vi.mocked(txQueryBuilder.getRawOne).mockReset();
+      vi.mocked(txRepo.create).mockClear();
+      vi.mocked(txRepo.save).mockClear();
+      vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
+        (
+          isolationOrRun:
+            | IsolationLevel
+            | ((manager: EntityManager) => Promise<unknown>),
+        ) =>
+          typeof isolationOrRun === 'function'
+            ? isolationOrRun(txManager)
+            : Promise.resolve(undefined),
+      );
+    });
+
+    it('returns empty without a transaction when no items are given', async () => {
+      const result = await service.createTasksBatch(planId, []);
+
+      expect(result).toEqual([]);
+      expect(mockTaskRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    it('appends MAX+gap stepping in array order when sortOrder is omitted', async () => {
+      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: '2000' });
+
+      const created = await service.createTasksBatch(planId, [
+        { ...baseItem, sortOrder: null, title: 'a' },
+        { ...baseItem, sortOrder: null, title: 'b' },
+      ]);
+
+      expect(created.map((task) => task.sortOrder)).toEqual([
+        2000 + TASK_SORT_ORDER_GAP,
+        2000 + 2 * TASK_SORT_ORDER_GAP,
+      ]);
+    });
+
+    it('respects explicit per-item sortOrder and only steps auto items', async () => {
+      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: null });
+
+      const created = await service.createTasksBatch(planId, [
+        { ...baseItem, sortOrder: 500, title: 'explicit' },
+        { ...baseItem, sortOrder: null, title: 'auto' },
+      ]);
+
+      expect(created.map((task) => task.sortOrder)).toEqual([
+        500,
+        TASK_SORT_ORDER_GAP,
+      ]);
     });
   });
 

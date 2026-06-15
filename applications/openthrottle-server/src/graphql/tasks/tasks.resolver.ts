@@ -21,7 +21,11 @@ import {
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Project } from '@openthrottle/nestjs-repositories';
+import type {
+  CreateTaskBatchItem,
+  Plan,
+  Project,
+} from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
 import { In, QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -29,6 +33,7 @@ import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
 import {
   CreateTaskInput,
+  CreateTasksInput,
   DeleteTaskInput,
   ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
@@ -36,7 +41,11 @@ import {
   TasksByProjectIdInput,
   UpdateTaskInput,
 } from './task.input';
-import { TaskObject, TasksByProjectIdResultObject } from './task.object';
+import {
+  CreateTasksResultObject,
+  TaskObject,
+  TasksByProjectIdResultObject,
+} from './task.object';
 import { TasksLoaders } from './tasks-loaders';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
@@ -264,6 +273,58 @@ export class TasksResolver {
     }
 
     return saved;
+  }
+
+  @Mutation(() => CreateTasksResultObject, {
+    description: `Create many tasks for one plan atomically in a single transaction. Omitted sortOrders append MAX+1000 stepping in array order; explicit per-item sortOrder is respected. Any failure rolls back the whole batch.`,
+  })
+  async createTasks(
+    @Args('input', { type: () => CreateTasksInput }) input: CreateTasksInput,
+  ): Promise<CreateTasksResultObject> {
+    const items: CreateTaskBatchItem[] = input.tasks.map((item) => ({
+      assignee: item.assignee ?? null,
+      category: item.category ?? null,
+      description: item.description ?? null,
+      project: item.project ?? null,
+      projectId: item.projectId ?? null,
+      requirements: item.requirements
+        ? (JSON.parse(item.requirements) as unknown[])
+        : [],
+      sortOrder: item.sortOrder ?? null,
+      status: (item.status ?? 'PENDING').toUpperCase(),
+      summary: item.summary ?? null,
+      title: item.title,
+    }));
+
+    let saved: Task[];
+    try {
+      saved = await this.tasksService.createTasksBatch(input.planId, items);
+    } catch (error) {
+      if (isSortOrderUniqueViolation(error)) {
+        throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
+      }
+      throw error;
+    }
+
+    if (saved.some((task) => task.status === 'IN_PROGRESS')) {
+      const promoted = await this.tasksService.syncParentPlanStatus(
+        input.planId,
+      );
+      if (promoted) {
+        this.notificationsService.emitPlanStatusChanged({
+          planId: input.planId,
+          status: 'IN_PROGRESS',
+        });
+      }
+    }
+
+    return {
+      tasks: saved.map((task) => ({
+        ...task,
+        requirementsJson: JSON.stringify(task.requirements ?? []),
+      })) as TaskObject[],
+      totalCount: saved.length,
+    };
   }
 
   @Mutation(() => TaskObject, {
