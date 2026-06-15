@@ -25,6 +25,7 @@ import {
 } from './project.input';
 import { ProjectObject } from './project.object';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => ProjectObject)
 export class ProjectsResolver {
   constructor(

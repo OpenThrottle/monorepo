@@ -60,16 +60,39 @@ With Postgres up and migrations applied:
 pnpm run database:bootstrap-service-accounts
 ```
 
-The script prints `**OPENTHROTTLE_MCP_AUTH_TOKEN**` and `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` once per account (skips accounts that already have an active credential).
+On a **fresh database** the script mints one bearer token per service account and prints each **once**. The relevant output looks like this (TypeORM may also log `query: …` lines — ignore those):
 
-1. Copy `**OPENTHROTTLE_MCP_AUTH_TOKEN**` into:
+```text
+=== openthrottle-mcp ===
+OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_<generated>      # ← copy this line
 
-- `applications/openthrottle-server/.env` → `OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_…`
-- Cursor MCP `**env**` for `**openthrottle-mcp**` (see step 5).
+=== workflow-ralph ===
+OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=ot_sa_<generated>
 
-2. Optionally copy `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` for BullMQ / Ralph workers.
+Add the lines above to:
+  - applications/openthrottle-server/.env
+  - Cursor ~/.cursor/mcp.json env for openthrottle-mcp (OPENTHROTTLE_MCP_AUTH_TOKEN only)
+Tokens are shown once; store them securely and rotate via admin GraphQL when needed.
+```
 
-Do not commit real tokens. Rotation: [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).
+`ot_sa_<generated>` stands in for the real token the script prints — **never commit the real value**.
+
+1. Copy the `OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_…` line into:
+
+- `applications/openthrottle-server/.env` — replace the existing `OPENTHROTTLE_MCP_AUTH_TOKEN=` value.
+- Cursor MCP `env` for `openthrottle-mcp` (see step 5).
+
+2. Optionally copy the `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=` line for BullMQ / Ralph workers.
+
+**Re-running** when tokens already exist prints a skip notice instead of new tokens (it does **not** reprint the existing token):
+
+```text
+Skip openthrottle-mcp: 1 active credential(s) already exist.
+  Revoke old credentials via admin GraphQL, then re-run this script to mint a new token.
+No new credentials minted. Set OPENTHROTTLE_MCP_AUTH_TOKEN / OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN from existing tokens.
+```
+
+To rotate (revoke the old credential, then mint a fresh token), see [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation). Do not commit real tokens.
 
 ---
 

@@ -2,13 +2,13 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../calendar.$eventId';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
+import Component from '../schedule.$eventId';
+import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
+import { SCHEDULE_NOT_FOUND_COPY } from '~/routing/schedule/data/data.copy';
 
-describe('routes/calendar.$eventId.tsx', () => {
+describe('routes/schedule.$eventId.tsx', () => {
   test('renders the event details when the event exists', () => {
-    const event = CALENDAR_EVENTS[0];
+    const event = SCHEDULE_EVENTS[0];
 
     const view = render(
       <MemoryRouter>
@@ -21,7 +21,7 @@ describe('routes/calendar.$eventId.tsx', () => {
       </MemoryRouter>,
     );
 
-    expect(view.getByTestId('CalendarEventDetails')).toBeInTheDocument();
+    expect(view.getByTestId('ScheduleEventDetails')).toBeInTheDocument();
   });
 
   test('renders the not-found state when the event is missing', () => {
@@ -36,6 +36,6 @@ describe('routes/calendar.$eventId.tsx', () => {
       </MemoryRouter>,
     );
 
-    expect(view.getByText(CALENDAR_NOT_FOUND_COPY.title)).toBeInTheDocument();
+    expect(view.getByText(SCHEDULE_NOT_FOUND_COPY.title)).toBeInTheDocument();
   });
 });

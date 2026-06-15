@@ -6,6 +6,7 @@
 import { Mutation, Query, Resolver } from '@nestjs/graphql';
 import { DevelopmentService } from './development.service';
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver()
 export class DevelopmentResolver {
   constructor(private readonly developmentService: DevelopmentService) {}

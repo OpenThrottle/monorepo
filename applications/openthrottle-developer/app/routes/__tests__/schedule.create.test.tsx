@@ -2,10 +2,10 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component, { action } from '../calendar.create';
+import Component, { action } from '../schedule.create';
 
-describe('routes/calendar.create.tsx', () => {
-  test('renders the calendar create form', () => {
+describe('routes/schedule.create.tsx', () => {
+  test('renders the schedule create form', () => {
     const RouteComponent = () => (
       <Component
         actionData={undefined}
@@ -20,18 +20,18 @@ describe('routes/calendar.create.tsx', () => {
 
     const view = render(<RoutesStub />);
 
-    expect(view.getByTestId('CalendarForm')).toBeInTheDocument();
+    expect(view.getByTestId('ScheduleForm')).toBeInTheDocument();
     expect(
       view.getByRole('button', { name: 'Create event' }),
     ).toBeInTheDocument();
   });
 
-  test('action redirects to the calendar list for a valid submission', async () => {
+  test('action redirects to the schedule list for a valid submission', async () => {
     const body = new FormData();
     body.set('title', 'Launch');
     body.set('startsAt', '2026-06-20T10:00');
 
-    const request = new Request('http://localhost/calendar/create', {
+    const request = new Request('http://localhost/schedule/create', {
       body,
       method: 'POST',
     });
@@ -43,14 +43,14 @@ describe('routes/calendar.create.tsx', () => {
     }
 
     expect(response.status).toBe(302);
-    expect(response.headers.get('Location')).toBe('/calendar');
+    expect(response.headers.get('Location')).toBe('/schedule');
   });
 
   test('action returns an error when the title is missing', async () => {
     const body = new FormData();
     body.set('startsAt', '2026-06-20T10:00');
 
-    const request = new Request('http://localhost/calendar/create', {
+    const request = new Request('http://localhost/schedule/create', {
       body,
       method: 'POST',
     });

@@ -36,6 +36,7 @@ function getTimestamp(row: ActivityRow): Date {
   return (row as ActivityTaskUpdatedRowObject).updatedAt as Date;
 }
 
+// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
 @Resolver(() => ActivityCommitRowObject)
 export class ActivityCommitRowResolver {
   constructor(private readonly loaders: ActivityLoaders) {}

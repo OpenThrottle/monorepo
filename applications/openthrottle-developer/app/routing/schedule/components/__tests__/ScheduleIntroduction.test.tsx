@@ -3,23 +3,23 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { CalendarToolbar } from '../CalendarToolbar';
-import type { CalendarToolbarProps } from '../CalendarToolbar';
+import { ScheduleIntroduction } from '../ScheduleIntroduction';
+import type { ScheduleIntroductionProps } from '../ScheduleIntroduction';
 
-describe('CalendarToolbar Component', () => {
+describe('ScheduleIntroduction Component', () => {
   let component: RenderResult;
-  let props: CalendarToolbarProps;
+  let props: ScheduleIntroductionProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <CalendarToolbar {...props} />;
+    const Component = () => <ScheduleIntroduction {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
   test('should render the component name', () => {
-    expect(component.getByTestId('CalendarToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('ScheduleIntroduction')).toBeInTheDocument();
   });
 });
