@@ -63,7 +63,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Queue name required', { status: 400 });
   }
 
-  const { limit, offset, page } = parseQueueJobsPagination(args.request.url);
+  const { limit, offset, page } = parseQueueJobsPagination(args.url.toString());
 
   const { queue } = await executeGraphqlWithAuth(
     args.request,

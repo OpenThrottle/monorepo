@@ -76,7 +76,7 @@ const DEFAULT_PLANS_LIMIT = 100;
 /** Hard ceiling for plans() even when an explicit limit is supplied. */
 const MAX_PLANS_LIMIT = 500;
 
-// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
+// @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(

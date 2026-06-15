@@ -1,8 +1,6 @@
-import { join } from "path";
 import swc from "unplugin-swc";
 import { ConfigEnv, loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default (config: ConfigEnv) => {
   const { mode } = config;
@@ -10,12 +8,12 @@ export default (config: ConfigEnv) => {
   const configuration = defineConfig({
     plugins: [
       swc.vite({ module: { type: "es6" } }), // This is required to build the test files with SWC
-
-      tsconfigPaths({
-        ignoreConfigErrors: false,
-        projects: [join(__dirname, "tsconfig.app.json")],
-      }),
     ],
+    resolve: {
+      // Vite 8 resolves tsconfig.json `paths` aliases natively, replacing the
+      // vite-tsconfig-paths plugin.
+      tsconfigPaths: true,
+    },
     test: {
       coverage: {
         exclude: ["build"],

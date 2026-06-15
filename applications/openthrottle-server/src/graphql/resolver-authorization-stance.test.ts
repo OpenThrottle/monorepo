@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 
 /**
  * @description Drift gate for the resolver authorization model (ADR:
- * docs/openthrottle/resolver-authorization-model-adr.md). Every GraphQL resolver must DECLARE an
+ * OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a). Every GraphQL resolver must DECLARE an
  * authorization stance so an unguarded resolver is a reviewed decision, not an oversight. A resolver
  * declares its stance by containing one of:
  *   - `@UseGuards(...)`     — permission/role enforced (pair with `@Permissions(...)`)
@@ -52,7 +52,7 @@ describe('resolver authorization stance (drift gate)', () => {
       `These resolvers declare no authorization stance. Add ONE of:\n` +
         `  • @UseGuards(GqlPermissionsGuard) + @Permissions(...)  — to permission-gate it\n` +
         `  • @Public()                                            — if intentionally unauthenticated\n` +
-        `  • // @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)\n` +
+        `  • // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)\n` +
         `Offenders:\n  ${offenders.join('\n  ')}`,
     ).toEqual([]);
   });

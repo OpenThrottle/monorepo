@@ -37,9 +37,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
   const endIso = end.toISOString();
 
-  const { owner, repo } = parseDashboardGithubParams(
-    new URL(args.request.url).searchParams,
-  );
+  const { owner, repo } = parseDashboardGithubParams(args.url.searchParams);
 
   const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();

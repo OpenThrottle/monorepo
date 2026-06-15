@@ -50,7 +50,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const url = new URL(args.request.url);
+  const url = args.url;
   const repositoryId = url.searchParams.get('repositoryId');
   const query = url.searchParams.get('q') ?? '';
 

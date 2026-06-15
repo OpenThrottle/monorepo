@@ -58,6 +58,7 @@ describe('routes/queues.$queueId.tsx', () => {
       params: { queueId: 'plans' },
       request: new Request('http://localhost/queues/plans?page=2&limit=50'),
       unstable_pattern: '/queues/plans',
+      url: new URL('http://localhost/queues/plans?page=2&limit=50'),
     };
 
     const result = await loader(args);
@@ -81,6 +82,7 @@ describe('routes/queues.$queueId.tsx', () => {
       params: { queueId: 'plans' },
       request: new Request('http://localhost/queues/plans'),
       unstable_pattern: '/queues/plans',
+      url: new URL('http://localhost/queues/plans'),
     };
 
     const result = await loader(args);

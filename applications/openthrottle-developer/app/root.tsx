@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
@@ -109,9 +110,9 @@ export const links: Route.LinksFunction = () => {
  * @link https://reactrouter.com/start/framework/route-module#loader
  */
 export const loader = async (args: Route.LoaderArgs) => {
-  const { request } = args;
+  const { request, url } = args;
 
-  const canonical: string = request.url;
+  const canonical: string = url.href;
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
 
@@ -135,7 +136,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   /** When false, the `me` query failed; do not treat as logged out for redirects. */
   let userLoadOk: boolean = isTokenNull;
 
-  const pathname = new URL(request.url).pathname;
+  const pathname = url.pathname;
   const isProtected = PROTECTED_PATH_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
@@ -198,7 +199,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   if (FEATURE_BETA_PREVIEW && userLoadOk && user === null) {
-    const pathname = new URL(request.url).pathname;
+    const pathname = url.pathname;
     const isProtected = PROTECTED_PATH_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
     );
@@ -318,6 +319,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <Toaster />
         <ScrollRestoration />
+        <Analytics />
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />

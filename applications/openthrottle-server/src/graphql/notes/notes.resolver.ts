@@ -8,7 +8,7 @@ import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateNoteInput, UpdateNoteInput } from './note.input';
 import { NoteObject } from './note.object';
 
-// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
+// @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => NoteObject)
 export class NotesResolver {
   constructor(private readonly notesService: NotesService) {}

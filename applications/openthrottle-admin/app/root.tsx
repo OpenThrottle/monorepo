@@ -63,11 +63,11 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
  * @link https://reactrouter.com/start/framework/route-module#loader
  */
 export const loader = async (args: Route.LoaderArgs) => {
-  const { request } = args;
+  const { request, url } = args;
 
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
-  const isIndexRoute = new URL(request.url).pathname === '/';
+  const isIndexRoute = url.pathname === '/';
 
   let user: UserObject | null = null;
 
@@ -90,7 +90,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     return redirect('/dashboard');
   }
 
-  const canonical: string = request.url;
+  const canonical: string = url.href;
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
