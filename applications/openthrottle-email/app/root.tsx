@@ -38,9 +38,9 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
  * @link https://reactrouter.com/start/framework/route-module#loader
  */
 export const loader = async (args: Route.LoaderArgs) => {
-  const { request } = args;
+  const { request, url } = args;
 
-  const canonical: string = request.url;
+  const canonical: string = url.href;
   const _header = request.headers.get('cookie');
   const env = {
     APP_ENV: process.env.APP_ENV,
