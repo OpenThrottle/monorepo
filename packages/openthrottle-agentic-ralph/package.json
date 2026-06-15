@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/openthrottle-agentic-ralph",
-  "description": "Ralph agentic workflow: codegen GraphQL client for Cortex plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,6 +9,7 @@
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
   },
+  "description": "Ralph agentic workflow: codegen GraphQL client for Cortex plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -26,6 +24,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-agentic-ralph",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -53,6 +52,7 @@
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
+        "description": "Regenerate agentic-ralph GraphQL types and fail if the committed src/__generated__ output drifts.",
         "executor": "nx:run-commands",
         "options": {
           "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
@@ -84,5 +84,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

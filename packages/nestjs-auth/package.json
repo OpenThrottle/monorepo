@@ -61,7 +61,7 @@
     }
   },
   "peerDependencies": {
-    "@nestjs/graphql": ">=10.0.0"
+    "@nestjs/graphql": "catalog:"
   },
   "private": true,
   "publishConfig": {

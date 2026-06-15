@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { Repository } from 'typeorm';
+import type { EntityManager } from 'typeorm';
 import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
 import type { PlanRunKind } from './plan-run.entity';
@@ -36,9 +37,15 @@ export class PlanRunsService {
 
   /**
    * @description Records a queued Ralph run. Upserts by queue/job id so idempotent enqueue calls can round-trip the same audit row.
+   * Pass `manager` to enlist the write in a caller-owned transaction (e.g. the atomic enqueue path).
    */
-  async recordQueuedRun(input: RecordQueuedPlanRunInput): Promise<PlanRun> {
-    const repo = this.getRepository();
+  async recordQueuedRun(
+    input: RecordQueuedPlanRunInput,
+    manager?: EntityManager,
+  ): Promise<PlanRun> {
+    const repo = manager
+      ? manager.getRepository(PlanRun)
+      : this.getRepository();
     const rowInput = {
       bullmqJobId: input.bullmqJobId,
       executionBackend: input.executionBackend,

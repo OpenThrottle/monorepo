@@ -1,0 +1,57 @@
+# MCP-only GraphQL documents: the agent-conversation feature, which is outside Ralph's
+# plan/task I/O domain. All shared plan/task/note/project/commit operations + fragments are
+# consumed from the canonical set in
+# packages/openthrottle-agentic-ralph/src/graphql/ralph/ (see codegen.ts documents glob;
+# Phase 1 codegen dedupe — docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md).
+
+fragment AgentConversation on AgentConversationObject {
+  createdAt
+  id
+  metadataJson
+  modelName
+  modelProvider
+  planId
+  projectId
+  status
+  title
+  updatedAt
+  userId
+}
+
+fragment AgentConversationMessage on AgentConversationMessageObject {
+  content
+  conversationId
+  createdAt
+  id
+  role
+  routingConfidence
+  routingModel
+  routingReason
+  routingTier
+  sortOrder
+  toolMetadataJson
+}
+
+query getAgentConversation($id: ID!) {
+  getAgentConversation(id: $id) {
+    ...AgentConversation
+  }
+}
+
+query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
+  getAgentConversationMessages(input: $input) {
+    messages {
+      ...AgentConversationMessage
+    }
+    totalCount
+  }
+}
+
+query listAgentConversations($input: ListAgentConversationsInput) {
+  listAgentConversations(input: $input) {
+    conversations {
+      ...AgentConversation
+    }
+    totalCount
+  }
+}

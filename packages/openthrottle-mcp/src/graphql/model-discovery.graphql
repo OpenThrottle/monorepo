@@ -1,0 +1,20 @@
+# MCP-only GraphQL document: local model-server discovery, which is outside Ralph's
+# plan/task I/O domain. All shared plan/task/note/project/commit operations + fragments are
+# consumed from the canonical set in
+# packages/openthrottle-agentic-ralph/src/graphql/ralph/ (see codegen.ts documents glob;
+# Phase 1 codegen dedupe — docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md).
+
+query discoverLocalModels {
+  discoverLocalModels {
+    endpoints {
+      baseUrl
+      host
+      models
+      port
+      provider
+    }
+    scannedAt
+    scannedHosts
+    totalCount
+  }
+}

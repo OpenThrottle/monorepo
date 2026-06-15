@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-editor",
-  "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -13,9 +10,11 @@
     "classnames": "catalog:",
     "jotai": "catalog:"
   },
+  "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
   "devDependencies": {},
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-editor",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -40,7 +39,7 @@
   },
   "peerDependencies": {
     "@openthrottle/react-router-utils": "workspace:^",
-    "react": "^19.0.0",
+    "react": "catalog:",
     "react-router": "catalog:"
   },
   "private": true,
@@ -50,5 +49,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }
