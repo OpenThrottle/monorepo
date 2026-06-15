@@ -27,6 +27,62 @@ if (typeof window !== 'undefined') {
   };
 }
 
+// usePrefersReducedMotion (and other media-query hooks) call window.matchMedia; jsdom does not provide it
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query: string): MediaQueryList =>
+    ({
+      addEventListener: (): void => {},
+      addListener: (): void => {},
+      dispatchEvent: (): boolean => false,
+      matches: false,
+      media: query,
+      onchange: null,
+      removeEventListener: (): void => {},
+      removeListener: (): void => {},
+    }) as MediaQueryList;
+}
+
+// @paper-design/shaders (GradientMesh) requires a WebGL2 context; jsdom returns
+// null for getContext('webgl2'), which makes the shader throw an async, unhandled
+// rejection during mount. Hand back a no-op context: every method returns
+// undefined, so the library's shader-compile guard bails and nothing is drawn.
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const realGetContext = HTMLCanvasElement.prototype.getContext;
+  const noopGlContext = new Proxy(
+    {},
+    {
+      get: () => () => undefined,
+    },
+  );
+  HTMLCanvasElement.prototype.getContext = function getContext(
+    this: HTMLCanvasElement,
+    contextId: string,
+    ...args: unknown[]
+  ) {
+    if (contextId === 'webgl' || contextId === 'webgl2') {
+      return noopGlContext as unknown as RenderingContext;
+    }
+    return realGetContext.call(this, contextId, ...(args as []));
+  } as typeof HTMLCanvasElement.prototype.getContext;
+}
+
+// @paper-design/shaders also reads the global `visualViewport`; jsdom does not
+// declare it, so a bare reference throws (optional chaining can't guard an
+// undeclared identifier). Provide a minimal stand-in.
+if (typeof globalThis.visualViewport === 'undefined') {
+  Object.defineProperty(globalThis, 'visualViewport', {
+    configurable: true,
+    value: {
+      addEventListener: (): void => {},
+      height: 768,
+      removeEventListener: (): void => {},
+      scale: 1,
+      width: 1024,
+    },
+    writable: true,
+  });
+}
+
 // cmdk (Command) and Radix Popover use ResizeObserver; jsdom does not provide it
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {

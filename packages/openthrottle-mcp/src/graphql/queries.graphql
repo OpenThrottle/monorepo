@@ -254,3 +254,18 @@ query getProject($id: ID!) {
     ...Project
   }
 }
+
+query discoverLocalModels {
+  discoverLocalModels {
+    endpoints {
+      baseUrl
+      host
+      models
+      port
+      provider
+    }
+    scannedAt
+    scannedHosts
+    totalCount
+  }
+}

@@ -1155,6 +1155,45 @@ type MetricsObject {
   serverSnapshot: ServerMetricsObject!
 }
 
+type ModelEndpointObject {
+  """
+  OpenAI-compatible /v1 base URL, e.g. http://localhost:11434/v1. Reflects the server's network vantage point.
+  """
+  baseUrl: String!
+
+  """
+  Host the endpoint was reached on, e.g. localhost or host.docker.internal.
+  """
+  host: String!
+
+  """
+  Sorted, de-duplicated model ids advertised by /v1/models (empty when the server is idle).
+  """
+  models: [String!]!
+
+  """Port the endpoint was reached on."""
+  port: Int!
+
+  """
+  Best-effort provider label (ollama, lmstudio) or null when not fingerprinted.
+  """
+  provider: String
+}
+
+type DiscoverLocalModelsResult {
+  """De-duplicated reachable endpoints, stably sorted by (host, port)."""
+  endpoints: [ModelEndpointObject!]!
+
+  """ISO-8601 timestamp of when this snapshot was scanned."""
+  scannedAt: String!
+
+  """Hosts probed during this scan, in resolution order."""
+  scannedHosts: [String!]!
+
+  """Number of discovered endpoints."""
+  totalCount: Int!
+}
+
 type NoteObject {
   author: String
   content: String!
@@ -1584,6 +1623,11 @@ type Query {
   List registered BullMQ queues with job counts (waiting, active, completed, failed, delayed).
   """
   queues: [QueueStatsObject!]!
+
+  """
+  Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request.
+  """
+  discoverLocalModels: DiscoverLocalModelsResult!
 
   """Get a note by ID"""
   note(id: ID!): NoteObject

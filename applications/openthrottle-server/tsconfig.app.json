@@ -68,6 +68,9 @@
       "path": "../../packages/nestjs-modules/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-model-discovery/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-logging/tsconfig.lib.json"
     },
     {

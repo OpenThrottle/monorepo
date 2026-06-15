@@ -7,6 +7,7 @@ import {
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
+  CalendarDaysIcon,
   CodeIcon,
   FileChartColumn,
   FoldersIcon,
@@ -27,6 +28,11 @@ import {
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
 export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   Workspace: [
+    {
+      children: 'Calendar',
+      icon: CalendarDaysIcon,
+      to: '/calendar',
+    },
     {
       children: 'Dashboard',
       icon: GaugeIcon,

@@ -18,6 +18,7 @@ export const WORKSPACE_CORE_ENTITY_LINKS: readonly WorkspaceJumpLink[] = [
 /** Full palette aligned with command-palette-style navigation on the dashboard. */
 export const WORKSPACE_FULL_JUMP_LINKS: readonly WorkspaceJumpLink[] = [
   { label: 'Search', to: '/search' },
+  { label: 'Calendar', to: '/calendar' },
   { label: 'Plans', to: '/plans' },
   { label: 'Projects', to: '/projects' },
   { label: 'Prompts', to: '/prompts' },

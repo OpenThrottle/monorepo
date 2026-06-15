@@ -15,14 +15,43 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Module layout (proposed)
 
-| Module file (proposed)  | Placeholder today | Intended utilities                                                                                                                  |
-| ----------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/postgres.ts` | `postgres.ts`     | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
-| `src/utils/workflow.ts` | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
-| `src/utils/nodejs.ts`   | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                       |
-| `src/utils/metrics.ts`  | `metrics.ts`      | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
+| Module file (proposed)       | Placeholder today | Intended utilities                                                                                                                                                                                                      |
+| ---------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/postgres.ts`      | `postgres.ts`     | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                                                                                                               |
+| `src/utils/workflow.ts`      | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId`                                                                                     |
+| `src/utils/nodejs.ts`        | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                                                                           |
+| `src/utils/metrics.ts`       | `metrics.ts`      | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                                                                                                                |
+| `src/utils/model-discovery/` | shipped           | `discoverModels`, `resolveHosts`/`resolvePorts`, `probeEndpoint`/`probeAll`/`fingerprintProvider`, `dedupeEndpoints`, `createLimiter` — pure local LLM model-server discovery (types in `src/types/model-discovery.ts`) |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
+
+### Local model discovery (`src/utils/model-discovery/`)
+
+Pure, framework-agnostic detection of **locally-running** OpenAI-compatible model
+servers (Ollama-primary; also vLLM, llama.cpp, SGLang, LM Studio) via
+`GET /v1/models`. Native `fetch`, no new dependencies, no `process.env` reads —
+callers pass an env-like object to `resolveHosts`/`resolvePorts`. It probes
+_running_ servers; it does **not** scan model files on disk or introspect which
+cloud models an agent CLI is configured to use.
+
+- **Host resolution:** `LLM_HOSTS` override (else `localhost` + `host.docker.internal`),
+  merged with hosts parsed from `OLLAMA_BASE_URL` / `OLLAMA_URL` / `LM_STUDIO_URL`.
+  A pluggable `HostSource` seam (`ResolveHostsOptions.extraSources`) is left for a
+  future Tailscale source — **zero Tailscale code ships today**.
+- **Port resolution:** default `8000-8020` + `1234` (LM Studio) + `11434`/`11435`
+  (Ollama); `LLM_PORTS` override; provider-URL ports merged in.
+- **Probe/fingerprint:** native `fetch` + `AbortController` (probe 3000ms /
+  fingerprint 1500ms), bounded concurrency (default 50). Best-effort fingerprint:
+  Ollama (`/api/tags`), LM Studio (`/api/v1/models`); `provider: null` otherwise
+  (generic OpenAI-compatible — no "everything is vllm").
+- **Dedup:** one machine reachable via multiple IPs collapses by `(port, sorted
+model ids)` with host preference `localhost > 127.0.0.1 > host.docker.internal >
+others`; results stably sorted by `(host, port)`. The caller stamps `scannedAt`.
+
+For a cached, ConfigService-wired NestJS service over this core see
+`@openthrottle/nestjs-model-discovery`. **Out of scope:** the odysseus "Cookbook"
+hardware-fit / model-download feature, availability history, and any Developer/Admin
+UI (can consume `discoverLocalModels` later).
 
 ### File naming convention
 

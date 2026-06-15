@@ -352,7 +352,7 @@ export default function App(): React.ReactElement {
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
-  const _isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
     isIndexRoute ||
@@ -439,7 +439,10 @@ export default function App(): React.ReactElement {
               authenticated={data?.user !== null}
               data={data?.user ? dataNavigationV2 : dataNavigationGuest}
               health={data?.serverHealth}
-              overrides={{ footer: isFooterHidden }}
+              overrides={{
+                footer: isFooterHidden,
+                header: isHeaderHidden,
+              }}
             >
               <GlobalRootLoaderFailureBanner
                 diagnostics={data?.rootLoaderDiagnostics}
@@ -454,9 +457,11 @@ export default function App(): React.ReactElement {
                 suppress={data?.rootLoaderFailure?.step === 'health'}
               />
 
-              <GlobalLayoutHeader
-                onSearchChromeEvent={handleSearchChromeEvent}
-              />
+              {!isHeaderHidden ? (
+                <GlobalLayoutHeader
+                  onSearchChromeEvent={handleSearchChromeEvent}
+                />
+              ) : null}
 
               <Outlet />
 
@@ -600,10 +605,8 @@ export const action = async (args: Route.ActionArgs) => {
     try {
       const success = await callLogoutMutation();
       if (success) {
-        return redirectDocument('/', {
-          headers: {
-            'Set-Cookie': getClearAuthCookieHeader(),
-          },
+        return redirectDocument('/auth', {
+          headers: { 'Set-Cookie': getClearAuthCookieHeader() },
         });
       }
     } catch (error) {
