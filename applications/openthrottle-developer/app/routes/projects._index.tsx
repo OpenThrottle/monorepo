@@ -46,7 +46,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     parseProjectWithStats,
   );
 
-  const url = new URL(args.request.url);
+  const url = args.url;
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const limit = Math.max(
     1,

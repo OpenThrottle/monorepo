@@ -48,6 +48,7 @@ describe('routes/settings.keys.tsx', () => {
       params: {},
       request: new Request(url),
       unstable_pattern: '/settings/keys',
+      url: new URL(url),
     });
 
     test('returns empty data when no service accounts exist', async () => {

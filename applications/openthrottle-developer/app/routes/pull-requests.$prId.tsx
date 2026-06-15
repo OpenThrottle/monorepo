@@ -39,7 +39,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const defaults = getDefaultGithubRepo();
-  const url = new URL(args.request.url);
+  const url = args.url;
   const owner = url.searchParams.get('owner') ?? defaults.owner;
   const repo = url.searchParams.get('repo') ?? defaults.repo;
   const raw = args.params.prId;

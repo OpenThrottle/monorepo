@@ -13,7 +13,7 @@ import {
 import { TaskEmbeddingObject } from './task-embedding.object';
 import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
-// @authz-stance: authenticated-only (Path A — see docs/openthrottle/resolver-authorization-model-adr.md)
+// @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => TaskEmbeddingObject)
 export class TaskEmbeddingsResolver {
   constructor(

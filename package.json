@@ -353,7 +353,6 @@
     "vite-bundle-analyzer": "catalog:",
     "vite-plugin-devtools-json": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:",
     "webpack-cli": "catalog:"
   },

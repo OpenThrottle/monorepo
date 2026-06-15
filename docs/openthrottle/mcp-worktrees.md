@@ -52,4 +52,4 @@ The chosen URL is exported as `API_URL` / `API_URL_INTERNAL`. Reading `.env` is 
 
 `.mcp.json` invokes the script directly (`"args": ["scripts/run-openthrottle-mcp.sh"]`); it no longer prefixes `set -a && source ./.env && …`. To debug resolution without starting the server, run `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` — it prints the resolved URL and exits.
 
-**Note:** MCP servers register at session start, so this fix takes effect for *new* sessions/worktrees. For a session already running with broken tools, drive GraphQL directly against the live server with `curl` (bearer `OPENTHROTTLE_MCP_AUTH_TOKEN`) as a stopgap.
+**Note:** MCP servers register at session start, so this fix takes effect for _new_ sessions/worktrees. For a session already running with broken tools, drive GraphQL directly against the live server with `curl` (bearer `OPENTHROTTLE_MCP_AUTH_TOKEN`) as a stopgap.

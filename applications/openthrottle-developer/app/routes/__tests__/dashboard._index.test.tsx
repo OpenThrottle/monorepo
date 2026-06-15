@@ -62,6 +62,7 @@ describe('routes/dashboard._index.tsx', () => {
         params: {},
         request,
         unstable_pattern: '/dashboard',
+        url: new URL(request.url),
       };
 
       const result = await loader(args);
@@ -88,6 +89,7 @@ describe('routes/dashboard._index.tsx', () => {
         params: {},
         request,
         unstable_pattern: '/dashboard',
+        url: new URL(request.url),
       };
 
       await loader(args);
