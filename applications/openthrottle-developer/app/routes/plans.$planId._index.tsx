@@ -504,6 +504,7 @@ export default function Component(
               </TabsTrigger>
 
               <div className="flex-1" />
+
               <TabsTrigger
                 className="flex-0 cursor-pointer"
                 value="configuration"
