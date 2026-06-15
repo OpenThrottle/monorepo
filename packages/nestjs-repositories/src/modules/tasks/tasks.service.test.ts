@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { Not } from 'typeorm';
+import { In, Not } from 'typeorm';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 import { tasksFactory } from './tasks.factory';
@@ -29,6 +29,7 @@ describe('TasksService', () => {
   };
 
   const mockTaskRepo = createMock<GetRepository>({
+    count: vi.fn().mockResolvedValue(0),
     createQueryBuilder: vi.fn().mockReturnValue(mockQueryBuilder),
     find: () => Promise.resolve(tasksFactory.buildList(2)),
   });
@@ -67,11 +68,12 @@ describe('TasksService', () => {
   });
 
   beforeEach(() => {
-    vi.mocked(mockPlanRepo.update).mockResolvedValue({
+    vi.mocked(mockPlanRepo.update).mockReset().mockResolvedValue({
       affected: 0,
       generatedMaps: [],
       raw: [],
     });
+    vi.mocked(mockTaskRepo.count).mockReset().mockResolvedValue(0);
   });
 
   describe('getRepository', () => {
@@ -159,6 +161,55 @@ describe('TasksService', () => {
       const promoted = await service.syncParentPlanStatus(planId);
 
       expect(promoted).toBe(false);
+    });
+  });
+
+  describe('completeParentPlanIfTasksDone', () => {
+    const planId = '55555555-5555-5555-5555-555555555555';
+
+    it('completes an IN_PROGRESS plan when no remaining tasks exist', async () => {
+      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
+      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
+        affected: 1,
+        generatedMaps: [],
+        raw: [],
+      });
+
+      const completed = await service.completeParentPlanIfTasksDone(planId);
+
+      expect(completed).toBe(true);
+      expect(mockTaskRepo.count).toHaveBeenCalledWith({
+        where: {
+          planId,
+          status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
+        },
+      });
+      expect(mockPlanRepo.update).toHaveBeenCalledWith(
+        { id: planId, status: 'IN_PROGRESS' },
+        { status: 'COMPLETED' },
+      );
+    });
+
+    it('does not complete the plan while tasks remain', async () => {
+      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(2);
+
+      const completed = await service.completeParentPlanIfTasksDone(planId);
+
+      expect(completed).toBe(false);
+      expect(mockPlanRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('returns false when the plan is not IN_PROGRESS (no row matched)', async () => {
+      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
+      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
+        affected: 0,
+        generatedMaps: [],
+        raw: [],
+      });
+
+      const completed = await service.completeParentPlanIfTasksDone(planId);
+
+      expect(completed).toBe(false);
     });
   });
 });

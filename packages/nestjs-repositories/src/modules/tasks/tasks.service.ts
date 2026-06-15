@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { Not, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 
@@ -63,6 +63,38 @@ export class TasksService {
     const result = await planRepo.update(
       { id: planId, status: Not('IN_PROGRESS') },
       { status: 'IN_PROGRESS' },
+    );
+
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * @description Downward reconcile: when a plan's last unfinished task completes, mark the plan
+   * COMPLETED. Acts only on a plan that is currently IN_PROGRESS and has no remaining tasks (PENDING,
+   * QUEUED, IN_PROGRESS, or BLOCKED) — COMPLETED/SKIPPED/CANCELED are terminal. The guarded atomic
+   * UPDATE keeps it idempotent and race-safe (mirrors {@link syncParentPlanStatus}); the IN_PROGRESS
+   * guard avoids resurrecting CANCELED/PENDING/BACKLOG plans. Returns whether the plan was completed.
+   *
+   * Without this, the only thing that completes a plan is the Ralph orchestrator's top-of-loop check,
+   * which several exit paths (agent completion signal, max iterations, cancellation) skip — stranding
+   * a plan IN_PROGRESS with every task COMPLETED.
+   */
+  async completeParentPlanIfTasksDone(planId: string): Promise<boolean> {
+    const remaining = await this.taskRepository.count({
+      where: {
+        planId,
+        status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
+      },
+    });
+
+    if (remaining > 0) {
+      return false;
+    }
+
+    const planRepo = this.plansService.getRepository();
+    const result = await planRepo.update(
+      { id: planId, status: 'IN_PROGRESS' },
+      { status: 'COMPLETED' },
     );
 
     return (result.affected ?? 0) > 0;
