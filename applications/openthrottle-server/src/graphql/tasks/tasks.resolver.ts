@@ -351,6 +351,21 @@ export class TasksResolver {
       }
     }
 
+    // Downward reconcile: completing the last task closes out the plan. Without this the plan can be
+    // stranded IN_PROGRESS with every task COMPLETED (the orchestrator only completes plans at its
+    // top-of-loop check, which several exit paths skip). See TasksService.completeParentPlanIfTasksDone.
+    if (saved.status === 'COMPLETED' && previousStatus !== 'COMPLETED') {
+      const completed = await this.tasksService.completeParentPlanIfTasksDone(
+        saved.planId,
+      );
+      if (completed) {
+        this.notificationsService.emitPlanStatusChanged({
+          planId: saved.planId,
+          status: 'COMPLETED',
+        });
+      }
+    }
+
     return saved;
   }
 
