@@ -13,6 +13,16 @@
     }
   },
   "namedInputs": {
+    "codegenGraphqlInputs": [
+      "{workspaceRoot}/schema.gql",
+      "{projectRoot}/codegen.ts",
+      "{projectRoot}/app/**/*.graphql",
+      "{projectRoot}/app/**/*.ts",
+      "{projectRoot}/src/**/*.graphql",
+      "{projectRoot}/src/**/*.ts",
+      "!{projectRoot}/**/__generated__/**",
+      { "externalDependencies": ["@graphql-codegen/cli"] }
+    ],
     "noMarkdown": ["!{projectRoot}/**/*.md"],
     "production": ["default", "!{projectRoot}/jest.config.ts"]
   },
@@ -193,12 +203,15 @@
       }
     },
     "codegen-graphql": {
+      "cache": true,
       "description": "Generate GraphQL types and typed operations for the project with graphql-codegen.",
       "executor": "nx:run-commands",
+      "inputs": ["codegenGraphqlInputs"],
       "options": {
         "command": "graphql-codegen",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": ["{projectRoot}/**/__generated__"]
     },
     "codegen-graphql-watch": {
       "continuous": true,
@@ -210,12 +223,22 @@
       }
     },
     "codegen-react-router": {
+      "cache": true,
       "description": "Generate React Router route types with `react-router typegen`.",
       "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/react-router.config.ts",
+        "{projectRoot}/app/**/*.ts",
+        "{projectRoot}/app/**/*.tsx",
+        "!{projectRoot}/**/__generated__/**",
+        "!{projectRoot}/.react-router/**",
+        { "externalDependencies": ["@react-router/dev", "react-router"] }
+      ],
       "options": {
         "command": "react-router typegen",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": ["{projectRoot}/.react-router/types"]
     },
     "codegen-react-router-watch": {
       "continuous": true,
