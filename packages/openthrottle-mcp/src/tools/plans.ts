@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   CreatePlanDocument,
+  CreatePlansDocument,
   DeletePlanDocument,
   GetPlanDocument,
   ListPlansByStatusDocument,
@@ -14,12 +15,14 @@ import {
 } from '../__generated__/graphql.js';
 import type {
   CreatePlanMutation,
+  CreatePlansMutation,
   GetPlanQuery,
   ListPlansByStatusQuery,
   UpdatePlanMutation,
 } from '../__generated__/graphql.js';
 import {
   CreatePlanInputSchema,
+  CreatePlansInputSchema,
   DeletePlanInputSchema,
   ListPlansByStatusInputSchema,
   UpdatePlanInputSchema,
@@ -31,6 +34,11 @@ import { runTool } from '../utils/tool-result.js';
 
 type CreatePlanResult = GenericResult<{
   plan: CreatePlanMutation['createPlan'];
+}>;
+
+type CreatePlansResult = GenericResult<{
+  plans: CreatePlansMutation['createPlans']['plans'];
+  totalCount: number;
 }>;
 
 type DeletePlanResult = GenericResult<{
@@ -51,12 +59,15 @@ type UpdatePlanResult = GenericResult<{
 }>;
 
 export const createPlanToolParameters = CreatePlanInputSchema();
+export const createPlansToolParameters = CreatePlansInputSchema();
 export const deletePlanToolParameters = DeletePlanInputSchema();
 export const getPlanToolParameters = z.object({ id: z.string().min(1) });
 export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
 export const updatePlanToolParameters = UpdatePlanInputSchema();
 
 export const createPlanToolDescription = `Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`;
+
+export const createPlansToolDescription = `Create multiple plans in Cortex atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status, assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
 
 export const deletePlanToolDescription = `Delete a plan by id. Returns whether a row was deleted.`;
 
@@ -121,6 +132,36 @@ export async function createPlanToolHandler(
       return { structuredContent: { plan }, text };
     },
   );
+}
+
+export async function createPlansToolHandler(
+  args: z.infer<typeof createPlansToolParameters>,
+): Promise<CreatePlansResult> {
+  const parsed = createPlansToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{
+    plans: CreatePlansMutation['createPlans']['plans'];
+    totalCount: number;
+  }>('create_plans', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, CreatePlansDocument, {
+      input: parsed.data,
+    });
+
+    const createResult = result?.createPlans;
+    if (!createResult) return null;
+
+    const { plans, totalCount } = createResult;
+    const text =
+      plans.length === 0
+        ? 'create_plans: no plans were created.'
+        : `Created ${plans.length} plan(s):\n${JSON.stringify(plans, null, 2)}`;
+
+    return { structuredContent: { plans, totalCount }, text };
+  });
 }
 
 export async function getPlanToolHandler(
@@ -201,6 +242,15 @@ export function registerPlanTools(server: McpServer): void {
       inputSchema: createPlanToolParameters,
     },
     createPlanToolHandler,
+  );
+
+  server.registerTool(
+    'create_plans',
+    {
+      description: createPlansToolDescription,
+      inputSchema: createPlansToolParameters,
+    },
+    createPlansToolHandler,
   );
 
   server.registerTool(

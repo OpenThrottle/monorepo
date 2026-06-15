@@ -84,6 +84,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.createPlansToolDescription,
+    name: 'create_plans',
+    parameters: asMcpParameters(Th.createPlansToolParameters),
+  })
+  createPlans(
+    args: Parameters<typeof Th.createPlansToolHandler>[0],
+  ): ReturnType<typeof Th.createPlansToolHandler> {
+    return Th.createPlansToolHandler(args);
+  }
+
+  @Tool({
     description: Th.createTaskToolDescription,
     name: 'create_task',
     parameters: asMcpParameters(Th.createTaskToolParameters),
