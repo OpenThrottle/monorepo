@@ -10,7 +10,7 @@ import type { Route } from '@/app/routes/+types/ide.symbol';
  * `.server` module so it never reaches the client bundle.
  */
 export const loader = async (args: Route.LoaderArgs) => {
-  const url = new URL(args.request.url);
+  const url = args.url;
   const repositoryId = url.searchParams.get('repositoryId');
   const path = url.searchParams.get('path') ?? undefined;
   const name = url.searchParams.get('name') ?? undefined;

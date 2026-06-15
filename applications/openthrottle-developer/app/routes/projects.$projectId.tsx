@@ -43,7 +43,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
-  const url = args.request.url ? new URL(args.request.url) : null;
+  const url = args.url;
   const pageRaw = url?.searchParams.get('page');
   const page = Math.max(
     1,

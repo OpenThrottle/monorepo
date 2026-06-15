@@ -40,7 +40,7 @@ export const handle = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const url = args.request.url ? new URL(args.request.url) : null;
+  const url = args.url;
 
   const searchParams = url?.searchParams ?? new URLSearchParams();
 

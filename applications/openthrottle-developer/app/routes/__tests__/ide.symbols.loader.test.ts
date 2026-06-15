@@ -37,6 +37,7 @@ const loaderArgs = (url: string): Route.LoaderArgs =>
     context: undefined,
     params: {},
     request: new Request(url),
+    url: new URL(url),
   }) as unknown as Route.LoaderArgs;
 
 describe('routes/ide.symbols loader', () => {

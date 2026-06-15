@@ -36,7 +36,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
-  const canonical: string = request.url;
+  const canonical: string = args.url.href;
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 

@@ -12,9 +12,8 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.search';
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const { request } = args;
+  const { url } = args;
 
-  const url = new URL(request.url);
   const q = url.searchParams.get('q') ?? '';
   const messages = getMockSearchResults(q);
 

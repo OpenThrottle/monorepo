@@ -39,7 +39,7 @@ function toSemanticStatus(value: string): IdeSemanticStatus {
 export const loader = async (
   args: Route.LoaderArgs,
 ): Promise<IdeSemanticResult> => {
-  const url = new URL(args.request.url);
+  const url = args.url;
   const repositoryId = url.searchParams.get('repositoryId');
   const query = url.searchParams.get('q') ?? '';
 
