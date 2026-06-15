@@ -61,10 +61,12 @@ export default function Component(
       onClick={onIncrementCount}
     >
       <GradientMesh
-        className="bg-black opacity-50"
-        distortion={0.5}
-        grainOverlay={0.15}
-        speed={0.1}
+        className="bg-white opacity-50"
+        distortion={0.9}
+        grainMixer={2.5}
+        grainOverlay={1.55}
+        speed={0.8}
+        swirl={1.6}
       />
       {/* <GradientMesh
         className="bg-black opacity-50"

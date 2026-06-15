@@ -57,7 +57,7 @@ export const SearchIntroduction = (
       )}
 
       {hasQuery && onExpandRankingChange != null ? (
-        <div className="text-muted-foreground mb-2 max-w-2xl space-y-2 text-sm">
+        <div className="text-muted-foreground mb-2 space-y-2 text-sm">
           <p>
             Open “Why this result?” on a card to see ranking notes, similarity,
             and entity ids. Enable power-user mode below to expand every card’s

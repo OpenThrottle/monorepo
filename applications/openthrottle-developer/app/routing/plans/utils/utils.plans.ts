@@ -24,7 +24,7 @@ export const getPlanStatusBadgeColor = (
       color = `violet`;
       break;
     case 'BLOCKED':
-      color = `amber`;
+      color = `red`;
       break;
     case 'CANCELED':
       color = `slate`;
@@ -39,7 +39,7 @@ export const getPlanStatusBadgeColor = (
       color = `sky`;
       break;
     case 'QUEUED':
-      color = `orange`;
+      color = `amber`;
       break;
     case 'SKIPPED':
       color = `red`;

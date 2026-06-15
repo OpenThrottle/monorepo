@@ -136,7 +136,7 @@ export const PlanTabDetails = (
               // onChange={handleEditorChange}
             />
           ) : (
-            <div className="space-y-4 p-4 md:p-8">
+            <div className="bg-card border-card-border space-y-4 rounded-lg border p-4 md:p-8">
               {hasSummary && (
                 <div>
                   <h2 className="mb-4">Summary</h2>
