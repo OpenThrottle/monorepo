@@ -15,12 +15,7 @@ if (isDevelopment && !url) {
 }
 
 const config: CodegenConfig = {
-  documents: [
-    'app/*.graphql',
-    'app/**/*.graphql',
-    'app/**/*.ts',
-    '!app/__generated__/**/*',
-  ],
+  documents: ['app/**/*.graphql', 'app/**/*.ts', '!app/__generated__/**/*'],
   generates: {
     './app/__generated__/': {
       overwrite: true,

@@ -80,7 +80,12 @@
         ],
         "executor": "@nx/js:tsc"
       },
-      "codegen-graphql": {},
+      "codegen-graphql": {
+        "inputs": [
+          "codegenGraphqlInputs",
+          "{workspaceRoot}/packages/openthrottle-agentic-ralph/src/graphql/ralph/**/*.graphql"
+        ]
+      },
       "codegen-graphql-watch": {},
       "lint": {},
       "serve": {
