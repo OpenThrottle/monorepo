@@ -1,11 +1,9 @@
-import { join } from 'path';
 import { analyzer } from 'vite-bundle-analyzer';
 import { ConfigEnv, defineConfig, loadEnv } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterDevTools } from 'react-router-devtools';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default (config: ConfigEnv) => {
   const { mode } = config;
@@ -37,11 +35,12 @@ export default (config: ConfigEnv) => {
       useReactRouterDevTools && reactRouterDevTools(), // NOTE: Must come before reactRouter()
       reactRouter(),
       tailwindcss(),
-      tsconfigPaths({
-        ignoreConfigErrors: false,
-        projects: [join(__dirname, 'tsconfig.json')],
-      }),
     ],
+    resolve: {
+      // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the
+      // tsconfig at `root`), replacing the vite-tsconfig-paths plugin.
+      tsconfigPaths: true,
+    },
     root: __dirname,
     server: {
       allowedHosts: ['admin.local'],

@@ -1,6 +1,4 @@
-import { join } from 'path';
 import { ConfigEnv, defineConfig, loadEnv } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 /**
  * @description Nx may set NODE_ENV=production for the test task; that pulls in
@@ -13,14 +11,11 @@ export default (config: ConfigEnv) => {
 
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/openthrottle-admin',
-    plugins: [
-      tsconfigPaths({
-        ignoreConfigErrors: false,
-        projects: [join(__dirname, 'tsconfig.json')],
-      }),
-    ],
     resolve: {
       dedupe: ['react', 'react-dom', '@testing-library/react'],
+      // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the
+      // tsconfig at `root`), replacing the vite-tsconfig-paths plugin.
+      tsconfigPaths: true,
     },
     root: __dirname,
     test: {
