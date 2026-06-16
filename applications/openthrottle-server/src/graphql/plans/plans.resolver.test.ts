@@ -559,6 +559,7 @@ describe('PlansResolver', () => {
       });
 
       expect(mockEnqueueSpawn).toHaveBeenCalledWith({
+        actorUserId: null,
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,
@@ -586,6 +587,30 @@ describe('PlansResolver', () => {
 
       expect(mockEnqueueSpawn).toHaveBeenCalledWith(
         expect.objectContaining({ idempotencyKey: null, planId: mockPlan.id }),
+      );
+    });
+
+    test('captures a user actor as actorUserId', async () => {
+      await resolver.enqueuePlanRun(
+        { planId: mockPlan.id, priority: null, workingDirectory: null },
+        'user-uuid-1',
+        'user',
+      );
+
+      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: 'user-uuid-1' }),
+      );
+    });
+
+    test('records no actorUserId for a service-account principal', async () => {
+      await resolver.enqueuePlanRun(
+        { planId: mockPlan.id, priority: null, workingDirectory: null },
+        'ot_sa_abc',
+        'service_account',
+      );
+
+      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: null }),
       );
     });
   });

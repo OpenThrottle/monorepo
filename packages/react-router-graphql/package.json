@@ -9,9 +9,14 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
-    "graphql": "catalog:"
+    "@openthrottle/react-router-utils": "workspace:^",
+    "graphql": "catalog:",
+    "graphql-ws": "catalog:",
+    "react": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@testing-library/react": "catalog:"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {

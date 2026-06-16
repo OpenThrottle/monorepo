@@ -9,12 +9,22 @@ import type {
 import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
 import {
   Args,
+  Context,
+  ID,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
+  Subscription,
 } from '@nestjs/graphql';
+import {
+  PUB_SUB,
+  planOutputTopic,
+  type PubSubEngine,
+} from '@openthrottle/nestjs-graphql';
+import { Public } from '@openthrottle/nestjs-auth';
+import { ForbiddenException, Inject } from '@nestjs/common';
 import { PlanObject } from '../plans/plan.object';
 import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
 import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
@@ -30,6 +40,7 @@ export class PlanOutputStreamResolver {
   constructor(
     private readonly loaders: PlanOutputStreamLoaders,
     private readonly planOutputStreamService: PlanOutputStreamService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -90,6 +101,37 @@ export class PlanOutputStreamResolver {
 
     const saved = await repo.save(entity);
 
+    // Publish the new chunk to the per-plan output topic so live subscribers on
+    // plan:<planId>:output receive it. The payload is keyed by the subscription
+    // field name so @nestjs/graphql can resolve planOutputChunkAdded.
+    await this.pubSub.publish(planOutputTopic(saved.planId), {
+      planOutputChunkAdded: saved,
+    });
+
     return saved;
+  }
+
+  // 🔌 graphql-ws only: connection auth (onConnect) already validated the token
+  // and stashed userId on the context, so skip the HTTP-shaped global auth guard
+  // (which requires `req`) and authorize from the connection identity here.
+  @Public()
+  @Subscription(() => PlanOutputStreamChunkObject, {
+    description: `Live stream of output chunks appended to a plan (topic plan:<planId>:output).`,
+  })
+  planOutputChunkAdded(
+    @Args('planId', { type: () => ID }) planId: string,
+    @Context() context: { userId?: string },
+  ): AsyncIterator<PlanOutputStreamChunk> {
+    // Path A (authenticated-only): identity comes from the authenticated ws
+    // connection, never from a subscription variable.
+    if (!context.userId) {
+      throw new ForbiddenException(
+        'A subscription requires an authenticated connection',
+      );
+    }
+
+    return this.pubSub.asyncIterator<PlanOutputStreamChunk>(
+      planOutputTopic(planId),
+    );
   }
 }

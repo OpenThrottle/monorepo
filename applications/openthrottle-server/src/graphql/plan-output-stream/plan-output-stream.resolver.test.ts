@@ -3,11 +3,18 @@ import type {
   PlanOutputStreamChunk,
 } from '@openthrottle/nestjs-repositories';
 import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
+import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
 import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
+
+const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
+const mockPubSub = {
+  asyncIterator: vi.fn().mockReturnValue(mockAsyncIterator),
+  publish: vi.fn().mockResolvedValue(undefined),
+};
 
 const planOutputStreamRepo = {
   create: vi.fn(),
@@ -59,6 +66,7 @@ describe('PlanOutputStreamResolver', () => {
           useValue: mockPlanOutputStreamService,
         },
         { provide: PlanOutputStreamLoaders, useValue: mockLoaders },
+        { provide: PUB_SUB, useValue: mockPubSub },
       ],
     }).compile();
 
@@ -145,6 +153,10 @@ describe('PlanOutputStreamResolver', () => {
       expect(result.planId).toBe(mockChunk.planId);
       expect(result.content).toBe('New output');
       expect(result.iteration).toBe(2);
+      expect(mockPubSub.publish).toHaveBeenCalledWith(
+        `plan:${mockChunk.planId}:output`,
+        { planOutputChunkAdded: { ...result } },
+      );
     });
 
     test('passes null iteration when omitted', async () => {
@@ -165,6 +177,25 @@ describe('PlanOutputStreamResolver', () => {
       });
 
       expect(result.iteration).toBeNull();
+    });
+  });
+
+  describe('planOutputChunkAdded (Subscription)', () => {
+    test('returns an async iterator on the per-plan output topic when authenticated', () => {
+      const iterator = resolver.planOutputChunkAdded(mockChunk.planId, {
+        userId: 'user-1',
+      });
+
+      expect(mockPubSub.asyncIterator).toHaveBeenCalledWith(
+        `plan:${mockChunk.planId}:output`,
+      );
+      expect(iterator).toBe(mockAsyncIterator);
+    });
+
+    test('throws when the connection carries no userId', () => {
+      expect(() => resolver.planOutputChunkAdded(mockChunk.planId, {})).toThrow(
+        /authenticated connection/,
+      );
     });
   });
 

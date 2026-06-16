@@ -198,7 +198,7 @@ export const PlanTabConfiguration = (
 
   return (
     <TabsContent value="configuration">
-      <div className="flex max-w-3xl flex-col gap-4 md:gap-8">
+      <div className="flex flex-col gap-4 md:gap-8">
         <Card className="p-4">
           <PlanWorkflowCommand
             command={command}
