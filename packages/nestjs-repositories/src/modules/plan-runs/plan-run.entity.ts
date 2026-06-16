@@ -32,6 +32,10 @@ export type PlanRunData = Pick<
 @Entity('plan_runs')
 @Unique('plan_runs_queue_job_unique', ['queueName', 'bullmqJobId'])
 export class PlanRun {
+  /** User who enqueued this run (null for service-account/system runs or legacy rows). */
+  @Column({ name: 'actor_user_id', nullable: true, type: 'uuid' })
+  actorUserId!: string | null;
+
   @Column({ name: 'bullmq_job_id', type: 'text' })
   bullmqJobId!: string;
 

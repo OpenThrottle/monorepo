@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""Real-time notification event delivered over a GraphQL subscription."""
+interface NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+}
+
 type CommitsPerPrRowObject {
   """Number of commits in the PR."""
   commits: Int!
@@ -1202,6 +1218,162 @@ type NoteObject {
   updatedAt: DateTime!
 }
 
+type DebugNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+
+  """JSON-encoded debug data."""
+  dataJson: String
+}
+
+type PlanEnqueuedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  queuePosition: Int!
+  queueTotal: Int!
+}
+
+type PlanUpdatedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  taskId: ID
+}
+
+type TaskCompletedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  taskId: ID
+}
+
+type QueueJobCompletedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  jobType: String!
+  planId: ID
+  taskId: ID
+}
+
+type PlanWaitingForWorktreeNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  retryDelayMs: Int!
+}
+
+type PlanStatusChangedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  status: String!
+}
+
+type SystemAlertNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  code: String
+}
+
+type TaskStatusChangedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+  planId: ID!
+  taskId: ID
+  status: String!
+}
+
 type PlanEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -2195,6 +2367,11 @@ type Mutation {
   register(input: RegisterInput!): RegisterResultObject!
 
   """
+  Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken.
+  """
+  mintSubscriptionToken: String!
+
+  """
   Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured.
   """
   indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
@@ -3008,4 +3185,21 @@ Optional filter: apply only to these local repository ids. Omit to apply to all 
 input ApplyWorkspaceEditorConfigurationInput {
   """When set, only these repositories receive editor configuration."""
   repositoryIds: [ID!]
+}
+
+type Subscription {
+  """
+  Firehose of all real-time notification events. Identity comes from the authenticated ws connection.
+  """
+  notifications: NotificationEvent!
+
+  """
+  Lifecycle notifications for a single plan (topic plan:<planId>:lifecycle).
+  """
+  planNotifications(planId: ID!): NotificationEvent!
+
+  """
+  Live stream of output chunks appended to a plan (topic plan:<planId>:output).
+  """
+  planOutputChunkAdded(planId: ID!): PlanOutputStreamChunkObject!
 }

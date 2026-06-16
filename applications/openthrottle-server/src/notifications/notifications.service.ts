@@ -1,7 +1,9 @@
 /**
- * @description Central service to emit notification events over the WebSocket (Socket.IO)
- * so the openthrottle-developer app can consume them. Uses the shared event names and
- * payload shapes from @openthrottle/openthrottle-notifications.
+ * @description Central service to emit notification events. Real-time delivery is
+ * over GraphQL subscriptions (graphql-ws) via the injectable PubSub — the Socket.IO
+ * path has been retired. Event names/severity still come from
+ * @openthrottle/openthrottle-notifications (the discriminators); the payload shapes
+ * are the code-first NotificationEvent types in the schema.
  */
 
 import type {
@@ -17,8 +19,14 @@ import type {
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { Injectable } from '@nestjs/common';
-import { NestjsWebsocketsGateway } from '@openthrottle/nestjs-websockets';
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  PUB_SUB,
+  notificationsFirehoseTopic,
+  planLifecycleTopic,
+  systemAlertTopic,
+  type PubSubEngine,
+} from '@openthrottle/nestjs-graphql';
 
 function isoNow(): string {
   return new Date().toISOString();
@@ -31,9 +39,34 @@ function planLink(planId: string): string {
   return `${PLAN_LINK_PREFIX}${planId}`;
 }
 
+function safeJson(value: unknown): string | undefined {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
+}
+
+/** A notification event object carrying its discriminator for interface resolution. */
+type NotificationEventObject = Record<string, unknown> & { event: string };
+
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly gateway: NestjsWebsocketsGateway) {}
+  constructor(@Inject(PUB_SUB) private readonly pubSub: PubSubEngine) {}
+
+  /**
+   * @description Fan an event out to its PubSub topics. The firehose topic always
+   * gets it; resource/global topics are added per event so subscribers route by
+   * topic instead of filtering client-side. Fire-and-forget: a publish failure must
+   * not break the originating mutation.
+   */
+  private fanout(event: NotificationEventObject, topics: string[]): void {
+    const all = [notificationsFirehoseTopic(), ...topics];
+
+    void Promise.all(
+      all.map((topic) => this.pubSub.publish(topic, { event })),
+    ).catch(() => undefined);
+  }
 
   /**
    * @description Emits a debug notification used for debugging and for
@@ -51,7 +84,16 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(NOTIFICATION_EVENT_NAMES.DEBUG, data);
+    this.fanout(
+      {
+        dataJson: safeJson(payload.data),
+        event: NOTIFICATION_EVENT_NAMES.DEBUG,
+        message: data.message,
+        severity: data.severity,
+        timestamp: data.timestamp,
+      },
+      [],
+    );
   }
 
   /**
@@ -80,7 +122,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(NOTIFICATION_EVENT_NAMES.PLAN_ENQUEUED, data);
+    this.fanout({ ...data, event: NOTIFICATION_EVENT_NAMES.PLAN_ENQUEUED }, [
+      planLifecycleTopic(payload.planId),
+    ]);
   }
 
   /**
@@ -103,7 +147,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, data);
+    this.fanout({ ...data, event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED }, [
+      planLifecycleTopic(payload.planId),
+    ]);
   }
 
   /**
@@ -126,7 +172,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(NOTIFICATION_EVENT_NAMES.TASK_COMPLETED, data);
+    this.fanout({ ...data, event: NOTIFICATION_EVENT_NAMES.TASK_COMPLETED }, [
+      planLifecycleTopic(payload.planId),
+    ]);
   }
 
   /**
@@ -153,9 +201,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(
-      NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED,
-      data,
+    this.fanout(
+      { ...data, event: NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED },
+      payload.planId != null ? [planLifecycleTopic(payload.planId)] : [],
     );
   }
 
@@ -182,9 +230,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(
-      NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE,
-      data,
+    this.fanout(
+      { ...data, event: NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE },
+      [planLifecycleTopic(payload.planId)],
     );
   }
 
@@ -198,9 +246,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(
-      NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      data,
+    this.fanout(
+      { ...data, event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED },
+      [planLifecycleTopic(payload.planId)],
     );
   }
 
@@ -219,7 +267,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT, data);
+    this.fanout({ ...data, event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT }, [
+      systemAlertTopic(),
+    ]);
   }
 
   /**
@@ -237,9 +287,9 @@ export class NotificationsService {
       timestamp: isoNow(),
     };
 
-    this.gateway.server.emit(
-      NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED,
-      data,
+    this.fanout(
+      { ...data, event: NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED },
+      [planLifecycleTopic(payload.planId)],
     );
   }
 }

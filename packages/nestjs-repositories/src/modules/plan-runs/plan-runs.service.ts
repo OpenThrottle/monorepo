@@ -10,6 +10,8 @@ import type { PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
 interface RecordQueuedPlanRunInput {
+  /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */
+  readonly actorUserId?: string | null;
   readonly bullmqJobId: string;
   readonly executionBackend: WorkflowConfigRunner;
   readonly planId: string;
@@ -47,6 +49,7 @@ export class PlanRunsService {
       ? manager.getRepository(PlanRun)
       : this.getRepository();
     const rowInput = {
+      actorUserId: input.actorUserId ?? null,
       bullmqJobId: input.bullmqJobId,
       executionBackend: input.executionBackend,
       planId: input.planId,

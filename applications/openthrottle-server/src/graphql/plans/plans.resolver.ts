@@ -21,6 +21,10 @@ import {
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
+  AUTH_PRINCIPAL_KIND_USER,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
+import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
   planHasCustomRunConfig,
@@ -75,6 +79,18 @@ const MAX_PLAN_RUNS_LIMIT = 100;
 const DEFAULT_PLANS_LIMIT = 100;
 /** Hard ceiling for plans() even when an explicit limit is supplied. */
 const MAX_PLANS_LIMIT = 500;
+
+/**
+ * @description Resolve the actor user id to persist on a run record. Only a user
+ * principal's `sub` is a users.id UUID; service-account/system principals have no
+ * user actor, so return null (keeps the nullable FK clean).
+ */
+function resolveActorUserId(
+  sub: string | undefined,
+  kind: string | undefined,
+): string | null {
+  return kind === AUTH_PRINCIPAL_KIND_USER ? (sub ?? null) : null;
+}
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => PlanObject)
@@ -659,8 +675,11 @@ export class PlansResolver {
   async enqueuePlanRun(
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<EnqueuePlanRunResultObject> {
     const outcome = await this.planEnqueueService.enqueueSpawn({
+      actorUserId: resolveActorUserId(actorSub, actorKind),
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
       planId: input.planId,
@@ -680,8 +699,10 @@ export class PlansResolver {
   async workflowPlanRun(
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<EnqueuePlanRunResultObject> {
-    return this.enqueuePlanRun(input);
+    return this.enqueuePlanRun(input, actorSub, actorKind);
   }
 
   @ProfileResponseTime('PlansResolver.enqueuePlanRalphOrchestrator')
@@ -714,6 +735,8 @@ export class PlansResolver {
   async enqueuePlanRalphOrchestrator(
     @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
     input: EnqueuePlanRalphOrchestratorInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<EnqueuePlanRunResultObject> {
     const { planId, taskId } = input;
 
@@ -740,6 +763,7 @@ export class PlansResolver {
     }
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
+      actorUserId: resolveActorUserId(actorSub, actorKind),
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
       mode,
