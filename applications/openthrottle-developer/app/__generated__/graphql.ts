@@ -3322,15 +3322,6 @@ export type NotificationsSubscription = {
       };
 };
 
-export type MintSubscriptionTokenMutationVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type MintSubscriptionTokenMutation = {
-  __typename?: 'Mutation';
-  mintSubscriptionToken: string;
-};
-
 export type SearchAgentAssetsQueryVariables = Exact<{
   input: AgentAssetSearchInput;
 }>;
@@ -3353,6 +3344,15 @@ export type SearchAgentAssetsQuery = {
       title: string;
     }>;
   };
+};
+
+export type MintSubscriptionTokenMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MintSubscriptionTokenMutation = {
+  __typename?: 'Mutation';
+  mintSubscriptionToken: string;
 };
 
 export type DashboardActivityCardFragment = {
@@ -6642,28 +6642,6 @@ export const NotificationsDocument = {
   NotificationsSubscription,
   NotificationsSubscriptionVariables
 >;
-export const MintSubscriptionTokenDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'MintSubscriptionToken' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'mintSubscriptionToken' },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  MintSubscriptionTokenMutation,
-  MintSubscriptionTokenMutationVariables
->;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',
   definitions: [
@@ -6759,6 +6737,28 @@ export const SearchAgentAssetsDocument = {
 } as unknown as DocumentNode<
   SearchAgentAssetsQuery,
   SearchAgentAssetsQueryVariables
+>;
+export const MintSubscriptionTokenDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'MintSubscriptionToken' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mintSubscriptionToken' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  MintSubscriptionTokenMutation,
+  MintSubscriptionTokenMutationVariables
 >;
 export const GetDashboardDocument = {
   kind: 'Document',
