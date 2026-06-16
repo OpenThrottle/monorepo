@@ -3,6 +3,7 @@ import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
   AddPermissionToRoleInput,
+  AgentAssetSearchInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   ApplyWorkspaceEditorConfigurationInput,
@@ -148,6 +149,17 @@ export function AddPermissionToRoleInputSchema(): z.ZodObject<
   return z.object({
     permissionId: z.string(),
     roleId: z.string(),
+  });
+}
+
+export function AgentAssetSearchInputSchema(): z.ZodObject<
+  Properties<AgentAssetSearchInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    projectId: z.string().nullish(),
+    promptTypes: z.array(CustomPromptTypeSchema).nullish(),
+    query: z.string(),
   });
 }
 

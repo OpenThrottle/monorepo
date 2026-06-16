@@ -21,6 +21,11 @@ export {
   getChunkById,
   listSources,
   runSemanticSearch,
+  searchAgentAssets,
   searchPlansBySemanticQuery,
 } from './cortex-client.js';
-export type { PlanStatusCount, SemanticSearchChunk } from './cortex-client.js';
+export type {
+  AgentAssetSearchChunk,
+  PlanStatusCount,
+  SemanticSearchChunk,
+} from './cortex-client.js';
