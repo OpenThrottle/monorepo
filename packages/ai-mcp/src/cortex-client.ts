@@ -179,6 +179,113 @@ export async function runSemanticSearch(
   return merged;
 }
 
+/** A single agent-asset (custom_prompt) match from semantic search over custom_prompt_embeddings. */
+export interface AgentAssetSearchChunk {
+  readonly content: string;
+  readonly customPromptId: string;
+  readonly description: string | null;
+  readonly filePath: string | null;
+  readonly id: string;
+  readonly labels: readonly string[];
+  readonly projectId: string | null;
+  readonly promptType: string;
+  readonly similarity: number;
+  readonly title: string;
+}
+
+/** Raw row from custom_prompt_embeddings + custom_prompts join for agent-asset semantic search. */
+interface CustomPromptEmbeddingSearchRow {
+  content: string;
+  custom_prompt_id: string;
+  description: string | null;
+  file_path: string | null;
+  id: string;
+  labels: string[];
+  project_id: string | null;
+  prompt_type: string;
+  similarity: string;
+  title: string;
+}
+
+/** Default max candidate rows fetched before de-duping by custom_prompt_id. */
+const AGENT_ASSET_CANDIDATE_CAP = 200;
+
+/**
+ * @description Cosine-similarity search over custom_prompt_embeddings (agent assets: skills, rules, personas, …),
+ * joined to custom_prompts for display metadata. Over-fetches candidates then de-dupes by custom_prompt_id keeping
+ * the best-scoring chunk so each asset appears once. Optionally filtered by prompt types and project id.
+ * Uses raw SQL so the pgvector `<=>` operator and HNSW index are preserved.
+ * @param embedding 1536-dim query embedding (e.g. OpenAI text-embedding-3-small).
+ * @param limit Max number of distinct assets to return.
+ * @param promptTypes Optional prompt_type filter (e.g. ['skills','rules','personas']); empty/undefined = all types.
+ * @param projectId Optional project_id filter (multi-repo scoping).
+ */
+export async function searchAgentAssets(
+  embedding: number[],
+  limit: number,
+  promptTypes?: readonly string[],
+  projectId?: string | null,
+): Promise<AgentAssetSearchChunk[]> {
+  const vectorStr = `[${embedding.join(',')}]`;
+  const ds = await getOrCreateDataSource();
+
+  const conditions: string[] = ['cp.deleted_at IS NULL'];
+  const params: (string | number | string[])[] = [vectorStr];
+  let paramIndex = 2;
+
+  if (promptTypes && promptTypes.length > 0) {
+    conditions.push(`cp.prompt_type = ANY($${paramIndex++})`);
+    params.push([...promptTypes]);
+  }
+  if (projectId != null && projectId !== '') {
+    conditions.push(`cp.project_id = $${paramIndex++}`);
+    params.push(projectId);
+  }
+
+  const candidateLimit = Math.min(
+    Math.max(limit * 3, limit),
+    AGENT_ASSET_CANDIDATE_CAP,
+  );
+  const limitParam = paramIndex;
+  params.push(candidateLimit);
+
+  const rowsRaw = await ds.query<CustomPromptEmbeddingSearchRow>(
+    `SELECT cpe.id, cpe.content, cpe.custom_prompt_id,
+              cp.title, cp.prompt_type, cp.file_path, cp.project_id, cp.description, cp.labels,
+              1 - (cpe.embedding <=> $1::vector) AS similarity
+       FROM custom_prompt_embeddings cpe
+       JOIN custom_prompts cp ON cpe.custom_prompt_id = cp.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY cpe.embedding <=> $1::vector
+       LIMIT $${limitParam}`,
+    params,
+  );
+
+  const { rows } =
+    normalizeQueryResult<CustomPromptEmbeddingSearchRow>(rowsRaw);
+
+  const seen = new Set<string>();
+  const chunks: AgentAssetSearchChunk[] = [];
+  for (const r of rows) {
+    if (seen.has(r.custom_prompt_id)) continue;
+    seen.add(r.custom_prompt_id);
+    chunks.push({
+      content: r.content,
+      customPromptId: r.custom_prompt_id,
+      description: r.description,
+      filePath: r.file_path,
+      id: r.id,
+      labels: Array.isArray(r.labels) ? r.labels : [],
+      projectId: r.project_id,
+      promptType: r.prompt_type,
+      similarity: Number(r.similarity),
+      title: r.title,
+    });
+    if (chunks.length >= limit) break;
+  }
+  return chunks;
+}
+
 /**
  * @description Fetches a single chunk by id from plan_embeddings, task_embeddings, or documentation_embeddings.
  * @param id UUID of the chunk (plan_embedding, task_embedding, or documentation_embedding id).
