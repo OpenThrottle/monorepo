@@ -37,10 +37,8 @@ import {
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  NotificationsSocketBridge,
-  NotificationsStoreProvider,
-} from '@openthrottle/react-router-notifications';
+import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
+import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
 import { useAtom } from 'jotai';
 import {
   GetMyUserDocument,
@@ -433,9 +431,7 @@ export default function App(): React.ReactElement {
   return (
     <>
       <NotificationsStoreProvider>
-        <NotificationsSocketBridge
-          webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
-        >
+        <NotificationsSubscriptionBridge>
           <GlobalProviders chatPersist={data?.user != null}>
             <GlobalLayout
               authenticated={data?.user !== null}
@@ -513,7 +509,7 @@ export default function App(): React.ReactElement {
               />
             </GlobalLayout>
           </GlobalProviders>
-        </NotificationsSocketBridge>
+        </NotificationsSubscriptionBridge>
       </NotificationsStoreProvider>
     </>
   );

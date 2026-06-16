@@ -23,6 +23,14 @@ http://127.0.0.1:7860
 # admin/admin
 ```
 
+🐳 Docker:
+
+```bash
+docker compose up --build                  # production parity (COMPOSE_PROFILES=prod from .env)
+docker compose --profile dev watch         # dev mode: build dev images, start, watch + sync
+docker compose --profile dev up --build    # dev mode without file watching
+```
+
 🤖 Claude:
 
 ```bash

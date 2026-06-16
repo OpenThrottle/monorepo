@@ -55,6 +55,8 @@ type ExecutionBackend = 'claude' | 'cursor' | 'opencode';
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
 interface EnqueueSpawnParams {
+  /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
+  readonly actorUserId?: string | null;
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly planId: string;
@@ -65,6 +67,8 @@ interface EnqueueSpawnParams {
 
 /** @description Validated parameters for an in-process orchestrator plan-run enqueue. */
 interface EnqueueOrchestratorParams {
+  /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
+  readonly actorUserId?: string | null;
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
@@ -107,6 +111,7 @@ export class PlanEnqueueService {
    */
   async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
     const {
+      actorUserId,
       idempotencyKey,
       jobRunHooksJson,
       planId,
@@ -126,6 +131,7 @@ export class PlanEnqueueService {
     // deployment opts back into spawn via OPENTHROTTLE_DEFAULT_RUN_KIND=spawn (Stage (a) rollback).
     if (resolveDefaultPlanRunKind() === 'orchestrator') {
       return this.enqueueOrchestrator({
+        actorUserId,
         idempotencyKey: idempotencyKey ?? null,
         jobRunHooksJson,
         mode: null,
@@ -162,6 +168,7 @@ export class PlanEnqueueService {
     const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
 
     await this.commitEnqueueTransaction({
+      actorUserId,
       bullmqJobId: jobId,
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
@@ -197,6 +204,7 @@ export class PlanEnqueueService {
     params: EnqueueOrchestratorParams,
   ): Promise<EnqueueOutcome> {
     const {
+      actorUserId,
       idempotencyKey,
       jobRunHooksJson,
       mode,
@@ -241,6 +249,7 @@ export class PlanEnqueueService {
     const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
 
     await this.commitEnqueueTransaction({
+      actorUserId,
       bullmqJobId: effectiveJobId,
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
@@ -282,6 +291,7 @@ export class PlanEnqueueService {
    * the processor's onModuleInit reconciliation tolerates.
    */
   private async commitEnqueueTransaction(params: {
+    actorUserId?: string | null;
     bullmqJobId: string;
     executionBackend: ExecutionBackend;
     planId: string;
@@ -289,6 +299,7 @@ export class PlanEnqueueService {
     runKind: 'orchestrator' | 'spawn';
   }): Promise<void> {
     const {
+      actorUserId,
       bullmqJobId,
       executionBackend,
       planId,
@@ -300,6 +311,7 @@ export class PlanEnqueueService {
     await repo.manager.transaction(async (manager) => {
       await this.planRunsService.recordQueuedRun(
         {
+          actorUserId: actorUserId ?? null,
           bullmqJobId,
           executionBackend,
           planId,

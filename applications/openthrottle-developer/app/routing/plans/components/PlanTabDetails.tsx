@@ -144,11 +144,7 @@ export const PlanTabDetails = (
                 </div>
               )}
 
-              <div>
-                <h2 className="mb-4">Description</h2>
-                <MarkdownRenderer source={plan.description ?? ''} />
-              </div>
-
+              <MarkdownRenderer source={plan.description ?? ''} />
               {requirements.length > 0 ? (
                 <>
                   <h2 className="mb-4">Requirements</h2>

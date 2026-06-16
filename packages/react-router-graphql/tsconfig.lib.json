@@ -21,6 +21,9 @@
       "path": "../nodejs-graphql/tsconfig.lib.json"
     },
     {
+      "path": "../react-router-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

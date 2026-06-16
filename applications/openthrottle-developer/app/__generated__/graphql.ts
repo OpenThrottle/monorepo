@@ -535,6 +535,21 @@ export type DailyStatsRangeResultObject = {
   items: Array<DailyStatsObject>;
 };
 
+export type DebugNotification = NotificationEvent & {
+  __typename?: 'DebugNotification';
+  /** JSON-encoded debug data. */
+  dataJson?: Maybe<Scalars['String']['output']>;
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
 export type DeletePlanInput = {
   /** Plan id to delete */
   id: Scalars['ID']['input'];
@@ -1107,6 +1122,8 @@ export type Mutation = {
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
+  /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
+  mintSubscriptionToken: Scalars['String']['output'];
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
   /** Remove a permission from a role */
@@ -1427,6 +1444,19 @@ export type NoteObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** Real-time notification event delivered over a GraphQL subscription. */
+export type NotificationEvent = {
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
 export type OpenPrCountByAuthorObject = {
   __typename?: 'OpenPrCountByAuthorObject';
   /** GitHub author login. */
@@ -1480,6 +1510,22 @@ export type PlanEmbeddingObject = {
 export type PlanEmbeddingsByPlanInput = {
   /** Plan id to list embeddings for */
   planId: Scalars['ID']['input'];
+};
+
+export type PlanEnqueuedNotification = NotificationEvent & {
+  __typename?: 'PlanEnqueuedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  queuePosition: Scalars['Int']['output'];
+  queueTotal: Scalars['Int']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type PlanObject = {
@@ -1565,10 +1611,55 @@ export type PlanRunsByPlanIdInput = {
   planId: Scalars['ID']['input'];
 };
 
+export type PlanStatusChangedNotification = NotificationEvent & {
+  __typename?: 'PlanStatusChangedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
 export type PlanStatusCountObject = {
   __typename?: 'PlanStatusCountObject';
   count: Scalars['Int']['output'];
   status: Scalars['String']['output'];
+};
+
+export type PlanUpdatedNotification = NotificationEvent & {
+  __typename?: 'PlanUpdatedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
+export type PlanWaitingForWorktreeNotification = NotificationEvent & {
+  __typename?: 'PlanWaitingForWorktreeNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  retryDelayMs: Scalars['Int']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type PrCountByLabelInput = {
@@ -2127,6 +2218,22 @@ export type QueueDetailsObject = {
   waitingCount: Scalars['Int']['output'];
 };
 
+export type QueueJobCompletedNotification = NotificationEvent & {
+  __typename?: 'QueueJobCompletedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  jobType: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId?: Maybe<Scalars['ID']['output']>;
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
 export type QueueStatsObject = {
   __typename?: 'QueueStatsObject';
   /** Number of jobs currently being processed. */
@@ -2441,6 +2548,38 @@ export type SignoutResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  /** Firehose of all real-time notification events. Identity comes from the authenticated ws connection. */
+  notifications: NotificationEvent;
+  /** Lifecycle notifications for a single plan (topic plan:<planId>:lifecycle). */
+  planNotifications: NotificationEvent;
+  /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
+  planOutputChunkAdded: PlanOutputStreamChunkObject;
+};
+
+export type SubscriptionPlanNotificationsArgs = {
+  planId: Scalars['ID']['input'];
+};
+
+export type SubscriptionPlanOutputChunkAddedArgs = {
+  planId: Scalars['ID']['input'];
+};
+
+export type SystemAlertNotification = NotificationEvent & {
+  __typename?: 'SystemAlertNotification';
+  code?: Maybe<Scalars['String']['output']>;
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
+};
+
 /** Complete system CPU metrics for a job, including start/end snapshots and pressure interpretation. */
 export type SystemCpuMetrics = {
   __typename?: 'SystemCpuMetrics';
@@ -2469,6 +2608,21 @@ export type SystemCpuSnapshot = {
   psi: PsiCpuMetrics;
   /** Timestamp when snapshot was taken (Unix ms). */
   timestamp: Scalars['Float']['output'];
+};
+
+export type TaskCompletedNotification = NotificationEvent & {
+  __typename?: 'TaskCompletedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type TaskEmbeddingObject = {
@@ -2526,6 +2680,22 @@ export type TaskRunMetrics = {
   systemCpuMetrics?: Maybe<SystemCpuMetrics>;
   /** Wall-clock vs CPU time metrics for workload characterization. */
   wallClockMetrics?: Maybe<WallClockMetrics>;
+};
+
+export type TaskStatusChangedNotification = NotificationEvent & {
+  __typename?: 'TaskStatusChangedNotification';
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type TasksByPlanIdInput = {
@@ -2768,6 +2938,116 @@ export type HealthCardFragment = {
   websocket: string;
 };
 
+type NotificationFields_DebugNotification_Fragment = {
+  __typename?: 'DebugNotification';
+  dataJson?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_PlanEnqueuedNotification_Fragment = {
+  __typename?: 'PlanEnqueuedNotification';
+  planId: string;
+  queuePosition: number;
+  queueTotal: number;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_PlanStatusChangedNotification_Fragment = {
+  __typename?: 'PlanStatusChangedNotification';
+  planId: string;
+  status: string;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_PlanUpdatedNotification_Fragment = {
+  __typename?: 'PlanUpdatedNotification';
+  planId: string;
+  taskId?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_PlanWaitingForWorktreeNotification_Fragment = {
+  __typename?: 'PlanWaitingForWorktreeNotification';
+  planId: string;
+  retryDelayMs: number;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_QueueJobCompletedNotification_Fragment = {
+  __typename?: 'QueueJobCompletedNotification';
+  jobType: string;
+  taskId?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_SystemAlertNotification_Fragment = {
+  __typename?: 'SystemAlertNotification';
+  code?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_TaskCompletedNotification_Fragment = {
+  __typename?: 'TaskCompletedNotification';
+  planId: string;
+  taskId?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+type NotificationFields_TaskStatusChangedNotification_Fragment = {
+  __typename?: 'TaskStatusChangedNotification';
+  planId: string;
+  status: string;
+  taskId?: string | null;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
+export type NotificationFieldsFragment =
+  | NotificationFields_DebugNotification_Fragment
+  | NotificationFields_PlanEnqueuedNotification_Fragment
+  | NotificationFields_PlanStatusChangedNotification_Fragment
+  | NotificationFields_PlanUpdatedNotification_Fragment
+  | NotificationFields_PlanWaitingForWorktreeNotification_Fragment
+  | NotificationFields_QueueJobCompletedNotification_Fragment
+  | NotificationFields_SystemAlertNotification_Fragment
+  | NotificationFields_TaskCompletedNotification_Fragment
+  | NotificationFields_TaskStatusChangedNotification_Fragment;
+
 export type RootMetricsFragment = {
   __typename?: 'ServerMetricsObject';
   cpuSystemMs: number;
@@ -2821,6 +3101,28 @@ export type GetRootMetricsQuery = {
   };
 };
 
+export type GetAgentConversationMessagesQueryVariables = Exact<{
+  input: GetAgentConversationMessagesInput;
+}>;
+
+export type GetAgentConversationMessagesQuery = {
+  __typename?: 'Query';
+  getAgentConversationMessages: {
+    __typename?: 'ListAgentConversationMessagesResultObject';
+    totalCount: number;
+    messages: Array<{
+      __typename?: 'AgentConversationMessageObject';
+      content: string;
+      createdAt: any;
+      id: string;
+      role: string;
+      routingConfidence?: number | null;
+      routingReason?: string | null;
+      toolMetadataJson?: string | null;
+    }>;
+  };
+};
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -2871,26 +3173,112 @@ export type SendAgentMessageMutation = {
   };
 };
 
-export type GetAgentConversationMessagesQueryVariables = Exact<{
-  input: GetAgentConversationMessagesInput;
+export type NotificationsSubscriptionVariables = Exact<{
+  [key: string]: never;
 }>;
 
-export type GetAgentConversationMessagesQuery = {
-  __typename?: 'Query';
-  getAgentConversationMessages: {
-    __typename?: 'ListAgentConversationMessagesResultObject';
-    totalCount: number;
-    messages: Array<{
-      __typename?: 'AgentConversationMessageObject';
-      content: string;
-      createdAt: any;
-      id: string;
-      role: string;
-      routingConfidence?: number | null;
-      routingReason?: string | null;
-      toolMetadataJson?: string | null;
-    }>;
-  };
+export type NotificationsSubscription = {
+  __typename?: 'Subscription';
+  notifications:
+    | {
+        __typename?: 'DebugNotification';
+        dataJson?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'PlanEnqueuedNotification';
+        planId: string;
+        queuePosition: number;
+        queueTotal: number;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'PlanStatusChangedNotification';
+        planId: string;
+        status: string;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'PlanUpdatedNotification';
+        planId: string;
+        taskId?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'PlanWaitingForWorktreeNotification';
+        planId: string;
+        retryDelayMs: number;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'QueueJobCompletedNotification';
+        jobType: string;
+        taskId?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'SystemAlertNotification';
+        code?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'TaskCompletedNotification';
+        planId: string;
+        taskId?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'TaskStatusChangedNotification';
+        planId: string;
+        status: string;
+        taskId?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      };
+};
+
+export type MintSubscriptionTokenMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MintSubscriptionTokenMutation = {
+  __typename?: 'Mutation';
+  mintSubscriptionToken: string;
 };
 
 export type DashboardActivityCardFragment = {
@@ -3498,6 +3886,51 @@ export type PlanDetailIndexLoaderQuery = {
     runKind: string;
     status: string;
   }>;
+};
+
+export type PlanOutputChunkAddedSubscriptionVariables = Exact<{
+  planId: Scalars['ID']['input'];
+}>;
+
+export type PlanOutputChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  planOutputChunkAdded: {
+    __typename?: 'PlanOutputStreamChunkObject';
+    id: string;
+    content: string;
+    createdAt: any;
+    iteration?: number | null;
+    planId: string;
+  };
+};
+
+export type PlanLifecycleNotificationsSubscriptionVariables = Exact<{
+  planId: Scalars['ID']['input'];
+}>;
+
+export type PlanLifecycleNotificationsSubscription = {
+  __typename?: 'Subscription';
+  planNotifications:
+    | { __typename?: 'DebugNotification'; event: string }
+    | { __typename?: 'PlanEnqueuedNotification'; event: string }
+    | {
+        __typename?: 'PlanStatusChangedNotification';
+        planId: string;
+        status: string;
+        event: string;
+      }
+    | { __typename?: 'PlanUpdatedNotification'; event: string }
+    | { __typename?: 'PlanWaitingForWorktreeNotification'; event: string }
+    | { __typename?: 'QueueJobCompletedNotification'; event: string }
+    | { __typename?: 'SystemAlertNotification'; event: string }
+    | { __typename?: 'TaskCompletedNotification'; event: string }
+    | {
+        __typename?: 'TaskStatusChangedNotification';
+        planId: string;
+        status: string;
+        taskId?: string | null;
+        event: string;
+      };
 };
 
 export type UpdatePlanMutationVariables = Exact<{
@@ -4543,6 +4976,164 @@ export const HealthCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<HealthCardFragment, unknown>;
+export const NotificationFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'NotificationFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'NotificationEvent' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'event' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'link' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DebugNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dataJson' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanEnqueuedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'queuePosition' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanUpdatedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TaskCompletedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'QueueJobCompletedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'jobType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'PlanWaitingForWorktreeNotification',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'retryDelayMs' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanStatusChangedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SystemAlertNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TaskStatusChangedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<NotificationFieldsFragment, unknown>;
 export const RootMetricsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -5490,6 +6081,94 @@ export const GetRootMetricsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetRootMetricsQuery, GetRootMetricsQueryVariables>;
+export const GetAgentConversationMessagesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAgentConversationMessages' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'GetAgentConversationMessagesInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getAgentConversationMessages' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'messages' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'routingConfidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'routingReason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'toolMetadataJson' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAgentConversationMessagesQuery,
+  GetAgentConversationMessagesQueryVariables
+>;
 export const LoginDocument = {
   kind: 'Document',
   definitions: [
@@ -5705,83 +6384,179 @@ export const SendAgentMessageDocument = {
   SendAgentMessageMutation,
   SendAgentMessageMutationVariables
 >;
-export const GetAgentConversationMessagesDocument = {
+export const NotificationsDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getAgentConversationMessages' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: {
-                kind: 'Name',
-                value: 'GetAgentConversationMessagesInput',
-              },
-            },
-          },
-        },
-      ],
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'Notifications' },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'getAgentConversationMessages' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
+            name: { kind: 'Name', value: 'notifications' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'messages' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'content' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'routingConfidence' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'routingReason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'toolMetadataJson' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'NotificationFields' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'NotificationFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'NotificationEvent' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'event' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'link' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DebugNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dataJson' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanEnqueuedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'queuePosition' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanUpdatedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TaskCompletedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'QueueJobCompletedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'jobType' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'PlanWaitingForWorktreeNotification',
+              },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'retryDelayMs' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanStatusChangedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SystemAlertNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TaskStatusChangedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
             },
           },
@@ -5790,8 +6565,30 @@ export const GetAgentConversationMessagesDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  GetAgentConversationMessagesQuery,
-  GetAgentConversationMessagesQueryVariables
+  NotificationsSubscription,
+  NotificationsSubscriptionVariables
+>;
+export const MintSubscriptionTokenDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'MintSubscriptionToken' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mintSubscriptionToken' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  MintSubscriptionTokenMutation,
+  MintSubscriptionTokenMutationVariables
 >;
 export const GetDashboardDocument = {
   kind: 'Document',
@@ -7717,6 +8514,162 @@ export const PlanDetailIndexLoaderDocument = {
 } as unknown as DocumentNode<
   PlanDetailIndexLoaderQuery,
   PlanDetailIndexLoaderQueryVariables
+>;
+export const PlanOutputChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'PlanOutputChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planOutputChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'planId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanOutputChunkAddedSubscription,
+  PlanOutputChunkAddedSubscriptionVariables
+>;
+export const PlanLifecycleNotificationsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'PlanLifecycleNotifications' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planNotifications' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'planId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'event' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: {
+                      kind: 'Name',
+                      value: 'PlanStatusChangedNotification',
+                    },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: {
+                      kind: 'Name',
+                      value: 'TaskStatusChangedNotification',
+                    },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskId' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanLifecycleNotificationsSubscription,
+  PlanLifecycleNotificationsSubscriptionVariables
 >;
 export const UpdatePlanDocument = {
   kind: 'Document',

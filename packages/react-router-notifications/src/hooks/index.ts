@@ -7,6 +7,7 @@ export {
   type UseSystemNotificationsPreferenceResult,
 } from './use-system-notifications-preference';
 export { useNotificationsSocket } from './useNotificationsSocket';
+export { useNotificationsStore } from './useNotificationsStore';
 export {
   useNotificationsSocketEventSubscription,
   type UseNotificationsSocketEventSubscriptionOptions,

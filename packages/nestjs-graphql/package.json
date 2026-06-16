@@ -12,7 +12,13 @@
     "@apollo/server-plugin-response-cache": "catalog:",
     "@nestjs/apollo": "catalog:",
     "@nestjs/graphql": "catalog:",
-    "graphql": "catalog:"
+    "graphql": "catalog:",
+    "graphql-subscriptions": "catalog:",
+    "graphql-ws": "catalog:",
+    "jsonwebtoken": "catalog:"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "catalog:"
   },
   "exports": {
     ".": {

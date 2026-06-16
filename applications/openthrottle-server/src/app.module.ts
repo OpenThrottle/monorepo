@@ -11,7 +11,12 @@ import { Module } from '@nestjs/common';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
+import {
+  NestjsGraphqlModule,
+  PubSubModule,
+  isGraphqlWsContext,
+  resolveGraphqlWsUserId,
+} from '@openthrottle/nestjs-graphql';
 import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
@@ -49,6 +54,8 @@ import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery-graphql.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
+import { NotificationsGraphqlModule } from './graphql/notifications/notifications-graphql.module';
+import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
@@ -86,17 +93,28 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     NestjsBullmqModule,
     NestjsBullmqBoardModule,
     NestjsGraphqlModule.forRoot({
+      // Subscriptions return the NotificationEvent interface, so its concrete
+      // implementing types are orphaned — register them explicitly so they make
+      // it into the schema.
+      buildSchemaOptions: { orphanedTypes: [...NOTIFICATION_EVENT_TYPES] },
       cachePlugins: {
         cacheControl: true,
         responseCache: true,
       },
-      context: ({ req }: { req: unknown }) => ({ req }),
+      // HTTP requests carry identity on `req` (set by the global auth guard).
+      // graphql-ws subscriptions carry it on the connection: onConnect validated
+      // the token and stashed the user id on `extra`, so surface it as `userId`.
+      context: (ctx: { req?: unknown }) =>
+        isGraphqlWsContext(ctx)
+          ? { req: undefined, userId: resolveGraphqlWsUserId(ctx) }
+          : { req: ctx.req },
     }),
     NestjsProfilingModule,
     NestjsRbacModule,
     NestjsRepositoriesModule,
     NestjsWebsocketsModule,
     NotificationsModule,
+    PubSubModule,
     ...(isOpenthrottleServerDevJsonlLoggingEnabled()
       ? [
           NestjsLoggingModule.forRoot({
@@ -138,6 +156,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     MetricsGraphqlModule,
     ModelDiscoveryGraphqlModule,
     NotesGraphqlModule,
+    NotificationsGraphqlModule,
     PlanEmbeddingsGraphqlModule,
     PlanOutputStreamGraphqlModule,
     PlansGraphqlModule,

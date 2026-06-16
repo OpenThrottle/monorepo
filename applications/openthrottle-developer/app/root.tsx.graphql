@@ -5,6 +5,59 @@ fragment HealthCard on ServerHealthObject {
   websocket
 }
 
+fragment NotificationFields on NotificationEvent {
+  event
+  link
+  message
+  severity
+  timestamp
+
+  ... on DebugNotification {
+    dataJson
+  }
+
+  ... on PlanEnqueuedNotification {
+    planId
+    queuePosition
+    queueTotal
+  }
+
+  ... on PlanUpdatedNotification {
+    planId
+    taskId
+  }
+
+  ... on TaskCompletedNotification {
+    planId
+    taskId
+  }
+
+  ... on QueueJobCompletedNotification {
+    jobType
+    taskId
+  }
+
+  ... on PlanWaitingForWorktreeNotification {
+    planId
+    retryDelayMs
+  }
+
+  ... on PlanStatusChangedNotification {
+    planId
+    status
+  }
+
+  ... on SystemAlertNotification {
+    code
+  }
+
+  ... on TaskStatusChangedNotification {
+    planId
+    status
+    taskId
+  }
+}
+
 fragment RootMetrics on ServerMetricsObject {
   cpuSystemMs
   cpuUserMs
@@ -34,6 +87,21 @@ query getRootHealth {
 query getRootMetrics {
   serverMetrics {
     ...RootMetrics
+  }
+}
+
+query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
+  getAgentConversationMessages(input: $input) {
+    messages {
+      content
+      createdAt
+      id
+      role
+      routingConfidence
+      routingReason
+      toolMetadataJson
+    }
+    totalCount
   }
 }
 
@@ -71,17 +139,8 @@ mutation sendAgentMessage($input: AgentsRunChatTurnInput!) {
   }
 }
 
-query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
-  getAgentConversationMessages(input: $input) {
-    messages {
-      content
-      createdAt
-      id
-      role
-      routingConfidence
-      routingReason
-      toolMetadataJson
-    }
-    totalCount
+subscription Notifications {
+  notifications {
+    ...NotificationFields
   }
 }

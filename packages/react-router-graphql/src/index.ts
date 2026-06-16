@@ -57,3 +57,6 @@ export async function executeGraphqlWithAuth<
 }
 
 export { executeGraphql };
+
+export * from './hooks/createGraphqlWsClient';
+export * from './hooks/useSubscription';
