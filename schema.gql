@@ -661,6 +661,47 @@ enum CustomPromptType {
   SKILLS
 }
 
+"""
+A ranked agent-asset match from semantic search over custom_prompt embeddings.
+"""
+type AgentAssetChunk {
+  """Embedding chunk UUID (custom_prompt_embeddings id)."""
+  id: String!
+
+  """Parent custom_prompt UUID."""
+  customPromptId: String!
+
+  """Asset title."""
+  title: String!
+
+  """Prompt type (skills, rules, personas, …)."""
+  promptType: CustomPromptType!
+
+  """Repo-relative file path on disk (SSOT), if known."""
+  filePath: String
+
+  """Owning project id, if scoped."""
+  projectId: String
+
+  """Asset description / summary."""
+  description: String
+
+  """Asset labels."""
+  labels: [String!]!
+
+  """Matched embedding chunk content."""
+  content: String!
+
+  """Cosine similarity (0–1, higher is more relevant)."""
+  similarity: Float!
+}
+
+"""Result wrapper for agent-asset semantic search."""
+type AgentAssetSearchResult {
+  """Ranked agent-asset matches by similarity."""
+  chunks: [AgentAssetChunk!]!
+}
+
 type DailyStatsObject {
   """Row created_at."""
   createdAt: DateTime!
@@ -1698,6 +1739,11 @@ type Query {
   """List commit links for a task, ordered by createdAt descending"""
   commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]!
 
+  """
+  Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
+  """
+  searchAgentAssets(input: AgentAssetSearchInput!): AgentAssetSearchResult!
+
   """Get a custom prompt by ID"""
   customPrompt(id: ID!): CustomPromptObject
 
@@ -2039,6 +2085,23 @@ input CommitLinksByPlanIdInput {
 input CommitLinksByTaskIdInput {
   """Task id to list commit links for"""
   taskId: ID!
+}
+
+"""Input for semantic search over agent-asset (custom_prompt) embeddings."""
+input AgentAssetSearchInput {
+  """Text query to embed and search by vector similarity."""
+  query: String!
+
+  """Max number of assets to return (default 20, max 50)."""
+  limit: Int
+
+  """
+  Filter by prompt types (default: skills, rules, personas). Empty/null uses the default set.
+  """
+  promptTypes: [CustomPromptType!]
+
+  """Filter by project id (multi-repo scoping)."""
+  projectId: ID
 }
 
 """Input for listing custom prompts with optional filters"""

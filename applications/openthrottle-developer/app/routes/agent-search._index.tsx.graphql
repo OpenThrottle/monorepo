@@ -1,0 +1,16 @@
+query searchAgentAssets($input: AgentAssetSearchInput!) {
+  searchAgentAssets(input: $input) {
+    chunks {
+      content
+      customPromptId
+      description
+      filePath
+      id
+      labels
+      projectId
+      promptType
+      similarity
+      title
+    }
+  }
+}

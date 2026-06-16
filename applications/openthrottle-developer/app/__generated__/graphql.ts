@@ -110,6 +110,50 @@ export type AddPermissionToRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+/** A ranked agent-asset match from semantic search over custom_prompt embeddings. */
+export type AgentAssetChunk = {
+  __typename?: 'AgentAssetChunk';
+  /** Matched embedding chunk content. */
+  content: Scalars['String']['output'];
+  /** Parent custom_prompt UUID. */
+  customPromptId: Scalars['String']['output'];
+  /** Asset description / summary. */
+  description?: Maybe<Scalars['String']['output']>;
+  /** Repo-relative file path on disk (SSOT), if known. */
+  filePath?: Maybe<Scalars['String']['output']>;
+  /** Embedding chunk UUID (custom_prompt_embeddings id). */
+  id: Scalars['String']['output'];
+  /** Asset labels. */
+  labels: Array<Scalars['String']['output']>;
+  /** Owning project id, if scoped. */
+  projectId?: Maybe<Scalars['String']['output']>;
+  /** Prompt type (skills, rules, personas, …). */
+  promptType: CustomPromptType;
+  /** Cosine similarity (0–1, higher is more relevant). */
+  similarity: Scalars['Float']['output'];
+  /** Asset title. */
+  title: Scalars['String']['output'];
+};
+
+/** Input for semantic search over agent-asset (custom_prompt) embeddings. */
+export type AgentAssetSearchInput = {
+  /** Max number of assets to return (default 20, max 50). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Filter by project id (multi-repo scoping). */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Filter by prompt types (default: skills, rules, personas). Empty/null uses the default set. */
+  promptTypes?: InputMaybe<Array<CustomPromptType>>;
+  /** Text query to embed and search by vector similarity. */
+  query: Scalars['String']['input'];
+};
+
+/** Result wrapper for agent-asset semantic search. */
+export type AgentAssetSearchResult = {
+  __typename?: 'AgentAssetSearchResult';
+  /** Ranked agent-asset matches by similarity. */
+  chunks: Array<AgentAssetChunk>;
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
   content: Scalars['String']['output'];
@@ -1913,6 +1957,8 @@ export type Query = {
   rolesForUser: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
+  /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  searchAgentAssets: AgentAssetSearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
   /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
@@ -2141,6 +2187,10 @@ export type QueryRolesForUserArgs = {
 
 export type QuerySearchArgs = {
   input: SearchInput;
+};
+
+export type QuerySearchAgentAssetsArgs = {
+  input: AgentAssetSearchInput;
 };
 
 export type QuerySearchPlansArgs = {
@@ -3270,6 +3320,30 @@ export type NotificationsSubscription = {
         severity?: string | null;
         timestamp: string;
       };
+};
+
+export type SearchAgentAssetsQueryVariables = Exact<{
+  input: AgentAssetSearchInput;
+}>;
+
+export type SearchAgentAssetsQuery = {
+  __typename?: 'Query';
+  searchAgentAssets: {
+    __typename?: 'AgentAssetSearchResult';
+    chunks: Array<{
+      __typename?: 'AgentAssetChunk';
+      content: string;
+      customPromptId: string;
+      description?: string | null;
+      filePath?: string | null;
+      id: string;
+      labels: Array<string>;
+      projectId?: string | null;
+      promptType: CustomPromptType;
+      similarity: number;
+      title: string;
+    }>;
+  };
 };
 
 export type MintSubscriptionTokenMutationVariables = Exact<{
@@ -6567,6 +6641,102 @@ export const NotificationsDocument = {
 } as unknown as DocumentNode<
   NotificationsSubscription,
   NotificationsSubscriptionVariables
+>;
+export const SearchAgentAssetsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'searchAgentAssets' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AgentAssetSearchInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'searchAgentAssets' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'chunks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'customPromptId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filePath' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'labels' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'projectId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'promptType' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'similarity' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SearchAgentAssetsQuery,
+  SearchAgentAssetsQueryVariables
 >;
 export const MintSubscriptionTokenDocument = {
   kind: 'Document',
