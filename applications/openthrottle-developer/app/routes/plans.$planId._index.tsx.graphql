@@ -142,3 +142,28 @@ query PlanDetailIndexLoader($planId: ID!) {
     status
   }
 }
+
+subscription PlanOutputChunkAdded($planId: ID!) {
+  planOutputChunkAdded(planId: $planId) {
+    id
+    content
+    createdAt
+    iteration
+    planId
+  }
+}
+
+subscription PlanLifecycleNotifications($planId: ID!) {
+  planNotifications(planId: $planId) {
+    event
+    ... on PlanStatusChangedNotification {
+      planId
+      status
+    }
+    ... on TaskStatusChangedNotification {
+      planId
+      status
+      taskId
+    }
+  }
+}

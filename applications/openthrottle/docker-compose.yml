@@ -15,7 +15,7 @@
 #     seed on a clean volume; the one-shot `migrations` service then applies any
 #     incremental migrations and exits before the server starts.
 #
-#     Upgrade: bump OPENTHROTTLE_VERSION (or keep `latest`) then
+#     Upgrade: bump APP_VERSION (or keep `latest`) then
 #         docker compose pull && docker compose up -d
 #     `migrations` re-runs (idempotent) so an existing volume reaches the new schema.
 #
@@ -36,8 +36,9 @@ x-developer: &developer
   <<: *common
   # Browser → server (published localhost); SSR → server (compose network).
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
-  API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
-  APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
+  # API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
+  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
+  APP_ENV: ${APP_ENV}
   APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
   APP_NAME_SHORT: ${OPENTHROTTLE_DEVELOPER_APP_NAME_SHORT}
   APP_URL: ${OPENTHROTTLE_DEVELOPER_APP_URL}
@@ -47,7 +48,7 @@ x-developer: &developer
   APP_URL_EMAIL: ${OPENTHROTTLE_DEVELOPER_APP_URL_EMAIL}
   APP_URL_SERVER: ${OPENTHROTTLE_DEVELOPER_APP_URL_SERVER}
   APP_URL_WEBSITE: ${OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE}
-  APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
+  APP_VERSION: ${APP_VERSION}
   # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
   OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
   OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
@@ -57,12 +58,13 @@ x-developer: &developer
 x-server: &server
   <<: *common
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
-  API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
-  APP_ENV: ${OPENTHROTTLE_SERVER_APP_ENV}
+  # API_URL_INTERNAL: http://server:${OPENTHROTTLE_SERVER_PORT}
+  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
+  APP_ENV: ${APP_ENV}
   APP_NAME: ${OPENTHROTTLE_SERVER_APP_NAME}
   APP_NAME_SHORT: ${OPENTHROTTLE_SERVER_APP_NAME_SHORT}
   APP_URL: ${OPENTHROTTLE_SERVER_APP_URL}
-  APP_VERSION: ${OPENTHROTTLE_SERVER_APP_VERSION}
+  APP_VERSION: ${APP_VERSION}
   BULLMQ_BOARD_ADMIN_PASSWORD: ${OPENTHROTTLE_SERVER_BULLMQ_BOARD_ADMIN_PASSWORD:-admin}
   BULLMQ_BOARD_ADMIN_USERNAME: ${OPENTHROTTLE_SERVER_BULLMQ_BOARD_ADMIN_USERNAME:-admin}
   CORS_CREDENTIALS: ${OPENTHROTTLE_SERVER_CORS_CREDENTIALS}
@@ -86,7 +88,7 @@ services:
   #     🗄️ migrations | one-shot: apply incremental migrations, then exit
   #
   migrations:
-    image: openthrottle/migrations:${OPENTHROTTLE_VERSION:-latest}
+    image: openthrottle/migrations:${APP_VERSION:-latest}
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,7 +103,7 @@ services:
     restart: 'no'
 
   developer:
-    image: openthrottle/developer:${OPENTHROTTLE_VERSION:-latest}
+    image: openthrottle/developer:${APP_VERSION:-latest}
     container_name: developer
     depends_on:
       server:
@@ -140,7 +142,7 @@ services:
       retries: 10
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       timeout: 5s
-    image: openthrottle/postgres:${OPENTHROTTLE_VERSION:-latest}
+    image: openthrottle/postgres:${APP_VERSION:-latest}
     ports:
       - ${POSTGRES_PORT}:5432
     restart: always
@@ -166,7 +168,7 @@ services:
     restart: always
 
   server:
-    image: openthrottle/server:${OPENTHROTTLE_VERSION:-latest}
+    image: openthrottle/server:${APP_VERSION:-latest}
     container_name: server
     depends_on:
       migrations:

@@ -228,7 +228,7 @@ With `OPENTHROTTLE_WORKSPACES_DIR` pointing at a directory containing a real che
 
 - `.env` bootstrap from a committed `.env.default` (the repo convention; `.env.example` is gitignored) with the minimal var set (ports, postgres credentials, `JWT_SECRET`, `OPENTHROTTLE_WORKSPACES_DIR`). No `GITHUB_TOKEN`/`NX_KEY` at runtime — those are build-time-only and consumers don't build.
 - **First boot:** the seeded `openthrottle/postgres` image applies `databases/seed.sql` via `docker-entrypoint-initdb.d` on a clean volume (full current schema). A one-shot `migrations` init service then applies incremental migrations and exits; `server` `depends_on` it with `service_completed_successfully`. The migrations image is a tiny standalone runner — `Dockerfile.Migrations` bakes `databases/run-migrations.mjs` (no workspace import, only `pg`) plus `databases/migrations/*.sql`. Idempotent re-runs make upgrades safe.
-- **Pinning/upgrade:** image tags from `OPENTHROTTLE_VERSION` (default `latest`); upgrade = `docker compose pull && docker compose up -d`.
+- **Pinning/upgrade:** image tags from `APP_VERSION` (default `latest`); upgrade = `docker compose pull && docker compose up -d`.
 - One documented command from a clean machine: `docker compose up -d` with only the compose file + `.env` present.
 
 ## 8. Implementation order (maps to plan tasks)

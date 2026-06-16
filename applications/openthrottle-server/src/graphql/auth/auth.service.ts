@@ -13,6 +13,8 @@ import type { RegisterInput } from './register.input';
 import type { RegisterResultObject } from './register-result.object';
 
 const DEFAULT_EXPIRES_IN = '24h';
+/** Short-lived: the subscription token only guards the graphql-ws handshake. */
+const SUBSCRIPTION_TOKEN_EXPIRES_IN = '5m';
 
 @Injectable()
 export class AuthService {
@@ -41,6 +43,21 @@ export class AuthService {
    */
   async signout(): Promise<{ success: boolean }> {
     return { success: true };
+  }
+
+  /**
+   * @description Issue a short-lived JWT (sub = userId) for authenticating a
+   * graphql-ws subscription connection. Same secret/issuer as the API token, so
+   * the server's onConnect verifies it identically; the browser fetches a fresh
+   * one per (re)connect, so a short TTL is safe.
+   */
+  signSubscriptionToken(userId: string): string {
+    const issuer = this.configService.get<string>('JWT_ISSUER');
+    const options: JwtSignOptions = issuer
+      ? { expiresIn: SUBSCRIPTION_TOKEN_EXPIRES_IN, issuer }
+      : { expiresIn: SUBSCRIPTION_TOKEN_EXPIRES_IN };
+
+    return this.jwtService.sign({ sub: userId }, options);
   }
 
   /**

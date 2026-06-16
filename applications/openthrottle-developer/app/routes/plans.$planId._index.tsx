@@ -1,30 +1,29 @@
 import * as React from 'react';
-import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  Badge,
+  Card,
+  TabsList,
+  TabsTrigger,
+} from '@openthrottle/react-router-shadcn';
+import {
+  executeGraphqlWithAuth,
+  useSubscription,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
-  Link,
   redirect,
   useFetcher,
   useRevalidator,
   useSearchParams,
 } from 'react-router';
-import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
-import type {
-  PlanStatusChangedPayload,
-  TaskStatusChangedPayload,
-} from '@openthrottle/openthrottle-notifications';
 import {
-  BadgeCheckIcon,
   BoltIcon,
   CogIcon,
-  FileIcon,
   LayoutListIcon,
   NotebookTextIcon,
   TerminalSquareIcon,
@@ -49,6 +48,7 @@ import {
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
+  PlanLifecycleNotificationsDocument,
 } from '~/__generated__/graphql';
 import {
   jobRunHookEntriesToDraftRows,
@@ -81,8 +81,6 @@ import {
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
-import { PlanTabRequirements } from '~/routing/plans/components/PlanTabRequirements';
-import { PlanTabsMetadata } from '~/routing/plans/components/PlanTabsMetadata';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -95,6 +93,8 @@ import {
 } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
+import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
+import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -157,8 +157,9 @@ export default function Component(
   const { plan, planRunAuditRows, recentPlanRuns, tasks } = loaderData;
 
   // Hooks
+  const fetcherSaveJobRunHooks = useFetcher<typeof action>();
+  const fetcherSaveRunConfig = useFetcher<typeof action>();
   const revalidator = useRevalidator();
-  const socketContext = useNotificationsSocket();
   const [searchParams, setSearchParams] = useSearchParams();
   const [workflowTimeout, setWorkflowTimeout] = React.useState('');
   const [workingDirectory, setWorkingDirectory] = React.useState('');
@@ -169,18 +170,22 @@ export default function Component(
   const [jobRunHookRows, setJobRunHookRows] = React.useState<
     JobRunHookDraftRow[]
   >(() => jobRunHookEntriesToDraftRows([]));
-  const fetcherSaveJobRunHooks = useFetcher<typeof action>();
-  const fetcherSaveRunConfig = useFetcher<typeof action>();
 
   // Setup
+  const notificationsClient = React.useMemo(() => getGraphqlWsClient(), []);
   const [fullscreen, setFullscreen] = React.useState(false);
 
-  const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
-  const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
 
   const planId = params.planId ?? '';
+
+  // Pilot: seed from the loader snapshot, then merge live deltas from the
+  // planOutputChunkAdded subscription (graphql-ws). Socket.IO keeps running.
+  const planOutputChunks = usePlanOutputStream(
+    planId,
+    loaderData.planOutputChunks,
+  );
   const status =
     plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
 
@@ -198,9 +203,11 @@ export default function Component(
 
   const jobRunHooksJson = React.useMemo((): string => {
     const validation = validateJobRunHooksDraftRows(jobRunHookRows);
+
     if (!validation.ok) {
       return '';
     }
+
     try {
       const entries = normalizeJobRunHookDraftRows(jobRunHookRows);
       return serializeJobRunHooksConfig(entries);
@@ -398,26 +405,16 @@ export default function Component(
     }
   }, [fetcherSaveRunConfig.state, fetcherSaveRunConfig.data, revalidator]);
 
-  React.useEffect(() => {
-    if (!planId || !socketContext?.socket) return;
-    const socket = socketContext.socket;
-
-    const onPlanStatusChanged = (payload: PlanStatusChangedPayload): void => {
-      if (payload.planId === planId) revalidator.revalidate();
-    };
-
-    const onTaskStatusChanged = (payload: TaskStatusChangedPayload): void => {
-      if (payload.planId === planId) revalidator.revalidate();
-    };
-
-    socket.on(PLAN_STATUS_CHANGED, onPlanStatusChanged);
-    socket.on(TASK_STATUS_CHANGED, onTaskStatusChanged);
-
-    return () => {
-      socket.off(PLAN_STATUS_CHANGED, onPlanStatusChanged);
-      socket.off(TASK_STATUS_CHANGED, onTaskStatusChanged);
-    };
-  }, [planId, revalidator, socketContext?.socket]);
+  // Revalidate plan detail when a plan/task lifecycle notification arrives over
+  // the GraphQL subscription (server-side topic routing by planId — no client
+  // filtering). Replaces the retired Socket.IO revalidation.
+  useSubscription(
+    notificationsClient,
+    PlanLifecycleNotificationsDocument,
+    { planId },
+    { onData: () => revalidator.revalidate() },
+    Boolean(planId),
+  );
 
   // 🔌 Short Circuit
   if (!plan) {
@@ -440,12 +437,23 @@ export default function Component(
             icon={NotebookTextIcon}
             title={plan.title ?? 'Untitled'}
           />
-          <div className="text-muted-foreground line-clamp-3 text-sm">
-            <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
-            {formatPlanDate(plan.updatedAt)}
+          <div className="text-muted-foreground line-clamp-3 flex items-center gap-2 text-sm">
+            <PlanStatusBadge status={status} />
+            <span>&bull;</span>
+            <Badge color="slate" size="xs">
+              {plan.projectRelation?.name
+                ? plan.projectRelation.name
+                : plan.project}
+            </Badge>
+            <span>&bull;</span>
+            <span>Last updated</span>
+            <span>&bull;</span>
+            <span className="font-medium">
+              {formatPlanDate(plan.updatedAt)}
+            </span>
             {/* {plan.description ?? 'No description'} */}
           </div>
-          {plan.projectRelation != null ||
+          {/* {plan.projectRelation != null ||
           (plan.project != null && plan.project !== '') ? (
             <div
               className="bg-muted/40 text-muted-foreground mt-3 rounded-md border px-3 py-2 text-sm"
@@ -467,7 +475,7 @@ export default function Component(
                 </span>
               )}
             </div>
-          ) : null}
+          ) : null} */}
         </div>
 
         <div className="">
@@ -490,15 +498,11 @@ export default function Component(
                 <LayoutListIcon />
                 Tasks ({tasks.length})
               </TabsTrigger>
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                value="requirements"
-              >
-                <BadgeCheckIcon />
-                Requirements ({tasks.length})
+              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+                <TerminalSquareIcon />
+                Output
               </TabsTrigger>
-              {/* {loaderData.planOutputChunks.length > 0 ? (
-              ) : null} */}
+
               <div className="flex-1" />
               <TabsTrigger
                 className="flex-0 cursor-pointer"
@@ -506,14 +510,6 @@ export default function Component(
               >
                 <CogIcon />
                 Configuration
-              </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
-                <FileIcon />
-                Metadata
-              </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="output">
-                <TerminalSquareIcon />
-                Output
               </TabsTrigger>
             </TabsList>
 
@@ -533,8 +529,7 @@ export default function Component(
               workingDirectory={workingDirectory}
             />
             <PlanTabTasks tasks={tasks} />
-            <PlanTabRequirements plan={plan} tasks={tasks} />
-            <PlanTabOutput chunks={loaderData.planOutputChunks} />
+            <PlanTabOutput chunks={planOutputChunks} />
             <PlanTabConfiguration
               iterationTimeoutText={workflowTimeout}
               jobRunHookRows={jobRunHookRows}
@@ -554,22 +549,24 @@ export default function Component(
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
+
             {saveJobRunHooksError != null ? (
               <p className="text-destructive px-4 text-xs" role="alert">
                 {saveJobRunHooksError}
               </p>
             ) : null}
+
             {saveRunConfigError != null ? (
               <p className="text-destructive px-4 text-xs" role="alert">
                 {saveRunConfigError}
               </p>
             ) : null}
+
             {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
               <p className="text-muted-foreground px-4 text-xs" role="note">
                 Save configuration blocked: {runConfigSaveBlockedReason}
               </p>
             ) : null}
-            <PlanTabsMetadata plan={plan} />
           </OpenThrottleTabs>
         </div>
       </GlobalScreen>

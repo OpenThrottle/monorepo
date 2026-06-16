@@ -2,6 +2,10 @@ import type { BaseContext } from '@apollo/server';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { DynamicModule, Module } from '@nestjs/common';
+import {
+  HEADER_APP_NAME,
+  HEADER_APP_VERSION,
+} from '@openthrottle/nestjs-utils';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getRedisCache } from '@openthrottle/nestjs-redis';
@@ -11,6 +15,7 @@ import {
   type ApolloServerPluginCacheControlOptions,
   type ApolloServerPluginResponseCacheOptions,
 } from '../config/nestjs-graphql.plugins';
+import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth';
 
 /** Opt-in cache configuration for NestjsGraphqlModule.forRoot(). */
 export interface NestjsGraphqlCacheOptions {
@@ -34,11 +39,30 @@ export interface NestjsGraphqlModuleOptions extends Omit<
 const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
   autoSchemaFile: 'schema.gql',
   csrfPrevention: {
-    requestHeaders: ['X-App-Name', 'X-App-Version'],
+    requestHeaders: [HEADER_APP_NAME, HEADER_APP_VERSION],
   },
   driver: ApolloDriver,
   introspection: true,
   playground: true,
+
+  /**
+   * graphql-ws subscription transport, served on the same HTTP server as the
+   * GraphQL HTTP endpoint (path defaults to the GraphQL endpoint path). NestJS's
+   * GraphQLModule owns the ws.Server lifecycle: it creates the graphql-ws server
+   * on init and disposes it on module destroy (enableShutdownHooks drains it),
+   * so no manual drainHttpServer plugin is required here.
+   *
+   * Connection auth: onConnect validates the client's connectionParams token
+   * (same HS256 JWT as HTTP) and stashes the user id on the connection's `extra`.
+   * The shared `context` callback reads it back via resolveGraphqlWsUserId so
+   * resolvers get identity from context only. Connections without a valid token
+   * are rejected (403 Forbidden) by default.
+   */
+  subscriptions: {
+    'graphql-ws': {
+      onConnect: createGraphqlWsOnConnect(),
+    },
+  },
 };
 
 function buildCachePlugins(
@@ -58,7 +82,7 @@ function buildCachePlugins(
     const opts =
       cache.responseCache === true
         ? // FIXME: Swap out eventually
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
           ({
             sessionId: async (requestContext: {
               request: {
@@ -73,8 +97,10 @@ function buildCachePlugins(
             },
           } as ApolloServerPluginResponseCacheOptions<BaseContext>)
         : cache.responseCache;
+
     plugins.push(createResponseCachePlugin(opts));
   }
+
   return plugins;
 }
 

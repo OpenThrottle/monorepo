@@ -13,6 +13,7 @@ import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard';
 import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard';
 import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
+import { SubscriptionTokenResolver } from './subscription-token.resolver';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AuthResolver } from './auth.resolver';
     GqlLocalAuthGuard,
     GqlLocalCredentialsGuard,
     LocalStrategy,
+    SubscriptionTokenResolver,
   ],
 })
 export class AuthGraphqlModule {}
