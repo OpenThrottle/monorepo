@@ -6,12 +6,26 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { ForbiddenException, Inject } from '@nestjs/common';
+import {
+  Args,
+  Context,
+  ID,
+  Mutation,
+  Resolver,
+  Subscription,
+} from '@nestjs/graphql';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
   CurrentUser,
+  Public,
 } from '@openthrottle/nestjs-auth';
+import {
+  PUB_SUB,
+  conversationStreamTopic,
+  type PubSubEngine,
+} from '@openthrottle/nestjs-graphql';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
@@ -21,8 +35,12 @@ import {
 import type { ChatCompletionMessage } from '@openthrottle/openthrottle-agentic-utils';
 
 import { StartConversationStreamInput } from './conversation-stream.input';
-import { StartConversationStreamResult } from './conversation-stream.object';
+import {
+  ConversationStreamChunkObject,
+  StartConversationStreamResult,
+} from './conversation-stream.object';
 import { ConversationStreamService } from './conversation-stream.service';
+import { type ConversationStreamChunkPayload } from './conversation-stream.types';
 
 /** Roles the model accepts; persisted `tool` rows are excluded from the prompt. */
 const PROMPT_ROLES = new Set<string>([
@@ -63,8 +81,36 @@ export class ConversationStreamResolver {
   constructor(
     private readonly conversations: AgentConversationsService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
     private readonly streamService: ConversationStreamService,
   ) {}
+
+  // 🔌 graphql-ws only: connection auth (onConnect) validated the token and
+  // stashed userId on the context; authorize from the connection identity here.
+  @Public()
+  @Subscription(() => ConversationStreamChunkObject, {
+    description: `Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation.`,
+  })
+  async conversationStreamChunkAdded(
+    @Args('conversationId', { type: () => ID }) conversationId: string,
+    @Context() context: { userId?: string },
+  ): Promise<AsyncIterator<ConversationStreamChunkPayload>> {
+    if (!context.userId) {
+      throw new ForbiddenException(
+        'A subscription requires an authenticated connection',
+      );
+    }
+
+    // Ownership gate: throws when the conversation is not owned by the caller.
+    await this.conversations.getConversationForUser(
+      context.userId,
+      conversationId,
+    );
+
+    return this.pubSub.asyncIterator<ConversationStreamChunkPayload>(
+      conversationStreamTopic(conversationId),
+    );
+  }
 
   @Mutation(() => StartConversationStreamResult, {
     description: `Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures.`,

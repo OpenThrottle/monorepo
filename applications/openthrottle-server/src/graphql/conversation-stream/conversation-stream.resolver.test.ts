@@ -43,6 +43,7 @@ const userMessage = {
 } as AgentConversationMessage;
 
 function build(): {
+  asyncIterator: ReturnType<typeof vi.fn>;
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
   resolver: ConversationStreamResolver;
@@ -61,12 +62,25 @@ function build(): {
     cancel: vi.fn().mockReturnValue(true),
     start: vi.fn(),
   });
+  const asyncIterator = vi.fn().mockReturnValue({ next: vi.fn() });
   const resolver = new ConversationStreamResolver(
     conversations,
     modelDiscovery,
+    {
+      asyncIterator,
+      publish: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    },
     streamService,
   );
-  return { conversations, modelDiscovery, resolver, streamService };
+  return {
+    asyncIterator,
+    conversations,
+    modelDiscovery,
+    resolver,
+    streamService,
+  };
 }
 
 describe('ConversationStreamResolver.startConversationStream', () => {
@@ -165,5 +179,44 @@ describe('ConversationStreamResolver.cancelConversationStream', () => {
       resolver.cancelConversationStream(serviceAccount, 'conv-1'),
     ).resolves.toBe(false);
     expect(streamService.cancel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('subscribes to the conversation topic for an authenticated owner', async () => {
+    const { asyncIterator, conversations, resolver } = build();
+
+    await resolver.conversationStreamChunkAdded('conv-1', { userId: 'user-1' });
+
+    expect(conversations.getConversationForUser).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+    );
+    expect(asyncIterator).toHaveBeenCalledWith('conversation:conv-1:stream');
+  });
+
+  it('throws when the connection is unauthenticated', async () => {
+    const { asyncIterator, resolver } = build();
+
+    await expect(
+      resolver.conversationStreamChunkAdded('conv-1', {}),
+    ).rejects.toThrow('authenticated connection');
+    expect(asyncIterator).not.toHaveBeenCalled();
+  });
+
+  it('rejects when the caller does not own the conversation', async () => {
+    const { asyncIterator, conversations, resolver } = build();
+    vi.mocked(conversations.getConversationForUser).mockRejectedValueOnce(
+      new Error('Agent conversation not found'),
+    );
+
+    await expect(
+      resolver.conversationStreamChunkAdded('conv-1', { userId: 'user-1' }),
+    ).rejects.toThrow('not found');
+    expect(asyncIterator).not.toHaveBeenCalled();
   });
 });
