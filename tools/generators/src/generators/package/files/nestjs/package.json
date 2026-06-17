@@ -1,13 +1,11 @@
 {
-  "name": "<%= org %>/<%= name %>",
-  "description": "TODO: Add a description",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {},
+  "description": "TODO: Add a description",
   "devDependencies": {},
   "exports": {
     ".": {
@@ -23,6 +21,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "<%= org %>/<%= name %>",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -79,5 +78,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

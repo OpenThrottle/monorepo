@@ -228,6 +228,9 @@ catalogs:
     '@pnpm/read-project-manifest':
       specifier: ^1001.2.6
       version: 1001.2.6
+    '@preact/signals':
+      specifier: ^2.0.2
+      version: 2.9.1
     '@react-router/dev':
       specifier: 7.17.0
       version: 7.17.0
@@ -249,6 +252,36 @@ catalogs:
     '@rollbar/react':
       specifier: ^1.0.0
       version: 1.0.0
+    '@schedule-x/calendar':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/calendar-controls':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/current-time':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/drag-and-drop':
+      specifier: ^3.7.3
+      version: 3.7.3
+    '@schedule-x/event-modal':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/event-recurrence':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/events-service':
+      specifier: ^4.6.0
+      version: 4.6.0
+    '@schedule-x/react':
+      specifier: ^4.1.0
+      version: 4.1.0
+    '@schedule-x/resize':
+      specifier: ^3.7.3
+      version: 3.7.3
+    '@schedule-x/theme-shadcn':
+      specifier: ^4.6.0
+      version: 4.6.0
     '@swc-node/register':
       specifier: 1.11.1
       version: 1.11.1
@@ -684,6 +717,9 @@ catalogs:
     postcss-preset-env:
       specifier: ^11.1.1
       version: 11.2.1
+    preact:
+      specifier: ^10.19.2
+      version: 10.29.1
     prettier:
       specifier: ^3.8.0
       version: 3.8.3
@@ -783,6 +819,9 @@ catalogs:
     tailwindcss-animate:
       specifier: 1.0.7
       version: 1.0.7
+    temporal-polyfill:
+      specifier: 0.3.0
+      version: 0.3.0
     tiny-invariant:
       specifier: ^1.3.3
       version: 1.3.3
@@ -1167,6 +1206,9 @@ importers:
       '@openthrottle/react-router-notifications':
         specifier: workspace:^
         version: link:packages/react-router-notifications
+      '@openthrottle/react-router-scheduling':
+        specifier: workspace:^
+        version: link:packages/react-router-scheduling
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:packages/react-router-shadcn
@@ -1966,6 +2008,9 @@ importers:
       '@openthrottle/react-router-notifications':
         specifier: workspace:^
         version: link:../../packages/react-router-notifications
+      '@openthrottle/react-router-scheduling':
+        specifier: workspace:^
+        version: link:../../packages/react-router-scheduling
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../../packages/react-router-shadcn
@@ -2883,6 +2928,61 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+
+  packages/react-router-scheduling:
+    dependencies:
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:^
+        version: link:../react-router-shadcn
+      '@preact/signals':
+        specifier: 'catalog:'
+        version: 2.9.1(preact@10.29.1)
+      '@schedule-x/calendar':
+        specifier: 'catalog:'
+        version: 4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)(temporal-polyfill@0.3.0)
+      '@schedule-x/calendar-controls':
+        specifier: 'catalog:'
+        version: 4.6.0
+      '@schedule-x/current-time':
+        specifier: 'catalog:'
+        version: 4.6.0
+      '@schedule-x/drag-and-drop':
+        specifier: 'catalog:'
+        version: 3.7.3
+      '@schedule-x/event-modal':
+        specifier: 'catalog:'
+        version: 4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)
+      '@schedule-x/event-recurrence':
+        specifier: 'catalog:'
+        version: 4.6.0
+      '@schedule-x/events-service':
+        specifier: 'catalog:'
+        version: 4.6.0
+      '@schedule-x/react':
+        specifier: 'catalog:'
+        version: 4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)(temporal-polyfill@0.3.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@schedule-x/resize':
+        specifier: 'catalog:'
+        version: 3.7.3
+      '@schedule-x/theme-shadcn':
+        specifier: 'catalog:'
+        version: 4.6.0
+      preact:
+        specifier: 'catalog:'
+        version: 10.29.1
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      temporal-polyfill:
+        specifier: 'catalog:'
+        version: 0.3.0
+    devDependencies:
+      '@openthrottle/react-router-testing':
+        specifier: workspace:^
+        version: link:../react-router-testing
 
   packages/react-router-shadcn:
     dependencies:
@@ -9560,6 +9660,47 @@ packages:
 
   '@scarf/scarf@1.4.0':
     resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
+  '@schedule-x/calendar-controls@4.6.0':
+    resolution: {integrity: sha512-+VVmJ4AhZkAqTsz/U6L6mftuohBXSdJ10/HFWoMrO5coaoj0K5MExCdcG7UkFK3ZmoPz03koO0RnqRt5FKyXsg==}
+
+  '@schedule-x/calendar@4.6.0':
+    resolution: {integrity: sha512-8Rf5bUf0DVphJB2BaudtG4IHkw21wgMJiiuk5o+7SIOq6YH4hkVJo+Kk12pWSfp2KTZ9mnnUuLV+szBVhiEPlg==}
+    peerDependencies:
+      '@preact/signals': ^2.0.2
+      preact: ^10.19.2
+      temporal-polyfill: 0.3.0
+
+  '@schedule-x/current-time@4.6.0':
+    resolution: {integrity: sha512-AcGZHlHJ0SEgICm7Wl5tE79uZscpKHVhrxG0pnbUhVpPq+u8s2yknEdKMWkUPWNEK+WZCmYxnL73CZxZpd06pw==}
+
+  '@schedule-x/drag-and-drop@3.7.3':
+    resolution: {integrity: sha512-nHwZKzdIKWNTdT5BEXy4vLlHOmOH3C3M744QUIU0EOXPAFZQR1bBTviGs2NhmvaLiGstnVx2/TZtdhocy60hgg==}
+
+  '@schedule-x/event-modal@4.6.0':
+    resolution: {integrity: sha512-ZWtOxXa84GPiY0aYkKfauJMT/VDnVZTQjyQRdqHoIxr9Bt4D6eebBamBO/KxbcdQfc2vERs+2WJPTvNnTqTOlw==}
+    peerDependencies:
+      '@preact/signals': ^2.0.2
+      preact: ^10.19.2
+
+  '@schedule-x/event-recurrence@4.6.0':
+    resolution: {integrity: sha512-g01QHnrqXMaGGZZTewK3mioKg4Kk2rXCc8btJQRmChqSio0jup2fpc+5cxZDiyhfheQo066an2QR5PiUIFOyIQ==}
+
+  '@schedule-x/events-service@4.6.0':
+    resolution: {integrity: sha512-czUSPdanESNYgckCxId3weoL3omSG6FKuJMYMefCyzx/NFBxJM83b6PKQQ+pJeRnPuyax+KNKFc/DQFCC05YLA==}
+
+  '@schedule-x/react@4.1.0':
+    resolution: {integrity: sha512-l2hn1kdTModk4Lbt+nEr/VAcuNMA+w+hAAtgz8VLOj5UeieM7PWoK+cDapzPHCjUKisCSPd8QZfAX966Ma82kQ==}
+    peerDependencies:
+      '@schedule-x/calendar': ^3.1.0 || ^4.0.0
+      react: 19.2.4
+      react-dom: 19.2.4
+
+  '@schedule-x/resize@3.7.3':
+    resolution: {integrity: sha512-rdzsBx6Dw7d7jwYb8IQzphTwxAofegn1caVaWEdv9WTj8RkLzDILgpM2Oe6KHtpgjMcUWs6aKBaPirJh0T9VZg==}
+
+  '@schedule-x/theme-shadcn@4.6.0':
+    resolution: {integrity: sha512-MwEBne7fPeN88Xa1mXxPQFkVIqs7Xi0zWMIHyppCgrPncfhDt1Gid4I7GqjsB3SnOyHWLbb5sL5Ab2ZaQesgtQ==}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -16250,8 +16391,8 @@ packages:
   oxc-resolver@11.19.1:
     resolution: {integrity: sha512-qE/CIg/spwrTBFt5aKmwe3ifeDdLfA2NESN30E42X/lII5ClF8V7Wt6WIJhcGZjp0/Q+nQ+9vgxGk//xZNX2hg==}
 
-  oxlint-plugin-react-doctor@0.4.2:
-    resolution: {integrity: sha512-pH5TCM+FqvbiK7I6PVdUD6AY0013okJ4DCee4eQbce2FjU2X+TXw+gkBxw7GT8S3I6jqvFLGkabekmISKcSJnw==}
+  oxlint-plugin-react-doctor@0.5.1:
+    resolution: {integrity: sha512-gGx0NCPA7s8z8UYCulfhX4CiXwBI4QdQve7zaVXglakWzzdgcXMZv6pedmbKUtefegzlfzkKDcYO4lOg8vqnJw==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   oxlint@1.68.0:
@@ -17506,8 +17647,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-doctor@0.4.2:
-    resolution: {integrity: sha512-h4wykdqF93jBd4RD4AlKjyaukfizqcrwAMdZGLM0UsCw7ipOqJXFPvfPRK+GbHVh8KKoYWq1nU7K1M3uGTY/Ag==}
+  react-doctor@0.5.1:
+    resolution: {integrity: sha512-2LSJ/iYtUugr9xj01XTyU2tRtfjmGjiwyDotrnxL0raP+q4Uhp10VaiY7BqfDhBpj4HtCsC+//G1xVupTTBDoA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -18953,6 +19094,12 @@ packages:
 
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
+
+  temporal-polyfill@0.3.0:
+    resolution: {integrity: sha512-qNsTkX9K8hi+FHDfHmf22e/OGuXmfBm9RqNismxBrnSmZVJKegQ+HYYXT+R7Ha8F/YSm2Y34vmzD4cxMu2u95g==}
+
+  temporal-spec@0.3.0:
+    resolution: {integrity: sha512-n+noVpIqz4hYgFSMOSiINNOUOMFtV5cZQNCmmszA6GiVFVRt3G7AqVyhXjhCSmowvQn+NsGn+jMDMKJYHd3bSQ==}
 
   terminal-link@4.0.0:
     resolution: {integrity: sha512-lk+vH+MccxNqgVqSnkMVKx4VLJfnLjDBGzH16JVZjKE2DoxP57s6/vt6JmXV5I3jBcfGrxNrYtC+mPtU7WJztA==}
@@ -27602,6 +27749,37 @@ snapshots:
 
   '@scarf/scarf@1.4.0': {}
 
+  '@schedule-x/calendar-controls@4.6.0': {}
+
+  '@schedule-x/calendar@4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)(temporal-polyfill@0.3.0)':
+    dependencies:
+      '@preact/signals': 2.9.1(preact@10.29.1)
+      preact: 10.29.1
+      temporal-polyfill: 0.3.0
+
+  '@schedule-x/current-time@4.6.0': {}
+
+  '@schedule-x/drag-and-drop@3.7.3': {}
+
+  '@schedule-x/event-modal@4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)':
+    dependencies:
+      '@preact/signals': 2.9.1(preact@10.29.1)
+      preact: 10.29.1
+
+  '@schedule-x/event-recurrence@4.6.0': {}
+
+  '@schedule-x/events-service@4.6.0': {}
+
+  '@schedule-x/react@4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)(temporal-polyfill@0.3.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@schedule-x/calendar': 4.6.0(@preact/signals@2.9.1(preact@10.29.1))(preact@10.29.1)(temporal-polyfill@0.3.0)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+
+  '@schedule-x/resize@3.7.3': {}
+
+  '@schedule-x/theme-shadcn@4.6.0': {}
+
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@secretlint/config-creator@10.2.2':
@@ -35644,7 +35822,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  oxlint-plugin-react-doctor@0.4.2:
+  oxlint-plugin-react-doctor@0.5.1:
     dependencies:
       '@typescript-eslint/types': 8.60.1
       eslint-scope: 9.1.2
@@ -37002,7 +37180,7 @@ snapshots:
       '@types/node': 24.12.2
       '@types/react': 19.2.7
 
-  react-doctor@0.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
+  react-doctor@0.5.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.0
       '@effect/platform-node-shared': 4.0.0-beta.70(effect@4.0.0-beta.70)
@@ -37016,7 +37194,7 @@ snapshots:
       jiti: 2.7.0
       magicast: 0.5.3
       oxlint: 1.68.0
-      oxlint-plugin-react-doctor: 0.4.2
+      oxlint-plugin-react-doctor: 0.5.1
       prompts: 2.4.2
       typescript: 6.0.3
       vscode-languageserver: 9.0.1
@@ -37194,7 +37372,7 @@ snapshots:
       preact: 10.29.1
       prompts: 2.4.2
       react: 19.2.4
-      react-doctor: 0.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
+      react-doctor: 0.5.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
       react-dom: 19.2.4(react@19.2.4)
       react-grab: 0.1.44(react@19.2.4)
     optionalDependencies:
@@ -38832,6 +39010,12 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+
+  temporal-polyfill@0.3.0:
+    dependencies:
+      temporal-spec: 0.3.0
+
+  temporal-spec@0.3.0: {}
 
   terminal-link@4.0.0:
     dependencies:

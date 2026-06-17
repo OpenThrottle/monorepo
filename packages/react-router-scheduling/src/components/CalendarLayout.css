@@ -1,0 +1,13 @@
+/*
+ * CalendarLayout supplies its own shadcn navigation/view toolbar, so hide
+ * Schedule-X's built-in header controls to avoid duplicate today/prev/next and
+ * view-switching UI. The <Calendar> primitive (used without CalendarLayout)
+ * keeps the default Schedule-X header.
+ */
+.sx-scheduling-layout .sx__calendar-header {
+  display: none;
+}
+
+.sx__calendar {
+  z-index: 1;
+}
