@@ -68,6 +68,7 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 ## OpenThrottle (OT) — plans knowledge base
 
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/openthrottle-mcp** (GraphQL only; see `.cursor/mcp.json`). Use the **openthrottle-mcp** MCP server for all OT tools.
+- **Registering MCP servers:** canonical guide — [docs/openthrottle/mcp-registration.md](docs/openthrottle/mcp-registration.md) (tiers, config locations, the openthrottle-mcp-only `.cursor/mcp.json.example` template, editor parity, user-provided servers).
 - **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/openthrottle-mcp/docs/verification-environment.md](packages/openthrottle-mcp/docs/verification-environment.md).
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Rules:** [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
