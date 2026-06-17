@@ -21,6 +21,23 @@ export const CROSS_PLAN_TASK_LIST_ORDER = {
   sortOrder: 'ASC',
 } as const;
 
+/**
+ * @description Per-item shape for {@link TasksService.createTasksBatch}. Mirrors the columns the
+ * single-create path writes; requirements is already parsed and status already normalized by the caller.
+ */
+export interface CreateTaskBatchItem {
+  assignee: string | null;
+  category: string | null;
+  description: string | null;
+  project: string | null;
+  projectId: string | null;
+  requirements: unknown[];
+  sortOrder: number | null;
+  status: string;
+  summary: string | null;
+  title: string;
+}
+
 @Injectable()
 export class TasksService {
   constructor(
@@ -53,6 +70,59 @@ export class TasksService {
       result?.max != null && result.max !== '' ? Number(result.max) : null;
 
     return max != null ? max + TASK_SORT_ORDER_GAP : TASK_SORT_ORDER_GAP;
+  }
+
+  /**
+   * @description Atomically create many tasks for one plan in a single transaction. Omitted sortOrders
+   * append MAX+{@link TASK_SORT_ORDER_GAP} stepping in array order (computed once inside the tx);
+   * explicit per-item sortOrders are kept. Any failure (e.g. a sortOrder unique violation) rolls back
+   * the whole batch — no partially-created plan. Returns the saved tasks in input order.
+   */
+  async createTasksBatch(
+    planId: string,
+    items: readonly CreateTaskBatchItem[],
+  ): Promise<Task[]> {
+    if (items.length === 0) return [];
+
+    return this.taskRepository.manager.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
+
+      const maxResult = await taskRepo
+        .createQueryBuilder('task')
+        .select('MAX(task.sortOrder)', 'max')
+        .where('task.planId = :planId', { planId })
+        .getRawOne<{ max: string | null }>();
+      const existingMax =
+        maxResult?.max != null && maxResult.max !== ''
+          ? Number(maxResult.max)
+          : null;
+
+      let nextAuto =
+        existingMax != null
+          ? existingMax + TASK_SORT_ORDER_GAP
+          : TASK_SORT_ORDER_GAP;
+
+      const entities = items.map((item) => {
+        const sortOrder = item.sortOrder != null ? item.sortOrder : nextAuto;
+        if (item.sortOrder == null) nextAuto += TASK_SORT_ORDER_GAP;
+
+        return taskRepo.create({
+          assignee: item.assignee,
+          category: item.category,
+          description: item.description,
+          planId,
+          project: item.project,
+          projectId: item.projectId,
+          requirements: item.requirements,
+          sortOrder,
+          status: item.status,
+          summary: item.summary,
+          title: item.title,
+        });
+      });
+
+      return taskRepo.save(entities);
+    });
   }
 
   /**

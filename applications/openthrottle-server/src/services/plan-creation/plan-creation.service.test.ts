@@ -28,6 +28,12 @@ describe('PlanCreationService', () => {
   let service: PlanCreationService;
   const planRepo = {
     create: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        (run: (manager: { getRepository: () => unknown }) => unknown) =>
+          run({ getRepository: () => planRepo }),
+      ),
+    },
     save: vi.fn(),
   };
   const embedRepo = {
@@ -259,6 +265,53 @@ describe('PlanCreationService', () => {
     expect(planRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ assignee: null }),
     );
+  });
+
+  describe('createPlansFromInput', () => {
+    const validInput = (title: string): CreatePlanInput => ({
+      assignee: null,
+      author: 'visormatt',
+      category: 'feature',
+      description: null,
+      project: null,
+      projectId: null,
+      runConfigJson: null,
+      status: null,
+      summary: null,
+      title,
+    });
+
+    it('returns empty without a transaction when no inputs are given', async () => {
+      const result = await service.createPlansFromInput([]);
+
+      expect(result).toEqual([]);
+      expect(planRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    it('creates every plan in one transaction with a single batched save', async () => {
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockImplementation((entities: unknown) =>
+        Promise.resolve(entities),
+      );
+
+      const result = await service.createPlansFromInput([
+        validInput('A'),
+        validInput('B'),
+      ]);
+
+      expect(planRepo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(planRepo.save).toHaveBeenCalledTimes(1);
+      expect(result.map((plan) => plan.title)).toEqual(['A', 'B']);
+    });
+
+    it('throws before opening a transaction when any input is invalid', async () => {
+      await expect(
+        service.createPlansFromInput([validInput('ok'), validInput('   ')]),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(planRepo.manager.transaction).not.toHaveBeenCalled();
+      expect(planRepo.save).not.toHaveBeenCalled();
+    });
   });
 
   it('persists embedding when embedQuery returns a vector', async () => {

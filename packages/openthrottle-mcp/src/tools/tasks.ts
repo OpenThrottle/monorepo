@@ -2,12 +2,12 @@
  * @description Registers task CRUD tools: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, delete_task.
  */
 
-/* eslint-disable no-await-in-loop */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   type CreateTaskMutation,
+  type CreateTasksMutation,
   type GetRemainingTasksByPlanIdQuery,
   type GetTaskQuery,
   type GetTasksByPlanIdQuery,
@@ -15,6 +15,7 @@ import {
   type ReorderPlanTasksMutation,
   type UpdateTaskMutation,
   CreateTaskDocument,
+  CreateTasksDocument,
   DeleteTaskDocument,
   GetRemainingTasksByPlanIdDocument,
   GetTaskDocument,
@@ -32,10 +33,6 @@ import {
   UpdateTaskInputSchema,
 } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
-import {
-  maxSortOrderFromTasks,
-  resolveBatchCreateSortOrders,
-} from '../utils/batch-create-sort-order.js';
 import { filterTasksByCategory } from '../utils/filters.js';
 import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
@@ -173,49 +170,39 @@ export async function createTasksToolHandler(
   }
 
   const { planId, tasks: items } = parsed.data;
-  const created: { id: string; title: string }[] = [];
-  const token = getAuthToken();
 
   return runTool<{ created: readonly { id: string; title: string }[] }>(
     'create_tasks',
     async () => {
-      const existingResult = await executeGraphqlWithAuth(
-        token,
-        GetTasksByPlanIdDocument,
-        { input: { planId } },
-      );
-      const existingTasks = existingResult?.tasksByPlanId ?? [];
-      const existingMax = maxSortOrderFromTasks(existingTasks);
-      const sortOrders = resolveBatchCreateSortOrders(existingMax, items);
-
-      for (let index = 0; index < items.length; index += 1) {
-        const item = items[index];
-        const input = {
+      const token = getAuthToken();
+      // Single atomic round trip: the server's createTasks mutation inserts all tasks in one
+      // transaction and computes MAX+1000 sortOrder stepping (explicit per-item sortOrder respected).
+      const input = {
+        planId,
+        tasks: items.map((item) => ({
           assignee: item.assignee ?? null,
           category: item.category ?? null,
           description: item.description ?? null,
-          planId,
           project: item.project ?? null,
           projectId: item.projectId ?? null,
           requirements:
             item.requirements != null
               ? JSON.stringify(item.requirements)
               : null,
-          sortOrder: sortOrders[index],
+          sortOrder: item.sortOrder ?? null,
           status: item.status ?? null,
           summary: item.summary ?? null,
           title: item.title,
-        };
+        })),
+      };
 
-        const result = await executeGraphqlWithAuth(token, CreateTaskDocument, {
-          input,
-        });
+      const result = await executeGraphqlWithAuth(token, CreateTasksDocument, {
+        input,
+      });
 
-        const task = result?.createTask;
-        if (!task) continue;
-
-        created.push({ id: task.id, title: task.title });
-      }
+      const tasks: CreateTasksMutation['createTasks']['tasks'] =
+        result?.createTasks?.tasks ?? [];
+      const created = tasks.map((task) => ({ id: task.id, title: task.title }));
 
       const text =
         created.length === 0
