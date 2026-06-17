@@ -95,18 +95,45 @@ MCP config is read per **workspace** and (for Cursor) optionally per **user**. W
 
 ## Template structure
 
-<!-- TODO(task 4000): .cursor/mcp.json.example with openthrottle-mcp active + commented optional
-     placeholders; launcher invocation (scripts/run-openthrottle-mcp.sh, API_URL/API_URL_INTERNAL
-     from OPENTHROTTLE_SERVER_APP_URL), env vars, bootstrap, worktree-aware behavior. -->
+The committed template is [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example). It has **one active entry — `openthrottle-mcp`** — and nothing else:
 
-_Pending — see task 4000._
+```json
+{
+  "mcpServers": {
+    "openthrottle-mcp": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "set -a && source ./.env && set +a && export API_URL=\"$OPENTHROTTLE_SERVER_APP_URL\" API_URL_INTERNAL=\"$OPENTHROTTLE_SERVER_APP_URL\" && ./scripts/run-openthrottle-mcp.sh"
+      ],
+      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."
+    }
+  }
+}
+```
+
+**Launcher invocation:**
+
+- The `bash -c` wrapper `source`s the repo `./.env`, then exports `API_URL` / `API_URL_INTERNAL` from `OPENTHROTTLE_SERVER_APP_URL` before running [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh).
+- `local-quickstart.md` shows an equivalent form that sets `API_URL` / `API_URL_INTERNAL` (and `OPENTHROTTLE_MCP_AUTH_TOKEN`) explicitly in an `env` block instead of deriving them from `.env` — either works; pick one. Keep the URLs aligned with the server `PORT` (default `6021`).
+- **Auth:** put `OPENTHROTTLE_MCP_AUTH_TOKEN` (an `ot_sa_…` service-account token) in `applications/openthrottle-server/.env` and, for Cursor, in the MCP `env` block. Mint it with `pnpm run database:bootstrap-service-accounts`. Never commit a real token — see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
+- **Embeddings** are configured on the server (`OPENAI_API_KEY` or `OLLAMA_*` in `applications/openthrottle-server/.env`), **not** in this launcher.
+- **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree and resolves a *live* server URL at launch (probing `/health`) rather than trusting a per-worktree `.env` port — full detail in [mcp-worktrees.md](./mcp-worktrees.md).
+
+**Optional user-provided servers** (github, shadcn, nx-mcp, maestro, fetch) are **not** active entries in the template. Register them at user level (`~/.cursor/mcp.json`) or as commented placeholders — see [User-provided servers](#user-provided-servers). Do **not** add `docs-mcp` (retired) or `git` (not committed) as active entries.
 
 ## Editor parity
 
-<!-- TODO(task 4000): table mapping Cursor (.cursor/mcp.json), VS Code (.vscode/mcp.json, empty),
-     Claude Code (.mcp.json) to their real current contents. -->
+Each editor reads its own MCP config file; their committed contents differ. This table is the real current state (audited 2026-06-16), not an aspiration.
 
-_Pending — see task 4000._
+| Editor          | Config file                | Committed contents today                                       | openthrottle-mcp present? |
+| --------------- | -------------------------- | -------------------------------------------------------------- | ------------------------- |
+| **Cursor**      | `.cursor/mcp.json.example` (template; copy → `.cursor/mcp.json`) | `openthrottle-mcp` only                       | Yes (the only entry)      |
+| **Claude Code** | `.mcp.json`                | `github`, `fetch`, `maestro`, `openthrottle-mcp`, `shadcn`     | Yes (+ user-provided)     |
+| **VS Code**     | `.vscode/mcp.json`         | empty `{}`                                                     | No — register yourself    |
+| **OpenCode**    | `opencode.json`            | `nx-mcp`                                                       | No — nx-mcp only          |
+
+**Why they differ:** Cursor's template is intentionally minimal (just the OT-native server); Claude Code's `.mcp.json` is committed with the fuller working set the team uses day-to-day; VS Code's file is a placeholder; OpenCode carries only `nx-mcp`. The one invariant: **`openthrottle-mcp` is the OT-native server** wherever OT plans/tasks are needed.
 
 ## User-provided servers
 
