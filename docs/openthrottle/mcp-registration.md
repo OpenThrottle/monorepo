@@ -26,12 +26,30 @@ and cross-links so the consolidation lands incrementally without duplicating sou
 
 ## Current state
 
-<!-- TODO(task 2000 — audit): inventory table of ACTUAL committed contents:
-     .cursor/mcp.json.example (openthrottle-mcp only, 2026-06-12), .mcp.json
-     (github/fetch/maestro/openthrottle-mcp/shadcn), .vscode/mcp.json (empty {}),
-     opencode.json (nx-mcp), user-level ~/.cursor/mcp.json patterns. Flag docs-mcp as RETIRED. -->
+Inventory of MCP config **as actually committed** (audited 2026-06-16). This is the ground truth the rest of this guide builds on — not the original (superseded) plan.
 
-_Pending — see task 2000._
+| Config source                | Scope               | Servers actually present                                          | Notes                                                                                                  |
+| ---------------------------- | ------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `.cursor/mcp.json.example`   | Project (committed) | **`openthrottle-mcp`** only                                       | Narrowed to a single active entry on 2026-06-12 (was openthrottle-mcp + docs-mcp + git). The template. |
+| `.cursor/mcp.json`           | Project (gitignored)| user's machine                                                    | Local, per-developer; may still contain stale `docs-mcp`. **Not** committed; leave alone.              |
+| `~/.cursor/mcp.json`         | User-level          | user's machine                                                    | Canonical home for the **secondary-workspace** setup (absolute paths to the OT checkout).              |
+| `.mcp.json` (Claude Code)    | Project (committed) | `github`, `fetch`, `maestro`, **`openthrottle-mcp`**, `shadcn`    | Wider surface than Cursor's template; `openthrottle-mcp` invoked as `bash scripts/run-openthrottle-mcp.sh`. |
+| `.vscode/mcp.json`           | Project (committed) | _none_ — empty `{}`                                               | Present but unconfigured; VS Code users register servers themselves.                                   |
+| `opencode.json`              | Project (committed) | `nx-mcp` (`npx nx mcp`)                                           | OpenCode editor config; nx-mcp only.                                                                   |
+| `~/.cursor/mcp.json` patterns| User-level          | optional user-provided servers                                    | github / shadcn / nx-mcp / maestro / fetch as the developer chooses (see [User-provided servers](#user-provided-servers)). |
+
+### `docs-mcp` is retired
+
+`docs-mcp` is **not** an active server and must not be documented as one:
+
+- No launcher — `scripts/run-docs-mcp.sh` was removed (PR #6); it does not exist on disk.
+- No package — there is no `docs-mcp` package under `packages/`.
+- No committed config references it as active (`.cursor/mcp.json.example`, `.mcp.json`, `.vscode/mcp.json`, `opencode.json` are all docs-mcp-free).
+- It lingers only in (a) the gitignored local `.cursor/mcp.json` on individual machines and (b) stale doc prose — being purged under this plan (see [task tracking in mcp-worktrees.md, first-time-onboarding.md, etc.](#related-documentation)). Historical/seed data (e.g. `databases/seed.sql`) is left intact.
+
+Its former role — semantic search over ingested `docs/` — is now served by **`openthrottle-mcp`** (`semantic_search`, `list_sources`, `get_document`).
+
+See [mcp-worktrees.md](./mcp-worktrees.md) for worktree identity and [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) for env alignment.
 
 ## MCP tiers
 
