@@ -137,11 +137,40 @@ Each editor reads its own MCP config file; their committed contents differ. This
 
 ## User-provided servers
 
-<!-- TODO(task 5000): GitHub MCP (key, command/args, GITHUB_PERSONAL_ACCESS_TOKEN/GITHUB_TOKEN,
-     scopes), shadcn, nx-mcp, maestro, fetch as they appear in .mcp.json/opencode.json; Cursor
-     project + user config merge behavior; GitHub MCP optional (appendix, not a gate). -->
+These are Tier 2 servers — useful in this repo but **not** OT-native and **not** required for OT plans/tasks. Register the ones you want; authenticate them yourself. The entries below are exactly as they appear in the committed `.mcp.json` (Claude Code) and `opencode.json` (OpenCode).
 
-_Pending — see task 5000._
+### GitHub MCP
+
+```json
+"github": {
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-github"],
+  "env": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+  }
+}
+```
+
+- **Token:** the server reads `GITHUB_PERSONAL_ACCESS_TOKEN`; the committed config maps it from your `GITHUB_TOKEN` environment variable (`${GITHUB_TOKEN}`), so export `GITHUB_TOKEN` in your shell/editor environment rather than committing a PAT.
+- **Scopes:** a classic PAT with `repo` (read/write to PRs, issues, contents) covers normal use; add `read:org` for org-scoped queries and `workflow` only if you drive Actions. Fine-grained tokens work if granted the equivalent repo permissions.
+- **Optional:** GitHub MCP is **not** a plan gate. It is covered as an optional appendix in the [smoke-test checklist](#smoke-test-checklist), not a required registration step.
+
+### shadcn, nx-mcp, maestro, fetch
+
+| Server     | Config (as committed)                                                            | Notes                                                                                  |
+| ---------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **shadcn** | `.mcp.json`: `npx shadcn@latest mcp`                                              | shadcn/ui component registry browsing/adding. No token.                                |
+| **nx-mcp** | `opencode.json`: `npx nx mcp` (`type: local`, `enabled: true`)                   | Nx workspace graph, generators, docs, task running. No token.                          |
+| **maestro**| `.mcp.json`: `maestro mcp`                                                        | Maestro E2E driving of the developer app. Requires the Maestro CLI on `PATH` + a running app/device. |
+| **fetch**  | `.mcp.json`: `uvx mcp-server-fetch`                                               | Generic URL fetch. Requires `uvx` (uv) on `PATH`. No token.                            |
+
+### Cursor merge behavior (project + user config)
+
+When you run Cursor inside OpenThrottle, **both** `~/.cursor/mcp.json` (user-level) and `.cursor/mcp.json` (project) apply; Cursor unions their `mcpServers` by key. Practical rules:
+
+- **Distinct keys union.** Put `openthrottle-mcp` in the project file (from the template) and your personal servers (github, shadcn, …) in `~/.cursor/mcp.json`; you get both.
+- **Same key → project wins.** If both files define `openthrottle-mcp`, the project-level entry takes precedence for this workspace. Keep the OT-native entry in one place (the project file when the monorepo is open; `~/.cursor/mcp.json` for a [secondary workspace](#secondary-workspace)) to avoid a stale duplicate shadowing the live one.
+- **Restart Cursor** after editing either file.
 
 ## Secondary workspace
 
