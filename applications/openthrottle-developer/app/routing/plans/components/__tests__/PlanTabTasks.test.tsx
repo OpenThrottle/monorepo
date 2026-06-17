@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
@@ -43,13 +44,29 @@ describe('PlanTabTasks Component', () => {
     expect(getByRole('heading', { name: 'No plans yet' })).toBeInTheDocument();
   });
 
-  test('renders task table when tasks exist', () => {
-    const { getByText } = renderTabTasks({ tasks: [mockTask] });
+  test('renders the list view by default', () => {
+    const { getByText, getByTestId, queryByText } = renderTabTasks({
+      tasks: [mockTask],
+    });
 
+    expect(getByTestId('PlanTabTasks-view-toggle')).toBeInTheDocument();
+    expect(getByTestId('PlanTaskItems')).toBeInTheDocument();
     expect(getByText('First task')).toBeInTheDocument();
-    expect(getByText('#')).toBeInTheDocument();
-    expect(getByText('Status')).toBeInTheDocument();
+    // Table-only column headers are absent in the list view.
+    expect(queryByText('Title / Context')).not.toBeInTheDocument();
+  });
+
+  test('switches to the table view via the toggle', async () => {
+    const user = userEvent.setup();
+    const { getByLabelText, getByText, queryByTestId } = renderTabTasks({
+      tasks: [mockTask],
+    });
+
+    await user.click(getByLabelText('Table view'));
+
     expect(getByText('Title / Context')).toBeInTheDocument();
+    expect(getByText('Status')).toBeInTheDocument();
+    expect(queryByTestId('PlanTaskItems')).not.toBeInTheDocument();
   });
 
   test('shows step index derived from sorted list position', () => {

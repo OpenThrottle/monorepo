@@ -1,7 +1,14 @@
 import * as React from 'react';
-import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
+import {
+  DataTable,
+  TabsContent,
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@openthrottle/react-router-shadcn';
+import { List, Table2 } from 'lucide-react';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
@@ -12,6 +19,13 @@ import {
 } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 import type { ColumnDef } from '@tanstack/react-table';
 
+const PLAN_TASKS_VIEW = {
+  list: 'list',
+  table: 'table',
+} as const;
+
+type PlanTasksView = (typeof PLAN_TASKS_VIEW)[keyof typeof PLAN_TASKS_VIEW];
+
 export interface PlanTabTasksProps {
   tasks: PlanTaskRowFragment[];
 }
@@ -20,6 +34,7 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   const { tasks } = props;
 
   // Hooks
+  const [view, setView] = React.useState<PlanTasksView>(PLAN_TASKS_VIEW.list);
   const sortedTasks = React.useMemo(
     () => sortPlanTasksByListOrder(tasks),
     [tasks],
@@ -40,6 +55,12 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   );
 
   // Handlers
+  const handleViewChange = React.useCallback((value: string) => {
+    // Radix emits '' when the active item is re-clicked; keep one view selected.
+    if (value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table) {
+      setView(value);
+    }
+  }, []);
 
   // Markup
 
@@ -49,18 +70,41 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
 
   return (
     <TabsContent value="tasks">
-      <div
-        // className="flex flex-col gap-4 md:gap-8"
-        className="bg-card border-card-border rounded-lg border"
-      >
-        <DataTable<PlanTaskRowFragment, string | null | undefined>
-          columns={columns}
-          data={sortedTasks}
-          emptyState={<PlanTasksEmpty />}
-          getRowId={getRowId}
-          getRowProps={getRowProps}
-        />
+      <div className="flex justify-end pb-2">
+        <ToggleGroup
+          aria-label="Task view"
+          data-testid="PlanTabTasks-view-toggle"
+          onValueChange={handleViewChange}
+          size="xs"
+          type="single"
+          value={view}
+          variant="outline"
+        >
+          <ToggleGroupItem aria-label="List view" value={PLAN_TASKS_VIEW.list}>
+            <List className="size-3.5" />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            aria-label="Table view"
+            value={PLAN_TASKS_VIEW.table}
+          >
+            <Table2 className="size-3.5" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
+
+      {view === PLAN_TASKS_VIEW.list ? (
+        <PlanTaskItems tasks={sortedTasks} />
+      ) : (
+        <div className="bg-card border-card-border rounded-lg border">
+          <DataTable<PlanTaskRowFragment, string | null | undefined>
+            columns={columns}
+            data={sortedTasks}
+            emptyState={<PlanTasksEmpty />}
+            getRowId={getRowId}
+            getRowProps={getRowProps}
+          />
+        </div>
+      )}
     </TabsContent>
   );
 };
