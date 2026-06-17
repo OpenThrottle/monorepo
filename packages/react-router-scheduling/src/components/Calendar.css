@@ -1,0 +1,9 @@
+/*
+ * Schedule-X requires explicit dimensions on its wrapper element; without them
+ * the calendar collapses to zero height. The <Calendar> component sets the outer
+ * size via props, and this fills the inner Schedule-X wrapper to match.
+ */
+.sx-react-calendar-wrapper {
+  height: 100%;
+  width: 100%;
+}

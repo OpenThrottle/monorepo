@@ -20,6 +20,7 @@
     "@openthrottle/react-router-ide": "workspace:^",
     "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-notifications": "workspace:^",
+    "@openthrottle/react-router-scheduling": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-ui-global": "workspace:^",

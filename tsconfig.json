@@ -195,6 +195,9 @@
     },
     {
       "path": "./packages/react-router-testing"
+    },
+    {
+      "path": "./packages/react-router-scheduling"
     }
   ]
 }
