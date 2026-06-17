@@ -80,6 +80,29 @@ These checks do **not** depend on which folder is the Cursor workspace root; the
    Adjust the host/port if **`API_URL_INTERNAL`** is not the default. Expect JSON with **`data.serverHealth`**.
 3. **In Cursor (secondary workspace):** after **`health`** succeeds in the MCP panel, call an authenticated tool (**`list_sources`**, **`list_plans_by_status`**, or **`create_plan`** / **`create_task`**) with **`OPENTHROTTLE_MCP_AUTH_TOKEN`** set in the global MCP **`env`** block. **Required:** GraphQL base aligned with the server (**`/graphql`** on the same origin as **`API_URL_INTERNAL`**); token format and acquisition: [AUTH.md](./AUTH.md).
 
+### Registration smoke-test (root + secondary workspace)
+
+The consolidated gate for **[mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)**: confirm `openthrottle-mcp` works after any registration or config change. There is **no docs-mcp gate** (docs-mcp is retired).
+
+**A. Monorepo root**
+
+1. Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`, set `OPENTHROTTLE_MCP_AUTH_TOKEN` (`ot_sa_…` from `pnpm run database:bootstrap-service-accounts`), restart the MCP host (Cursor).
+2. Launcher resolves a live server: `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` → prints `✅ … live server at http://localhost:<port>`.
+3. **`health`** → `{api, database, redis, websocket}` all `ok`.
+4. **One OT tool** (e.g. `list_sources` or `semantic_search`) succeeds with authenticated data (e.g. `list_sources` returns `plan` / `task` / `documentation` sources).
+
+**B. Secondary workspace** (a different repo open in the host)
+
+1. Register `openthrottle-mcp` in `~/.cursor/mcp.json` with an **absolute path** to `scripts/run-openthrottle-mcp.sh` and the same OT env; restart Cursor.
+2. From any cwd, the absolute-path launcher still resolves the live server: `cd /tmp && OT_MCP_RESOLVE_ONLY=1 bash <abs-path>/scripts/run-openthrottle-mcp.sh`.
+3. **`health`** passes in the MCP panel; one authenticated OT tool succeeds.
+
+> **Last validated (2026-06-16):** root smoke green — `health` all `ok`, `list_sources` → 520 plans / 3 sources (`documentation`, `plan`, `task`); launcher resolved `http://localhost:6021` at root and from `/tmp`; GraphQL `serverHealth` parity green. The in-IDE Cursor-restart confirmation (especially the secondary-workspace case) is a human step.
+
+### Optional appendix — GitHub MCP
+
+GitHub MCP is **not** a registration gate (it's a user-provided Tier 2 server — see [mcp-registration.md § User-provided servers](../../../docs/openthrottle/mcp-registration.md#user-provided-servers)). To smoke it optionally: export `GITHUB_TOKEN` (PAT with `repo`, optionally `read:org`), register the `github` entry from `.mcp.json`, restart the host, and call a read-only tool (e.g. list your repos or get an issue). Failure here does not block OT registration.
+
 ### Agent conversation read tools smoke (human JWT)
 
 These three read-only tools query persisted **web chat** threads (`agent_conversation_*`). They require a **human JWT** in **`OPENTHROTTLE_MCP_AUTH_TOKEN`** — service account tokens (`ot_sa_…`) are rejected with **403 Human authentication required**. See [agent-conversation-read-tools-contract.md](./agent-conversation-read-tools-contract.md) and [AUTH.md](./AUTH.md) § Human JWT.

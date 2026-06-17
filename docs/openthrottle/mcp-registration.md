@@ -188,11 +188,19 @@ Cursor keys MCP servers by the `mcpServers` key and the server's advertised name
 
 ## Smoke-test checklist
 
-<!-- TODO(task 13000): consolidated checklist — openthrottle-mcp health + one OT tool at root and
-     from secondary workspace; optional GitHub MCP appendix; no docs-mcp gate (retired). Links to
-     verification-environment.md § Smoke checklist. -->
+After registering or changing MCP config, confirm `openthrottle-mcp` works. There is **no docs-mcp gate** (retired). The full, maintained checklist lives in **[verification-environment.md § Registration smoke-test](../../packages/openthrottle-mcp/docs/verification-environment.md#registration-smoke-test-root--secondary-workspace)**; the gates in brief:
 
-_Pending — see task 13000 and [verification-environment.md § Smoke checklist](../../packages/openthrottle-mcp/docs/verification-environment.md#smoke-checklist-re-validate-after-doc-or-config-changes)._
+**Root (monorepo open):**
+1. Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`, set `OPENTHROTTLE_MCP_AUTH_TOKEN`, restart Cursor.
+2. `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` resolves a live server.
+3. `health` → all `ok`.
+4. One OT tool (e.g. `list_sources` / `semantic_search`) succeeds.
+
+**Secondary workspace (a different repo open):**
+1. `~/.cursor/mcp.json` with an absolute path to `scripts/run-openthrottle-mcp.sh` + same OT env; restart Cursor.
+2. The absolute-path launcher resolves the live server from any cwd; `health` passes in the MCP panel.
+
+**Optional:** GitHub MCP is **not** a gate — see the [optional GitHub appendix](../../packages/openthrottle-mcp/docs/verification-environment.md#optional-appendix--github-mcp).
 
 ## Related documentation
 
