@@ -1,6 +1,7 @@
 .markdown {
   color: var(--color-muted-foreground);
   font-size: var(--text-sm);
+  word-wrap: break-word;
 }
 
 /**
@@ -96,7 +97,8 @@
 
 .markdown ol,
 .markdown ul {
-  @apply my-4 space-y-2 text-xs;
+  /* margin-left: 1rem; */
+  @apply my-4 ml-2 space-y-2 text-xs;
 }
 
 .markdown ol li,

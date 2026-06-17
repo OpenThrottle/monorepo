@@ -138,21 +138,22 @@ describe('createTasksToolHandler', () => {
   });
 
   describe('when GraphQL creates multiple tasks', () => {
-    it('returns all created task ids and titles', async () => {
-      vi.mocked(executeGraphqlWithAuth)
-        .mockResolvedValueOnce({ tasksByPlanId: [] })
-        .mockResolvedValueOnce({
-          createTask: {
-            id: '27956636-1ab4-4ded-b227-8c52bf888b05',
-            title: 'First task',
-          },
-        })
-        .mockResolvedValueOnce({
-          createTask: {
-            id: 'c0c8c4ad-2fee-4706-8d59-84f7ed3981a8',
-            title: 'Second task',
-          },
-        });
+    it('returns all created task ids and titles from one atomic call', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createTasks: {
+          tasks: [
+            {
+              id: '27956636-1ab4-4ded-b227-8c52bf888b05',
+              title: 'First task',
+            },
+            {
+              id: 'c0c8c4ad-2fee-4706-8d59-84f7ed3981a8',
+              title: 'Second task',
+            },
+          ],
+          totalCount: 2,
+        },
+      });
 
       const result = await createTasksToolHandler({
         planId,
@@ -173,89 +174,79 @@ describe('createTasksToolHandler', () => {
           ],
         },
       });
-      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(3);
+      // Single round trip: no pre-fetch loop, server computes sortOrder.
+      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
     });
 
-    it('assigns sortOrder after plan max when omitted', async () => {
-      vi.mocked(executeGraphqlWithAuth)
-        .mockResolvedValueOnce({
-          tasksByPlanId: [
-            { id: 'existing', sortOrder: 3000, title: 'Existing' },
+    it('sends one createTasks input with the tasks array (sortOrder defaulted server-side)', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createTasks: {
+          tasks: [
+            { id: 'new-1', title: 'First new' },
+            { id: 'new-2', title: 'Second new' },
           ],
-        })
-        .mockResolvedValueOnce({
-          createTask: { id: 'new-1', title: 'First new' },
-        })
-        .mockResolvedValueOnce({
-          createTask: { id: 'new-2', title: 'Second new' },
-        });
+          totalCount: 2,
+        },
+      });
 
       await createTasksToolHandler({
         planId,
         tasks: [{ title: 'First new' }, { title: 'Second new' }],
       });
 
-      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
-        2,
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
         {
-          input: expect.objectContaining({
+          input: {
             planId,
-            sortOrder: 4000,
-            title: 'First new',
-          }),
-        },
-      );
-      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
-        3,
-        serviceAccountToken,
-        expect.anything(),
-        {
-          input: expect.objectContaining({
-            planId,
-            sortOrder: 5000,
-            title: 'Second new',
-          }),
+            tasks: [
+              expect.objectContaining({ sortOrder: null, title: 'First new' }),
+              expect.objectContaining({ sortOrder: null, title: 'Second new' }),
+            ],
+          },
         },
       );
     });
 
-    it('respects explicit sortOrder per item', async () => {
-      vi.mocked(executeGraphqlWithAuth)
-        .mockResolvedValueOnce({ tasksByPlanId: [] })
-        .mockResolvedValueOnce({
-          createTask: { id: 'new-1', title: 'Explicit' },
-        })
-        .mockResolvedValueOnce({
-          createTask: { id: 'new-2', title: 'Implicit' },
-        });
+    it('passes explicit per-item sortOrder and stringifies requirements', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createTasks: {
+          tasks: [
+            { id: 'new-1', title: 'Explicit' },
+            { id: 'new-2', title: 'Implicit' },
+          ],
+          totalCount: 2,
+        },
+      });
 
       await createTasksToolHandler({
         planId,
-        tasks: [{ sortOrder: 7500, title: 'Explicit' }, { title: 'Implicit' }],
+        tasks: [
+          { requirements: ['a', 'b'], sortOrder: 7500, title: 'Explicit' },
+          { title: 'Implicit' },
+        ],
       });
 
-      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
-        2,
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
         {
-          input: expect.objectContaining({
-            sortOrder: 7500,
-            title: 'Explicit',
-          }),
-        },
-      );
-      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
-        3,
-        serviceAccountToken,
-        expect.anything(),
-        {
-          input: expect.objectContaining({
-            sortOrder: 1000,
-            title: 'Implicit',
-          }),
+          input: {
+            planId,
+            tasks: [
+              expect.objectContaining({
+                requirements: JSON.stringify(['a', 'b']),
+                sortOrder: 7500,
+                title: 'Explicit',
+              }),
+              expect.objectContaining({
+                requirements: null,
+                sortOrder: null,
+                title: 'Implicit',
+              }),
+            ],
+          },
         },
       );
     });
@@ -263,9 +254,9 @@ describe('createTasksToolHandler', () => {
 
   describe('when GraphQL creates no tasks', () => {
     it('returns empty created list', async () => {
-      vi.mocked(executeGraphqlWithAuth)
-        .mockResolvedValueOnce({ tasksByPlanId: [] })
-        .mockResolvedValueOnce({ createTask: null });
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createTasks: { tasks: [], totalCount: 0 },
+      });
 
       const result = await createTasksToolHandler({
         planId,

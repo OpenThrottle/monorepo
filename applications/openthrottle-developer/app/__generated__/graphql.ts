@@ -441,6 +441,17 @@ export type CreatePlanInput = {
   title: Scalars['String']['input'];
 };
 
+export type CreatePlansInput = {
+  /** Plans to create atomically in one transaction. Each item carries its own author/category/title (same shape as createPlan). */
+  plans: Array<CreatePlanInput>;
+};
+
+export type CreatePlansResultObject = {
+  __typename?: 'CreatePlansResultObject';
+  plans: Array<PlanObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
 export type CreateProjectInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
@@ -505,6 +516,35 @@ export type CreateTaskInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
+};
+
+export type CreateTasksInput = {
+  /** Plan id all tasks in this batch belong to */
+  planId: Scalars['ID']['input'];
+  /** Tasks to create atomically in one transaction. sortOrder is per-item optional; omitted items append MAX+1000, MAX+2000, … in array order. */
+  tasks: Array<CreateTasksItemInput>;
+};
+
+export type CreateTasksItemInput = {
+  assignee?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  project?: InputMaybe<Scalars['String']['input']>;
+  /** Project UUID (FK to projects table). Omit or pass null when task is not linked to a project. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** JSON string of requirements array */
+  requirements?: InputMaybe<Scalars['String']['input']>;
+  /** Optional. Execution order within plan. When omitted, server auto-assigns MAX+1000 stepping in array order. */
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  summary?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type CreateTasksResultObject = {
+  __typename?: 'CreateTasksResultObject';
+  tasks: Array<TaskObject>;
+  totalCount: Scalars['Int']['output'];
 };
 
 export type CreateUserInput = {
@@ -1108,6 +1148,8 @@ export type Mutation = {
   createNote: NoteObject;
   /** Create a plan */
   createPlan: PlanObject;
+  /** Create many plans atomically in a single transaction. Every input is validated up front (same rules as createPlan); a single invalid input or DB failure rolls back the whole batch. */
+  createPlans: CreatePlansResultObject;
   /** Create a project */
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
@@ -1120,6 +1162,8 @@ export type Mutation = {
   createServiceAccountCredential?: Maybe<CreateServiceAccountCredentialResultObject>;
   /** Create a task */
   createTask: TaskObject;
+  /** Create many tasks for one plan atomically in a single transaction. Omitted sortOrders append MAX+1000 stepping in array order; explicit per-item sortOrder is respected. Any failure rolls back the whole batch. */
+  createTasks: CreateTasksResultObject;
   /** Create a user */
   createUser: UserObject;
   /** Register a local filesystem repository for the authenticated user. */
@@ -1275,6 +1319,10 @@ export type MutationCreatePlanArgs = {
   input: CreatePlanInput;
 };
 
+export type MutationCreatePlansArgs = {
+  input: CreatePlansInput;
+};
+
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
 };
@@ -1297,6 +1345,10 @@ export type MutationCreateServiceAccountCredentialArgs = {
 
 export type MutationCreateTaskArgs = {
   input: CreateTaskInput;
+};
+
+export type MutationCreateTasksArgs = {
+  input: CreateTasksInput;
 };
 
 export type MutationCreateUserArgs = {

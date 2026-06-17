@@ -14,7 +14,7 @@ export const SERVER_INSTRUCTIONS = `OpenThrottle (OT) is the single source of tr
 
 Hard rules:
 - OT only. Never create or update a plan/task as a Markdown file under docs/ or anywhere else. If these tools are unavailable, fail loudly and report the error — do NOT fall back to writing plans as files.
-- create_plan / create_task / create_tasks record plans and tasks. Prefer reorder_plan_tasks to re-sequence; do not delete-and-recreate to reorder.
+- create_plan / create_plans / create_task / create_tasks record plans and tasks. create_tasks (one plan, many tasks) and create_plans (many plans) are atomic — the whole batch commits or rolls back together — so prefer them over looping single creates. Prefer reorder_plan_tasks to re-sequence; do not delete-and-recreate to reorder.
 - update_task takes the task id (UUID), not the title. Move a task through its lifecycle by updating status (e.g. in_progress → completed), not by recreating.
 - link_commit is for the squash commit AFTER a PR merges — one link per task to its merged commit. It is NOT for every intermediate work commit. Per-task work commits carry traceability via the Plan-Id: / Task-Id: footers instead.
 - Author/assignee fields expect the GitHub username, not a display name.
