@@ -1,5 +1,7 @@
 # OT MCP verification — environment and fixtures
 
+> **Registering MCP servers?** The canonical guide is **[docs/openthrottle/mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)** — tiers, config locations, the `.cursor/mcp.json.example` template, editor parity, and user-provided servers. This page covers the **environment, fixtures, and smoke checks** for verifying `openthrottle-mcp` against a local server; it does not re-document registration.
+
 Use this when exercising **@openthrottle/openthrottle-mcp** against a local **openthrottle-server** (GraphQL only; no direct Postgres from the MCP).
 
 ## Minimal stack (aligned with native checkout)
@@ -31,7 +33,7 @@ Verified daily path for **Postgres, Redis, migrations, API, and optional develop
 
 Cursor MCP config lives in `.cursor/mcp.json` under **`openthrottle-mcp`** — keep **`API_URL` / `API_URL_INTERNAL`** aligned with the running server port.
 
-**Committed template:** [`.cursor/mcp.json.example`](../../../.cursor/mcp.json.example) shows the minimal **`openthrottle-mcp`** entry (API base URL + **`OPENTHROTTLE_MCP_AUTH_TOKEN`** placeholder). Copy or merge into `.cursor/mcp.json` (project workspace) or `~/.cursor/mcp.json` (secondary workspace); replace the token with output from **`pnpm run database:bootstrap-service-accounts`**. Do not commit real tokens. Token setup: [AUTH.md](./AUTH.md).
+**Committed template & registration:** the `.cursor/mcp.json.example` template, config locations, and editor parity are documented in **[mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)**. In short: copy/merge the `openthrottle-mcp` entry into `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (secondary workspace) and set **`OPENTHROTTLE_MCP_AUTH_TOKEN`** from **`pnpm run database:bootstrap-service-accounts`**. Do not commit real tokens. Token setup: [AUTH.md](./AUTH.md).
 
 ## Quick prerequisite check
 
