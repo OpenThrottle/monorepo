@@ -18,12 +18,6 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [Worktrees](#worktrees) — worktree-aware launcher (see mcp-worktrees.md)
 - [Smoke-test checklist](#smoke-test-checklist) — registration gates
 
-<!--
-SECTION PLACEHOLDERS — filled in by later tasks in plan 0f2ffac0-26fc-40bc-914f-b3f1dede75b4.
-Each section is authored by its own task; this scaffold establishes the structure, TOC,
-and cross-links so the consolidation lands incrementally without duplicating source docs.
--->
-
 ## Current state
 
 Inventory of MCP config **as actually committed** (audited 2026-06-16). This is the ground truth the rest of this guide builds on — not the original (superseded) plan.
