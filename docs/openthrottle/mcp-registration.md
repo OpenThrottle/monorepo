@@ -53,17 +53,45 @@ See [mcp-worktrees.md](./mcp-worktrees.md) for worktree identity and [verificati
 
 ## MCP tiers
 
-<!-- TODO(task 3000): required OT-native = openthrottle-mcp only; user-provided/optional =
-     github, shadcn, nx-mcp, maestro, fetch. NOT docs-mcp (retired), NOT git (not committed). -->
+OpenThrottle distinguishes two tiers of MCP server. **Only one is OT-native and required**; everything else is user-provided and optional.
 
-_Pending — see task 3000._
+### Tier 1 — Required, OT-native
+
+| Server             | Why                                                                                                   | Registration                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **openthrottle-mcp** | The single OT-native server. Plans, tasks, notes, commit links, activity, plan output stream, semantic search over the OT knowledge base (plans + tasks + ingested `docs/`), and `health`. Plans/tasks live in OT **only** — never as Markdown files. | `bash scripts/run-openthrottle-mcp.sh` — see [Template structure](#template-structure). |
+
+This is the only server this repo expects you to register to work with OpenThrottle. It absorbed the former `docs-mcp` documentation-search role (see [Current state](#current-state)).
+
+### Tier 2 — User-provided / optional
+
+These are general-purpose servers a developer may register to taste. They are **not** OT-native and **not** required for OT plans/tasks. They appear in `.mcp.json` / `opencode.json` because they are useful in this repo, but you register and authenticate them yourself.
+
+| Server     | Purpose                                  | Appears in                  |
+| ---------- | ---------------------------------------- | --------------------------- |
+| **github** | GitHub PRs, issues, code search          | `.mcp.json`                 |
+| **shadcn** | shadcn/ui component registry             | `.mcp.json`                 |
+| **nx-mcp** | Nx workspace graph, generators, docs     | `opencode.json`             |
+| **maestro**| Maestro E2E driving of the developer app | `.mcp.json`                 |
+| **fetch**  | Generic URL fetch                        | `.mcp.json`                 |
+
+Detail and registration for these: [User-provided servers](#user-provided-servers).
+
+> **Not active OT-native servers:** `docs-mcp` (retired — see [Current state](#current-state)) and `git` (not present in any committed config). Do not register either as an OT-native server.
 
 ## Config locations
 
-<!-- TODO(task 3000): project-level .cursor/mcp.json vs user-level ~/.cursor/mcp.json;
-     secondary workspace canonical = ~/.cursor/mcp.json with absolute paths to the OT checkout. -->
+MCP config is read per **workspace** and (for Cursor) optionally per **user**. Where you put the `openthrottle-mcp` entry depends on whether the OpenThrottle monorepo is your open workspace.
 
-_Pending — see task 3000._
+| Location                         | Scope                | When to use                                                                                                   |
+| -------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `.cursor/mcp.json`               | Project (this repo)  | The monorepo is your open Cursor workspace. Copy/merge from [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example). Gitignored — your local copy with real tokens. |
+| `~/.cursor/mcp.json`             | User-level (Cursor)  | **Secondary workspace** — a *different* repo is open in Cursor but you still want OT tools. Canonical home; use **absolute paths** to the OT checkout. See [Secondary workspace](#secondary-workspace). |
+| `.mcp.json`                      | Project (Claude Code)| Claude Code in the monorepo. Committed; already includes `openthrottle-mcp` + user-provided servers.          |
+| `.vscode/mcp.json`               | Project (VS Code)    | VS Code's MCP support. Currently empty `{}` — register servers yourself.                                      |
+| `opencode.json`                  | Project (OpenCode)   | OpenCode editor. Committed; includes `nx-mcp`.                                                                |
+
+**Project vs user-level (Cursor):** a project-level `.cursor/mcp.json` is only loaded when that folder is the workspace root. When OpenThrottle is *not* the open workspace, the project file is ignored — use `~/.cursor/mcp.json` instead. If both define `openthrottle-mcp`, see [Cursor merge behavior](#user-provided-servers).
 
 ## Template structure
 
@@ -90,11 +118,13 @@ _Pending — see task 5000._
 
 ## Secondary workspace
 
-<!-- TODO(task 3000/5000): using OT MCP while the active workspace is a different checkout —
-     ~/.cursor/mcp.json with absolute path to scripts/run-openthrottle-mcp.sh; same env as local OT.
-     Detail in verification-environment.md § Secondary workspace. -->
+Use `openthrottle-mcp` while your **active Cursor workspace is a different repo** (not the OpenThrottle monorepo root). The project-level `.cursor/mcp.json` inside OpenThrottle is not loaded then, so register at user level.
 
-_Pending — see verification-environment.md § Secondary workspace and task 3000._
+1. **Register in `~/.cursor/mcp.json`** (user-level), not the project file.
+2. **Use an absolute path** to the launcher — `bash` + `<path-to-openthrottle-checkout>/scripts/run-openthrottle-mcp.sh`. A relative `./scripts/...` resolves against the *open* workspace and won't exist outside the OT repo.
+3. **Same env as local OT** — `API_URL` / `API_URL_INTERNAL` pointed at the running server (e.g. `http://localhost:6021`) and `OPENTHROTTLE_MCP_AUTH_TOKEN` for authenticated tools. These are independent of which folder is open.
+
+The launcher `cd`s into the monorepo and starts Node from that checkout; GraphQL-backed tools (`create_plan`, `create_task`, …) call the server over HTTP and do not depend on the open workspace path. Full detail and failure modes: [verification-environment.md § Secondary workspace](../../packages/openthrottle-mcp/docs/verification-environment.md#secondary-workspace-another-repo-open-in-cursor).
 
 ## Worktrees
 
