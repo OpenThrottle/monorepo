@@ -94,6 +94,7 @@
     "@openthrottle/react-router-auth": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
     "@openthrottle/react-router-editor": "workspace:^",
+    "@openthrottle/react-router-floor-layout": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-ide": "workspace:^",
     "@openthrottle/react-router-notifications": "workspace:^",

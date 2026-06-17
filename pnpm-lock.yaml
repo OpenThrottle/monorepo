@@ -1197,6 +1197,9 @@ importers:
       '@openthrottle/react-router-editor':
         specifier: workspace:^
         version: link:packages/react-router-editor
+      '@openthrottle/react-router-floor-layout':
+        specifier: workspace:^
+        version: link:packages/react-router-floor-layout
       '@openthrottle/react-router-graphql':
         specifier: workspace:^
         version: link:packages/react-router-graphql
@@ -2836,6 +2839,25 @@ importers:
       react-router:
         specifier: 'catalog:'
         version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  packages/react-router-floor-layout:
+    dependencies:
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:^
+        version: link:../react-router-shadcn
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@openthrottle/react-router-testing':
+        specifier: workspace:^
+        version: link:../react-router-testing
 
   packages/react-router-graphql:
     dependencies:

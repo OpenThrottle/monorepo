@@ -198,6 +198,9 @@
     },
     {
       "path": "./packages/react-router-scheduling"
+    },
+    {
+      "path": "./packages/react-router-floor-layout"
     }
   ]
 }
