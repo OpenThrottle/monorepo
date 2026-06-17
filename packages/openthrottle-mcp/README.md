@@ -4,6 +4,8 @@ Model Context Protocol (MCP) server for OpenThrottle: plans, tasks, and GraphQL-
 
 For schema, embeddings, and local Postgres setup, see [databases/README.md](../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
+**Registering this server:** the canonical guide is [docs/openthrottle/mcp-registration.md](../../docs/openthrottle/mcp-registration.md) — tiers, config locations, the `.cursor/mcp.json.example` template, and editor parity. The package-specific launcher and env details below stay here.
+
 **Cursor launcher:** [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [run-locally-oss.md](../../docs/openthrottle/run-locally-oss.md).
 
 ## Authentication

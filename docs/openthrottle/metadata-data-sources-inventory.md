@@ -8,11 +8,11 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 | ------ | -------------------------- | ------------------------------------------- | --------------- | ---------------------------------------- |
 | Plans  | `plan_embeddings`          | Plan title, description, summary, output md | vector(1536)    | openthrottle-mcp `semantic_search`       |
 | Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | openthrottle-mcp `semantic_search`       |
-| Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | docs-mcp `documentation_semantic_search` |
+| Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | openthrottle-mcp `semantic_search` / `get_document` |
 
 **Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).
 
-**Gap:** openthrottle-mcp and docs-mcp are separate MCPs — semantic search does not cross plans + tasks + docs + commits in one query.
+**Gap:** `semantic_search` does not yet rank across plans + tasks + docs + commits in one query (all served by openthrottle-mcp; the former standalone `docs-mcp` is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state)).
 
 ---
 
@@ -70,7 +70,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 **Main gaps:**
 
-1. **No cross-source semantic search** — plans, tasks, docs, and commits are queried separately. A unified "story over time" query would need to join or federate across openthrottle-mcp and docs-mcp.
+1. **No cross-source semantic search** — plans, tasks, docs, and commits are queried separately within openthrottle-mcp. A unified "story over time" query would need to join or rank across those source types in one call.
 2. **Inconsistent metadata** — `documentation` and `commit_links` both carry repo/sha; plans/tasks have author/assignee but no repo/sha. No single metadata model that ties all four.
 3. **Docs not in activity** — `get_activity_by_date` returns commits, plan output, tasks updated; docs changes are not included.
 4. **Commit content not searchable** — commit messages are in `commit_links.message` but not embedded; cannot semantically search "commits about X".
