@@ -3449,6 +3449,48 @@ export type DiscoverLocalModelsQuery = {
   };
 };
 
+export type StartConversationStreamMutationVariables = Exact<{
+  input: StartConversationStreamInput;
+}>;
+
+export type StartConversationStreamMutation = {
+  __typename?: 'Mutation';
+  startConversationStream: {
+    __typename?: 'StartConversationStreamResult';
+    assistantMessageId?: string | null;
+    conversationId?: string | null;
+    errorMessage?: string | null;
+    userMessageId?: string | null;
+  };
+};
+
+export type CancelConversationStreamMutationVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+export type CancelConversationStreamMutation = {
+  __typename?: 'Mutation';
+  cancelConversationStream: boolean;
+};
+
+export type ConversationStreamChunkAddedSubscriptionVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+export type ConversationStreamChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  conversationStreamChunkAdded: {
+    __typename?: 'ConversationStreamChunkObject';
+    conversationId: string;
+    delta: string;
+    done: boolean;
+    error?: string | null;
+    id: string;
+    messageId: string;
+    sortOrder: number;
+  };
+};
+
 export type SearchAgentAssetsQueryVariables = Exact<{
   input: AgentAssetSearchInput;
 }>;
@@ -6818,6 +6860,180 @@ export const DiscoverLocalModelsDocument = {
 } as unknown as DocumentNode<
   DiscoverLocalModelsQuery,
   DiscoverLocalModelsQueryVariables
+>;
+export const StartConversationStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StartConversationStream' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'StartConversationStreamInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'startConversationStream' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'assistantMessageId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'userMessageId' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  StartConversationStreamMutation,
+  StartConversationStreamMutationVariables
+>;
+export const CancelConversationStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CancelConversationStream' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'conversationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelConversationStream' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'conversationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelConversationStreamMutation,
+  CancelConversationStreamMutationVariables
+>;
+export const ConversationStreamChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'ConversationStreamChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'conversationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'conversationStreamChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'conversationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'delta' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'messageId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ConversationStreamChunkAddedSubscription,
+  ConversationStreamChunkAddedSubscriptionVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',
