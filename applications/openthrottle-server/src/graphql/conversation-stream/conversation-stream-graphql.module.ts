@@ -7,13 +7,14 @@
 
 import { Module } from '@nestjs/common';
 import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { ConversationStreamResolver } from './conversation-stream.resolver';
 import { ConversationStreamService } from './conversation-stream.service';
 
 @Module({
-  imports: [NestjsModelDiscoveryModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, NestjsModelDiscoveryModule, NestjsRepositoriesModule],
   providers: [ConversationStreamResolver, ConversationStreamService],
 })
 export class ConversationStreamGraphqlModule {}
