@@ -80,3 +80,13 @@ export class TasksByProjectIdResultObject {
   @Field(() => Int)
   totalCount!: number;
 }
+
+/** Result of createTasks: the tasks created in the batch and how many. */
+@ObjectType()
+export class CreateTasksResultObject {
+  @Field(() => [TaskObject])
+  tasks!: TaskObject[];
+
+  @Field(() => Int)
+  totalCount!: number;
+}

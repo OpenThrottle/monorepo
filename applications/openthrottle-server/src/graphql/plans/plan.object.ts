@@ -124,6 +124,16 @@ export class ListPlansByStatusResultObject {
   totalCount!: number;
 }
 
+/** Result of createPlans: the plans created in the batch and how many. */
+@ObjectType()
+export class CreatePlansResultObject {
+  @Field(() => [PlanObject])
+  plans!: PlanObject[];
+
+  @Field(() => Int)
+  totalCount!: number;
+}
+
 /** Result of enqueuePlanRun (and deprecated workflowPlanRun alias): job id, plan id, and queue position for UI feedback. */
 @ObjectType()
 export class EnqueuePlanRunResultObject {

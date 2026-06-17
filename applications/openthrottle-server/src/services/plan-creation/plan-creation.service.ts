@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Plan } from '@openthrottle/nestjs-repositories';
+import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
+  Plan,
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
@@ -56,9 +57,22 @@ export class PlanCreationService {
   }
 
   /**
-   * @description Persists a plan using the same input contract as GraphQL `createPlan` / MCP `create_plan`, with Cortex-style assignee normalization, optional `GITHUB_USER` author default, and best-effort plan embedding for semantic search.
+   * @description Validates and normalizes a single create input into the persisted plan column set
+   * (Cortex-style assignee normalization, optional `GITHUB_USER` author default, run-config defaulting).
+   * Throws {@link BadRequestException} on missing title/category/author. Shared by single and batch create.
    */
-  async createPlanFromInput(input: CreatePlanInput): Promise<Plan> {
+  private resolvePlanCreateFields(input: CreatePlanInput): {
+    assignee: string | null;
+    author: string;
+    category: string;
+    description: string | null;
+    project: string | null;
+    projectId: string | null;
+    runConfig: PlanRunConfigStorage;
+    status: string;
+    summary: string | null;
+    title: string;
+  } {
     const defaultGh = process.env.GITHUB_USER?.trim();
     const title = input.title?.trim() ?? '';
     const category = input.category?.trim() ?? '';
@@ -80,28 +94,61 @@ export class PlanCreationService {
       );
     }
 
-    const assignee = normalizeAssignee(input.assignee ?? null);
-
     const parsedRunConfig = parsePlanRunConfigJson(input.runConfigJson);
-    const runConfig = parsedRunConfig ?? getDefaultPlanRunConfigStorage();
 
-    const repo = this.plansService.getRepository();
-    const entity = repo.create({
-      assignee,
+    return {
+      assignee: normalizeAssignee(input.assignee ?? null),
       author,
       category,
       description: input.description ?? null,
       project: input.project ?? null,
       projectId: input.projectId ?? null,
-      runConfig,
+      runConfig: parsedRunConfig ?? getDefaultPlanRunConfigStorage(),
       status: (input.status ?? 'PENDING').toUpperCase(),
       summary: input.summary ?? null,
       title,
-    });
+    };
+  }
+
+  /**
+   * @description Persists a plan using the same input contract as GraphQL `createPlan` / MCP `create_plan`, with Cortex-style assignee normalization, optional `GITHUB_USER` author default, and best-effort plan embedding for semantic search.
+   */
+  async createPlanFromInput(input: CreatePlanInput): Promise<Plan> {
+    const repo = this.plansService.getRepository();
+    const entity = repo.create(this.resolvePlanCreateFields(input));
 
     const saved = await repo.save(entity);
 
     await this.maybeInsertPlanEmbedding(saved);
+
+    return saved;
+  }
+
+  /**
+   * @description Atomically create many plans in one transaction. Every input is validated/normalized
+   * up front (same rules as {@link createPlanFromInput}); a single bad input throws before anything is
+   * persisted, and any DB failure rolls back the whole batch. Embeddings are inserted best-effort after
+   * commit (failures never roll back the plans), matching the single-create path. Returns saved plans in
+   * input order.
+   */
+  async createPlansFromInput(
+    inputs: readonly CreatePlanInput[],
+  ): Promise<Plan[]> {
+    if (inputs.length === 0) return [];
+
+    const fieldsList = inputs.map((input) =>
+      this.resolvePlanCreateFields(input),
+    );
+
+    const repo = this.plansService.getRepository();
+    const saved = await repo.manager.transaction(async (manager) => {
+      const planRepo = manager.getRepository(Plan);
+      const entities = fieldsList.map((fields) => planRepo.create(fields));
+
+      return planRepo.save(entities);
+    });
+
+    await Promise.all(saved.map((plan) => this.maybeInsertPlanEmbedding(plan)));
 
     return saved;
   }
