@@ -11,14 +11,14 @@
  *   `aria-live` region should announce moves and errors.
  */
 import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { createRoutesStub } from 'react-router';
+import type { RenderResult } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { PlanTasksBoard } from '../PlanTasksBoard';
-import type { PlanTasksBoardProps } from '../PlanTasksBoard';
+import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 const mockTask = (
@@ -41,15 +41,22 @@ const mockTask = (
   ...overrides,
 });
 
-const renderBoard = (props: PlanTasksBoardProps): React.ReactElement => {
-  const Component = () => (
+const renderBoard = (args: {
+  planId: string;
+  tasks: PlanTaskRowFragment[];
+}): RenderResult =>
+  renderWithPlanDetailRouteData(
     <DndProvider backend={HTML5Backend}>
-      <PlanTasksBoard {...props} />
-    </DndProvider>
+      <PlanTasksBoard />
+    </DndProvider>,
+    {
+      plan: { id: args.planId },
+      planOutputChunks: [],
+      planRunAuditRows: [],
+      recentPlanRuns: [],
+      tasks: args.tasks,
+    },
   );
-  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub />);
-};
 
 describe('PlanTasksBoard Component', () => {
   test('exposes a live region for drag-and-drop announcements', () => {

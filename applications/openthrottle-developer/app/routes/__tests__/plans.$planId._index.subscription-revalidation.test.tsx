@@ -1,8 +1,9 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { createRoutesStub, type UIMatch } from 'react-router';
+import { type UIMatch } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
 
 const mockRevalidate = vi.fn();
@@ -63,24 +64,25 @@ const mockPlan = {
 };
 
 function renderPlanDetail(planId: string): ReturnType<typeof render> {
-  const Component = () => (
+  const loaderData = {
+    plan: mockPlan,
+    planOutputChunks: [],
+    planRunAuditRows: [],
+    recentPlanRuns: [],
+    tasks: [],
+  };
+  return renderWithPlanDetailRouteData(
     <TooltipProvider>
       <PlanDetail
         actionData={undefined}
-        loaderData={{
-          plan: mockPlan,
-          planOutputChunks: [],
-          planRunAuditRows: [],
-          recentPlanRuns: [],
-          tasks: [],
-        }}
+        loaderData={loaderData}
         matches={[] as UIMatch[]}
         params={{ planId }}
       />
-    </TooltipProvider>
+    </TooltipProvider>,
+    loaderData,
+    { initialEntries: ['/?view=table'] },
   );
-  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub initialEntries={['/?view=table']} />);
 }
 
 describe('routes/plans.$planId._index subscription revalidation', () => {
