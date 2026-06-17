@@ -3432,6 +3432,23 @@ export type NotificationsSubscription = {
       };
 };
 
+export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DiscoverLocalModelsQuery = {
+  __typename?: 'Query';
+  discoverLocalModels: {
+    __typename?: 'DiscoverLocalModelsResult';
+    totalCount: number;
+    endpoints: Array<{
+      __typename?: 'ModelEndpointObject';
+      baseUrl: string;
+      host: string;
+      models: Array<string>;
+      provider?: string | null;
+    }>;
+  };
+};
+
 export type SearchAgentAssetsQueryVariables = Exact<{
   input: AgentAssetSearchInput;
 }>;
@@ -6751,6 +6768,56 @@ export const NotificationsDocument = {
 } as unknown as DocumentNode<
   NotificationsSubscription,
   NotificationsSubscriptionVariables
+>;
+export const DiscoverLocalModelsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DiscoverLocalModels' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverLocalModels' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'endpoints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'baseUrl' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'host' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'models' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'provider' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DiscoverLocalModelsQuery,
+  DiscoverLocalModelsQueryVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',

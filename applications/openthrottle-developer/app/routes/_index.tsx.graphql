@@ -1,0 +1,11 @@
+query DiscoverLocalModels {
+  discoverLocalModels {
+    endpoints {
+      baseUrl
+      host
+      models
+      provider
+    }
+    totalCount
+  }
+}

@@ -13,9 +13,9 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
-  CHAT_TOOLBAR_MODELS,
   CHAT_TOOLBAR_PERSONAS,
 } from '~/routing/home/data/chat-toolbar';
+import { loadDiscoveredModels } from '~/routing/home/data/models.server';
 import type { Route } from '@/app/routes/+types/_index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -25,8 +25,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+export const loader = async (args: Route.LoaderArgs) => {
+  const models = await loadDiscoveredModels(args.request);
+  return { conversationId: null, models, seedMessages: [] };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -40,11 +41,14 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
+  const { models } = loaderData;
+  const hasModels = models.length > 0;
 
   // Hooks
   const [modelId, setModelId] = React.useState<string | undefined>(
-    CHAT_TOOLBAR_MODELS[0]?.id,
+    models[0]?.id,
   );
   const [personaId, setPersonaId] = React.useState<string | undefined>(
     CHAT_TOOLBAR_PERSONAS[0]?.id,
@@ -74,7 +78,7 @@ export default function Component(
       contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
       mode={mode}
       modelId={modelId}
-      models={CHAT_TOOLBAR_MODELS}
+      models={models}
       onAddContext={() => {}}
       onModeChange={setMode}
       onModelChange={setModelId}
@@ -102,9 +106,15 @@ export default function Component(
 
       <div className="mx-auto w-full max-w-3xl">
         <ChatThread emptyStateLabel="" messages={[]} />
+        {!hasModels ? (
+          <p className="text-muted-foreground mb-2 text-center text-sm">
+            No local models discovered. Start a local OpenAI-compatible server
+            (e.g. Ollama) and reload.
+          </p>
+        ) : null}
         <ChatComposer
           className="border-t-0"
-          disabled={false}
+          disabled={!hasModels}
           isStreaming={isStreaming}
           onStop={onStop}
           onSubmit={onSubmit}

@@ -12,7 +12,7 @@ describe('routes/_index.tsx', () => {
         <MemoryRouter>
           <Index
             actionData={undefined}
-            loaderData={{}}
+            loaderData={{ conversationId: null, models: [], seedMessages: [] }}
             matches={[] as never}
             params={{}}
           />
