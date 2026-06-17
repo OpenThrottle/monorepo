@@ -1,17 +1,16 @@
 {
-  "name": "<%= name %>",
-  "description": "FIXME: Add a description...",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://<%= name %>.com"
   },
   "dependencies": {},
+  "description": "FIXME: Add a description...",
   "devDependencies": {},
   "engines": {
     "node": ">=22"
   },
+  "name": "<%= name %>",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -40,5 +39,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "sideEffects": false,
   "scripts": {},
-  "type": "module"
+  "type": "module",
+  "version": "1.0.0"
 }

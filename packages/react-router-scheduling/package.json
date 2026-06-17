@@ -4,34 +4,42 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "description": "TODO: Add a description",
-  "devDependencies": {},
-  "exports": {
-    ".": {
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js",
-      "types": "./dist/*.d.ts"
-    }
+  "dependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@preact/signals": "catalog:",
+    "@schedule-x/calendar": "catalog:",
+    "@schedule-x/calendar-controls": "catalog:",
+    "@schedule-x/current-time": "catalog:",
+    "@schedule-x/drag-and-drop": "catalog:",
+    "@schedule-x/event-modal": "catalog:",
+    "@schedule-x/event-recurrence": "catalog:",
+    "@schedule-x/events-service": "catalog:",
+    "@schedule-x/react": "catalog:",
+    "@schedule-x/resize": "catalog:",
+    "@schedule-x/theme-shadcn": "catalog:",
+    "preact": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "temporal-polyfill": "catalog:"
+  },
+  "description": "Source-first React Router scheduling calendar package: an engine-agnostic wrapper (hooks, components, utils) around Schedule-X for day/week/month views, drag-and-drop, resize, and event CRUD.",
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
   },
   "main": "./src/index.ts",
-  "name": "<%= org %>/<%= name %>",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-scheduling",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:<%= org %>/<%= name %>",
+      "name:@openthrottle/react-router-scheduling",
       "production:true",
       "publish:false",
-      "technology:nodejs",
+      "technology:react",
+      "technology:react-router",
       "type:package"
     ],
     "targets": {
