@@ -4,7 +4,6 @@ import { execSync } from 'child_process';
  * @description Valid technology tag values as defined in the reference document
  */
 const VALID_TECHNOLOGY_TAGS = [
-  'expo',
   'llm',
   'nestjs',
   'nodejs',
@@ -12,7 +11,6 @@ const VALID_TECHNOLOGY_TAGS = [
   'react-native',
   'react-router',
   'react',
-  'supabase',
   'terraform',
   'typescript',
 ] as const;

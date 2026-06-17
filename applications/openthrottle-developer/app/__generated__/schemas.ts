@@ -19,12 +19,15 @@ import {
   CreateCustomPromptInput,
   CreateNoteInput,
   CreatePlanInput,
+  CreatePlansInput,
   CreateProjectInput,
   CreateQueueInput,
   CreateRoleInput,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   CreateTaskInput,
+  CreateTasksInput,
+  CreateTasksItemInput,
   CreateUserInput,
   CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
@@ -315,6 +318,14 @@ export function CreatePlanInputSchema(): z.ZodObject<
   });
 }
 
+export function CreatePlansInputSchema(): z.ZodObject<
+  Properties<CreatePlansInput>
+> {
+  return z.object({
+    plans: z.array(z.lazy(() => CreatePlanInputSchema())),
+  });
+}
+
 export function CreateProjectInputSchema(): z.ZodObject<
   Properties<CreateProjectInput>
 > {
@@ -369,6 +380,32 @@ export function CreateTaskInputSchema(): z.ZodObject<
     category: z.string().nullish(),
     description: z.string().nullish(),
     planId: z.string(),
+    project: z.string().nullish(),
+    projectId: z.string().nullish(),
+    requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
+    status: z.string().nullish(),
+    summary: z.string().nullish(),
+    title: z.string(),
+  });
+}
+
+export function CreateTasksInputSchema(): z.ZodObject<
+  Properties<CreateTasksInput>
+> {
+  return z.object({
+    planId: z.string(),
+    tasks: z.array(z.lazy(() => CreateTasksItemInputSchema())),
+  });
+}
+
+export function CreateTasksItemInputSchema(): z.ZodObject<
+  Properties<CreateTasksItemInput>
+> {
+  return z.object({
+    assignee: z.string().nullish(),
+    category: z.string().nullish(),
+    description: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),

@@ -6,6 +6,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createPlanToolHandler,
+  createPlansToolHandler,
   listPlansByStatusToolHandler,
 } from './plans.js';
 
@@ -128,6 +129,110 @@ describe('createPlanToolHandler', () => {
 
       expect(result).toEqual({
         content: [{ text: 'create_plan failed: network down', type: 'text' }],
+        isError: true,
+      });
+    });
+  });
+});
+
+describe('createPlansToolHandler', () => {
+  const serviceAccountToken = 'ot_sa_testprefix_testsecret';
+
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when args are invalid', () => {
+    it('returns an invalid-args error without calling GraphQL', async () => {
+      const result = await createPlansToolHandler(
+        {} as Parameters<typeof createPlansToolHandler>[0],
+      );
+
+      expect(result).toMatchObject({
+        content: [
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*plans/i) },
+        ],
+        isError: true,
+      });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when GraphQL creates plans', () => {
+    it('returns the created plans and totalCount from one atomic call', async () => {
+      const plans = [
+        {
+          author: 'visormatt',
+          category: 'maintenance',
+          id: 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e',
+          status: 'PENDING',
+          title: 'First plan',
+        },
+        {
+          author: 'visormatt',
+          category: 'feature',
+          id: 'c0c8c4ad-2fee-4706-8d59-84f7ed3981a8',
+          status: 'PENDING',
+          title: 'Second plan',
+        },
+      ];
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createPlans: { plans, totalCount: 2 },
+      });
+
+      const result = await createPlansToolHandler({
+        plans: [
+          { author: 'visormatt', category: 'maintenance', title: 'First plan' },
+          { author: 'visormatt', category: 'feature', title: 'Second plan' },
+        ],
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { plans, totalCount: 2 },
+      });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            plans: [
+              {
+                author: 'visormatt',
+                category: 'maintenance',
+                title: 'First plan',
+              },
+              {
+                author: 'visormatt',
+                category: 'feature',
+                title: 'Second plan',
+              },
+            ],
+          },
+        },
+      );
+    });
+  });
+
+  describe('when GraphQL returns no result', () => {
+    it('returns a no-result error', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+        createPlans: null,
+      });
+
+      const result = await createPlansToolHandler({
+        plans: [
+          { author: 'visormatt', category: 'maintenance', title: 'Only plan' },
+        ],
+      });
+
+      expect(result).toEqual({
+        content: [{ text: 'create_plans returned no result', type: 'text' }],
         isError: true,
       });
     });

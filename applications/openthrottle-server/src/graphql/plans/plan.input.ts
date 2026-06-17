@@ -71,6 +71,14 @@ export class CreatePlanInput {
 }
 
 @InputType()
+export class CreatePlansInput {
+  @Field(() => [CreatePlanInput], {
+    description: `Plans to create atomically in one transaction. Each item carries its own author/category/title (same shape as createPlan).`,
+  })
+  plans!: CreatePlanInput[];
+}
+
+@InputType()
 export class UpdatePlanInput {
   @Field(() => String, { nullable: true })
   assignee!: string | null;

@@ -53,6 +53,7 @@ import {
 import {
   CancelPlanRunInput,
   CreatePlanInput,
+  CreatePlansInput,
   DeletePlanInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
@@ -65,6 +66,7 @@ import {
 } from './plan.input';
 import {
   CancelPlanRunResultObject,
+  CreatePlansResultObject,
   EnqueuePlanRunResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
@@ -455,6 +457,19 @@ export class PlansResolver {
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
   ): Promise<PlanObject> {
     return this.planCreationService.createPlanFromInput(input);
+  }
+
+  @Mutation(() => CreatePlansResultObject, {
+    description: `Create many plans atomically in a single transaction. Every input is validated up front (same rules as createPlan); a single invalid input or DB failure rolls back the whole batch.`,
+  })
+  async createPlans(
+    @Args('input', { type: () => CreatePlansInput }) input: CreatePlansInput,
+  ): Promise<CreatePlansResultObject> {
+    const plans = await this.planCreationService.createPlansFromInput(
+      input.plans,
+    );
+
+    return { plans, totalCount: plans.length };
   }
 
   // @ProfileResponseTime('PlansResolver.updatePlan')

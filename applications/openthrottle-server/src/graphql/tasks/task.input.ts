@@ -50,6 +50,59 @@ export class CreateTaskInput {
 }
 
 @InputType()
+export class CreateTasksItemInput {
+  @Field(() => String, { nullable: true })
+  assignee!: string | null;
+
+  @Field(() => String, { nullable: true })
+  category!: string | null;
+
+  @Field(() => String, { nullable: true })
+  description!: string | null;
+
+  @Field(() => String, { nullable: true })
+  project!: string | null;
+
+  @Field(() => ID, {
+    description: `Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.`,
+    nullable: true,
+  })
+  projectId!: string | null;
+
+  @Field(() => String, {
+    description: `JSON string of requirements array`,
+    nullable: true,
+  })
+  requirements!: string | null;
+
+  @Field(() => Int, {
+    description: `Optional. Execution order within plan. When omitted, server auto-assigns MAX+1000 stepping in array order.`,
+    nullable: true,
+  })
+  sortOrder!: number | null;
+
+  @Field(() => String, { nullable: true })
+  status!: string | null;
+
+  @Field(() => String, { nullable: true })
+  summary!: string | null;
+
+  @Field(() => String)
+  title!: string;
+}
+
+@InputType()
+export class CreateTasksInput {
+  @Field(() => ID, { description: `Plan id all tasks in this batch belong to` })
+  planId!: string;
+
+  @Field(() => [CreateTasksItemInput], {
+    description: `Tasks to create atomically in one transaction. sortOrder is per-item optional; omitted items append MAX+1000, MAX+2000, … in array order.`,
+  })
+  tasks!: CreateTasksItemInput[];
+}
+
+@InputType()
 export class UpdateTaskInput {
   @Field(() => String, { nullable: true })
   assignee!: string | null;

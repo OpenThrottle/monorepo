@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
@@ -39,6 +40,7 @@ export default function Component(
 
   // Hooks
   const [count, setCount] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
 
   // Setup
   const isFormEnabled = count >= 0;
@@ -52,6 +54,9 @@ export default function Component(
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 🔌 Short Circuit
 
@@ -61,7 +66,9 @@ export default function Component(
       onClick={onIncrementCount}
     >
       <GradientMesh
-        className="bg-white opacity-50"
+        className={classnames('opacity-0 transition-opacity duration-1000', {
+          'opacity-100': isMounted,
+        })}
         distortion={0.9}
         grainMixer={2.5}
         grainOverlay={1.55}

@@ -44,6 +44,24 @@ mutation createTask($input: CreateTaskInput!) {
   }
 }
 
+mutation createTasks($input: CreateTasksInput!) {
+  createTasks(input: $input) {
+    tasks {
+      ...Task
+    }
+    totalCount
+  }
+}
+
+mutation createPlans($input: CreatePlansInput!) {
+  createPlans(input: $input) {
+    plans {
+      ...Plan
+    }
+    totalCount
+  }
+}
+
 mutation updateTask($input: UpdateTaskInput!) {
   updateTask(input: $input) {
     ...Task
