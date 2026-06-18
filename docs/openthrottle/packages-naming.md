@@ -16,7 +16,7 @@
 - **Conventions:**
   - Prefer **short, clear names** that match the surface (e.g. `vscode` for the VS Code extension, `api-client` for the API SDK).
   - Avoid redundant scope in the name (e.g. `@openthrottle/openthrottle-core` is redundant; use `@openthrottle/core`).
-  - For MCP servers and product surfaces, name by **function** (e.g. `mcp` for the plans/tasks MCP server, `docs-mcp` for the docs search MCP).
+  - For MCP servers and product surfaces, name by **function** (e.g. `openthrottle-mcp` for the OT plans/tasks/docs MCP server).
 
 ### Rationale
 

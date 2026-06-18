@@ -395,6 +395,23 @@ export type CommitsPerPrRowObject = {
   prNumber: Scalars['Int']['output'];
 };
 
+export type ConversationStreamChunkObject = {
+  __typename?: 'ConversationStreamChunkObject';
+  conversationId: Scalars['String']['output'];
+  /** Incremental assistant text for this chunk (empty on the terminal chunk). */
+  delta: Scalars['String']['output'];
+  /** True exactly once, on the terminal chunk of the stream. */
+  done: Scalars['Boolean']['output'];
+  /** Error message when the stream failed; null otherwise. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Unique id for this chunk (subscription dedupe / cursor). */
+  id: Scalars['String']['output'];
+  /** Assistant message id the deltas accumulate into. */
+  messageId: Scalars['String']['output'];
+  /** Monotonic index within the stream. */
+  sortOrder: Scalars['Int']['output'];
+};
+
 export type CreateAgentConversationInput = {
   /** JSON string of optional metadata object */
   metadataJson?: InputMaybe<Scalars['String']['input']>;
@@ -1138,6 +1155,8 @@ export type Mutation = {
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
+  /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
+  cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Create an agent conversation for the authenticated human user. */
@@ -1236,6 +1255,8 @@ export type Mutation = {
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
+  /** Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures. */
+  startConversationStream: StartConversationStreamResult;
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
@@ -1297,6 +1318,10 @@ export type MutationAssignRoleToServiceAccountArgs = {
 
 export type MutationAssignRoleToUserArgs = {
   input: AssignRoleToUserInput;
+};
+
+export type MutationCancelConversationStreamArgs = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -1477,6 +1502,10 @@ export type MutationSetPlanStatusArgs = {
 
 export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
   input: SetWorkspaceLocalRepositoryProjectInput;
+};
+
+export type MutationStartConversationStreamArgs = {
+  input: StartConversationStreamInput;
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
@@ -2650,14 +2679,43 @@ export type SignoutResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type StartConversationStreamInput = {
+  /** OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. */
+  baseUrl: Scalars['String']['input'];
+  /** Existing conversation to continue; omit to start a new conversation. */
+  conversationId?: InputMaybe<Scalars['ID']['input']>;
+  /** User message text for this turn. */
+  message: Scalars['String']['input'];
+  /** Model id to complete with, as advertised by the discovered endpoint. */
+  modelId: Scalars['String']['input'];
+};
+
+export type StartConversationStreamResult = {
+  __typename?: 'StartConversationStreamResult';
+  /** Pre-allocated assistant message id the streamed deltas accumulate into. Null when the request failed. */
+  assistantMessageId?: Maybe<Scalars['String']['output']>;
+  /** Resolved (or newly created) conversation id. Null when the request failed. */
+  conversationId?: Maybe<Scalars['String']['output']>;
+  /** Validation or business-rule error (no throw). Null on success. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Persisted user message id for this turn. Null when the request failed. */
+  userMessageId?: Maybe<Scalars['String']['output']>;
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
+  /** Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation. */
+  conversationStreamChunkAdded: ConversationStreamChunkObject;
   /** Firehose of all real-time notification events. Identity comes from the authenticated ws connection. */
   notifications: NotificationEvent;
   /** Lifecycle notifications for a single plan (topic plan:<planId>:lifecycle). */
   planNotifications: NotificationEvent;
   /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
   planOutputChunkAdded: PlanOutputStreamChunkObject;
+};
+
+export type SubscriptionConversationStreamChunkAddedArgs = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type SubscriptionPlanNotificationsArgs = {
@@ -3372,6 +3430,65 @@ export type NotificationsSubscription = {
         severity?: string | null;
         timestamp: string;
       };
+};
+
+export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DiscoverLocalModelsQuery = {
+  __typename?: 'Query';
+  discoverLocalModels: {
+    __typename?: 'DiscoverLocalModelsResult';
+    totalCount: number;
+    endpoints: Array<{
+      __typename?: 'ModelEndpointObject';
+      baseUrl: string;
+      host: string;
+      models: Array<string>;
+      provider?: string | null;
+    }>;
+  };
+};
+
+export type StartConversationStreamMutationVariables = Exact<{
+  input: StartConversationStreamInput;
+}>;
+
+export type StartConversationStreamMutation = {
+  __typename?: 'Mutation';
+  startConversationStream: {
+    __typename?: 'StartConversationStreamResult';
+    assistantMessageId?: string | null;
+    conversationId?: string | null;
+    errorMessage?: string | null;
+    userMessageId?: string | null;
+  };
+};
+
+export type CancelConversationStreamMutationVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+export type CancelConversationStreamMutation = {
+  __typename?: 'Mutation';
+  cancelConversationStream: boolean;
+};
+
+export type ConversationStreamChunkAddedSubscriptionVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+export type ConversationStreamChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  conversationStreamChunkAdded: {
+    __typename?: 'ConversationStreamChunkObject';
+    conversationId: string;
+    delta: string;
+    done: boolean;
+    error?: string | null;
+    id: string;
+    messageId: string;
+    sortOrder: number;
+  };
 };
 
 export type SearchAgentAssetsQueryVariables = Exact<{
@@ -6693,6 +6810,230 @@ export const NotificationsDocument = {
 } as unknown as DocumentNode<
   NotificationsSubscription,
   NotificationsSubscriptionVariables
+>;
+export const DiscoverLocalModelsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DiscoverLocalModels' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverLocalModels' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'endpoints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'baseUrl' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'host' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'models' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'provider' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DiscoverLocalModelsQuery,
+  DiscoverLocalModelsQueryVariables
+>;
+export const StartConversationStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StartConversationStream' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'StartConversationStreamInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'startConversationStream' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'assistantMessageId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'userMessageId' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  StartConversationStreamMutation,
+  StartConversationStreamMutationVariables
+>;
+export const CancelConversationStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CancelConversationStream' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'conversationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelConversationStream' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'conversationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelConversationStreamMutation,
+  CancelConversationStreamMutationVariables
+>;
+export const ConversationStreamChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'ConversationStreamChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'conversationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'conversationStreamChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'conversationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'delta' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'messageId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ConversationStreamChunkAddedSubscription,
+  ConversationStreamChunkAddedSubscriptionVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',

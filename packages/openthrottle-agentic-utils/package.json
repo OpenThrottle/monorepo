@@ -7,7 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "openai": "catalog:"
+  },
   "devDependencies": {
     "@types/pidusage": "catalog:",
     "nx": "catalog:",

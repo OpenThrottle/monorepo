@@ -29,8 +29,8 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 
 ### Documentation search
 
-- Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via the **docs-mcp** MCP server (separate from openthrottle-mcp; use docs-mcp for docs content, openthrottle-mcp for plans/tasks).
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (documentation, documentation_embeddings, ingest), [packages/docs-mcp/README.md](../../packages/docs-mcp/README.md).
+- Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via **openthrottle-mcp** (`semantic_search`, `list_sources`, `get_document`) alongside plans and tasks. (The former standalone `docs-mcp` server is retired; its role folded into `openthrottle-mcp` — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).)
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (documentation, documentation_embeddings, ingest).
 
 ### Activity and commit links
 

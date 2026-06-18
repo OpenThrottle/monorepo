@@ -32,7 +32,9 @@ function isoNow(): string {
   return new Date().toISOString();
 }
 
-/** App-relative path prefix for plan click-through (e.g. developer app /plans/:id). */
+/**
+ * App-relative path prefix for plan click-through (e.g. developer app /plans/:id).
+ */
 const PLAN_LINK_PREFIX = '/plans/';
 
 function planLink(planId: string): string {
@@ -47,7 +49,9 @@ function safeJson(value: unknown): string | undefined {
   }
 }
 
-/** A notification event object carrying its discriminator for interface resolution. */
+/**
+ * A notification event object carrying its discriminator for interface resolution.
+ */
 type NotificationEventObject = Record<string, unknown> & { event: string };
 
 @Injectable()

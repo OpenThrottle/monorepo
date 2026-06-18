@@ -645,6 +645,48 @@ type CommitLinkObject {
   taskId: String
 }
 
+type ConversationStreamChunkObject {
+  conversationId: String!
+
+  """
+  Incremental assistant text for this chunk (empty on the terminal chunk).
+  """
+  delta: String!
+
+  """True exactly once, on the terminal chunk of the stream."""
+  done: Boolean!
+
+  """Error message when the stream failed; null otherwise."""
+  error: String
+
+  """Unique id for this chunk (subscription dedupe / cursor)."""
+  id: String!
+
+  """Assistant message id the deltas accumulate into."""
+  messageId: String!
+
+  """Monotonic index within the stream."""
+  sortOrder: Int!
+}
+
+type StartConversationStreamResult {
+  """
+  Pre-allocated assistant message id the streamed deltas accumulate into. Null when the request failed.
+  """
+  assistantMessageId: String
+
+  """
+  Resolved (or newly created) conversation id. Null when the request failed.
+  """
+  conversationId: String
+
+  """Validation or business-rule error (no throw). Null on success."""
+  errorMessage: String
+
+  """Persisted user message id for this turn. Null when the request failed."""
+  userMessageId: String
+}
+
 """A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
@@ -2454,6 +2496,16 @@ type Mutation {
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
 
+  """
+  Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures.
+  """
+  startConversationStream(input: StartConversationStreamInput!): StartConversationStreamResult!
+
+  """
+  Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted.
+  """
+  cancelConversationStream(conversationId: ID!): Boolean!
+
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
 
@@ -2739,6 +2791,22 @@ input LinkCommitInput {
 
   """Optional commit or PR message"""
   message: String
+}
+
+input StartConversationStreamInput {
+  """
+  OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1.
+  """
+  baseUrl: String!
+
+  """Existing conversation to continue; omit to start a new conversation."""
+  conversationId: ID
+
+  """User message text for this turn."""
+  message: String!
+
+  """Model id to complete with, as advertised by the discovered endpoint."""
+  modelId: String!
 }
 
 """Input for creating a new custom prompt"""
@@ -3311,6 +3379,11 @@ input ApplyWorkspaceEditorConfigurationInput {
 }
 
 type Subscription {
+  """
+  Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation.
+  """
+  conversationStreamChunkAdded(conversationId: ID!): ConversationStreamChunkObject!
+
   """
   Firehose of all real-time notification events. Identity comes from the authenticated ws connection.
   """

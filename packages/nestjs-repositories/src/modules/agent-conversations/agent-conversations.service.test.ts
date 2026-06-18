@@ -230,6 +230,92 @@ describe('AgentConversationsService', () => {
     });
   });
 
+  describe('appendMessages', () => {
+    beforeEach(() => {
+      vi.mocked(mockConversationRepository.manager.transaction).mockReset();
+    });
+
+    it('appends with consecutive sort_order and honors an explicit id', async () => {
+      const savedMessages: AgentConversationMessage[] = [];
+      const messageRepoInTx = {
+        create: vi.fn((data: Partial<AgentConversationMessage>) => data),
+        createQueryBuilder: vi.fn(() => ({
+          getRawOne: vi.fn().mockResolvedValue({ max: '4' }),
+          select: vi.fn().mockReturnThis(),
+          where: vi.fn().mockReturnThis(),
+        })),
+        save: vi.fn(async (entities: AgentConversationMessage[]) => {
+          const saved = entities.map(
+            (entity, offset) =>
+              ({
+                ...entity,
+                id: entity.id ?? fakerId(savedMessages.length + offset),
+              }) as AgentConversationMessage,
+          );
+          savedMessages.push(...saved);
+          return saved;
+        }),
+      };
+      const conversationRepoInTx = {
+        findOne: vi.fn().mockResolvedValue({ ...mockConversation }),
+      };
+
+      vi.mocked(
+        mockConversationRepository.manager.transaction,
+      ).mockImplementation(async (callback) =>
+        callback({
+          getRepository: (entity: unknown) => {
+            if (isEntityTarget(entity, AgentConversation)) {
+              return conversationRepoInTx;
+            }
+            if (isEntityTarget(entity, AgentConversationMessage)) {
+              return messageRepoInTx;
+            }
+            throw new Error(`Unexpected entity: ${String(entity)}`);
+          },
+        } as never),
+      );
+
+      const result = await service.appendMessages(userId, conversationId, [
+        {
+          content: 'streamed reply',
+          id: 'assistant-fixed-id',
+          role: AGENT_CONVERSATION_MESSAGE_ROLES.assistant,
+        },
+      ]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.sortOrder).toBe(5);
+      expect(result[0]?.id).toBe('assistant-fixed-id');
+      expect(result[0]?.role).toBe(AGENT_CONVERSATION_MESSAGE_ROLES.assistant);
+    });
+
+    it('throws NotFoundException when conversation is not owned', async () => {
+      const conversationRepoInTx = {
+        findOne: vi.fn().mockResolvedValue(null),
+      };
+
+      vi.mocked(
+        mockConversationRepository.manager.transaction,
+      ).mockImplementation(async (callback) =>
+        callback({
+          getRepository: (entity: unknown) => {
+            if (isEntityTarget(entity, AgentConversation)) {
+              return conversationRepoInTx;
+            }
+            return { createQueryBuilder: vi.fn() };
+          },
+        } as never),
+      );
+
+      await expect(
+        service.appendMessages(userId, conversationId, [
+          { content: 'x', role: AGENT_CONVERSATION_MESSAGE_ROLES.assistant },
+        ]),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
   describe('appendTurn', () => {
     beforeEach(() => {
       vi.mocked(mockConversationRepository.manager.transaction).mockReset();

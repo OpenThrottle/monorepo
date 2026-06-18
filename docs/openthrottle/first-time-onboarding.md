@@ -2,7 +2,7 @@
 
 This playbook is for someone who has already configured the **openthrottle-mcp** MCP and can run **openthrottle-server** (and optionally the developer app). It describes what to do next, how the pieces fit together, and gives a copy-paste **prompt sequence** for a minimal end-to-end exercise in your own repo.
 
-**Related:** Schema, migrations, embeddings, and commit-link conventions live in [`databases/README.md`](../../databases/README.md). MCP smoke checks and env alignment are in [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
+**Related:** How to **register** MCP servers (tiers, config locations, template, editor parity) is in [`mcp-registration.md`](./mcp-registration.md). Schema, migrations, embeddings, and commit-link conventions live in [`databases/README.md`](../../databases/README.md). MCP smoke checks and env alignment are in [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
 
 ---
 
@@ -11,7 +11,7 @@ This playbook is for someone who has already configured the **openthrottle-mcp**
 **New clone?** Follow [local-quickstart.md](./local-quickstart.md) first (env → migrate → [bootstrap tokens](#bootstrap-and-auth) → server → verify MCP), then return here.
 
 1. Confirm [Prerequisites](#prerequisites-checklist) (server up, MCP pointed at GraphQL, token env).
-2. Read the [Mental model](#mental-model-post-setup) so you know when to use OT MCP vs docs-MCP vs repo rules.
+2. Read the [Mental model](#mental-model-post-setup) so you know when to use OT MCP vs repo rules.
 3. Run the [Prompt sequence](#prompt-sequence-minimal-e2e) in Cursor to complete one trivial but real workflow (search → plan → task → commit).
 4. If something fails, use [Troubleshooting](#troubleshooting).
 
@@ -43,7 +43,7 @@ Use this before relying on OT tools in the agent.
 | **openthrottle-server** running                                 | GraphQL defaults to `http://localhost:6021/graphql` (see server `.env`).                                                                                                                                                                                                                          |
 | MCP **`API_URL` / `API_URL_INTERNAL`** match the server         | See [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md).                                                                                                                                                                                              |
 | **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (and server embedding config) | Auth: [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Embeddings: **`OPENAI_API_KEY`** or **`OLLAMA_*`** on **`applications/openthrottle-server/.env`** — `scripts/run-openthrottle-mcp.sh` does not require a root OpenAI key; Ollama-only: [run-locally-oss.md](./run-locally-oss.md). |
-| Cursor registers **openthrottle-mcp**                           | `.cursor/mcp.json` or [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example); restart Cursor after changes.                                                                                                                                                                                 |
+| Cursor registers **openthrottle-mcp**                           | Register per [mcp-registration.md](./mcp-registration.md) (template, config locations, editor parity); copy [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) → `.cursor/mcp.json` and restart Cursor after changes.                                                                     |
 
 For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/README.md`](../../databases/README.md).
 
@@ -51,8 +51,7 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 
 ## Mental model (post-setup)
 
-- **OpenThrottle (OT)** stores plans, tasks, embeddings for semantic search over that knowledge, and plan output streams. Agents reach it only via **GraphQL** through **openthrottle-mcp** — not by writing ad hoc Markdown plans in the repo.
-- **docs-mcp** searches ingested **repository documentation** (`docs/`). Use it for “what does this repo say about X?” Use **openthrottle-mcp** for “what plans/tasks exist?” and OT-specific tools (`semantic_search`, `list_sources`, `create_plan`, …).
+- **OpenThrottle (OT)** stores plans, tasks, ingested **repository documentation** (`docs/`), embeddings for semantic search over all of it, and plan output streams. Agents reach it only via **GraphQL** through **openthrottle-mcp** — not by writing ad hoc Markdown plans in the repo. Use it for both “what plans/tasks exist?” and “what does this repo’s docs say about X?” via `semantic_search`, `list_sources`, `get_document`, `create_plan`, …. (The former standalone `docs-mcp` server is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).)
 - **Workspace rules** (e.g. [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc)) define when to use which OT tool and that **plans/tasks belong in OT**, not in new Markdown plan files under `docs/`.
 - **Optional automation:** [workflow-ralph](../../tools/workflows/README.md) and worktrees are advanced paths; you can ignore them until after your first successful manual flow.
 
@@ -63,7 +62,7 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 | “What plans/tasks exist?” / status lists      | **openthrottle-mcp** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                |
 | “Find plans about X” (meaning, not filenames) | **openthrottle-mcp** — `semantic_search`, then `get_document` for a chunk                                        |
 | “What’s in the OT knowledge base?”            | **openthrottle-mcp** — `list_sources`                                                                            |
-| “What does this repo’s docs say about X?”     | **docs-mcp** (ingested `docs/`)                                                                                  |
+| “What does this repo’s docs say about X?”     | **openthrottle-mcp** — `semantic_search` / `get_document` over ingested `docs/`                                  |
 | Create or update a plan/task                  | **openthrottle-mcp** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)           |
 | Log agent iteration output for a plan         | **openthrottle-mcp** — `append_plan_output`                                                                      |
 | Tie landed work on `main` to a plan           | After PR merge — `link_commit` or `workflow-link-merge` (see [`databases/README.md`](../../databases/README.md)) |
@@ -141,6 +140,7 @@ Summarize how many sources and pending plans you see.
 | Service account tokens and MCP `env`         | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
 | Run server + developer app locally           | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                  |
 | MCP verification, env, smoke checks          | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
+| MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                |
 | MCP config template                          | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                    |
 | DB schema, migrations, imports, commit links | [databases/README.md](../../databases/README.md)                                                |
 | OT MCP tool choice and skills                | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`        |
