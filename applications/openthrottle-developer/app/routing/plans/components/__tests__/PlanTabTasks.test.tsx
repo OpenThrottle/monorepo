@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
@@ -50,9 +48,7 @@ describe('PlanTabTasks Component', () => {
   });
 
   test('renders the list view by default', () => {
-    const { getByText, getByTestId, queryByText } = renderTabTasks({
-      tasks: [mockTask],
-    });
+    const { getByText, getByTestId, queryByText } = renderTabTasks([mockTask]);
 
     expect(getByTestId('PlanTabTasks-view-toggle')).toBeInTheDocument();
     expect(getByTestId('PlanTaskItems')).toBeInTheDocument();
@@ -63,9 +59,9 @@ describe('PlanTabTasks Component', () => {
 
   test('switches to the table view via the toggle', async () => {
     const user = userEvent.setup();
-    const { getByLabelText, getByText, queryByTestId } = renderTabTasks({
-      tasks: [mockTask],
-    });
+    const { getByLabelText, getByText, queryByTestId } = renderTabTasks([
+      mockTask,
+    ]);
 
     await user.click(getByLabelText('Table view'));
 
