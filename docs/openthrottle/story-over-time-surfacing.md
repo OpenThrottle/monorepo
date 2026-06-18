@@ -9,7 +9,7 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 | **activityByDate**      | GraphQL query — commits, plan output chunks, tasks updated for a date or last N days | openthrottle-mcp, openthrottle-server |
 | **activityByDateRange** | Same, for an ISO date range                                                          | openthrottle-server                   |
 | **Dashboard**           | Recent activity card (commits, output chunks, tasks)                                 | Cortex app, openthrottle-developer    |
-| **Semantic search**     | Plans + tasks (openthrottle-mcp); docs (docs-mcp)                                    | Separate MCPs; no cross-source        |
+| **Semantic search**     | Plans + tasks + docs, all via openthrottle-mcp (`semantic_search`, `get_document`)   | One MCP; cross-source ranking is a gap |
 
 ---
 
@@ -33,7 +33,7 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 ## Semantic search across plans / docs / commits
 
 - **Concept:** One query that returns hits from plans, tasks, docs, and (optionally) commits — e.g. "everything about OAuth" or "auth-related work".
-- **Today:** openthrottle-mcp `semantic_search` (plans + tasks); docs-mcp `documentation_semantic_search` (docs). No unified API.
+- **Today:** openthrottle-mcp serves plans, tasks, and docs (`semantic_search`, `list_sources`, `get_document`). (The former standalone `docs-mcp` server is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).) Cross-source ranking in a single call is not yet unified.
 - **Options:**
   1. **Federated:** New MCP tool or GraphQL query that calls both, merges results, dedupes by relevance. Client sees one result set.
   2. **Unified table:** Single embedding table with `source_type` + `source_id` (see metadata-model-minimal). One query; simpler but requires migration/ingest changes.
@@ -57,5 +57,5 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 
 - **Timeline:** Use existing activity data; optionally add docs; improve UI grouping/filtering.
 - **Activity API:** Extend to include docs (join on sha or separate docs-by-date).
-- **Semantic search:** Federate openthrottle-mcp + docs-mcp, or unify embedding storage; optionally add commit embeddings.
+- **Semantic search:** Unify cross-source ranking within openthrottle-mcp (plans + tasks + docs), or unify embedding storage; optionally add commit embeddings.
 - **Surfaces:** Dashboard, plan detail, project view, unified search — in that order of complexity.

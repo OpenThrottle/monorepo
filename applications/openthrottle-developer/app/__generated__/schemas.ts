@@ -79,6 +79,7 @@ import {
   SearchPlansInput,
   SetPlanStatusInput,
   SetWorkspaceLocalRepositoryProjectInput,
+  StartConversationStreamInput,
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
@@ -874,6 +875,17 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   return z.object({
     id: z.string(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function StartConversationStreamInputSchema(): z.ZodObject<
+  Properties<StartConversationStreamInput>
+> {
+  return z.object({
+    baseUrl: z.string(),
+    conversationId: z.string().nullish(),
+    message: z.string(),
+    modelId: z.string(),
   });
 }
 

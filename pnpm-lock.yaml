@@ -2718,6 +2718,10 @@ importers:
         version: link:../openthrottle-agentic-workflow
 
   packages/openthrottle-agentic-utils:
+    dependencies:
+      openai:
+        specifier: 'catalog:'
+        version: 6.36.0(ws@8.20.0)(zod@4.4.3)
     devDependencies:
       '@types/pidusage':
         specifier: 'catalog:'

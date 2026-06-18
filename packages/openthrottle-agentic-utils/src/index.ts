@@ -3,6 +3,7 @@ export * from './data/artwork.js';
 export * from './data/prompts.js';
 export * from './types/index.js';
 export * from './types/model-discovery.js';
+export * from './utils/chat-completions/index.js';
 export * from './utils/configuration.js';
 export * from './utils/model-discovery/index.js';
 export * from './utils/postgres.js';

@@ -1,0 +1,36 @@
+query DiscoverLocalModels {
+  discoverLocalModels {
+    endpoints {
+      baseUrl
+      host
+      models
+      provider
+    }
+    totalCount
+  }
+}
+
+mutation StartConversationStream($input: StartConversationStreamInput!) {
+  startConversationStream(input: $input) {
+    assistantMessageId
+    conversationId
+    errorMessage
+    userMessageId
+  }
+}
+
+mutation CancelConversationStream($conversationId: ID!) {
+  cancelConversationStream(conversationId: $conversationId)
+}
+
+subscription ConversationStreamChunkAdded($conversationId: ID!) {
+  conversationStreamChunkAdded(conversationId: $conversationId) {
+    conversationId
+    delta
+    done
+    error
+    id
+    messageId
+    sortOrder
+  }
+}
