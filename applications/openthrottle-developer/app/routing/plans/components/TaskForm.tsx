@@ -132,7 +132,7 @@ export const TaskForm = (props: TaskFormProps): React.ReactElement => {
           ) : null}
 
           <CardFooter className="flex gap-3 p-0 pt-4">
-            <Button type="submit">
+            <Button id="task-submit-button" type="submit">
               {isEdit ? 'Update task' : 'Save task'}
             </Button>
             <Button asChild={true} variant="outline">

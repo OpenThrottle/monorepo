@@ -1,0 +1,15 @@
+# Auth happy path: log in via the shared helper and assert an authenticated
+# landing (dashboard content grid + the authenticated nav shell).
+# Prereqs: dev server on :6020 and the seeded user (tests/e2e/scripts/seed-user.sh).
+url: http://localhost:6020/auth
+name: auth-login
+tags:
+  - auth
+  - full
+---
+- runFlow:
+    file: ../../helpers/login.yaml
+# The helper already waits for dashboard-content-grid; additionally confirm the
+# authenticated nav shell rendered.
+- assertVisible:
+    id: 'global-layout-nav'

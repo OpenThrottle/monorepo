@@ -1,0 +1,46 @@
+# Projects overview: the list loads (scoped to workspace projects, with per-row
+# plan/task count columns), filtering works, and a project's detail opens with its
+# Overview and Tasks tabs.
+#
+# Stable-data assumption: the workspace project "@openthrottle/react-router-shadcn"
+# is seeded (a core package every React Router app depends on). If the projects
+# seed changes, update the filter term + asserted name below.
+# Prereqs: production build on :6020 + seeded user (tests/e2e/scripts/seed-user.sh).
+url: http://localhost:6020/projects
+name: projects-overview
+tags:
+  - projects
+  - full
+---
+- runFlow:
+    file: ../../helpers/login.yaml
+- openLink: http://localhost:6020/projects
+# List loaded (the table carries the per-row Plans/Tasks count columns).
+- extendedWaitUntil:
+    visible:
+      id: 'ProjectsTable'
+    timeout: 15000
+# Exercise the filter: narrow to the stable project, then assert its row.
+- tapOn:
+    id: 'projects-search-input'
+- inputText: 'react-router-shadcn'
+- tapOn:
+    id: 'projects-search-submit'
+- extendedWaitUntil:
+    visible:
+      text: '@openthrottle/react-router-shadcn'
+    timeout: 15000
+# Open the project detail.
+- tapOn: 'View Project'
+# Overview tab: the heading shows the project name (id is on the <h1>).
+- extendedWaitUntil:
+    visible:
+      id: 'project-overview-heading'
+    timeout: 20000
+# Switch to the Tasks tab and confirm it renders.
+- tapOn:
+    id: 'project-tab-tasks'
+- extendedWaitUntil:
+    visible:
+      id: 'project-tasks-heading'
+    timeout: 15000
