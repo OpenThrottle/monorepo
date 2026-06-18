@@ -3,6 +3,7 @@ import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
@@ -12,14 +13,9 @@ import {
 } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 import type { ColumnDef } from '@tanstack/react-table';
 
-export interface PlanTabTasksProps {
-  tasks: PlanTaskRowFragment[];
-}
-
-export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
-  const { tasks } = props;
-
+export const PlanTabTasks = (): React.ReactElement => {
   // Hooks
+  const { tasks } = usePlanDetailRouteData();
   const sortedTasks = React.useMemo(
     () => sortPlanTasksByListOrder(tasks),
     [tasks],

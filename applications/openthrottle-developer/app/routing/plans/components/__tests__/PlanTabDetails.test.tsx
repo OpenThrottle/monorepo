@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { PlanTabDetails } from '../PlanTabDetails';
 import type { PlanTabDetailsProps } from '../PlanTabDetails';
+import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
@@ -48,25 +47,26 @@ describe('PlanTabDetails Component', () => {
     const setFullscreen = vi.fn() as PlanTabDetailsProps['setFullscreen'];
     const props: PlanTabDetailsProps = {
       fullscreen: false,
-      plan: mockPlan,
-      planRunAuditRows: defaultPlanRunAuditRows,
       ralphTuningJson: '',
-      recentPlanRuns: defaultRecent,
       setFullscreen,
-      tasks: [],
       workflowInput: defaultWorkflow,
       workflowTimeout: '',
     };
 
-    const Component = () => (
+    const { findAllByText, getByTestId } = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <Tabs value="overview">
           <PlanTabDetails {...props} />
         </Tabs>
-      </TooltipProvider>
+      </TooltipProvider>,
+      {
+        plan: mockPlan,
+        planOutputChunks: [],
+        planRunAuditRows: defaultPlanRunAuditRows,
+        recentPlanRuns: defaultRecent,
+        tasks: [],
+      },
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { findAllByText, getByTestId } = render(<RoutesStub />);
 
     expect(getByTestId('PlanToolbar')).toBeInTheDocument();
     expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
