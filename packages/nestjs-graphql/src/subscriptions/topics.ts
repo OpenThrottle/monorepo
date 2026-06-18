@@ -41,6 +41,13 @@ export function planLifecycleTopic(planId: string): string {
 }
 
 /**
+ * Token deltas streamed for a single agent conversation: `conversation:<conversationId>:stream`.
+ */
+export function conversationStreamTopic(conversationId: string): string {
+  return instanceTopic('conversation', conversationId, 'stream');
+}
+
+/**
  * A user's personal notification feed: `user:<userId>:notifications`.
  */
 export function userNotificationsTopic(userId: string): string {

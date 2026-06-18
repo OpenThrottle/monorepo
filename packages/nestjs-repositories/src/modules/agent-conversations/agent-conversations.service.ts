@@ -10,6 +10,7 @@ import { AgentConversationMessage } from './agent-conversation-message.entity';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
+  type AgentConversationMessageRole,
   type AgentConversationStatus,
 } from './agent-conversation.constants';
 import { AgentConversation } from './agent-conversation.entity';
@@ -50,6 +51,18 @@ interface AppendTurnInput {
   readonly routingTier?: string | null;
   readonly toolMetadata?: Record<string, unknown> | null;
   readonly userContent: string;
+}
+
+interface AppendMessageInput {
+  readonly content: string;
+  /** Optional explicit id (e.g. a pre-allocated assistant message id from a streaming turn). */
+  readonly id?: string;
+  readonly role: AgentConversationMessageRole;
+  readonly routingConfidence?: number | null;
+  readonly routingModel?: string | null;
+  readonly routingReason?: string | null;
+  readonly routingTier?: string | null;
+  readonly toolMetadata?: Record<string, unknown> | null;
 }
 
 interface UpdateModelSnapshotInput {
@@ -189,6 +202,62 @@ export class AgentConversationsService {
       }
 
       return { assistantMessage, userMessage };
+    });
+  }
+
+  /**
+   * @description Appends one or more messages to an owned conversation in a
+   * single transaction with consecutive sort_order values continuing from the
+   * conversation's current maximum. Each message may carry an explicit id (used
+   * by streaming turns that pre-allocate the assistant message id). Returns the
+   * saved rows in input order.
+   */
+  async appendMessages(
+    userId: string,
+    conversationId: string,
+    messages: ReadonlyArray<AppendMessageInput>,
+  ): Promise<AgentConversationMessage[]> {
+    return this.conversationRepository.manager.transaction(async (manager) => {
+      const conversationRepo = manager.getRepository(AgentConversation);
+      const messageRepo = manager.getRepository(AgentConversationMessage);
+
+      const conversation = await conversationRepo.findOne({
+        where: { id: conversationId, userId },
+      });
+      if (!conversation) {
+        throw new NotFoundException('Agent conversation not found');
+      }
+
+      const maxSortOrderResult = await messageRepo
+        .createQueryBuilder('message')
+        .select('MAX(message.sortOrder)', 'max')
+        .where('message.conversationId = :conversationId', { conversationId })
+        .getRawOne<{ max: string | null }>();
+      const currentMax =
+        maxSortOrderResult?.max != null && maxSortOrderResult.max !== ''
+          ? Number(maxSortOrderResult.max)
+          : 0;
+
+      const entities = messages.map((message, index) => {
+        const base = {
+          content: capAgentConversationContent(message.content).content,
+          conversationId,
+          role: message.role,
+          routingConfidence: message.routingConfidence ?? null,
+          routingModel: message.routingModel ?? null,
+          routingReason: message.routingReason ?? null,
+          routingTier: message.routingTier ?? null,
+          sortOrder: currentMax + index + 1,
+          toolMetadata: capAgentConversationToolMetadata(
+            message.toolMetadata ?? null,
+          ).toolMetadata,
+        };
+        return messageRepo.create(
+          message.id !== undefined ? { ...base, id: message.id } : base,
+        );
+      });
+
+      return messageRepo.save(entities);
     });
   }
 

@@ -93,7 +93,8 @@ repo root
 | Ralph loop prompt                     | [`.agents/skills/agents-ralph/SKILL.md`](../../.agents/skills/agents-ralph/SKILL.md)     | `.cursor/skills/agents-ralph/` (stable Ralph CLI path) |
 | Ralph CLI & queue docs                | [`.agents/skills/workflow-ralph/SKILL.md`](../../.agents/skills/workflow-ralph/SKILL.md) | `AGENTS.md`, workflow docs                             |
 | Cross-editor handbook                 | [`AGENTS.md`](../../AGENTS.md)                                                           | `CLAUDE.md` defers here                                |
-| MCP template (openthrottle-mcp)       | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                             | Local `.cursor/mcp.json`                               |
+| MCP registration guide (SSOT)         | [`docs/openthrottle/mcp-registration.md`](../openthrottle/mcp-registration.md)          | —                                                      |
+| MCP template (openthrottle-mcp only)  | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                             | Local `.cursor/mcp.json`                               |
 
 Full table and editor-unique paths: [ownership doc](./agent-editor-folders-ownership.md).
 
@@ -127,7 +128,7 @@ Historical pre-SSOT duplication: [duplication map](./agent-editor-folders-duplic
 | Add a **persona**                         | `.agents/personas/<id>.md` from `_template.md`                                                                            | —                                               |
 | Change **Ralph loop** behavior            | `.agents/skills/agents-ralph/SKILL.md`                                                                                    | — (`.cursor/skills/agents-ralph` is symlink)    |
 | Change **Ralph CLI** flags / queue        | `.agents/skills/workflow-ralph/`, `tools/workflows/`                                                                      | —                                               |
-| Configure **openthrottle-mcp** locally    | Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`                                                                      | —                                               |
+| Configure **openthrottle-mcp** locally    | Copy `.cursor/mcp.json.example` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md))                                  | —                                               |
 | Add **Cursor hook** (e.g. format on edit) | `.cursor/hooks.json`, `.cursor/hooks/`                                                                                    | — (Cursor-only)                                 |
 | Recreate editor symlinks after clone      | `ln -s` per [canonical layout §3](./agent-assets-canonical-layout.md#3-editor-views-symlinks-only--no-independent-bodies) | —                                               |
 
