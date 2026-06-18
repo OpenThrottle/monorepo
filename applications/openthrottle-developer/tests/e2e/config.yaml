@@ -12,7 +12,17 @@
 #   shared steps  : helpers/**/*.yaml (subflows referenced via `runFlow`)
 #   artifacts     : output/ (gitignored — recordings, screenshots, reports)
 #
-# Tags let CI scope runs (e.g. `--include-tags smoke` for PR checks).
+# Tagging scheme (every flow declares tags; CI scopes with --include-tags):
+#   smoke   — fast, unauthenticated PR gate (flows/smoke.yaml).
+#   full    — the complete suite (every flow carries `full`); the deeper run.
+#   auth | plans | projects — per-area scoping for targeted local runs.
+# Run scoped subsets via the Nx target configurations (see package.json):
+#   pnpm nx run openthrottle-developer:test-e2e --configuration=smoke
+#   pnpm nx run openthrottle-developer:test-e2e --configuration=full
+# or directly: maestro test --config config.yaml --include-tags <tag>
+#
+# includeTags is left empty so the default `test-e2e` runs everything; scoping is
+# applied per-invocation (the configurations above) rather than globally here.
 flows:
   - 'flows/*.yaml'
   - 'flows/**/*.yaml'
