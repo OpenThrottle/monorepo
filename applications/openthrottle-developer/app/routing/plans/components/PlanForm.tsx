@@ -71,7 +71,7 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
                 name="category"
                 required={true}
               >
-                <SelectTrigger>
+                <SelectTrigger id="plan-category-trigger">
                   <SelectValue placeholder="Add permission…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
                   Cancel
                 </Link>
               </Button>
-              <Button type="submit" variant="outline">
+              <Button id="plan-submit-button" type="submit" variant="outline">
                 {isEdit ? 'Update plan' : 'Create plan'}
               </Button>
             </CardFooter>

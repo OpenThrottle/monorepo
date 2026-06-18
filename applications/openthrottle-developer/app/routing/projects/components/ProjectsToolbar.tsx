@@ -119,13 +119,19 @@ export const ProjectsToolbar = (
           <Input
             aria-label="Search projects"
             className="h-9 w-[140px] min-w-[100px] shrink-0"
+            id="projects-search-input"
             name="q"
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search projects..."
             type="search"
             value={searchInput}
           />
-          <Button size="sm" type="submit" variant="outline">
+          <Button
+            id="projects-search-submit"
+            size="sm"
+            type="submit"
+            variant="outline"
+          >
             Search
           </Button>
         </div>

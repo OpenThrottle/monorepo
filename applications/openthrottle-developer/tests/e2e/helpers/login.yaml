@@ -1,0 +1,46 @@
+# Reusable login subflow. Pull into authenticated specs via:
+#   - runFlow:
+#       file: ../../helpers/login.yaml   # path is relative to the calling flow
+#
+# Maestro Web notes (see tests/e2e/README.md "Maestro Web selector & input notes"):
+#   - The /auth form pre-fills a real local dev account. Maestro Web cannot reliably
+#     CLEAR a controlled React input (erase does not round-trip through React state),
+#     so this helper does NOT type credentials — it submits the prefilled form. The
+#     matching user is provisioned by tests/e2e/scripts/seed-user.sh.
+#   - Maestro's `id:` selector resolves to an element's DOM `id` first, so we match
+#     the submit button by its DOM id (`auth-submit-button`), which is the most stable.
+#   - Host is hard-coded to the default dev port (6020), matching smoke.yaml. Env
+#     interpolation in the `url:` header is unreliable on Maestro Web; to target
+#     another host, copy this file or edit the url (see the README).
+#   - Idempotent: Maestro Web shares one browser across a run and clearState does
+#     NOT clear the HTTP-only auth cookie, so if a prior flow already logged in,
+#     /auth redirects straight to /dashboard. We submit the form only when it is
+#     actually shown, then assert the authenticated landing either way.
+url: http://localhost:6020/auth
+name: login
+tags:
+  - auth
+---
+- launchApp:
+    clearState: true
+# Submit the prefilled credentials only if the login form is shown (i.e. we are
+# not already authenticated from an earlier flow in this run). The /auth page
+# runs a continuous WebGL gradient, so settle before tapping.
+- runFlow:
+    when:
+      visible:
+        id: 'OpenThrottleAuthForm'
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: 'auth-submit-button'
+          timeout: 15000
+      - tapOn:
+          id: 'auth-submit-button'
+# After login the route plays a ~1.5s exit animation, then a full-document
+# redirect to /dashboard. The dashboard content grid confirms we landed authed
+# (whether we just logged in or were already authenticated).
+- extendedWaitUntil:
+    visible:
+      id: 'dashboard-content-grid'
+    timeout: 25000

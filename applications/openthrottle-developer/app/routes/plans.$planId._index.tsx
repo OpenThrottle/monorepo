@@ -490,15 +490,27 @@ export default function Component(
               className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
               variant="line"
             >
-              <TabsTrigger className="flex-0 cursor-pointer" value="overview">
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                id="plan-tab-overview"
+                value="overview"
+              >
                 <BoltIcon />
                 Details
               </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                id="plan-tab-tasks"
+                value="tasks"
+              >
                 <LayoutListIcon />
                 Tasks ({tasks.length})
               </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                id="plan-tab-output"
+                value="output"
+              >
                 <TerminalSquareIcon />
                 Output
               </TabsTrigger>
@@ -506,6 +518,7 @@ export default function Component(
               <div className="flex-1" />
               <TabsTrigger
                 className="flex-0 cursor-pointer"
+                id="plan-tab-configuration"
                 value="configuration"
               >
                 <CogIcon />

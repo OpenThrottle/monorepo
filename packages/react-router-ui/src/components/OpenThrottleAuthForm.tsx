@@ -98,6 +98,7 @@ export const OpenThrottleAuthForm = (
               <Label htmlFor="auth-email">Email</Label>
               <Input
                 autoComplete="email"
+                data-testid="auth-email-input"
                 id="auth-email"
                 name="email"
                 onChange={(e) => setEmail(e.target.value)}
@@ -111,6 +112,7 @@ export const OpenThrottleAuthForm = (
               <Label htmlFor="auth-password">Password</Label>
               <Input
                 autoComplete="current-password"
+                data-testid="auth-password-input"
                 id="auth-password"
                 name="password"
                 onChange={(e) => setPassword(e.target.value)}
@@ -124,7 +126,9 @@ export const OpenThrottleAuthForm = (
           <CardFooter>
             <Button
               className="w-full"
+              data-testid="auth-submit-button"
               disabled={isLoading}
+              id="auth-submit-button"
               type="submit"
               variant="secondary"
             >

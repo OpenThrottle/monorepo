@@ -79,8 +79,14 @@
       "test": {},
       "test-e2e": {
         "configurations": {
+          "full": {
+            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags full"
+          },
           "record": {
             "command": "maestro record --local"
+          },
+          "smoke": {
+            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags smoke"
           },
           "studio": {
             "command": "maestro studio"

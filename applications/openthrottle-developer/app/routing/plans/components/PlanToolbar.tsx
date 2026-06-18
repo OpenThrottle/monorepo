@@ -277,7 +277,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <DropdownMenuTrigger asChild={true}>
-              <Button size="sm" variant="outline">
+              <Button id="plan-actions-trigger" size="sm" variant="outline">
                 Actions
                 <ChevronDown />
               </Button>

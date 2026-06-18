@@ -147,6 +147,7 @@ PlansTable.buildTable = (
               <Link
                 aria-label={`View plan: ${title}`}
                 className="hover:text-primary underline underline-offset-2"
+                data-testid="plan-list-title-link"
                 to={planHref}
                 viewTransition={true}
               >
