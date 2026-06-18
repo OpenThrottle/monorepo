@@ -3,11 +3,7 @@ import classnames from 'classnames';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
-import type {
-  PlanDetailIndexLoaderQuery,
-  PlanDetailsFragment,
-  PlanTaskRowFragment,
-} from '~/__generated__/graphql';
+import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
@@ -25,12 +21,8 @@ export interface PlanTabDetailsProps {
   jobRunHooksBlocked?: boolean;
   jobRunHooksBlockedReason?: string;
   jobRunHooksJson?: string;
-  plan: PlanDetailsFragment;
-  planRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'];
   ralphTuningJson: string;
-  recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
-  tasks: PlanTaskRowFragment[];
   workflowInput: WorkflowRalphRunOptionsInput;
   workflowTimeout: string;
   workingDirectory?: string;
@@ -38,24 +30,22 @@ export interface PlanTabDetailsProps {
 
 export const PlanTabDetails = (
   props: PlanTabDetailsProps,
-): React.ReactElement => {
+): React.ReactElement | null => {
   const {
     fullscreen,
     jobRunHooksBlocked = false,
     jobRunHooksBlockedReason,
     jobRunHooksJson = '',
-    plan,
-    planRunAuditRows,
     ralphTuningJson,
-    recentPlanRuns,
     // setFullscreen,
-    tasks,
     workingDirectory,
     workflowInput,
     workflowTimeout,
   } = props;
 
   // Hooks
+  const { plan, planRunAuditRows, recentPlanRuns, tasks } =
+    usePlanDetailRouteData();
 
   // Setup
   const canonicalWorkflowCommand = React.useMemo(() => {
@@ -84,7 +74,7 @@ export const PlanTabDetails = (
     : !workflowValidation.ok
       ? workflowValidation.issues[0]?.message
       : workspacePathError;
-  const hasSummary = plan.summary != null && plan.summary !== '';
+  const hasSummary = plan?.summary != null && plan.summary !== '';
   const requirements = React.useMemo(() => {
     return tasks
       .map((task) => JSON.parse(task.requirementsJson))
@@ -98,6 +88,9 @@ export const PlanTabDetails = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (plan == null) {
+    return null;
+  }
 
   return (
     <TabsContent value="overview">

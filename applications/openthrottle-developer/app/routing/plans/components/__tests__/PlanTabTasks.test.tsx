@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
-import type { PlanTabTasksProps } from '../PlanTabTasks';
+import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 const mockTask: PlanTaskRowFragment = {
@@ -24,27 +22,32 @@ const mockTask: PlanTaskRowFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-function renderTabTasks(props: PlanTabTasksProps) {
-  const Component = () => (
+function renderTabTasks(tasks: PlanTaskRowFragment[]) {
+  return renderWithPlanDetailRouteData(
     <TooltipProvider>
       <Tabs value="tasks">
-        <PlanTabTasks {...props} />
+        <PlanTabTasks />
       </Tabs>
-    </TooltipProvider>
+    </TooltipProvider>,
+    {
+      plan: null,
+      planOutputChunks: [],
+      planRunAuditRows: [],
+      recentPlanRuns: [],
+      tasks,
+    },
   );
-  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub />);
 }
 
 describe('PlanTabTasks Component', () => {
   test('renders empty tasks state when there are no tasks', () => {
-    const { getByRole } = renderTabTasks({ tasks: [] });
+    const { getByRole } = renderTabTasks([]);
 
     expect(getByRole('heading', { name: 'No plans yet' })).toBeInTheDocument();
   });
 
   test('renders task table when tasks exist', () => {
-    const { getByText } = renderTabTasks({ tasks: [mockTask] });
+    const { getByText } = renderTabTasks([mockTask]);
 
     expect(getByText('First task')).toBeInTheDocument();
     expect(getByText('#')).toBeInTheDocument();
@@ -53,44 +56,40 @@ describe('PlanTabTasks Component', () => {
   });
 
   test('shows step index derived from sorted list position', () => {
-    const { getByLabelText } = renderTabTasks({
-      tasks: [
-        {
-          ...mockTask,
-          id: 'task-second',
-          sortOrder: 2000,
-          title: 'Second task',
-        },
-        {
-          ...mockTask,
-          id: 'task-first',
-          sortOrder: 1000,
-          title: 'First by order',
-        },
-      ],
-    });
+    const { getByLabelText } = renderTabTasks([
+      {
+        ...mockTask,
+        id: 'task-second',
+        sortOrder: 2000,
+        title: 'Second task',
+      },
+      {
+        ...mockTask,
+        id: 'task-first',
+        sortOrder: 1000,
+        title: 'First by order',
+      },
+    ]);
 
     expect(getByLabelText('Step 1')).toHaveTextContent('#1');
     expect(getByLabelText('Step 2')).toHaveTextContent('#2');
   });
 
   test('orders rows by sortOrder not input array order', () => {
-    const { getAllByRole } = renderTabTasks({
-      tasks: [
-        {
-          ...mockTask,
-          id: 'task-second',
-          sortOrder: 2000,
-          title: 'Second task',
-        },
-        {
-          ...mockTask,
-          id: 'task-first',
-          sortOrder: 1000,
-          title: 'First by order',
-        },
-      ],
-    });
+    const { getAllByRole } = renderTabTasks([
+      {
+        ...mockTask,
+        id: 'task-second',
+        sortOrder: 2000,
+        title: 'Second task',
+      },
+      {
+        ...mockTask,
+        id: 'task-first',
+        sortOrder: 1000,
+        title: 'First by order',
+      },
+    ]);
 
     const titleLinks = getAllByRole('link', { name: /scroll to task:/i });
     expect(titleLinks[0]).toHaveTextContent('First by order');

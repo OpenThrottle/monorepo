@@ -6,6 +6,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { useFetcher, useRevalidator } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTaskCard } from '~/routing/plans/components/PlanTaskCard';
+import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksColumn } from '~/routing/plans/components/PlanTasksColumn';
 import {
@@ -28,8 +29,6 @@ interface PlanTaskDragItem {
 
 export interface PlanTasksBoardProps {
   className?: string;
-  planId: string;
-  tasks: PlanTaskRowFragment[];
 }
 
 type PlanDetailActionData =
@@ -171,9 +170,11 @@ const PlanTasksColumnDrop = (
 export const PlanTasksBoard = (
   props: PlanTasksBoardProps,
 ): React.ReactElement => {
-  const { className, planId, tasks } = props;
+  const { className } = props;
 
   // Hooks
+  const { plan, tasks } = usePlanDetailRouteData();
+  const planId = plan?.id ?? '';
   const fetcher = useFetcher<PlanDetailActionData>();
   const revalidator = useRevalidator();
 

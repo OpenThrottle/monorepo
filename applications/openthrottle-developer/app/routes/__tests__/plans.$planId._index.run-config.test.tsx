@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub, type UIMatch } from 'react-router';
+import { type UIMatch } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
 
 const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
@@ -54,25 +55,25 @@ const mockPlan = {
 describe('routes/plans.$planId._index run config hydration', () => {
   test('hydrates Configuration tab from plan.runConfigJson', async () => {
     const user = userEvent.setup();
-    const Component = () => (
+    const loaderData = {
+      plan: mockPlan,
+      planOutputChunks: [],
+      planRunAuditRows: [],
+      recentPlanRuns: [],
+      tasks: [],
+    };
+    renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail
           actionData={undefined}
-          loaderData={{
-            plan: mockPlan,
-            planOutputChunks: [],
-            planRunAuditRows: [],
-            recentPlanRuns: [],
-            tasks: [],
-          }}
+          loaderData={loaderData}
           matches={[] as UIMatch[]}
           params={{ planId: mockPlan.id }}
         />
-      </TooltipProvider>
+      </TooltipProvider>,
+      loaderData,
+      { initialEntries: ['/?plansDetailTab=configuration'] },
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    render(<RoutesStub initialEntries={['/?plansDetailTab=configuration']} />);
 
     await user.click(screen.getByRole('tab', { name: 'Configuration' }));
 
