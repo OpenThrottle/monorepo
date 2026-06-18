@@ -7,6 +7,7 @@ import {
   type ChartConfig,
 } from '@openthrottle/react-router-shadcn';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 /** One row of chart data: date plus the six series. */
@@ -60,12 +61,14 @@ export function mapToChartData(
 export interface DashboardDailyStatsCardProps {
   className?: string;
   dailyStats: DashboardDailyStatsCardFragment[];
+  /** Called with the clicked day's date (YYYY-MM-DD) when a bar is selected. */
+  onSelectDate?: (date: string) => void;
 }
 
 export const DashboardDailyStatsCard = (
   props: DashboardDailyStatsCardProps,
 ): React.ReactElement => {
-  const { className, dailyStats } = props;
+  const { className, dailyStats, onSelectDate } = props;
 
   // Hooks
 
@@ -76,6 +79,16 @@ export const DashboardDailyStatsCard = (
   );
 
   // Handlers
+  const handleBarClick = React.useCallback(
+    (state: { activeIndex?: number | string | null }): void => {
+      const date = resolveDateFromActiveIndex(chartData, state.activeIndex);
+
+      if (date !== null) {
+        onSelectDate?.(date);
+      }
+    },
+    [chartData, onSelectDate],
+  );
 
   // Markup
 
@@ -99,19 +112,15 @@ export const DashboardDailyStatsCard = (
       data-testid="DashboardDailyStatsCard"
     >
       <ChartContainer
-        className="mt-4 min-h-[240px] w-full"
+        className={classnames('mt-4 min-h-[240px] w-full', {
+          'cursor-pointer': onSelectDate !== undefined,
+        })}
         config={CHART_CONFIG}
       >
         <BarChart
           data={chartData}
           margin={{ left: 0, right: 12 }}
-          onClick={(...args) => {
-            const activeIndex = args[0]?.activeIndex;
-
-            if (activeIndex !== null && activeIndex !== undefined) {
-              console.log('clicked', chartData[activeIndex as number]);
-            }
-          }}
+          onClick={handleBarClick}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
