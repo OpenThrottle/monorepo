@@ -154,7 +154,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, planRunAuditRows, recentPlanRuns, tasks } = loaderData;
+  const { plan, tasks } = loaderData;
 
   // Hooks
   const fetcherSaveJobRunHooks = useFetcher<typeof action>();
@@ -518,17 +518,13 @@ export default function Component(
               jobRunHooksBlocked={!jobRunHooksValidation.ok}
               jobRunHooksBlockedReason={jobRunHooksValidation.issues[0]}
               jobRunHooksJson={jobRunHooksJson}
-              plan={plan}
-              planRunAuditRows={planRunAuditRows}
               ralphTuningJson={ralphTuningJson}
-              recentPlanRuns={recentPlanRuns}
               setFullscreen={setFullscreen}
-              tasks={tasks}
               workflowInput={workflowInput}
               workflowTimeout={workflowTimeout}
               workingDirectory={workingDirectory}
             />
-            <PlanTabTasks tasks={tasks} />
+            <PlanTabTasks />
             <PlanTabOutput chunks={planOutputChunks} />
             <PlanTabConfiguration
               iterationTimeoutText={workflowTimeout}
@@ -573,7 +569,7 @@ export default function Component(
 
       {isBoardView ? (
         <Card className="mx-4 overflow-hidden">
-          <PlanTasksBoard planId={plan.id} tasks={tasks} />
+          <PlanTasksBoard />
         </Card>
       ) : null}
     </>
