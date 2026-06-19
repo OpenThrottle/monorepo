@@ -9,13 +9,17 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/docs';
 
-type HandleData = Route.ComponentProps['loaderData'];
-
 const docsNav = buildDocsNav(docsManifest, 'docs');
+
+type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Docs',
   links: (_match) => [],
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {

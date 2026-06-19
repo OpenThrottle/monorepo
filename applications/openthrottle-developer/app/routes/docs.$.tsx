@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { DocPageView } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalLayoutBreadcrumbsHandle,
+} from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/docs.$';
 
@@ -11,6 +14,13 @@ const docsBySlug = new Map(
     .map((entry) => [entry.path, entry]),
 );
 
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => match.loaderData?.title ?? 'Docs',
+  links: (_match) => [],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const entry = docsBySlug.get(`/docs/${args.params['*']}`);
 
@@ -19,6 +29,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   return { title: entry.title };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = (args: Route.MetaArgs) => {

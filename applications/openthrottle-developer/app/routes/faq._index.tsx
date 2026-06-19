@@ -11,21 +11,21 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/faq._index';
 
-type HandleData = Route.ComponentProps['loaderData'];
-
 const faqEntries = docsManifest.filter((entry) => entry.section === 'faq');
+
+type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'FAQ',
   links: (_match) => [],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
-};
-
 export const links: Route.LinksFunction = () => {
   return [];
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
 };
 
 export const meta = (_args: Route.MetaArgs) => {

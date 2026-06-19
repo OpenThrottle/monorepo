@@ -24,15 +24,22 @@ const ChatThreadMessageComponent = (
 ): React.ReactElement => {
   const { message } = props;
 
+  // Hooks
+
   // Setup
   const hasTimeline =
     message.role === 'assistant' &&
     message.events !== undefined &&
     message.events.length > 0;
 
-  // 🔌 Short Circuit
+  // Handlers
 
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <article
       className={classnames('flex flex-col gap-1 text-sm', {
@@ -63,9 +70,10 @@ const ChatThreadMessageComponent = (
         ) : null}
       </div>
       <div
-        className={classnames('max-w-[85%] rounded-lg px-3 py-2', {
-          'bg-muted text-foreground': message.role === 'assistant',
-          'bg-primary text-primary-foreground': message.role === 'user',
+        className={classnames('max-w-[85%] rounded-lg', {
+          'bg-primary text-primary-foreground px-3 py-2':
+            message.role === 'user',
+          // 'px-3 py-2': message.role === 'assistant',
           'text-muted-foreground border border-dashed':
             message.role === 'system',
         })}

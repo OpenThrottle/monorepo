@@ -1,11 +1,29 @@
 import * as React from 'react';
 import { DocPageView } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalLayoutBreadcrumbsHandle,
+} from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/docs._index';
 
 const indexEntry = docsManifest.find((entry) => entry.path === '/docs');
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Docs',
+  links: (_match) => [],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Docs | ${SITE_TITLE}` }];
