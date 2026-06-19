@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, useFetcher } from 'react-router';
+import { Link, useFetcher, useNavigate } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -85,6 +85,7 @@ export default function Component(
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
+  const navigate = useNavigate();
 
   // Setup
   const _isIdle = fetcher.state !== 'idle';
@@ -94,6 +95,15 @@ export default function Component(
       : null;
 
   // Handlers
+  const handleSelectDate = React.useCallback(
+    (date: string): void => {
+      navigate(
+        `/dashboard?modal=${DashboardDailyStatsModal.key}&date=${date}`,
+        { preventScrollReset: true, viewTransition: true },
+      );
+    },
+    [navigate],
+  );
 
   // Markup
 
@@ -128,7 +138,10 @@ export default function Component(
               </Link>
             </Button>
           </div>
-          <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
+          <DashboardDailyStatsCard
+            dailyStats={dailyStatsRange.items}
+            onSelectDate={handleSelectDate}
+          />
         </div>
 
         <DashboardToolbar className="col-span-2" />
@@ -179,7 +192,7 @@ export default function Component(
         </div> */}
       </div>
 
-      <DashboardDailyStatsModal />
+      <DashboardDailyStatsModal dailyStats={dailyStatsRange.items} />
     </GlobalScreen>
   );
 }
