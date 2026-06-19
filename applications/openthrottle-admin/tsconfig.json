@@ -20,6 +20,9 @@
       "path": "../../tools/dotfiles"
     },
     {
+      "path": "../../packages/react-router-docs"
+    },
+    {
       "path": "../../packages/react-router-ui"
     },
     {

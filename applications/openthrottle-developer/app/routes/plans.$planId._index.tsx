@@ -430,7 +430,7 @@ export default function Component(
 
   return (
     <>
-      <GlobalScreen className="flex h-full w-full max-w-5xl flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
+      <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <div>
           <GlobalHeading
             className="mb-4"

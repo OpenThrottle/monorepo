@@ -44,14 +44,12 @@ export const PlanTaskItems = (
 
   return (
     <div
-      className={classnames(
-        'bg-card border-card-border divide-card-border divide-y rounded-lg border',
-        className,
-      )}
+      className={classnames('flex flex-col gap-4', className)}
       data-testid="PlanTaskItems"
     >
       {sortedTasks.map((task, index) => (
         <PlanTaskItem
+          className="bg-card border-card-border divide-card-border rounded-lg border p-4 md:p-8"
           key={task.id}
           step={getPlanTaskStepIndex(index)}
           task={task}

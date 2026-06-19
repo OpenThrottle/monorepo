@@ -7,6 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://developer.openthrottle.ai"
   },
+  "dependencies": {
+    "@openthrottle/react-router-docs": "workspace:^"
+  },
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"
   },
