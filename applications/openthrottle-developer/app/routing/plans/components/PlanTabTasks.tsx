@@ -2,10 +2,10 @@ import * as React from 'react';
 import {
   DataTable,
   TabsContent,
-  // ToggleGroup,
-  // ToggleGroupItem,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-// import { List, Table2 } from 'lucide-react';
+import { List, Table2 } from 'lucide-react';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
@@ -33,9 +33,7 @@ export interface PlanTabTasksProps {
 
 export const PlanTabTasks = (): React.ReactElement => {
   // Hooks
-  const [view /*, setView */] = React.useState<PlanTasksView>(
-    PLAN_TASKS_VIEW.list,
-  );
+  const [view, setView] = React.useState<PlanTasksView>(PLAN_TASKS_VIEW.list);
   const { tasks } = usePlanDetailRouteData();
   const sortedTasks = React.useMemo(
     () => sortPlanTasksByListOrder(tasks),
@@ -57,12 +55,12 @@ export const PlanTabTasks = (): React.ReactElement => {
   );
 
   // Handlers
-  // const handleViewChange = React.useCallback((value: string) => {
-  //   // Radix emits '' when the active item is re-clicked; keep one view selected.
-  //   if (value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table) {
-  //     setView(value);
-  //   }
-  // }, []);
+  const handleViewChange = React.useCallback((value: string) => {
+    // Radix emits '' when the active item is re-clicked; keep one view selected.
+    if (value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table) {
+      setView(value);
+    }
+  }, []);
 
   // Markup
 
@@ -72,7 +70,7 @@ export const PlanTabTasks = (): React.ReactElement => {
 
   return (
     <TabsContent value="tasks">
-      {/* <div className="flex justify-end pb-2">
+      <div className="flex justify-end pb-2">
         <ToggleGroup
           aria-label="Task view"
           data-testid="PlanTabTasks-view-toggle"
@@ -92,7 +90,7 @@ export const PlanTabTasks = (): React.ReactElement => {
             <Table2 className="size-3.5" />
           </ToggleGroupItem>
         </ToggleGroup>
-      </div> */}
+      </div>
 
       {view === PLAN_TASKS_VIEW.list ? (
         <PlanTaskItems tasks={sortedTasks} />
