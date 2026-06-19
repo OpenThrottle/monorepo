@@ -43,7 +43,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('space-y-1 overflow-hidden p-3', className)}
+      className={classnames('space-y-2 overflow-hidden', className)}
       data-testid="PlanTaskItem"
       id={`task-${task.id}`}
     >
@@ -51,7 +51,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
         <PlanStatusChip status={task.status} />
         <span
           aria-label={`Step ${step}`}
-          className="text-muted-foreground shrink-0 text-xs tabular-nums"
+          className="text-muted-foreground shrink-0 text-sm tabular-nums"
         >
           #{step}
         </span>
@@ -69,7 +69,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
       </div>
 
       {category || requirementsCount > 0 || task.assignee ? (
-        <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
           {category ? (
             <Badge size="xs" variant="outline">
               {category}
@@ -87,9 +87,11 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
         </div>
       ) : null}
 
+      <div className="mb-4" />
+
       {description ? (
         <p
-          className="text-muted-foreground mt-2 line-clamp-3 text-xs"
+          className="text-muted-foreground mt-2 line-clamp-3 text-sm"
           // title={
           //   description.length > TASK_CONTEXT_TRUNCATE ? description : undefined
           // }
@@ -103,7 +105,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
 
       {summary ? (
         <p
-          className="text-muted-foreground text-xs"
+          className="text-muted-foreground text-sm"
           title={summary.length > TASK_CONTEXT_TRUNCATE ? summary : undefined}
         >
           {summary.length > TASK_CONTEXT_TRUNCATE
