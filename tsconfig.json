@@ -201,6 +201,9 @@
     },
     {
       "path": "./packages/react-router-floor-layout"
+    },
+    {
+      "path": "./packages/react-router-docs"
     }
   ]
 }
