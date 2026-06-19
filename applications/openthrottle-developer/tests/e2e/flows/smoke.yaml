@@ -5,6 +5,9 @@
 # present without a session (brand chrome + chat landing) and proves navigation
 # by tapping the "About" link and asserting its page content.
 url: http://localhost:6020
+tags:
+  - smoke
+  - full
 ---
 - launchApp
 - assertVisible: 'OpenThrottle'

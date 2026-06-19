@@ -1,0 +1,70 @@
+# Tasks happy path: create a plan (own context), add a task to it via the plan
+# detail Actions menu, then confirm the task shows in the plan's Tasks tab.
+# Self-contained — does not depend on any other flow's leftover state.
+# Prereqs: production build on :6020 + seeded user (tests/e2e/scripts/seed-user.sh).
+url: http://localhost:6020/plans/create
+name: plans-create-task
+tags:
+  - plans
+  - full
+---
+- runFlow:
+    file: ../../helpers/login.yaml
+- evalScript: ${output.planTitle = 'E2E-plan-' + Date.now()}
+- evalScript: ${output.taskTitle = 'E2E-task-' + Date.now()}
+# 1) Create the plan that will hold the task.
+- openLink: http://localhost:6020/plans/create
+- extendedWaitUntil:
+    visible:
+      id: 'PlanForm'
+    timeout: 15000
+- tapOn:
+    id: 'plan-title'
+- inputText: ${output.planTitle}
+- tapOn:
+    id: 'plan-author'
+- inputText: 'visormatt'
+- tapOn:
+    id: 'plan-category-trigger'
+- tapOn: 'feature'
+- tapOn:
+    id: 'plan-submit-button'
+# 2) On the plan detail (Details tab): open the Actions menu and add a task.
+- extendedWaitUntil:
+    visible:
+      id: 'plan-actions-trigger'
+    timeout: 20000
+- tapOn:
+    id: 'plan-actions-trigger'
+- tapOn: 'Add Task'
+- extendedWaitUntil:
+    visible:
+      id: 'TaskForm'
+    timeout: 15000
+- tapOn:
+    id: 'task-title'
+- inputText: ${output.taskTitle}
+# Submit via Enter from the title field. The task form is long and Maestro Web
+# can't reliably reach the below-the-fold submit button; Enter triggers the
+# native form submit. (The button still carries id="task-submit-button".)
+- pressKey: 'Enter'
+# 3) Task created -> task detail (heading is "Task: <title>", so match a
+#    contains-regex). Return to the plan via the breadcrumb link (its unique plan
+#    title), open the Tasks tab, and assert the task is listed.
+- extendedWaitUntil:
+    visible:
+      text: '.*${output.taskTitle}.*'
+    timeout: 20000
+# "View plan" links back to the plan detail (stable label, unlike the truncated
+# breadcrumb title).
+- tapOn: 'View plan'
+- extendedWaitUntil:
+    visible:
+      id: 'plan-tab-tasks'
+    timeout: 15000
+- tapOn:
+    id: 'plan-tab-tasks'
+- extendedWaitUntil:
+    visible:
+      text: '.*${output.taskTitle}.*'
+    timeout: 15000

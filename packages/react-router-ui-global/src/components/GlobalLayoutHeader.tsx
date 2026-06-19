@@ -139,6 +139,7 @@ export const GlobalLayoutHeader = (
         'sticky top-0 z-10 w-full',
         className,
       )}
+      data-testid="global-layout-nav"
     >
       <div className="flex flex-1 items-center gap-2">
         <Tooltip delayDuration={1_000}>
@@ -197,6 +198,7 @@ export const GlobalLayoutHeader = (
         <input name="intent" type="hidden" value="logout" />
         <Button
           className="relative size-6 shrink-0 rounded-full"
+          id="global-nav-logout"
           variant="ghost"
         >
           <SignOutIcon />

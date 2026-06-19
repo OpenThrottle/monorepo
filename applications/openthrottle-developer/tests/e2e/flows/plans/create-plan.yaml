@@ -1,0 +1,42 @@
+# Plans happy path: create a uniquely-titled plan, confirm it lands on the plan
+# detail page, and confirm it shows up in the plans list (filtered by the unique
+# title so the assertion is independent of pagination/sort).
+# Prereqs: production build on :6020 + seeded user (tests/e2e/scripts/seed-user.sh).
+url: http://localhost:6020/plans/create
+name: plans-create-plan
+tags:
+  - plans
+  - full
+---
+- runFlow:
+    file: ../../helpers/login.yaml
+# Unique-per-run title (no spaces, so it drops cleanly into a ?q= filter URL).
+- evalScript: ${output.title = 'E2E-create-' + Date.now()}
+- openLink: http://localhost:6020/plans/create
+- extendedWaitUntil:
+    visible:
+      id: 'PlanForm'
+    timeout: 15000
+- tapOn:
+    id: 'plan-title'
+- inputText: ${output.title}
+- tapOn:
+    id: 'plan-author'
+- inputText: 'visormatt'
+# Category is a Radix select: open it, then pick an option.
+- tapOn:
+    id: 'plan-category-trigger'
+- tapOn: 'feature'
+- tapOn:
+    id: 'plan-submit-button'
+# Redirected to /plans/$planId — the detail heading shows our unique title.
+- extendedWaitUntil:
+    visible:
+      text: ${output.title}
+    timeout: 20000
+# And it appears in the (filtered) plans list.
+- openLink: http://localhost:6020/plans?q=${output.title}
+- extendedWaitUntil:
+    visible:
+      text: ${output.title}
+    timeout: 15000

@@ -1,0 +1,31 @@
+# Protected-route guard: an unauthenticated visit to a protected path must be
+# redirected to /auth.
+#
+# Maestro Web shares one browser across all flows in a run, and clearState does
+# NOT clear the HTTP-only auth cookie, so a prior login in the same run would
+# leave us authenticated. To be order-independent we first log out for real via
+# the nav logout control (POSTs intent=logout to root, which clears the cookie
+# server-side), then assert the guard on /plans.
+url: http://localhost:6020/
+name: auth-route-guard
+tags:
+  - auth
+  - full
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: 'global-nav-logout'
+    timeout: 15000
+- tapOn:
+    id: 'global-nav-logout'
+# Now unauthenticated: a protected path must bounce to /auth (login form shown,
+# protected content absent).
+- openLink: http://localhost:6020/plans
+- extendedWaitUntil:
+    visible:
+      id: 'OpenThrottleAuthForm'
+    timeout: 15000
+- assertNotVisible:
+    id: 'dashboard-content-grid'

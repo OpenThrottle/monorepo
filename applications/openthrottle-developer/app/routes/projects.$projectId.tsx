@@ -126,8 +126,12 @@ export default function Component(
         value={activeTab}
       >
         <TabsList aria-label="Project sections" className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger id="project-tab-overview" value="overview">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger id="project-tab-tasks" value="tasks">
+            Tasks
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent className="mt-0" value="overview">
