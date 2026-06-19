@@ -1,12 +1,16 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { MDXProvider } from '@mdx-js/react';
-import { compileMarkdown } from '../utils/compileMarkdown';
+import { compileMarkdownSync } from '../utils/compileMarkdown';
 import type { CompiledMarkdown } from '../utils/compileMarkdown';
 
 type MarkdownComponents = React.ComponentProps<
   typeof MDXProvider
 >['components'];
+
+type CompileResult =
+  | { readonly Content: CompiledMarkdown; readonly error: null }
+  | { readonly Content: null; readonly error: Error };
 
 export interface MarkdownRendererProps {
   readonly className?: string;
@@ -20,8 +24,20 @@ export const MarkdownRenderer = (
   const { className, components, source } = props;
 
   // Hooks
-  const [Content, setContent] = React.useState<CompiledMarkdown | null>(null);
-  const [error, setError] = React.useState<Error | null>(null);
+  // Compile synchronously during render (memoized on `source`) so the output
+  // is present in the server-rendered HTML — no client-side effect, no flash
+  // of empty content. The try/catch keeps malformed input from crashing the
+  // surrounding route; CommonMark (`format: 'md'`) compilation rarely throws.
+  const compiled = React.useMemo<CompileResult>(() => {
+    try {
+      return { Content: compileMarkdownSync({ source }), error: null };
+    } catch (cause: unknown) {
+      return {
+        Content: null,
+        error: cause instanceof Error ? cause : new Error(String(cause)),
+      };
+    }
+  }, [source]);
 
   // Setup
 
@@ -30,40 +46,17 @@ export const MarkdownRenderer = (
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    let active = true;
-
-    compileMarkdown({ source })
-      .then((compiled) => {
-        if (!active) return;
-        setError(null);
-        // Functional update: `compiled` is itself a component, so the plain
-        // setter form would be treated as a state updater.
-        setContent(() => compiled);
-      })
-      .catch((cause: unknown) => {
-        if (!active) return;
-        setContent(null);
-        setError(cause instanceof Error ? cause : new Error(String(cause)));
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [source]);
 
   // 🔌 Short Circuit
-  if (error) {
+  if (compiled.error) {
     return (
       <div className={className} data-testid="MarkdownRenderer" role="alert">
-        {error.message}
+        {compiled.error.message}
       </div>
     );
   }
 
-  if (!Content) {
-    return <div className={className} data-testid="MarkdownRenderer" />;
-  }
+  const { Content } = compiled;
 
   return (
     <div

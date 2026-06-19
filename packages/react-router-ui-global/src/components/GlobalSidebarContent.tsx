@@ -18,6 +18,7 @@ import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
+  disabled?: boolean;
   icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -73,7 +74,13 @@ export const GlobalSidebarContent = (
           isActive={isActive}
           tooltip={String(children)}
         >
-          <NavLink className="text-xs!" to={item.to} viewTransition={true}>
+          <NavLink
+            className={classnames('text-xs!', {
+              'text-muted-foreground pointer-events-none': item.disabled,
+            })}
+            to={item.to}
+            viewTransition={true}
+          >
             <IconComponent
               className={classnames('size-4 shrink-0', {
                 'text-accent': isActive,

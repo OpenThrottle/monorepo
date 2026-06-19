@@ -37,6 +37,23 @@
   margin-bottom: 0.6rem;
 }
 
+.markdown table {
+  @apply bg-background my-4 rounded-lg border font-light;
+}
+
+.markdown table thead th,
+.markdown table tbody td {
+  @apply p-4;
+}
+
+.markdown table thead {
+  @apply border-border border-b;
+}
+
+.markdown table tbody td {
+  @apply py-2;
+}
+
 .markdown a {
   color: var(--color-accent);
   text-decoration: underline;

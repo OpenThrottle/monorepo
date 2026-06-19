@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src"]
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
+  ],
+  "references": [
+    {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-markdown/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}
