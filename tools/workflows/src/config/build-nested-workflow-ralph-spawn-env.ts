@@ -3,16 +3,16 @@
  * {@link loadWorkflowRalphConfig}, then delegates to {@link buildWorkflowRalphSpawnEnv}.
  */
 
-import type { BuildWorkflowRalphSpawnEnvOptions } from '@openthrottle/ai-mcp/src/config';
-import {
-  buildWorkflowRalphSpawnEnv,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-} from '@openthrottle/ai-mcp/src/cortex-server';
 import {
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { loadWorkflowRalphConfig } from './load-workflow-ralph-config.js';
+import {
+  buildWorkflowRalphSpawnEnv,
+  type BuildWorkflowRalphSpawnEnvOptions,
+} from './workflow-ralph-spawn-env.js';
 
 /**
  * @description Resolves Ralph config cwd for queue workers: job worktree, then `WORKSPACE_ROOT`, then process cwd.
