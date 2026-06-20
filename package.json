@@ -93,6 +93,7 @@
     "@openthrottle/openthrottle-workflows": "workspace:^",
     "@openthrottle/react-router-auth": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
+    "@openthrottle/react-router-docs": "workspace:^",
     "@openthrottle/react-router-editor": "workspace:^",
     "@openthrottle/react-router-floor-layout": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",

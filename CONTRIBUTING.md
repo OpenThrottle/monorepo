@@ -260,12 +260,13 @@ Most no-build packages are **`technology:react-router`** workspace libraries und
 
 Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
 
-### All projects without `build` (17)
+### All projects without `build` (18)
 
 | Nx project                                     | Role                                                                    |
 | ---------------------------------------------- | ----------------------------------------------------------------------- |
 | `@openthrottle/react-router-auth`              | Shared React Router auth UI and hooks                                   |
 | `@openthrottle/react-router-chat`              | Shared chat UI                                                          |
+| `@openthrottle/react-router-docs`              | Docs/FAQ rendering layer over a per-app Markdown content folder         |
 | `@openthrottle/react-router-editor`            | Monaco-based editor                                                     |
 | `@openthrottle/react-router-graphql`           | GraphQL client helpers for React Router apps                            |
 | `@openthrottle/react-router-notifications`     | Notifications UI                                                        |

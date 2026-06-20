@@ -912,6 +912,9 @@ catalogs:
     xlsx:
       specifier: ^0.18.5
       version: 0.18.5
+    yaml:
+      specifier: ^2.7.1
+      version: 2.9.0
     yargs:
       specifier: ^18.0.0
       version: 18.0.0
@@ -1194,6 +1197,9 @@ importers:
       '@openthrottle/react-router-chat':
         specifier: workspace:^
         version: link:packages/react-router-chat
+      '@openthrottle/react-router-docs':
+        specifier: workspace:^
+        version: link:packages/react-router-docs
       '@openthrottle/react-router-editor':
         specifier: workspace:^
         version: link:packages/react-router-editor
@@ -1968,6 +1974,10 @@ importers:
         version: 7.0.2(webpack-dev-server@5.2.3)(webpack@5.106.2)
 
   applications/openthrottle-admin:
+    dependencies:
+      '@openthrottle/react-router-docs':
+        specifier: workspace:^
+        version: link:../../packages/react-router-docs
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
@@ -1996,6 +2006,9 @@ importers:
       '@openthrottle/react-router-chat':
         specifier: workspace:^
         version: link:../../packages/react-router-chat
+      '@openthrottle/react-router-docs':
+        specifier: workspace:^
+        version: link:../../packages/react-router-docs
       '@openthrottle/react-router-editor':
         specifier: workspace:^
         version: link:../../packages/react-router-editor
@@ -2080,6 +2093,10 @@ importers:
         version: link:../../packages/react-router-testing
 
   applications/openthrottle-email:
+    dependencies:
+      '@openthrottle/react-router-docs':
+        specifier: workspace:^
+        version: link:../../packages/react-router-docs
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
@@ -2245,6 +2262,10 @@ importers:
         version: 4.4.3
 
   applications/openthrottle-website:
+    dependencies:
+      '@openthrottle/react-router-docs':
+        specifier: workspace:^
+        version: link:../../packages/react-router-docs
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
@@ -2819,6 +2840,24 @@ importers:
       react-router:
         specifier: 'catalog:'
         version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  packages/react-router-docs:
+    dependencies:
+      '@openthrottle/react-router-markdown':
+        specifier: workspace:^
+        version: link:../react-router-markdown
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:^
+        version: link:../react-router-shadcn
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-router:
+        specifier: 'catalog:'
+        version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.0
 
   packages/react-router-editor:
     dependencies:
