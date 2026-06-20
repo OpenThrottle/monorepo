@@ -11,7 +11,7 @@
   "name": "@tools/ollama-proxy",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
+    "projectType": "application",
     "sourceRoot": "./",
     "tags": [
       "name:@tools/ollama-proxy",
@@ -54,6 +54,7 @@
         }
       },
       "lint": {},
+      "test": {},
       "serve": {
         "cache": false,
         "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded.",
@@ -67,6 +68,7 @@
           "parallel": false
         }
       },
+      "typecheck": {},
       "typecheck-tests": {}
     }
   },
@@ -81,6 +83,5 @@
     "e2e": "node scripts/e2e.mjs"
   },
   "type": "module",
-  "types": "./src/index.ts",
   "version": "1.0.0"
 }
