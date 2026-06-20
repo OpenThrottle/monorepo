@@ -54,7 +54,7 @@ import type {
 import {
   ROOT_LOADER_UNREACHABLE_HEALTH,
   classifyRootLoaderError,
-  parseHttpStatusFromRootLoaderMessage,
+  httpStatusFromRootLoaderError,
   rootLoaderErrorMessage,
 } from '~/global/utils/root-loader-diagnostics';
 import { SITE_TITLE } from '#/app/global/config/settings';
@@ -158,8 +158,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       console.error('root loader: GetRootHealth failed', error);
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
       const healthMessage = rootLoaderErrorMessage(error);
-      const healthHttpStatus =
-        parseHttpStatusFromRootLoaderMessage(healthMessage);
+      const healthHttpStatus = httpStatusFromRootLoaderError(error);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
         message: healthMessage,
@@ -186,7 +185,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       userLoadOk = false;
       // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
       const userMessage = rootLoaderErrorMessage(error);
-      const userHttpStatus = parseHttpStatusFromRootLoaderMessage(userMessage);
+      const userHttpStatus = httpStatusFromRootLoaderError(error);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
         message: userMessage,

@@ -38,6 +38,20 @@ export class GraphqlAuthError extends Error {
 }
 
 /**
+ * @description Type guard that reports whether a thrown error is an
+ * authentication/authorization failure (HTTP 401/403) raised by
+ * {@link executeGraphqlWithAuth}. Use this single helper in loaders/actions to
+ * decide whether to redirect to login, instead of brittle `message.includes`
+ * string-scraping that breaks when the backend rewords an error or returns the
+ * status in a GraphQL-errors body rather than the HTTP status line.
+ *
+ * @publicApi
+ */
+export function isAuthError(error: unknown): error is GraphqlAuthError {
+  return error instanceof GraphqlAuthError;
+}
+
+/**
  * @description Extract the HTTP status from a {@link executeGraphql} error
  * message of the form `openthrottle-server GraphQL error <status>: <msg>`
  * (see `@openthrottle/nodejs-graphql`). Returns `undefined` for any other

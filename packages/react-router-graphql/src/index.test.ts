@@ -22,7 +22,8 @@ vi.mock('@openthrottle/react-router-auth', () => ({
 // Seed it before the dynamic import so module evaluation does not throw.
 Object.assign(window, { env: { NODE_ENV: 'test' } });
 
-const { GraphqlAuthError, executeGraphqlWithAuth } = await import('./index');
+const { GraphqlAuthError, executeGraphqlWithAuth, isAuthError } =
+  await import('./index');
 
 const document = {} as TypedDocumentNode<unknown, Record<string, unknown>>;
 
@@ -118,5 +119,33 @@ describe('executeGraphqlWithAuth auth-error mapping', () => {
     const result = await executeGraphqlWithAuth(makeRequest(), document);
 
     expect(result).toBe(data);
+  });
+});
+
+describe('isAuthError', () => {
+  it('is true for a GraphqlAuthError', () => {
+    expect(isAuthError(new GraphqlAuthError('Unauthorized', 401))).toBe(true);
+  });
+
+  it('is false for a plain Error whose message merely contains 401', () => {
+    expect(
+      isAuthError(new Error('openthrottle-server GraphQL error 500: 401 ish')),
+    ).toBe(false);
+  });
+
+  it('is false for non-error values', () => {
+    expect(isAuthError(undefined)).toBe(false);
+    expect(isAuthError('403')).toBe(false);
+    expect(isAuthError(null)).toBe(false);
+  });
+
+  it('narrows to GraphqlAuthError so httpStatus is accessible', () => {
+    const error: unknown = new GraphqlAuthError('Forbidden', 403);
+
+    if (isAuthError(error)) {
+      expect(error.httpStatus).toBe(403);
+    } else {
+      throw new Error('expected isAuthError to narrow the type');
+    }
   });
 });
