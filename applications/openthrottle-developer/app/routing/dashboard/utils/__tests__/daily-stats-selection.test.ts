@@ -4,6 +4,7 @@ import {
   resolveDateFromActiveIndex,
   selectDailyStatByDate,
   selectMostRecentDailyStat,
+  shiftIsoDate,
 } from '../daily-stats-selection';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
@@ -74,6 +75,28 @@ describe('selectMostRecentDailyStat', () => {
 
   test('should return null for an empty range', () => {
     expect(selectMostRecentDailyStat([])).toBeNull();
+  });
+});
+
+describe('shiftIsoDate', () => {
+  test('should step forward by one day', () => {
+    expect(shiftIsoDate('2026-01-01', 1)).toBe('2026-01-02');
+  });
+
+  test('should step backward by one day', () => {
+    expect(shiftIsoDate('2026-01-01', -1)).toBe('2025-12-31');
+  });
+
+  test('should roll across month boundaries', () => {
+    expect(shiftIsoDate('2026-01-31', 1)).toBe('2026-02-01');
+  });
+
+  test('should handle leap days', () => {
+    expect(shiftIsoDate('2024-02-28', 1)).toBe('2024-02-29');
+  });
+
+  test('should return the input unchanged when it is not a YYYY-MM-DD value', () => {
+    expect(shiftIsoDate('not-a-date', 1)).toBe('not-a-date');
   });
 });
 

@@ -15,6 +15,28 @@ export function parseSelectedStatDate(
 }
 
 /**
+ * @description Returns a `YYYY-MM-DD` date string shifted by `deltaDays`, computed in UTC so
+ * it never drifts across DST/timezone boundaries. Returns the input unchanged when it isn't a
+ * valid `YYYY-MM-DD` value.
+ */
+export function shiftIsoDate(date: string, deltaDays: number): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+
+  if (match === null) {
+    return date;
+  }
+
+  const [, year, month, day] = match;
+  const base = Date.UTC(Number(year), Number(month) - 1, Number(day));
+  const shifted = new Date(base + deltaDays * 24 * 60 * 60 * 1000);
+  const yyyy = shifted.getUTCFullYear().toString().padStart(4, '0');
+  const mm = (shifted.getUTCMonth() + 1).toString().padStart(2, '0');
+  const dd = shifted.getUTCDate().toString().padStart(2, '0');
+
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
  * @description Resolves the clicked day's date from a chart bar's active index, or null
  * when the index is missing/out of range. Pure so the bar-click behaviour is testable
  * without recharts geometry (jsdom reports no element size).
