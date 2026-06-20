@@ -7,17 +7,41 @@
       "skillPath": "skills/brag-sheet/SKILL.md",
       "computedHash": "235eebe934fdf6348d018178d13ccbf2c36307ba6030d79561f44887322043e9"
     },
+    "create-cli": {
+      "source": "steipete/agent-scripts",
+      "sourceType": "github",
+      "skillPath": "skills/create-cli/SKILL.md",
+      "computedHash": "2901b8d252d2e154ceb3b1069e94152a80e8a4f0e700e0cebc9d901dea0e26ae"
+    },
     "create-readme": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/create-readme/SKILL.md",
       "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
     },
+    "frontend-design": {
+      "source": "steipete/agent-scripts",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "ab3a76798c9fae60d475a796c979d2878b769ab4de3aadc5459a0f134eee5158"
+    },
     "git-commit": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/git-commit/SKILL.md",
       "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
+    },
+    "github-deep-review": {
+      "source": "steipete/agent-scripts",
+      "sourceType": "github",
+      "skillPath": "skills/github-deep-review/SKILL.md",
+      "computedHash": "dcf692f6dfb01d01bf7032df7ecb452fade3e1709fa224783fd2432221c39215"
+    },
+    "github-project-triage": {
+      "source": "steipete/agent-scripts",
+      "sourceType": "github",
+      "skillPath": "skills/github-project-triage/SKILL.md",
+      "computedHash": "06338f3ee2615bb94977b87f2993b626dc5e0b9ebf98e81b9a487b6629296cc8"
     },
     "grill-me": {
       "source": "mattpocock/skills",
@@ -48,6 +72,12 @@
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
       "computedHash": "8f8bcc9024aa068245fac646d654a18c80280e4b06112ccd3e691a8c96cd66bd"
+    },
+    "skill-cleaner": {
+      "source": "steipete/agent-scripts",
+      "sourceType": "github",
+      "skillPath": "skills/skill-cleaner/SKILL.md",
+      "computedHash": "50470a9de011b56d096b3b03e2080866edf38bfec9f437a6efcdf5715415b70c"
     }
   }
 }

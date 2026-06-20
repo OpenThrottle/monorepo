@@ -3,7 +3,10 @@ import { TransformableInfo } from 'logform';
 
 const formatColors = format.colorize({
   all: true,
-  colors: { debug: 'blue', info: 'white' },
+  colors: {
+    debug: 'blue',
+    // info: 'white'
+  },
   level: false,
   message: false,
 });

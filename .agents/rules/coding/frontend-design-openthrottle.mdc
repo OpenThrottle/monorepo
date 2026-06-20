@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+description: OpenThrottle overlay for the vendored `frontend-design` skill — realize its aesthetic rubric inside the React Router + shadcn stack and OT conventions.
+globs:
+name: coding-frontend-design-openthrottle
+---
+
+OpenThrottle frontend-design overlay:
+
+The vendored [`frontend-design`](../../skills/frontend-design/SKILL.md) skill supplies the **aesthetic rubric** (distinctive, production-grade, non-"AI-slop" UI). It is intentionally stack-agnostic. When you apply it here, realize it through OpenThrottle's stack and conventions below — do not introduce a parallel UI system.
+
+Stack:
+
+- Build UI only in the React Router v7 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`, `openthrottle-email`.
+- Compose from `@openthrottle/react-router-shadcn` (source in `packages/react-router-shadcn/src/components`). Reach for an existing component before hand-rolling one; if a primitive is missing, add it to that package rather than inlining a bespoke variant in an app.
+- Style with the Tailwind + shadcn tokens already in the design system. Don't hardcode raw colors/spacing that bypass the tokens — distinctive ≠ off-system.
+
+Structure:
+
+- Scaffold via `@tools/generators` (`react-router --subGenerator=component`) instead of hand-writing files; keep the generated section-comment scaffold (Hooks / Setup / Handlers / Markup / Life Cycle / 🔌 Short Circuit) even when a section is empty.
+- One component per file, exporting only the component + its props. Hardcoded data, lists, mock data, and user-facing copy go in the nearest `data/` folder — see [`coding-component-data-boundaries`](./component-data-boundaries.mdc) (copy → `data.copy.ts`).
+
+Verify:
+
+- Component/route specs use `component` (not `screen`) to get elements and `userEvent` (not `fireEvent`). Don't assert against duplicated literals — assert against the imported constant from `data.copy.ts`.
+- Validate via the app's `lint` / `test` / `build` (the `openthrottle-developer` `typecheck` target is a disabled no-op; run standalone `tsc` on changed files when you need type coverage).

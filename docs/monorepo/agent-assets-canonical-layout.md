@@ -119,6 +119,13 @@ ln -s ../../.agents/skills/<slug> .claude/skills/<slug>
 ln -s ../.agents/skills/<slug> skills/<slug>
 ```
 
+Or run the idempotent fixer to (re)create symlinks for **every** SSOT asset at once — skills into all three roots and rules into `.cursor/rules` (`nx-rules.mdc` skipped — generated). Use this after a skills.sh install or a fresh clone, then verify with the guard:
+
+```bash
+bash scripts/link-agent-assets.sh            # --dry-run/-n to preview; --skills-only / --rules-only to scope
+pnpm nx run monorepo:check-agent-assets-ssot # confirms no drift
+```
+
 **Coverage:** All **36** slugs under `.agents/skills/` get `.cursor` and `.claude` symlinks. Repo-root `skills/` symlinks are **optional subset** for external agentskills.io consumers (historically 7 symlinks + copies); prefer symlinks over copies for any slug exposed at root.
 
 ### 3.2 Rule file symlinks
