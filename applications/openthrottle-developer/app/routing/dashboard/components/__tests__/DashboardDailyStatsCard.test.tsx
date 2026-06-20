@@ -87,6 +87,29 @@ describe('DashboardDailyStatsCard Component', () => {
   });
 });
 
+describe('DashboardDailyStatsCard Component interactivity', () => {
+  function renderCard(props: DashboardDailyStatsCardProps): RenderResult {
+    const Component = () => <DashboardDailyStatsCard {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    return render(<RoutesStub />);
+  }
+
+  test('applies a clickable affordance when onSelectDate is provided', () => {
+    const result = renderCard({
+      dailyStats: [...twoDayStats],
+      onSelectDate: () => undefined,
+    });
+    const card = result.getByTestId('DashboardDailyStatsCard');
+    expect(card.querySelector('.cursor-pointer')).not.toBeNull();
+  });
+
+  test('omits the clickable affordance when onSelectDate is absent', () => {
+    const result = renderCard({ dailyStats: [...twoDayStats] });
+    const card = result.getByTestId('DashboardDailyStatsCard');
+    expect(card.querySelector('.cursor-pointer')).toBeNull();
+  });
+});
+
 describe('DashboardDailyStatsCard Component empty state', () => {
   test('should render empty message when dailyStats is empty', () => {
     const props: DashboardDailyStatsCardProps = {
