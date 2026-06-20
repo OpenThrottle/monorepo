@@ -82,6 +82,8 @@
   border-radius: 0.5rem;
   padding: 1rem;
   font-size: var(--text-base);
+
+  @apply bg-card;
 }
 
 .markdown blockquote {
