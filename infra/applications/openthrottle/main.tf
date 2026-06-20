@@ -85,13 +85,15 @@ locals {
 module "cloud_sql_postgres" {
   source = "../../modules/gcp_cloud_sql_postgres"
 
-  disk_size_gb      = var.postgres_disk_size_gb
-  disk_type         = var.postgres_disk_type
-  name              = "openthrottle-${var.env_name}-postgres"
-  project_id        = var.project_id
-  public_ip_enabled = var.postgres_public_ip_enabled
-  region            = var.region
-  tier              = var.postgres_tier
+  authorized_networks = var.postgres_authorized_networks
+  disk_size_gb        = var.postgres_disk_size_gb
+  disk_type           = var.postgres_disk_type
+  name                = "openthrottle-${var.env_name}-postgres"
+  project_id          = var.project_id
+  public_ip_enabled   = var.postgres_public_ip_enabled
+  region              = var.region
+  ssl_mode            = var.postgres_ssl_mode
+  tier                = var.postgres_tier
 }
 
 module "compute_e2" {
