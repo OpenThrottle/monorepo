@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   createEmbeddingsProvider,
+  diffSnapshots,
+  hashWorkspace,
   indexWorkspace,
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
@@ -12,6 +14,7 @@ import type {
   SemanticMatch,
 } from '@openthrottle/openthrottle-ide';
 import { AppConfigService } from './app-config.service';
+import { CodeSnapshotStore } from './code-snapshot-store';
 import { CodeVectorStore } from './code-vector-store';
 
 /** Default number of matches returned by {@link CodeSearchService.codeSemanticSearch}. */
@@ -30,21 +33,44 @@ export class CodeSearchService {
     private readonly appConfig: AppConfigService,
     private readonly logger: LoggerService,
     private readonly store: CodeVectorStore,
+    private readonly snapshotStore: CodeSnapshotStore,
   ) {}
 
   /**
-   * Full re-index of a workspace's code into `code_embeddings` (v1: no incremental diff — clears the
-   * workspace's vectors, then chunks + embeds + upserts every tracked file).
+   * Re-index a workspace's code into `code_embeddings`, incrementally when possible.
+   *
+   * Loads the prior workspace snapshot (engine `hashWorkspace` output, persisted in
+   * `code_index_snapshots`). When one exists, it diffs it against a fresh scan (`diffSnapshots`) and
+   * runs the engine in incremental mode — re-embedding only added/changed files and deleting removed
+   * ones via the store. With no prior snapshot it falls back to a FULL index (clear + embed every
+   * tracked file). The new snapshot is persisted only after a successful index, so a failed run never
+   * advances the baseline (which would silently skip files next time).
    */
   async indexCodeWorkspace(
     workspaceRoot: string,
   ): Promise<IndexWorkspaceResult> {
     this.logger.debug(`🧩 indexCodeWorkspace: ${workspaceRoot}`);
     const provider = this.resolveProvider();
-    return indexWorkspace(
-      { root: workspaceRoot },
-      { provider, store: this.store },
-    );
+    const config = { root: workspaceRoot };
+
+    const [priorSnapshot, nextSnapshot] = await Promise.all([
+      this.snapshotStore.load(workspaceRoot),
+      hashWorkspace(config),
+    ]);
+
+    const result =
+      priorSnapshot === null
+        ? await indexWorkspace(config, { provider, store: this.store })
+        : await indexWorkspace(config, {
+            diff: diffSnapshots(priorSnapshot, nextSnapshot),
+            provider,
+            store: this.store,
+          });
+
+    // Persist AFTER a successful index only: if indexWorkspace throws, the baseline is unchanged so
+    // the next run re-attempts the same delta instead of skipping the files it failed to embed.
+    await this.snapshotStore.save(workspaceRoot, nextSnapshot);
+    return result;
   }
 
   /** Number of indexed code chunks for a workspace (0 means not yet indexed). */
