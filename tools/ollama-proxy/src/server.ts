@@ -13,6 +13,20 @@ const OLLAMA_BASE_URL = (
 const TARGET_MODEL =
   process.env.OLLAMA_PROXY_TARGET_MODEL ?? 'qwen3-coder-next';
 const TIMEOUT_MS = Number(process.env.OLLAMA_PROXY_TIMEOUT_MS ?? '120000');
+const MAX_BODY_BYTES = Number(
+  process.env.OLLAMA_PROXY_MAX_BODY_BYTES ?? `${10 * 1024 * 1024}`,
+);
+
+class BodyTooLargeError extends Error {
+  constructor(limitBytes: number) {
+    super(`Request body exceeds maximum size of ${limitBytes} bytes`);
+    this.name = 'BodyTooLargeError';
+  }
+}
+
+function isBodyTooLargeError(error: unknown): boolean {
+  return error instanceof BodyTooLargeError;
+}
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
@@ -68,11 +82,28 @@ function parseOllamaTagsResponse(value: unknown): OllamaTagsResponse | null {
   return { models };
 }
 
-function parseBody(req: http.IncomingMessage): Promise<string> {
+function parseBody(
+  req: http.IncomingMessage,
+  maxBytes: number,
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
+    const declaredLength = Number(req.headers['content-length']);
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+      reject(new BodyTooLargeError(maxBytes));
+      return;
+    }
 
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    const chunks: Buffer[] = [];
+    let total = 0;
+
+    req.on('data', (chunk: Buffer) => {
+      total += chunk.length;
+      if (total > maxBytes) {
+        reject(new BodyTooLargeError(maxBytes));
+        return;
+      }
+      chunks.push(chunk);
+    });
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
@@ -276,7 +307,25 @@ const requestHandler = async (
   }
 
   if (path === '/v1/chat/completions' && req.method === 'POST') {
-    const body = await parseBody(req);
+    let body: string;
+    try {
+      body = await parseBody(req, MAX_BODY_BYTES);
+    } catch (error) {
+      if (isBodyTooLargeError(error)) {
+        if (!res.headersSent) {
+          writeJson(res, 413, {
+            error: {
+              message: `Request body exceeds maximum size of ${MAX_BODY_BYTES} bytes`,
+            },
+          });
+        }
+        req.destroy();
+
+        return;
+      }
+
+      throw error;
+    }
     await handleChatCompletions(req, res, body);
 
     return;
