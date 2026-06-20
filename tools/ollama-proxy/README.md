@@ -9,6 +9,7 @@ Local HTTP proxy that accepts OpenAI-style requests (e.g. from Cursor) and forwa
 | `OLLAMA_PROXY_PORT`         | `11435`                | Port the proxy listens on (localhost only).                                                                                   |
 | `OLLAMA_BASE_URL`           | `https://ollama.local` | Upstream Ollama URL (use Caddy-proxied URL when running Caddy; see [docs/monorepo/Ollama.md](../../docs/monorepo/Ollama.md)). |
 | `OLLAMA_PROXY_TARGET_MODEL` | `qwen3-coder-next`     | Model name sent to Ollama (the one Cursor cannot use directly).                                                               |
+| `OLLAMA_PROXY_TIMEOUT_MS`   | `120000`               | Upstream fetch timeout in milliseconds; on timeout the proxy responds `504` instead of hanging on a slow or dead upstream.    |
 
 ## Dependencies
 

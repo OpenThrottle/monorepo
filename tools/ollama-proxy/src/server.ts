@@ -12,6 +12,11 @@ const OLLAMA_BASE_URL = (
 ).replace(/\/$/, '');
 const TARGET_MODEL =
   process.env.OLLAMA_PROXY_TARGET_MODEL ?? 'qwen3-coder-next';
+const TIMEOUT_MS = Number(process.env.OLLAMA_PROXY_TIMEOUT_MS ?? '120000');
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
 
 interface ChatCompletionsBody {
   [key: string]: unknown;
@@ -117,8 +122,17 @@ async function handleChatCompletions(
       body: JSON.stringify(rewritten),
       headers,
       method: 'POST',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (error) {
+    if (isAbortError(error)) {
+      writeJson(res, 504, {
+        error: { message: `Upstream request timed out after ${TIMEOUT_MS}ms` },
+      });
+
+      return;
+    }
+
     const isError = error instanceof Error;
     const message = isError ? error.message : String(error);
 
@@ -159,8 +173,16 @@ async function handleModels(res: http.ServerResponse): Promise<void> {
   let upstream: Response;
 
   try {
-    upstream = await fetch(url);
+    upstream = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch (error) {
+    if (isAbortError(error)) {
+      writeJson(res, 504, {
+        error: { message: `Upstream request timed out after ${TIMEOUT_MS}ms` },
+      });
+
+      return;
+    }
+
     const isError = error instanceof Error;
     const message = isError ? error.message : String(error);
 
