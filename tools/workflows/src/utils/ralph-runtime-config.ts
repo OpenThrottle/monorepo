@@ -38,6 +38,11 @@ export interface WorkflowRalphDefaultsFileJson {
   readonly promptFile?: string;
   /** Cursor-only: `--skip-worktree-setup`. */
   readonly skipWorktreeSetup?: boolean;
+  /**
+   * Opt-in task-mode iteration override (same as `--task-iterations <n>` /
+   * `WORKFLOW_RALPH_TASK_ITERATIONS`). Unset keeps the single-task rule (effective 1).
+   */
+  readonly taskIterations?: number;
   /** Agent CLI worktree name (same as `--worktree <name>`). */
   readonly worktree?: string;
   /** Cursor-only: `--worktree-base`. */
@@ -61,6 +66,8 @@ export interface RalphRuntimeSeed {
    */
   readonly promptFile: string | undefined;
   readonly skipWorktreeSetup: boolean | undefined;
+  /** Opt-in task-mode iteration override; `undefined` keeps the single-task rule (effective 1). */
+  readonly taskIterations: number | undefined;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
 }
@@ -93,6 +100,9 @@ const pickRunTuningFromV1 = (
   }
   if (v1.skipWorktreeSetup !== undefined) {
     out.skipWorktreeSetup = v1.skipWorktreeSetup;
+  }
+  if (v1.taskIterations !== undefined) {
+    out.taskIterations = v1.taskIterations;
   }
   if (v1.worktree !== undefined) {
     out.worktree = v1.worktree;
@@ -139,6 +149,7 @@ export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
     prompt: resolved.prompt,
     promptFile: resolved.promptFile,
     skipWorktreeSetup: resolved.skipWorktreeSetup,
+    taskIterations: resolved.taskIterations,
     worktree: resolved.worktree,
     worktreeBase: resolved.worktreeBase,
   };

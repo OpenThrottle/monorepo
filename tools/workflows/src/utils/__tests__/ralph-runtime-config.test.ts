@@ -131,6 +131,32 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
     }
   });
 
+  it('taskIterations: undefined by default, file sets it, env overrides file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      expect(mergeRalphRuntimeSeed(dir).taskIterations).toBeUndefined();
+
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ taskIterations: 3 }),
+        'utf8',
+      );
+      expect(mergeRalphRuntimeSeed(dir).taskIterations).toBe(3);
+
+      vi.stubEnv(WORKFLOW_RALPH_ENV.taskIterations, '5');
+      expect(mergeRalphRuntimeSeed(dir).taskIterations).toBe(5);
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('readWorkflowRalphEnv throws on invalid taskIterations', () => {
+    vi.stubEnv(WORKFLOW_RALPH_ENV.taskIterations, '0');
+    expect(() => readWorkflowRalphEnv()).toThrow(
+      WORKFLOW_RALPH_ENV.taskIterations,
+    );
+  });
+
   it('merge backend: env overrides file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-'));
     try {

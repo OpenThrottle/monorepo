@@ -30,6 +30,7 @@ describe('resolveRalphPromptFromSeed', () => {
       prompt: '/agents/seo',
       promptFile: undefined,
       skipWorktreeSetup: undefined,
+      taskIterations: undefined,
       worktree: undefined,
       worktreeBase: undefined,
     });
@@ -52,6 +53,7 @@ describe('resolveRalphPromptFromSeed', () => {
         prompt: DEFAULT_RALPH_PROMPT,
         promptFile: 'custom.md',
         skipWorktreeSetup: undefined,
+        taskIterations: undefined,
         worktree: undefined,
         worktreeBase: undefined,
       });

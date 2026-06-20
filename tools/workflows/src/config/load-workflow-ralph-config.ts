@@ -52,6 +52,7 @@ export const WORKFLOW_RALPH_ENV = {
   prompt: 'WORKFLOW_RALPH_PROMPT',
   promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
   skipWorktreeSetup: 'WORKFLOW_RALPH_SKIP_WORKTREE_SETUP',
+  taskIterations: 'WORKFLOW_RALPH_TASK_ITERATIONS',
   worktree: 'WORKFLOW_RALPH_WORKTREE',
   worktreeBase: 'WORKFLOW_RALPH_WORKTREE_BASE',
 } as const;
@@ -82,6 +83,7 @@ const V1_KNOWN_ROOT_KEYS = new Set([
   'promptFile',
   'skipWorktreeSetup',
   'spawn',
+  'taskIterations',
   'transport',
   'worktree',
   'worktreeBase',
@@ -276,6 +278,18 @@ export const normalizeWorkflowRalphDefaultsFileV1 = (
       throw new Error(`${filePath}: "iterations" must be a positive integer`);
     }
     out.iterations = o.iterations;
+  }
+  if ('taskIterations' in o && o.taskIterations !== undefined) {
+    if (
+      typeof o.taskIterations !== 'number' ||
+      !Number.isInteger(o.taskIterations) ||
+      o.taskIterations < 1
+    ) {
+      throw new Error(
+        `${filePath}: "taskIterations" must be a positive integer`,
+      );
+    }
+    out.taskIterations = o.taskIterations;
   }
   if ('iterationTimeout' in o && o.iterationTimeout !== undefined) {
     if (
@@ -521,6 +535,14 @@ export const readWorkflowRalphConfigEnv = (
     out.iterations = iterations;
   }
 
+  const taskIterations = parsePositiveIntEnv(
+    env[WORKFLOW_RALPH_ENV.taskIterations],
+    WORKFLOW_RALPH_ENV.taskIterations,
+  );
+  if (taskIterations !== undefined) {
+    out.taskIterations = taskIterations;
+  }
+
   const iterationTimeout = parsePositiveIntEnv(
     env[WORKFLOW_RALPH_ENV.iterationTimeout],
     WORKFLOW_RALPH_ENV.iterationTimeout,
@@ -679,6 +701,7 @@ export const loadWorkflowRalphConfig = (
     promptFile,
     skipWorktreeSetup: envLayer.skipWorktreeSetup ?? file.skipWorktreeSetup,
     spawn: mergeSpawn(file.spawn, envLayer.spawn),
+    taskIterations: envLayer.taskIterations ?? file.taskIterations,
     transport: envLayer.transport ?? file.transport ?? DEFAULT_TRANSPORT,
     worktree: envLayer.worktree ?? file.worktree,
     worktreeBase: envLayer.worktreeBase ?? file.worktreeBase,

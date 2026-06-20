@@ -29,6 +29,7 @@ Options:
   ${COLORS.cyan}--help ${COLORS.reset}              Show this message
   ${COLORS.cyan}--iteration-timeout ${COLORS.gray}<seconds>${COLORS.reset}  Per-iteration timeout (non-interactive only)  ${COLORS.gray}e.g. 1800${COLORS.reset}
   ${COLORS.cyan}--iterations ${COLORS.gray}<number>${COLORS.reset}    Number of iterations to run  ${COLORS.gray}default: ${COLORS.blue}10${COLORS.reset}
+  ${COLORS.cyan}--task-iterations ${COLORS.gray}<number>${COLORS.reset}  Opt-in max iterations for ${COLORS.cyan}--task${COLORS.reset} mode (overrides the single-task rule)  ${COLORS.gray}default: ${COLORS.blue}1${COLORS.reset}
   ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Model preset when the backend supports it (${COLORS.gray}--model${COLORS.reset}; omit when ${COLORS.blue}'auto'${COLORS.reset} for Claude)  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
   ${COLORS.cyan}--project ${COLORS.gray}<name>${COLORS.reset}          NX project name (from project graph; applications + packages)
   ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents-ralph${COLORS.reset}
@@ -49,6 +50,7 @@ Environment (prompt profile + run tuning; optional):
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.prompt}${COLORS.reset}   Default prompt profile (command-style), same as ${COLORS.cyan}--prompt${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.promptFile}${COLORS.reset}   Default prompt file path (UTF-8), same as ${COLORS.cyan}--prompt-file${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterations}${COLORS.reset}   Default iteration count (positive integer)
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.taskIterations}${COLORS.reset}   Opt-in max iterations for ${COLORS.cyan}--task${COLORS.reset} mode (positive integer; unset = single-task rule)
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterationTimeout}${COLORS.reset}   Per-iteration timeout in ${COLORS.green}seconds${COLORS.reset} (non-interactive), same as ${COLORS.cyan}--iteration-timeout${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.model}${COLORS.reset}   Default model for the active backend, same as ${COLORS.cyan}--model${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.project}${COLORS.reset}   Default NX project, same as ${COLORS.cyan}--project${COLORS.reset}

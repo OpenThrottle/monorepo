@@ -7,6 +7,7 @@ import { constants } from 'fs';
 import { dirname, join } from 'path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import {
   OPENTHROTTLE_REPO_SKILL_PATHS,
   type RepoSkillPathLayout,
@@ -110,7 +111,12 @@ export class WorkspaceEditorConfigService {
     const filesWritten: string[] = [];
     const warnings: string[] = [];
     const paths = getWorkspaceEditorConfigPaths(params.editor);
-    const repositoryRoot = params.filesystemPath;
+    // The repository's filesystemPath is host-truthful (as stored in the DB). When the server runs
+    // in a container with the workspace bridge active, translate it to the in-container mount before
+    // any filesystem write so config lands at a path that exists. Identity (no-op) when the bridge
+    // env (OPENTHROTTLE_HOST/CONTAINER_WORKSPACES_DIR) is unset — i.e. every host-run flow. Mirrors
+    // the boundary translation in code-search.resolver / ide-engine.server.
+    const repositoryRoot = toContainerPath(params.filesystemPath);
 
     try {
       await access(repositoryRoot, constants.R_OK | constants.W_OK);

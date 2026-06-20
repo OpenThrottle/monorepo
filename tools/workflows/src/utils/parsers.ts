@@ -142,6 +142,11 @@ export interface RalphArgs {
   skipWorktreeSetup: boolean | undefined;
   /** When set, Ralph runs in task-centric mode (single task). Plan can be omitted and resolved from the task. */
   task: string | undefined;
+  /**
+   * Opt-in override for max iterations in task-centric mode (`--task-iterations <n>` /
+   * `WORKFLOW_RALPH_TASK_ITERATIONS`). Unset keeps the single-task rule (effective 1). Ignored in plan mode.
+   */
+  taskIterations: number | undefined;
   /** Resolved agent CLI worktree name for every iteration. */
   worktree: RalphWorktreeName | undefined;
   /** Cursor-only: `--worktree-base`. */
@@ -165,6 +170,7 @@ export const parseRalphArgs = (): RalphArgs => {
     prompt: seed.prompt,
     skipWorktreeSetup: seed.skipWorktreeSetup,
     task: undefined,
+    taskIterations: seed.taskIterations,
     worktree: seed.worktree,
     worktreeBase: seed.worktreeBase,
   };
@@ -239,6 +245,15 @@ export const parseRalphArgs = (): RalphArgs => {
       }
 
       parsed.iterations = value;
+      i++;
+    } else if (arg === '--task-iterations' && i + 1 < args.length) {
+      const value = parseInt(args[i + 1] ?? '', 10);
+      if (isNaN(value) || value < 1) {
+        const message = `--task-iterations must be a positive integer greater than 0`;
+        throw new Error(message);
+      }
+
+      parsed.taskIterations = value;
       i++;
     } else if (arg === '--plan') {
       if (i + 1 >= args.length) {
@@ -397,6 +412,7 @@ export const parseRalphArgs = (): RalphArgs => {
     ralphDebugLevel: ralphDebugLogger.level,
     skipWorktreeSetup: cliSkipWorktreeSetup ?? parsed.skipWorktreeSetup,
     task: parsed.task,
+    taskIterations: parsed.taskIterations,
     worktree,
     worktreeBase: cliWorktreeBase ?? parsed.worktreeBase,
   };

@@ -46,6 +46,12 @@ export interface WorkflowRalphDefaultsFileV1Json {
   readonly promptFile?: string;
   readonly skipWorktreeSetup?: boolean;
   readonly spawn?: WorkflowRalphDefaultsSpawnJson;
+  /**
+   * Opt-in override for the max iterations in **task-centric** mode. Default (unset) keeps the
+   * single-task rule (effective iterations = 1). When set to a positive integer, task mode honors
+   * it instead of forcing 1. Ignored in plan mode (use `iterations` there).
+   */
+  readonly taskIterations?: number;
   readonly transport?: WorkflowRalphTransport;
   readonly worktree?: string;
   readonly worktreeBase?: string;
@@ -68,6 +74,8 @@ export interface WorkflowRalphResolvedDefaults extends Required<
   readonly promptFile: string | undefined;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly spawn: WorkflowRalphDefaultsSpawnJson;
+  /** Opt-in task-mode iteration override; `undefined` keeps the single-task rule (effective 1). */
+  readonly taskIterations: number | undefined;
   readonly transport: WorkflowRalphTransport;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;

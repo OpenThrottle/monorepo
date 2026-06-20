@@ -1,5 +1,6 @@
 /**
- * @description Integration tests for `--backend` in {@link parseRalphArgs} (uses partial mock of seed merge).
+ * @description Integration tests for `--task-iterations` in {@link parseRalphArgs}
+ * (uses a partial mock of the runtime seed merge).
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -25,9 +26,9 @@ vi.mock('../ralph-runtime-config', async (importOriginal) => {
   };
 });
 
-const PLAN_UUID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';
+const TASK_UUID = '45a30762-92a9-42f4-90e0-2437c7ef26a8';
 
-describe('parseRalphArgs (execution backend)', () => {
+describe('parseRalphArgs (--task-iterations)', () => {
   const originalArgv = process.argv;
 
   beforeEach(() => {
@@ -40,44 +41,35 @@ describe('parseRalphArgs (execution backend)', () => {
     process.argv = originalArgv;
   });
 
-  it('parses --backend cursor', async () => {
-    process.argv = [
-      'node',
-      'ralph.js',
-      '--plan',
-      PLAN_UUID,
-      '--backend',
-      'cursor',
-    ];
+  it('defaults taskIterations to undefined when the flag is absent', async () => {
+    process.argv = ['node', 'ralph.js', '--task', TASK_UUID];
     const { parseRalphArgs } = await import('../parsers');
-    const args = parseRalphArgs();
-    expect(args.backend).toBe('cursor');
+    expect(parseRalphArgs().taskIterations).toBeUndefined();
   });
 
-  it('parses --backend claude (case-insensitive)', async () => {
+  it('parses --task-iterations <n>', async () => {
     process.argv = [
       'node',
       'ralph.js',
-      '--plan',
-      PLAN_UUID,
-      '--backend',
-      'Claude',
+      '--task',
+      TASK_UUID,
+      '--task-iterations',
+      '5',
     ];
     const { parseRalphArgs } = await import('../parsers');
-    const args = parseRalphArgs();
-    expect(args.backend).toBe('claude');
+    expect(parseRalphArgs().taskIterations).toBe(5);
   });
 
-  it('throws on unknown --backend', async () => {
+  it('throws on a non-positive --task-iterations value', async () => {
     process.argv = [
       'node',
       'ralph.js',
-      '--plan',
-      PLAN_UUID,
-      '--backend',
-      'not-a-runner',
+      '--task',
+      TASK_UUID,
+      '--task-iterations',
+      '0',
     ];
     const { parseRalphArgs } = await import('../parsers');
-    expect(() => parseRalphArgs()).toThrow(/Unknown execution backend/);
+    expect(() => parseRalphArgs()).toThrow(/--task-iterations/);
   });
 });
