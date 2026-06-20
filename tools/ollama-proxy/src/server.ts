@@ -13,6 +13,7 @@ const OLLAMA_BASE_URL = (
 const TARGET_MODEL =
   process.env.OLLAMA_PROXY_TARGET_MODEL ?? 'qwen3-coder-next';
 const TIMEOUT_MS = Number(process.env.OLLAMA_PROXY_TIMEOUT_MS ?? '120000');
+const UPSTREAM_TOKEN = process.env.OLLAMA_PROXY_UPSTREAM_TOKEN ?? '';
 const MAX_BODY_BYTES = Number(
   process.env.OLLAMA_PROXY_MAX_BODY_BYTES ?? `${10 * 1024 * 1024}`,
 );
@@ -119,7 +120,7 @@ function writeJson(
 }
 
 async function handleChatCompletions(
-  req: http.IncomingMessage,
+  _req: http.IncomingMessage,
   res: http.ServerResponse,
   body: string,
 ): Promise<void> {
@@ -140,12 +141,15 @@ async function handleChatCompletions(
   const rewritten = { ...parsed, model: TARGET_MODEL };
   const url = `${OLLAMA_BASE_URL}/v1/chat/completions`;
 
+  // Do NOT forward the inbound client Authorization header to the upstream:
+  // the proxy ignores the client API key (see README), and forwarding it would
+  // leak whatever the client sends to a potentially remote OLLAMA_BASE_URL.
+  // Only attach a dedicated upstream token when one is explicitly configured.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
-  const auth = req.headers.authorization;
-  if (auth) headers['Authorization'] = auth;
+  if (UPSTREAM_TOKEN) headers['Authorization'] = `Bearer ${UPSTREAM_TOKEN}`;
 
   let upstream: Response;
   try {

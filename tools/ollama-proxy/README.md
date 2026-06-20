@@ -11,6 +11,7 @@ Local HTTP proxy that accepts OpenAI-style requests (e.g. from Cursor) and forwa
 | `OLLAMA_PROXY_TARGET_MODEL`   | `qwen3-coder-next`     | Model name sent to Ollama (the one Cursor cannot use directly).                                                               |
 | `OLLAMA_PROXY_TIMEOUT_MS`     | `120000`               | Upstream fetch timeout in milliseconds; on timeout the proxy responds `504` instead of hanging on a slow or dead upstream.    |
 | `OLLAMA_PROXY_MAX_BODY_BYTES` | `10485760`             | Maximum accepted request body size in bytes (10 MB); the proxy responds `413` and closes the connection when exceeded.        |
+| `OLLAMA_PROXY_UPSTREAM_TOKEN` | _(unset)_              | Optional bearer token sent to the upstream as `Authorization: Bearer <token>`. The inbound client API key is never forwarded. |
 
 ## Dependencies
 
@@ -54,7 +55,7 @@ The script sends a chat completion request with a whitelisted model and verifies
 
 1. **Override OpenAI Base URL:** `http://127.0.0.1:11435/v1` (or `http://127.0.0.1:<OLLAMA_PROXY_PORT>/v1` if you changed the port).
 2. **Model:** Use a Cursor-whitelisted name, e.g. `gpt-4o` or `codellama`. The proxy will replace it with `OLLAMA_PROXY_TARGET_MODEL` when forwarding to Ollama.
-3. **API key:** Leave empty or use a placeholder (e.g. `ollama`); the proxy does not validate it.
+3. **API key:** Leave empty or use a placeholder (e.g. `ollama`); the proxy does not validate it and never forwards it upstream. To authenticate against a protected `OLLAMA_BASE_URL`, set `OLLAMA_PROXY_UPSTREAM_TOKEN` so the proxy sends its own `Authorization: Bearer <token>` instead.
 
 See [docs/monorepo/Ollama.md](../../docs/monorepo/Ollama.md) for Caddy and `OLLAMA_BASE_URL` details.
 
