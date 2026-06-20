@@ -2,8 +2,12 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { createMock } from '@golevelup/ts-vitest';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  CONTAINER_WORKSPACES_DIR_ENV,
+  HOST_WORKSPACES_DIR_ENV,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import type { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
@@ -35,6 +39,10 @@ describe('WorkspaceEditorConfigService', () => {
       mockUserWorkspaceSettingsService,
       mockWorkspaceLocalRepositoriesService,
     );
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test('returns empty when no editors are enabled', async () => {
@@ -76,6 +84,66 @@ describe('WorkspaceEditorConfigService', () => {
     expect(results[0]?.filesWritten).toContain(
       '.openthrottle/workspace-editors.json',
     );
+    expect(results[0]?.warnings).toEqual([]);
+  });
+
+  test('translates the write path through the host bridge when bridge env is set', async () => {
+    const repoId = '33333333-3333-4333-8333-333333333333';
+    // The real writable dir (repositoryRoot, created in beforeEach) is the *container* view.
+    // The DB stores a host-truthful path; the bridge maps host -> container at the FS boundary.
+    const containerParent = join(repositoryRoot, '..');
+    const repoName = repositoryRoot.slice(containerParent.length + 1);
+    const hostWorkspaces = '/host/workspaces';
+    const hostPath = `${hostWorkspaces}/${repoName}`;
+
+    vi.stubEnv(HOST_WORKSPACES_DIR_ENV, hostWorkspaces);
+    vi.stubEnv(CONTAINER_WORKSPACES_DIR_ENV, containerParent);
+
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
+      enabledEditors: ['cursor'],
+      userId,
+    } as UserWorkspaceSettings);
+    // filesystemPath stays host-truthful (as stored in the DB).
+    mockWorkspaceLocalRepositoriesService.listByUserId.mockResolvedValue([
+      {
+        filesystemPath: hostPath,
+        id: repoId,
+        userId,
+      } as WorkspaceLocalRepository,
+    ]);
+
+    const results = await service.applyForUser(userId, {
+      apiBaseUrl: 'http://localhost:6021',
+    });
+
+    // Writes succeeded (no "not readable/writable" warning) because the host path was translated
+    // to the real container dir, and the reported path is the translated one.
+    expect(results[0]?.warnings).toEqual([]);
+    expect(results[0]?.filesystemPath).toBe(repositoryRoot);
+    expect(results[0]?.filesWritten).toContain('.cursor/mcp.json');
+  });
+
+  test('leaves the write path unchanged when bridge env is unset', async () => {
+    const repoId = '44444444-4444-4444-8444-444444444444';
+
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
+      enabledEditors: ['cursor'],
+      userId,
+    } as UserWorkspaceSettings);
+    mockWorkspaceLocalRepositoriesService.listByUserId.mockResolvedValue([
+      {
+        filesystemPath: repositoryRoot,
+        id: repoId,
+        userId,
+      } as WorkspaceLocalRepository,
+    ]);
+
+    const results = await service.applyForUser(userId, {
+      apiBaseUrl: 'http://localhost:6021',
+    });
+
+    // No bridge env -> identity translation -> the stored path is used verbatim.
+    expect(results[0]?.filesystemPath).toBe(repositoryRoot);
     expect(results[0]?.warnings).toEqual([]);
   });
 });

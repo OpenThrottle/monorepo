@@ -88,6 +88,7 @@ Ralph runs the agentic process (prompt + plan) for a fixed number of iterations.
 - **Prompt (source of truth):** `.cursor/skills/agents-ralph/SKILL.md`
 - **`--plan`:** OpenThrottle (OT) plan ID (UUID). Ralph loads plan and tasks from Postgres and injects them into the prompt; the agent should not call `get_plan` or `get_tasks_by_plan_id`. Ralph updates task status from `<ralph:task-complete>` and `<promise>COMPLETE</promise>`; iteration output can be logged via OT MCP `append_plan_output` / `get_plan_output` if the agent has MCP.
 - **`--task`:** OpenThrottle task ID (UUID). Task-centric mode: work on a single task; plan is resolved from the task when `--plan` is omitted.
+- **`--task-iterations <n>`:** Opt-in override for task-centric mode. By default task mode runs the single task **once** (`--iterations` is ignored — the single-task rule); pass `--task-iterations <n>` (or set `WORKFLOW_RALPH_TASK_ITERATIONS` / `taskIterations` in `.workflow-ralph.json`) to loop the same task up to `n` times for iterative refinement without re-enqueueing. Unset keeps the default of 1. Ignored in plan mode. Precedence is the usual CLI flag → env → file → built-in.
 - **OpenThrottle required:** Plan/task mode requires OpenThrottle to be configured and reachable. Set `POSTGRES_URL` or `POSTGRES_*`; the CLI fails fast with a clear error if the DB is unreachable.
 - **No ref file:** Ralph does not write a ref file. Ralph injects plan and tasks into the prompt; the agent need not call OT MCP for plan/tasks.
 

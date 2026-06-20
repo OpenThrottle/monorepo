@@ -26,6 +26,11 @@
       "minimum": 1,
       "description": "Default iteration count (WORKFLOW_RALPH_ITERATIONS / --iterations)."
     },
+    "taskIterations": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Opt-in max iterations for task-centric mode (WORKFLOW_RALPH_TASK_ITERATIONS / --task-iterations). Unset keeps the single-task rule (effective 1)."
+    },
     "iterationTimeout": {
       "type": "integer",
       "minimum": 1,

@@ -162,17 +162,24 @@ export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
 
 /**
  * @description Builds {@link WorkflowRalphContext} from a full {@link WorkflowOptions}
- * (e.g. developer UI / argv preview). Applies task `iterations === 1` rule; keeps
+ * (e.g. developer UI / argv preview). Applies the task single-task rule (effective `iterations = 1`)
+ * unless {@link WorkflowOptions.taskIterations} opts into an override; keeps
  * {@link WorkflowOptions.iterations} as the user-facing value.
  */
 export function buildRalphFlowContextFromRunOptionsShape(
   input: WorkflowOptions,
 ): WorkflowRalphContext {
   const isTaskMode = input.mode === 'task';
+  const effectiveTaskIterations =
+    input.taskIterations != null &&
+    Number.isInteger(input.taskIterations) &&
+    input.taskIterations >= 1
+      ? input.taskIterations
+      : 1;
 
   return {
     ...input,
-    iterations: isTaskMode ? 1 : input.iterations,
+    iterations: isTaskMode ? effectiveTaskIterations : input.iterations,
     kind: 'ralph',
     mode: input.mode,
   };

@@ -97,7 +97,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.runner).toBe(DEFAULT_RALPH_RUNNER);
   });
 
-  it('applies task iterations rule', () => {
+  it('applies task iterations rule (default single-task)', () => {
     const taskId = 'b56b17b4-b052-44cf-98a6-1c972caca673';
     const shape = resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning({
       mode: 'task',
@@ -109,9 +109,82 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     const ctx = buildRalphFlowContextFromRunOptionsShape(shape);
 
     expect(shape.iterations).toBe(10);
+    // GraphQL tuning carries no taskIterations override, so the single-task rule applies.
+    expect(shape.taskIterations).toBeUndefined();
     expect(ctx.iterations).toBe(1);
     expect(ctx.mode).toBe('task');
     expect(ctx.taskId).toBe(taskId);
+  });
+
+  it('honors taskIterations override in task mode', () => {
+    const ctx = buildRalphFlowContextFromRunOptionsShape({
+      debug: 'omit',
+      iterationMax: 1,
+      iterationTimeout: undefined,
+      iterations: 1,
+      mode: 'task',
+      model: DEFAULT_RALPH_MODEL,
+      planId,
+      project: undefined,
+      prompt: DEFAULT_RALPH_PROMPT,
+      runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
+      taskId: 'b56b17b4-b052-44cf-98a6-1c972caca673',
+      taskIterations: 5,
+      timeout: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
+    });
+
+    expect(ctx.iterations).toBe(5);
+    expect(ctx.mode).toBe('task');
+  });
+
+  it('ignores taskIterations override in plan mode', () => {
+    const ctx = buildRalphFlowContextFromRunOptionsShape({
+      debug: 'omit',
+      iterationMax: 8,
+      iterationTimeout: undefined,
+      iterations: 8,
+      mode: 'plan',
+      model: DEFAULT_RALPH_MODEL,
+      planId,
+      project: undefined,
+      prompt: DEFAULT_RALPH_PROMPT,
+      runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
+      taskId: '',
+      taskIterations: 3,
+      timeout: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
+    });
+
+    expect(ctx.iterations).toBe(8);
+    expect(ctx.mode).toBe('plan');
+  });
+
+  it('falls back to single-task when taskIterations is non-positive', () => {
+    const ctx = buildRalphFlowContextFromRunOptionsShape({
+      debug: 'omit',
+      iterationMax: 1,
+      iterationTimeout: undefined,
+      iterations: 1,
+      mode: 'task',
+      model: DEFAULT_RALPH_MODEL,
+      planId,
+      project: undefined,
+      prompt: DEFAULT_RALPH_PROMPT,
+      runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
+      taskId: 'b56b17b4-b052-44cf-98a6-1c972caca673',
+      taskIterations: 0,
+      timeout: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
+    });
+
+    expect(ctx.iterations).toBe(1);
   });
 
   it('maps RalphNestedDebugCli.Verbose to debug verbose', () => {

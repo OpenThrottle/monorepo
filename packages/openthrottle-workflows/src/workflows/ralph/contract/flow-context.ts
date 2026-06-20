@@ -22,7 +22,8 @@
  * | `mode` `'plan'` \| `'task'` | `mode` + `mode` `'plan'` \| `'task'` | `--plan <uuid>` vs `--task <uuid>` (if only `--task`, plan is resolved from task row). |
  * | `planId` | `planId` | `--plan`; required in plan mode; in task-only mode resolved from DB. |
  * | `taskId` | `taskId` | `--task`; task uses this as the fixed task. plan: runner picks per-iteration task — **not** duplicated in context for iterations. |
- * | `iterations` | `iterations` + `iterations` | `--iterations` (default 10). **task:** `main()` sets `iterations = 1` **ignoring** `--iterations` (single-task rule); `iterations` keeps the user-requested value. |
+ * | `iterations` | `iterations` + `iterations` | `--iterations` (default 10). **task:** `main()` sets `iterations = 1` **ignoring** `--iterations` (single-task rule) unless `--task-iterations <n>` opts in; `iterations` keeps the user-requested value. |
+ * | `taskIterations` | `taskIterations` | `--task-iterations <n>` / `WORKFLOW_RALPH_TASK_ITERATIONS`. Opt-in override of the task-mode single-task rule; unset keeps effective `iterations = 1`. Plan mode ignores it. |
  * | `prompt` | `prompt` | `--prompt` (default `/agents-ralph`). |
  * | `project` | `project` | `--project` (must be a known Nx project name). |
  * | `model` | `model` | `--model` (default `auto`). |
@@ -86,6 +87,12 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  /**
+   * Opt-in override for effective task-mode iterations (CLI `--task-iterations` /
+   * `WORKFLOW_RALPH_TASK_ITERATIONS`). Unset keeps the single-task rule (effective `iterations` = 1
+   * in {@link WorkflowRalphContext}). Ignored in plan mode.
+   */
+  readonly taskIterations?: number;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
 }
