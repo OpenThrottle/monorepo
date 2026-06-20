@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardDailyStatsModal } from '../DashboardDailyStatsModal';
@@ -120,6 +121,57 @@ describe('DashboardDailyStatsModal Component', () => {
       expect(
         component.getByText(DAILY_STATS_MODAL_COPY.mostRecentHint),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('arrow-key date navigation', () => {
+    test('steps to the next day on ArrowRight', async () => {
+      const user = userEvent.setup();
+      const component = renderWithProps({}, [
+        '/?modal=daily-stats&date=2026-01-01',
+      ]);
+      expect(component.getByText('Jan 1')).toBeInTheDocument();
+
+      await user.keyboard('{ArrowRight}');
+
+      expect(component.getByText('Jan 2')).toBeInTheDocument();
+    });
+
+    test('does not step past the most-recent day (clamped to range)', async () => {
+      const user = userEvent.setup();
+      const component = renderWithProps({}, [
+        '/?modal=daily-stats&date=2026-01-02',
+      ]);
+      expect(component.getByText('Jan 2')).toBeInTheDocument();
+
+      await user.keyboard('{ArrowRight}');
+
+      expect(component.getByText('Jan 2')).toBeInTheDocument();
+    });
+
+    test('does not step before the earliest day (clamped to range)', async () => {
+      const user = userEvent.setup();
+      const component = renderWithProps({}, [
+        '/?modal=daily-stats&date=2026-01-01',
+      ]);
+      expect(component.getByText('Jan 1')).toBeInTheDocument();
+
+      await user.keyboard('{ArrowLeft}');
+
+      expect(component.getByText('Jan 1')).toBeInTheDocument();
+    });
+
+    test('ignores arrow keys when the modal is closed', async () => {
+      const user = userEvent.setup();
+      const component = renderWithProps({}, ['/']);
+
+      await user.keyboard('{ArrowRight}');
+
+      expect(
+        component.queryByRole('heading', {
+          name: DAILY_STATS_MODAL_COPY.title,
+        }),
+      ).not.toBeInTheDocument();
     });
   });
 

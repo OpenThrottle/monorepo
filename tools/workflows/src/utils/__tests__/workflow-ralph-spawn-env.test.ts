@@ -4,14 +4,18 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  getOpenThrottleRoot,
   OPENTHROTTLE_POSTGRES_URL_ENV,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
+} from '@openthrottle/openthrottle-agentic-utils';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.js';
+import {
+  applyWorkflowRalphSpawnIdentityOverrides,
   buildWorkflowRalphSpawnEnv,
   resolveCortexPostgresConnectionStringFromEnv,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
-} from '../../../../../packages/ai-mcp/src/config';
-import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+} from '../../config/workflow-ralph-spawn-env.js';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;
@@ -170,5 +174,71 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     );
 
     expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('postgres-direct');
+  });
+
+  it('treats the legacy "postgres" alias as postgres-direct', () => {
+    const out = buildWorkflowRalphSpawnEnv({
+      [WORKFLOW_RALPH_TRANSPORT_ENV]: 'POSTGRES',
+    });
+
+    expect(out[WORKFLOW_RALPH_TRANSPORT_ENV]).toBe('postgres-direct');
+  });
+
+  it('prefers the worker auth token over workflows/mcp tokens', () => {
+    const out = buildWorkflowRalphSpawnEnv({
+      OPENTHROTTLE_MCP_AUTH_TOKEN: 'mcp-token',
+      OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: 'worker-token',
+      OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN: 'workflows-token',
+    });
+
+    expect(out.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN).toBe('worker-token');
+  });
+
+  it('lets an explicit canonical graphql auth override any worker env token', () => {
+    const out = buildWorkflowRalphSpawnEnv(
+      { OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: 'worker-token' },
+      { canonicalWorkflowGraphqlAuth: 'canonical-token' },
+    );
+
+    expect(out.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN).toBe('canonical-token');
+  });
+});
+
+describe('applyWorkflowRalphSpawnIdentityOverrides', () => {
+  it('returns the env unchanged when no home/xdg override is present', () => {
+    const input = { PATH: '/usr/bin' };
+    expect(applyWorkflowRalphSpawnIdentityOverrides(input)).toBe(input);
+  });
+
+  it('lets the env HOME override win over the merged default', () => {
+    const result = applyWorkflowRalphSpawnIdentityOverrides(
+      { [WORKFLOW_RALPH_SPAWN_HOME_ENV]: '/env/home' },
+      { spawn: { home: '/merged/home' } },
+    );
+    expect(result.HOME).toBe('/env/home');
+  });
+
+  it('falls back to the merged home and xdg config when env is unset', () => {
+    const result = applyWorkflowRalphSpawnIdentityOverrides(
+      {},
+      { spawn: { home: '/merged/home', xdgConfigHome: '/merged/xdg' } },
+    );
+    expect(result.HOME).toBe('/merged/home');
+    expect(result.XDG_CONFIG_HOME).toBe('/merged/xdg');
+  });
+
+  it('ignores whitespace-only overrides', () => {
+    const input = { [WORKFLOW_RALPH_SPAWN_HOME_ENV]: '   ' };
+    const result = applyWorkflowRalphSpawnIdentityOverrides(input);
+    expect(result).toBe(input);
+    expect(result.HOME).toBeUndefined();
+  });
+
+  it('applies the xdg override independently of home', () => {
+    const result = applyWorkflowRalphSpawnIdentityOverrides({
+      [WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]: '/env/xdg',
+    });
+    expect(result.XDG_CONFIG_HOME).toBe('/env/xdg');
+    expect(result.HOME).toBeUndefined();
   });
 });
