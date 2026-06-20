@@ -1,8 +1,13 @@
 ################################################################################
 #
-#   Build and push Docker images for openthrottle-server and openthrottle-developer
-#   when those apps or shared deps change. Pushes to Google Artifact Registry
-#   on push to main; PRs only build (no push) to validate Dockerfiles.
+#   Build and push Docker images for openthrottle-server, openthrottle-developer,
+#   and the openthrottle/migrations one-shot runner when those apps, shared deps,
+#   or the migrations runner change. Pushes to Google Artifact Registry on push to
+#   main; PRs only build (no push) to validate Dockerfiles.
+#
+#   The migrations image is NOT an Nx app (no applications/<app>, no --target
+#   production / NX build args), so it uses a dedicated build step rather than the
+#   nx-affected-docker-apps + docker-build-push composite action path.
 #
 #   See docs/openthrottle/docker-image-build-strategy.md and
 #   docs/openthrottle/single-box-run-design.md.
@@ -16,6 +21,7 @@ on:
     paths:
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
+      - 'Dockerfile.Migrations'
       - 'databases/**'
       - 'nx.json'
       - 'package.json'
@@ -26,6 +32,7 @@ on:
     paths:
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
+      - 'Dockerfile.Migrations'
       - 'databases/**'
       - 'nx.json'
       - 'package.json'
@@ -109,3 +116,19 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
+
+      # The migrations image is a tiny non-Nx runner (node + pg + databases/migrations), built
+      # directly from Dockerfile.Migrations — it has no applications/<app>/package.json, no
+      # `--target production`, and no NX/PNPM build args, so the docker-build-push composite action
+      # (and the Nx-affected gating above) do not apply. It is intentionally cheap to build, so it is
+      # built unconditionally whenever this workflow runs (the workflow only triggers on changes to
+      # databases/**, Dockerfile.Migrations, or shared deps) and pushed only on main, matching the
+      # sha-<GITHUB_SHA> tag scheme used for server/developer.
+      - name: '🐳 Build (and push on main) openthrottle/migrations'
+        shell: bash
+        run: |
+          IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/migrations:sha-${GITHUB_SHA}"
+          docker build -f Dockerfile.Migrations -t "${IMAGE}" .
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            docker push "${IMAGE}"
+          fi

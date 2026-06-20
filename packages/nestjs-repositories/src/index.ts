@@ -1,5 +1,8 @@
 export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
 export { codeEmbeddingsFactory } from './modules/code-embeddings/code-embeddings.factory';
+export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity';
+export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code-index-snapshot.entity';
+export { codeIndexSnapshotsFactory } from './modules/code-index-snapshots/code-index-snapshots.factory';
 export {
   createCollectionByColumnLoader,
   createEntityByIdLoader,
