@@ -38,8 +38,8 @@ variable "zone" {
 ################################################################################
 
 variable "compute_disk_size_gb" {
-  default     = 2
-  description = "Compute Engine E2 boot disk size in GB."
+  default     = 10
+  description = "Compute Engine E2 boot disk size in GB. 10 GB matches the module default and leaves headroom for the server + developer + Caddy images pulled during `docker compose pull`; 2 GB risks filling the disk."
   type        = number
 }
 

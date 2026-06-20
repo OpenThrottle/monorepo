@@ -11,8 +11,12 @@ services:
       - ALL
     cpus: 0.25
     depends_on:
-      - openthrottle-server
-      - openthrottle-developer
+      # Wait for both apps to report healthy so Caddy never proxies to a
+      # not-yet-ready upstream (avoids transient 502s on boot).
+      openthrottle-developer:
+        condition: service_healthy
+      openthrottle-server:
+        condition: service_healthy
     image: ${caddy_image}
     mem_limit: 128m
     ports:
@@ -35,6 +39,15 @@ services:
       - ALL
     cpus: 0.5
     env_file: .env
+    healthcheck:
+      # curl is present on the production-debian image target (the distroless
+      # default has neither shell nor curl); mirror the server healthcheck.
+      # The React Router app serves SSR HTML at / on port 3000.
+      interval: 30s
+      retries: 3
+      start_period: 40s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      timeout: 10s
     image: ${developer_image}
     mem_limit: 384m
     read_only: true

@@ -4,17 +4,17 @@ Terraform module for **Compute Engine E2** instance(s) with **SSD-backed persist
 
 ## Inputs
 
-| Name           | Description                                              | Type          | Default                    |
-| -------------- | -------------------------------------------------------- | ------------- | -------------------------- |
-| `disk_size_gb` | Size of the SSD persistent disk (GB)                     | `number`      | `10`                       |
-| `machine_type` | GCP machine type (e.g. e2-micro)                         | `string`      | `"e2-micro"`               |
-| `name`         | Name prefix for the instance and disk                    | `string`      | required                   |
-| `network`      | VPC network id or self_link                              | `string`      | required                   |
-| `project_id`   | GCP project ID                                           | `string`      | required                   |
-| `region`       | GCP region (e.g. us-west1)                               | `string`      | `"us-west1"`               |
-| `zone`         | GCP zone (e.g. us-west1-a). Empty = first zone in region | `string`      | `""`                       |
-| `boot_image`   | Boot image family                                        | `string`      | `"debian-cloud/debian-12"` |
-| `labels`       | Labels for the instance and disk                         | `map(string)` | `{}`                       |
+| Name           | Description                                              | Type          | Default                                       |
+| -------------- | -------------------------------------------------------- | ------------- | --------------------------------------------- |
+| `disk_size_gb` | Size of the SSD persistent disk (GB)                     | `number`      | `10`                                          |
+| `machine_type` | GCP machine type (e.g. e2-micro)                         | `string`      | `"e2-micro"`                                  |
+| `name`         | Name prefix for the instance and disk                    | `string`      | required                                      |
+| `network`      | VPC network id or self_link                              | `string`      | required                                      |
+| `project_id`   | GCP project ID                                           | `string`      | required                                      |
+| `region`       | GCP region (e.g. us-west1)                               | `string`      | `"us-west1"`                                  |
+| `zone`         | GCP zone (e.g. us-west1-a). Empty = first zone in region | `string`      | `""`                                          |
+| `boot_image`   | Boot image (pinned dated image for reproducibility)      | `string`      | `"debian-cloud/debian-12-bookworm-v20260609"` |
+| `labels`       | Labels for the instance and disk                         | `map(string)` | `{}`                                          |
 
 ## Outputs
 
