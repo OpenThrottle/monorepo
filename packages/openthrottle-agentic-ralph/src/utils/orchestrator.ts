@@ -22,7 +22,7 @@ import {
 import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
-} from '@openthrottle/ai-mcp/src/foreign-workspace-context';
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowContext } from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {

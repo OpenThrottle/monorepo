@@ -12,8 +12,10 @@ import {
 } from '~/routing/dashboard/data/data.copy';
 import {
   parseSelectedStatDate,
+  SELECTED_DATE_PARAM,
   selectDailyStatByDate,
   selectMostRecentDailyStat,
+  shiftIsoDate,
 } from '~/routing/dashboard/utils/daily-stats-selection';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
@@ -27,7 +29,7 @@ export const DashboardDailyStatsModal = (
   const { dailyStats } = props;
 
   // Hooks
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Setup
   const selectedDate = parseSelectedStatDate(searchParams);
@@ -35,11 +37,81 @@ export const DashboardDailyStatsModal = (
   const selected = explicit ?? selectMostRecentDailyStat(dailyStats);
   const isFallback = explicit === null && selected !== null;
 
+  const isOpen = searchParams.get('modal') === DashboardDailyStatsModal.key;
+  const selectedDateValue = selected?.date ?? null;
+  const dateBounds = React.useMemo((): { max: string; min: string } | null => {
+    if (dailyStats.length === 0) {
+      return null;
+    }
+
+    let max = dailyStats[0].date;
+    let min = dailyStats[0].date;
+
+    for (const item of dailyStats) {
+      if (item.date > max) max = item.date;
+      if (item.date < min) min = item.date;
+    }
+
+    return { max, min };
+  }, [dailyStats]);
+
   // Handlers
 
   // Markup
 
   // Life Cycle
+
+  // Step the selected day by ±1 with Left/Right arrows while the modal is open, clamped to the
+  // available date range so we never scrub into a gap (which would snap back to the most-recent
+  // fallback). Skipped when focus is in a text field so typing isn't hijacked.
+  React.useEffect(() => {
+    if (!isOpen || selectedDateValue === null) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+        return;
+      }
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const delta = event.key === 'ArrowLeft' ? -1 : 1;
+      const next = shiftIsoDate(selectedDateValue, delta);
+
+      if (
+        dateBounds !== null &&
+        (next < dateBounds.min || next > dateBounds.max)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.set(SELECTED_DATE_PARAM, next);
+          return params;
+        },
+        { preventScrollReset: true, replace: true },
+      );
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [dateBounds, isOpen, selectedDateValue, setSearchParams]);
 
   // 🔌 Short Circuit
 

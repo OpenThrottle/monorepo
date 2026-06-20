@@ -5,6 +5,7 @@ export * from './types/index.js';
 export * from './types/model-discovery.js';
 export * from './utils/chat-completions/index.js';
 export * from './utils/configuration.js';
+export * from './utils/foreign-workspace-context.js';
 export * from './utils/model-discovery/index.js';
 export * from './utils/postgres.js';
 export * from './utils/metrics.js';

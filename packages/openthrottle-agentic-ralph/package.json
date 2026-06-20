@@ -5,8 +5,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/ai-mcp": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
   },
   "description": "Ralph agentic workflow: codegen GraphQL client for Cortex plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",

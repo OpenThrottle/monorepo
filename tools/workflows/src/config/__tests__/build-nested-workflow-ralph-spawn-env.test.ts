@@ -3,10 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-  WORKFLOW_RALPH_SPAWN_HOME_ENV,
-} from '../../../../../packages/ai-mcp/src/config';
+import { WORKFLOW_RALPH_OT_ROOT_ENV } from '@openthrottle/openthrottle-agentic-utils';
+import { WORKFLOW_RALPH_SPAWN_HOME_ENV } from '../workflow-ralph-spawn-env.js';
 import {
   applyWorkflowRalphOtRootFromConfig,
   buildNestedWorkflowRalphSpawnEnv,

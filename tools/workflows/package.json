@@ -6,7 +6,6 @@
   },
   "dependencies": {
     "@nx/devkit": "catalog:",
-    "@openthrottle/ai-mcp": "workspace:^",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@tools/generators": "workspace:^",
