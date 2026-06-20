@@ -15,6 +15,7 @@ const baseArgs = (): RalphArgs => ({
   ralphDebugLevel: 'off',
   skipWorktreeSetup: undefined,
   task: undefined,
+  taskIterations: undefined,
   worktree: undefined,
   worktreeBase: undefined,
 });

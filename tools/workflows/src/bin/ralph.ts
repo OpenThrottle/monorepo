@@ -141,7 +141,12 @@ export const main = async (): Promise<void> => {
     await updateTaskStatus(cortexConfig, task, 'IN_PROGRESS');
   }
 
-  const maxIterations = task ? 1 : iterations;
+  /**
+   * Task-centric mode runs a single task once by default (the single-task rule). The opt-in
+   * `--task-iterations <n>` / `WORKFLOW_RALPH_TASK_ITERATIONS` override lets a caller loop the same
+   * task up to n times (e.g. iterative refinement) without re-enqueueing. Plan mode uses `--iterations`.
+   */
+  const maxIterations = task ? (parsedArgs.taskIterations ?? 1) : iterations;
 
   /** Task set to IN_PROGRESS for the last iteration; used to reset to PENDING when exiting due to max iterations with work remaining. */
   let lastIterationTaskId: string | undefined = undefined;
