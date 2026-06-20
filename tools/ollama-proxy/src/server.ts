@@ -18,6 +18,15 @@ const MAX_BODY_BYTES = Number(
   process.env.OLLAMA_PROXY_MAX_BODY_BYTES ?? `${10 * 1024 * 1024}`,
 );
 
+// CORS is opt-in. Native clients (Cursor) talk to the proxy directly and do not
+// need CORS headers; a wildcard would let any web page in the user's browser
+// drive the local model. Set OLLAMA_PROXY_ALLOWED_ORIGINS to a comma-separated
+// allowlist to enable browser access; the proxy then echoes only matching origins.
+const ALLOWED_ORIGINS = (process.env.OLLAMA_PROXY_ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+
 class BodyTooLargeError extends Error {
   constructor(limitBytes: number) {
     super(`Request body exceeds maximum size of ${limitBytes} bytes`);
@@ -119,8 +128,110 @@ function writeJson(
   res.end(JSON.stringify(body));
 }
 
+/** Resolve the CORS origin header value for a request, or null when CORS is disabled. */
+function resolveCorsOrigin(req: http.IncomingMessage): string | null {
+  const origin = req.headers['origin'];
+  if (typeof origin !== 'string' || !ALLOWED_ORIGINS.includes(origin)) {
+    return null;
+  }
+
+  return origin;
+}
+
+/** Wait for a backpressured response to drain before resuming writes. */
+function waitForDrain(res: http.ServerResponse): Promise<void> {
+  return new Promise<void>((resolve) => {
+    res.once('drain', resolve);
+  });
+}
+
+/**
+ * Pipe an upstream fetch body to the client response, honoring `res.write`
+ * backpressure and cancelling the upstream reader when the client disconnects.
+ */
+async function pipeStreamToResponse(
+  body: ReadableStream<Uint8Array>,
+  res: http.ServerResponse,
+): Promise<void> {
+  const reader = body.getReader();
+  let clientGone = res.writableEnded || res.destroyed;
+  const onClose = (): void => {
+    clientGone = true;
+    void reader.cancel().catch(() => undefined);
+  };
+
+  res.once('close', onClose);
+
+  try {
+    for (;;) {
+      // eslint-disable-next-line no-await-in-loop
+      const { done, value } = await reader.read();
+
+      if (done) break;
+      if (clientGone) break;
+
+      const ok = res.write(Buffer.from(value));
+      if (!ok) {
+        // eslint-disable-next-line no-await-in-loop
+        await waitForDrain(res);
+      }
+    }
+  } finally {
+    res.off('close', onClose);
+    reader.releaseLock();
+  }
+
+  if (!clientGone && !res.writableEnded) {
+    res.end();
+  }
+}
+
+/**
+ * Build a fetch signal that aborts on either the upstream timeout or the client
+ * disconnecting, and wire the disconnect listener on the request/response.
+ */
+function createUpstreamSignal(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): AbortSignal {
+  const controller = new AbortController();
+  const onClose = (): void => controller.abort();
+
+  req.once('close', onClose);
+  res.once('close', onClose);
+
+  return AbortSignal.any([controller.signal, AbortSignal.timeout(TIMEOUT_MS)]);
+}
+
+/** Map an upstream fetch error onto a client response without leaking internals. */
+function writeUpstreamFetchError(
+  res: http.ServerResponse,
+  error: unknown,
+): void {
+  if (res.headersSent || res.writableEnded) {
+    // Client already received headers (or disconnected); nothing to send.
+    return;
+  }
+
+  if (isAbortError(error)) {
+    writeJson(res, 504, {
+      error: { message: `Upstream request timed out after ${TIMEOUT_MS}ms` },
+    });
+
+    return;
+  }
+
+  // Log the underlying error server-side for debugging, but do NOT echo the raw
+  // message to the client — it can leak internal hostnames/paths.
+  console.error('Upstream request failed:', error);
+
+  writeJson(res, 502, {
+    error: { message: 'Upstream request failed' },
+  });
+}
+
 async function handleChatCompletions(
-  _req: http.IncomingMessage,
+  req: http.IncomingMessage,
   res: http.ServerResponse,
   body: string,
 ): Promise<void> {
@@ -157,23 +268,10 @@ async function handleChatCompletions(
       body: JSON.stringify(rewritten),
       headers,
       method: 'POST',
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: createUpstreamSignal(req, res),
     });
   } catch (error) {
-    if (isAbortError(error)) {
-      writeJson(res, 504, {
-        error: { message: `Upstream request timed out after ${TIMEOUT_MS}ms` },
-      });
-
-      return;
-    }
-
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    writeJson(res, 502, {
-      error: { message: `Upstream request failed: ${message}` },
-    });
+    writeUpstreamFetchError(res, error);
 
     return;
   }
@@ -187,43 +285,20 @@ async function handleChatCompletions(
     return;
   }
 
-  const reader = upstream.body.getReader();
-  try {
-    for (;;) {
-      // eslint-disable-next-line no-await-in-loop
-      const { done, value } = await reader.read();
-
-      if (done) break;
-
-      res.write(Buffer.from(value));
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  res.end();
+  await pipeStreamToResponse(upstream.body, res);
 }
 
-async function handleModels(res: http.ServerResponse): Promise<void> {
+async function handleModels(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): Promise<void> {
   const url = `${OLLAMA_BASE_URL}/api/tags`;
   let upstream: Response;
 
   try {
-    upstream = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    upstream = await fetch(url, { signal: createUpstreamSignal(req, res) });
   } catch (error) {
-    if (isAbortError(error)) {
-      writeJson(res, 504, {
-        error: { message: `Upstream request timed out after ${TIMEOUT_MS}ms` },
-      });
-
-      return;
-    }
-
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    writeJson(res, 502, {
-      error: { message: `Upstream request failed: ${message}` },
-    });
+    writeUpstreamFetchError(res, error);
 
     return;
   }
@@ -232,19 +307,7 @@ async function handleModels(res: http.ServerResponse): Promise<void> {
     res.writeHead(upstream.status);
 
     if (upstream.body) {
-      const reader = upstream.body.getReader();
-
-      const pump = (): Promise<void> =>
-        reader.read().then(({ done, value }) => {
-          if (done) {
-            res.end();
-            return;
-          }
-          res.write(Buffer.from(value));
-          return pump();
-        });
-
-      await pump();
+      await pipeStreamToResponse(upstream.body, res);
     } else {
       res.end();
     }
@@ -291,21 +354,36 @@ const requestHandler = async (
   req: http.IncomingMessage,
   res: http.ServerResponse,
 ): Promise<void> => {
+  const corsOrigin = resolveCorsOrigin(req);
+
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
+    const headers: Record<string, string> = {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Origin': '*',
-    });
+    };
+
+    // Only emit CORS headers for explicitly allowlisted origins
+    // (OLLAMA_PROXY_ALLOWED_ORIGINS); native clients do not need them.
+    if (corsOrigin) {
+      headers['Access-Control-Allow-Origin'] = corsOrigin;
+      headers['Vary'] = 'Origin';
+    }
+
+    res.writeHead(204, headers);
 
     res.end();
 
     return;
   }
 
+  if (corsOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+    res.setHeader('Vary', 'Origin');
+  }
+
   const path = req.url?.split('?')[0] ?? '';
   if (path === '/v1/models' && req.method === 'GET') {
-    await handleModels(res);
+    await handleModels(req, res);
 
     return;
   }

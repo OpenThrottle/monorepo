@@ -4,14 +4,15 @@ Local HTTP proxy that accepts OpenAI-style requests (e.g. from Cursor) and forwa
 
 ## Environment
 
-| Variable                      | Default                | Description                                                                                                                   |
-| ----------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `OLLAMA_PROXY_PORT`           | `11435`                | Port the proxy listens on (localhost only).                                                                                   |
-| `OLLAMA_BASE_URL`             | `https://ollama.local` | Upstream Ollama URL (use Caddy-proxied URL when running Caddy; see [docs/monorepo/Ollama.md](../../docs/monorepo/Ollama.md)). |
-| `OLLAMA_PROXY_TARGET_MODEL`   | `qwen3-coder-next`     | Model name sent to Ollama (the one Cursor cannot use directly).                                                               |
-| `OLLAMA_PROXY_TIMEOUT_MS`     | `120000`               | Upstream fetch timeout in milliseconds; on timeout the proxy responds `504` instead of hanging on a slow or dead upstream.    |
-| `OLLAMA_PROXY_MAX_BODY_BYTES` | `10485760`             | Maximum accepted request body size in bytes (10 MB); the proxy responds `413` and closes the connection when exceeded.        |
-| `OLLAMA_PROXY_UPSTREAM_TOKEN` | _(unset)_              | Optional bearer token sent to the upstream as `Authorization: Bearer <token>`. The inbound client API key is never forwarded. |
+| Variable                       | Default                | Description                                                                                                                                                                                                                 |
+| ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OLLAMA_PROXY_PORT`            | `11435`                | Port the proxy listens on (localhost only).                                                                                                                                                                                 |
+| `OLLAMA_BASE_URL`              | `https://ollama.local` | Upstream Ollama URL (use Caddy-proxied URL when running Caddy; see [docs/monorepo/Ollama.md](../../docs/monorepo/Ollama.md)).                                                                                               |
+| `OLLAMA_PROXY_TARGET_MODEL`    | `qwen3-coder-next`     | Model name sent to Ollama (the one Cursor cannot use directly).                                                                                                                                                             |
+| `OLLAMA_PROXY_TIMEOUT_MS`      | `120000`               | Upstream fetch timeout in milliseconds; on timeout the proxy responds `504` instead of hanging on a slow or dead upstream.                                                                                                  |
+| `OLLAMA_PROXY_MAX_BODY_BYTES`  | `10485760`             | Maximum accepted request body size in bytes (10 MB); the proxy responds `413` and closes the connection when exceeded.                                                                                                      |
+| `OLLAMA_PROXY_UPSTREAM_TOKEN`  | _(unset)_              | Optional bearer token sent to the upstream as `Authorization: Bearer <token>`. The inbound client API key is never forwarded.                                                                                               |
+| `OLLAMA_PROXY_ALLOWED_ORIGINS` | _(unset)_              | Optional comma-separated CORS allowlist. Unset = no CORS headers (native clients like Cursor do not need them). Set only to allow specific browser origins; the proxy echoes a matching `Origin` and never uses a wildcard. |
 
 ## Dependencies
 
