@@ -5,12 +5,13 @@
  */
 
 import * as http from 'node:http';
+import { pathToFileURL } from 'node:url';
 
 const PORT = Number(process.env.OLLAMA_PROXY_PORT ?? '11435');
-const OLLAMA_BASE_URL = (
+export const OLLAMA_BASE_URL = (
   process.env.OLLAMA_BASE_URL ?? 'https://ollama.local'
 ).replace(/\/$/, '');
-const TARGET_MODEL =
+export const TARGET_MODEL =
   process.env.OLLAMA_PROXY_TARGET_MODEL ?? 'qwen3-coder-next';
 const TIMEOUT_MS = Number(process.env.OLLAMA_PROXY_TIMEOUT_MS ?? '120000');
 const UPSTREAM_TOKEN = process.env.OLLAMA_PROXY_UPSTREAM_TOKEN ?? '';
@@ -49,7 +50,7 @@ interface ChatCompletionsBody {
   stream?: boolean;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
@@ -61,7 +62,9 @@ interface OllamaTagsResponse {
   readonly models?: readonly OllamaModelTag[];
 }
 
-function parseOllamaTagsResponse(value: unknown): OllamaTagsResponse | null {
+export function parseOllamaTagsResponse(
+  value: unknown,
+): OllamaTagsResponse | null {
   if (!isRecord(value)) {
     return null;
   }
@@ -350,7 +353,7 @@ async function handleModels(
   });
 }
 
-const requestHandler = async (
+export const requestHandler = async (
   req: http.IncomingMessage,
   res: http.ServerResponse,
 ): Promise<void> => {
@@ -418,13 +421,28 @@ const requestHandler = async (
   });
 };
 
-const server = http.createServer(requestHandler);
+/** Create and start the proxy HTTP server. Separated so tests can import the
+ *  request handler/helpers without binding a port. */
+export function startServer(): http.Server {
+  const server = http.createServer(requestHandler);
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(
-    `Ollama proxy listening on http://127.0.0.1:${PORT}; upstream=${OLLAMA_BASE_URL}, target model=${TARGET_MODEL}`,
-  );
-  console.log(
-    `Use in Cursor: Override OpenAI Base URL = http://127.0.0.1:${PORT}/v1`,
-  );
-});
+  server.listen(PORT, '127.0.0.1', () => {
+    console.log(
+      `Ollama proxy listening on http://127.0.0.1:${PORT}; upstream=${OLLAMA_BASE_URL}, target model=${TARGET_MODEL}`,
+    );
+    console.log(
+      `Use in Cursor: Override OpenAI Base URL = http://127.0.0.1:${PORT}/v1`,
+    );
+  });
+
+  return server;
+}
+
+// Only start listening when run directly (e.g. `node dist/server.js`), not when
+// imported by a test module.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  startServer();
+}

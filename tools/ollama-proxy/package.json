@@ -54,6 +54,7 @@
         }
       },
       "lint": {},
+      "test": {},
       "serve": {
         "cache": false,
         "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded.",
