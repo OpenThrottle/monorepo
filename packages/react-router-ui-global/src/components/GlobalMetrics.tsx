@@ -77,13 +77,16 @@ export const GlobalMetrics = (
   });
 
   // Setup
-  const query = print(GetRootMetricsDocument);
+  const query = React.useMemo(() => print(GetRootMetricsDocument), []);
 
   /**
    * HttpOnly auth cookies are not readable in JS; metrics calls run
    * without Bearer unless wired server-side.
+   *
+   * Memoized so the reference is stable across renders; `usePollServerMetrics`
+   * can then safely depend on `url`/`query` without re-subscribing each render.
    */
-  const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
+  const url = React.useMemo(() => `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`, []);
 
   // Handlers
   const handleIntervalChange = React.useCallback((value: string) => {
