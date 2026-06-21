@@ -1,5 +1,4 @@
 import { APP_GUARD } from '@nestjs/core';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
@@ -23,7 +22,6 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
         },
       ],
     }),
-    LoggerModule,
   ],
   providers: [
     {
