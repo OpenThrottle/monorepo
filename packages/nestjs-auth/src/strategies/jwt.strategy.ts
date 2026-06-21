@@ -8,6 +8,12 @@ import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
 export const JWT_STRATEGY_NAME = 'jwt';
 
 /**
+ * Minimum required byte-length for the JWT secret. HS256 keys shorter than the
+ * hash output (32 bytes) are brute-forceable offline, so reject them at startup.
+ */
+export const JWT_SECRET_MIN_BYTES = 32;
+
+/**
  * @description Payload shape returned by JWT verification. Consumers can extend this via module augmentation.
  */
 export interface JwtPayload {
@@ -35,6 +41,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
     if (!secret) {
       throw new Error(
         'JwtStrategy: JWT_SECRET or NestjsAuthOptions.jwtSecret is required',
+      );
+    }
+
+    if (Buffer.byteLength(secret, 'utf8') < JWT_SECRET_MIN_BYTES) {
+      throw new Error(
+        `JwtStrategy: JWT secret must be at least ${JWT_SECRET_MIN_BYTES} bytes ` +
+          'for HS256; a short/low-entropy secret makes tokens brute-forceable offline',
       );
     }
 
