@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { act, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ComposeForm } from '../ComposeForm';
@@ -10,7 +11,7 @@ describe('ComposeForm Component', () => {
   let component: RenderResult;
   let props: ComposeFormProps;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     props = {};
 
     const Component = () => <ComposeForm {...props} />;
@@ -19,6 +20,12 @@ describe('ComposeForm Component', () => {
     ]);
 
     component = render(<RemixStub />);
+
+    // Flush the router stub's hydration and formik's `validateOnMount` async
+    // validation inside act() so the resulting state update is settled before
+    // any test asserts — otherwise it lands outside act() and races the
+    // assertions (the source of the CI-only flakiness).
+    await act(async () => {});
   });
 
   test('should render our UI', () => {
@@ -29,36 +36,28 @@ describe('ComposeForm Component', () => {
   });
 
   test('should render errors when form is submitted with invalid data', async () => {
-    const form = component.getByRole('form');
+    const user = userEvent.setup();
 
-    act(() => {
-      fireEvent.submit(form);
-    });
+    await user.click(component.getByRole('button', { name: 'Send' }));
 
-    await waitFor(() => {
-      expect(component.getByText('To is required.')).toBeInTheDocument();
-      expect(component.getByText('Subject is required.')).toBeInTheDocument();
-    });
+    expect(await component.findByText('To is required.')).toBeInTheDocument();
+    expect(
+      await component.findByText('Subject is required.'),
+    ).toBeInTheDocument();
   });
 
   test('should clear errors as the form is updated', async () => {
-    const form = component.getByTestId('ComposeForm');
-    const inputTo = component.getByLabelText('To');
-    const inputSubject = component.getByLabelText('Subject');
+    const user = userEvent.setup();
 
-    act(() => {
-      fireEvent.submit(form);
-    });
+    await user.click(component.getByRole('button', { name: 'Send' }));
 
-    await waitFor(() => {
-      expect(component.queryByText('To is required.')).not.toBe(null);
-      expect(component.queryByText('Subject is required.')).not.toBe(null);
-    });
+    expect(await component.findByText('To is required.')).toBeInTheDocument();
+    expect(
+      await component.findByText('Subject is required.'),
+    ).toBeInTheDocument();
 
-    act(() => {
-      fireEvent.change(inputTo, { target: { value: 'user@example.com' } });
-      fireEvent.change(inputSubject, { target: { value: 'Test subject' } });
-    });
+    await user.type(component.getByLabelText('To'), 'user@example.com');
+    await user.type(component.getByLabelText('Subject'), 'Test subject');
 
     await waitFor(() => {
       expect(component.queryByText('To is required.')).toBe(null);
