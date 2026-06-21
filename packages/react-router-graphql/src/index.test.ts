@@ -40,6 +40,61 @@ const makeRequest = (): Request =>
     headers: { cookie: 'session=abc' },
   });
 
+describe('executeGraphqlWithAuth dispatch', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('parses the token from the request cookie header', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue(undefined);
+    executeGraphqlMock.mockResolvedValue({ ok: true });
+
+    await executeGraphqlWithAuth(makeRequest(), document);
+
+    expect(getAuthTokenFromCookieMock).toHaveBeenCalledWith('session=abc');
+  });
+
+  it('passes an empty string to the cookie parser when no cookie header is present', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue(undefined);
+    executeGraphqlMock.mockResolvedValue({ ok: true });
+
+    await executeGraphqlWithAuth(new Request('https://example.test'), document);
+
+    expect(getAuthTokenFromCookieMock).toHaveBeenCalledWith('');
+  });
+
+  it('calls the unauthenticated executeGraphql when no token is present', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue(undefined);
+    executeGraphqlMock.mockResolvedValue({ ok: true });
+    const variables = { planId: 'p1' };
+
+    await executeGraphqlWithAuth(makeRequest(), document, variables);
+
+    expect(executeGraphqlMock).toHaveBeenCalledTimes(1);
+    expect(executeGraphqlMock).toHaveBeenCalledWith(document, variables, {
+      timeoutMs: DEFAULT_LOADER_TIMEOUT_MS,
+    });
+    expect(executeGraphqlWithAuthNodeJSMock).not.toHaveBeenCalled();
+  });
+
+  it('calls the auth variant with the extracted token when a token is present', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue('a-token');
+    executeGraphqlWithAuthNodeJSMock.mockResolvedValue({ ok: true });
+    const variables = { planId: 'p1' };
+
+    await executeGraphqlWithAuth(makeRequest(), document, variables);
+
+    expect(executeGraphqlWithAuthNodeJSMock).toHaveBeenCalledTimes(1);
+    expect(executeGraphqlWithAuthNodeJSMock).toHaveBeenCalledWith(
+      'a-token',
+      document,
+      variables,
+      { timeoutMs: DEFAULT_LOADER_TIMEOUT_MS },
+    );
+    expect(executeGraphqlMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('executeGraphqlWithAuth auth-error mapping', () => {
   beforeEach(() => {
     vi.clearAllMocks();
