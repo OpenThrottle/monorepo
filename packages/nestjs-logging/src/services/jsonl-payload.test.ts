@@ -7,6 +7,7 @@ import {
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './jsonl-payload';
+import { createLogRedactor } from './log-redaction';
 
 describe('structuredLogRecordToJsonlPayload', () => {
   it('maps timestampIso to timestamp and omits undefined ids', () => {
@@ -86,6 +87,47 @@ describe('structuredLogRecordToJsonlPayload', () => {
       message: 'detailed',
       pid: 4242,
       spanId: 'span-a',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('redacts secrets in message and extra by default (default-on chokepoint)', () => {
+    const record: StructuredLogRecord = {
+      context: 'Auth',
+      correlationId: undefined,
+      extra: { authorization: 'Bearer abc.def', userId: 7 },
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'login with Bearer abc.def',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      context: 'Auth',
+      extra: { authorization: '[REDACTED]', userId: 7 },
+      level: 'log',
+      message: 'login with [REDACTED]',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('honors an explicit disabled redactor (verbatim message and extra)', () => {
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: { password: 'hunter2' },
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'password=hunter2',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(
+      structuredLogRecordToJsonlPayload(record, createLogRedactor(false)),
+    ).toEqual({
+      extra: { password: 'hunter2' },
+      level: 'log',
+      message: 'password=hunter2',
       timestamp: '2026-05-02T12:00:00.000Z',
     });
   });

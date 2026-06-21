@@ -113,7 +113,7 @@ export class FileLogJsonlSink
     this.activeRelativeName = desiredName;
 
     const rotation = this.options.rotation;
-    const line = serializeStructuredLogLine(record);
+    const line = serializeStructuredLogLine(record, this.options.redactor);
     const lineBytes = Buffer.byteLength(line, 'utf8');
 
     if (

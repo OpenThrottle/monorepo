@@ -3,6 +3,11 @@ import type {
   FactoryProvider,
   ModuleMetadata,
 } from '@nestjs/common';
+import {
+  createLogRedactor,
+  type LogRedactor,
+  type RedactionOptions,
+} from '../services/log-redaction';
 import { NestjsLoggingError } from './nestjs-logging.error';
 import {
   ALL_NESTJS_LOGGING_LEVELS,
@@ -98,6 +103,12 @@ export interface NestjsLoggingModuleOptions {
    */
   readonly maxReplayLines?: number | undefined;
   /**
+   * @description Secret/PII redaction policy applied to `message` and `extra` at the JSONL
+   * chokepoint (file sink + every WebSocket emit path). Default-on with a sensible deny-list;
+   * pass `false` to disable entirely (not recommended), or a {@link RedactionOptions} to customize.
+   */
+  readonly redaction?: RedactionOptions | false | undefined;
+  /**
    * @description Rotation policy for the JSONL sink.
    */
   readonly rotation?: JsonlRotationPolicy | undefined;
@@ -153,7 +164,12 @@ export const applyNestjsLoggingModuleDefaults = (
       | 'websocket'
     >
   > &
-    NestjsLoggingModuleOptions
+    NestjsLoggingModuleOptions & {
+      /**
+       * @description Resolved redactor applied at the JSONL chokepoint (default-on).
+       */
+      readonly redactor: LogRedactor;
+    }
 > => {
   const websocketEnabled = options.websocket?.enabled === true;
 
@@ -163,6 +179,7 @@ export const applyNestjsLoggingModuleDefaults = (
     flushIntervalMs: options.flushIntervalMs ?? DEFAULT_FLUSH_MS,
     levels: options.levels ?? ALL_NESTJS_LOGGING_LEVELS,
     maxReplayLines: options.maxReplayLines ?? DEFAULT_MAX_REPLAY_LINES,
+    redactor: createLogRedactor(options.redaction),
     rotation: options.rotation ?? DEFAULT_ROTATION,
     websocket: {
       enabled: websocketEnabled,
@@ -319,6 +336,57 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
     } else {
       throw new NestjsLoggingError(
         `rotation.type must be "none", "size", or "daily". Got: ${String(type)}.`,
+      );
+    }
+  }
+
+  const redaction = opts.redaction;
+
+  if (redaction !== undefined && redaction !== false) {
+    if (typeof redaction !== 'object' || redaction === null) {
+      throw new NestjsLoggingError(
+        'redaction must be an object or false when provided.',
+      );
+    }
+
+    const red = redaction as Record<string, unknown>;
+
+    const keys = red.keys;
+
+    if (
+      keys !== undefined &&
+      (!Array.isArray(keys) || keys.some((key) => typeof key !== 'string'))
+    ) {
+      throw new NestjsLoggingError(
+        'redaction.keys, when provided, must be an array of strings.',
+      );
+    }
+
+    const patterns = red.patterns;
+
+    if (
+      patterns !== undefined &&
+      (!Array.isArray(patterns) ||
+        patterns.some((pattern) => !(pattern instanceof RegExp)))
+    ) {
+      throw new NestjsLoggingError(
+        'redaction.patterns, when provided, must be an array of RegExp.',
+      );
+    }
+
+    const replacement = red.replacement;
+
+    if (replacement !== undefined && typeof replacement !== 'string') {
+      throw new NestjsLoggingError(
+        'redaction.replacement, when provided, must be a string.',
+      );
+    }
+
+    const redactMessage = red.redactMessage;
+
+    if (redactMessage !== undefined && typeof redactMessage !== 'boolean') {
+      throw new NestjsLoggingError(
+        'redaction.redactMessage, when provided, must be a boolean.',
       );
     }
   }

@@ -7,6 +7,7 @@ import type {
   JsonValue,
   StructuredLogRecord,
 } from '../ports/logging-ports';
+import { DEFAULT_LOG_REDACTOR, type LogRedactor } from './log-redaction';
 
 /**
  * @description JSONL root object key order is **explicit per contract** (see
@@ -116,14 +117,22 @@ const parseExtraField = (
 };
 
 /**
- * @description Maps {@link StructuredLogRecord} to the on-disk JSONL object shape (see `docs/openclaw-style-contract.md`).
+ * @description Maps {@link StructuredLogRecord} to the on-disk JSONL object shape (see
+ * `docs/openclaw-style-contract.md`). This is the single chokepoint for secret/PII redaction:
+ * both the file sink (via {@link serializeStructuredLogLine}) and every WebSocket emit path
+ * (`drainPendingRecords`, `logs.history`, `logs.replay`, `logs.tail`) call it, so passing a
+ * configured {@link LogRedactor} masks `message` and `extra` everywhere. Defaults to a
+ * sensible default-on redactor ({@link DEFAULT_LOG_REDACTOR}) when none is supplied.
  */
 export const structuredLogRecordToJsonlPayload = (
   record: StructuredLogRecord,
+  redactor: LogRedactor = DEFAULT_LOG_REDACTOR,
 ): Readonly<Record<string, unknown>> => {
   const payload: Record<string, unknown> = {
     level: record.level,
-    message: record.message,
+    message: redactor.redactMessageEnabled
+      ? redactor.redactString(record.message)
+      : record.message,
     timestamp: record.timestampIso,
   };
 
@@ -136,7 +145,7 @@ export const structuredLogRecordToJsonlPayload = (
   }
 
   if (record.extra !== undefined && Object.keys(record.extra).length > 0) {
-    payload.extra = record.extra;
+    payload.extra = redactor.redactValue(record.extra);
   }
 
   if (record.hostname !== undefined) {
@@ -163,7 +172,9 @@ export const structuredLogRecordToJsonlPayload = (
  */
 export const serializeStructuredLogLine = (
   record: StructuredLogRecord,
-): string => `${JSON.stringify(structuredLogRecordToJsonlPayload(record))}\n`;
+  redactor: LogRedactor = DEFAULT_LOG_REDACTOR,
+): string =>
+  `${JSON.stringify(structuredLogRecordToJsonlPayload(record, redactor))}\n`;
 
 /**
  * @description Parses one JSONL object line into {@link StructuredLogRecord}; returns undefined for empty or invalid lines. Extra top-level keys are ignored (see `docs/openclaw-style-contract.md` §4).
@@ -178,7 +189,6 @@ export const parseJsonlLineToStructuredRecord = (
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- JSON.parse is unknown; validated below
     const raw = JSON.parse(trimmed) as Record<string, unknown>;
     let context: string;
     if (raw.context === undefined) {

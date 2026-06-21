@@ -55,5 +55,14 @@ export {
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './services/jsonl-payload';
+export {
+  createLogRedactor,
+  DEFAULT_LOG_REDACTOR,
+  DEFAULT_REDACTION_KEYS,
+  DEFAULT_REDACTION_PATTERNS,
+  DEFAULT_REDACTION_REPLACEMENT,
+  type LogRedactor,
+  type RedactionOptions,
+} from './services/log-redaction';
 export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
