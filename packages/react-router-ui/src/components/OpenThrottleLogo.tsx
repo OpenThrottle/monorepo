@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { SpeedometerIcon } from '@phosphor-icons/react/dist/ssr/Speedometer';
 
@@ -17,7 +17,7 @@ export const OpenThrottleLogo = (
   // Hooks
 
   // Setup
-  const containerClasses = classnames(
+  const containerClasses = cn(
     'flex items-center gap-2 px-2 py-2 text-sidebar-foreground h-10',
     className,
   );

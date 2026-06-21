@@ -65,7 +65,7 @@ describe('useForm', () => {
     expect(result.current.loading).toBe(false);
   });
 
-  test('prevents default submission when the form is invalid', async () => {
+  test('prevents default and delegates to formik.handleSubmit when invalid', async () => {
     mocks.formik.isValid = false;
 
     const { result } = renderUseForm();
@@ -75,13 +75,14 @@ describe('useForm', () => {
       await result.current.onSubmit(event);
     });
 
+    // preventDefault must fire synchronously (before any await) so the browser
+    // does not navigate; Formik then surfaces the validation errors.
     expect(preventDefault).toHaveBeenCalledTimes(1);
-    expect(mocks.formik.handleSubmit).not.toHaveBeenCalled();
+    expect(mocks.formik.handleSubmit).toHaveBeenCalledWith(event);
   });
 
-  test('delegates to formik.handleSubmit and clears loading on validation errors', async () => {
+  test('clears loading after delegating an invalid submission to formik', async () => {
     mocks.formik.isValid = false;
-    mocks.formik.validateForm.mockResolvedValue({ name: 'Required' });
 
     const { result } = renderUseForm();
     const { event } = createSubmitEvent();
@@ -91,6 +92,8 @@ describe('useForm', () => {
     });
 
     expect(mocks.formik.handleSubmit).toHaveBeenCalledWith(event);
+    // Single validation pass: validateForm is no longer called separately.
+    expect(mocks.formik.validateForm).not.toHaveBeenCalled();
     expect(result.current.loading).toBe(false);
   });
 

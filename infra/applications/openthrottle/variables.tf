@@ -38,8 +38,8 @@ variable "zone" {
 ################################################################################
 
 variable "compute_disk_size_gb" {
-  default     = 2
-  description = "Compute Engine E2 boot disk size in GB."
+  default     = 10
+  description = "Compute Engine E2 boot disk size in GB. 10 GB matches the module default and leaves headroom for the server + developer + Caddy images pulled during `docker compose pull`; 2 GB risks filling the disk."
   type        = number
 }
 
@@ -66,9 +66,24 @@ variable "postgres_disk_type" {
 }
 
 variable "postgres_public_ip_enabled" {
-  default     = true
-  description = "Whether Cloud SQL has a public IPv4 address."
+  default     = false
+  description = "Whether Cloud SQL has a public IPv4 address. Defaults to false; prefer private IP. When enabled, postgres_ssl_mode enforces encryption and postgres_authorized_networks restricts source ranges."
   type        = bool
+}
+
+variable "postgres_ssl_mode" {
+  default     = "ENCRYPTED_ONLY"
+  description = "Cloud SQL SSL enforcement mode (ENCRYPTED_ONLY, TRUSTED_CLIENT_CERTIFICATE_REQUIRED, or ALLOW_UNENCRYPTED_AND_ENCRYPTED). Defaults to ENCRYPTED_ONLY so cleartext connections are rejected."
+  type        = string
+}
+
+variable "postgres_authorized_networks" {
+  default     = []
+  description = "Allowlist of CIDR source ranges permitted to reach the Cloud SQL public IP: [{ name, value }]. Required when public IP is enabled; never use 0.0.0.0/0 (e.g. the E2 egress IP only)."
+  type = list(object({
+    name  = string
+    value = string
+  }))
 }
 
 variable "postgres_tier" {

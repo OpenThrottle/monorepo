@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottleClipboardProps {
   readonly className?: string;
@@ -81,7 +81,7 @@ export function OpenThrottleClipboard(props: OpenThrottleClipboardProps) {
   return (
     <button
       aria-label={copied ? 'Copied' : label}
-      className={classnames('cursor-pointer', className)}
+      className={cn('cursor-pointer', className)}
       onClick={onClick}
       type="button"
     >

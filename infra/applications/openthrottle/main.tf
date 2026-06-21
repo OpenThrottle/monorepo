@@ -12,11 +12,32 @@ data "google_project" "project" {
 
 ################################################################################
 # Firewall: allow HTTP/HTTPS to the E2 instance (for Caddy reverse proxy).
+#
+# Intent: this is a PUBLIC web endpoint. Caddy on the E2 instance terminates TLS
+# and reverse-proxies the server/developer apps by hostname, so opening tcp
+# 80/443 to 0.0.0.0/0 is by design — anyone on the internet must be able to
+# reach the site. This rule is scoped narrowly on purpose:
+#   * It only targets instances tagged "openthrottle-http" (the E2 instance),
+#     not every VM on the network.
+#   * It only opens tcp 80 and 443 — no SSH (22) or other management ports are
+#     opened here. SSH/ICMP/etc. are NOT defined in this module; they rely on
+#     the VPC's default rules. Confirm the default network does not leave 22 (or
+#     other ports) open to 0.0.0.0/0; manage admin access via IAP or a tightly
+#     scoped rule instead.
+#
+# No rate-limit / WAF layer is applied at this firewall. If the public surface
+# needs DDoS/WAF protection or origin lockdown, front the endpoint with
+# Cloudflare or Google Cloud Armor and then restrict source_ranges below to the
+# CDN/proxy egress ranges (e.g. Cloudflare IP ranges) instead of 0.0.0.0/0. A
+# Cloudflare module is referenced in the repo README but is not yet present in
+# modules/; adding it is a separate, larger change tracked outside this rule.
 ################################################################################
 resource "google_compute_firewall" "allow_http_https" {
-  name          = "openthrottle-${var.env_name}-allow-http-https"
-  network       = var.network
-  project       = var.project_id
+  name    = "openthrottle-${var.env_name}-allow-http-https"
+  network = var.network
+  project = var.project_id
+  # 0.0.0.0/0 is intentional: public HTTP/HTTPS web endpoint (see comment above).
+  # Narrow to CDN/proxy egress ranges if fronted by Cloudflare/Cloud Armor.
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["openthrottle-http"]
 
@@ -85,13 +106,15 @@ locals {
 module "cloud_sql_postgres" {
   source = "../../modules/gcp_cloud_sql_postgres"
 
-  disk_size_gb      = var.postgres_disk_size_gb
-  disk_type         = var.postgres_disk_type
-  name              = "openthrottle-${var.env_name}-postgres"
-  project_id        = var.project_id
-  public_ip_enabled = var.postgres_public_ip_enabled
-  region            = var.region
-  tier              = var.postgres_tier
+  authorized_networks = var.postgres_authorized_networks
+  disk_size_gb        = var.postgres_disk_size_gb
+  disk_type           = var.postgres_disk_type
+  name                = "openthrottle-${var.env_name}-postgres"
+  project_id          = var.project_id
+  public_ip_enabled   = var.postgres_public_ip_enabled
+  region              = var.region
+  ssl_mode            = var.postgres_ssl_mode
+  tier                = var.postgres_tier
 }
 
 module "compute_e2" {

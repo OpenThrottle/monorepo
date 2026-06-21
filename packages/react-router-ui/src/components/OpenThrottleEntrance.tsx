@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { motion } from 'framer-motion';
 
 export interface OpenThrottleEntranceProps {
@@ -18,7 +18,7 @@ export const OpenThrottleEntrance = (
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className={classnames(className)}
+      className={cn(className)}
       initial={{ opacity: 0, y: 12 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >

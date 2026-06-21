@@ -21,6 +21,7 @@ import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
 import type { Provider } from '@nestjs/common';
 import {
   getOpenthrottleServerDevJsonlLogDirectory,
@@ -113,6 +114,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     NestjsProfilingModule,
     NestjsRbacModule,
     NestjsRepositoriesModule,
+    NestjsThrottlerModule,
     NestjsWebsocketsModule,
     NotificationsModule,
     PubSubModule,

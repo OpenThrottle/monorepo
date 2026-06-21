@@ -10,6 +10,8 @@
 
 /**
  * Build an instance-scoped topic name: `<entity>:<id>:<facet>`.
+ *
+ * @publicApi
  */
 export function instanceTopic(
   entity: string,
@@ -21,6 +23,8 @@ export function instanceTopic(
 
 /**
  * Build a global-scoped topic name: `<entity>:<facet>`.
+ *
+ * @publicApi
  */
 export function globalTopic(entity: string, facet: string): string {
   return `${entity}:${facet}`;
@@ -28,6 +32,8 @@ export function globalTopic(entity: string, facet: string): string {
 
 /**
  * Topic carrying appended output chunks for a single plan: `plan:<planId>:output`.
+ *
+ * @publicApi
  */
 export function planOutputTopic(planId: string): string {
   return instanceTopic('plan', planId, 'output');
@@ -35,6 +41,8 @@ export function planOutputTopic(planId: string): string {
 
 /**
  * Lifecycle notifications for a single plan (status/task changes): `plan:<planId>:lifecycle`.
+ *
+ * @publicApi
  */
 export function planLifecycleTopic(planId: string): string {
   return instanceTopic('plan', planId, 'lifecycle');
@@ -42,6 +50,8 @@ export function planLifecycleTopic(planId: string): string {
 
 /**
  * Token deltas streamed for a single agent conversation: `conversation:<conversationId>:stream`.
+ *
+ * @publicApi
  */
 export function conversationStreamTopic(conversationId: string): string {
   return instanceTopic('conversation', conversationId, 'stream');
@@ -49,6 +59,8 @@ export function conversationStreamTopic(conversationId: string): string {
 
 /**
  * A user's personal notification feed: `user:<userId>:notifications`.
+ *
+ * @publicApi
  */
 export function userNotificationsTopic(userId: string): string {
   return instanceTopic('user', userId, 'notifications');
@@ -56,6 +68,8 @@ export function userNotificationsTopic(userId: string): string {
 
 /**
  * Global notification firehose (every notification event): `notifications:all`.
+ *
+ * @publicApi
  */
 export function notificationsFirehoseTopic(): string {
   return globalTopic('notifications', 'all');
@@ -63,6 +77,8 @@ export function notificationsFirehoseTopic(): string {
 
 /**
  * Global system alerts: `system:alert`.
+ *
+ * @publicApi
  */
 export function systemAlertTopic(): string {
   return globalTopic('system', 'alert');

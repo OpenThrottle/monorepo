@@ -6,7 +6,7 @@ import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsGraphqlModule as _NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRedisModule as _NestjsRedisModule } from '@openthrottle/nestjs-redis';
-import { NestjsThrottlerModule as _NestjsThrottlerModule } from '@openthrottle/nestjs-throttler/src/nestjs-throttler.module';
+import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 
@@ -19,6 +19,7 @@ import { AppController } from './app.controller';
     LoggerModule,
     NestjsBullmqModule,
     NestjsRedisModule,
+    NestjsThrottlerModule,
 
     // 🧩 Application Modules
   ],

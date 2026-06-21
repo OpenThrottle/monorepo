@@ -54,7 +54,7 @@ import type {
 import {
   ROOT_LOADER_UNREACHABLE_HEALTH,
   classifyRootLoaderError,
-  parseHttpStatusFromRootLoaderMessage,
+  httpStatusFromRootLoaderError,
   rootLoaderErrorMessage,
 } from '~/global/utils/root-loader-diagnostics';
 import { SITE_TITLE } from '#/app/global/config/settings';
@@ -114,11 +114,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
 
+  /**
+   * Seed an unknown/`unconfigured` baseline (amber), never all-green: if the
+   * health query is skipped or short-circuits without overwriting this, the
+   * shell must not read as healthy during a real outage.
+   */
   let serverHealth: ServerHealthObject = {
-    api: 'ok',
-    database: 'ok',
-    redis: 'ok',
-    websocket: 'ok',
+    api: 'unconfigured',
+    database: 'unconfigured',
+    redis: 'unconfigured',
+    websocket: 'unconfigured',
   };
 
   const diagnostics: RootLoaderDiagnostics = {
@@ -158,8 +163,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       console.error('root loader: GetRootHealth failed', error);
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
       const healthMessage = rootLoaderErrorMessage(error);
-      const healthHttpStatus =
-        parseHttpStatusFromRootLoaderMessage(healthMessage);
+      const healthHttpStatus = httpStatusFromRootLoaderError(error);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
         message: healthMessage,
@@ -186,7 +190,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       userLoadOk = false;
       // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
       const userMessage = rootLoaderErrorMessage(error);
-      const userHttpStatus = parseHttpStatusFromRootLoaderMessage(userMessage);
+      const userHttpStatus = httpStatusFromRootLoaderError(error);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
         message: userMessage,

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottlePlanStatusBadgeProps {
   className?: string;
@@ -24,7 +24,7 @@ export const OpenThrottlePlanStatusBadge = (
 
   return (
     <div
-      className={classnames('p-4', className)}
+      className={cn('p-4', className)}
       data-testid="OpenThrottlePlanStatusBadge"
     >
       <h2>OpenThrottle Plan Status Badge</h2>

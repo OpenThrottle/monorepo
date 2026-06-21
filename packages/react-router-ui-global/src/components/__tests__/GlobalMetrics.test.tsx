@@ -276,4 +276,56 @@ describe('GlobalMetrics Component', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  /**
+   * @description Polling-lifecycle smoke test. The real `clearInterval` lives in
+   * `usePollServerMetrics` (a different package), so here we run that hook for
+   * real (delegating the module mock to the actual implementation) over a
+   * stubbed `fetch` + fake timers, and assert that unmounting `GlobalMetrics`
+   * stops further polling — no additional fetches fire after the component is
+   * gone.
+   */
+  describe('polling lifecycle on unmount', () => {
+    test('stops fetching after the component unmounts', async () => {
+      cleanup();
+      vi.useFakeTimers();
+
+      const fetchMock = vi.fn(async () => ({
+        json: async () => ({ data: { serverMetrics: null } }),
+        ok: true,
+        status: 200,
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const actual = await vi.importActual<
+        typeof import('@openthrottle/react-router-ui')
+      >('@openthrottle/react-router-ui');
+      mockUsePollServerMetrics.mockImplementation(actual.usePollServerMetrics);
+
+      try {
+        const Component = () => (
+          <GlobalProviders>
+            <GlobalMetrics pollIntervalMs={1_000} />
+          </GlobalProviders>
+        );
+        const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+        const { unmount } = render(<RoutesStub />);
+
+        // Let the initial fetch + a couple of intervals fire while mounted.
+        await vi.advanceTimersByTimeAsync(2_500);
+        expect(fetchMock.mock.calls.length).toBeGreaterThan(0);
+
+        const callsBeforeUnmount = fetchMock.mock.calls.length;
+        unmount();
+
+        // No further polling should occur once the interval is cleared.
+        await vi.advanceTimersByTimeAsync(5_000);
+        expect(fetchMock.mock.calls.length).toBe(callsBeforeUnmount);
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+        mockUsePollServerMetrics.mockReset();
+      }
+    });
+  });
 });

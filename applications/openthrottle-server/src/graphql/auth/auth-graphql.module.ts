@@ -21,12 +21,16 @@ import { SubscriptionTokenResolver } from './subscription-token.resolver';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const audience = config.get<string>('JWT_AUDIENCE');
         const issuer = config.get<string>('JWT_ISSUER');
         return {
           secret: config.get<string>('JWT_SECRET'),
           signOptions: {
             algorithm: 'HS256',
             expiresIn: '24h',
+            // Opt-in: stamp `aud` so audience-bound verifiers accept the token.
+            // Omitted when JWT_AUDIENCE is unset to preserve existing tokens.
+            ...(audience ? { audience } : {}),
             ...(issuer ? { issuer } : {}),
           },
         };

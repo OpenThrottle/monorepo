@@ -4,11 +4,13 @@
  * use {@link createResponseCachePlugin} to create a full response-cache plugin with optional sessionId.
  */
 
+/** @publicApi */
 export {
   type ApolloServerPluginCacheControlOptions,
   ApolloServerPluginCacheControl,
 } from '@apollo/server/plugin/cacheControl';
 
+/** @publicApi */
 export {
   default as createResponseCachePlugin,
   type ApolloServerPluginResponseCacheOptions,

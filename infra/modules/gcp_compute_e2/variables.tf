@@ -40,9 +40,9 @@ variable "zone" {
 }
 
 variable "boot_image" {
-  description = "Boot image family or full image for the instance."
+  description = "Boot image family or full dated image for the instance. Pinned to a dated Debian 12 image (not the rolling debian-12 family) so rebuilds are byte-reproducible; bump deliberately to adopt a newer image."
   type        = string
-  default     = "debian-cloud/debian-12"
+  default     = "debian-cloud/debian-12-bookworm-v20260609"
 }
 
 variable "labels" {
