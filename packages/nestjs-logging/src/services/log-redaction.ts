@@ -138,18 +138,19 @@ export const createLogRedactor = (
     return typeof value === 'string' ? redactString(value) : value;
   };
 
-  // A single `extra` value: primitive, primitive array, or a nested record of
-  // primitives (the shapes permitted by JsonValue). `keyDenied` means an ancestor
-  // key matched the deny-list, so every contained primitive is fully replaced.
+  // A single `extra` value: primitive, or an arbitrarily nested array/record of
+  // JsonValues (the shapes permitted by JsonValue). Recurses so deny-listed keys at
+  // any depth are honored. `keyDenied` means an ancestor key matched the deny-list, so
+  // every contained primitive is fully replaced.
   const redactJsonValue = (value: JsonValue, keyDenied: boolean): JsonValue => {
     if (Array.isArray(value)) {
-      return value.map((entry) => redactPrimitive(entry, keyDenied));
+      return value.map((entry) => redactJsonValue(entry, keyDenied));
     }
 
     if (value !== null && typeof value === 'object') {
-      const out: Record<string, JsonPrimitive> = {};
+      const out: Record<string, JsonValue> = {};
       for (const [key, entry] of Object.entries(value)) {
-        out[key] = redactPrimitive(
+        out[key] = redactJsonValue(
           entry,
           keyDenied || matchesDenyKey(key, loweredKeys),
         );
