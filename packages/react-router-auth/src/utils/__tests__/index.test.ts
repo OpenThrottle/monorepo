@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 // AUTH_COOKIE_NAME is computed from APP_NAME at import time, so set it first.
 process.env.APP_NAME = 'test-app';
 
+import { AUTH_COOKIE_NAME } from '../../config/index';
 import {
   buildAuthCookie,
   getAuthTokenFromCookie,
@@ -94,5 +95,25 @@ describe('auth cookie header builders', () => {
 
   it('returns null when the auth cookie is absent', () => {
     expect(getAuthTokenFromCookie('other=value')).toBeNull();
+  });
+
+  it('returns null for an empty cookie header', () => {
+    expect(getAuthTokenFromCookie('')).toBeNull();
+  });
+
+  it('finds the auth cookie among multiple cookies', () => {
+    expect(
+      getAuthTokenFromCookie(`foo=1; ${AUTH_COOKIE_NAME}=jwt; bar=2`),
+    ).toBe('jwt');
+  });
+
+  it('preserves `=` characters inside the token value (JWT segments)', () => {
+    const jwt = 'header.payload.signature==';
+
+    expect(getAuthTokenFromCookie(`${AUTH_COOKIE_NAME}=${jwt}`)).toBe(jwt);
+  });
+
+  it('trims surrounding whitespace from the cookie value', () => {
+    expect(getAuthTokenFromCookie(`${AUTH_COOKIE_NAME}=  jwt  `)).toBe('jwt');
   });
 });
