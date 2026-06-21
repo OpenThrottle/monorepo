@@ -15,11 +15,15 @@ import jwt from 'jsonwebtoken';
 
 /**
  * connectionParams key the browser client puts the ws token under.
+ *
+ * @publicApi
  */
 export const GRAPHQL_WS_AUTH_TOKEN_PARAM = 'authToken';
 
 /**
  * Options for {@link verifyConnectionToken} / {@link createGraphqlWsOnConnect}.
+ *
+ * @publicApi
  */
 export interface GraphqlWsAuthOptions {
   /** Expected `iss` claim. Defaults to `process.env.JWT_ISSUER` (optional). */
@@ -38,6 +42,8 @@ export interface GraphqlWsAuthOptions {
  * depend on — a supertype of graphql-ws's `Context`, so it is assignable both
  * ways without coupling to that type. `extra` is opaque (graphql-ws owns it; we
  * narrow before reading/writing `userId`).
+ *
+ * @publicApi
  */
 export interface GraphqlWsConnectionContext {
   readonly connectionParams?: Readonly<Record<string, unknown>>;
@@ -49,6 +55,8 @@ export interface GraphqlWsConnectionContext {
  * @description Pull the bearer token out of connectionParams. Accepts either
  * `authToken` (preferred) or an `Authorization: Bearer <t>` style param
  * (case-insensitive), so non-browser clients can reuse their HTTP header value.
+ *
+ * @publicApi
  */
 export function extractConnectionToken(
   connectionParams: Readonly<Record<string, unknown>> | undefined,
@@ -72,6 +80,8 @@ export function extractConnectionToken(
  * @description Verify the HS256 JWT and return its `sub` as the user id. Throws
  * if the secret is missing or the token is invalid/expired — callers decide how
  * to surface that (the onConnect handler rejects the connection).
+ *
+ * @publicApi
  */
 export function verifyConnectionToken(
   token: string,
@@ -102,6 +112,8 @@ export function verifyConnectionToken(
  * connectionParams, stashes the resolved `userId` on `ctx.extra`, and returns a
  * boolean (false closes the socket with 4403 Forbidden). An invalid token is
  * always rejected; a missing token is rejected only when `required` (default).
+ *
+ * @publicApi
  */
 export function createGraphqlWsOnConnect(
   options: GraphqlWsAuthOptions = {},
@@ -138,6 +150,8 @@ export function createGraphqlWsOnConnect(
  * @description Read the connection identity back out of a graphql-ws context.
  * The shared GraphQL `context` callback uses this to surface `userId` for ws
  * operations (HTTP requests carry identity on `req` instead).
+ *
+ * @publicApi
  */
 export function resolveGraphqlWsUserId(
   ctx: GraphqlWsConnectionContext | undefined,
@@ -154,6 +168,8 @@ export function resolveGraphqlWsUserId(
  * @description True when `value` looks like a graphql-ws connection context
  * (carries `extra` and a `connectionParams` key), as opposed to an HTTP
  * `{ req }` context. Used to branch the shared GraphQL `context` callback.
+ *
+ * @publicApi
  */
 export function isGraphqlWsContext(
   value: unknown,

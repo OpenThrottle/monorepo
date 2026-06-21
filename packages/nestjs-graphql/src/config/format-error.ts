@@ -31,12 +31,20 @@ const INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_SERVER_ERROR';
 /** Generic client-facing message used in place of leaked internal detail. */
 const GENERIC_INTERNAL_ERROR_MESSAGE = 'Internal server error';
 
-/** Minimal logger surface this module needs (matches LoggerService.error). */
+/**
+ * Minimal logger surface this module needs (matches LoggerService.error).
+ *
+ * @publicApi
+ */
 export interface FormatErrorLogger {
   error(message: unknown, ...optionalParams: unknown[]): void;
 }
 
-/** Options controlling {@link createFormatError} behavior. */
+/**
+ * Options controlling {@link createFormatError} behavior.
+ *
+ * @publicApi
+ */
 export interface CreateFormatErrorOptions {
   /**
    * When true, mask internal (`INTERNAL_SERVER_ERROR`) messages with a generic

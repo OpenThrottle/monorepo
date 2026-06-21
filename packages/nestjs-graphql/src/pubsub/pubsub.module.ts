@@ -12,6 +12,8 @@ import { PUB_SUB } from './pubsub.constants';
  * BullMQ — reuse REDIS_HOST/REDIS_PORT). Both implement {@link PubSubEngine}
  * (`asyncIterator(topics)` / `publish(topic, payload)`), so resolvers injecting
  * {@link PUB_SUB} need no change.
+ *
+ * @publicApi
  */
 export function createPubSub(): PubSubEngine {
   return new PubSub();
@@ -22,6 +24,8 @@ export function createPubSub(): PubSubEngine {
  * {@link PUB_SUB} token. Global so any GraphQL feature module can inject the same
  * singleton without re-importing — publishers and subscribers must share one
  * instance for the in-memory backend to deliver events.
+ *
+ * @publicApi
  */
 @Global()
 @Module({

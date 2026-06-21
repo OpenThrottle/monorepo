@@ -149,5 +149,9 @@ export function createQueryDepthLimitRule(maxDepth: number): ValidationRule {
   });
 }
 
-/** Re-export of the operation-definition guard for callers building rule sets. */
+/**
+ * Re-export of the operation-definition guard for callers building rule sets.
+ *
+ * @publicApi
+ */
 export { isOperationDefinition };

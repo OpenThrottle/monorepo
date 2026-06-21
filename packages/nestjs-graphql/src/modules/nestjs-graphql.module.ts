@@ -22,6 +22,7 @@ import {
   type ApolloServerPluginResponseCacheOptions,
 } from '../config/nestjs-graphql.plugins';
 import { createQueryDepthLimitRule } from '../config/query-depth-limit';
+import { defaultResponseCacheSessionId } from '../config/response-cache-session';
 import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth';
 
 /**
@@ -46,7 +47,11 @@ function createLandingPagePlugin(): ApolloServerPlugin<BaseContext> {
     : ApolloServerPluginLandingPageLocalDefault();
 }
 
-/** Opt-in cache configuration for NestjsGraphqlModule.forRoot(). */
+/**
+ * Opt-in cache configuration for NestjsGraphqlModule.forRoot().
+ *
+ * @publicApi
+ */
 export interface NestjsGraphqlCacheOptions {
   /** Enable or configure Cache-Control plugin. Default options used when true. */
   cacheControl?: boolean | ApolloServerPluginCacheControlOptions;
@@ -54,7 +59,11 @@ export interface NestjsGraphqlCacheOptions {
   responseCache?: boolean | ApolloServerPluginResponseCacheOptions<BaseContext>;
 }
 
-/** Options for NestjsGraphqlModule.forRoot(); extends ApolloDriverConfig with optional cache plugins. */
+/**
+ * Options for NestjsGraphqlModule.forRoot(); extends ApolloDriverConfig with optional cache plugins.
+ *
+ * @publicApi
+ */
 export interface NestjsGraphqlModuleOptions extends Omit<
   ApolloDriverConfig,
   'plugins'
@@ -141,23 +150,12 @@ function buildCachePlugins(
   }
 
   if (cache.responseCache) {
-    const opts =
+    // Default to a sessionId derived from the verified user id (hashed), not the
+    // raw Authorization header — see defaultResponseCacheSessionId. Callers can
+    // override by passing their own response-cache options object.
+    const opts: ApolloServerPluginResponseCacheOptions<BaseContext> =
       cache.responseCache === true
-        ? // FIXME: Swap out eventually
-
-          ({
-            sessionId: async (requestContext: {
-              request: {
-                http?: {
-                  headers?: { get: (name: string) => string | undefined };
-                };
-              };
-            }): Promise<string | null> => {
-              const header =
-                requestContext.request.http?.headers?.get('authorization');
-              return header ?? null;
-            },
-          } as ApolloServerPluginResponseCacheOptions<BaseContext>)
+        ? { sessionId: defaultResponseCacheSessionId }
         : cache.responseCache;
 
     plugins.push(createResponseCachePlugin(opts));
@@ -185,6 +183,48 @@ function buildValidationRules(
   return rules;
 }
 
+/**
+ * Deep-merge the security-sensitive nested config blocks (`subscriptions`,
+ * `csrfPrevention`) so a caller overriding one nested field can't silently drop
+ * a secure default. The plain spread in `buildDriverConfig` shallow-replaces
+ * these whole objects, which would, e.g., wipe the default graphql-ws
+ * `onConnect` auth (fail-open) if a caller set `subscriptions` only to add a
+ * path. Per-key merge keeps the defaults the caller didn't explicitly override.
+ */
+function mergeSecureDefaults(
+  base: ApolloDriverConfig,
+  rest: Partial<ApolloDriverConfig>,
+): void {
+  if (rest.subscriptions !== undefined) {
+    const defaultSubscriptions = DEFAULT_DRIVER_CONFIG.subscriptions ?? {};
+    const merged: NonNullable<ApolloDriverConfig['subscriptions']> = {
+      ...defaultSubscriptions,
+      ...rest.subscriptions,
+    };
+
+    // Deep-merge the graphql-ws block only when the caller passed an object, so
+    // adding (e.g.) a `path` keeps the default `onConnect` auth rather than
+    // silently dropping it (fail-open). An explicit boolean enable/disable from
+    // the caller is respected as-is.
+    const defaultWs = defaultSubscriptions['graphql-ws'];
+    const callerWs = rest.subscriptions['graphql-ws'];
+
+    if (typeof callerWs === 'object' && typeof defaultWs === 'object') {
+      merged['graphql-ws'] = { ...defaultWs, ...callerWs };
+    }
+
+    base.subscriptions = merged;
+  }
+
+  if (rest.csrfPrevention !== undefined) {
+    base.csrfPrevention =
+      typeof rest.csrfPrevention === 'object' &&
+      typeof DEFAULT_DRIVER_CONFIG.csrfPrevention === 'object'
+        ? { ...DEFAULT_DRIVER_CONFIG.csrfPrevention, ...rest.csrfPrevention }
+        : rest.csrfPrevention;
+  }
+}
+
 function buildDriverConfig(
   options: NestjsGraphqlModuleOptions,
 ): ApolloDriverConfig {
@@ -196,6 +236,10 @@ function buildDriverConfig(
     ...rest
   } = options;
   const base = { ...DEFAULT_DRIVER_CONFIG, ...rest };
+
+  // Re-apply secure defaults for the nested blocks the shallow spread above
+  // would have wholesale-replaced (notably the graphql-ws onConnect auth).
+  mergeSecureDefaults(base, rest);
 
   base.validationRules = buildValidationRules(maxDepth, userRules);
 
@@ -217,6 +261,13 @@ function buildDriverConfig(
   return base;
 }
 
+/**
+ * NestJS dynamic module wiring Apollo GraphQL (HTTP + graphql-ws subscriptions)
+ * with secure defaults: error sanitization, query-depth limiting, pinned landing
+ * page, CSRF prevention, ws connection auth, and opt-in Apollo cache plugins.
+ *
+ * @publicApi
+ */
 @Module({
   controllers: [],
   exports: [],
