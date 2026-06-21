@@ -19,6 +19,8 @@ export type OpenThrottleEnv = {
   APP_VERSION: string;
 
   // Environment
+  /** Feature flag (string-encoded boolean; see config/features.ts). */
+  FEATURE_BETA_PREVIEW?: string;
   NODE_ENV: 'development' | 'production' | 'staging' | 'test';
   ROLLBAR_TOKEN: string;
 };
