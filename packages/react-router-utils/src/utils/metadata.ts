@@ -128,7 +128,11 @@ function addUniqueMeta(
   acc: MetaDescriptor[] | undefined,
   parentMeta: MetaDescriptor,
 ) {
-  if (acc?.findIndex((meta) => isMetaEqual(meta, parentMeta)) === -1) {
+  if (!acc) {
+    return;
+  }
+
+  if (acc.findIndex((meta) => isMetaEqual(meta, parentMeta)) === -1) {
     acc.push(parentMeta);
   }
 }
