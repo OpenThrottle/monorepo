@@ -114,11 +114,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
 
+  /**
+   * Seed an unknown/`unconfigured` baseline (amber), never all-green: if the
+   * health query is skipped or short-circuits without overwriting this, the
+   * shell must not read as healthy during a real outage.
+   */
   let serverHealth: ServerHealthObject = {
-    api: 'ok',
-    database: 'ok',
-    redis: 'ok',
-    websocket: 'ok',
+    api: 'unconfigured',
+    database: 'unconfigured',
+    redis: 'unconfigured',
+    websocket: 'unconfigured',
   };
 
   const diagnostics: RootLoaderDiagnostics = {
