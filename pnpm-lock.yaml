@@ -2185,6 +2185,9 @@ importers:
       '@openthrottle/nestjs-stripe':
         specifier: workspace:^
         version: link:../../packages/nestjs-stripe
+      '@openthrottle/nestjs-throttler':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-throttler
       '@openthrottle/nestjs-utils':
         specifier: workspace:^
         version: link:../../packages/nestjs-utils
@@ -16427,8 +16430,8 @@ packages:
   oxc-resolver@11.19.1:
     resolution: {integrity: sha512-qE/CIg/spwrTBFt5aKmwe3ifeDdLfA2NESN30E42X/lII5ClF8V7Wt6WIJhcGZjp0/Q+nQ+9vgxGk//xZNX2hg==}
 
-  oxlint-plugin-react-doctor@0.5.2:
-    resolution: {integrity: sha512-9UTlyNoxVx+6JDFCP1RonbD8ySjoJ2x4YlDjTI2wRGbr0yRx4b+FLdciSxqNwrtkWsGmPEunQGblTRy1KQUmVg==}
+  oxlint-plugin-react-doctor@0.5.4:
+    resolution: {integrity: sha512-Jhj1axEmBpqyRu4PVne/iOEgNCmbSTTaZ9cW4C7LnxtLeH0SII/BwmAys1qTXo1J0rjjGlXDFyjijH6DuYbk8g==}
     engines: {node: ^20.19.0 || >=22.13.0}
 
   oxlint@1.66.0:
@@ -17677,8 +17680,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-doctor@0.5.2:
-    resolution: {integrity: sha512-AJpF334K7l2QV98TpxjtkbsRyA75fAAeXildRqSG8PdanxLK+2QB1gZYKSI3NZi/eLZ2V3AbA2PC+rmLmUNRPA==}
+  react-doctor@0.5.4:
+    resolution: {integrity: sha512-5z1Tc5Li05ogalBoM4k8ee7Pe52wDopeCtIuGRufRd8qnsAJBk8ypSjSr2puXS0pBYd6YwF32nmPacOGQs7iJA==}
     engines: {node: ^20.19.0 || >=22.13.0}
     hasBin: true
 
@@ -35814,7 +35817,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  oxlint-plugin-react-doctor@0.5.2:
+  oxlint-plugin-react-doctor@0.5.4:
     dependencies:
       '@typescript-eslint/types': 8.60.1
       eslint-scope: 9.1.2
@@ -37170,7 +37173,7 @@ snapshots:
       '@types/node': 24.12.2
       '@types/react': 19.2.7
 
-  react-doctor@0.5.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
+  react-doctor@0.5.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.0
       '@sentry/node': 10.56.0
@@ -37182,7 +37185,7 @@ snapshots:
       jiti: 2.7.0
       magicast: 0.5.3
       oxlint: 1.66.0
-      oxlint-plugin-react-doctor: 0.5.2
+      oxlint-plugin-react-doctor: 0.5.4
       prompts: 2.4.2
       typescript: 6.0.3
       vscode-languageserver: 9.0.1
@@ -37357,7 +37360,7 @@ snapshots:
       preact: 10.29.1
       prompts: 2.4.2
       react: 19.2.4
-      react-doctor: 0.5.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
+      react-doctor: 0.5.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
       react-dom: 19.2.4(react@19.2.4)
       react-grab: 0.1.44(react@19.2.4)
     optionalDependencies:
