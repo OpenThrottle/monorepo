@@ -213,12 +213,20 @@ const disposeClient = (
 
 /**
  * @description Builds a Socket.IO gateway class for the given namespace (Nest reads {@link WebSocketGateway} metadata from the generated subclass).
+ *
+ * `allowedOrigins` becomes the explicit CORS `origin` allow-list for the handshake — there is no
+ * reflect-any-origin (`origin: true`) fallback. When the list is empty, CORS is left unset so no
+ * cross-origin browser client is permitted. Per-connection identity is enforced separately at
+ * runtime via the injected `websocket.authorize` hook in `handleConnection`.
  */
 export const buildNestjsLoggingWebsocketGatewayClass = (
   namespace: string,
+  allowedOrigins: ReadonlyArray<string> = [],
 ): Type<object> => {
+  const corsOrigins = [...allowedOrigins];
+
   @WebSocketGateway({
-    cors: { origin: true },
+    ...(corsOrigins.length > 0 ? { cors: { origin: corsOrigins } } : {}),
     namespace,
   })
   class NestjsLoggingWebsocketGatewayImpl
@@ -237,11 +245,37 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       private readonly moduleOptions: ResolvedNestjsLoggingModuleOptions,
     ) {}
 
-    handleConnection(client: Socket): void {
+    async handleConnection(client: Socket): Promise<void> {
       if (this.moduleOptions.websocket.enabled !== true) {
         client.disconnect(true);
 
         return;
+      }
+
+      const authorize = this.moduleOptions.websocket.authorize;
+
+      if (authorize !== undefined) {
+        let authorized = false;
+
+        try {
+          authorized = await authorize(client);
+        } catch (error) {
+          this.logger.warn(
+            `Rejecting logging WebSocket connection: authorize hook threw: ${String(error)}`,
+          );
+          client.disconnect(true);
+
+          return;
+        }
+
+        if (authorized !== true) {
+          this.logger.verbose(
+            'Rejecting logging WebSocket connection: authorize hook returned false.',
+          );
+          client.disconnect(true);
+
+          return;
+        }
       }
 
       const maxPending =

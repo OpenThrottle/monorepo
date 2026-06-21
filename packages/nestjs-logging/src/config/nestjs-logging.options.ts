@@ -33,9 +33,34 @@ export type CorrelationIdExtractor = (
 export type TraceIdExtractor = (ctx: ExecutionContext) => string | undefined;
 
 /**
+ * @description Per-connection authorization hook for the logging WebSocket gateway. Called in
+ * `handleConnection` with the connecting Socket.IO socket; return `false` (or throw) to reject and
+ * disconnect the client before it can issue any `logs.*` control message. Implementations typically
+ * verify a token/cookie from `socket.handshake` against the host application's auth system.
+ *
+ * The log stream may contain secrets/PII; the namespace MUST be protected before enabling in
+ * production. If omitted, every client that can reach the namespace can read the full log stream.
+ */
+export type NestjsLoggingWebsocketAuthorizeHook = (
+  socket: unknown,
+) => Promise<boolean> | boolean;
+
+/**
  * @description Socket.IO streaming for log tail/replay (see `docs/openclaw-style-contract.md`). Disabled by default.
  */
 export interface NestjsLoggingWebsocketOptions {
+  /**
+   * @description Explicit CORS allow-list of permitted request `Origin` values for the gateway's
+   * Socket.IO handshake. When omitted or empty, no cross-origin requests are allowed (CORS is left
+   * unset on the gateway). Never use a reflect-any-origin policy for a log stream — list the exact
+   * origins (e.g. `['https://ops.example.com']`) that are allowed to connect.
+   */
+  readonly allowedOrigins?: ReadonlyArray<string> | undefined;
+  /**
+   * @description Per-connection authorization hook. The log stream is unauthenticated unless this is
+   * provided; see {@link NestjsLoggingWebsocketAuthorizeHook}.
+   */
+  readonly authorize?: NestjsLoggingWebsocketAuthorizeHook | undefined;
   /**
    * @description When true, registers the logging WebSocket gateway (Socket.IO namespace from {@link NestjsLoggingWebsocketOptions.namespace}).
    */
@@ -135,6 +160,14 @@ export interface NestjsLoggingModuleAsyncOptions {
   readonly registerWebsocketGateway?: boolean | undefined;
   readonly useFactory: FactoryProvider<NestjsLoggingModuleOptions>['useFactory'];
   /**
+   * @description Explicit CORS allow-list baked into the gateway's static {@link WebSocketGateway}
+   * metadata when {@link NestjsLoggingModuleAsyncOptions.registerWebsocketGateway} is true. Socket.IO
+   * CORS metadata is read at class-build time, before the async factory resolves, so it cannot be
+   * derived from the factory result — declare the permitted origins here. Omit (or pass `[]`) to
+   * forbid all cross-origin browser clients. Should match `websocket.allowedOrigins` from your factory.
+   */
+  readonly websocketGatewayAllowedOrigins?: ReadonlyArray<string> | undefined;
+  /**
    * @description Namespace for the gateway when {@link NestjsLoggingModuleAsyncOptions.registerWebsocketGateway} is true; should match the resolved `websocket.namespace` from your factory (default `/ot-logging`).
    */
   readonly websocketGatewayNamespace?: string | undefined;
@@ -182,6 +215,8 @@ export const applyNestjsLoggingModuleDefaults = (
     redactor: createLogRedactor(options.redaction),
     rotation: options.rotation ?? DEFAULT_ROTATION,
     websocket: {
+      allowedOrigins: options.websocket?.allowedOrigins ?? [],
+      authorize: options.websocket?.authorize,
       enabled: websocketEnabled,
       maxPendingRecordsPerSocket:
         options.websocket?.maxPendingRecordsPerSocket ??
@@ -432,6 +467,34 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
         'websocket.maxPendingRecordsPerSocket, when provided, must be a positive integer.',
       );
     }
+
+    const authorize = ws.authorize;
+
+    if (authorize !== undefined && typeof authorize !== 'function') {
+      throw new NestjsLoggingError(
+        'websocket.authorize, when provided, must be a function.',
+      );
+    }
+
+    const allowedOrigins = ws.allowedOrigins;
+
+    if (allowedOrigins !== undefined) {
+      if (!Array.isArray(allowedOrigins)) {
+        throw new NestjsLoggingError(
+          'websocket.allowedOrigins, when provided, must be an array of strings.',
+        );
+      }
+
+      if (
+        allowedOrigins.some(
+          (origin) => typeof origin !== 'string' || origin.trim() === '',
+        )
+      ) {
+        throw new NestjsLoggingError(
+          'websocket.allowedOrigins must contain only non-empty strings.',
+        );
+      }
+    }
   }
 };
 
@@ -460,6 +523,26 @@ export const validateNestjsLoggingModuleAsyncOptions = (
     throw new NestjsLoggingError(
       'websocketGatewayNamespace, when provided, must be a non-empty string starting with "/".',
     );
+  }
+
+  const gatewayAllowedOrigins = options.websocketGatewayAllowedOrigins;
+
+  if (gatewayAllowedOrigins !== undefined) {
+    if (!Array.isArray(gatewayAllowedOrigins)) {
+      throw new NestjsLoggingError(
+        'websocketGatewayAllowedOrigins, when provided, must be an array of strings.',
+      );
+    }
+
+    if (
+      gatewayAllowedOrigins.some(
+        (origin) => typeof origin !== 'string' || origin.trim() === '',
+      )
+    ) {
+      throw new NestjsLoggingError(
+        'websocketGatewayAllowedOrigins must contain only non-empty strings.',
+      );
+    }
   }
 };
 

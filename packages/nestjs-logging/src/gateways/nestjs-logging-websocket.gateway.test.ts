@@ -102,7 +102,7 @@ interface MockLogSocket {
  * tests need the public handler surface for typechecking. Payload/result shapes are asserted in tests.
  */
 interface CompiledNestjsLoggingWebsocketGateway {
-  handleConnection(client: Socket): void;
+  handleConnection(client: Socket): Promise<void> | void;
   handleDisconnect(client: Socket): void;
   onLogsHistory(payload: unknown): Promise<any>;
   onLogsReplay(payload: unknown): Promise<any>;
@@ -181,6 +181,87 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     gateway.handleConnection(client);
 
     expect(disconnect).toHaveBeenCalledWith(true);
+  });
+
+  it('disconnects the socket when the authorize hook returns false', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const authorize = vi.fn(async () => false);
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { authorize, enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client, disconnect } = createMockSocket();
+
+    await gateway.handleConnection(client);
+
+    expect(authorize).toHaveBeenCalledWith(client);
+    expect(disconnect).toHaveBeenCalledWith(true);
+
+    // Socket was never initialized, so control messages are rejected.
+    expect(gateway.onLogsSubscribe(client, {})).toMatchObject({ ok: false });
+  });
+
+  it('disconnects the socket when the authorize hook throws', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const authorize = vi.fn(async () => {
+      throw new Error('no token');
+    });
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { authorize, enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client, disconnect } = createMockSocket();
+
+    await gateway.handleConnection(client);
+
+    expect(disconnect).toHaveBeenCalledWith(true);
+    expect(gateway.onLogsSubscribe(client, {})).toMatchObject({ ok: false });
+  });
+
+  it('initializes the socket when the authorize hook returns true', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const authorize = vi.fn(async () => true);
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { authorize, enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client, disconnect } = createMockSocket();
+
+    await gateway.handleConnection(client);
+
+    expect(authorize).toHaveBeenCalledWith(client);
+    expect(disconnect).not.toHaveBeenCalled();
+
+    const sub = gateway.onLogsSubscribe(client, {});
+
+    expect(sub).toMatchObject({ ok: true });
   });
 
   it('logs.subscribe returns an error when the socket was not initialized', async () => {

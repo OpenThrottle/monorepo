@@ -13,6 +13,7 @@ export {
   NESTJS_LOGGING_MODULE_OPTIONS,
   type NestjsLoggingModuleAsyncOptions,
   type NestjsLoggingModuleOptions,
+  type NestjsLoggingWebsocketAuthorizeHook,
   type NestjsLoggingWebsocketOptions,
   parseNestjsLoggingModuleOptions,
   type ResolvedNestjsLoggingModuleOptions,
