@@ -125,4 +125,19 @@ describe('mergeRouteModuleMeta', () => {
       { title: 'Leaf' },
     ]);
   });
+
+  test('does not throw when the leaf meta fn returns a non-array accumulator', () => {
+    // A misbehaving leaf meta fn returns a non-array (here `null`) instead of an
+    // array, so the reduce accumulator is non-array. addUniqueMeta must guard
+    // against this rather than dereferencing it when appending parent meta.
+    // `JSON.parse` is typed as `any`, so the contract-violating return value
+    // flows through without a type assertion.
+    const undefinedLeaf: () => MetaDescriptor[] = () => JSON.parse('null');
+    const meta = mergeRouteModuleMeta(undefinedLeaf);
+
+    expect(() =>
+      meta({ matches: [{ meta: [{ title: 'Parent' }] }] }),
+    ).not.toThrow();
+    expect(meta({ matches: [{ meta: [{ title: 'Parent' }] }] })).toBeNull();
+  });
 });
