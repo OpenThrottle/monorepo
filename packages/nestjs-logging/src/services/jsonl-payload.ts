@@ -76,18 +76,31 @@ const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
   typeof value === 'string';
 
 /**
- * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}.
+ * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}. Tracks
+ * visited objects/arrays in `seen` so a circular reference is rejected (returns false) rather
+ * than overflowing the stack.
  */
-const isJsonValue = (value: unknown): value is JsonValue => {
+const isJsonValue = (
+  value: unknown,
+  seen: ReadonlySet<object> = new Set(),
+): value is JsonValue => {
   if (isJsonPrimitive(value)) {
     return true;
   }
   if (Array.isArray(value)) {
-    return value.every(isJsonValue);
+    if (seen.has(value)) {
+      return false;
+    }
+    const nextSeen = new Set(seen).add(value);
+    return value.every((entry) => isJsonValue(entry, nextSeen));
   }
   if (typeof value === 'object' && value !== null) {
+    if (seen.has(value)) {
+      return false;
+    }
+    const nextSeen = new Set(seen).add(value);
     return Object.entries(value).every(
-      ([key, entry]) => typeof key === 'string' && isJsonValue(entry),
+      ([key, entry]) => typeof key === 'string' && isJsonValue(entry, nextSeen),
     );
   }
   return false;
@@ -114,6 +127,29 @@ const parseExtraField = (
     return undefined;
   }
   return raw;
+};
+
+/**
+ * @description Drops entries whose value is not JSON-serializable from an `extra` record so
+ * serialization never throws or silently loses a whole line. `extra` is typed as
+ * {@link JsonValue} but is populated at runtime from untrusted caller input, which may contain
+ * `bigint`, `undefined`, functions, symbols, or circular references — any of which make
+ * {@link JSON.stringify} throw (circular) or omit/mangle the value. Each top-level entry is kept
+ * only when it passes the existing {@link isJsonValue} guard; invalid entries are dropped.
+ * Returns undefined when nothing survives.
+ */
+const normalizeExtraForEmit = (
+  extra: Readonly<Record<string, JsonValue>>,
+): Readonly<Record<string, JsonValue>> | undefined => {
+  const normalized: Record<string, JsonValue> = {};
+
+  for (const [key, value] of Object.entries(extra)) {
+    if (isJsonValue(value)) {
+      normalized[key] = value;
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 };
 
 /**
@@ -145,7 +181,10 @@ export const structuredLogRecordToJsonlPayload = (
   }
 
   if (record.extra !== undefined && Object.keys(record.extra).length > 0) {
-    payload.extra = redactor.redactValue(record.extra);
+    const normalizedExtra = normalizeExtraForEmit(record.extra);
+    if (normalizedExtra !== undefined) {
+      payload.extra = redactor.redactValue(normalizedExtra);
+    }
   }
 
   if (record.hostname !== undefined) {
