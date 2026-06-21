@@ -24,9 +24,6 @@
       "path": "../nodejs-graphql/tsconfig.lib.json"
     },
     {
-      "path": "../ai-mcp/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

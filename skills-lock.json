@@ -78,6 +78,18 @@
       "sourceType": "github",
       "skillPath": "skills/skill-cleaner/SKILL.md",
       "computedHash": "50470a9de011b56d096b3b03e2080866edf38bfec9f437a6efcdf5715415b70c"
+    },
+    "visual-plan": {
+      "source": "BuilderIO/skills",
+      "sourceType": "github",
+      "skillPath": "skills/visual-plan/SKILL.md",
+      "computedHash": "b444d75071e4da372df596e9d8e52c8bba256df176797164f1bbb94c584e01ab"
+    },
+    "visual-recap": {
+      "source": "BuilderIO/skills",
+      "sourceType": "github",
+      "skillPath": "skills/visual-recap/SKILL.md",
+      "computedHash": "58786344f3a87b26d21f6e0e3898d13b5a28e5df993e47aff817d9e5a9febcaf"
     }
   }
 }
