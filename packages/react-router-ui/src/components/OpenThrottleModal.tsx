@@ -1,22 +1,27 @@
 import * as React from 'react';
 import {
-  Button,
   Dialog,
   DialogContent,
+  DialogTitle,
 } from '@openthrottle/react-router-shadcn';
-import type { DialogProps } from '@openthrottle/react-router-shadcn';
 import { useSearchParams } from 'react-router';
-import { XIcon } from 'lucide-react';
 
-export interface OpenThrottleModalProps extends DialogProps {
+export interface OpenThrottleModalProps {
+  readonly children?: React.ReactNode;
   readonly param: string;
+  /**
+   * Accessible name for the dialog. Rendered into a visually-hidden
+   * `DialogTitle` so screen readers announce the dialog while keeping the
+   * default UI chrome unchanged.
+   */
+  readonly title?: string;
   readonly value: string;
 }
 
 export const OpenThrottleModal = (
   props: OpenThrottleModalProps,
 ): React.ReactElement => {
-  const { param, value } = props;
+  const { children, param, title = 'Dialog', value } = props;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,18 +30,11 @@ export const OpenThrottleModal = (
   const isOpen = searchParams.get(param) === value;
 
   // Handlers
-  const onToggle = () => {
+  const onOpenChange = (open: boolean) => {
     const newParams = new URLSearchParams(searchParams);
 
-    newParams.set(param, value);
-
-    setSearchParams(newParams);
-  };
-
-  const onClose = () => {
-    const newParams = new URLSearchParams(searchParams);
-
-    if (isOpen) newParams.delete(param);
+    if (open) newParams.set(param, value);
+    else newParams.delete(param);
 
     setSearchParams(newParams);
   };
@@ -50,21 +48,12 @@ export const OpenThrottleModal = (
   return (
     <Dialog
       data-testid="OpenThrottleModal"
-      onOpenChange={onToggle}
+      onOpenChange={onOpenChange}
       open={isOpen}
     >
       <DialogContent>
-        <Button onClick={onClose}>
-          <XIcon className="size-10" />
-          <span className="sr-only">Close</span>
-        </Button>
-        <p className="text-muted-foreground">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita quod
-          minus est facilis ullam magni necessitatibus quis dolor numquam
-          consectetur autem, rem incidunt fugiat at natus! Aperiam error labore
-          eum.
-        </p>
-        {props.children}
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        {children}
       </DialogContent>
     </Dialog>
   );

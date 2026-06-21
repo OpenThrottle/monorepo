@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { ARTWORK_YODA } from '../data/data.artwork';
 
 export interface OpenThrottleEmptyStateProps {
@@ -26,10 +26,7 @@ export const OpenThrottleEmptyState = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="OpenThrottleEmptyState"
-    >
+    <div className={cn('p-4', className)} data-testid="OpenThrottleEmptyState">
       <h2 className="text-foreground mb-4 text-base">{title}</h2>
       <p className="text-muted-foreground text-sm">{description}</p>
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { LucideIcon } from 'lucide-react';
 
 export interface OpenThrottleFieldsetProps extends React.PropsWithChildren {
@@ -30,7 +30,7 @@ export const OpenThrottleFieldset = (
   return (
     <fieldset
       aria-labelledby={id}
-      className={classnames(
+      className={cn(
         '--bg-card border-border rounded-md border transition-colors',
         'space-y-4 p-4 md:p-8',
         className,

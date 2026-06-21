@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottleLoaderProps {
   readonly className?: string;
@@ -23,10 +23,7 @@ export const OpenThrottleLoader = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="OpenThrottleLoader"
-    >
+    <div className={cn('p-4', className)} data-testid="OpenThrottleLoader">
       <h2>OpenThrottle Loader</h2>
     </div>
   );
