@@ -1,3 +1,4 @@
+export * from './config/format-error';
 export * from './config/nestjs-graphql.plugins';
 export * from './config/query-depth-limit';
 export * from './modules/nestjs-graphql.module';

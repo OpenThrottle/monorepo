@@ -10,6 +10,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getRedisCache } from '@openthrottle/nestjs-redis';
 import type { ValidationRule } from 'graphql';
+import { createFormatError } from '../config/format-error';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
@@ -58,6 +59,17 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
     requestHeaders: [HEADER_APP_NAME, HEADER_APP_VERSION],
   },
   driver: ApolloDriver,
+
+  /**
+   * Sanitize errors before they reach the client. Apollo only masks stack
+   * traces in production, and never scrubs arbitrary `extensions`, so without
+   * this an unhandled resolver/DB error leaks internals (SQL text, file paths,
+   * `extensions.exception`/stacktrace, the raw Error message). The default
+   * strips those, and in production replaces unhandled (`INTERNAL_SERVER_ERROR`)
+   * messages with a generic string while logging the original server-side.
+   * forRoot callers can override by passing their own `formatError`.
+   */
+  formatError: createFormatError(new LoggerService()),
   // Introspection lets clients dump the entire schema. Keep it on in non-prod
   // for codegen/devtools, but off in production unless a forRoot caller
   // explicitly overrides it. GRAPHQL_INTROSPECTION=true force-enables it.
