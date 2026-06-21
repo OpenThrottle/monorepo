@@ -73,7 +73,36 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
   }
 
   /**
-   * @description Validates the JWT payload. Override in subclasses to add custom validation.
+   * @description Default `validate` trusts the token **signature only** — it returns
+   * the decoded payload unchanged and performs NO existence / active / revocation
+   * check on `sub`.
+   *
+   * SECURITY: Because nothing here re-checks the subject, any structurally-valid,
+   * unexpired token authenticates — including tokens for a since-deleted, disabled,
+   * or revoked user — until the token expires (up to its TTL, e.g. 24h). The
+   * signature guarantees the token was minted by a holder of the secret, not that
+   * the subject is still a valid principal.
+   *
+   * Production consumers MUST subclass `JwtStrategy` and override `validate` to
+   * verify the subject still exists and is active (e.g. look up `payload.sub`,
+   * reject if missing/disabled, and optionally enrich roles). This default exists
+   * only for the stateless / signature-trust case; it is not enforced by the type
+   * system, so the responsibility is on the consumer.
+   *
+   * @example
+   * ```ts
+   * @Injectable()
+   * class AppJwtStrategy extends JwtStrategy {
+   *   constructor(config: ConfigService, private readonly users: UsersService) {
+   *     super(config);
+   *   }
+   *   override async validate(payload: JwtPayload): Promise<JwtPayload> {
+   *     const user = await this.users.findActiveById(payload.sub);
+   *     if (!user) throw new UnauthorizedException();
+   *     return { ...payload, roles: user.roles };
+   *   }
+   * }
+   * ```
    */
   validate(payload: JwtPayload): JwtPayload {
     return payload;
