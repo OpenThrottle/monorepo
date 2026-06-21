@@ -42,7 +42,12 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
     requestHeaders: [HEADER_APP_NAME, HEADER_APP_VERSION],
   },
   driver: ApolloDriver,
-  introspection: true,
+  // Introspection lets clients dump the entire schema. Keep it on in non-prod
+  // for codegen/devtools, but off in production unless a forRoot caller
+  // explicitly overrides it. GRAPHQL_INTROSPECTION=true force-enables it.
+  introspection:
+    process.env.GRAPHQL_INTROSPECTION === 'true' ||
+    process.env.NODE_ENV !== 'production',
   playground: true,
 
   /**
