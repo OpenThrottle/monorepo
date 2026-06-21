@@ -56,6 +56,31 @@ variable "public_ip_enabled" {
   default     = false
 }
 
+variable "ssl_mode" {
+  description = "SSL enforcement mode for connections. ENCRYPTED_ONLY requires encryption without client certs; TRUSTED_CLIENT_CERTIFICATE_REQUIRED also requires a client cert; ALLOW_UNENCRYPTED_AND_ENCRYPTED permits cleartext (not recommended)."
+  type        = string
+  default     = "ENCRYPTED_ONLY"
+
+  validation {
+    condition     = contains(["ALLOW_UNENCRYPTED_AND_ENCRYPTED", "ENCRYPTED_ONLY", "TRUSTED_CLIENT_CERTIFICATE_REQUIRED"], var.ssl_mode)
+    error_message = "ssl_mode must be one of ALLOW_UNENCRYPTED_AND_ENCRYPTED, ENCRYPTED_ONLY, or TRUSTED_CLIENT_CERTIFICATE_REQUIRED."
+  }
+}
+
+variable "authorized_networks" {
+  description = "Allowlist of CIDR source ranges permitted to reach the public IP: [{ name, value }]. Empty means no public source ranges are authorized; never use 0.0.0.0/0."
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+
+  validation {
+    condition     = !contains([for n in var.authorized_networks : n.value], "0.0.0.0/0")
+    error_message = "authorized_networks must not include 0.0.0.0/0; restrict to specific source ranges (e.g. the E2 egress IP)."
+  }
+}
+
 variable "private_network" {
   description = "VPC network self_link for private IP (optional)."
   type        = string
