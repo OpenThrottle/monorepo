@@ -1,4 +1,9 @@
-import { AUTH_COOKIE_MAX_AGE_DAYS, AUTH_COOKIE_NAME } from '../config/index';
+import {
+  AUTH_COOKIE_MAX_AGE_DAYS,
+  AUTH_COOKIE_NAME,
+  AUTH_COOKIE_PATH,
+  AUTH_COOKIE_SAME_SITE,
+} from '../config/index';
 
 /**
  * @description Options shared by the auth cookie header builders.
@@ -10,6 +15,23 @@ export interface AuthCookieOptions {
    * outside of an explicit `NODE_ENV !== 'production'` dev environment.
    */
   insecureCookies?: boolean;
+  /**
+   * Override the cookie lifetime in days. Defaults to
+   * `AUTH_COOKIE_MAX_AGE_DAYS`. Extension point for an app that needs a
+   * non-default session length without forking the shared helper.
+   */
+  maxAgeDays?: number;
+  /**
+   * Override the cookie `Path` attribute. Defaults to `AUTH_COOKIE_PATH`
+   * (`/`). Extension point for per-app divergence.
+   */
+  path?: string;
+  /**
+   * Override the cookie `SameSite` attribute. Defaults to
+   * `AUTH_COOKIE_SAME_SITE` (`Lax`). Extension point for an app that needs
+   * `Strict`.
+   */
+  sameSite?: string;
 }
 
 /**
@@ -34,18 +56,27 @@ function buildAuthCookieAttributes(
 ): string {
   const insecure = options?.insecureCookies ?? isInsecureByDefault();
   const secure = insecure ? '' : '; Secure';
+  const path = options?.path ?? AUTH_COOKIE_PATH;
+  const sameSite = options?.sameSite ?? AUTH_COOKIE_SAME_SITE;
 
-  return `Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${maxAge}`;
+  return `Path=${path}; HttpOnly; SameSite=${sameSite}${secure}; Max-Age=${maxAge}`;
 }
 
 /**
  * @description Builds a Set-Cookie header value for the auth cookie.
+ *
+ * Contract: `token` MUST be a server-issued JWT (base64url segments joined by
+ * `.`), whose characters are all cookie-value-safe. The value is interpolated
+ * verbatim and NOT percent-encoded, so passing a token containing `;`, `,`,
+ * whitespace, or other separators would silently corrupt the Set-Cookie
+ * header. Callers must not pass arbitrary strings.
  */
 export function buildAuthCookie(
   token: string,
   options?: AuthCookieOptions,
 ): string {
-  const maxAge = AUTH_COOKIE_MAX_AGE_DAYS * 24 * 60 * 60;
+  const maxAge =
+    (options?.maxAgeDays ?? AUTH_COOKIE_MAX_AGE_DAYS) * 24 * 60 * 60;
 
   return `${AUTH_COOKIE_NAME}=${token}; ${buildAuthCookieAttributes(maxAge, options)}`;
 }
@@ -60,7 +91,12 @@ export function getAuthTokenFromCookie(cookieHeader: string): string | null {
     const [name, ...valueParts] = part.split('=');
 
     if (name?.trim() === AUTH_COOKIE_NAME && valueParts.length > 0) {
-      return valueParts.join('=').trim();
+      const value = valueParts.join('=').trim();
+
+      // An effectively-empty value (`name=` or `name= `) is not a real token;
+      // return null to match the documented `string | null` intent rather
+      // than handing back an empty string.
+      return value === '' ? null : value;
     }
   }
 

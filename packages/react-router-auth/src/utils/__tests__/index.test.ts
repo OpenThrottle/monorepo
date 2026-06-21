@@ -62,4 +62,37 @@ describe('auth cookie header builders', () => {
 
     expect(getAuthTokenFromCookie(cookieHeader)).toBe('abc.def.ghi');
   });
+
+  it('uses default Path, SameSite, and Max-Age when no overrides given', () => {
+    const header = buildAuthCookie('jwt', { insecureCookies: true });
+
+    expect(header).toContain('Path=/');
+    expect(header).toContain('SameSite=Lax');
+    expect(header).toContain(`Max-Age=${7 * 24 * 60 * 60}`);
+  });
+
+  it('honors path, sameSite, and maxAgeDays overrides', () => {
+    const header = buildAuthCookie('jwt', {
+      insecureCookies: true,
+      maxAgeDays: 1,
+      path: '/app',
+      sameSite: 'Strict',
+    });
+
+    expect(header).toContain('Path=/app');
+    expect(header).toContain('SameSite=Strict');
+    expect(header).toContain(`Max-Age=${24 * 60 * 60}`);
+  });
+
+  it('returns null for an empty cookie value', () => {
+    expect(getAuthTokenFromCookie('test-app_auth_token=')).toBeNull();
+  });
+
+  it('returns null for a whitespace-only cookie value', () => {
+    expect(getAuthTokenFromCookie('test-app_auth_token= ')).toBeNull();
+  });
+
+  it('returns null when the auth cookie is absent', () => {
+    expect(getAuthTokenFromCookie('other=value')).toBeNull();
+  });
 });

@@ -1,5 +1,19 @@
 export const AUTH_COOKIE_MAX_AGE_DAYS = 7;
 
+/**
+ * Default cookie `Path` attribute. Shared across all four consuming apps.
+ * Extension point: if per-app divergence is ever needed, pass an override
+ * through `AuthCookieOptions` rather than editing this default.
+ */
+export const AUTH_COOKIE_PATH = '/';
+
+/**
+ * Default cookie `SameSite` attribute. Shared across all four consuming apps.
+ * Extension point: if an app needs `Strict`, pass an override through
+ * `AuthCookieOptions` rather than editing this default.
+ */
+export const AUTH_COOKIE_SAME_SITE = 'Lax';
+
 interface WindowEnv {
   APP_NAME?: string;
 }
