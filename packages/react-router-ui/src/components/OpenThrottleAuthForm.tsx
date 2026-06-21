@@ -17,6 +17,10 @@ export interface OpenThrottleAuthFormProps {
   readonly action?: string;
   /** Optional classnames to apply to the card. */
   readonly className?: string;
+  /** Opt-in initial email value (dev convenience). Defaults to empty. */
+  readonly defaultEmail?: string;
+  /** Opt-in initial password value (dev convenience). Defaults to empty. */
+  readonly defaultPassword?: string;
   /** Server or client error message to display (e.g. from actionData or fetcher.data). */
   readonly error?: string;
   /** When true, disables the submit button (e.g. fetcher.state === 'loading'). */
@@ -32,12 +36,20 @@ export interface OpenThrottleAuthFormProps {
 export const OpenThrottleAuthForm = (
   props: OpenThrottleAuthFormProps,
 ): React.ReactElement => {
-  const { action = '/', className, error, isLoading = false, onSubmit } = props;
+  const {
+    action = '/',
+    className,
+    defaultEmail = '',
+    defaultPassword = '',
+    error,
+    isLoading = false,
+    onSubmit,
+  } = props;
 
   // Hooks
-  const [email, setEmail] = React.useState('developer@openthrottle.com');
+  const [email, setEmail] = React.useState(defaultEmail);
   const [intent, setIntent] = React.useState<'login' | 'register'>('login');
-  const [password, setPassword] = React.useState('FullThrottle2026!');
+  const [password, setPassword] = React.useState(defaultPassword);
 
   // Setup
   const isLogin = intent === 'login';
