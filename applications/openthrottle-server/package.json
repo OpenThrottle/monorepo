@@ -32,6 +32,7 @@
     "@openthrottle/nestjs-rbac": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nestjs-stripe": "workspace:^",
+    "@openthrottle/nestjs-throttler": "workspace:^",
     "@openthrottle/nestjs-utils": "workspace:^",
     "@openthrottle/nestjs-vector-search": "workspace:^",
     "@openthrottle/nestjs-websockets": "workspace:^",

@@ -1,14 +1,19 @@
-import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { Module } from '@nestjs/common';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 /**
  * @external https://docs.nestjs.com/security/rate-limiting
  * @description This module is used to throttle requests to the API.
+ *
+ * Binds {@link ThrottlerGuard} as a global guard (`APP_GUARD`) so importing
+ * this module actually enforces the configured rate limit (10 requests / 60s)
+ * rather than only providing config + storage.
  */
 @Module({
   controllers: [],
-  exports: [],
+  exports: [ThrottlerModule],
   imports: [
     ThrottlerModule.forRoot({
       throttlers: [
@@ -20,6 +25,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
     }),
     LoggerModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class NestjsThrottlerModule {}
