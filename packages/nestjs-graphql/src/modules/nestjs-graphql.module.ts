@@ -136,7 +136,12 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
   validationRules: [createQueryDepthLimitRule(DEFAULT_MAX_DEPTH)],
 };
 
-function buildCachePlugins(
+/**
+ * Assemble the opt-in Apollo cache plugins (Cache-Control, then response-cache)
+ * in a fixed order. Exported for unit testing of the assembly/order behavior;
+ * not part of the package public API (no `@publicApi`), so consume via forRoot.
+ */
+export function buildCachePlugins(
   cache: NestjsGraphqlCacheOptions,
 ): NonNullable<ApolloDriverConfig['plugins']> {
   const plugins: NonNullable<ApolloDriverConfig['plugins']> = [];
@@ -225,7 +230,13 @@ function mergeSecureDefaults(
   }
 }
 
-function buildDriverConfig(
+/**
+ * Merge a partial `forRoot` options object onto the secure DEFAULT_DRIVER_CONFIG,
+ * preserving security-relevant defaults the caller didn't explicitly override.
+ * Exported for unit testing of the default-preservation/merge behavior; not part
+ * of the package public API (no `@publicApi`), so consume via forRoot.
+ */
+export function buildDriverConfig(
   options: NestjsGraphqlModuleOptions,
 ): ApolloDriverConfig {
   const {
