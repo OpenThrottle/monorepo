@@ -1,3 +1,4 @@
+import { isAuthError } from '@openthrottle/react-router-graphql';
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
 /** Health snapshot when the root loader cannot reach openthrottle-server for serverHealth. */
@@ -30,6 +31,11 @@ export interface RootLoaderDiagnostics {
 export const classifyRootLoaderError = (
   error: unknown,
 ): RootLoaderFailureKind => {
+  // Auth failures (401/403) arrive as a typed GraphqlAuthError from
+  // executeGraphqlWithAuth; treat them as transport without scraping the message.
+  if (isAuthError(error)) {
+    return 'transport';
+  }
   const msg =
     error instanceof Error ? error.message : String(error ?? 'unknown');
   if (msg.includes('GraphQL errors:')) {
@@ -73,6 +79,21 @@ export const parseHttpStatusFromRootLoaderMessage = (
   }
   const n = Number.parseInt(m[1], 10);
   return Number.isFinite(n) ? n : undefined;
+};
+
+/**
+ * @description Resolves the HTTP status for a thrown root-loader error. Prefers
+ * the typed {@link GraphqlAuthError.httpStatus} (401/403) exposed by
+ * `@openthrottle/react-router-graphql`, falling back to message-scraping for
+ * non-auth transport errors (e.g. a 502 from `executeGraphql`).
+ */
+export const httpStatusFromRootLoaderError = (
+  error: unknown,
+): number | undefined => {
+  if (isAuthError(error)) {
+    return error.httpStatus;
+  }
+  return parseHttpStatusFromRootLoaderMessage(rootLoaderErrorMessage(error));
 };
 
 /**

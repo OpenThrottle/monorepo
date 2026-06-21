@@ -1,7 +1,7 @@
 /**
  * @description GraphQL client our react-router applications. Used in route
  * loaders/actions with typed documents create using GraphQL Codegens.
- * Requires "API_URL" in env (e.g. http://localhost:6021).
+ * Requires "API_URL_INTERNAL" in env (e.g. http://localhost:6021).
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -27,6 +27,64 @@ export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
 
 /**
+ * @description Default per-request timeout (milliseconds) applied to the
+ * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
+ * Bounds an SSR loader/action so a stalled openthrottle-server connection
+ * cannot hold the request open indefinitely.
+ */
+export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
+
+/**
+ * @description Marker prefix on the message of the `Error` thrown when a
+ * request exceeds its timeout. Consumers (e.g. `@openthrottle/react-router-graphql`)
+ * match on this to classify the failure as a distinct timeout kind rather than a
+ * generic network error.
+ */
+export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
+  'openthrottle-server GraphQL request timed out';
+
+/**
+ * @description Build the `AbortSignal` enforcing the per-request timeout.
+ * `0` or a negative value disables the timeout (no signal). Defaults to
+ * {@link DEFAULT_GRAPHQL_TIMEOUT_MS} when `timeoutMs` is `undefined`.
+ */
+function buildTimeoutSignal(
+  timeoutMs: number | undefined,
+): AbortSignal | undefined {
+  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
+
+  if (ms <= 0) {
+    return undefined;
+  }
+
+  return AbortSignal.timeout(ms);
+}
+
+/**
+ * @description Wrap a thrown `fetch` rejection: when it is the abort raised by
+ * our timeout signal (`TimeoutError`/`AbortError`), rethrow a recognizable
+ * timeout `Error` (message prefixed with {@link GRAPHQL_TIMEOUT_ERROR_PREFIX});
+ * otherwise rethrow the original error unchanged.
+ */
+function rethrowAsTimeoutIfAborted(
+  error: unknown,
+  timeoutMs: number | undefined,
+): never {
+  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
+
+  if (
+    error instanceof Error &&
+    (error.name === 'TimeoutError' || error.name === 'AbortError')
+  ) {
+    throw new Error(`${GRAPHQL_TIMEOUT_ERROR_PREFIX} after ${ms}ms`, {
+      cause: error,
+    });
+  }
+
+  throw error;
+}
+
+/**
  * @description Standard GraphQL response shape from openthrottle-server.
  */
 export interface GraphqlResponse<TData> {
@@ -42,6 +100,14 @@ export interface GraphqlResponse<TData> {
  */
 export interface ExecuteGraphqlOptions {
   readonly headers?: Record<string, string>;
+  /**
+   * @description Per-request timeout in milliseconds, enforced via
+   * `AbortSignal.timeout`. Defaults to {@link DEFAULT_GRAPHQL_TIMEOUT_MS}.
+   * Pass `0` or a negative value to disable the timeout. On timeout the call
+   * rejects with an `Error` whose message starts with
+   * {@link GRAPHQL_TIMEOUT_ERROR_PREFIX}.
+   */
+  readonly timeoutMs?: number | undefined;
 }
 
 /**
@@ -73,11 +139,18 @@ export async function executeGraphql<
     ...options?.headers,
   };
 
-  const res = await fetch(url, {
-    body,
-    headers,
-    method: 'POST',
-  });
+  let res: Response;
+
+  try {
+    res = await fetch(url, {
+      body,
+      headers,
+      method: 'POST',
+      signal: buildTimeoutSignal(options?.timeoutMs),
+    });
+  } catch (error) {
+    rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
+  }
 
   // FIXME: Tighten this up
 
@@ -114,6 +187,14 @@ export interface ExecuteGraphqlAtUrlOptions {
    * so the token wins over any `Authorization` here.
    */
   readonly headers?: Record<string, string>;
+  /**
+   * @description Per-request timeout in milliseconds, enforced via
+   * `AbortSignal.timeout`. Defaults to {@link DEFAULT_GRAPHQL_TIMEOUT_MS}.
+   * Pass `0` or a negative value to disable the timeout. On timeout the call
+   * rejects with an `Error` whose message starts with
+   * {@link GRAPHQL_TIMEOUT_ERROR_PREFIX}.
+   */
+  readonly timeoutMs?: number | undefined;
   /** When set, sent as Authorization: Bearer <token>. Omit for unauthenticated requests. */
   readonly token?: string | undefined;
 }
@@ -151,11 +232,18 @@ export async function executeGraphqlAtUrl<
       : {}),
   };
 
-  const res = await fetch(url, {
-    body,
-    headers,
-    method: 'POST',
-  });
+  let res: Response;
+
+  try {
+    res = await fetch(url, {
+      body,
+      headers,
+      method: 'POST',
+      signal: buildTimeoutSignal(options?.timeoutMs),
+    });
+  } catch (error) {
+    rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
+  }
 
   // FIXME: Tighten this up
 
@@ -182,6 +270,18 @@ export async function executeGraphqlAtUrl<
 }
 
 /**
+ * @description Options for {@link executeGraphqlWithAuth}.
+ */
+export interface ExecuteGraphqlWithAuthOptions {
+  /**
+   * @description Per-request timeout in milliseconds, forwarded to
+   * {@link executeGraphql}. Defaults to {@link DEFAULT_GRAPHQL_TIMEOUT_MS}.
+   * Pass `0` or a negative value to disable the timeout.
+   */
+  readonly timeoutMs?: number | undefined;
+}
+
+/**
  * @description Runs executeGraphql with Authorization: Bearer <token> when the request has an auth cookie. Use in loaders/actions that have access to the request.
  */
 export async function executeGraphqlWithAuth<
@@ -191,11 +291,13 @@ export async function executeGraphqlWithAuth<
   token: string,
   document: TypedDocumentNode<TData, TVariables>,
   variables?: TVariables,
+  options?: ExecuteGraphqlWithAuthOptions,
 ): Promise<TData> {
   const isTokenNull = !token || token == null;
-  const options = !isTokenNull
-    ? { headers: { Authorization: `Bearer ${token}` } }
-    : {};
+  const executeOptions: ExecuteGraphqlOptions = {
+    timeoutMs: options?.timeoutMs,
+    ...(isTokenNull ? {} : { headers: { Authorization: `Bearer ${token}` } }),
+  };
 
-  return executeGraphql(document, variables, options);
+  return executeGraphql(document, variables, executeOptions);
 }
