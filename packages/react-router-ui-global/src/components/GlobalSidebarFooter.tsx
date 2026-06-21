@@ -9,6 +9,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
+import {
+  deriveOverallHealthStatus,
+  healthStatusColorClass,
+} from '../utils/utils.global';
 
 export interface GlobalSidebarFooterProps {
   readonly health?: ServerHealthObject;
@@ -22,9 +26,7 @@ export const GlobalSidebarFooter = (
   // Hooks
 
   // Setup
-  const { api, database, redis } = health ?? {};
-  const allOnline = api === 'ok' && database === 'ok' && redis === 'ok';
-  const color = allOnline ? 'bg-green-500' : 'bg-amber-500';
+  const color = healthStatusColorClass(deriveOverallHealthStatus(health));
 
   // Handlers
 
