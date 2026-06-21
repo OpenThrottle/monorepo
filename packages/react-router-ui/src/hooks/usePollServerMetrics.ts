@@ -38,9 +38,7 @@ export function usePollServerMetrics<T>(
         options.token,
       );
 
-      // FIXME: Tighten this up
-
-      setServerMetrics((data as unknown as { serverMetrics: T }).serverMetrics);
+      setServerMetrics(data.serverMetrics);
       setError(null);
     } catch (error) {
       setError(error instanceof Error ? error : new Error(String(error)));

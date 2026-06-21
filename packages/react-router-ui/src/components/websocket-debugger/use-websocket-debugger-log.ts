@@ -23,7 +23,6 @@ export interface UseWebsocketDebuggerLogResult {
   ) => void;
   readonly clear: () => void;
   readonly entries: readonly WebsocketDebuggerLogEntry[];
-  readonly filteredEntries: readonly WebsocketDebuggerLogEntry[];
   readonly selectedEventNames: readonly NotificationEventName[];
   readonly setSelectedEventNames: (
     names: readonly NotificationEventName[],
@@ -95,16 +94,10 @@ export const useWebsocketDebuggerLog = (
     setEntries([]);
   }, []);
 
-  const filteredEntries = React.useMemo(
-    () => filterWebsocketDebuggerEntries(entries, selectedEventNames),
-    [entries, selectedEventNames],
-  );
-
   return {
     append,
     clear,
     entries,
-    filteredEntries,
     selectedEventNames,
     setSelectedEventNames,
   };
