@@ -1,6 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
-import { SidebarHeader } from '@openthrottle/react-router-shadcn';
+import { SidebarHeader, cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 
 export interface OpenThrottleSidebarHeaderProps {
@@ -28,7 +27,7 @@ export const OpenThrottleSidebarHeader = (
 
   return (
     <SidebarHeader
-      className={classnames(className)}
+      className={cn(className)}
       data-testid="OpenThrottleSidebarHeader"
     >
       <OpenThrottleLogo name={name} to={to} />

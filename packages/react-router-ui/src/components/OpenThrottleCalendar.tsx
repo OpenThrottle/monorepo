@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottleCalendarProps {
   className?: string;
@@ -23,10 +23,7 @@ export const OpenThrottleCalendar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="OpenThrottleCalendar"
-    >
+    <div className={cn('p-4', className)} data-testid="OpenThrottleCalendar">
       <h2>OpenThrottle Calendar</h2>
     </div>
   );
