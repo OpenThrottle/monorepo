@@ -45,12 +45,7 @@ resource "google_storage_bucket" "terraform_state" {
     prevent_destroy = true
   }
 
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      age = 90
-    }
+  versioning {
+    enabled = true
   }
 }

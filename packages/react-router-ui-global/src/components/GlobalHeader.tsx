@@ -36,7 +36,6 @@ export const GlobalHeader = (
         'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
         'px-4 py-2',
-        // FIXME: Bring this back when we can populate with breadcrumbs easily
         'sticky top-0 z-10 w-full',
         'flex items-center justify-between',
         className,

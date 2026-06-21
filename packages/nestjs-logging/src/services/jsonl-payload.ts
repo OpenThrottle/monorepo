@@ -7,6 +7,7 @@ import type {
   JsonValue,
   StructuredLogRecord,
 } from '../ports/logging-ports';
+import { DEFAULT_LOG_REDACTOR, type LogRedactor } from './log-redaction';
 
 /**
  * @description JSONL root object key order is **explicit per contract** (see
@@ -75,18 +76,31 @@ const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
   typeof value === 'string';
 
 /**
- * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}.
+ * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}. Tracks
+ * visited objects/arrays in `seen` so a circular reference is rejected (returns false) rather
+ * than overflowing the stack.
  */
-const isJsonValue = (value: unknown): value is JsonValue => {
+const isJsonValue = (
+  value: unknown,
+  seen: ReadonlySet<object> = new Set(),
+): value is JsonValue => {
   if (isJsonPrimitive(value)) {
     return true;
   }
   if (Array.isArray(value)) {
-    return value.every(isJsonValue);
+    if (seen.has(value)) {
+      return false;
+    }
+    const nextSeen = new Set(seen).add(value);
+    return value.every((entry) => isJsonValue(entry, nextSeen));
   }
   if (typeof value === 'object' && value !== null) {
+    if (seen.has(value)) {
+      return false;
+    }
+    const nextSeen = new Set(seen).add(value);
     return Object.entries(value).every(
-      ([key, entry]) => typeof key === 'string' && isJsonValue(entry),
+      ([key, entry]) => typeof key === 'string' && isJsonValue(entry, nextSeen),
     );
   }
   return false;
@@ -116,14 +130,45 @@ const parseExtraField = (
 };
 
 /**
- * @description Maps {@link StructuredLogRecord} to the on-disk JSONL object shape (see `docs/openclaw-style-contract.md`).
+ * @description Drops entries whose value is not JSON-serializable from an `extra` record so
+ * serialization never throws or silently loses a whole line. `extra` is typed as
+ * {@link JsonValue} but is populated at runtime from untrusted caller input, which may contain
+ * `bigint`, `undefined`, functions, symbols, or circular references — any of which make
+ * {@link JSON.stringify} throw (circular) or omit/mangle the value. Each top-level entry is kept
+ * only when it passes the existing {@link isJsonValue} guard; invalid entries are dropped.
+ * Returns undefined when nothing survives.
+ */
+const normalizeExtraForEmit = (
+  extra: Readonly<Record<string, JsonValue>>,
+): Readonly<Record<string, JsonValue>> | undefined => {
+  const normalized: Record<string, JsonValue> = {};
+
+  for (const [key, value] of Object.entries(extra)) {
+    if (isJsonValue(value)) {
+      normalized[key] = value;
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+};
+
+/**
+ * @description Maps {@link StructuredLogRecord} to the on-disk JSONL object shape (see
+ * `docs/openclaw-style-contract.md`). This is the single chokepoint for secret/PII redaction:
+ * both the file sink (via {@link serializeStructuredLogLine}) and every WebSocket emit path
+ * (`drainPendingRecords`, `logs.history`, `logs.replay`, `logs.tail`) call it, so passing a
+ * configured {@link LogRedactor} masks `message` and `extra` everywhere. Defaults to a
+ * sensible default-on redactor ({@link DEFAULT_LOG_REDACTOR}) when none is supplied.
  */
 export const structuredLogRecordToJsonlPayload = (
   record: StructuredLogRecord,
+  redactor: LogRedactor = DEFAULT_LOG_REDACTOR,
 ): Readonly<Record<string, unknown>> => {
   const payload: Record<string, unknown> = {
     level: record.level,
-    message: record.message,
+    message: redactor.redactMessageEnabled
+      ? redactor.redactString(record.message)
+      : record.message,
     timestamp: record.timestampIso,
   };
 
@@ -136,7 +181,10 @@ export const structuredLogRecordToJsonlPayload = (
   }
 
   if (record.extra !== undefined && Object.keys(record.extra).length > 0) {
-    payload.extra = record.extra;
+    const normalizedExtra = normalizeExtraForEmit(record.extra);
+    if (normalizedExtra !== undefined) {
+      payload.extra = redactor.redactValue(normalizedExtra);
+    }
   }
 
   if (record.hostname !== undefined) {
@@ -163,7 +211,9 @@ export const structuredLogRecordToJsonlPayload = (
  */
 export const serializeStructuredLogLine = (
   record: StructuredLogRecord,
-): string => `${JSON.stringify(structuredLogRecordToJsonlPayload(record))}\n`;
+  redactor: LogRedactor = DEFAULT_LOG_REDACTOR,
+): string =>
+  `${JSON.stringify(structuredLogRecordToJsonlPayload(record, redactor))}\n`;
 
 /**
  * @description Parses one JSONL object line into {@link StructuredLogRecord}; returns undefined for empty or invalid lines. Extra top-level keys are ignored (see `docs/openclaw-style-contract.md` §4).
@@ -178,7 +228,6 @@ export const parseJsonlLineToStructuredRecord = (
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- JSON.parse is unknown; validated below
     const raw = JSON.parse(trimmed) as Record<string, unknown>;
     let context: string;
     if (raw.context === undefined) {

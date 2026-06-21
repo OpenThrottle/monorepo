@@ -35,7 +35,10 @@ describe('installTestEnv', () => {
     installTestEnv();
 
     expect(window.env.APP_ENV).toBe('test');
-    expect(window.env.API_URL_INTERNAL).toBe('http://localhost:6021');
+    // window.env is the public tier (OpenThrottleClientEnv); the server-only
+    // API_URL_INTERNAL is intentionally not exposed there — assert the public
+    // API_URL_EXTERNAL instead.
+    expect(window.env.API_URL_EXTERNAL).toBe('http://localhost:6021');
   });
 
   test('applies overrides onto window.env', () => {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import type { OpenThrottleEnv } from '../../types';
+import type { OpenThrottleEnv, OpenThrottlePublicEnv } from '../../types';
 
 const VALID_ENV: Record<string, number | string> = {
   API_URL_EXTERNAL: 'https://api.example.com',
@@ -46,6 +46,15 @@ const loadGetEnvironment = async (
   return mod.getEnvironment;
 };
 
+const loadGetPublicEnv = async (
+  env: Record<string, unknown>,
+): Promise<() => OpenThrottlePublicEnv> => {
+  vi.resetModules();
+  vi.stubGlobal('window', { env });
+  const mod = await import('../environment');
+  return mod.getPublicEnv;
+};
+
 const withoutKey = (key: string): Record<string, unknown> => {
   const env: Record<string, unknown> = {};
   for (const [k, value] of Object.entries(VALID_ENV)) {
@@ -88,5 +97,33 @@ describe('getEnvironment', () => {
     const getEnvironment = await loadGetEnvironment(withoutKey(key));
 
     expect(() => getEnvironment()).toThrow(`${key} is not set`);
+  });
+});
+
+describe('getPublicEnv', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  test('does NOT leak the server-only API_URL_INTERNAL into the public tier', async () => {
+    // VALID_ENV deliberately carries the server-only API_URL_INTERNAL key. The
+    // public tier is what gets serialized onto window.env, so it must never
+    // surface server-only topology. This locks in the public/server tiering.
+    const getPublicEnv = await loadGetPublicEnv(VALID_ENV);
+
+    const publicEnv = getPublicEnv();
+
+    expect(publicEnv).not.toHaveProperty('API_URL_INTERNAL');
+    expect(Object.values(publicEnv)).not.toContain('http://api.internal');
+  });
+
+  test('requires only the public tier (succeeds without API_URL_INTERNAL)', async () => {
+    // The browser never has the server-only key, so the public accessor must
+    // resolve fully without it.
+    const getPublicEnv = await loadGetPublicEnv(withoutKey('API_URL_INTERNAL'));
+
+    expect(() => getPublicEnv()).not.toThrow();
+    expect(getPublicEnv()).not.toHaveProperty('API_URL_INTERNAL');
   });
 });

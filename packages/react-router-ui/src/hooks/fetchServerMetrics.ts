@@ -9,13 +9,22 @@ interface GraphqlResponse<T> {
 }
 
 /**
+ * @description GraphQL data envelope for the `serverMetrics` field. Callers pass
+ * the shape of the metrics they queried as `T`.
+ */
+export interface ServerMetricsEnvelope<T> {
+  readonly serverMetrics: T;
+}
+
+/**
  * @description Fetches server metrics from the GraphQL API. Safe to call from the client.
+ * Returns the `{ serverMetrics: T }` data envelope; callers read `.serverMetrics`.
  */
 export async function fetchServerMetrics<T>(
   url: string,
   query: string,
   token?: string,
-): Promise<T> {
+): Promise<ServerMetricsEnvelope<T>> {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
   if (token) {
@@ -28,9 +37,7 @@ export async function fetchServerMetrics<T>(
     method: 'POST',
   });
 
-  // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const json = (await res.json()) as GraphqlResponse<T>;
+  const json: GraphqlResponse<ServerMetricsEnvelope<T>> = await res.json();
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -41,8 +48,8 @@ export async function fetchServerMetrics<T>(
     throw new Error(`GraphQL errors: ${json.errors[0]?.message ?? 'unknown'}`);
   }
 
-  if (json.data == null) {
-    throw new Error('GraphQL response missing data');
+  if (json.data == null || !('serverMetrics' in json.data)) {
+    throw new Error('GraphQL response missing serverMetrics');
   }
 
   return json.data;

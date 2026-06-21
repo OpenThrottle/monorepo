@@ -30,6 +30,7 @@ export class NestjsLoggingModule {
             buildNestjsLoggingWebsocketGatewayClass(
               resolved.websocket.namespace ??
                 DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+              resolved.websocket.allowedOrigins ?? [],
             ),
           ]
         : [];
@@ -70,6 +71,7 @@ export class NestjsLoggingModule {
             buildNestjsLoggingWebsocketGatewayClass(
               options.websocketGatewayNamespace ??
                 DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+              options.websocketGatewayAllowedOrigins ?? [],
             ),
           ]
         : [];

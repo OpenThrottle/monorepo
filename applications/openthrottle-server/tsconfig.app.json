@@ -50,6 +50,9 @@
       "path": "../../packages/nestjs-utils/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-throttler/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-stripe/tsconfig.lib.json"
     },
     {

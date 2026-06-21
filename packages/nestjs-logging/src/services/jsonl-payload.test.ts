@@ -7,6 +7,7 @@ import {
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './jsonl-payload';
+import { createLogRedactor } from './log-redaction';
 
 describe('structuredLogRecordToJsonlPayload', () => {
   it('maps timestampIso to timestamp and omits undefined ids', () => {
@@ -88,6 +89,123 @@ describe('structuredLogRecordToJsonlPayload', () => {
       spanId: 'span-a',
       timestamp: '2026-05-02T12:00:00.000Z',
     });
+  });
+
+  it('redacts secrets in message and extra by default (default-on chokepoint)', () => {
+    const record: StructuredLogRecord = {
+      context: 'Auth',
+      correlationId: undefined,
+      extra: { authorization: 'Bearer abc.def', userId: 7 },
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'login with Bearer abc.def',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      context: 'Auth',
+      extra: { authorization: '[REDACTED]', userId: 7 },
+      level: 'log',
+      message: 'login with [REDACTED]',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('honors an explicit disabled redactor (verbatim message and extra)', () => {
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: { password: 'hunter2' },
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'password=hunter2',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(
+      structuredLogRecordToJsonlPayload(record, createLogRedactor(false)),
+    ).toEqual({
+      extra: { password: 'hunter2' },
+      level: 'log',
+      message: 'password=hunter2',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('drops non-JSON extra values (bigint, undefined, function) and keeps valid siblings', () => {
+    const dirtyExtra = {
+      big: 10n,
+      fn: () => undefined,
+      missing: undefined,
+      ok: 'kept',
+      okNumber: 42,
+    } as unknown as Readonly<Record<string, JsonValue>>;
+
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: dirtyExtra,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'dirty extra',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      extra: { ok: 'kept', okNumber: 42 },
+      level: 'log',
+      message: 'dirty extra',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('omits extra entirely when no value is JSON-serializable', () => {
+    const allInvalid = {
+      big: 1n,
+      fn: () => undefined,
+    } as unknown as Readonly<Record<string, JsonValue>>;
+
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: allInvalid,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'no valid extra',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).not.toHaveProperty(
+      'extra',
+    );
+  });
+
+  it('drops a circular extra value without throwing and serializes safely', () => {
+    const circular: Record<string, unknown> = { name: 'loop' };
+    circular.self = circular;
+    const extraWithCycle = {
+      circular,
+      safe: 'present',
+    } as unknown as Readonly<Record<string, JsonValue>>;
+
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: extraWithCycle,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'cyclic extra',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      extra: { safe: 'present' },
+      level: 'log',
+      message: 'cyclic extra',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+
+    expect(() => serializeStructuredLogLine(record)).not.toThrow();
   });
 
   it('omits extra when undefined or empty object', () => {

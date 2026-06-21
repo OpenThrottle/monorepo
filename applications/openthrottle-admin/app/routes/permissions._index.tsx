@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  isAuthError,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
@@ -30,11 +33,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     return { permissions: data.permissions };
   } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-    console.log('🔴 message', message);
-
-    if (isError && (message.includes('401') || message.includes('403'))) {
+    if (isAuthError(error)) {
       return redirect('/');
     }
 

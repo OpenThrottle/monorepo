@@ -9,8 +9,19 @@ export type AuthenticatedRequest = {
 };
 
 /**
- * @description Resolves the HTTP request from GraphQL or REST execution context.
- * Uses string coercion on {@link ExecutionContext.getType} to match openthrottle-server guards.
+ * @description Resolves the HTTP request from a Nest {@link ExecutionContext}
+ * (GraphQL or REST). Uses string coercion on {@link ExecutionContext.getType} to
+ * match openthrottle-server guards.
+ *
+ * Intended split (these two helpers are complementary, not redundant):
+ * - `getRequestFromExecutionContext(ctx)` — input is a Nest `ExecutionContext`;
+ *   returns the raw request object. Use inside guards/interceptors that hold a
+ *   context.
+ * - {@link getAuthPrincipalFromRequest} — input is an already-extracted raw request;
+ *   returns the normalized {@link AuthPrincipal}. Use after this helper, or when you
+ *   already have a request (e.g. middleware) and never had a context.
+ *
+ * Typical pairing: `getAuthPrincipalFromRequest(getRequestFromExecutionContext(ctx))`.
  */
 export const getRequestFromExecutionContext = (
   ctx: ExecutionContext,

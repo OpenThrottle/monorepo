@@ -38,11 +38,12 @@ describe('config/environment', () => {
     expect(config.IS_STAGING).toBe(false);
   });
 
-  test('flags reflect a staging NODE_ENV', async () => {
+  test('flags reflect a staging NODE_ENV (staging is NOT development)', async () => {
     const config = await loadConfig({ NODE_ENV: 'staging' });
 
     expect(config.NODE_ENV).toBe('staging');
-    expect(config.IS_DEVELOPMENT).toBe(true);
+    // Staging is its own tier: dev-only behavior must not leak into staging.
+    expect(config.IS_DEVELOPMENT).toBe(false);
     expect(config.IS_PRODUCTION).toBe(false);
     expect(config.IS_STAGING).toBe(true);
   });

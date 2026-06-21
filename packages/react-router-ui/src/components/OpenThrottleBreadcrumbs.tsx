@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,6 +6,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  cn,
 } from '@openthrottle/react-router-shadcn';
 import { Link, LinkProps } from 'react-router';
 
@@ -44,7 +44,7 @@ export const OpenThrottleBreadcrumbs = (
               <BreadcrumbItem>
                 <BreadcrumbLink asChild={true}>
                   <Link
-                    className={classnames(
+                    className={cn(
                       'hover:text-accent transition-colors',
                       link.className,
                     )}

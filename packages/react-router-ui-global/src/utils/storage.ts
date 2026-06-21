@@ -154,14 +154,12 @@ export const readStoredMetricsChartHistory = (
 ): readonly MetricsChartDatum[] => {
   const storage = getSessionChartStorage();
   if (storage == null) {
-    // console.log('⏲︎ 🔴 HISTORYs storage is null');
     return [];
   }
 
   let raw: string | null;
   try {
     raw = storage.getItem(GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY);
-    // console.log('⏲︎ 🟢 🟡 🟢 READ', JSON.parse(raw ?? '{}'));
   } catch {
     return [];
   }

@@ -11,7 +11,10 @@ import {
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  isAuthError,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
@@ -39,10 +42,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     return { users: data.users };
   } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    if (isError && (message.includes('401') || message.includes('403'))) {
+    if (isAuthError(error)) {
       return redirect('/');
     }
 

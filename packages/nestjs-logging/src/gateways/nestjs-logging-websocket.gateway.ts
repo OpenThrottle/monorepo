@@ -22,6 +22,7 @@ import {
 import type { LogStreamHub, StructuredLogRecord } from '../ports/logging-ports';
 import { getActiveJsonlRelativePath } from '../services/get-active-jsonl-relative-path';
 import { structuredLogRecordToJsonlPayload } from '../services/jsonl-payload';
+import type { LogRedactor } from '../services/log-redaction';
 import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
 
 interface LogSubscriptionFilter {
@@ -34,6 +35,7 @@ interface ConnectedLogClientState {
   hubUnsubscribe: (() => void) | undefined;
   readonly maxPending: number;
   pendingRecords: StructuredLogRecord[];
+  readonly redactor: LogRedactor;
   readonly subscriptionFilters: Map<string, LogSubscriptionFilter>;
   tailFollowSubscriptionId: string | undefined;
 }
@@ -143,7 +145,7 @@ const drainPendingRecords = (
 
     if (rec !== undefined) {
       socket.emit('log.record', {
-        record: structuredLogRecordToJsonlPayload(rec),
+        record: structuredLogRecordToJsonlPayload(rec, state.redactor),
       });
     }
   }
@@ -211,12 +213,20 @@ const disposeClient = (
 
 /**
  * @description Builds a Socket.IO gateway class for the given namespace (Nest reads {@link WebSocketGateway} metadata from the generated subclass).
+ *
+ * `allowedOrigins` becomes the explicit CORS `origin` allow-list for the handshake — there is no
+ * reflect-any-origin (`origin: true`) fallback. When the list is empty, CORS is left unset so no
+ * cross-origin browser client is permitted. Per-connection identity is enforced separately at
+ * runtime via the injected `websocket.authorize` hook in `handleConnection`.
  */
 export const buildNestjsLoggingWebsocketGatewayClass = (
   namespace: string,
+  allowedOrigins: ReadonlyArray<string> = [],
 ): Type<object> => {
+  const corsOrigins = [...allowedOrigins];
+
   @WebSocketGateway({
-    cors: { origin: true },
+    ...(corsOrigins.length > 0 ? { cors: { origin: corsOrigins } } : {}),
     namespace,
   })
   class NestjsLoggingWebsocketGatewayImpl
@@ -235,11 +245,37 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       private readonly moduleOptions: ResolvedNestjsLoggingModuleOptions,
     ) {}
 
-    handleConnection(client: Socket): void {
+    async handleConnection(client: Socket): Promise<void> {
       if (this.moduleOptions.websocket.enabled !== true) {
         client.disconnect(true);
 
         return;
+      }
+
+      const authorize = this.moduleOptions.websocket.authorize;
+
+      if (authorize !== undefined) {
+        let authorized = false;
+
+        try {
+          authorized = await authorize(client);
+        } catch (error) {
+          this.logger.warn(
+            `Rejecting logging WebSocket connection: authorize hook threw: ${String(error)}`,
+          );
+          client.disconnect(true);
+
+          return;
+        }
+
+        if (authorized !== true) {
+          this.logger.verbose(
+            'Rejecting logging WebSocket connection: authorize hook returned false.',
+          );
+          client.disconnect(true);
+
+          return;
+        }
       }
 
       const maxPending =
@@ -250,6 +286,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         hubUnsubscribe: undefined,
         maxPending,
         pendingRecords: [],
+        redactor: this.moduleOptions.redactor,
         subscriptionFilters: new Map(),
         tailFollowSubscriptionId: undefined,
       };
@@ -288,7 +325,6 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- runtime guard
       const payload = body as Record<string, unknown>;
       const levelsResult = parseStringArrayField(payload.levels, 'levels');
 
@@ -332,7 +368,6 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const subscriptionId = (body as Record<string, unknown>).subscriptionId;
 
       if (typeof subscriptionId !== 'string' || subscriptionId.trim() === '') {
@@ -364,7 +399,6 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const payload = body as Record<string, unknown>;
       const maxLinesResult = parsePositiveInt(
         payload.maxLines,
@@ -380,7 +414,9 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       const lines = await this.hub.readReplayTailLines(maxLinesResult.value);
 
       return {
-        lines: lines.map((r) => structuredLogRecordToJsonlPayload(r)),
+        lines: lines.map((r) =>
+          structuredLogRecordToJsonlPayload(r, this.moduleOptions.redactor),
+        ),
         ok: true,
       };
     }
@@ -398,7 +434,6 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const payload = body as Record<string, unknown>;
       const fromRaw = payload.fromByteOffset;
       const fromByteOffset =
@@ -432,7 +467,9 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       const capped = chunk.records.slice(0, maxLinesResult.value);
 
       return {
-        lines: capped.map((r) => structuredLogRecordToJsonlPayload(r)),
+        lines: capped.map((r) =>
+          structuredLogRecordToJsonlPayload(r, this.moduleOptions.redactor),
+        ),
         nextByteOffset: chunk.nextByteOffset,
         ok: true,
       };
@@ -454,7 +491,6 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const payload = body as Record<string, unknown>;
 
       if (typeof payload.follow !== 'boolean') {
@@ -511,13 +547,15 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
 
       return {
         cursor: { byteOffset, path: relative },
-        lines: lines.map((r) => structuredLogRecordToJsonlPayload(r)),
+        lines: lines.map((r) =>
+          structuredLogRecordToJsonlPayload(r, this.moduleOptions.redactor),
+        ),
         ok: true,
       };
     }
   }
 
   // Nest `Type<object>` is the dynamic provider token; the generated class satisfies it at runtime.
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `implements` clauses widen; cast keeps the public API stable for `DynamicModule.providers`.
+
   return NestjsLoggingWebsocketGatewayImpl as Type<object>;
 };

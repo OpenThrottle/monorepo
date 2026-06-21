@@ -1,0 +1,159 @@
+import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
+import { NestjsThrottlerError } from './nestjs-throttler.error';
+
+/**
+ * @description Injection token for resolved {@link NestjsThrottlerModuleOptions} (including defaults).
+ */
+export const NESTJS_THROTTLER_MODULE_OPTIONS =
+  'NESTJS_THROTTLER_MODULE_OPTIONS' as const;
+
+/**
+ * @description Default request limit per {@link DEFAULT_THROTTLER_TTL_MS} window.
+ */
+export const DEFAULT_THROTTLER_LIMIT = 10;
+
+/**
+ * @description Default sliding window in milliseconds.
+ */
+export const DEFAULT_THROTTLER_TTL_MS = 60_000;
+
+/**
+ * @description A single named throttler tier (e.g. anon vs auth, per-route bucket).
+ */
+export interface ThrottlerTierOptions {
+  /**
+   * @description Maximum number of requests allowed within {@link ThrottlerTierOptions.ttl}.
+   */
+  readonly limit: number;
+  /**
+   * @description Optional tier name (enables `@Throttle({ <name>: ... })` / `@SkipThrottle({ <name>: ... })`).
+   */
+  readonly name?: string | undefined;
+  /**
+   * @description Sliding window in milliseconds.
+   */
+  readonly ttl: number;
+}
+
+/**
+ * @description Static registration options for {@link NestjsThrottlerModule.forRoot}.
+ */
+export interface NestjsThrottlerModuleOptions {
+  /**
+   * @description When true, register the dynamic module as global.
+   */
+  readonly isGlobal?: boolean | undefined;
+  /**
+   * @description One or more throttler tiers. Defaults to a single
+   * {@link DEFAULT_THROTTLER_LIMIT}/{@link DEFAULT_THROTTLER_TTL_MS} tier when omitted.
+   */
+  readonly throttlers?: ReadonlyArray<ThrottlerTierOptions> | undefined;
+}
+
+/**
+ * @description Async registration options for {@link NestjsThrottlerModule.forRootAsync}.
+ */
+export interface NestjsThrottlerModuleAsyncOptions {
+  readonly imports?: ModuleMetadata['imports'];
+  readonly inject?: FactoryProvider<NestjsThrottlerModuleOptions>['inject'];
+  readonly isGlobal?: boolean | undefined;
+  readonly useFactory: FactoryProvider<NestjsThrottlerModuleOptions>['useFactory'];
+}
+
+const DEFAULT_THROTTLERS: ReadonlyArray<ThrottlerTierOptions> = [
+  { limit: DEFAULT_THROTTLER_LIMIT, ttl: DEFAULT_THROTTLER_TTL_MS },
+];
+
+/**
+ * @description Applies defaults for optional fields; does not validate (use {@link validateNestjsThrottlerModuleOptions}).
+ */
+export const applyNestjsThrottlerModuleDefaults = (
+  options: NestjsThrottlerModuleOptions,
+): Readonly<
+  Required<Pick<NestjsThrottlerModuleOptions, 'throttlers'>> &
+    NestjsThrottlerModuleOptions
+> => ({
+  ...options,
+  throttlers:
+    options.throttlers !== undefined && options.throttlers.length > 0
+      ? options.throttlers
+      : DEFAULT_THROTTLERS,
+});
+
+/**
+ * @description Options after {@link applyNestjsThrottlerModuleDefaults}.
+ */
+export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
+  typeof applyNestjsThrottlerModuleDefaults
+>;
+
+const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
+
+/**
+ * @description Validates module options at bootstrap.
+ * @throws NestjsThrottlerError when fields or numeric bounds are invalid.
+ */
+export const validateNestjsThrottlerModuleOptions = (
+  options: unknown,
+): void => {
+  if (options === null || options === undefined) {
+    throw new NestjsThrottlerError(
+      'NestjsThrottlerModuleOptions are required. Pass them to forRoot() or return them from forRootAsync().useFactory().',
+    );
+  }
+
+  const opts = options as Record<string, unknown>;
+  const throttlers = opts.throttlers;
+
+  if (throttlers === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(throttlers) || throttlers.length === 0) {
+    throw new NestjsThrottlerError(
+      'throttlers, when provided, must be a non-empty array of { limit, ttl } tiers.',
+    );
+  }
+
+  for (const tier of throttlers) {
+    if (typeof tier !== 'object' || tier === null) {
+      throw new NestjsThrottlerError(
+        'Each throttler tier must be an object with positive-integer limit and ttl.',
+      );
+    }
+
+    const entry = tier as Record<string, unknown>;
+
+    if (typeof entry.limit !== 'number' || !isPositiveInt(entry.limit)) {
+      throw new NestjsThrottlerError(
+        'throttler tier "limit" must be a positive integer.',
+      );
+    }
+
+    if (typeof entry.ttl !== 'number' || !isPositiveInt(entry.ttl)) {
+      throw new NestjsThrottlerError(
+        'throttler tier "ttl" must be a positive integer (milliseconds).',
+      );
+    }
+
+    if (
+      entry.name !== undefined &&
+      (typeof entry.name !== 'string' || entry.name.trim() === '')
+    ) {
+      throw new NestjsThrottlerError(
+        'throttler tier "name", when provided, must be a non-empty string.',
+      );
+    }
+  }
+};
+
+/**
+ * @description Validates then returns the same object reference as {@link NestjsThrottlerModuleOptions}.
+ */
+export const parseNestjsThrottlerModuleOptions = (
+  input: unknown,
+): NestjsThrottlerModuleOptions => {
+  validateNestjsThrottlerModuleOptions(input);
+
+  return input as NestjsThrottlerModuleOptions;
+};
