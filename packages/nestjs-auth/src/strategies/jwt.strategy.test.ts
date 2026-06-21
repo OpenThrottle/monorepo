@@ -1,7 +1,11 @@
 import type { ConfigService } from '@nestjs/config';
 import { describe, expect, it } from 'vitest';
 import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
-import { JWT_SECRET_MIN_BYTES, JwtStrategy } from './jwt.strategy';
+import {
+  JWT_SECRET_MIN_BYTES,
+  JwtStrategy,
+  type JwtPayload,
+} from './jwt.strategy';
 
 const createConfigService = (
   values: Readonly<Record<string, string | undefined>>,
@@ -86,6 +90,64 @@ describe('JwtStrategy', () => {
             }),
           ),
       ).not.toThrow();
+    });
+  });
+
+  describe('issuer wiring', () => {
+    it('constructs with an issuer supplied via options', () => {
+      const options: NestjsAuthOptions = {
+        jwtIssuer: 'openthrottle',
+        jwtSecret: STRONG_SECRET,
+      };
+
+      expect(
+        () => new JwtStrategy(createConfigService({}), options),
+      ).not.toThrow();
+    });
+
+    it('constructs with an issuer supplied via env JWT_ISSUER', () => {
+      expect(
+        () =>
+          new JwtStrategy(
+            createConfigService({
+              JWT_ISSUER: 'openthrottle',
+              JWT_SECRET: STRONG_SECRET,
+            }),
+          ),
+      ).not.toThrow();
+    });
+  });
+
+  describe('validate (passthrough contract)', () => {
+    // The default validate trusts the token signature only and returns the
+    // decoded payload unchanged. This locks in that documented behavior so a
+    // silent "fix" (e.g. rejecting payloads, mutating roles) is flagged.
+    const strategy = new JwtStrategy(
+      createConfigService({ JWT_SECRET: STRONG_SECRET }),
+    );
+
+    it('returns the payload unchanged (same reference)', () => {
+      const payload: JwtPayload = {
+        email: 'user@example.com',
+        exp: 1_999_999_999,
+        iat: 1_000_000_000,
+        roles: ['admin'],
+        sub: 'user-uuid-1',
+      };
+
+      expect(strategy.validate(payload)).toBe(payload);
+    });
+
+    it('does not reject a minimal payload (sub only)', () => {
+      const payload: JwtPayload = { sub: 'user-uuid-2' };
+
+      expect(strategy.validate(payload)).toEqual({ sub: 'user-uuid-2' });
+    });
+
+    it('performs no subject existence/revocation check (no throw)', () => {
+      const payload: JwtPayload = { sub: 'since-deleted-user' };
+
+      expect(() => strategy.validate(payload)).not.toThrow();
     });
   });
 });

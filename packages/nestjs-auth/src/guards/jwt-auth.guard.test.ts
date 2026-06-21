@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '@nestjs/common';
+import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -50,6 +50,45 @@ describe('JwtAuthGuard', () => {
 
       expect(guard.canActivate(context)).toBe(true);
       expect(superCanActivate).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('handleRequest (fail-closed)', () => {
+    const guard = new JwtAuthGuard(new Reflector());
+    const context = createContext();
+
+    it('rethrows the Passport error when err is present', () => {
+      const err = new Error('strategy boom');
+
+      expect(() =>
+        guard.handleRequest(err, { sub: 'user-1' }, undefined, context),
+      ).toThrow(err);
+    });
+
+    it('prefers the error even when a user is also present', () => {
+      const err = new UnauthorizedException('token expired');
+
+      expect(() =>
+        guard.handleRequest(err, { sub: 'user-1' }, undefined, context),
+      ).toThrow(err);
+    });
+
+    it('throws UnauthorizedException when user is false', () => {
+      expect(() =>
+        guard.handleRequest(null, false, undefined, context),
+      ).toThrow(UnauthorizedException);
+    });
+
+    it('throws UnauthorizedException when user is otherwise falsy (null)', () => {
+      expect(() =>
+        guard.handleRequest(null, null as unknown as false, undefined, context),
+      ).toThrow(UnauthorizedException);
+    });
+
+    it('returns the user when there is no error and a user is present', () => {
+      const user = { sub: 'user-1' };
+
+      expect(guard.handleRequest(null, user, undefined, context)).toBe(user);
     });
   });
 });
