@@ -39,7 +39,7 @@ export function usePollServerMetrics<T>(
       );
 
       // FIXME: Tighten this up
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
       setServerMetrics((data as unknown as { serverMetrics: T }).serverMetrics);
       setError(null);
     } catch (error) {
@@ -47,7 +47,7 @@ export function usePollServerMetrics<T>(
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [options.query, options.token, options.url]);
 
   // Markup
 
