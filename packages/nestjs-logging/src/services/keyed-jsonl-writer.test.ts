@@ -192,6 +192,37 @@ describe('KeyedJsonlWriter', () => {
     await w.closeAll();
   });
 
+  it('keeps raw mode verbatim by default (no control-byte stripping)', async () => {
+    const w = new KeyedJsonlWriter({
+      lineFormat: 'raw',
+      runOutputBaseDirectory: await mkBase(),
+    });
+
+    w.appendRunChunk('q', '1', 'a\r\n{"forged":1}\n');
+    await w.close('q', '1');
+
+    const text = await readFile(path.join(baseDir, 'q/1.log'), 'utf8');
+
+    expect(text).toBe('a\r\n{"forged":1}\n');
+    await w.closeAll();
+  });
+
+  it('strips control bytes except tab and newline when sanitizeRaw is enabled', async () => {
+    const w = new KeyedJsonlWriter({
+      lineFormat: 'raw',
+      runOutputBaseDirectory: await mkBase(),
+      sanitizeRaw: true,
+    });
+
+    w.appendRunChunk('q', '1', 'a\r\tb\n');
+    await w.close('q', '1');
+
+    const text = await readFile(path.join(baseDir, 'q/1.log'), 'utf8');
+
+    expect(text).toBe('a\tb\n');
+    await w.closeAll();
+  });
+
   it('replaces invalid lone surrogate in raw mode with UTF-8 replacement', async () => {
     const w = new KeyedJsonlWriter({
       lineFormat: 'raw',

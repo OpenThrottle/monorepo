@@ -1,5 +1,6 @@
 import { mkdir, open, type FileHandle } from 'node:fs/promises';
 import * as path from 'node:path';
+import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
 import {
   appendUtf8ToFileHandle,
   flushFileHandle,
@@ -13,12 +14,60 @@ import {
 const compoundKey = (queueName: string, jobId: string): string =>
   `${queueName}\0${jobId}`;
 
+/**
+ * @description Strip C0/C1 control bytes except `\n` (U+000A) and `\t` (U+0009)
+ * from a raw chunk. Used only when `sanitizeRaw` is enabled; removes `\r` and
+ * other control bytes an attacker could use to forge or corrupt lines while
+ * preserving line breaks and tabs. Built from explicit unicode escapes to keep
+ * literal control bytes out of source.
+ */
+const CONTROL_BYTES_EXCEPT_TAB_NEWLINE = new RegExp(
+  // eslint-disable-next-line no-control-regex -- matching control bytes is the intent of the sanitizer
+  '[\\u0000-\\u0008\\u000B-\\u001F\\u007F-\\u009F]',
+  'g',
+);
+
+const stripRawControlBytes = (text: string): string =>
+  text.replace(CONTROL_BYTES_EXCEPT_TAB_NEWLINE, '');
+
 const DEFAULT_MAX_OPEN_FILES = 64;
 
 export interface KeyedJsonlWriterOptions {
+  /**
+   * @description Durability level applied on each `flush`/`close` (see {@link JsonlDurabilityLevel}).
+   * Defaults to `'sync'` (full `fsync`) to preserve historical behavior; `'datasync'` or `'none'`
+   * reduce per-flush I/O cost on hot files at the expense of metadata/data durability.
+   */
+  readonly durability?: JsonlDurabilityLevel;
+  /**
+   * @description Per-key file write mode.
+   *
+   * - `'jsonl'` (default): each chunk is serialized with `JSON.stringify` and a
+   *   trailing `\n`, so control bytes and newlines in `data` are escaped — the
+   *   output is always one well-formed JSON object per line. Use this for any
+   *   structured or attacker-influenced content.
+   * - `'raw'`: chunks are an **untrusted-passthrough** — the caller string is
+   *   appended verbatim with no newline normalization or escaping. Run output is
+   *   attacker-influenced, so an embedded `\n{"forged":"line"}` can forge
+   *   JSONL-looking lines in the `.log` file or split a record across reads and
+   *   confuse downstream tail/line parsers. Treat raw `.log` files as opaque
+   *   byte streams, never parse them as JSONL, and prefer `'jsonl'` whenever the
+   *   content is consumed structurally. Set {@link sanitizeRaw} to strip control
+   *   bytes if you must keep raw mode but want line-injection hardening.
+   */
   readonly lineFormat?: 'jsonl' | 'raw';
   readonly maxOpenFiles?: number;
   readonly runOutputBaseDirectory: string;
+  /**
+   * @description Opt-in hardening for `lineFormat: 'raw'` (ignored in `'jsonl'`
+   * mode). When `true`, C0/C1 control bytes other than `\n` and `\t` are stripped
+   * from each raw chunk before it is written, which removes `\r` (CRLF
+   * normalization) and other control bytes an attacker could use to forge or
+   * corrupt lines. Embedded `\n` is preserved, so this is not a substitute for
+   * `'jsonl'` mode when the content must be parsed structurally — it only reduces
+   * the control-byte surface. Defaults to `false` (verbatim passthrough).
+   */
+  readonly sanitizeRaw?: boolean;
 }
 
 /**
@@ -56,6 +105,8 @@ export class KeyedJsonlWriter {
   private readonly runOutputBaseDirectory: string;
   private readonly maxOpen: number;
   private readonly lineFormat: 'jsonl' | 'raw';
+  private readonly sanitizeRaw: boolean;
+  private readonly durability: JsonlDurabilityLevel;
   private baseDirEnsured = false;
   private readonly tailByCompound = new Map<string, Promise<void>>();
   private readonly openByCompound = new Map<string, OpenEntry>();
@@ -67,10 +118,18 @@ export class KeyedJsonlWriter {
     this.runOutputBaseDirectory = options.runOutputBaseDirectory;
     this.maxOpen = options.maxOpenFiles ?? DEFAULT_MAX_OPEN_FILES;
     this.lineFormat = options.lineFormat ?? 'jsonl';
+    this.sanitizeRaw = options.sanitizeRaw ?? false;
+    this.durability = options.durability ?? 'sync';
   }
 
   /**
    * @description Append one line (`jsonl`) or raw UTF-8 (`raw`). Queues on the per-key chain.
+   *
+   * Raw mode is an untrusted-passthrough: the string is written verbatim (or with
+   * control bytes stripped when `sanitizeRaw` is enabled) with no escaping, so
+   * attacker-influenced content can forge or split lines in the `.log` file. Use
+   * `lineFormat: 'jsonl'` for any content that is consumed structurally — see
+   * {@link KeyedJsonlWriterOptions.lineFormat}.
    */
   appendRunChunk(
     queueName: string,
@@ -124,7 +183,7 @@ export class KeyedJsonlWriter {
         return;
       }
 
-      await flushFileHandle(entry.fd);
+      await flushFileHandle(entry.fd, this.durability);
     });
   }
 
@@ -150,7 +209,7 @@ export class KeyedJsonlWriter {
           const entry = this.openByCompound.get(k);
 
           if (entry !== undefined) {
-            await flushFileHandle(entry.fd);
+            await flushFileHandle(entry.fd, this.durability);
           }
         }),
       ),
@@ -325,8 +384,9 @@ export class KeyedJsonlWriter {
     text: string,
   ): Promise<void> {
     const entry = await this.openForCompound(compound, queueName, jobId);
+    const payload = this.sanitizeRaw ? stripRawControlBytes(text) : text;
 
-    await appendUtf8ToFileHandle(entry.fd, text);
+    await appendUtf8ToFileHandle(entry.fd, payload);
     this.lruTouch(compound);
   }
 
@@ -340,7 +400,7 @@ export class KeyedJsonlWriter {
     this.openByCompound.delete(compound);
 
     try {
-      await flushFileHandle(entry.fd);
+      await flushFileHandle(entry.fd, this.durability);
     } finally {
       await entry.fd.close();
     }
