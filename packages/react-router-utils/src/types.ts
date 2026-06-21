@@ -22,6 +22,16 @@ export type OpenThrottlePublicEnv = {
   API_URL_EXTERNAL: string;
 
   // This application
+  /**
+   * Application-level environment label.
+   *
+   * NOTE: `NODE_ENV` is the authoritative source for runtime-tier decisions —
+   * the derived flags `IS_DEVELOPMENT` / `IS_STAGING` / `IS_PRODUCTION` (see
+   * `config/environment.ts`) are computed from `NODE_ENV`, not `APP_ENV`.
+   * `APP_ENV` exists only as a human-facing display/diagnostics label (e.g.
+   * the settings env panel) and should mirror `NODE_ENV`; do not branch runtime
+   * behavior on it. The two carry the same union to stay in sync.
+   */
   APP_ENV: 'development' | 'production' | 'staging' | 'test';
   APP_NAME: string;
   APP_NAME_SHORT: string;
@@ -39,6 +49,11 @@ export type OpenThrottlePublicEnv = {
   // Environment
   /** Feature flag (string-encoded boolean; see config/features.ts). */
   FEATURE_BETA_PREVIEW?: string;
+  /**
+   * Authoritative runtime environment tier. The `IS_DEVELOPMENT` /
+   * `IS_STAGING` / `IS_PRODUCTION` flags in `config/environment.ts` derive from
+   * this value (not from {@link OpenThrottlePublicEnv.APP_ENV}).
+   */
   NODE_ENV: 'development' | 'production' | 'staging' | 'test';
   ROLLBAR_TOKEN: string;
 };

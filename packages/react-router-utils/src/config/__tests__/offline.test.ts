@@ -17,11 +17,19 @@ describe('getOfflineModeTemplate', () => {
     expect(html).toContain('🔌 Offline mode');
   });
 
-  test('interpolates the title raw, without HTML escaping', () => {
+  test('HTML-escapes markup in the site title', () => {
     const html = getOfflineModeTemplate('<script>alert(1)</script>');
 
-    // Documents current behavior: the title is interpolated verbatim, so any
-    // markup in siteTitle lands in the output unescaped.
-    expect(html).toContain('<title><script>alert(1)</script></title>');
+    // The title is escaped so injected markup cannot break out of <title>.
+    expect(html).toContain(
+      '<title>&lt;script&gt;alert(1)&lt;/script&gt;</title>',
+    );
+    expect(html).not.toContain('<title><script>');
+  });
+
+  test('escapes ampersands and quotes', () => {
+    const html = getOfflineModeTemplate(`A&B "C" 'D'`);
+
+    expect(html).toContain('<title>A&amp;B &quot;C&quot; &#39;D&#39;</title>');
   });
 });

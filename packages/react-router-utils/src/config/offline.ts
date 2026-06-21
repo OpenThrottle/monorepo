@@ -1,10 +1,24 @@
+/**
+ * @description Escapes the HTML-significant characters so an arbitrary
+ * `siteTitle` cannot break out of the `<title>` element or inject markup. The
+ * value only ever lands inside element content, so escaping `& < > " '` is
+ * sufficient.
+ */
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 export const getOfflineModeTemplate = (
   siteTitle: string,
 ) => `<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${siteTitle}</title>
+  <title>${escapeHtml(siteTitle)}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" type="text/css"/>
 </head>
 <body style="font-family: Inter; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
