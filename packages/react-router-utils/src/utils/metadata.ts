@@ -5,14 +5,24 @@ import type {
   MetaFunction,
 } from 'react-router';
 
-// FIXME: WIP - react-router/route-module is not a thing anymore
-type CreateMetaArgs<T = any> = T;
-type MetaDescriptors<T = any> = T;
+/**
+ * Route-module meta arg shape relied on by {@link mergeRouteModuleMeta}.
+ *
+ * React Router v7 no longer ships the old `react-router/route-module` entry
+ * (its `CreateMetaArgs`/`MetaDescriptors` helpers now live in the non-public
+ * `react-router/internal` module and are not re-exported). Rather than fall
+ * back to `any`, we model the only field the merge helper actually touches:
+ * the array of route matches, each carrying its own `meta` descriptors. The
+ * generated `Route.MetaArgs` type is structurally assignable to this, so
+ * `export const meta: Route.MetaFunction = mergeRouteModuleMeta(...)` keeps
+ * full type safety at the call site.
+ */
+interface RouteModuleMetaArgs {
+  matches: ReadonlyArray<{ meta?: MetaDescriptor[] } | undefined>;
+}
 
-// import type {
-//   CreateMetaArgs,
-//   MetaDescriptors,
-// } from 'react-router/route-module';
+/** Return type of a route-module meta function. */
+type MetaDescriptors = MetaDescriptor[];
 
 /**
  * Merging helper
@@ -98,14 +108,13 @@ export function mergeMeta<
  * ```
  * The resulting meta will contain both `title: 'My Leaf Route'` and `description: 'This is the parent route'`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mergeRouteModuleMeta<TMetaArgs extends CreateMetaArgs<any>>(
+export function mergeRouteModuleMeta<TMetaArgs extends RouteModuleMetaArgs>(
   leafMetaFn: (args: TMetaArgs) => MetaDescriptors,
 ): (args: TMetaArgs) => MetaDescriptors {
-  return (args: any) => {
+  return (args) => {
     const leafMeta = leafMetaFn(args);
 
-    return args.matches.reduceRight((acc: any, match: any) => {
+    return args.matches.reduceRight<MetaDescriptors>((acc, match) => {
       for (const parentMeta of match?.meta ?? []) {
         addUniqueMeta(acc, parentMeta);
       }
