@@ -63,5 +63,5 @@ The module registers the `jwt` strategy with Passport. The validated user is att
 - `JwtAuthGuard` — Guard for JWT-protected routes
 - `JwtStrategy` — Passport JWT strategy
 - `CurrentUser` — Param decorator to get the authenticated user
-- `Public` — Decorator to skip JWT for specific routes
+- `Public` — Decorator to skip JWT for specific routes. Honored by `JwtAuthGuard` (and any guard that checks `IS_PUBLIC_KEY` via `Reflector`); a route or controller marked `@Public()` short-circuits and skips authentication.
 - `JwtPayload` — Payload shape; extend via module augmentation
