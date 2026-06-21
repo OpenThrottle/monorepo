@@ -1,7 +1,7 @@
 /**
  * @description GraphQL client our react-router applications. Used in route
  * loaders/actions with typed documents create using GraphQL Codegens.
- * Requires "API_URL" in env (e.g. http://localhost:6021).
+ * Requires "API_URL_INTERNAL" in env (e.g. http://localhost:6021).
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
@@ -198,6 +198,21 @@ export async function executeGraphqlWithAuth<
   }
 }
 
+/**
+ * @description Re-export of the unauthenticated v1 primitive from
+ * `@openthrottle/nodejs-graphql`. This is the sanctioned import surface per the
+ * repo "no deep package imports" convention — consumers must not reach into
+ * `@openthrottle/nodejs-graphql` directly. Intentionally exposed for the few
+ * call sites that genuinely need an unauthenticated request; auth-aware loaders
+ * should prefer {@link executeGraphqlWithAuth} instead.
+ *
+ * Transport note: a single `fetch` attempt is made with no retry. This is a
+ * deliberate decision for SSR loaders/actions — a transient transport failure
+ * surfaces immediately and the user retries by reloading, rather than the
+ * loader silently stalling through retry/backoff during the SSR request.
+ *
+ * @publicApi
+ */
 export { executeGraphql };
 
 export * from './hooks/createGraphqlWsClient';

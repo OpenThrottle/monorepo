@@ -1,7 +1,7 @@
 /**
  * @description GraphQL client our react-router applications. Used in route
  * loaders/actions with typed documents create using GraphQL Codegens.
- * Requires "API_URL" in env (e.g. http://localhost:6021).
+ * Requires "API_URL_INTERNAL" in env (e.g. http://localhost:6021).
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
