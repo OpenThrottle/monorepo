@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import {
   Inject,
   Injectable,
+  Logger,
   Optional,
   type OnModuleDestroy,
   type OnModuleInit,
@@ -39,11 +40,15 @@ import { serializeStructuredLogLine } from './jsonl-payload';
 export class FileLogJsonlSink
   implements LogJsonlSink, OnModuleInit, OnModuleDestroy
 {
+  private static readonly FAILURE_REPORT_INTERVAL_MS = 30_000;
   private activeRelativeName: string | undefined;
   private bytesOnFile = 0;
   private fd: FileHandle | undefined;
   private flushTimer: ReturnType<typeof setInterval> | undefined;
+  private readonly logger = new Logger(FileLogJsonlSink.name);
+  private suppressedFailureCount = 0;
   private tail: Promise<void> = Promise.resolve();
+  private lastFailureReportAt = 0;
 
   constructor(
     @Inject(NESTJS_LOGGING_MODULE_OPTIONS)
@@ -59,8 +64,10 @@ export class FileLogJsonlSink
   async onModuleInit(): Promise<void> {
     await mkdir(this.options.logDirectory, { recursive: true });
     this.flushTimer = setInterval(() => {
-      void this.flush().catch(() => {
-        // Background flush must not surface as unhandled rejection.
+      void this.flush().catch((error: unknown) => {
+        // Background flush must not surface as unhandled rejection, but a
+        // persistently failing disk should still reach an operator.
+        this.reportSinkFailure('periodic flush', error);
       });
     }, this.options.flushIntervalMs);
   }
@@ -86,8 +93,10 @@ export class FileLogJsonlSink
 
     this.tail = this.tail
       .then(() => this.appendInternal(record))
-      .catch(() => {
-        // Keep the chain alive; losing one line is preferable to stalling the app.
+      .catch((error: unknown) => {
+        // Keep the chain alive; losing one line is preferable to stalling the
+        // app, but surface repeated failures so a broken sink is noticed.
+        this.reportSinkFailure('append', error);
       });
   }
 
@@ -97,8 +106,38 @@ export class FileLogJsonlSink
         return;
       }
 
-      await flushFileHandle(this.fd);
+      await flushFileHandle(this.fd, this.options.durability);
     });
+  }
+
+  /**
+   * @description Throttled diagnostic for swallowed sink failures: the empty catch blocks keep the
+   * app alive, but a persistently failing disk (ENOSPC, EACCES, …) would otherwise drop logs with
+   * zero signal. Emits at most one Nest `Logger.error` per {@link FileLogJsonlSink.FAILURE_REPORT_INTERVAL_MS}
+   * window and reports how many failures were suppressed since the last report.
+   */
+  private reportSinkFailure(operation: string, error: unknown): void {
+    this.suppressedFailureCount += 1;
+
+    const now = Date.now();
+
+    if (
+      now - this.lastFailureReportAt <
+      FileLogJsonlSink.FAILURE_REPORT_INTERVAL_MS
+    ) {
+      return;
+    }
+
+    const suppressed = this.suppressedFailureCount;
+
+    this.lastFailureReportAt = now;
+    this.suppressedFailureCount = 0;
+
+    const message = error instanceof Error ? error.message : String(error);
+
+    this.logger.error(
+      `JSONL log sink ${operation} failed (${suppressed} failure(s) in the last ${FileLogJsonlSink.FAILURE_REPORT_INTERVAL_MS}ms; logs may be lost): ${message}`,
+    );
   }
 
   private async appendInternal(record: StructuredLogRecord): Promise<void> {

@@ -9,6 +9,7 @@ export {
   type CorrelationIdExtractor,
   DEFAULT_MAX_PENDING_WS_RECORDS,
   DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+  type JsonlDurabilityLevel,
   type JsonlRotationPolicy,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type NestjsLoggingModuleAsyncOptions,

@@ -1,5 +1,6 @@
 import { mkdir, open, type FileHandle } from 'node:fs/promises';
 import * as path from 'node:path';
+import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
 import {
   appendUtf8ToFileHandle,
   flushFileHandle,
@@ -32,6 +33,12 @@ const stripRawControlBytes = (text: string): string =>
 const DEFAULT_MAX_OPEN_FILES = 64;
 
 export interface KeyedJsonlWriterOptions {
+  /**
+   * @description Durability level applied on each `flush`/`close` (see {@link JsonlDurabilityLevel}).
+   * Defaults to `'sync'` (full `fsync`) to preserve historical behavior; `'datasync'` or `'none'`
+   * reduce per-flush I/O cost on hot files at the expense of metadata/data durability.
+   */
+  readonly durability?: JsonlDurabilityLevel;
   /**
    * @description Per-key file write mode.
    *
@@ -99,6 +106,7 @@ export class KeyedJsonlWriter {
   private readonly maxOpen: number;
   private readonly lineFormat: 'jsonl' | 'raw';
   private readonly sanitizeRaw: boolean;
+  private readonly durability: JsonlDurabilityLevel;
   private baseDirEnsured = false;
   private readonly tailByCompound = new Map<string, Promise<void>>();
   private readonly openByCompound = new Map<string, OpenEntry>();
@@ -111,6 +119,7 @@ export class KeyedJsonlWriter {
     this.maxOpen = options.maxOpenFiles ?? DEFAULT_MAX_OPEN_FILES;
     this.lineFormat = options.lineFormat ?? 'jsonl';
     this.sanitizeRaw = options.sanitizeRaw ?? false;
+    this.durability = options.durability ?? 'sync';
   }
 
   /**
@@ -174,7 +183,7 @@ export class KeyedJsonlWriter {
         return;
       }
 
-      await flushFileHandle(entry.fd);
+      await flushFileHandle(entry.fd, this.durability);
     });
   }
 
@@ -200,7 +209,7 @@ export class KeyedJsonlWriter {
           const entry = this.openByCompound.get(k);
 
           if (entry !== undefined) {
-            await flushFileHandle(entry.fd);
+            await flushFileHandle(entry.fd, this.durability);
           }
         }),
       ),
@@ -391,7 +400,7 @@ export class KeyedJsonlWriter {
     this.openByCompound.delete(compound);
 
     try {
-      await flushFileHandle(entry.fd);
+      await flushFileHandle(entry.fd, this.durability);
     } finally {
       await entry.fd.close();
     }

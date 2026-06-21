@@ -76,6 +76,19 @@ export interface NestjsLoggingWebsocketOptions {
 }
 
 /**
+ * @description Durability level applied on each periodic flush of the JSONL sink.
+ *
+ * - `'none'`: skip the fsync entirely (rely on the OS page cache). Cheapest, weakest durability.
+ * - `'datasync'`: `fdatasync` — flush file data without all inode metadata; cheaper than a full
+ *   fsync on a hot log file under high write throughput.
+ * - `'sync'`: `fsync` — flush data and metadata. Most durable but the most expensive per interval.
+ *
+ * Defaults to `'sync'` to preserve historical behavior. High-throughput services that find the
+ * per-interval fsync costly should consider `'datasync'`.
+ */
+export type JsonlDurabilityLevel = 'datasync' | 'none' | 'sync';
+
+/**
  * @description File rotation strategy for JSONL sinks.
  */
 export type JsonlRotationPolicy =
@@ -95,6 +108,10 @@ export interface NestjsLoggingModuleOptions {
    * @description Optional extractor for correlation id (e.g. `x-request-id` header via `ctx.switchToHttp().getRequest()`).
    */
   readonly correlationIdExtractor?: CorrelationIdExtractor;
+  /**
+   * @description Durability level applied on each periodic flush (see {@link JsonlDurabilityLevel}). Defaults to `'sync'`.
+   */
+  readonly durability?: JsonlDurabilityLevel | undefined;
   /**
    * @description Base file name without extension; files are `{basename}.jsonl` unless {@link NestjsLoggingModuleOptions.fileNamePattern} is set.
    */
@@ -173,6 +190,7 @@ export interface NestjsLoggingModuleAsyncOptions {
   readonly websocketGatewayNamespace?: string | undefined;
 }
 
+const DEFAULT_DURABILITY: JsonlDurabilityLevel = 'sync';
 const DEFAULT_FILE_BASENAME = 'application';
 const DEFAULT_FLUSH_MS = 1_000;
 const DEFAULT_MAX_REPLAY_LINES = 10_000;
@@ -189,6 +207,7 @@ export const applyNestjsLoggingModuleDefaults = (
   Required<
     Pick<
       NestjsLoggingModuleOptions,
+      | 'durability'
       | 'fileBasename'
       | 'flushIntervalMs'
       | 'levels'
@@ -208,6 +227,7 @@ export const applyNestjsLoggingModuleDefaults = (
 
   return {
     ...options,
+    durability: options.durability ?? DEFAULT_DURABILITY,
     fileBasename: options.fileBasename ?? DEFAULT_FILE_BASENAME,
     flushIntervalMs: options.flushIntervalMs ?? DEFAULT_FLUSH_MS,
     levels: options.levels ?? ALL_NESTJS_LOGGING_LEVELS,
@@ -286,6 +306,19 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
   ) {
     throw new NestjsLoggingError(
       'flushIntervalMs, when provided, must be a positive integer (milliseconds).',
+    );
+  }
+
+  const durability = opts.durability;
+
+  if (
+    durability !== undefined &&
+    durability !== 'none' &&
+    durability !== 'datasync' &&
+    durability !== 'sync'
+  ) {
+    throw new NestjsLoggingError(
+      `durability, when provided, must be "none", "datasync", or "sync". Got: ${String(durability)}.`,
     );
   }
 

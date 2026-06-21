@@ -1,4 +1,5 @@
 import type { FileHandle } from 'node:fs/promises';
+import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
 
 /**
  * @description Append UTF-8 text to an open append-mode {@link FileHandle}.
@@ -13,8 +14,29 @@ export async function appendUtf8ToFileHandle(
 }
 
 /**
- * @description `fsync` the handle so prior writes are durable on disk.
+ * @description Flush the handle to the requested {@link JsonlDurabilityLevel}.
+ *
+ * - `'none'`: no fsync; rely on the OS page cache to write back. Cheapest, least durable.
+ * - `'datasync'`: `fdatasync` — flushes file data (and metadata required to read it back) but not
+ *   all inode metadata (e.g. mtime). Cheaper than a full fsync under high write throughput.
+ * - `'sync'`: `fsync` — flushes data and all metadata. Most durable, most expensive.
+ *
+ * On a hot log file flushed every interval, a full `fsync` can add measurable I/O stalls; prefer
+ * `'datasync'` (or `'none'`) when interval durability of inode metadata is not required.
  */
-export async function flushFileHandle(fd: FileHandle): Promise<void> {
+export async function flushFileHandle(
+  fd: FileHandle,
+  durability: JsonlDurabilityLevel,
+): Promise<void> {
+  if (durability === 'none') {
+    return;
+  }
+
+  if (durability === 'datasync') {
+    await fd.datasync();
+
+    return;
+  }
+
   await fd.sync();
 }
