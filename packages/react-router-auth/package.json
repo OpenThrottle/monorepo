@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/react-router-auth",
-  "description": "HTTP-only auth cookie helpers for React Router apps: Set-Cookie builders, JWT parsing from Cookie headers, and session clear.",
+  "description": "HTTP-only auth cookie helpers for React Router apps: Set-Cookie builders, reading the auth token from a Cookie header, and a session-clear header.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
