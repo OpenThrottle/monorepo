@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-throttler",
-  "description": "NestJS API rate limiting via @nestjs/throttler: ThrottlerModule defaults, LoggerModule, and injectable NestjsThrottlerService.",
+  "description": "NestJS API rate limiting via @nestjs/throttler: NestjsThrottlerModule configures ThrottlerModule defaults (10 requests / 60s), imports LoggerModule, and binds ThrottlerGuard as a global APP_GUARD.",
   "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
