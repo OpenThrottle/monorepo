@@ -5,6 +5,8 @@
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
+  DEFAULT_GRAPHQL_TIMEOUT_MS,
+  GRAPHQL_TIMEOUT_ERROR_PREFIX,
   executeGraphql,
   executeGraphqlWithAuth as executeGraphqlWithAuthNodeJS,
 } from '@openthrottle/nodejs-graphql';
@@ -52,6 +54,48 @@ export function isAuthError(error: unknown): error is GraphqlAuthError {
 }
 
 /**
+ * @description Typed error thrown by {@link executeGraphqlWithAuth} when the
+ * underlying request exceeds its timeout (`AbortSignal.timeout`). Distinguished
+ * from generic network failures so loaders/actions can render a "request timed
+ * out" state (e.g. 504) instead of treating an unbounded stall as a normal
+ * error. Without this, a hung openthrottle-server connection would hold the SSR
+ * request open with no upper bound.
+ *
+ * @publicApi
+ */
+export class GraphqlTimeoutError extends Error {
+  /** @description The timeout (milliseconds) that elapsed before aborting. */
+  readonly timeoutMs: number;
+
+  constructor(message: string, timeoutMs: number, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'GraphqlTimeoutError';
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+/**
+ * @description Type guard that reports whether a thrown error is a request
+ * timeout raised by {@link executeGraphqlWithAuth}. Use in loaders/actions to
+ * render a distinct timeout state rather than a generic error.
+ *
+ * @publicApi
+ */
+export function isTimeoutError(error: unknown): error is GraphqlTimeoutError {
+  return error instanceof GraphqlTimeoutError;
+}
+
+/**
+ * @description Default per-request timeout (milliseconds) applied by
+ * {@link executeGraphqlWithAuth} when a caller does not pass `timeoutMs`.
+ * Mirrors `@openthrottle/nodejs-graphql`'s default so the loader-facing API
+ * has a single sane bound (15s).
+ *
+ * @publicApi
+ */
+export const DEFAULT_LOADER_TIMEOUT_MS = DEFAULT_GRAPHQL_TIMEOUT_MS;
+
+/**
  * @description Extract the HTTP status from a {@link executeGraphql} error
  * message of the form `openthrottle-server GraphQL error <status>: <msg>`
  * (see `@openthrottle/nodejs-graphql`). Returns `undefined` for any other
@@ -70,13 +114,19 @@ function extractHttpStatus(message: string): number | undefined {
 }
 
 /**
- * @description Inspect a thrown error and, when it carries an auth-related HTTP
- * status (401/403), return a {@link GraphqlAuthError}; otherwise return the
- * original error unchanged so callers see the same failure they always have.
+ * @description Inspect a thrown error and classify it into a typed failure when
+ * recognizable: a {@link GraphqlTimeoutError} for the timeout marker raised by
+ * `@openthrottle/nodejs-graphql`, or a {@link GraphqlAuthError} for an
+ * auth-related HTTP status (401/403). Any other error is returned unchanged so
+ * callers see the same failure they always have.
  */
-function toAuthErrorOrSelf(error: unknown): unknown {
+function classifyError(error: unknown, timeoutMs: number): unknown {
   if (!(error instanceof Error)) {
     return error;
+  }
+
+  if (error.message.startsWith(GRAPHQL_TIMEOUT_ERROR_PREFIX)) {
+    return new GraphqlTimeoutError(error.message, timeoutMs, { cause: error });
   }
 
   const httpStatus = extractHttpStatus(error.message);
@@ -89,10 +139,32 @@ function toAuthErrorOrSelf(error: unknown): unknown {
 }
 
 /**
+ * @description Options for {@link executeGraphqlWithAuth}.
+ *
+ * @publicApi
+ */
+export interface ExecuteGraphqlWithAuthOptions {
+  /**
+   * @description Upper bound (milliseconds) on the underlying request, enforced
+   * via `AbortSignal.timeout` so a stalled openthrottle-server connection cannot
+   * hold an SSR loader/action open indefinitely. Defaults to
+   * {@link DEFAULT_LOADER_TIMEOUT_MS} (15s). Pass `0` or a negative value to
+   * disable the timeout. On timeout the call rejects with a
+   * {@link GraphqlTimeoutError} (check via {@link isTimeoutError}).
+   */
+  readonly timeoutMs?: number | undefined;
+}
+
+/**
  * @description Runs executeGraphql with Authorization: Bearer <token> when
  * the request has an auth cookie. Use in loaders/actions that have access to the request.
  *
- * On an auth-related failure (HTTP 401/403) the rejection is a
+ * The underlying request is bounded by a timeout (default
+ * {@link DEFAULT_LOADER_TIMEOUT_MS}, configurable via `options.timeoutMs`) so a
+ * stalled connection cannot hang the loader indefinitely.
+ *
+ * On a timeout the rejection is a {@link GraphqlTimeoutError} (check via
+ * {@link isTimeoutError}); on an auth-related failure (HTTP 401/403) it is a
  * {@link GraphqlAuthError} (with `httpStatus`) so callers can `instanceof`-check
  * it and redirect to login; all other failures reject with the original error.
  */
@@ -103,22 +175,26 @@ export async function executeGraphqlWithAuth<
   request: Request,
   document: TypedDocumentNode<TData, TVariables>,
   variables?: TVariables,
+  options?: ExecuteGraphqlWithAuthOptions,
 ): Promise<TData> {
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_LOADER_TIMEOUT_MS;
 
   if (!token) {
     try {
-      return await executeGraphql(document, variables);
+      return await executeGraphql(document, variables, { timeoutMs });
     } catch (error) {
-      throw toAuthErrorOrSelf(error);
+      throw classifyError(error, timeoutMs);
     }
   }
 
   try {
-    return await executeGraphqlWithAuthNodeJS(token, document, variables);
+    return await executeGraphqlWithAuthNodeJS(token, document, variables, {
+      timeoutMs,
+    });
   } catch (error) {
-    throw toAuthErrorOrSelf(error);
+    throw classifyError(error, timeoutMs);
   }
 }
 
