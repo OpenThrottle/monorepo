@@ -51,10 +51,22 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
       );
     }
 
+    const audience =
+      options?.jwtAudience ?? configService.get<string>('JWT_AUDIENCE');
+
     super({
       algorithms: ['HS256'],
+      // Opt-in audience binding: when set, tokens are rejected unless their
+      // `aud` claim matches, so a token minted for one service is not accepted
+      // by another sharing the secret. Omitting it skips the check (back-compat).
+      ...(audience ? { audience } : {}),
       ignoreExpiration: false,
+
       issuer: options?.jwtIssuer ?? configService.get<string>('JWT_ISSUER'),
+      // Reject expired tokens with zero grace period beyond `exp`. jsonwebtoken
+      // defaults clockTolerance to 0; we set it explicitly to document that no
+      // clock skew is tolerated.
+      jsonWebTokenOptions: { clockTolerance: 0 },
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: secret,
     });

@@ -57,4 +57,35 @@ describe('JwtStrategy', () => {
       ).not.toThrow();
     });
   });
+
+  describe('audience binding (opt-in)', () => {
+    it('constructs without an audience when none is configured', () => {
+      expect(
+        () =>
+          new JwtStrategy(createConfigService({ JWT_SECRET: STRONG_SECRET })),
+      ).not.toThrow();
+    });
+
+    it('constructs with an audience supplied via options', () => {
+      const options: NestjsAuthOptions = {
+        jwtAudience: 'openthrottle-server',
+        jwtSecret: STRONG_SECRET,
+      };
+      expect(
+        () => new JwtStrategy(createConfigService({}), options),
+      ).not.toThrow();
+    });
+
+    it('constructs with an audience supplied via env JWT_AUDIENCE', () => {
+      expect(
+        () =>
+          new JwtStrategy(
+            createConfigService({
+              JWT_AUDIENCE: 'openthrottle-server',
+              JWT_SECRET: STRONG_SECRET,
+            }),
+          ),
+      ).not.toThrow();
+    });
+  });
 });
