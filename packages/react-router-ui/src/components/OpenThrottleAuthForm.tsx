@@ -57,17 +57,15 @@ export const OpenThrottleAuthForm = (
   // Handlers
   const handleSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-
       if (onSubmit) {
+        // Client-side handling: prevent the native POST and hand off the payload.
+        e.preventDefault();
         onSubmit({ email, password });
         return;
       }
-      // Let the form submit natively to action (e.g. root route action)
 
-      // FIXME: Tighten this up
-
-      (e.target as HTMLFormElement).submit();
+      // No onSubmit handler: let the native POST to `action` proceed so React
+      // Router's form action (or the browser) handles the submission.
     },
 
     // 🪝 (re)create our submit handler when our state changes
