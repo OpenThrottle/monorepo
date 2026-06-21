@@ -5,8 +5,16 @@
  */
 import type { PubSubEngine } from 'graphql-subscriptions';
 
-/** Injection token for the process-wide {@link PubSubEngine} instance. */
+/**
+ * Injection token for the process-wide {@link PubSubEngine} instance.
+ *
+ * @publicApi
+ */
 export const PUB_SUB = Symbol('PUB_SUB');
 
-/** Re-exported for resolver typings: the engine API both backends implement. */
+/**
+ * Re-exported for resolver typings: the engine API both backends implement.
+ *
+ * @publicApi
+ */
 export type { PubSubEngine };
