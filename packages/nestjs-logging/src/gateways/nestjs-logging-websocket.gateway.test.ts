@@ -759,6 +759,188 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     });
   });
 
+  it('masks secrets in message and extra on the live log.record emit path', async () => {
+    let hubListener: ((record: StructuredLogRecord) => void) | undefined;
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn((listener) => {
+        hubListener = listener;
+
+        return () => undefined;
+      }),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client, emit } = createMockSocket();
+
+    gateway.handleConnection(client);
+    gateway.onLogsSubscribe(client, {});
+
+    if (hubListener === undefined) {
+      throw new Error('expected hub listener');
+    }
+
+    hubListener({
+      context: 'Auth',
+      correlationId: undefined,
+      extra: { authorization: 'Bearer abc.def', userId: 7 },
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'login with Bearer abc.def',
+      timestampIso: '2026-05-02T18:00:00.000Z',
+      traceId: undefined,
+    });
+
+    await Promise.resolve();
+
+    const recordCalls = emit.mock.calls.filter(
+      (call) => call[0] === 'log.record',
+    );
+
+    expect(recordCalls).toHaveLength(1);
+    expect(recordCalls[0]?.[1]).toEqual({
+      record: {
+        context: 'Auth',
+        extra: { authorization: '[REDACTED]', userId: 7 },
+        level: 'log',
+        message: 'login with [REDACTED]',
+        timestamp: '2026-05-02T18:00:00.000Z',
+      },
+    });
+  });
+
+  it('masks secrets in message and extra on the logs.history emit path', async () => {
+    const tailLines: StructuredLogRecord[] = [
+      {
+        context: 'Auth',
+        correlationId: undefined,
+        extra: { password: 'hunter2' },
+        level: NESTJS_LOGGING_LEVELS.log,
+        message: 'auth via Authorization: Bearer abc.def',
+        timestampIso: '2026-05-02T15:30:00.000Z',
+        traceId: undefined,
+      },
+    ];
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => tailLines),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      maxReplayLines: 50,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+
+    const ok = await gateway.onLogsHistory({ maxLines: 10 });
+
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) {
+      throw new Error('expected history ok');
+    }
+
+    expect(ok.lines[0]).toMatchObject({
+      extra: { password: '[REDACTED]' },
+      message: 'auth via Authorization: [REDACTED]',
+    });
+  });
+
+  it('masks secrets in message and extra on the logs.replay emit path', async () => {
+    const records: StructuredLogRecord[] = [
+      {
+        context: 'Auth',
+        correlationId: undefined,
+        extra: { accessToken: 'abc' },
+        level: NESTJS_LOGGING_LEVELS.warn,
+        message: 'issued Authorization: Bearer abc.def',
+        timestampIso: '2026-05-02T16:00:00.000Z',
+        traceId: undefined,
+      },
+    ];
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 42,
+        records,
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      maxReplayLines: 50,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+
+    const ok = await gateway.onLogsReplay({ fromByteOffset: 0, maxLines: 10 });
+
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) {
+      throw new Error('expected replay ok');
+    }
+
+    expect(ok.lines[0]).toMatchObject({
+      extra: { accessToken: '[REDACTED]' },
+      message: 'issued Authorization: [REDACTED]',
+    });
+  });
+
+  it('masks secrets in message and extra on the logs.tail emit path', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => [
+        {
+          context: 'Auth',
+          correlationId: undefined,
+          extra: { apiKey: 'xyz' },
+          level: NESTJS_LOGGING_LEVELS.log,
+          message: 'using Authorization: Bearer abc.def',
+          timestampIso: '2026-05-02T17:00:00.000Z',
+          traceId: undefined,
+        },
+      ]),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      fileBasename: 'application',
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client } = createMockSocket();
+
+    gateway.handleConnection(client);
+
+    const ok = await gateway.onLogsTail(client, { follow: false, maxLines: 5 });
+
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) {
+      throw new Error('expected tail ok');
+    }
+
+    expect(ok.lines[0]).toMatchObject({
+      extra: { apiKey: '[REDACTED]' },
+      message: 'using Authorization: [REDACTED]',
+    });
+  });
+
   it('emits backpressure notice when pending records exceed the per-socket cap', async () => {
     const hubUnsubscribe = vi.fn();
     const hubSubscribe = vi.fn(() => hubUnsubscribe);
