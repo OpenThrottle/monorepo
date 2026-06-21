@@ -1,5 +1,6 @@
 export * from './auth-principal';
 export * from './config/nestjs-auth.options';
+export * from './config/nestjs-auth.tokens';
 export * from './decorators/current-user.decorator';
 export * from './decorators/public.decorator';
 export * from './guards/jwt-auth.guard';
