@@ -1,4 +1,8 @@
-import type { BaseContext } from '@apollo/server';
+import type { ApolloServerPlugin, BaseContext } from '@apollo/server';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { DynamicModule, Module } from '@nestjs/common';
@@ -27,6 +31,20 @@ import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth';
  * set maxDepth to 0 (or a negative value) to disable depth limiting entirely.
  */
 const DEFAULT_MAX_DEPTH = 12;
+
+/**
+ * Choose the Apollo landing page explicitly instead of relying on implicit
+ * NODE_ENV behavior. In Apollo Server 4/5 the legacy `playground` flag is a
+ * dead no-op; the served landing page is otherwise picked by NODE_ENV. We pin
+ * it here so it is intentional and auditable: the embedded Apollo Sandbox
+ * (with introspection) in non-production, and the minimal production landing
+ * page (no embedded explorer) in production.
+ */
+function createLandingPagePlugin(): ApolloServerPlugin<BaseContext> {
+  return process.env.NODE_ENV === 'production'
+    ? ApolloServerPluginLandingPageProductionDefault()
+    : ApolloServerPluginLandingPageLocalDefault();
+}
 
 /** Opt-in cache configuration for NestjsGraphqlModule.forRoot(). */
 export interface NestjsGraphqlCacheOptions {
@@ -76,7 +94,14 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
   introspection:
     process.env.GRAPHQL_INTROSPECTION === 'true' ||
     process.env.NODE_ENV !== 'production',
-  playground: true,
+
+  /**
+   * Pin the landing page explicitly. The legacy `playground` flag does nothing
+   * in Apollo Server 4/5, so relying on it gave a false sense the editor was
+   * controlled. Sandbox locally, minimal production page in prod. Always merged
+   * ahead of caller plugins so a forRoot caller can still override it.
+   */
+  plugins: [createLandingPagePlugin()],
 
   /**
    * graphql-ws subscription transport, served on the same HTTP server as the
@@ -174,15 +199,20 @@ function buildDriverConfig(
 
   base.validationRules = buildValidationRules(maxDepth, userRules);
 
+  // Always keep the default plugins (e.g. the landing-page plugin) ahead of
+  // any cache or caller-supplied plugins so behavior stays intentional unless
+  // a caller deliberately overrides it later in the list.
+  const defaultPlugins = DEFAULT_DRIVER_CONFIG.plugins ?? [];
+
   if (!cacheOpts) {
-    base.plugins = userPlugins;
+    base.plugins = [...defaultPlugins, ...(userPlugins ?? [])];
 
     return base;
   }
 
   const plugins = buildCachePlugins(cacheOpts);
 
-  base.plugins = [...plugins, ...(userPlugins ?? [])];
+  base.plugins = [...defaultPlugins, ...plugins, ...(userPlugins ?? [])];
 
   return base;
 }
