@@ -9,13 +9,23 @@ import {
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getRedisCache } from '@openthrottle/nestjs-redis';
+import type { ValidationRule } from 'graphql';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
   type ApolloServerPluginCacheControlOptions,
   type ApolloServerPluginResponseCacheOptions,
 } from '../config/nestjs-graphql.plugins';
+import { createQueryDepthLimitRule } from '../config/query-depth-limit';
 import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth';
+
+/**
+ * Default maximum query nesting depth. Deeply-nested/recursive queries can fan
+ * out into an expensive resolver storm (DoS), so we cap depth at the validation
+ * stage by default. Override per-app via NestjsGraphqlModuleOptions.maxDepth;
+ * set maxDepth to 0 (or a negative value) to disable depth limiting entirely.
+ */
+const DEFAULT_MAX_DEPTH = 12;
 
 /** Opt-in cache configuration for NestjsGraphqlModule.forRoot(). */
 export interface NestjsGraphqlCacheOptions {
@@ -32,6 +42,12 @@ export interface NestjsGraphqlModuleOptions extends Omit<
 > {
   /** Optional Apollo cache plugins (CacheControl + response-cache). Omit for no caching. */
   cachePlugins?: NestjsGraphqlCacheOptions;
+  /**
+   * Maximum allowed query nesting depth (DoS guard). Applied as a GraphQL
+   * validation rule before resolvers run. Defaults to DEFAULT_MAX_DEPTH;
+   * set to 0 or a negative number to disable depth limiting.
+   */
+  maxDepth?: number;
   /** Additional Apollo plugins (merged after cache plugins when cachePlugins is set). */
   plugins?: ApolloDriverConfig['plugins'];
 }
@@ -68,6 +84,10 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
       onConnect: createGraphqlWsOnConnect(),
     },
   },
+
+  // DoS guard: cap query nesting depth at the validation stage by default.
+  // forRoot callers can raise/lower it via maxDepth, or disable with maxDepth<=0.
+  validationRules: [createQueryDepthLimitRule(DEFAULT_MAX_DEPTH)],
 };
 
 function buildCachePlugins(
@@ -109,11 +129,38 @@ function buildCachePlugins(
   return plugins;
 }
 
+/**
+ * Build the validation-rules list: a depth-limit rule (using the caller's
+ * maxDepth, or the safe default) plus any rules the caller passed through
+ * `validationRules`. A maxDepth <= 0 disables depth limiting.
+ */
+function buildValidationRules(
+  maxDepth: number | undefined,
+  userRules: readonly ValidationRule[] | undefined,
+): ValidationRule[] {
+  const depth = maxDepth ?? DEFAULT_MAX_DEPTH;
+  const rules: ValidationRule[] = [...(userRules ?? [])];
+
+  if (depth > 0) {
+    rules.push(createQueryDepthLimitRule(depth));
+  }
+
+  return rules;
+}
+
 function buildDriverConfig(
   options: NestjsGraphqlModuleOptions,
 ): ApolloDriverConfig {
-  const { cachePlugins: cacheOpts, plugins: userPlugins, ...rest } = options;
+  const {
+    cachePlugins: cacheOpts,
+    maxDepth,
+    plugins: userPlugins,
+    validationRules: userRules,
+    ...rest
+  } = options;
   const base = { ...DEFAULT_DRIVER_CONFIG, ...rest };
+
+  base.validationRules = buildValidationRules(maxDepth, userRules);
 
   if (!cacheOpts) {
     base.plugins = userPlugins;
