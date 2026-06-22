@@ -1,6 +1,8 @@
+import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import { describe, expect, it } from 'vitest';
 import {
   classifyRootLoaderError,
+  httpStatusFromRootLoaderError,
   parseHttpStatusFromRootLoaderMessage,
   rootLoaderErrorMessage,
   rootLoaderStepLabel,
@@ -30,6 +32,32 @@ describe('classifyRootLoaderError', () => {
 
   it('classifies unknown errors', () => {
     expect(classifyRootLoaderError(new Error('weird'))).toBe('unknown');
+  });
+
+  it('classifies a typed GraphqlAuthError as transport', () => {
+    expect(
+      classifyRootLoaderError(new GraphqlAuthError('Unauthorized', 401)),
+    ).toBe('transport');
+  });
+});
+
+describe('httpStatusFromRootLoaderError', () => {
+  it('reads httpStatus from a typed GraphqlAuthError', () => {
+    expect(
+      httpStatusFromRootLoaderError(new GraphqlAuthError('Forbidden', 403)),
+    ).toBe(403);
+  });
+
+  it('falls back to message-scraping for non-auth transport errors', () => {
+    expect(
+      httpStatusFromRootLoaderError(
+        new Error('openthrottle-server GraphQL error 502: bad gateway'),
+      ),
+    ).toBe(502);
+  });
+
+  it('returns undefined when no status is available', () => {
+    expect(httpStatusFromRootLoaderError(new Error('weird'))).toBeUndefined();
   });
 });
 

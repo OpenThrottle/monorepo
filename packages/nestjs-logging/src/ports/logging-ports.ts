@@ -6,12 +6,25 @@ import type { NestjsLoggingLevel } from '../config/nestjs-logging-levels';
 export type JsonPrimitive = boolean | null | number | string;
 
 /**
- * @description JSON-serializable value (for {@link StructuredLogRecord.extra} and similar).
+ * @description JSON array of arbitrarily nested {@link JsonValue}s. An interface is used so
+ * {@link JsonValue} can reference itself without a circular type-alias error (TS2456).
  */
-export type JsonValue =
-  | JsonPrimitive
-  | readonly JsonPrimitive[]
-  | Readonly<Record<string, JsonPrimitive>>;
+interface JsonArray extends ReadonlyArray<JsonValue> {}
+
+/**
+ * @description JSON object of arbitrarily nested {@link JsonValue}s. An interface is used so
+ * {@link JsonValue} can reference itself without a circular type-alias error (TS2456).
+ */
+interface JsonObject {
+  readonly [key: string]: JsonValue;
+}
+
+/**
+ * @description JSON-serializable value (for {@link StructuredLogRecord.extra} and similar).
+ * Recursive to match the `isJsonValue` runtime guard, which validates arbitrarily nested
+ * arrays/objects; arrays and records hold further {@link JsonValue}s rather than only primitives.
+ */
+export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 /**
  * @description Single structured line persisted as JSON and broadcast on the hub.

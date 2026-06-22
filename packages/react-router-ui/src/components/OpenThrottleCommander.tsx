@@ -168,16 +168,13 @@ export const OpenThrottleCommander = (
         value={search}
       />
 
-      <CommandList className="visormatt-testing m-0! p-0! pt-4!">
+      <CommandList className="m-0! p-0! pt-4!">
         {groups.map((group, groupIndex) => (
           <React.Fragment key={group.heading}>
             {groupIndex > 0 ? (
               <CommandSeparator className="my-4 px-4!" />
             ) : null}
-            <CommandGroup
-              className="visormatt-testing m-0! p-0!"
-              heading={group.heading}
-            >
+            <CommandGroup className="m-0! p-0!" heading={group.heading}>
               {group.items.map((item) => (
                 <CommandItem
                   className="m-0! h-auto! rounded-none! p-2! px-4!"

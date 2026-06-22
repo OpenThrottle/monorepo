@@ -9,10 +9,12 @@ export {
   type CorrelationIdExtractor,
   DEFAULT_MAX_PENDING_WS_RECORDS,
   DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+  type JsonlDurabilityLevel,
   type JsonlRotationPolicy,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type NestjsLoggingModuleAsyncOptions,
   type NestjsLoggingModuleOptions,
+  type NestjsLoggingWebsocketAuthorizeHook,
   type NestjsLoggingWebsocketOptions,
   parseNestjsLoggingModuleOptions,
   type ResolvedNestjsLoggingModuleOptions,
@@ -55,5 +57,14 @@ export {
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './services/jsonl-payload';
+export {
+  createLogRedactor,
+  DEFAULT_LOG_REDACTOR,
+  DEFAULT_REDACTION_KEYS,
+  DEFAULT_REDACTION_PATTERNS,
+  DEFAULT_REDACTION_REPLACEMENT,
+  type LogRedactor,
+  type RedactionOptions,
+} from './services/log-redaction';
 export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';

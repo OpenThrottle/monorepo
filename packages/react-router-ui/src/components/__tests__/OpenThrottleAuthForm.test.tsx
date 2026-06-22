@@ -23,6 +23,13 @@ describe('OpenThrottleAuthForm Component', () => {
     component = render(<RoutesStub />);
   });
 
+  test('should render email and password inputs empty by default', () => {
+    // Regression guard: prefilled credentials were removed, so the inputs must
+    // render empty unless an explicit defaultEmail/defaultPassword is passed.
+    expect(component.getByTestId('auth-email-input')).toHaveValue('');
+    expect(component.getByTestId('auth-password-input')).toHaveValue('');
+  });
+
   test('should render email and password fields and submit button', () => {
     expect(component.getByTestId('OpenThrottleAuthForm')).toBeInTheDocument();
     expect(

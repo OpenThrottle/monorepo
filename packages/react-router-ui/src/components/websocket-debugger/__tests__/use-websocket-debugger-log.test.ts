@@ -92,25 +92,9 @@ describe('useWebsocketDebuggerLog', () => {
     });
 
     expect(result.current.entries).toEqual([]);
-    expect(result.current.filteredEntries).toEqual([]);
   });
 
-  test('filteredEntries shows none when no events are selected', () => {
-    const { result } = renderHook(() => useWebsocketDebuggerLog());
-
-    act(() => {
-      result.current.append(
-        NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
-        systemAlertPayload,
-      );
-      result.current.setSelectedEventNames([]);
-    });
-
-    expect(result.current.entries).toHaveLength(1);
-    expect(result.current.filteredEntries).toEqual([]);
-  });
-
-  test('filteredEntries respects multiselect filter', () => {
+  test('tracks selected event names for callers to filter with', () => {
     const { result } = renderHook(() => useWebsocketDebuggerLog());
 
     act(() => {
@@ -127,9 +111,16 @@ describe('useWebsocketDebuggerLog', () => {
       ]);
     });
 
-    expect(result.current.filteredEntries).toHaveLength(1);
-    expect(result.current.filteredEntries[0]?.event).toBe(
+    expect(result.current.selectedEventNames).toEqual([
       NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+    ]);
+
+    const filtered = filterWebsocketDebuggerEntries(
+      result.current.entries,
+      result.current.selectedEventNames,
     );
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.event).toBe(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED);
   });
 });

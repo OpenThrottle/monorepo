@@ -25,6 +25,49 @@ describe('validateNestjsLoggingModuleOptions', () => {
     expect(() => validateNestjsLoggingModuleOptions(opts)).not.toThrow();
   });
 
+  describe('redaction', () => {
+    it('accepts false (disabled)', () => {
+      expect(() =>
+        validateNestjsLoggingModuleOptions({
+          logDirectory: '/tmp',
+          redaction: false,
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts a custom policy', () => {
+      expect(() =>
+        validateNestjsLoggingModuleOptions({
+          logDirectory: '/tmp',
+          redaction: {
+            keys: ['custom'],
+            patterns: [/x/g],
+            redactMessage: false,
+            replacement: '***',
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    it('throws when keys is not an array of strings', () => {
+      expect(() =>
+        validateNestjsLoggingModuleOptions({
+          logDirectory: '/tmp',
+          redaction: { keys: [1] },
+        }),
+      ).toThrow(NestjsLoggingError);
+    });
+
+    it('throws when patterns contains a non-RegExp', () => {
+      expect(() =>
+        validateNestjsLoggingModuleOptions({
+          logDirectory: '/tmp',
+          redaction: { patterns: ['not-a-regex'] },
+        }),
+      ).toThrow(NestjsLoggingError);
+    });
+  });
+
   describe('rotation type size', () => {
     it('throws when maxBytes is invalid', () => {
       expect(() =>
@@ -57,6 +100,26 @@ describe('applyNestjsLoggingModuleDefaults', () => {
     expect(merged.flushIntervalMs).toBe(1_000);
     expect(merged.websocket.enabled).toBe(false);
     expect(merged.websocket.namespace).toBe('/ot-logging');
+  });
+
+  it('resolves a default-on redactor when redaction is omitted', () => {
+    const merged = applyNestjsLoggingModuleDefaults({ logDirectory: '/tmp' });
+
+    expect(merged.redactor.redactMessageEnabled).toBe(true);
+    expect(merged.redactor.redactValue({ token: 't' })).toEqual({
+      token: '[REDACTED]',
+    });
+  });
+
+  it('resolves a disabled redactor when redaction is false', () => {
+    const merged = applyNestjsLoggingModuleDefaults({
+      logDirectory: '/tmp',
+      redaction: false,
+    });
+
+    expect(merged.redactor.redactValue({ token: 't' })).toEqual({
+      token: 't',
+    });
   });
 
   it('preserves websocket.enabled when set to true', () => {

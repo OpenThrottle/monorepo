@@ -1,10 +1,10 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottleStatCardProps {
@@ -40,7 +40,7 @@ export const OpenThrottleStatCard = (
 
   return (
     <Card
-      className={classnames('gap-2 p-4', className)}
+      className={cn('gap-2 p-4', className)}
       data-testid="OpenThrottleStatCard"
     >
       <CardHeader className="flex items-center gap-2 p-0 pb-2">
