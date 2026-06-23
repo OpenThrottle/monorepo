@@ -2,56 +2,48 @@ import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
 import { NestjsThrottlerError } from './nestjs-throttler.error';
 
 /**
- * @description Injection token for resolved {@link NestjsThrottlerModuleOptions} (including defaults).
+ * Injection token for resolved {@link NestjsThrottlerModuleOptions} (including defaults).
  */
 export const NESTJS_THROTTLER_MODULE_OPTIONS =
   'NESTJS_THROTTLER_MODULE_OPTIONS' as const;
 
 /**
- * @description Default request limit per {@link DEFAULT_THROTTLER_TTL_MS} window.
+ * Default request limit per {@link DEFAULT_THROTTLER_TTL_MS} window.
  */
 export const DEFAULT_THROTTLER_LIMIT = 10;
 
 /**
- * @description Default sliding window in milliseconds.
+ * Default sliding window in milliseconds.
  */
 export const DEFAULT_THROTTLER_TTL_MS = 60_000;
 
 /**
- * @description A single named throttler tier (e.g. anon vs auth, per-route bucket).
+ * A single named throttler tier (e.g. anon vs auth, per-route bucket).
  */
 export interface ThrottlerTierOptions {
-  /**
-   * @description Maximum number of requests allowed within {@link ThrottlerTierOptions.ttl}.
-   */
+  /** Maximum number of requests allowed within {@link ThrottlerTierOptions.ttl}. */
   readonly limit: number;
-  /**
-   * @description Optional tier name (enables `@Throttle({ <name>: ... })` / `@SkipThrottle({ <name>: ... })`).
-   */
+  /** Optional tier name (enables `@Throttle({ <name>: ... })` / `@SkipThrottle({ <name>: ... })`). */
   readonly name?: string | undefined;
-  /**
-   * @description Sliding window in milliseconds.
-   */
+  /** Sliding window in milliseconds. */
   readonly ttl: number;
 }
 
 /**
- * @description Static registration options for {@link NestjsThrottlerModule.forRoot}.
+ * Static registration options for {@link NestjsThrottlerModule.forRoot}.
  */
 export interface NestjsThrottlerModuleOptions {
-  /**
-   * @description When true, register the dynamic module as global.
-   */
+  /** When true, register the dynamic module as global. */
   readonly isGlobal?: boolean | undefined;
   /**
-   * @description One or more throttler tiers. Defaults to a single
+   * One or more throttler tiers. Defaults to a single
    * {@link DEFAULT_THROTTLER_LIMIT}/{@link DEFAULT_THROTTLER_TTL_MS} tier when omitted.
    */
   readonly throttlers?: ReadonlyArray<ThrottlerTierOptions> | undefined;
 }
 
 /**
- * @description Async registration options for {@link NestjsThrottlerModule.forRootAsync}.
+ * Async registration options for {@link NestjsThrottlerModule.forRootAsync}.
  */
 export interface NestjsThrottlerModuleAsyncOptions {
   readonly imports?: ModuleMetadata['imports'];
@@ -65,7 +57,7 @@ const DEFAULT_THROTTLERS: ReadonlyArray<ThrottlerTierOptions> = [
 ];
 
 /**
- * @description Applies defaults for optional fields; does not validate (use {@link validateNestjsThrottlerModuleOptions}).
+ * Applies defaults for optional fields; does not validate (use {@link validateNestjsThrottlerModuleOptions}).
  */
 export const applyNestjsThrottlerModuleDefaults = (
   options: NestjsThrottlerModuleOptions,
@@ -81,7 +73,7 @@ export const applyNestjsThrottlerModuleDefaults = (
 });
 
 /**
- * @description Options after {@link applyNestjsThrottlerModuleDefaults}.
+ * Options after {@link applyNestjsThrottlerModuleDefaults}.
  */
 export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
   typeof applyNestjsThrottlerModuleDefaults
@@ -90,7 +82,7 @@ export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
 const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
 
 /**
- * @description Validates module options at bootstrap.
+ * Validates module options at bootstrap.
  * @throws NestjsThrottlerError when fields or numeric bounds are invalid.
  */
 export const validateNestjsThrottlerModuleOptions = (
@@ -148,7 +140,7 @@ export const validateNestjsThrottlerModuleOptions = (
 };
 
 /**
- * @description Validates then returns the same object reference as {@link NestjsThrottlerModuleOptions}.
+ * Validates then returns the same object reference as {@link NestjsThrottlerModuleOptions}.
  */
 export const parseNestjsThrottlerModuleOptions = (
   input: unknown,

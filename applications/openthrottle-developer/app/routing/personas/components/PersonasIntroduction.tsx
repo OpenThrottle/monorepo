@@ -1,5 +1,5 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { BookOpenIcon } from 'lucide-react';
+import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 
@@ -17,7 +17,7 @@ export const PersonasIntroduction = (
       <GlobalHeading
         className="mb-4"
         heading="h1"
-        icon={BookOpenIcon}
+        icon={BrainCircuitIcon}
         title="Personas"
       />
       <p className="text-muted-foreground text-sm">

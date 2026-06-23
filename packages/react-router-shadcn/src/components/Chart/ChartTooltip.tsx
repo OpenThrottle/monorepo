@@ -22,7 +22,7 @@ export const ChartTooltip = (props: ChartTooltipProps): React.ReactElement => {
 
   // 🔌 Short Circuit
 
-  return <RechartsTooltip {...props} />;
+  return <RechartsTooltip cursor={false} {...props} />;
 };
 
 ChartTooltip.displayName = 'ChartTooltip';
