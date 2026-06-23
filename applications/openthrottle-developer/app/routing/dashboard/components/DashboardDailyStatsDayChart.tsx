@@ -62,9 +62,10 @@ export const DashboardDailyStatsDayChart = (
           <YAxis
             axisLine={false}
             dataKey="label"
+            fontSize={14}
             tickLine={false}
             type="category"
-            width={120}
+            width={150}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="value" radius={[0, 4, 4, 0]}>
