@@ -2,24 +2,31 @@ import { type ExecutionContext, Injectable } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
-/** GraphQL execution context shape produced by the server's `context` factory. */
+/**
+ * GraphQL execution context shape produced by the server's `context` factory.
+ */
 interface GraphqlThrottlerContext {
   readonly req?: GraphqlThrottlerRequest;
   readonly res?: Record<string, unknown>;
 }
 
-/** HTTP request as seen on the GraphQL context (Express request under Apollo). */
+/**
+ * HTTP request as seen on the GraphQL context (Express request under Apollo).
+ */
 interface GraphqlThrottlerRequest extends Record<string, unknown> {
   readonly res?: Record<string, unknown>;
 }
 
-/** Minimal `GraphQLResolveInfo` shape needed to detect the operation kind. */
+/**
+ * Minimal `GraphQLResolveInfo` shape needed to detect the operation kind.
+ */
 interface GraphqlThrottlerInfo {
   readonly operation?: { readonly operation?: string };
 }
 
-const isGraphqlContext = (context: ExecutionContext): boolean =>
-  `${context.getType()}` === 'graphql';
+const isGraphqlContext = (context: ExecutionContext): boolean => {
+  return `${context.getType()}` === 'graphql';
+};
 
 const isSubscriptionOperation = (gqlContext: GqlExecutionContext): boolean => {
   const info = gqlContext.getInfo<GraphqlThrottlerInfo | undefined>();

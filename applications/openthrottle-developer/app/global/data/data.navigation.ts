@@ -11,9 +11,9 @@ import {
   BrainIcon,
   BugIcon,
   CalendarDaysIcon,
+  ChartAreaIcon,
   CircleHelpIcon,
   // CodeIcon,
-  FileChartColumn,
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
@@ -108,7 +108,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         children: 'Usage',
         disabled: false, // 🔴 🟠
-        icon: FileChartColumn,
+        icon: ChartAreaIcon,
         to: '/usage',
       },
     ],
