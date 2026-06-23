@@ -11,6 +11,7 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
 
 export interface OpenThrottleAuthFormProps {
   /** Optional form action URL (e.g. for React Router action). Defaults to current path. */
@@ -39,8 +40,8 @@ export const OpenThrottleAuthForm = (
   const {
     action = '/',
     className,
-    defaultEmail = '',
-    defaultPassword = '',
+    defaultEmail = IS_DEVELOPMENT ? 'developer@openthrottle.com' : '',
+    defaultPassword = IS_DEVELOPMENT ? 'FullThrottle2026!' : '',
     error,
     isLoading = false,
     onSubmit,

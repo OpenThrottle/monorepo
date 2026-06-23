@@ -1,7 +1,6 @@
 import type { Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { describe, expect, it } from 'vitest';
 import { NestjsThrottlerError } from '../config/nestjs-throttler.error';
 import {
@@ -10,6 +9,7 @@ import {
   DEFAULT_THROTTLER_TTL_MS,
   validateNestjsThrottlerModuleOptions,
 } from '../config/nestjs-throttler.options';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
 import { NestjsThrottlerModule } from './nestjs-throttler.module';
 
 describe('applyNestjsThrottlerModuleDefaults', () => {
@@ -84,7 +84,7 @@ const bindsThrottlerGuard = (
       'provide' in provider &&
       provider.provide === APP_GUARD &&
       'useClass' in provider &&
-      provider.useClass === ThrottlerGuard,
+      provider.useClass === GqlThrottlerGuard,
   );
 
 describe('NestjsThrottlerModule', () => {
@@ -96,7 +96,7 @@ describe('NestjsThrottlerModule', () => {
     expect(app).toBeDefined();
   });
 
-  it('forRoot binds ThrottlerGuard as APP_GUARD and compiles with custom tiers', async () => {
+  it('forRoot binds GqlThrottlerGuard as APP_GUARD and compiles with custom tiers', async () => {
     const dynamic = NestjsThrottlerModule.forRoot({
       throttlers: [{ limit: 3, ttl: 5_000 }],
     });
