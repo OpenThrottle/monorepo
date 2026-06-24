@@ -65,5 +65,5 @@ export const installTestEnv = (
     return;
   }
 
-  window.env = createTestEnv(overrides);
+  (window as any).env = createTestEnv(overrides);
 };

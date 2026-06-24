@@ -21,7 +21,7 @@ export function SidebarMenu(props: SidebarMenuProps) {
 
   return (
     <ul
-      className={cn('flex w-full min-w-0 flex-col gap-1', className)}
+      className={cn('mt-2 flex w-full min-w-0 flex-col gap-1', className)}
       data-sidebar="menu"
       data-slot="sidebar-menu"
       {...rest}
