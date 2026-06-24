@@ -7,11 +7,11 @@
  */
 
 import { streamChatCompletion } from '../chat-completions/index.js';
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
+import { CONVERSATION_STREAM_CHUNK_KINDS } from './types.js';
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
 } from './types.js';
 
 async function* streamOpenAi(
@@ -20,6 +20,7 @@ async function* streamOpenAi(
   if (run.baseUrl === undefined) {
     throw new Error('The openai conversation backend requires a baseUrl.');
   }
+
   for await (const chunk of streamChatCompletion({
     baseUrl: run.baseUrl,
     messages: run.messages,

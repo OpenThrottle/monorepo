@@ -40,7 +40,9 @@ const ALLOWED_ENV_KEYS = [
   'USER',
 ] as const;
 
-/** Resolve the binary: explicit env override, else `cursor-agent` off PATH. */
+/**
+ * Resolve the binary: explicit env override, else `cursor-agent` off PATH.
+ */
 function resolveCursorAgentBin(env: NodeJS.ProcessEnv = process.env): string {
   const override = env[CURSOR_AGENT_BIN_ENV]?.trim();
   return override !== undefined && override !== ''
@@ -48,7 +50,9 @@ function resolveCursorAgentBin(env: NodeJS.ProcessEnv = process.env): string {
     : CURSOR_AGENT_DEFAULT_BIN;
 }
 
-/** Build a minimal allowlisted environment for the spawned child. */
+/**
+ * Build a minimal allowlisted environment for the spawned child.
+ */
 function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): NodeJS.ProcessEnv {
@@ -62,7 +66,9 @@ function buildScrubbedEnv(
   return scrubbed;
 }
 
-/** Latest user message in the run, persona-prefixed when a system prompt is set. */
+/**
+ * Latest user message in the run, persona-prefixed when a system prompt is set.
+ */
 function composePrompt(run: ConversationBackendRun): string {
   let latestUser = '';
   for (const message of run.messages) {
@@ -76,7 +82,9 @@ function composePrompt(run: ConversationBackendRun): string {
     : latestUser;
 }
 
-/** Parse one NDJSON line into a chunk, tolerating non-JSON lines (skipped). */
+/**
+ * Parse one NDJSON line into a chunk, tolerating non-JSON lines (skipped).
+ */
 function lineToChunk(line: string): ConversationStreamChunk | null {
   try {
     return mapCursorEvent(JSON.parse(line));
@@ -85,7 +93,9 @@ function lineToChunk(line: string): ConversationStreamChunk | null {
   }
 }
 
-/** Options for {@link createCursorAgentSession}. */
+/**
+ * Options for {@link createCursorAgentSession}.
+ */
 export interface CreateCursorAgentSessionOptions {
   /** Workspace directory to create the chat in. */
   readonly cwd: string;
@@ -111,9 +121,11 @@ export async function createCursorAgentSession(
 
   let stdout = '';
   let stderr = '';
+
   child.stdout?.on('data', (data: Buffer) => {
     stdout += data.toString('utf8');
   });
+
   child.stderr?.on('data', (data: Buffer) => {
     stderr += data.toString('utf8');
   });
@@ -128,10 +140,12 @@ export async function createCursorAgentSession(
       `cursor-agent create-chat failed (exit ${code}): ${stderr.trim()}`,
     );
   }
+
   const sessionId = stdout.trim();
   if (sessionId === '') {
     throw new Error('cursor-agent create-chat returned no session id.');
   }
+
   return sessionId;
 }
 
@@ -141,6 +155,7 @@ async function* streamCursorAgent(
   if (run.cwd === undefined || run.cwd === '') {
     throw new Error('The cursor-agent backend requires a cwd.');
   }
+
   if (run.sessionId === undefined || run.sessionId === '') {
     throw new Error('The cursor-agent backend requires a sessionId.');
   }
@@ -183,8 +198,10 @@ async function* streamCursorAgent(
     () => terminate('wall-clock timeout'),
     timeouts.wallClockMs,
   );
+
   wallTimer.unref();
   const onAbort = (): void => terminate('cancelled');
+
   run.signal?.addEventListener('abort', onAbort, { once: true });
   if (run.signal?.aborted === true) {
     terminate('cancelled');
@@ -224,6 +241,7 @@ async function* streamCursorAgent(
         resetIdle();
         yield* emit(buffer.push(data));
       }
+
       yield* emit(buffer.flush());
     }
 

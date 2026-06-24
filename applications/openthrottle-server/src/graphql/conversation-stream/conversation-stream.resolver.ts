@@ -38,7 +38,6 @@ import {
   type ChatCompletionMessage,
   createCursorAgentSession,
 } from '@openthrottle/openthrottle-agentic-utils';
-
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
   ConversationStreamChunkObject,
@@ -47,7 +46,9 @@ import {
 import { ConversationStreamService } from './conversation-stream.service';
 import { type ConversationStreamChunkPayload } from './conversation-stream.types';
 
-/** Roles the model accepts; persisted `tool` rows are excluded from the prompt. */
+/**
+ * Roles the model accepts; persisted `tool` rows are excluded from the prompt.
+ */
 const PROMPT_ROLES = new Set<string>([
   AGENT_CONVERSATION_MESSAGE_ROLES.assistant,
   AGENT_CONVERSATION_MESSAGE_ROLES.system,
@@ -56,22 +57,25 @@ const PROMPT_ROLES = new Set<string>([
 
 const toChatMessage = (
   message: AgentConversationMessage,
-): ChatCompletionMessage => ({
-  content: message.content,
-  role:
-    message.role === AGENT_CONVERSATION_MESSAGE_ROLES.assistant
-      ? 'assistant'
-      : message.role === AGENT_CONVERSATION_MESSAGE_ROLES.system
-        ? 'system'
-        : 'user',
-});
+): ChatCompletionMessage => {
+  const { assistant, system } = AGENT_CONVERSATION_MESSAGE_ROLES;
+  const isAssistant = message.role === assistant;
+  const isSystem = message.role === system;
+
+  return {
+    content: message.content,
+    role: isAssistant ? 'assistant' : isSystem ? 'system' : 'user',
+  };
+};
 
 const failed = (errorMessage: string): StartConversationStreamResult => {
   const result = new StartConversationStreamResult();
+
   result.assistantMessageId = null;
   result.conversationId = null;
   result.errorMessage = errorMessage;
   result.userMessageId = null;
+
   return result;
 };
 
@@ -80,7 +84,9 @@ const resolveHumanUserId = (
 ): string | null =>
   principal?.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
 
-/** Supported backends. CLI runners beyond cursor are not wired in v1. */
+/**
+ * Supported backends. CLI runners beyond cursor are not wired in v1.
+ */
 const OPENAI_BACKEND = 'openai';
 const CURSOR_BACKEND = 'cursor';
 
@@ -91,18 +97,19 @@ const CURSOR_BACKEND = 'cursor';
  */
 const DEV_CWD_ENV = 'OPENTHROTTLE_AGENT_DEV_CWD';
 
-/** RFC-4122 UUID matcher: registry persona ids are UUIDs; mock composer ids are not. */
+/**
+ * RFC-4122 UUID matcher: registry persona ids are UUIDs; mock composer ids are not.
+ */
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/** Fallback persona → system-prompt map for the mock composer ids (pre-registry). */
+/**
+ * Fallback persona → system-prompt map for the mock composer ids (pre-registry).
+ */
 const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
-  architect:
-    'You are the Architect. Analyze the request and propose a clear, minimal plan before making changes; prefer design clarity over speed.',
-  builder:
-    'You are the Builder. Implement the requested change directly and pragmatically, matching the surrounding code style.',
-  reviewer:
-    'You are the Reviewer. Critically review for correctness, security, and edge cases; call out risks explicitly.',
+  architect: `You are the Architect. Analyze the request and propose a clear, minimal plan before making changes; prefer design clarity over speed.`,
+  builder: `You are the Builder. Implement the requested change directly and pragmatically, matching the surrounding code style.`,
+  reviewer: `You are the Reviewer. Critically review for correctness, security, and edge cases; call out risks explicitly.`,
 };
 
 /** Backend-specific run parameters resolved before the stream starts. */
@@ -185,6 +192,7 @@ export class ConversationStreamResolver {
       input.conversationId,
       message,
     );
+
     if (conversationId == null) {
       return failed('Conversation not found.');
     }
@@ -195,6 +203,7 @@ export class ConversationStreamResolver {
       conversationId,
       input,
     );
+
     if (typeof resolved === 'string') {
       return failed(resolved);
     }
@@ -209,6 +218,7 @@ export class ConversationStreamResolver {
       userId,
       conversationId,
     );
+
     const messages = history
       .filter((row) => PROMPT_ROLES.has(row.role))
       .map(toChatMessage);
@@ -230,10 +240,12 @@ export class ConversationStreamResolver {
     });
 
     const result = new StartConversationStreamResult();
+
     result.assistantMessageId = assistantMessageId;
     result.conversationId = conversationId;
     result.errorMessage = null;
     result.userMessageId = userMessage?.id ?? null;
+
     return result;
   }
 
@@ -252,6 +264,7 @@ export class ConversationStreamResolver {
       if (!input.baseUrl || !input.modelId) {
         return 'baseUrl and modelId are required for the openai backend.';
       }
+
       // SSRF guard: only stream to an endpoint+model the server discovered.
       const discovery = await this.modelDiscovery.discover();
       const endpoint = discovery.endpoints.find(
@@ -259,9 +272,11 @@ export class ConversationStreamResolver {
           candidate.baseUrl === input.baseUrl &&
           candidate.models.includes(input.modelId ?? ''),
       );
+
       if (!endpoint) {
         return 'Unknown model or endpoint. Pick a model from the discovered list.';
       }
+
       return {
         baseUrl: endpoint.baseUrl,
         cwd: null,
@@ -280,6 +295,7 @@ export class ConversationStreamResolver {
         input.repositoryId,
         userId,
       );
+
       if (!repository) {
         return 'Repository not found.';
       }
@@ -288,6 +304,7 @@ export class ConversationStreamResolver {
       const devCwd = process.env[DEV_CWD_ENV]?.trim();
       cwd = devCwd === undefined || devCwd === '' ? null : devCwd;
     }
+
     if (cwd == null) {
       return isProduction()
         ? 'A repository is required to run an agent CLI.'
@@ -299,8 +316,10 @@ export class ConversationStreamResolver {
       userId,
       conversationId,
     );
+
     const existingSessionId = conversation.metadata?.['cursorSessionId'];
     let sessionId: string;
+
     if (typeof existingSessionId === 'string' && existingSessionId !== '') {
       sessionId = existingSessionId;
     } else {
@@ -310,6 +329,7 @@ export class ConversationStreamResolver {
         const message = error instanceof Error ? error.message : String(error);
         return `Failed to start a cursor-agent session: ${message}`;
       }
+
       await this.conversations.updateMetadata(conversationId, {
         cursorRepositoryId: input.repositoryId ?? null,
         cursorSessionId: sessionId,
@@ -361,14 +381,17 @@ export class ConversationStreamResolver {
     if (personaId == null || personaId === '') {
       return null;
     }
+
     if (UUID_RE.test(personaId)) {
       const persona = await this.customPrompts.getRepository().findOne({
         where: { id: personaId, promptType: 'personas' },
       });
+
       if (persona) {
         return persona.content;
       }
     }
+
     return PERSONA_SYSTEM_PROMPTS[personaId] ?? null;
   }
 
@@ -382,6 +405,7 @@ export class ConversationStreamResolver {
       const created = await this.conversations.createConversation(userId, {
         title: message.slice(0, 80),
       });
+
       return created.id;
     }
 
@@ -390,6 +414,7 @@ export class ConversationStreamResolver {
         userId,
         conversationId,
       );
+
       return existing.id;
     } catch {
       return null;

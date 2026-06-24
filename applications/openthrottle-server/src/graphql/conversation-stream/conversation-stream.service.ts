@@ -67,12 +67,9 @@ export class ConversationStreamService {
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
 
-  /** Kick off a streaming completion. Fire-and-forget; errors are logged, never thrown. */
-  start(run: StartConversationStreamRun): void {
-    void this.runStream(run);
-  }
-
-  /** Abort an in-flight stream for a conversation. Returns whether one was aborted. */
+  /**
+   * Abort an in-flight stream for a conversation. Returns whether one was aborted.
+   */
   cancel(conversationId: string): boolean {
     const controller = this.controllers.get(conversationId);
     if (!controller) {
@@ -82,12 +79,23 @@ export class ConversationStreamService {
     return true;
   }
 
-  /** Drive the stream to completion. Always resolves; failures surface as a terminal error chunk. */
+  /**
+   * Kick off a streaming completion. Fire-and-forget; errors are logged, never thrown.
+   */
+  start(run: StartConversationStreamRun): void {
+    void this.runStream(run);
+  }
+
+  /**
+   * Drive the stream to completion. Always resolves; failures surface as a terminal error chunk.
+   */
   async runStream(run: StartConversationStreamRun): Promise<void> {
     const controller = new AbortController();
     this.controllers.set(run.conversationId, controller);
+
     let accumulated = '';
     let sortOrder = 0;
+
     // Non-text events (thinking/tool/usage/session) collected for persistence
     // into the assistant message's tool_metadata on completion.
     const toolEvents: Array<Record<string, unknown>> = [];
@@ -96,6 +104,7 @@ export class ConversationStreamService {
       run.backend === CURSOR_BACKEND
         ? cursorAgentConversationBackend
         : openAiConversationBackend;
+
     const backendRun: ConversationBackendRun = {
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
@@ -111,6 +120,7 @@ export class ConversationStreamService {
         if (chunk.done) {
           break;
         }
+
         // Assistant text accumulates into the persisted message body; non-text
         // events are collected and persisted into tool_metadata on completion.
         if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.text) {
@@ -122,6 +132,7 @@ export class ConversationStreamService {
             metadata: chunk.metadata ?? null,
           });
         }
+
         await this.publishChunk({
           conversationId: run.conversationId,
           delta: chunk.delta,
@@ -136,6 +147,7 @@ export class ConversationStreamService {
               : JSON.stringify(chunk.metadata),
           sortOrder: sortOrder,
         });
+
         sortOrder += 1;
       }
 
@@ -154,10 +166,12 @@ export class ConversationStreamService {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`conversation-stream failed: ${message}`);
+
       // Persist whatever streamed before the failure so the turn is not lost.
       if (accumulated.length > 0 || toolEvents.length > 0) {
         await this.persistAssistant(run, accumulated, toolEvents);
       }
+
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
@@ -180,8 +194,9 @@ export class ConversationStreamService {
     toolEvents: ReadonlyArray<Record<string, unknown>>,
   ): Promise<void> {
     try {
-      const toolMetadata =
-        toolEvents.length > 0 ? { events: [...toolEvents] } : null;
+      const isEmpty = toolEvents.length === 0;
+      const toolMetadata = !isEmpty ? { events: [...toolEvents] } : null;
+
       await this.conversations.appendMessages(run.userId, run.conversationId, [
         {
           content,
@@ -190,12 +205,15 @@ export class ConversationStreamService {
           toolMetadata,
         },
       ]);
+
       await this.conversations.updateModelSnapshot(run.conversationId, {
         modelName: run.model,
         modelProvider: run.provider,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       this.logger.error(`conversation-stream persist failed: ${message}`);
     }
   }
@@ -208,7 +226,9 @@ export class ConversationStreamService {
         [CONVERSATION_STREAM_CHUNK_FIELD]: chunk,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       this.logger.error(`conversation-stream publish failed: ${message}`);
     }
   }

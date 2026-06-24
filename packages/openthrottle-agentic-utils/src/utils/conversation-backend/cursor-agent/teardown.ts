@@ -9,10 +9,9 @@
 import type { ChildProcess } from 'node:child_process';
 
 /** Env override: idle (no-output) timeout in ms. */
-export const AGENT_IDLE_TIMEOUT_MS_ENV = 'OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS';
+export const AGENT_IDLE_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`;
 /** Env override: wall-clock timeout in ms. */
-export const AGENT_WALLCLOCK_TIMEOUT_MS_ENV =
-  'OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS';
+export const AGENT_WALLCLOCK_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS`;
 /** Env override: grace period before SIGKILL after SIGTERM, in ms. */
 export const AGENT_KILL_GRACE_MS_ENV = 'OPENTHROTTLE_AGENT_KILL_GRACE_MS';
 
@@ -31,11 +30,15 @@ function positiveIntOr(value: string | undefined, fallback: number): number {
   if (value === undefined) {
     return fallback;
   }
+
   const parsed = Number.parseInt(value, 10);
+
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-/** Read the (env-overridable) timeouts; falls back to safe defaults. */
+/**
+ * Read the (env-overridable) timeouts; falls back to safe defaults.
+ */
 export function resolveAgentTimeouts(
   env: NodeJS.ProcessEnv = process.env,
 ): AgentTimeouts {
@@ -52,7 +55,9 @@ export function resolveAgentTimeouts(
   };
 }
 
-/** True once the child has exited (by code or signal). */
+/**
+ * True once the child has exited (by code or signal).
+ */
 function hasExited(child: ChildProcess): boolean {
   return child.exitCode !== null || child.signalCode !== null;
 }
@@ -66,13 +71,16 @@ export function terminateChild(child: ChildProcess, graceMs: number): void {
   if (hasExited(child)) {
     return;
   }
+
   child.kill('SIGTERM');
   const killTimer = setTimeout(() => {
     if (!hasExited(child)) {
       child.kill('SIGKILL');
     }
   }, graceMs);
+
   killTimer.unref();
+
   child.once('close', () => {
     clearTimeout(killTimer);
   });

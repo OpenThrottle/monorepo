@@ -6,26 +6,32 @@
  * docs/openthrottle/cursor-agent-stream-json-schema.md §6.
  */
 
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from '../types.js';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.js';
+import type { ConversationStreamChunk } from '../types.js';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  const isObject = typeof value === 'object';
 
-const asString = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined;
+  return isObject && value !== null && !Array.isArray(value);
+};
+
+const asString = (value: unknown): string | undefined => {
+  const isString = typeof value === 'string';
+
+  return isString ? value : undefined;
+};
 
 /** First text block of a cursor `message.content` array, when present. */
 function messageText(message: unknown): string {
   if (!isRecord(message)) {
     return '';
   }
+
   const content = message.content;
   if (!Array.isArray(content) || !isRecord(content[0])) {
     return '';
   }
+
   return asString(content[0].text) ?? '';
 }
 
@@ -36,6 +42,7 @@ function mapSystem(
   if (event.subtype !== 'init') {
     return null;
   }
+
   return {
     delta: '',
     done: false,
@@ -55,6 +62,7 @@ function mapAssistant(
   if (event.timestamp_ms === undefined) {
     return null;
   }
+
   return {
     delta: messageText(event.message),
     done: false,
@@ -69,6 +77,7 @@ function mapThinking(
   if (event.subtype !== 'delta') {
     return null;
   }
+
   return {
     delta: asString(event.text) ?? '',
     done: false,
@@ -93,6 +102,7 @@ function mapToolCall(
       metadata: { callId, toolCall: event.tool_call ?? null },
     };
   }
+
   if (event.subtype === 'completed') {
     return {
       delta: '',
@@ -101,10 +111,13 @@ function mapToolCall(
       metadata: { callId, toolCall: event.tool_call ?? null },
     };
   }
+
   return null;
 }
 
-/** `result` → the terminal chunk. Gate the error on `is_error`. */
+/**
+ * `result` → the terminal chunk. Gate the error on `is_error`.
+ */
 function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
   const isError = event.is_error === true;
   return {
@@ -130,6 +143,7 @@ export function mapCursorEvent(event: unknown): ConversationStreamChunk | null {
   if (!isRecord(event)) {
     return null;
   }
+
   switch (event.type) {
     case 'assistant':
       return mapAssistant(event);
@@ -141,6 +155,7 @@ export function mapCursorEvent(event: unknown): ConversationStreamChunk | null {
       return mapThinking(event);
     case 'tool_call':
       return mapToolCall(event);
+
     default:
       return null;
   }

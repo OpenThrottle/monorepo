@@ -14,7 +14,9 @@ import {
   toChatModelOptions,
 } from '~/routing/home/utils/chat-model-option';
 
-/** A registered local checkout selectable as the working directory for a CLI agent. */
+/**
+ * A registered local checkout selectable as the working directory for a CLI agent.
+ */
 export interface RepositoryOption {
   readonly displayName: string;
   readonly id: string;
@@ -34,6 +36,7 @@ export async function loadDiscoveredModels(
       request,
       DiscoverLocalModelsDocument,
     );
+
     return toChatModelOptions(data.discoverLocalModels);
   } catch {
     return [];
@@ -53,6 +56,7 @@ export async function loadAgentClis(
       request,
       DiscoverAgentClisDocument,
     );
+
     return toAgentChatOptions(data.discoverAgentClis);
   } catch {
     return [];
@@ -71,6 +75,7 @@ export async function loadRepositories(
       request,
       WorkspaceLocalRepositoriesDocument,
     );
+
     return data.workspaceLocalRepositories.map((repository) => ({
       displayName: repository.displayName,
       id: repository.id,
@@ -91,6 +96,7 @@ export async function loadPersonas(
 ): Promise<ChatPersonaOption[]> {
   try {
     const data = await executeGraphqlWithAuth(request, PersonaPromptsDocument);
+
     return data.customPrompts.map((persona) => ({
       description: persona.description ?? undefined,
       id: persona.id,

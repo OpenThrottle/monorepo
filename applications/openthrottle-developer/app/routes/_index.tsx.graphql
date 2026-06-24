@@ -1,3 +1,14 @@
+query DiscoverAgentClis {
+  discoverAgentClis {
+    agents {
+      backend
+      label
+      version
+    }
+    totalCount
+  }
+}
+
 query DiscoverLocalModels {
   discoverLocalModels {
     endpoints {
@@ -10,14 +21,19 @@ query DiscoverLocalModels {
   }
 }
 
-query DiscoverAgentClis {
-  discoverAgentClis {
-    agents {
-      backend
-      label
-      version
-    }
-    totalCount
+query PersonaPrompts {
+  customPrompts(input: { promptType: PERSONAS }) {
+    description
+    id
+    title
+  }
+}
+
+query WorkspaceLocalRepositories {
+  workspaceLocalRepositories {
+    displayName
+    filesystemPath
+    id
   }
 }
 
@@ -45,21 +61,5 @@ subscription ConversationStreamChunkAdded($conversationId: ID!) {
     messageId
     metadataJson
     sortOrder
-  }
-}
-
-query WorkspaceLocalRepositories {
-  workspaceLocalRepositories {
-    displayName
-    filesystemPath
-    id
-  }
-}
-
-query PersonaPrompts {
-  customPrompts(input: { promptType: PERSONAS }) {
-    description
-    id
-    title
   }
 }

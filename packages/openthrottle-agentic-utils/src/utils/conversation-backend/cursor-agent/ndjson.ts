@@ -8,26 +8,39 @@
 export class NdjsonBuffer {
   private buffer = '';
 
-  /** Append a chunk and return any newly-completed lines (without the newline). */
+  /**
+   * Append a chunk and return any newly-completed lines (without the newline).
+   */
   push(chunk: Buffer | string): string[] {
-    this.buffer += typeof chunk === 'string' ? chunk : chunk.toString('utf8');
+    const isString = typeof chunk === 'string';
     const lines: string[] = [];
+
+    this.buffer += isString ? chunk : chunk.toString('utf8');
+
     let newline = this.buffer.indexOf('\n');
     while (newline !== -1) {
       const line = this.buffer.slice(0, newline).replace(/\r$/, '');
       this.buffer = this.buffer.slice(newline + 1);
+
       if (line.trim() !== '') {
         lines.push(line);
       }
+
       newline = this.buffer.indexOf('\n');
     }
+
     return lines;
   }
 
-  /** Return any buffered partial line (stream ended without a trailing newline). */
+  /**
+   * Return any buffered partial line (stream ended without a trailing newline).
+   */
   flush(): string[] {
     const remainder = this.buffer.trim();
+    const isEmpty = remainder === '';
+
     this.buffer = '';
-    return remainder === '' ? [] : [remainder];
+
+    return isEmpty ? [] : [remainder];
   }
 }

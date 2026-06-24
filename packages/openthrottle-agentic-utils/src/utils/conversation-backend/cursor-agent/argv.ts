@@ -5,13 +5,19 @@
  * The flag set is the one verified in docs/openthrottle/cursor-agent-stream-json-schema.md.
  */
 
-/** Env var holding an absolute path to the cursor-agent binary; overrides PATH lookup. */
-export const CURSOR_AGENT_BIN_ENV = 'OPENTHROTTLE_CURSOR_AGENT_BIN';
+/**
+ * Env var holding an absolute path to the cursor-agent binary; overrides PATH lookup.
+ */
+export const CURSOR_AGENT_BIN_ENV = `OPENTHROTTLE_CURSOR_AGENT_BIN`;
 
-/** Default binary name, resolved off PATH when the env override is unset. */
-export const CURSOR_AGENT_DEFAULT_BIN = 'cursor-agent';
+/**
+ * Default binary name, resolved off PATH when the env override is unset.
+ */
+export const CURSOR_AGENT_DEFAULT_BIN = `cursor-agent`;
 
-/** Inputs for one streamed cursor-agent turn. */
+/**
+ * Inputs for one streamed cursor-agent turn.
+ */
 export interface CursorAgentArgvOptions {
   /** Workspace directory; passed as `--workspace` (and used as the spawn cwd). */
   readonly cwd: string;
@@ -41,9 +47,12 @@ export function buildCursorAgentArgv(
     '--resume',
     options.sessionId,
   ];
+
   if (options.model !== undefined && options.model !== '') {
     argv.push('--model', options.model);
   }
+
   argv.push(options.prompt);
+
   return argv;
 }

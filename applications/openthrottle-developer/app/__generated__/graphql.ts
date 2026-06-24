@@ -3464,6 +3464,22 @@ export type NotificationsSubscription = {
       };
 };
 
+export type DiscoverAgentClisQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DiscoverAgentClisQuery = {
+  __typename?: 'Query';
+  discoverAgentClis: {
+    __typename?: 'DiscoverAgentClisResult';
+    totalCount: number;
+    agents: Array<{
+      __typename?: 'AgentCliOptionObject';
+      backend: string;
+      label: string;
+      version?: string | null;
+    }>;
+  };
+};
+
 export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type DiscoverLocalModelsQuery = {
@@ -3481,20 +3497,30 @@ export type DiscoverLocalModelsQuery = {
   };
 };
 
-export type DiscoverAgentClisQueryVariables = Exact<{ [key: string]: never }>;
+export type PersonaPromptsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type DiscoverAgentClisQuery = {
+export type PersonaPromptsQuery = {
   __typename?: 'Query';
-  discoverAgentClis: {
-    __typename?: 'DiscoverAgentClisResult';
-    totalCount: number;
-    agents: Array<{
-      __typename?: 'AgentCliOptionObject';
-      backend: string;
-      label: string;
-      version?: string | null;
-    }>;
-  };
+  customPrompts: Array<{
+    __typename?: 'CustomPromptObject';
+    description?: string | null;
+    id: string;
+    title: string;
+  }>;
+};
+
+export type WorkspaceLocalRepositoriesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type WorkspaceLocalRepositoriesQuery = {
+  __typename?: 'Query';
+  workspaceLocalRepositories: Array<{
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+  }>;
 };
 
 export type StartConversationStreamMutationVariables = Exact<{
@@ -3539,32 +3565,6 @@ export type ConversationStreamChunkAddedSubscription = {
     metadataJson?: string | null;
     sortOrder: number;
   };
-};
-
-export type WorkspaceLocalRepositoriesQueryVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type WorkspaceLocalRepositoriesQuery = {
-  __typename?: 'Query';
-  workspaceLocalRepositories: Array<{
-    __typename?: 'WorkspaceLocalRepositoryObject';
-    displayName: string;
-    filesystemPath: string;
-    id: string;
-  }>;
-};
-
-export type PersonaPromptsQueryVariables = Exact<{ [key: string]: never }>;
-
-export type PersonaPromptsQuery = {
-  __typename?: 'Query';
-  customPrompts: Array<{
-    __typename?: 'CustomPromptObject';
-    description?: string | null;
-    id: string;
-    title: string;
-  }>;
 };
 
 export type SearchAgentAssetsQueryVariables = Exact<{
@@ -6887,6 +6887,52 @@ export const NotificationsDocument = {
   NotificationsSubscription,
   NotificationsSubscriptionVariables
 >;
+export const DiscoverAgentClisDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DiscoverAgentClis' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverAgentClis' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agents' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'version' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DiscoverAgentClisQuery,
+  DiscoverAgentClisQueryVariables
+>;
 export const DiscoverLocalModelsDocument = {
   kind: 'Document',
   definitions: [
@@ -6937,41 +6983,71 @@ export const DiscoverLocalModelsDocument = {
   DiscoverLocalModelsQuery,
   DiscoverLocalModelsQueryVariables
 >;
-export const DiscoverAgentClisDocument = {
+export const PersonaPromptsDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'DiscoverAgentClis' },
+      name: { kind: 'Name', value: 'PersonaPrompts' },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'discoverAgentClis' },
+            name: { kind: 'Name', value: 'customPrompts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'promptType' },
+                      value: { kind: 'EnumValue', value: 'PERSONAS' },
+                    },
+                  ],
+                },
+              },
+            ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PersonaPromptsQuery, PersonaPromptsQueryVariables>;
+export const WorkspaceLocalRepositoriesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositories' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'agents' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'version' },
-                      },
-                    ],
-                  },
+                  name: { kind: 'Name', value: 'filesystemPath' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
               ],
             },
           },
@@ -6980,8 +7056,8 @@ export const DiscoverAgentClisDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  DiscoverAgentClisQuery,
-  DiscoverAgentClisQueryVariables
+  WorkspaceLocalRepositoriesQuery,
+  WorkspaceLocalRepositoriesQueryVariables
 >;
 export const StartConversationStreamDocument = {
   kind: 'Document',
@@ -7162,82 +7238,6 @@ export const ConversationStreamChunkAddedDocument = {
   ConversationStreamChunkAddedSubscription,
   ConversationStreamChunkAddedSubscriptionVariables
 >;
-export const WorkspaceLocalRepositoriesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'WorkspaceLocalRepositories' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filesystemPath' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  WorkspaceLocalRepositoriesQuery,
-  WorkspaceLocalRepositoriesQueryVariables
->;
-export const PersonaPromptsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'PersonaPrompts' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'customPrompts' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'promptType' },
-                      value: { kind: 'EnumValue', value: 'PERSONAS' },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<PersonaPromptsQuery, PersonaPromptsQueryVariables>;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',
   definitions: [

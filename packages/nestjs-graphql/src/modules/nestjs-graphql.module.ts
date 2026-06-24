@@ -18,8 +18,10 @@ import { createFormatError } from '../config/format-error';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
-  type ApolloServerPluginCacheControlOptions,
-  type ApolloServerPluginResponseCacheOptions,
+} from '../config/nestjs-graphql.plugins';
+import type {
+  ApolloServerPluginCacheControlOptions,
+  ApolloServerPluginResponseCacheOptions,
 } from '../config/nestjs-graphql.plugins';
 import { createQueryDepthLimitRule } from '../config/query-depth-limit';
 import { defaultResponseCacheSessionId } from '../config/response-cache-session';
@@ -82,9 +84,11 @@ export interface NestjsGraphqlModuleOptions extends Omit<
 
 const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
   autoSchemaFile: 'schema.gql',
+
   csrfPrevention: {
     requestHeaders: [HEADER_APP_NAME, HEADER_APP_VERSION],
   },
+
   driver: ApolloDriver,
 
   /**
@@ -97,9 +101,12 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
    * forRoot callers can override by passing their own `formatError`.
    */
   formatError: createFormatError(new LoggerService()),
-  // Introspection lets clients dump the entire schema. Keep it on in non-prod
-  // for codegen/devtools, but off in production unless a forRoot caller
-  // explicitly overrides it. GRAPHQL_INTROSPECTION=true force-enables it.
+
+  /**
+   * Introspection lets clients dump the entire schema. Keep it on in non-prod
+   * for codegen/devtools, but off in production unless a forRoot caller
+   * explicitly overrides it. GRAPHQL_INTROSPECTION=true force-enables it.
+   */
   introspection:
     process.env.GRAPHQL_INTROSPECTION === 'true' ||
     process.env.NODE_ENV !== 'production',
@@ -131,8 +138,10 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
     },
   },
 
-  // DoS guard: cap query nesting depth at the validation stage by default.
-  // forRoot callers can raise/lower it via maxDepth, or disable with maxDepth<=0.
+  /**
+   * DoS guard: cap query nesting depth at the validation stage by default.
+   * forRoot callers can raise/lower it via maxDepth, or disable with maxDepth<=0.
+   */
   validationRules: [createQueryDepthLimitRule(DEFAULT_MAX_DEPTH)],
 };
 

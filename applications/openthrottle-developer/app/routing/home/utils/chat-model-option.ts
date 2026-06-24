@@ -30,22 +30,28 @@ export function decodeModelOptionId(id: string): DecodedModelOption | null {
   if (index === -1) {
     return null;
   }
+
   const baseUrl = id.slice(0, index);
   const model = id.slice(index + SEPARATOR.length);
   if (!baseUrl || !model) {
     return null;
   }
+
   return { baseUrl, model };
 }
 
-/** A decoded composer option: the openai endpoint+model, or a bare CLI backend. */
+/**
+ * A decoded composer option: the openai endpoint+model, or a bare CLI backend.
+ */
 export type DecodedChatOption =
   | {
       readonly backend: 'openai';
       readonly baseUrl: string;
       readonly model: string;
     }
-  | { readonly backend: string };
+  | {
+      readonly backend: string;
+    };
 
 /**
  * Decode a composer option id as a tagged union on the first segment: an
@@ -57,15 +63,23 @@ export function decodeChatOption(id: string): DecodedChatOption | null {
   if (index === -1) {
     return id === '' ? null : { backend: id };
   }
+
   const baseUrl = id.slice(0, index);
   const model = id.slice(index + SEPARATOR.length);
   if (!baseUrl || !model) {
     return null;
   }
-  return { backend: 'openai', baseUrl, model };
+
+  return {
+    backend: 'openai',
+    baseUrl,
+    model,
+  };
 }
 
-/** Flatten discovered endpoints × models into composer toolbar options. */
+/**
+ * Flatten discovered endpoints × models into composer toolbar options.
+ */
 export function toChatModelOptions(
   discovery: DiscoverLocalModelsQuery['discoverLocalModels'],
 ): ChatModelOption[] {
@@ -86,10 +100,16 @@ export function toChatModelOptions(
 export function toAgentChatOptions(
   discovery: DiscoverAgentClisQuery['discoverAgentClis'],
 ): ChatModelOption[] {
-  return discovery.agents.map((agent) => ({
-    description:
-      agent.version === null ? 'Agent CLI' : `Agent CLI · ${agent.version}`,
-    id: agent.backend,
-    label: agent.label,
-  }));
+  return discovery.agents.map((agent) => {
+    const hasVersion = agent.version !== null;
+    const description = !hasVersion
+      ? 'Agent CLI'
+      : `Agent CLI · ${agent.version}`;
+
+    return {
+      description,
+      id: agent.backend,
+      label: agent.label,
+    };
+  });
 }

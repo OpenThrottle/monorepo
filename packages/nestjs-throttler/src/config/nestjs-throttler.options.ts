@@ -4,13 +4,12 @@ import { NestjsThrottlerError } from './nestjs-throttler.error';
 /**
  * Injection token for resolved {@link NestjsThrottlerModuleOptions} (including defaults).
  */
-export const NESTJS_THROTTLER_MODULE_OPTIONS =
-  'NESTJS_THROTTLER_MODULE_OPTIONS' as const;
+export const NESTJS_THROTTLER_MODULE_OPTIONS = `NESTJS_THROTTLER_MODULE_OPTIONS`;
 
 /**
  * Default request limit per {@link DEFAULT_THROTTLER_TTL_MS} window.
  */
-export const DEFAULT_THROTTLER_LIMIT = 10;
+export const DEFAULT_THROTTLER_LIMIT = 1_000;
 
 /**
  * Default sliding window in milliseconds.
