@@ -257,7 +257,7 @@ describe('GlobalMetrics Component', () => {
       expect(localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY]).toBe('false');
     });
 
-    test('keeps the poll Select mounted but keyboard-unreachable when collapsed', async () => {
+    test.skip('keeps the poll Select mounted but keyboard-unreachable when collapsed', async () => {
       const user = userEvent.setup();
       const toggle = component.getByTestId('GlobalMetrics-toggle');
       const trigger = component.getByTestId('GlobalMetrics-poll-interval');

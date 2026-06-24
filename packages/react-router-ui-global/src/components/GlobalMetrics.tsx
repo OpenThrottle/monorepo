@@ -57,6 +57,8 @@ import {
 
 export interface GlobalMetricsProps {
   readonly className?: string;
+  /** Whether the metrics panel should be open by default. */
+  readonly defaultOpen?: boolean;
   /** Deep link to a persistent metric-definitions panel (e.g. Settings → Debug → Server metrics definitions). */
   readonly definitionsHref?: string;
   /** In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer). */
@@ -71,6 +73,7 @@ export const GlobalMetrics = (
 ): React.ReactElement => {
   const {
     className,
+    defaultOpen = true,
     definitionsHref,
     diagnosticsHref: _diagnosticsHref = '/settings/debug',
     pollIntervalMs: propPollIntervalMs,
@@ -79,7 +82,7 @@ export const GlobalMetrics = (
 
   // Hooks
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isOpen, setIsOpen] = React.useState<boolean>(defaultOpen);
   const [metricsHistory, setMetricsHistory] = React.useState<
     readonly MetricsChartDatum[]
   >([]);
