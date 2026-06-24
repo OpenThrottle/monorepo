@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-ui-global",
-  "description": "TODO: Add a description",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -13,8 +10,13 @@
     "@paper-design/shaders-react": "catalog:",
     "rollbar": "catalog:"
   },
+  "description": "TODO: Add a description",
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-ui-global",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -60,7 +62,5 @@
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",
-  "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
-  }
+  "version": "1.0.0"
 }
