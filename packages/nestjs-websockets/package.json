@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-websockets",
-  "description": "NestJS Socket.IO websockets module with gateway, service, and @EmitNotification decorator/interceptor for emitting real-time events after resolver or controller methods complete.",
+  "description": "Transport-agnostic NestJS @EmitNotification decorator/interceptor for emitting real-time events after resolver or controller methods complete. Bind a provider to EMIT_NOTIFICATION_EMITTER to deliver over any transport (e.g. graphql-ws PubSub).",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -9,9 +9,8 @@
   },
   "dependencies": {
     "@nestjs/common": "catalog:",
-    "@nestjs/platform-socket.io": "catalog:",
-    "@nestjs/websockets": "catalog:",
-    "socket.io": "catalog:"
+    "@nestjs/core": "catalog:",
+    "rxjs": "catalog:"
   },
   "devDependencies": {},
   "exports": {

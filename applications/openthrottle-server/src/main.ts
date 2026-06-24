@@ -8,11 +8,10 @@ import {
 } from '@openthrottle/nestjs-profiling';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
-import { IoAdapter } from '@openthrottle/nestjs-websockets';
 import { AppModule } from './app.module';
 
 /**
- * @description Bootstrap our NestJS + GraphQL + Websockets backend for
+ * @description Bootstrap our NestJS + GraphQL backend for
  * the OpenThrottle platform.
  */
 async function bootstrap(): Promise<void> {
@@ -44,9 +43,6 @@ async function bootstrap(): Promise<void> {
 
   /** @external https://docs.nestjs.com/techniques/logger#dependency-injection */
   app.useLogger(logger);
-
-  /** Use Socket.IO adapter so @openthrottle/nestjs-websockets gateway. */
-  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Global middleware to set response headers
   // app.use(setHeadersMiddleware);
