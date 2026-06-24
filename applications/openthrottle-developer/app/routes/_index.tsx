@@ -1,3 +1,4 @@
+import { useState, useRef, useMemo, useEffect } from 'react';
 import {
   ChatComposer,
   ChatComposerMode,
@@ -11,7 +12,6 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import * as React from 'react';
 import { useFetcher } from 'react-router';
 import {
   CancelConversationStreamDocument,
@@ -22,15 +22,22 @@ import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
 } from '~/routing/home/data/chat-toolbar';
-import { loadDiscoveredModels } from '~/routing/home/data/models.server';
+import {
+  loadAgentClis,
+  loadDiscoveredModels,
+  loadPersonas,
+  loadRepositories,
+} from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
-import { decodeModelOptionId } from '~/routing/home/utils/chat-model-option';
+import { decodeChatOption } from '~/routing/home/utils/chat-model-option';
 import type { Route } from '@/app/routes/+types/_index';
 
-type HandleData = Route.ComponentProps['loaderData'];
-
-/** Stable empty seed: history seeding is keyed off a conversation in the URL, which the home route has none of. */
+/**
+ * Stable empty seed: history seeding is keyed off a conversation in the URL, which the home route has none of.
+ */
 const EMPTY_SEED: readonly ChatMessage[] = [];
+
+type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'OpenThrottle',
@@ -38,8 +45,18 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const models = await loadDiscoveredModels(args.request);
-  return { models };
+  const [localModels, agentClis, repositories, personas] = await Promise.all([
+    loadDiscoveredModels(args.request),
+    loadAgentClis(args.request),
+    loadRepositories(args.request),
+    loadPersonas(args.request),
+  ]);
+
+  return {
+    models: [...localModels, ...agentClis],
+    personas,
+    repositories,
+  };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -55,28 +72,26 @@ export default function Component(
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
-  const { models } = loaderData;
+  const { models, repositories } = loaderData;
   const hasModels = models.length > 0;
+  const hasRepositories = repositories.length > 0;
+  // Registry personas when available, else the mock fallback list.
+  const personas =
+    loaderData.personas.length > 0
+      ? loaderData.personas
+      : CHAT_TOOLBAR_PERSONAS;
 
   // Hooks
-  const [modelId, setModelId] = React.useState<string | undefined>(
-    models[0]?.id,
-  );
-  const [personaId, setPersonaId] = React.useState<string | undefined>(
-    CHAT_TOOLBAR_PERSONAS[0]?.id,
-  );
-  const [mode, setMode] = React.useState<ChatComposerMode>(
-    ChatComposerMode.plan,
-  );
-  const [conversationId, setConversationId] = React.useState<string | null>(
-    null,
-  );
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
-  const [error, setError] = React.useState<string | null>(null);
-
-  const startFetcher = useFetcher<StartActionResult>();
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [mode, setMode] = useState<ChatComposerMode>(ChatComposerMode.plan);
+  const [modelId, setModelId] = useState<string | undefined>(models[0]?.id);
+  const [personaId, setPersonaId] = useState<string | undefined>(personas[0]?.id); // prettier-ignore
+  const [repositoryId, setRepositoryId] = useState<string | undefined>(repositories[0]?.id); // prettier-ignore
   const cancelFetcher = useFetcher();
-  const localIdRef = React.useRef(0);
+  const localIdRef = useRef(0);
+  const startFetcher = useFetcher<StartActionResult>();
 
   // Setup
   const stream = useConversationStream({
@@ -85,47 +100,70 @@ export default function Component(
   });
 
   // Streamed assistant bodies overlay the ordered placeholders by message id.
-  const streamedById = React.useMemo(
+  const streamedById = useMemo(
     () => new Map(stream.messages.map((message) => [message.id, message.body])),
     [stream.messages],
   );
-  const threadMessages = React.useMemo<ChatMessage[]>(
-    () =>
-      messages.map((message) => {
-        const streamed = streamedById.get(message.id);
-        return streamed === undefined
-          ? message
-          : { ...message, body: streamed };
-      }),
-    [messages, streamedById],
-  );
+
+  const threadMessages = useMemo(() => {
+    return messages.map((message) => {
+      const streamed = streamedById.get(message.id);
+      const isUndefined = streamed === undefined;
+
+      return isUndefined ? message : { ...message, body: streamed };
+    });
+  }, [messages, streamedById]);
 
   const isStreaming = startFetcher.state !== 'idle' || stream.isStreaming;
+  const isEmptyThread = threadMessages.length === 0;
+
+  const decodedOption = modelId ? decodeChatOption(modelId) : null;
+  const isCliBackend =
+    decodedOption !== null && decodedOption.backend !== 'openai';
 
   // Handlers
   const onSubmit = (message: string): void => {
     const trimmed = message.trim();
-    const decoded = modelId ? decodeModelOptionId(modelId) : null;
+    const decoded = modelId ? decodeChatOption(modelId) : null;
     if (!trimmed || !decoded) {
+      return;
+    }
+
+    if (decoded.backend !== 'openai' && !repositoryId) {
+      setError('Select a repository to run the agent in.');
       return;
     }
 
     setError(null);
     localIdRef.current += 1;
+
     const userId = `local-user-${localIdRef.current}`;
-    setMessages((previous) => [
-      ...previous,
-      { body: trimmed, id: userId, role: 'user' },
-    ]);
+    const newMessage: ChatMessage = {
+      body: trimmed,
+      id: userId,
+      role: 'user',
+    };
+
+    setMessages((previous) => [...previous, newMessage]);
 
     startFetcher.submit(
-      {
-        baseUrl: decoded.baseUrl,
-        conversationId: conversationId ?? '',
-        intent: 'start',
-        message: trimmed,
-        modelId: decoded.model,
-      },
+      decoded.backend === 'openai'
+        ? {
+            backend: 'openai',
+            baseUrl: decoded.baseUrl,
+            conversationId: conversationId ?? '',
+            intent: 'start',
+            message: trimmed,
+            modelId: decoded.model,
+          }
+        : {
+            backend: decoded.backend,
+            conversationId: conversationId ?? '',
+            intent: 'start',
+            message: trimmed,
+            personaId: personaId ?? '',
+            repositoryId: repositoryId ?? '',
+          },
       { method: 'post' },
     );
   };
@@ -134,6 +172,7 @@ export default function Component(
     if (!conversationId) {
       return;
     }
+
     cancelFetcher.submit(
       { conversationId, intent: 'cancel' },
       { method: 'post' },
@@ -142,32 +181,59 @@ export default function Component(
 
   // Markup
   const toolbar = (
-    <ChatComposerToolbar
-      contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
-      mode={mode}
-      modelId={modelId}
-      models={models}
-      onAddContext={() => {}}
-      onModeChange={setMode}
-      onModelChange={setModelId}
-      onPersonaChange={setPersonaId}
-      personaId={personaId}
-      personas={CHAT_TOOLBAR_PERSONAS}
-    />
+    <div className="flex flex-col gap-2">
+      <ChatComposerToolbar
+        contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
+        mode={mode}
+        modelId={modelId}
+        models={models}
+        onAddContext={() => {}}
+        onModeChange={setMode}
+        onModelChange={setModelId}
+        onPersonaChange={setPersonaId}
+        personaId={personaId}
+        personas={personas}
+      />
+      {isCliBackend ? (
+        hasRepositories ? (
+          <select
+            aria-label="Repository"
+            className="border-input bg-background text-foreground w-fit rounded-md border px-2 py-1 text-sm"
+            onChange={(event) =>
+              setRepositoryId(event.target.value || undefined)
+            }
+            value={repositoryId ?? ''}
+          >
+            <option value="">Select a repository…</option>
+            {repositories.map((repository) => (
+              <option key={repository.id} value={repository.id}>
+                {repository.displayName}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="text-muted-foreground text-xs">
+            Register a local repository in Settings to run an agent CLI.
+          </p>
+        )
+      ) : null}
+    </div>
   );
 
   // Life Cycle
-  React.useEffect(() => {
+  useEffect(() => {
     const result = startFetcher.data;
     if (!result) {
       return;
     }
+
     if (result.errorMessage || !result.conversationId) {
       setError(result.errorMessage ?? 'Failed to start the conversation.');
       return;
     }
 
     setConversationId(result.conversationId);
+
     if (result.assistantMessageId) {
       const assistantId = result.assistantMessageId;
       setMessages((previous) =>
@@ -181,16 +247,18 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-1 flex-col p-4 md:p-8 lg:p-12">
-      <div className="flex flex-1 flex-col items-center justify-center">
-        <h1 className="text-center text-2xl">
-          What would you like to build today?
-        </h1>
-        <p className="text-muted-foreground mt-2 text-sm">
-          OpenThrottle is a platform for building applications based on best
-          practices for Agentic development.
-        </p>
-      </div>
+    <GlobalScreen className="flex flex-1 flex-col justify-end p-4 md:p-8 lg:p-12">
+      {isEmptyThread && (
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <h1 className="text-center text-2xl">
+            What would you like to build today?
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            OpenThrottle is a platform for building applications based on best
+            practices for Agentic development.
+          </p>
+        </div>
+      )}
 
       <div className="mx-auto w-full max-w-3xl">
         <ChatThread emptyStateLabel="" messages={threadMessages} />
@@ -238,15 +306,19 @@ export const action = async (
         { conversationId },
       );
     }
+
     return { cancelled: true };
   }
 
   const conversationId = String(formData.get('conversationId') ?? '');
   const input = {
-    baseUrl: String(formData.get('baseUrl') ?? ''),
+    backend: String(formData.get('backend') ?? '') || null,
+    baseUrl: String(formData.get('baseUrl') ?? '') || null,
     conversationId: conversationId || null,
     message: String(formData.get('message') ?? ''),
-    modelId: String(formData.get('modelId') ?? ''),
+    modelId: String(formData.get('modelId') ?? '') || null,
+    personaId: String(formData.get('personaId') ?? '') || null,
+    repositoryId: String(formData.get('repositoryId') ?? '') || null,
   };
 
   try {
@@ -255,13 +327,15 @@ export const action = async (
       StartConversationStreamDocument,
       { input },
     );
+
     return data.startConversationStream;
-  } catch (caught) {
+  } catch (error) {
+    const isError = error instanceof Error;
+
     return {
       assistantMessageId: null,
       conversationId: null,
-      errorMessage:
-        caught instanceof Error ? caught.message : 'Failed to start stream.',
+      errorMessage: isError ? error.message : 'Failed to start stream.',
       userMessageId: null,
     };
   }

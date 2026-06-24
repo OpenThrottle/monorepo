@@ -20,8 +20,12 @@ export interface ConversationStreamChunkPayload {
   readonly error: string | null;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   readonly id: string;
+  /** Event kind: text | thinking | tool_call | tool_result | usage | session. */
+  readonly kind: string;
   /** Assistant message id the deltas accumulate into. */
   readonly messageId: string;
+  /** JSON-encoded structured metadata for non-text kinds (tool args, usage, …); null otherwise. */
+  readonly metadataJson: string | null;
   /** Monotonic index within the stream. */
   readonly sortOrder: number;
 }

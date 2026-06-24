@@ -882,10 +882,13 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
   Properties<StartConversationStreamInput>
 > {
   return z.object({
-    baseUrl: z.string(),
+    backend: z.string().nullish(),
+    baseUrl: z.string().nullish(),
     conversationId: z.string().nullish(),
     message: z.string(),
-    modelId: z.string(),
+    modelId: z.string().nullish(),
+    personaId: z.string().nullish(),
+    repositoryId: z.string().nullish(),
   });
 }
 

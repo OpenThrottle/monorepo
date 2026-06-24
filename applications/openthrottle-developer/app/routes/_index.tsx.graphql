@@ -1,3 +1,14 @@
+query DiscoverAgentClis {
+  discoverAgentClis {
+    agents {
+      backend
+      label
+      version
+    }
+    totalCount
+  }
+}
+
 query DiscoverLocalModels {
   discoverLocalModels {
     endpoints {
@@ -7,6 +18,22 @@ query DiscoverLocalModels {
       provider
     }
     totalCount
+  }
+}
+
+query PersonaPrompts {
+  customPrompts(input: { promptType: PERSONAS }) {
+    description
+    id
+    title
+  }
+}
+
+query WorkspaceLocalRepositories {
+  workspaceLocalRepositories {
+    displayName
+    filesystemPath
+    id
   }
 }
 
@@ -30,7 +57,9 @@ subscription ConversationStreamChunkAdded($conversationId: ID!) {
     done
     error
     id
+    kind
     messageId
+    metadataJson
     sortOrder
   }
 }

@@ -7,11 +7,13 @@ import {
 import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
 import {
   applyNestjsThrottlerModuleDefaults,
-  type NestjsThrottlerModuleAsyncOptions,
-  type NestjsThrottlerModuleOptions,
   parseNestjsThrottlerModuleOptions,
-  type ResolvedNestjsThrottlerModuleOptions,
   validateNestjsThrottlerModuleOptions,
+} from '../config/nestjs-throttler.options';
+import type {
+  NestjsThrottlerModuleAsyncOptions,
+  NestjsThrottlerModuleOptions,
+  ResolvedNestjsThrottlerModuleOptions,
 } from '../config/nestjs-throttler.options';
 
 const toThrottlerModuleOptions = (

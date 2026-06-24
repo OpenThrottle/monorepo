@@ -31,6 +31,7 @@ import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test-queue
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module';
 import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module';
+import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery-graphql.module';
 import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.module';
@@ -147,6 +148,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     ActivityGraphqlModule,
     AgenticWorkflowGraphqlModule,
     AgentConversationsGraphqlModule,
+    AgentDiscoveryGraphqlModule,
     AgentsGraphqlModule,
     AuthGraphqlModule,
     CodeSearchGraphqlModule,
