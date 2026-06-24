@@ -38,6 +38,17 @@ export class ConversationStreamChunkObject {
   })
   messageId!: string;
 
+  @Field(() => String, {
+    description: `Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session.`,
+  })
+  kind!: string;
+
+  @Field(() => String, {
+    description: `JSON-encoded structured metadata for non-text kinds (tool args, usage, session id); null otherwise.`,
+    nullable: true,
+  })
+  metadataJson!: string | null;
+
   @Field(() => Int, {
     description: `Monotonic index within the stream.`,
   })

@@ -43,7 +43,7 @@ Use this before relying on OT tools in the agent.
 | **openthrottle-server** running                                 | GraphQL defaults to `http://localhost:6021/graphql` (see server `.env`).                                                                                                                                                                                                                          |
 | MCP **`API_URL` / `API_URL_INTERNAL`** match the server         | See [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md).                                                                                                                                                                                              |
 | **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (and server embedding config) | Auth: [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Embeddings: **`OPENAI_API_KEY`** or **`OLLAMA_*`** on **`applications/openthrottle-server/.env`** — `scripts/run-openthrottle-mcp.sh` does not require a root OpenAI key; Ollama-only: [run-locally-oss.md](./run-locally-oss.md). |
-| Cursor registers **openthrottle-mcp**                           | Register per [mcp-registration.md](./mcp-registration.md) (template, config locations, editor parity); copy [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) → `.cursor/mcp.json` and restart Cursor after changes.                                                                     |
+| Cursor registers **openthrottle-mcp**                           | Register per [mcp-registration.md](./mcp-registration.md) (template, config locations, editor parity); copy [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) → `.cursor/mcp.json` and restart Cursor after changes.                                                                   |
 
 For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/README.md`](../../databases/README.md).
 
@@ -75,7 +75,7 @@ Ordered prompts you can paste into the agent. Replace bracketed placeholders wit
 
 ### 1. Warm-up — ask OT
 
-```
+```txt
 Using OpenThrottle MCP only, run semantic_search with query "local onboarding" and limit 5.
 Summarize what you found from the retrieved chunks only; do not invent plan content.
 ```
@@ -84,7 +84,7 @@ Summarize what you found from the retrieved chunks only; do not invent plan cont
 
 ### 2. Create a small plan
 
-```
+```txt
 Create a plan via MCP with title "Onboarding smoke test" and category "documentation".
 Add two tasks:
 1) "Confirm MCP health tool works"
@@ -98,7 +98,7 @@ Reply with the plan UUID and both task UUIDs.
 
 Use the plan and task UUIDs from step 2.
 
-```
+```txt
 Complete the first task from plan <PLAN_UUID> (task <TASK_UUID>).
 Make a minimal change (e.g. add a one-line comment in README or a scratch note).
 Commit with a conventional commit message and include in the commit body:
@@ -111,7 +111,7 @@ Then update the task status to completed via MCP.
 
 ### 4. Confirm visibility
 
-```
+```txt
 Call list_sources via MCP and list_plans_by_status with status "pending".
 Summarize how many sources and pending plans you see.
 ```
@@ -134,15 +134,15 @@ Summarize how many sources and pending plans you see.
 
 ## Related documentation
 
-| Topic                                        | Location                                                                                        |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Fresh clone → server + MCP                   | [local-quickstart.md](./local-quickstart.md)                                                    |
-| Service account tokens and MCP `env`         | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
-| Run server + developer app locally           | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                  |
-| MCP verification, env, smoke checks          | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
-| MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                |
-| MCP config template                          | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                    |
-| DB schema, migrations, imports, commit links | [databases/README.md](../../databases/README.md)                                                |
-| OT MCP tool choice and skills                | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`        |
-| Workflow CLI / Ralph (optional)              | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
-| OSS / Ollama path                            | [run-locally-oss.md](./run-locally-oss.md)                                                      |
+| Topic                                           | Location                                                                                        |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Fresh clone → server + MCP                      | [local-quickstart.md](./local-quickstart.md)                                                    |
+| Service account tokens and MCP `env`            | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
+| Run server + developer app locally              | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                  |
+| MCP verification, env, smoke checks             | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
+| MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                    |
+| MCP config template                             | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                    |
+| DB schema, migrations, imports, commit links    | [databases/README.md](../../databases/README.md)                                                |
+| OT MCP tool choice and skills                   | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`        |
+| Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
+| OSS / Ollama path                               | [run-locally-oss.md](./run-locally-oss.md)                                                      |

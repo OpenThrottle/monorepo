@@ -22,9 +22,14 @@ import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
 } from '~/routing/home/data/chat-toolbar';
-import { loadDiscoveredModels } from '~/routing/home/data/models.server';
+import {
+  loadAgentClis,
+  loadDiscoveredModels,
+  loadPersonas,
+  loadRepositories,
+} from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
-import { decodeModelOptionId } from '~/routing/home/utils/chat-model-option';
+import { decodeChatOption } from '~/routing/home/utils/chat-model-option';
 import type { Route } from '@/app/routes/+types/_index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -38,8 +43,13 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const models = await loadDiscoveredModels(args.request);
-  return { models };
+  const [localModels, agentClis, repositories, personas] = await Promise.all([
+    loadDiscoveredModels(args.request),
+    loadAgentClis(args.request),
+    loadRepositories(args.request),
+    loadPersonas(args.request),
+  ]);
+  return { models: [...localModels, ...agentClis], personas, repositories };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -55,15 +65,24 @@ export default function Component(
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
-  const { models } = loaderData;
+  const { models, repositories } = loaderData;
   const hasModels = models.length > 0;
+  const hasRepositories = repositories.length > 0;
+  // Registry personas when available, else the mock fallback list.
+  const personas =
+    loaderData.personas.length > 0
+      ? loaderData.personas
+      : CHAT_TOOLBAR_PERSONAS;
 
   // Hooks
   const [modelId, setModelId] = React.useState<string | undefined>(
     models[0]?.id,
   );
+  const [repositoryId, setRepositoryId] = React.useState<string | undefined>(
+    repositories[0]?.id,
+  );
   const [personaId, setPersonaId] = React.useState<string | undefined>(
-    CHAT_TOOLBAR_PERSONAS[0]?.id,
+    personas[0]?.id,
   );
   const [mode, setMode] = React.useState<ChatComposerMode>(
     ChatComposerMode.plan,
@@ -102,11 +121,19 @@ export default function Component(
 
   const isStreaming = startFetcher.state !== 'idle' || stream.isStreaming;
 
+  const decodedOption = modelId ? decodeChatOption(modelId) : null;
+  const isCliBackend =
+    decodedOption !== null && decodedOption.backend !== 'openai';
+
   // Handlers
   const onSubmit = (message: string): void => {
     const trimmed = message.trim();
-    const decoded = modelId ? decodeModelOptionId(modelId) : null;
+    const decoded = modelId ? decodeChatOption(modelId) : null;
     if (!trimmed || !decoded) {
+      return;
+    }
+    if (decoded.backend !== 'openai' && !repositoryId) {
+      setError('Select a repository to run the agent in.');
       return;
     }
 
@@ -119,13 +146,23 @@ export default function Component(
     ]);
 
     startFetcher.submit(
-      {
-        baseUrl: decoded.baseUrl,
-        conversationId: conversationId ?? '',
-        intent: 'start',
-        message: trimmed,
-        modelId: decoded.model,
-      },
+      decoded.backend === 'openai'
+        ? {
+            backend: 'openai',
+            baseUrl: decoded.baseUrl,
+            conversationId: conversationId ?? '',
+            intent: 'start',
+            message: trimmed,
+            modelId: decoded.model,
+          }
+        : {
+            backend: decoded.backend,
+            conversationId: conversationId ?? '',
+            intent: 'start',
+            message: trimmed,
+            personaId: personaId ?? '',
+            repositoryId: repositoryId ?? '',
+          },
       { method: 'post' },
     );
   };
@@ -142,18 +179,43 @@ export default function Component(
 
   // Markup
   const toolbar = (
-    <ChatComposerToolbar
-      contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
-      mode={mode}
-      modelId={modelId}
-      models={models}
-      onAddContext={() => {}}
-      onModeChange={setMode}
-      onModelChange={setModelId}
-      onPersonaChange={setPersonaId}
-      personaId={personaId}
-      personas={CHAT_TOOLBAR_PERSONAS}
-    />
+    <div className="flex flex-col gap-2">
+      <ChatComposerToolbar
+        contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
+        mode={mode}
+        modelId={modelId}
+        models={models}
+        onAddContext={() => {}}
+        onModeChange={setMode}
+        onModelChange={setModelId}
+        onPersonaChange={setPersonaId}
+        personaId={personaId}
+        personas={personas}
+      />
+      {isCliBackend ? (
+        hasRepositories ? (
+          <select
+            aria-label="Repository"
+            className="border-input bg-background text-foreground w-fit rounded-md border px-2 py-1 text-sm"
+            onChange={(event) =>
+              setRepositoryId(event.target.value || undefined)
+            }
+            value={repositoryId ?? ''}
+          >
+            <option value="">Select a repository…</option>
+            {repositories.map((repository) => (
+              <option key={repository.id} value={repository.id}>
+                {repository.displayName}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="text-muted-foreground text-xs">
+            Register a local repository in Settings to run an agent CLI.
+          </p>
+        )
+      ) : null}
+    </div>
   );
 
   // Life Cycle
@@ -243,10 +305,13 @@ export const action = async (
 
   const conversationId = String(formData.get('conversationId') ?? '');
   const input = {
-    baseUrl: String(formData.get('baseUrl') ?? ''),
+    backend: String(formData.get('backend') ?? '') || null,
+    baseUrl: String(formData.get('baseUrl') ?? '') || null,
     conversationId: conversationId || null,
     message: String(formData.get('message') ?? ''),
-    modelId: String(formData.get('modelId') ?? ''),
+    modelId: String(formData.get('modelId') ?? '') || null,
+    personaId: String(formData.get('personaId') ?? '') || null,
+    repositoryId: String(formData.get('repositoryId') ?? '') || null,
   };
 
   try {

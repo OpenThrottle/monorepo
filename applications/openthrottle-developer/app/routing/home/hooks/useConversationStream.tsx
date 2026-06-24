@@ -33,6 +33,34 @@ export const INITIAL_STREAM_STATE: StreamState = {
   seen: new Set(),
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+/** Best-effort tool name from a tool_call chunk's metadataJson; falls back to 'tool'. */
+export function toolActivityLabel(
+  metadataJson: string | null | undefined,
+): string {
+  if (
+    metadataJson === null ||
+    metadataJson === undefined ||
+    metadataJson === ''
+  ) {
+    return 'tool';
+  }
+  try {
+    const parsed: unknown = JSON.parse(metadataJson);
+    if (!isRecord(parsed) || !isRecord(parsed.toolCall)) {
+      return 'tool';
+    }
+    const name = Object.keys(parsed.toolCall).find(
+      (key) => key !== 'toolCallId' && key !== 'hookAdditionalContexts',
+    );
+    return name === undefined ? 'tool' : name.replace(/ToolCall$/, '');
+  } catch {
+    return 'tool';
+  }
+}
+
 /** Pure reducer: fold one streamed chunk into the accumulation state. */
 export function reduceStreamChunk(
   state: StreamState,
@@ -55,7 +83,17 @@ export function reduceStreamChunk(
     return { bodies, isStreaming: false, seen };
   }
 
-  bodies.set(chunk.messageId, current + chunk.delta);
+  // Assistant text accumulates into the body; tool calls show a dim one-line
+  // marker in arrival order. thinking/tool_result/usage/session stream for
+  // liveness but are not rendered inline in v1 (richer rendering is a follow-up).
+  if (chunk.kind === 'text') {
+    bodies.set(chunk.messageId, current + chunk.delta);
+  } else if (chunk.kind === 'tool_call') {
+    bodies.set(
+      chunk.messageId,
+      `${current}\n\n_🔧 ${toolActivityLabel(chunk.metadataJson)}_`,
+    );
+  }
   return { bodies, isStreaming: true, seen };
 }
 

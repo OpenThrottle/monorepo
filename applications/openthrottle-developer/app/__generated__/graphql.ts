@@ -154,6 +154,16 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
 };
 
+export type AgentCliOptionObject = {
+  __typename?: 'AgentCliOptionObject';
+  /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
+  backend: Scalars['String']['output'];
+  /** Human-readable label for the selector. */
+  label: Scalars['String']['output'];
+  /** Trimmed --version output, or null when unknown. */
+  version?: Maybe<Scalars['String']['output']>;
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
   content: Scalars['String']['output'];
@@ -406,8 +416,12 @@ export type ConversationStreamChunkObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   id: Scalars['String']['output'];
+  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session. */
+  kind: Scalars['String']['output'];
   /** Assistant message id the deltas accumulate into. */
   messageId: Scalars['String']['output'];
+  /** JSON-encoded structured metadata for non-text kinds (tool args, usage, session id); null otherwise. */
+  metadataJson?: Maybe<Scalars['String']['output']>;
   /** Monotonic index within the stream. */
   sortOrder: Scalars['Int']['output'];
 };
@@ -664,6 +678,16 @@ export type DeleteProjectInput = {
 export type DeleteTaskInput = {
   /** Task id to delete */
   id: Scalars['ID']['input'];
+};
+
+export type DiscoverAgentClisResult = {
+  __typename?: 'DiscoverAgentClisResult';
+  /** Allowlisted agent CLIs detected as available on the server host. */
+  agents: Array<AgentCliOptionObject>;
+  /** ISO-8601 timestamp of when this snapshot was scanned. */
+  scannedAt: Scalars['String']['output'];
+  /** Number of available agent CLIs. */
+  totalCount: Scalars['Int']['output'];
 };
 
 export type DiscoverLocalModelsResult = {
@@ -1938,6 +1962,8 @@ export type Query = {
   databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
+  /** Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request. */
+  discoverAgentClis: DiscoverAgentClisResult;
   /** Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request. */
   discoverLocalModels: DiscoverLocalModelsResult;
   /** Get a generator by name (includes schema JSON) */
@@ -2680,14 +2706,20 @@ export type SignoutResultObject = {
 };
 
 export type StartConversationStreamInput = {
-  /** OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. */
-  baseUrl: Scalars['String']['input'];
+  /** Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai. */
+  backend?: InputMaybe<Scalars['String']['input']>;
+  /** OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. Required for the openai backend. */
+  baseUrl?: InputMaybe<Scalars['String']['input']>;
   /** Existing conversation to continue; omit to start a new conversation. */
   conversationId?: InputMaybe<Scalars['ID']['input']>;
   /** User message text for this turn. */
   message: Scalars['String']['input'];
-  /** Model id to complete with, as advertised by the discovered endpoint. */
-  modelId: Scalars['String']['input'];
+  /** Model id to complete with. Required for the openai backend; optional model override for CLI backends. */
+  modelId?: InputMaybe<Scalars['String']['input']>;
+  /** Persona to steer the turn; CLI backends inject it as a system prompt. */
+  personaId?: InputMaybe<Scalars['ID']['input']>;
+  /** Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path). */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type StartConversationStreamResult = {
@@ -3449,6 +3481,22 @@ export type DiscoverLocalModelsQuery = {
   };
 };
 
+export type DiscoverAgentClisQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DiscoverAgentClisQuery = {
+  __typename?: 'Query';
+  discoverAgentClis: {
+    __typename?: 'DiscoverAgentClisResult';
+    totalCount: number;
+    agents: Array<{
+      __typename?: 'AgentCliOptionObject';
+      backend: string;
+      label: string;
+      version?: string | null;
+    }>;
+  };
+};
+
 export type StartConversationStreamMutationVariables = Exact<{
   input: StartConversationStreamInput;
 }>;
@@ -3486,9 +3534,37 @@ export type ConversationStreamChunkAddedSubscription = {
     done: boolean;
     error?: string | null;
     id: string;
+    kind: string;
     messageId: string;
+    metadataJson?: string | null;
     sortOrder: number;
   };
+};
+
+export type WorkspaceLocalRepositoriesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type WorkspaceLocalRepositoriesQuery = {
+  __typename?: 'Query';
+  workspaceLocalRepositories: Array<{
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+  }>;
+};
+
+export type PersonaPromptsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type PersonaPromptsQuery = {
+  __typename?: 'Query';
+  customPrompts: Array<{
+    __typename?: 'CustomPromptObject';
+    description?: string | null;
+    id: string;
+    title: string;
+  }>;
 };
 
 export type SearchAgentAssetsQueryVariables = Exact<{
@@ -6861,6 +6937,52 @@ export const DiscoverLocalModelsDocument = {
   DiscoverLocalModelsQuery,
   DiscoverLocalModelsQueryVariables
 >;
+export const DiscoverAgentClisDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DiscoverAgentClis' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverAgentClis' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agents' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'version' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DiscoverAgentClisQuery,
+  DiscoverAgentClisQueryVariables
+>;
 export const StartConversationStreamDocument = {
   kind: 'Document',
   definitions: [
@@ -7022,7 +7144,12 @@ export const ConversationStreamChunkAddedDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'done' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'error' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'messageId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'metadataJson' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
               ],
             },
@@ -7035,6 +7162,82 @@ export const ConversationStreamChunkAddedDocument = {
   ConversationStreamChunkAddedSubscription,
   ConversationStreamChunkAddedSubscriptionVariables
 >;
+export const WorkspaceLocalRepositoriesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositories' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  WorkspaceLocalRepositoriesQuery,
+  WorkspaceLocalRepositoriesQueryVariables
+>;
+export const PersonaPromptsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PersonaPrompts' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'customPrompts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'promptType' },
+                      value: { kind: 'EnumValue', value: 'PERSONAS' },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PersonaPromptsQuery, PersonaPromptsQueryVariables>;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',
   definitions: [

@@ -16,28 +16,43 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import {
+  CONVERSATION_STREAM_CHUNK_KINDS,
   type ChatCompletionMessage,
-  streamChatCompletion,
+  type ConversationBackend,
+  type ConversationBackendRun,
+  cursorAgentConversationBackend,
+  openAiConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
   type ConversationStreamChunkPayload,
 } from './conversation-stream.types';
 
+/** CLI backend that spawns cursor-agent; openai is the default HTTP path. */
+const CURSOR_BACKEND = 'cursor';
+
 /** Everything needed to run one streamed assistant turn. */
 export interface StartConversationStreamRun {
   /** Pre-allocated assistant message id (returned to the client by the mutation). */
   readonly assistantMessageId: string;
-  /** OpenAI-compatible base URL of the discovered endpoint. */
-  readonly baseUrl: string;
+  /** Backend discriminator (`openai` | `cursor`). */
+  readonly backend: string;
+  /** OpenAI-compatible base URL of the discovered endpoint (openai backend). */
+  readonly baseUrl: string | null;
   /** Conversation the turn belongs to. */
   readonly conversationId: string;
+  /** Resolved working directory for a CLI backend. */
+  readonly cwd: string | null;
   /** Full prompt context (prior history + the new user message), oldest first. */
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
-  /** Model id to complete with. */
+  /** Model id to complete with (openai), or optional model override (cli). */
   readonly model: string;
-  /** Discovered provider label persisted on the conversation, or null. */
+  /** Provider/backend label persisted on the conversation, or null. */
   readonly provider: string | null;
+  /** CLI session handle to resume (e.g. cursor chat id). */
+  readonly sessionId: string | null;
+  /** System prompt (persona) injected by CLI backends. */
+  readonly systemPrompt: string | null;
   /** Owning user id (conversation ownership is enforced on persist). */
   readonly userId: string;
 }
@@ -73,46 +88,75 @@ export class ConversationStreamService {
     this.controllers.set(run.conversationId, controller);
     let accumulated = '';
     let sortOrder = 0;
+    // Non-text events (thinking/tool/usage/session) collected for persistence
+    // into the assistant message's tool_metadata on completion.
+    const toolEvents: Array<Record<string, unknown>> = [];
+
+    const backend: ConversationBackend =
+      run.backend === CURSOR_BACKEND
+        ? cursorAgentConversationBackend
+        : openAiConversationBackend;
+    const backendRun: ConversationBackendRun = {
+      baseUrl: run.baseUrl ?? undefined,
+      cwd: run.cwd ?? undefined,
+      messages: run.messages,
+      model: run.model,
+      sessionId: run.sessionId ?? undefined,
+      signal: controller.signal,
+      systemPrompt: run.systemPrompt ?? undefined,
+    };
 
     try {
-      for await (const chunk of streamChatCompletion({
-        baseUrl: run.baseUrl,
-        messages: run.messages,
-        model: run.model,
-        signal: controller.signal,
-      })) {
+      for await (const chunk of backend.stream(backendRun)) {
         if (chunk.done) {
           break;
         }
-        accumulated += chunk.delta;
+        // Assistant text accumulates into the persisted message body; non-text
+        // events are collected and persisted into tool_metadata on completion.
+        if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.text) {
+          accumulated += chunk.delta;
+        } else {
+          toolEvents.push({
+            delta: chunk.delta,
+            kind: chunk.kind,
+            metadata: chunk.metadata ?? null,
+          });
+        }
         await this.publishChunk({
           conversationId: run.conversationId,
           delta: chunk.delta,
           done: false,
           error: null,
           id: randomUUID(),
+          kind: chunk.kind,
           messageId: run.assistantMessageId,
+          metadataJson:
+            chunk.metadata === undefined
+              ? null
+              : JSON.stringify(chunk.metadata),
           sortOrder: sortOrder,
         });
         sortOrder += 1;
       }
 
-      await this.persistAssistant(run, accumulated);
+      await this.persistAssistant(run, accumulated, toolEvents);
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
         done: true,
         error: null,
         id: randomUUID(),
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
+        metadataJson: null,
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`conversation-stream failed: ${message}`);
       // Persist whatever streamed before the failure so the turn is not lost.
-      if (accumulated.length > 0) {
-        await this.persistAssistant(run, accumulated);
+      if (accumulated.length > 0 || toolEvents.length > 0) {
+        await this.persistAssistant(run, accumulated, toolEvents);
       }
       await this.publishChunk({
         conversationId: run.conversationId,
@@ -120,7 +164,9 @@ export class ConversationStreamService {
         done: true,
         error: message,
         id: randomUUID(),
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
+        metadataJson: null,
         sortOrder: sortOrder,
       });
     } finally {
@@ -131,10 +177,18 @@ export class ConversationStreamService {
   private async persistAssistant(
     run: StartConversationStreamRun,
     content: string,
+    toolEvents: ReadonlyArray<Record<string, unknown>>,
   ): Promise<void> {
     try {
+      const toolMetadata =
+        toolEvents.length > 0 ? { events: [...toolEvents] } : null;
       await this.conversations.appendMessages(run.userId, run.conversationId, [
-        { content, id: run.assistantMessageId, role: 'assistant' },
+        {
+          content,
+          id: run.assistantMessageId,
+          role: 'assistant',
+          toolMetadata,
+        },
       ]);
       await this.conversations.updateModelSnapshot(run.conversationId, {
         modelName: run.model,

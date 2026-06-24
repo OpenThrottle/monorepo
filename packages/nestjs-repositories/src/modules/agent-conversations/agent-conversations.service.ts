@@ -368,6 +368,26 @@ export class AgentConversationsService {
     return this.conversationRepository.save(conversation);
   }
 
+  /**
+   * @description Shallow-merges a patch into a conversation's metadata JSONB
+   * (e.g. a CLI backend's session id + repository id). Existing keys are
+   * overwritten; unrelated keys are preserved.
+   */
+  async updateMetadata(
+    conversationId: string,
+    patch: Record<string, unknown>,
+  ): Promise<AgentConversation> {
+    const conversation = await this.conversationRepository.findOne({
+      where: { id: conversationId },
+    });
+    if (!conversation) {
+      throw new NotFoundException('Agent conversation not found');
+    }
+
+    conversation.metadata = { ...(conversation.metadata ?? {}), ...patch };
+    return this.conversationRepository.save(conversation);
+  }
+
   private async assertPlanExistsWhenSet(
     planId: string | null | undefined,
   ): Promise<void> {

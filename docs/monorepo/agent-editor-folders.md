@@ -28,7 +28,7 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 
 ## 1. Folder tree (overview)
 
-```
+```bash
 repo root
 ├── AGENTS.md, CLAUDE.md              # Cross-editor entry points (edit in place)
 ├── .workflow-ralph.json.example      # Ralph CLI local defaults (example)

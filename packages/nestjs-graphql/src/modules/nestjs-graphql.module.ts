@@ -296,6 +296,7 @@ export class NestjsGraphqlModule {
     return {
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: 'schema.gql',
           cache: getRedisCache(),
           ...config,
         }),

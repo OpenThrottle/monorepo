@@ -31,8 +31,13 @@ import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   type AgentConversationMessage,
   AgentConversationsService,
+  CustomPromptsService,
+  WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
-import type { ChatCompletionMessage } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  type ChatCompletionMessage,
+  createCursorAgentSession,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
@@ -75,13 +80,52 @@ const resolveHumanUserId = (
 ): string | null =>
   principal?.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
 
+/** Supported backends. CLI runners beyond cursor are not wired in v1. */
+const OPENAI_BACKEND = 'openai';
+const CURSOR_BACKEND = 'cursor';
+
+/**
+ * Env var holding a dev-only working directory for CLI backends. Honored ONLY
+ * when NODE_ENV !== 'production' — the escape hatch is hard-disabled in prod so
+ * a CLI backend there always requires a registered repository.
+ */
+const DEV_CWD_ENV = 'OPENTHROTTLE_AGENT_DEV_CWD';
+
+/** RFC-4122 UUID matcher: registry persona ids are UUIDs; mock composer ids are not. */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Fallback persona → system-prompt map for the mock composer ids (pre-registry). */
+const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
+  architect:
+    'You are the Architect. Analyze the request and propose a clear, minimal plan before making changes; prefer design clarity over speed.',
+  builder:
+    'You are the Builder. Implement the requested change directly and pragmatically, matching the surrounding code style.',
+  reviewer:
+    'You are the Reviewer. Critically review for correctness, security, and edge cases; call out risks explicitly.',
+};
+
+/** Backend-specific run parameters resolved before the stream starts. */
+interface ResolvedBackendRun {
+  readonly baseUrl: string | null;
+  readonly cwd: string | null;
+  readonly model: string;
+  readonly provider: string | null;
+  readonly sessionId: string | null;
+  readonly systemPrompt: string | null;
+}
+
+const isProduction = (): boolean => process.env.NODE_ENV === 'production';
+
 // @authz-stance: authenticated-only (Path A — human JWT user)
 @Resolver()
 export class ConversationStreamResolver {
   constructor(
     private readonly conversations: AgentConversationsService,
+    private readonly customPrompts: CustomPromptsService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
+    private readonly repositories: WorkspaceLocalRepositoriesService,
     private readonly streamService: ConversationStreamService,
   ) {}
 
@@ -131,17 +175,9 @@ export class ConversationStreamResolver {
       return failed('Message is required.');
     }
 
-    // SSRF guard: only stream to an endpoint+model the server actually discovered.
-    const discovery = await this.modelDiscovery.discover();
-    const endpoint = discovery.endpoints.find(
-      (candidate) =>
-        candidate.baseUrl === input.baseUrl &&
-        candidate.models.includes(input.modelId),
-    );
-    if (!endpoint) {
-      return failed(
-        'Unknown model or endpoint. Pick a model from the discovered list.',
-      );
+    const backend = (input.backend ?? OPENAI_BACKEND).trim() || OPENAI_BACKEND;
+    if (backend !== OPENAI_BACKEND && backend !== CURSOR_BACKEND) {
+      return failed(`Unsupported backend: ${backend}.`);
     }
 
     const conversationId = await this.resolveConversationId(
@@ -151,6 +187,16 @@ export class ConversationStreamResolver {
     );
     if (conversationId == null) {
       return failed('Conversation not found.');
+    }
+
+    const resolved = await this.resolveBackendRun(
+      backend,
+      userId,
+      conversationId,
+      input,
+    );
+    if (typeof resolved === 'string') {
+      return failed(resolved);
     }
 
     const [userMessage] = await this.conversations.appendMessages(
@@ -171,11 +217,15 @@ export class ConversationStreamResolver {
 
     this.streamService.start({
       assistantMessageId,
-      baseUrl: endpoint.baseUrl,
+      backend,
+      baseUrl: resolved.baseUrl,
       conversationId,
+      cwd: resolved.cwd,
       messages,
-      model: input.modelId,
-      provider: endpoint.provider,
+      model: resolved.model,
+      provider: resolved.provider,
+      sessionId: resolved.sessionId,
+      systemPrompt: resolved.systemPrompt,
       userId,
     });
 
@@ -185,6 +235,97 @@ export class ConversationStreamResolver {
     result.errorMessage = null;
     result.userMessageId = userMessage?.id ?? null;
     return result;
+  }
+
+  /**
+   * Validate + resolve backend-specific run parameters, or return an error
+   * message string. openai validates the endpoint+model (SSRF guard); cursor
+   * resolves a scoped working directory and mints/reuses a chat session.
+   */
+  private async resolveBackendRun(
+    backend: string,
+    userId: string,
+    conversationId: string,
+    input: StartConversationStreamInput,
+  ): Promise<ResolvedBackendRun | string> {
+    if (backend === OPENAI_BACKEND) {
+      if (!input.baseUrl || !input.modelId) {
+        return 'baseUrl and modelId are required for the openai backend.';
+      }
+      // SSRF guard: only stream to an endpoint+model the server discovered.
+      const discovery = await this.modelDiscovery.discover();
+      const endpoint = discovery.endpoints.find(
+        (candidate) =>
+          candidate.baseUrl === input.baseUrl &&
+          candidate.models.includes(input.modelId ?? ''),
+      );
+      if (!endpoint) {
+        return 'Unknown model or endpoint. Pick a model from the discovered list.';
+      }
+      return {
+        baseUrl: endpoint.baseUrl,
+        cwd: null,
+        model: input.modelId,
+        provider: endpoint.provider,
+        sessionId: null,
+        systemPrompt: null,
+      };
+    }
+
+    // CLI backend (cursor): resolve a scoped cwd from a registered repository,
+    // or — only in development, behind an env flag — a configured dev directory.
+    let cwd: string | null = null;
+    if (input.repositoryId != null && input.repositoryId !== '') {
+      const repository = await this.repositories.findByIdForUser(
+        input.repositoryId,
+        userId,
+      );
+      if (!repository) {
+        return 'Repository not found.';
+      }
+      cwd = repository.filesystemPath;
+    } else if (!isProduction()) {
+      const devCwd = process.env[DEV_CWD_ENV]?.trim();
+      cwd = devCwd === undefined || devCwd === '' ? null : devCwd;
+    }
+    if (cwd == null) {
+      return isProduction()
+        ? 'A repository is required to run an agent CLI.'
+        : `A repository is required to run an agent CLI (or set ${DEV_CWD_ENV} for local development).`;
+    }
+
+    // One OT conversation ↔ one cursor chat: reuse the persisted id, else mint.
+    const conversation = await this.conversations.getConversationForUser(
+      userId,
+      conversationId,
+    );
+    const existingSessionId = conversation.metadata?.['cursorSessionId'];
+    let sessionId: string;
+    if (typeof existingSessionId === 'string' && existingSessionId !== '') {
+      sessionId = existingSessionId;
+    } else {
+      try {
+        sessionId = await createCursorAgentSession({ cwd });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return `Failed to start a cursor-agent session: ${message}`;
+      }
+      await this.conversations.updateMetadata(conversationId, {
+        cursorRepositoryId: input.repositoryId ?? null,
+        cursorSessionId: sessionId,
+      });
+    }
+
+    const systemPrompt = await this.resolvePersonaSystemPrompt(input.personaId);
+
+    return {
+      baseUrl: null,
+      cwd,
+      model: input.modelId ?? '',
+      provider: CURSOR_BACKEND,
+      sessionId,
+      systemPrompt,
+    };
   }
 
   @Mutation(() => Boolean, {
@@ -207,6 +348,28 @@ export class ConversationStreamResolver {
     }
 
     return this.streamService.cancel(conversationId);
+  }
+
+  /**
+   * Resolve a persona's system prompt: a registry persona (custom_prompts,
+   * promptType=personas) by UUID id, else the hardcoded fallback map for the
+   * mock composer ids. Null when no persona is selected or resolvable.
+   */
+  private async resolvePersonaSystemPrompt(
+    personaId: string | null,
+  ): Promise<string | null> {
+    if (personaId == null || personaId === '') {
+      return null;
+    }
+    if (UUID_RE.test(personaId)) {
+      const persona = await this.customPrompts.getRepository().findOne({
+        where: { id: personaId, promptType: 'personas' },
+      });
+      if (persona) {
+        return persona.content;
+      }
+    }
+    return PERSONA_SYSTEM_PROMPTS[personaId] ?? null;
   }
 
   /** Resolve an owned conversation id, or create a new one. Returns null when a given id is not owned. */
