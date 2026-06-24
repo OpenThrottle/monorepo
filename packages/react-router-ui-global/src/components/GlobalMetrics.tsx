@@ -79,9 +79,7 @@ export const GlobalMetrics = (
 
   // Hooks
   const prefersReducedMotion = usePrefersReducedMotion();
-
-  const [isOpen, setIsOpen] = React.useState<boolean>(true);
-
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [metricsHistory, setMetricsHistory] = React.useState<
     readonly MetricsChartDatum[]
   >([]);
@@ -119,6 +117,7 @@ export const GlobalMetrics = (
     ) {
       return;
     }
+
     setIntervalMs(valueMs);
 
     try {
@@ -137,7 +136,6 @@ export const GlobalMetrics = (
 
   React.useEffect(() => {
     if (serverMetrics == null) return;
-
     let trimmed: readonly MetricsChartDatum[] = [];
 
     setMetricsHistory((prev) => {
@@ -157,7 +155,6 @@ export const GlobalMetrics = (
 
   React.useLayoutEffect(() => {
     const restored = readStoredMetricsChartHistory();
-
     if (restored.length === 0) return;
 
     setMetricsHistory(restored);
@@ -171,7 +168,6 @@ export const GlobalMetrics = (
 
   React.useLayoutEffect(() => {
     const collapsed = getStoredMetricsCollapsed();
-
     if (collapsed == null) return;
 
     setIsOpen(!collapsed);
