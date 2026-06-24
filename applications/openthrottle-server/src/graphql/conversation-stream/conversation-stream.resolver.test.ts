@@ -6,15 +6,33 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import {
-  type AgentConversation,
-  type AgentConversationMessage,
   AgentConversationsService,
+  CustomPromptsService,
+  WorkspaceLocalRepositoriesService,
+} from '@openthrottle/nestjs-repositories';
+import type {
+  AgentConversation,
+  AgentConversationMessage,
+  CustomPrompt,
+  WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
+import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ConversationStreamResolver } from './conversation-stream.resolver';
 import { ConversationStreamService } from './conversation-stream.service';
+
+const { createCursorAgentSessionMock } = vi.hoisted(() => ({
+  createCursorAgentSessionMock: vi.fn(),
+}));
+
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@openthrottle/openthrottle-agentic-utils')
+  >()),
+  createCursorAgentSession: createCursorAgentSessionMock,
+}));
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {
@@ -46,6 +64,8 @@ function build(): {
   asyncIterator: ReturnType<typeof vi.fn>;
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
+  personaFindOne: ReturnType<typeof vi.fn>;
+  repositories: WorkspaceLocalRepositoriesService;
   resolver: ConversationStreamResolver;
   streamService: ConversationStreamService;
 } {
@@ -54,9 +74,18 @@ function build(): {
     createConversation: vi.fn().mockResolvedValue(conversation),
     getConversationForUser: vi.fn().mockResolvedValue(conversation),
     listMessagesForConversation: vi.fn().mockResolvedValue([userMessage]),
+    updateMetadata: vi.fn().mockResolvedValue(conversation),
+  });
+  const personaFindOne = vi.fn().mockResolvedValue(null);
+  const customPrompts = createMock<CustomPromptsService>({
+    getRepository: () =>
+      createMock<Repository<CustomPrompt>>({ findOne: personaFindOne }),
   });
   const modelDiscovery = createMock<NestjsModelDiscoveryService>({
     discover: vi.fn().mockResolvedValue(discovery),
+  });
+  const repositories = createMock<WorkspaceLocalRepositoriesService>({
+    findByIdForUser: vi.fn().mockResolvedValue(null),
   });
   const streamService = createMock<ConversationStreamService>({
     cancel: vi.fn().mockReturnValue(true),
@@ -65,6 +94,7 @@ function build(): {
   const asyncIterator = vi.fn().mockReturnValue({ next: vi.fn() });
   const resolver = new ConversationStreamResolver(
     conversations,
+    customPrompts,
     modelDiscovery,
     {
       asyncIterator,
@@ -72,12 +102,15 @@ function build(): {
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
     },
+    repositories,
     streamService,
   );
   return {
     asyncIterator,
     conversations,
     modelDiscovery,
+    personaFindOne,
+    repositories,
     resolver,
     streamService,
   };
@@ -140,6 +173,103 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     });
 
     expect(result.errorMessage).toContain('Unknown model or endpoint');
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('routes a cursor backend: resolves the repo cwd, mints a session, starts the cursor stream', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue({
+      filesystemPath: '/repo/checkout',
+    } as WorkspaceLocalRepository);
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'do the thing',
+      modelId: null,
+      personaId: 'architect',
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(createCursorAgentSessionMock).toHaveBeenCalledWith({
+      cwd: '/repo/checkout',
+    });
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'cursor',
+        cwd: '/repo/checkout',
+        provider: 'cursor',
+        sessionId: 'cursor-sess-1',
+        systemPrompt: expect.stringContaining('Architect'),
+      }),
+    );
+  });
+
+  it('resolves a cursor persona system prompt from the custom_prompts registry by id', async () => {
+    const { personaFindOne, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue({
+      filesystemPath: '/repo/checkout',
+    } as WorkspaceLocalRepository);
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+    personaFindOne.mockResolvedValue({
+      content: 'You are the registry persona.',
+    } as CustomPrompt);
+    const personaId = '11111111-1111-4111-8111-111111111111';
+
+    await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hi',
+      modelId: null,
+      personaId,
+      repositoryId: 'repo-1',
+    });
+
+    expect(personaFindOne).toHaveBeenCalledWith({
+      where: { id: personaId, promptType: 'personas' },
+    });
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemPrompt: 'You are the registry persona.',
+      }),
+    );
+  });
+
+  it('rejects a cursor backend when the repository is not owned/found', async () => {
+    const { resolver, streamService } = build();
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: 'conv-1',
+      message: 'hi',
+      modelId: null,
+      personaId: null,
+      repositoryId: 'missing-repo',
+    });
+
+    expect(result.errorMessage).toBe('Repository not found.');
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unsupported backend (allowlist enforcement)', async () => {
+    const { resolver, streamService } = build();
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'rm-rf-backend',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hi',
+      modelId: null,
+      personaId: null,
+      repositoryId: null,
+    });
+
+    expect(result.errorMessage).toContain('Unsupported backend');
     expect(streamService.start).not.toHaveBeenCalled();
   });
 

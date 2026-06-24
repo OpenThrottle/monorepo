@@ -8,9 +8,9 @@
  * revalidates and the persisted assistant row (same id) appears in seedMessages,
  * the seed version wins (dedup by id).
  */
+import * as React from 'react';
 import type { ChatMessage } from '@openthrottle/react-router-chat';
 import { useSubscription } from '@openthrottle/react-router-graphql';
-import * as React from 'react';
 import type { ConversationStreamChunkAddedSubscription } from '~/__generated__/graphql';
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
@@ -33,6 +33,40 @@ export const INITIAL_STREAM_STATE: StreamState = {
   seen: new Set(),
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
+
+/**
+ * Best-effort tool name from a tool_call chunk's metadataJson; falls back to 'tool'.
+ */
+export function toolActivityLabel(
+  metadataJson: string | null | undefined,
+): string {
+  if (
+    metadataJson === null ||
+    metadataJson === undefined ||
+    metadataJson === ''
+  ) {
+    return 'tool';
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(metadataJson);
+    if (!isRecord(parsed) || !isRecord(parsed.toolCall)) {
+      return 'tool';
+    }
+
+    const name = Object.keys(parsed.toolCall).find(
+      (key) => key !== 'toolCallId' && key !== 'hookAdditionalContexts',
+    );
+
+    return name === undefined ? 'tool' : name.replace(/ToolCall$/, '');
+  } catch {
+    return 'tool';
+  }
+}
+
 /** Pure reducer: fold one streamed chunk into the accumulation state. */
 export function reduceStreamChunk(
   state: StreamState,
@@ -42,6 +76,7 @@ export function reduceStreamChunk(
   if (state.seen.has(dedupeKey)) {
     return state;
   }
+
   const seen = new Set(state.seen);
   seen.add(dedupeKey);
 
@@ -52,14 +87,28 @@ export function reduceStreamChunk(
     if (chunk.error) {
       bodies.set(chunk.messageId, `${current}\n\n_Error: ${chunk.error}_`);
     }
+
     return { bodies, isStreaming: false, seen };
   }
 
-  bodies.set(chunk.messageId, current + chunk.delta);
+  // Assistant text accumulates into the body; tool calls show a dim one-line
+  // marker in arrival order. thinking/tool_result/usage/session stream for
+  // liveness but are not rendered inline in v1 (richer rendering is a follow-up).
+  if (chunk.kind === 'text') {
+    bodies.set(chunk.messageId, current + chunk.delta);
+  } else if (chunk.kind === 'tool_call') {
+    bodies.set(
+      chunk.messageId,
+      `${current}\n\n_🔧 ${toolActivityLabel(chunk.metadataJson)}_`,
+    );
+  }
+
   return { bodies, isStreaming: true, seen };
 }
 
-/** Merge loader history with accumulated streamed assistant messages (seed wins by id). */
+/**
+ * Merge loader history with accumulated streamed assistant messages (seed wins by id).
+ */
 export function toThreadMessages(
   seedMessages: readonly ChatMessage[],
   bodies: ReadonlyMap<string, string>,
@@ -68,6 +117,7 @@ export function toThreadMessages(
   const streamed: ChatMessage[] = Array.from(bodies.entries())
     .filter(([messageId]) => !seedIds.has(messageId))
     .map(([messageId, body]) => ({ body, id: messageId, role: 'assistant' }));
+
   return [...seedMessages, ...streamed];
 }
 
@@ -101,8 +151,9 @@ export function useConversationStream(
 
   // Life Cycle
   React.useEffect(() => {
-    // New conversation → drop any prior accumulation.
     setState(INITIAL_STREAM_STATE);
+
+    // 🪝 New conversation → drop any prior accumulation.
   }, [conversationId]);
 
   useSubscription(
@@ -120,5 +171,8 @@ export function useConversationStream(
     [seedMessages, state.bodies],
   );
 
-  return { isStreaming: state.isStreaming, messages };
+  return {
+    isStreaming: state.isStreaming,
+    messages,
+  };
 }

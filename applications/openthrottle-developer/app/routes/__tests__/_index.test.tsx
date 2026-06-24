@@ -8,7 +8,7 @@ describe('routes/_index.tsx', () => {
     const view = renderRoutesStub(
       <Index
         actionData={undefined}
-        loaderData={{ models: [] }}
+        loaderData={{ models: [], personas: [], repositories: [] }}
         matches={[] as never}
         params={{}}
       />,
