@@ -928,7 +928,7 @@ catalogs:
 overrides:
   '@radix-ui/react-slot': ^1.2.4
   '@tanstack/query-sync-storage-persister': ^5.90.21
-  '@tanstack/react-query': ^5.90.19
+  '@tanstack/react-query': ^5.101.0
   '@tanstack/react-query-persist-client': ^5.90.21
   graphql-request: ^7.4.0
   react: 19.2.4
@@ -1264,11 +1264,11 @@ importers:
         specifier: ^5.90.21
         version: 5.100.9
       '@tanstack/react-query':
-        specifier: ^5.90.19
-        version: 5.100.9(react@19.2.4)
+        specifier: ^5.101.0
+        version: 5.101.0(react@19.2.4)
       '@tanstack/react-query-persist-client':
         specifier: ^5.90.21
-        version: 5.100.9(@tanstack/react-query@5.100.9(react@19.2.4))(react@19.2.4)
+        version: 5.100.9(@tanstack/react-query@5.101.0(react@19.2.4))(react@19.2.4)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -9144,8 +9144,8 @@ packages:
   '@react-dnd/shallowequal@4.0.2':
     resolution: {integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==}
 
-  '@react-grab/cli@0.1.44':
-    resolution: {integrity: sha512-gMDYY2rw6OWajCcDlXSIgs2LC432YJXSb3Lm5yM187uhRgBYddoEVULi36h+IolX3r7jSb3ew7vn9FfI8NSo0A==}
+  '@react-grab/cli@0.1.46':
+    resolution: {integrity: sha512-rNjGKeRY3HROku1J/a7y8RGHRGFR6ZnllSPqNLfFI5cUu6FCdjjxHvXf1TEXxW7I5REq8iKoLuzM9iYboXCRdg==}
     hasBin: true
 
   '@react-router/dev@7.17.0':
@@ -10303,6 +10303,9 @@ packages:
   '@tanstack/query-core@5.100.9':
     resolution: {integrity: sha512-SJSFw1S8+kQ0+knv/XGfrbocWoAlT7vDKsSImtLx3ZPQmEcR46hkDjLSvynSy25N8Ms4tIEini1FuBd5k7IscQ==}
 
+  '@tanstack/query-core@5.101.0':
+    resolution: {integrity: sha512-cQetA74EB+seWySv1TTKr828TnP0u39m6LykwDXIo84SNortpDkp30TMEjkqtYCNP9c40uT/iwl6MLiufEt0Ow==}
+
   '@tanstack/query-persist-client-core@5.100.9':
     resolution: {integrity: sha512-sCPZZp3D9sOeqcA4SDxjUIm4wVq8PwHebH4ouFZetwjT4xvGjT/cLBQ4Sst+BFcFuk745pCPkf3T4MFliLHECQ==}
 
@@ -10321,11 +10324,11 @@ packages:
   '@tanstack/react-query-persist-client@5.100.9':
     resolution: {integrity: sha512-qO7j+3VUZm4YH4T3dWszDqgvO+5+6NB1kSY+QmF7JD6+IONfeNmGyOzyobjmrX+6CYLPQtQ+sjM9vFYaSOAv6A==}
     peerDependencies:
-      '@tanstack/react-query': ^5.90.19
+      '@tanstack/react-query': ^5.101.0
       react: 19.2.4
 
-  '@tanstack/react-query@5.100.9':
-    resolution: {integrity: sha512-Oa44XkaI3kCNN6ME0KByU3xT3SEUNOMfZpHxL6+wFoTm+OeUFYHKdeYVe0aOXlRDm/f15sgLwEt2HDorIdW8+A==}
+  '@tanstack/react-query@5.101.0':
+    resolution: {integrity: sha512-rLlJXSpkqfizLWgkR5+eLeIk0MvTx/meEIR7LRjxic+qxiQP8zVjq7BqQkiCMNLQBlLfuOLqqr6KO5GtrDlmSg==}
     peerDependencies:
       react: 19.2.4
 
@@ -11419,6 +11422,10 @@ packages:
 
   agent-install@0.0.5:
     resolution: {integrity: sha512-nHlms9BkP8ZiY79HrwCGiA2DcNaXrAaJrCM/BEqQ7MEsSKyCk+2A76xPGylIfASZSZE0SaU3T0bNSg4rBPIJAQ==}
+    hasBin: true
+
+  agent-install@0.0.6:
+    resolution: {integrity: sha512-7NRMZ/ZDz2vHevQTgJsocBFpakB1/Wx5ip19YSJuj4VOXpraWztTerViNtdSyARKZT9e2yVwUUB5JXXCE7mNrA==}
     hasBin: true
 
   agentkeepalive@4.6.0:
@@ -17712,8 +17719,8 @@ packages:
   react-fast-compare@2.0.4:
     resolution: {integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==}
 
-  react-grab@0.1.44:
-    resolution: {integrity: sha512-bDEwBdI90ljq2lhUtPqmWis/HwYB/CvfT0m5i+P9F83Pt0Ot8o9XL8v00s9jcWzdQUlsFDzmq2FO2CHUe8JY8A==}
+  react-grab@0.1.46:
+    resolution: {integrity: sha512-i6sSSBGqW1yxZ5TZL9wX2m9qNMKOydpou5IMaXrK1iylJAJyr/npoqv4mhq3cO7480FBhmlEZbf5VF8KOCBlMQ==}
     hasBin: true
     peerDependencies:
       react: 19.2.4
@@ -27255,9 +27262,9 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.44':
+  '@react-grab/cli@0.1.46':
     dependencies:
-      agent-install: 0.0.5
+      agent-install: 0.0.6
       commander: 14.0.3
       ignore: 7.0.5
       ora: 9.4.0
@@ -28398,6 +28405,8 @@ snapshots:
 
   '@tanstack/query-core@5.100.9': {}
 
+  '@tanstack/query-core@5.101.0': {}
+
   '@tanstack/query-persist-client-core@5.100.9':
     dependencies:
       '@tanstack/query-core': 5.100.9
@@ -28420,15 +28429,15 @@ snapshots:
       - solid-js
       - utf-8-validate
 
-  '@tanstack/react-query-persist-client@5.100.9(@tanstack/react-query@5.100.9(react@19.2.4))(react@19.2.4)':
+  '@tanstack/react-query-persist-client@5.100.9(@tanstack/react-query@5.101.0(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@tanstack/query-persist-client-core': 5.100.9
-      '@tanstack/react-query': 5.100.9(react@19.2.4)
+      '@tanstack/react-query': 5.101.0(react@19.2.4)
       react: 19.2.4
 
-  '@tanstack/react-query@5.100.9(react@19.2.4)':
+  '@tanstack/react-query@5.101.0(react@19.2.4)':
     dependencies:
-      '@tanstack/query-core': 5.100.9
+      '@tanstack/query-core': 5.101.0
       react: 19.2.4
 
   '@tanstack/react-table@8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
@@ -29632,6 +29641,15 @@ snapshots:
   agent-base@7.1.4: {}
 
   agent-install@0.0.5:
+    dependencies:
+      '@iarna/toml': 2.2.5
+      commander: 14.0.3
+      jsonc-parser: 3.3.1
+      picocolors: 1.1.1
+      prompts: 2.4.2
+      yaml: 2.9.0
+
+  agent-install@0.0.6:
     dependencies:
       '@iarna/toml': 2.2.5
       commander: 14.0.3
@@ -37225,9 +37243,9 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.44(react@19.2.4):
+  react-grab@0.1.46(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.44
+      '@react-grab/cli': 0.1.46
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
@@ -37381,7 +37399,7 @@ snapshots:
       react: 19.2.4
       react-doctor: 0.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.44(react@19.2.4)
+      react-grab: 0.1.46(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 3.0.0
