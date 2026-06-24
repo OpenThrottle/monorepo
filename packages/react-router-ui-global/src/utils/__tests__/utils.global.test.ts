@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   deriveOverallHealthStatus,
+  formatMetricsSummary,
   healthStatusColorClass,
   healthValueColorClass,
 } from '../utils.global';
@@ -80,5 +81,25 @@ describe('healthValueColorClass', () => {
     expect(healthValueColorClass('unreachable')).toBe('bg-red-500');
     expect(healthValueColorClass('unconfigured')).toBe('bg-amber-500');
     expect(healthValueColorClass(undefined)).toBe('bg-amber-500');
+  });
+});
+
+describe('formatMetricsSummary', () => {
+  test('renders an em-dash placeholder when no sample is available', () => {
+    expect(formatMetricsSummary(null)).toBe('—');
+    expect(formatMetricsSummary(undefined)).toBe('—');
+  });
+
+  test('summarizes RSS, heap-used, and CPU-user from the latest sample', () => {
+    expect(
+      formatMetricsSummary({
+        cpuSystemMs: 99,
+        cpuUserMs: 12_340.7,
+        externalMb: 5,
+        heapTotalMb: 200,
+        heapUsedMb: 87.456,
+        rssMb: 145.219,
+      }),
+    ).toBe('RSS 145.22 MB · Heap 87.46 MB · CPU 12341 ms');
   });
 });

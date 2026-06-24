@@ -2,6 +2,13 @@ import { ChartConfig } from '@openthrottle/react-router-shadcn';
 
 export const GLOBAL_METRICS_STORAGE_KEY = `openthrottle-developer:metricsPollInterval`;
 
+/**
+ * @description sessionStorage key persisting whether the metrics panel is
+ * collapsed. Stores the *collapsed* boolean (`'true'`/`'false'`); an absent
+ * value means the panel defaults to open.
+ */
+export const GLOBAL_METRICS_COLLAPSED_KEY = `openthrottle-developer:metricsCollapsed`;
+
 export const GLOBAL_METRICS_POLL_INTERVAL_DEFAULT = 60_000;
 export const GLOBAL_METRICS_POLL_INTERVAL_PRESETS: readonly {
   readonly label: string;

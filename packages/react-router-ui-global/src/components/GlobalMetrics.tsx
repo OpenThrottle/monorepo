@@ -1,10 +1,14 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
+  Button,
   Card,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Label,
   Select,
   SelectContent,
@@ -18,16 +22,19 @@ import {
   usePollServerMetrics,
 } from '@openthrottle/react-router-ui';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+import { ChevronDownIcon } from 'lucide-react';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import {
   GetRootMetricsDocument,
   GetRootMetricsQuery,
 } from '@openthrottle/openthrottle-developer-codegen';
 import {
+  getStoredMetricsCollapsed,
   getStoredPollIntervalMs,
   readStoredMetricsChartHistory,
   trimMetricsChartData,
   writeStoredMetricsChartHistory,
+  writeStoredMetricsCollapsed,
   type MetricsChartDatum,
 } from '../utils/storage';
 import {
@@ -37,7 +44,12 @@ import {
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
-import { formatCpuMs, formatMb } from '../utils/utils.global';
+import {
+  formatCpuMs,
+  formatMb,
+  formatMetricsSummary,
+} from '../utils/utils.global';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import {
   GlobalMetricsInfoModal,
   GlobalMetricsInfoTrigger,
@@ -66,6 +78,10 @@ export const GlobalMetrics = (
   } = props;
 
   // Hooks
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  const [isOpen, setIsOpen] = React.useState<boolean>(true);
+
   const [metricsHistory, setMetricsHistory] = React.useState<
     readonly MetricsChartDatum[]
   >([]);
@@ -89,6 +105,11 @@ export const GlobalMetrics = (
   const url = React.useMemo(() => `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`, []);
 
   // Handlers
+  const handleOpenChange = React.useCallback((next: boolean) => {
+    setIsOpen(next);
+    writeStoredMetricsCollapsed(!next);
+  }, []);
+
   const handleIntervalChange = React.useCallback((value: string) => {
     const valueMs = Number(value);
 
@@ -148,6 +169,20 @@ export const GlobalMetrics = (
      */
   }, []);
 
+  React.useLayoutEffect(() => {
+    const collapsed = getStoredMetricsCollapsed();
+
+    if (collapsed == null) return;
+
+    setIsOpen(!collapsed);
+
+    /**
+     * 🪝 Restore the collapsed/open preference from sessionStorage after mount.
+     * Initial state stays open on the server and on the client’s first render so
+     * SSR/hydration markup matches; `useLayoutEffect` runs only in the browser.
+     */
+  }, []);
+
   const chartLineData = React.useMemo((): MetricsChartDatum[] => {
     if (metricsHistory.length > 0) {
       return [...metricsHistory];
@@ -174,136 +209,194 @@ export const GlobalMetrics = (
     <div
       className={classnames(
         'flex w-full flex-col',
-        'gap-4 md:gap-8 lg:gap-12',
         'p-4 md:p-8 lg:p-12',
         className,
       )}
       data-testid="GlobalMetrics"
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-muted-foreground">Server metrics</h2>
-            <GlobalMetricsInfoTrigger />
-          </div>
-          <Label className="flex items-center gap-2">
-            <span>Poll</span>
-            <Select
-              aria-label="Metrics poll interval"
-              onValueChange={handleIntervalChange}
-              value={intervalMs.toString()}
-            >
-              <SelectTrigger
-                className="w-[80px]"
-                data-testid="GlobalMetrics-poll-interval"
+      <Collapsible onOpenChange={handleOpenChange} open={isOpen}>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex w-full min-w-0 items-center gap-2">
+              <CollapsibleTrigger asChild={true}>
+                <Button
+                  aria-label={
+                    isOpen ? 'Collapse server metrics' : 'Expand server metrics'
+                  }
+                  className="text-muted-foreground hover:text-foreground size-7 shrink-0"
+                  data-testid="GlobalMetrics-toggle"
+                  size="icon"
+                  variant="ghost"
+                >
+                  <ChevronDownIcon
+                    aria-hidden={true}
+                    className={classnames('size-4', {
+                      'rotate-180': isOpen,
+                      'transition-transform duration-300':
+                        !prefersReducedMotion,
+                    })}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <h2 className="text-muted-foreground shrink-0">Server metrics</h2>
+              <GlobalMetricsInfoTrigger />
+              <div className="flex-1" />
+              <span
+                aria-hidden={isOpen}
+                className={classnames(
+                  'text-muted-foreground truncate text-sm tabular-nums',
+                  {
+                    'max-w-0 overflow-hidden opacity-0': isOpen,
+                    'max-w-[60ch] opacity-100': !isOpen,
+                    'transition-all duration-300': !prefersReducedMotion,
+                  },
+                )}
+                data-testid="GlobalMetrics-summary"
               >
-                <SelectValue placeholder="Poll interval…" />
-              </SelectTrigger>
-              <SelectContent>
-                {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
-                  <SelectItem
-                    key={preset.valueMs}
-                    value={preset.valueMs.toString()}
+                {formatMetricsSummary(serverMetrics)}
+              </span>
+
+              {isOpen && (
+                <Label
+                  aria-hidden={!isOpen}
+                  className={classnames('flex shrink-0 items-center gap-2', {
+                    'opacity-100': isOpen,
+                    'pointer-events-none opacity-0': !isOpen,
+                    'transition-opacity duration-200': !prefersReducedMotion,
+                  })}
+                >
+                  <span>Poll</span>
+                  <Select
+                    aria-label="Metrics poll interval"
+                    onValueChange={handleIntervalChange}
+                    value={intervalMs.toString()}
                   >
-                    {preset.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Label>
-        </div>
-
-        <GlobalMetricsInfoModal definitionsHref={definitionsHref} />
-
-        {showGlobalLoadingBanner && (
-          <p data-testid="GlobalMetrics-loading">Loading…</p>
-        )}
-
-        {error != null && (
-          <p data-testid="GlobalMetrics-error" role="alert">
-            {error.message}
-          </p>
-        )}
-
-        {showStatCards && serverMetrics != null && (
-          <div
-            className="flex flex-wrap gap-4 md:gap-8 lg:gap-12"
-            data-testid="GlobalMetrics-data"
-          >
-            <OpenThrottleStatCard
-              className="flex-1 bg-transparent p-4 md:p-8"
-              subValue={formatMb(serverMetrics.externalMb)}
-              title="RSS / External (MB)"
-              value={formatMb(serverMetrics.rssMb)}
-            />
-            <OpenThrottleStatCard
-              className="flex-1 bg-transparent p-4 md:p-8"
-              subValue={formatMb(serverMetrics.heapTotalMb)}
-              title="Heap (MB)"
-              value={formatMb(serverMetrics.heapUsedMb)}
-            />
-            <OpenThrottleStatCard
-              className="flex-1 bg-transparent p-4 md:p-8"
-              subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
-              title="CPU (ms) user / system"
-              value={formatCpuMs(serverMetrics.cpuUserMs)}
-            />
+                    <SelectTrigger
+                      className="w-[80px]"
+                      data-testid="GlobalMetrics-poll-interval"
+                      tabIndex={isOpen ? undefined : -1}
+                    >
+                      <SelectValue placeholder="Poll interval…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
+                        <SelectItem
+                          key={preset.valueMs}
+                          value={preset.valueMs.toString()}
+                        >
+                          {preset.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Label>
+              )}
+            </div>
           </div>
-        )}
-      </div>
 
-      {showMetricsChart && (
-        <Card
-          className={classnames('p-4 md:p-8')}
-          data-testid="GlobalMetrics-chart-card"
-        >
-          <ChartContainer
-            className="-ml-1 min-h-[160px] w-full overflow-visible text-sm"
-            config={GLOBAL_METRICS_CHART_CONFIG}
+          <GlobalMetricsInfoModal definitionsHref={definitionsHref} />
+
+          {showGlobalLoadingBanner && (
+            <p data-testid="GlobalMetrics-loading">Loading…</p>
+          )}
+
+          {error != null && (
+            <p data-testid="GlobalMetrics-error" role="alert">
+              {error.message}
+            </p>
+          )}
+
+          <CollapsibleContent
+            className={classnames('overflow-hidden', {
+              'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:duration-300':
+                !prefersReducedMotion,
+            })}
           >
-            <LineChart
-              data={chartLineData}
-              margin={{ bottom: 8, left: 10, right: 12, top: 4 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                axisLine={false}
-                dataKey="i"
-                tickLine={false}
-                tickMargin={8}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tickMargin={4}
-                width={36}
-              />
-              <ChartTooltip content={<ChartTooltipContent labelKey="i" />} />
-              <Line
-                dataKey="rssMb"
-                dot={false}
-                stroke="var(--color-rssMb)"
-                strokeWidth={1.5}
-                type="monotone"
-              />
-              <Line
-                dataKey="heapUsedMb"
-                dot={false}
-                stroke="var(--color-heapUsedMb)"
-                strokeWidth={1.5}
-                type="monotone"
-              />
-              <Line
-                dataKey="cpuUserMs"
-                dot={false}
-                stroke="var(--color-cpuUserMs)"
-                strokeWidth={1.5}
-                type="monotone"
-              />
-            </LineChart>
-          </ChartContainer>
-        </Card>
-      )}
+            <div className="flex w-full flex-col gap-4 pt-4 md:gap-8 md:pt-8 lg:gap-12">
+              {showStatCards && serverMetrics != null && (
+                <div
+                  className="flex flex-wrap gap-4 md:gap-8 lg:gap-12"
+                  data-testid="GlobalMetrics-data"
+                >
+                  <OpenThrottleStatCard
+                    className="flex-1 bg-transparent p-4 md:p-8"
+                    subValue={formatMb(serverMetrics.externalMb)}
+                    title="RSS / External (MB)"
+                    value={formatMb(serverMetrics.rssMb)}
+                  />
+                  <OpenThrottleStatCard
+                    className="flex-1 bg-transparent p-4 md:p-8"
+                    subValue={formatMb(serverMetrics.heapTotalMb)}
+                    title="Heap (MB)"
+                    value={formatMb(serverMetrics.heapUsedMb)}
+                  />
+                  <OpenThrottleStatCard
+                    className="flex-1 bg-transparent p-4 md:p-8"
+                    subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
+                    title="CPU (ms) user / system"
+                    value={formatCpuMs(serverMetrics.cpuUserMs)}
+                  />
+                </div>
+              )}
+
+              {showMetricsChart && (
+                <Card
+                  className={classnames('p-4 md:p-8')}
+                  data-testid="GlobalMetrics-chart-card"
+                >
+                  <ChartContainer
+                    className="-ml-1 min-h-[160px] w-full overflow-visible text-sm"
+                    config={GLOBAL_METRICS_CHART_CONFIG}
+                  >
+                    <LineChart
+                      data={chartLineData}
+                      margin={{ bottom: 8, left: 10, right: 12, top: 4 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        axisLine={false}
+                        dataKey="i"
+                        tickLine={false}
+                        tickMargin={8}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tickMargin={4}
+                        width={36}
+                      />
+                      <ChartTooltip
+                        content={<ChartTooltipContent labelKey="i" />}
+                      />
+                      <Line
+                        dataKey="rssMb"
+                        dot={false}
+                        stroke="var(--color-rssMb)"
+                        strokeWidth={1.5}
+                        type="monotone"
+                      />
+                      <Line
+                        dataKey="heapUsedMb"
+                        dot={false}
+                        stroke="var(--color-heapUsedMb)"
+                        strokeWidth={1.5}
+                        type="monotone"
+                      />
+                      <Line
+                        dataKey="cpuUserMs"
+                        dot={false}
+                        stroke="var(--color-cpuUserMs)"
+                        strokeWidth={1.5}
+                        type="monotone"
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                </Card>
+              )}
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
     </div>
   );
 };
