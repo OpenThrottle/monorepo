@@ -1,5 +1,6 @@
 import { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
 import {
+  GLOBAL_METRICS_COLLAPSED_KEY,
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config/index';
@@ -75,6 +76,41 @@ export function getStoredPollIntervalMs(): number | null {
     return null;
   }
 }
+
+/**
+ * @description Reads the persisted *collapsed* flag for the metrics panel from
+ * sessionStorage. Returns `null` when missing, unparseable, or not in a
+ * browser, so callers can apply their own default (open).
+ */
+export const getStoredMetricsCollapsed = (): boolean | null => {
+  const storage = getSessionChartStorage();
+  if (storage == null) return null;
+
+  try {
+    const raw = storage.getItem(GLOBAL_METRICS_COLLAPSED_KEY);
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * @description Persists the *collapsed* flag for the metrics panel to
+ * sessionStorage. Ignores access/quota errors (private mode, etc.).
+ */
+export const writeStoredMetricsCollapsed = (collapsed: boolean): void => {
+  const storage = getSessionChartStorage();
+  if (storage == null) return;
+
+  try {
+    storage.setItem(GLOBAL_METRICS_COLLAPSED_KEY, collapsed ? 'true' : 'false');
+  } catch {
+    // private mode / quota — ignore
+  }
+};
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);

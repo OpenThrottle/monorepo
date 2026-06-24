@@ -471,6 +471,7 @@ export default function App(): React.ReactElement {
 
               {!isMetricsHidden ? (
                 <GlobalMetrics
+                  defaultOpen={false}
                   definitionsHref="/settings/debug#server-metrics-definitions"
                   diagnosticsHref="/settings/debug#graphql-endpoint-health"
                 />
@@ -546,15 +547,19 @@ export const action = async (args: Route.ActionArgs) => {
     if (jump === 'plan-detail' && REGEX_UUID.test(id)) {
       return redirect(`/plans/${id}`);
     }
+
     if (jump === 'queue-detail' && REGEX_UUID.test(id)) {
       return redirect(`/queues/${id}`);
     }
+
     if (jump === 'generator-detail' && REGEX_UUID.test(id)) {
       return redirect(`/generators/${id}`);
     }
+
     if (jump === 'queue-job' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(queueJobDetailPath(id, id2));
     }
+
     if (jump === 'plan-task' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(`/plans/${id}/tasks/${id2}`);
     }
@@ -563,11 +568,13 @@ export const action = async (args: Route.ActionArgs) => {
       const qTextRaw = formData.get('q');
       const qText = typeof qTextRaw === 'string' ? qTextRaw.trim() : '';
       const pairFromQuery = parseQueueAndJobIdsFromCommanderQuery(qText);
+
       if (pairFromQuery) {
         const [a, b] = pairFromQuery;
         if (jump === 'queue-job') {
           return redirect(queueJobDetailPath(a, b));
         }
+
         return redirect(`/plans/${a}/tasks/${b}`);
       }
     }
