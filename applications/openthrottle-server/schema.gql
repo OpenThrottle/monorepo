@@ -511,6 +511,30 @@ type ListAgentConversationMessagesResultObject {
   totalCount: Int!
 }
 
+type AgentCliOptionObject {
+  """
+  Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
+  """
+  backend: String!
+
+  """Human-readable label for the selector."""
+  label: String!
+
+  """Trimmed --version output, or null when unknown."""
+  version: String
+}
+
+type DiscoverAgentClisResult {
+  """Allowlisted agent CLIs detected as available on the server host."""
+  agents: [AgentCliOptionObject!]!
+
+  """ISO-8601 timestamp of when this snapshot was scanned."""
+  scannedAt: String!
+
+  """Number of available agent CLIs."""
+  totalCount: Int!
+}
+
 type AgentsChatTurnResult {
   """
   Assistant-visible reply text. Null when the turn failed (see errorMessage).
@@ -664,6 +688,16 @@ type ConversationStreamChunkObject {
 
   """Assistant message id the deltas accumulate into."""
   messageId: String!
+
+  """
+  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session.
+  """
+  kind: String!
+
+  """
+  JSON-encoded structured metadata for non-text kinds (tool args, usage, session id); null otherwise.
+  """
+  metadataJson: String
 
   """Monotonic index within the stream."""
   sortOrder: Int!
@@ -1766,6 +1800,11 @@ type Query {
   getAgentConversationMessages(input: GetAgentConversationMessagesInput!): ListAgentConversationMessagesResultObject!
 
   """
+  Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request.
+  """
+  discoverAgentClis: DiscoverAgentClisResult!
+
+  """
   Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.
   """
   codeSemanticSearch(input: CodeSemanticSearchInput!): CodeSemanticSearchResult!
@@ -2795,9 +2834,14 @@ input LinkCommitInput {
 
 input StartConversationStreamInput {
   """
-  OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1.
+  Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai.
   """
-  baseUrl: String!
+  backend: String
+
+  """
+  OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. Required for the openai backend.
+  """
+  baseUrl: String
 
   """Existing conversation to continue; omit to start a new conversation."""
   conversationId: ID
@@ -2805,8 +2849,18 @@ input StartConversationStreamInput {
   """User message text for this turn."""
   message: String!
 
-  """Model id to complete with, as advertised by the discovered endpoint."""
-  modelId: String!
+  """
+  Model id to complete with. Required for the openai backend; optional model override for CLI backends.
+  """
+  modelId: String
+
+  """Persona to steer the turn; CLI backends inject it as a system prompt."""
+  personaId: ID
+
+  """
+  Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).
+  """
+  repositoryId: ID
 }
 
 """Input for creating a new custom prompt"""

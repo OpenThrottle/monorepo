@@ -4,10 +4,10 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 ## 1. Vector search (embeddings)
 
-| Source | Table                      | Content                                     | Embedding model | MCP / consumer                           |
-| ------ | -------------------------- | ------------------------------------------- | --------------- | ---------------------------------------- |
-| Plans  | `plan_embeddings`          | Plan title, description, summary, output md | vector(1536)    | openthrottle-mcp `semantic_search`       |
-| Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | openthrottle-mcp `semantic_search`       |
+| Source | Table                      | Content                                     | Embedding model | MCP / consumer                                      |
+| ------ | -------------------------- | ------------------------------------------- | --------------- | --------------------------------------------------- |
+| Plans  | `plan_embeddings`          | Plan title, description, summary, output md | vector(1536)    | openthrottle-mcp `semantic_search`                  |
+| Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | openthrottle-mcp `semantic_search`                  |
 | Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | openthrottle-mcp `semantic_search` / `get_document` |
 
 **Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).

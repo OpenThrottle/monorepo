@@ -11,7 +11,9 @@ const chunk = (overrides: {
   delta?: string;
   done?: boolean;
   error?: string | null;
+  kind?: string;
   messageId?: string;
+  metadataJson?: string | null;
   sortOrder: number;
 }) => ({
   conversationId: 'conv-1',
@@ -19,7 +21,9 @@ const chunk = (overrides: {
   done: overrides.done ?? false,
   error: overrides.error ?? null,
   id: `chunk-${overrides.sortOrder}`,
+  kind: overrides.kind ?? 'text',
   messageId: overrides.messageId ?? 'assistant-1',
+  metadataJson: overrides.metadataJson ?? null,
   sortOrder: overrides.sortOrder,
 });
 
@@ -39,6 +43,38 @@ describe('reduceStreamChunk', () => {
     state = reduceStreamChunk(state, chunk({ delta: 'Hi', sortOrder: 0 }));
 
     expect(state.bodies.get('assistant-1')).toBe('Hi');
+  });
+
+  it('does not accumulate non-text kinds (thinking/tool/session) into the body', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'Hi', sortOrder: 0 }));
+    state = reduceStreamChunk(
+      state,
+      chunk({ delta: 'reasoning…', kind: 'thinking', sortOrder: 1 }),
+    );
+    state = reduceStreamChunk(state, chunk({ delta: ' there', sortOrder: 2 }));
+
+    expect(state.bodies.get('assistant-1')).toBe('Hi there');
+  });
+
+  it('renders a tool_call as a dim marker with a best-effort label', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'Reading', sortOrder: 0 }));
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'tool_call',
+        metadataJson: JSON.stringify({
+          callId: 'c1',
+          toolCall: { readToolCall: { args: {} } },
+        }),
+        sortOrder: 1,
+      }),
+    );
+
+    const body = state.bodies.get('assistant-1');
+    expect(body).toContain('Reading');
+    expect(body).toContain('🔧 read');
   });
 
   it('flips streaming off on the terminal done chunk', () => {

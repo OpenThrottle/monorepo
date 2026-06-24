@@ -4,11 +4,11 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 
 ## Current state
 
-| Surface                 | What exists                                                                          | Source                                |
-| ----------------------- | ------------------------------------------------------------------------------------ | ------------------------------------- |
-| **activityByDate**      | GraphQL query — commits, plan output chunks, tasks updated for a date or last N days | openthrottle-mcp, openthrottle-server |
-| **activityByDateRange** | Same, for an ISO date range                                                          | openthrottle-server                   |
-| **Dashboard**           | Recent activity card (commits, output chunks, tasks)                                 | Cortex app, openthrottle-developer    |
+| Surface                 | What exists                                                                          | Source                                 |
+| ----------------------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| **activityByDate**      | GraphQL query — commits, plan output chunks, tasks updated for a date or last N days | openthrottle-mcp, openthrottle-server  |
+| **activityByDateRange** | Same, for an ISO date range                                                          | openthrottle-server                    |
+| **Dashboard**           | Recent activity card (commits, output chunks, tasks)                                 | Cortex app, openthrottle-developer     |
 | **Semantic search**     | Plans + tasks + docs, all via openthrottle-mcp (`semantic_search`, `get_document`)   | One MCP; cross-source ranking is a gap |
 
 ---

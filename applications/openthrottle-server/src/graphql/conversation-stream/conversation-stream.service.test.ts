@@ -8,31 +8,38 @@ import {
   type StartConversationStreamRun,
 } from './conversation-stream.service';
 
-const { streamChatCompletionMock } = vi.hoisted(() => ({
-  streamChatCompletionMock: vi.fn(),
+const { openAiStreamMock } = vi.hoisted(() => ({
+  openAiStreamMock: vi.fn(),
 }));
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({
-  streamChatCompletion: streamChatCompletionMock,
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@openthrottle/openthrottle-agentic-utils')
+  >()),
+  openAiConversationBackend: { stream: openAiStreamMock },
 }));
 
-/** Build a fake agentic-utils stream yielding the given deltas + a terminal done. */
+/** Build a fake backend stream yielding the given text deltas + a terminal done. */
 async function* fakeStream(
   deltas: ReadonlyArray<string>,
-): AsyncGenerator<{ delta: string; done: boolean }> {
+): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
   for (const delta of deltas) {
-    yield { delta, done: false };
+    yield { delta, done: false, kind: 'text' };
   }
-  yield { delta: '', done: true };
+  yield { delta: '', done: true, kind: 'text' };
 }
 
 const baseRun: StartConversationStreamRun = {
   assistantMessageId: 'assistant-msg-1',
+  backend: 'openai',
   baseUrl: 'http://localhost:11434/v1',
   conversationId: 'conv-1',
+  cwd: null,
   messages: [{ content: 'hi', role: 'user' }],
   model: 'llama3',
   provider: 'ollama',
+  sessionId: null,
+  systemPrompt: null,
   userId: 'user-1',
 };
 
@@ -65,7 +72,7 @@ afterEach(() => {
 
 describe('ConversationStreamService', () => {
   it('publishes each delta then a terminal done chunk and persists the assistant message', async () => {
-    streamChatCompletionMock.mockReturnValue(fakeStream(['Hel', 'lo']));
+    openAiStreamMock.mockReturnValue(fakeStream(['Hel', 'lo']));
     const { conversations, publish, service } = buildService();
 
     await service.runStream(baseRun);
@@ -86,7 +93,14 @@ describe('ConversationStreamService', () => {
     expect(conversations.appendMessages).toHaveBeenCalledWith(
       'user-1',
       'conv-1',
-      [{ content: 'Hello', id: 'assistant-msg-1', role: 'assistant' }],
+      [
+        {
+          content: 'Hello',
+          id: 'assistant-msg-1',
+          role: 'assistant',
+          toolMetadata: null,
+        },
+      ],
     );
     expect(conversations.updateModelSnapshot).toHaveBeenCalledWith('conv-1', {
       modelName: 'llama3',
@@ -94,8 +108,47 @@ describe('ConversationStreamService', () => {
     });
   });
 
+  it('persists non-text events (thinking/tool) to the assistant message tool_metadata', async () => {
+    async function* mixed(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield { delta: 'reasoning…', done: false, kind: 'thinking' };
+      yield {
+        delta: '',
+        done: false,
+        kind: 'tool_call',
+        metadata: { callId: 'c1' },
+      };
+      yield { delta: 'Answer', done: false, kind: 'text' };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockReturnValue(mixed());
+    const { conversations, service } = buildService();
+
+    await service.runStream(baseRun);
+
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        expect.objectContaining({
+          content: 'Answer',
+          toolMetadata: {
+            events: [
+              { delta: 'reasoning…', kind: 'thinking', metadata: null },
+              { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
+            ],
+          },
+        }),
+      ],
+    );
+  });
+
   it('publishes the topic keyed by conversation id with the resolver field name', async () => {
-    streamChatCompletionMock.mockReturnValue(fakeStream(['x']));
+    openAiStreamMock.mockReturnValue(fakeStream(['x']));
     const { publish, service } = buildService();
 
     await service.runStream(baseRun);
@@ -112,11 +165,12 @@ describe('ConversationStreamService', () => {
     async function* failing(): AsyncGenerator<{
       delta: string;
       done: boolean;
+      kind: string;
     }> {
-      yield { delta: 'partial', done: false };
+      yield { delta: 'partial', done: false, kind: 'text' };
       throw new Error('connection reset');
     }
-    streamChatCompletionMock.mockReturnValue(failing());
+    openAiStreamMock.mockReturnValue(failing());
     const { conversations, publish, service } = buildService();
 
     await service.runStream(baseRun);
@@ -126,7 +180,14 @@ describe('ConversationStreamService', () => {
     expect(conversations.appendMessages).toHaveBeenCalledWith(
       'user-1',
       'conv-1',
-      [{ content: 'partial', id: 'assistant-msg-1', role: 'assistant' }],
+      [
+        {
+          content: 'partial',
+          id: 'assistant-msg-1',
+          role: 'assistant',
+          toolMetadata: null,
+        },
+      ],
     );
   });
 
@@ -134,13 +195,13 @@ describe('ConversationStreamService', () => {
     let abortObserved = false;
     async function* abortable(
       _input: unknown,
-    ): AsyncGenerator<{ delta: string; done: boolean }> {
-      yield { delta: 'first', done: false };
+    ): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      yield { delta: 'first', done: false, kind: 'text' };
       // simulate the SDK observing the abort on the next pull
       abortObserved = true;
       throw new DOMException('aborted', 'AbortError');
     }
-    streamChatCompletionMock.mockImplementation(abortable);
+    openAiStreamMock.mockImplementation(abortable);
     const { publish, service } = buildService();
 
     const done = service.runStream(baseRun);

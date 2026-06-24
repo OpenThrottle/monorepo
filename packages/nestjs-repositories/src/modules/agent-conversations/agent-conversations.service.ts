@@ -10,8 +10,10 @@ import { AgentConversationMessage } from './agent-conversation-message.entity';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-  type AgentConversationMessageRole,
-  type AgentConversationStatus,
+} from './agent-conversation.constants';
+import type {
+  AgentConversationMessageRole,
+  AgentConversationStatus,
 } from './agent-conversation.constants';
 import { AgentConversation } from './agent-conversation.entity';
 import {
@@ -136,9 +138,11 @@ export class AgentConversationsService {
     const cappedUserContent = capAgentConversationContent(
       input.userContent,
     ).content;
+
     const cappedAssistantContent = capAgentConversationContent(
       input.assistantContent,
     ).content;
+
     const cappedToolMetadata = capAgentConversationToolMetadata(
       input.toolMetadata,
     );
@@ -150,6 +154,7 @@ export class AgentConversationsService {
       const conversation = await conversationRepo.findOne({
         where: { id: conversationId, userId },
       });
+
       if (!conversation) {
         throw new NotFoundException('Agent conversation not found');
       }
@@ -164,6 +169,7 @@ export class AgentConversationsService {
         maxSortOrderResult?.max != null && maxSortOrderResult.max !== ''
           ? Number(maxSortOrderResult.max)
           : 0;
+
       const userSortOrder = currentMax + 1;
       const assistantSortOrder = currentMax + 2;
 
@@ -198,10 +204,14 @@ export class AgentConversationsService {
       if (input.modelProvider !== undefined || input.modelName !== undefined) {
         conversation.modelProvider = input.modelProvider ?? null;
         conversation.modelName = input.modelName ?? null;
+
         await conversationRepo.save(conversation);
       }
 
-      return { assistantMessage, userMessage };
+      return {
+        assistantMessage,
+        userMessage,
+      };
     });
   }
 
@@ -224,6 +234,7 @@ export class AgentConversationsService {
       const conversation = await conversationRepo.findOne({
         where: { id: conversationId, userId },
       });
+
       if (!conversation) {
         throw new NotFoundException('Agent conversation not found');
       }
@@ -233,6 +244,7 @@ export class AgentConversationsService {
         .select('MAX(message.sortOrder)', 'max')
         .where('message.conversationId = :conversationId', { conversationId })
         .getRawOne<{ max: string | null }>();
+
       const currentMax =
         maxSortOrderResult?.max != null && maxSortOrderResult.max !== ''
           ? Number(maxSortOrderResult.max)
@@ -252,6 +264,7 @@ export class AgentConversationsService {
             message.toolMetadata ?? null,
           ).toolMetadata,
         };
+
         return messageRepo.create(
           message.id !== undefined ? { ...base, id: message.id } : base,
         );
@@ -259,6 +272,41 @@ export class AgentConversationsService {
 
       return messageRepo.save(entities);
     });
+  }
+
+  /**
+   * @description Archives an owned conversation (no hard delete in v1).
+   */
+  async archiveConversation(
+    userId: string,
+    conversationId: string,
+  ): Promise<AgentConversation> {
+    const conversation = await this.getConversationForUser(
+      userId,
+      conversationId,
+    );
+
+    conversation.status = AGENT_CONVERSATION_STATUSES.archived;
+
+    return this.conversationRepository.save(conversation);
+  }
+
+  /**
+   * @description Returns a conversation when owned by the user; otherwise throws 404.
+   */
+  async getConversationForUser(
+    userId: string,
+    conversationId: string,
+  ): Promise<AgentConversation> {
+    const conversation = await this.conversationRepository.findOne({
+      where: { id: conversationId, userId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Agent conversation not found');
+    }
+
+    return conversation;
   }
 
   /**
@@ -278,23 +326,6 @@ export class AgentConversationsService {
       take: limit,
       where: { status, userId },
     });
-  }
-
-  /**
-   * @description Returns a conversation when owned by the user; otherwise throws 404.
-   */
-  async getConversationForUser(
-    userId: string,
-    conversationId: string,
-  ): Promise<AgentConversation> {
-    const conversation = await this.conversationRepository.findOne({
-      where: { id: conversationId, userId },
-    });
-    if (!conversation) {
-      throw new NotFoundException('Agent conversation not found');
-    }
-
-    return conversation;
   }
 
   /**
@@ -319,21 +350,6 @@ export class AgentConversationsService {
   }
 
   /**
-   * @description Archives an owned conversation (no hard delete in v1).
-   */
-  async archiveConversation(
-    userId: string,
-    conversationId: string,
-  ): Promise<AgentConversation> {
-    const conversation = await this.getConversationForUser(
-      userId,
-      conversationId,
-    );
-    conversation.status = AGENT_CONVERSATION_STATUSES.archived;
-    return this.conversationRepository.save(conversation);
-  }
-
-  /**
    * @description Updates the title on an owned conversation.
    */
   async updateConversationTitle(
@@ -345,7 +361,9 @@ export class AgentConversationsService {
       userId,
       conversationId,
     );
+
     conversation.title = title;
+
     return this.conversationRepository.save(conversation);
   }
 
@@ -359,12 +377,36 @@ export class AgentConversationsService {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
     });
+
     if (!conversation) {
       throw new NotFoundException('Agent conversation not found');
     }
 
     conversation.modelProvider = input.modelProvider;
     conversation.modelName = input.modelName;
+
+    return this.conversationRepository.save(conversation);
+  }
+
+  /**
+   * @description Shallow-merges a patch into a conversation's metadata JSONB
+   * (e.g. a CLI backend's session id + repository id). Existing keys are
+   * overwritten; unrelated keys are preserved.
+   */
+  async updateMetadata(
+    conversationId: string,
+    patch: Record<string, unknown>,
+  ): Promise<AgentConversation> {
+    const conversation = await this.conversationRepository.findOne({
+      where: { id: conversationId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Agent conversation not found');
+    }
+
+    conversation.metadata = { ...(conversation.metadata ?? {}), ...patch };
+
     return this.conversationRepository.save(conversation);
   }
 
@@ -378,6 +420,7 @@ export class AgentConversationsService {
     const plan = await this.plansService
       .getRepository()
       .findOne({ where: { id: planId } });
+
     if (!plan) {
       throw new NotFoundException(`Plan not found: ${planId}`);
     }
