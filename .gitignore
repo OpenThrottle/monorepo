@@ -15,6 +15,7 @@ node_modules
 repositories/*
 services/*
 tmp
+videos
 
 #############################################################################
 # Files
