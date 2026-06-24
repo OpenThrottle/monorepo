@@ -5,7 +5,10 @@
 // import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
 
 import { LinkProps } from 'react-router';
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type {
+  GetRootMetricsQuery,
+  ServerHealthObject,
+} from '@openthrottle/openthrottle-developer-codegen';
 
 /**
  * @description Normalized status for a single health component (or the folded
@@ -102,6 +105,23 @@ export const formatMb = (value: number): number => {
 /** Format CPU ms (cumulative) for display; show integer when possible. */
 export const formatCpuMs = (value: number): number => {
   return Number(value.toFixed(0));
+};
+
+/**
+ * @description Compact one-line summary of the latest metrics sample shown in
+ * the metrics panel's collapsed header (e.g. `RSS 145 MB · Heap 87 MB · CPU
+ * 12340 ms`). Returns an em-dash placeholder when no sample is available yet.
+ */
+export const formatMetricsSummary = (
+  metrics: GetRootMetricsQuery['serverMetrics'] | null | undefined,
+): string => {
+  if (metrics == null) return '—';
+
+  return [
+    `RSS ${formatMb(metrics.rssMb)} MB`,
+    `Heap ${formatMb(metrics.heapUsedMb)} MB`,
+    `CPU ${formatCpuMs(metrics.cpuUserMs)} ms`,
+  ].join(' · ');
 };
 
 export function getPathFromTo(to: LinkProps['to']): string {

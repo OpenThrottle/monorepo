@@ -52,7 +52,10 @@ export interface NestjsThrottlerModuleAsyncOptions {
 }
 
 const DEFAULT_THROTTLERS: ReadonlyArray<ThrottlerTierOptions> = [
-  { limit: DEFAULT_THROTTLER_LIMIT, ttl: DEFAULT_THROTTLER_TTL_MS },
+  {
+    limit: DEFAULT_THROTTLER_LIMIT,
+    ttl: DEFAULT_THROTTLER_TTL_MS,
+  },
 ];
 
 /**
