@@ -1,10 +1,10 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import {
-  ThrottlerGuard,
   ThrottlerModule,
   type ThrottlerModuleOptions,
 } from '@nestjs/throttler';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
 import {
   applyNestjsThrottlerModuleDefaults,
   type NestjsThrottlerModuleAsyncOptions,
@@ -47,7 +47,7 @@ const toThrottlerModuleOptions = (
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: GqlThrottlerGuard,
     },
   ],
 })
@@ -67,7 +67,7 @@ export class NestjsThrottlerModule {
       providers: [
         {
           provide: APP_GUARD,
-          useClass: ThrottlerGuard,
+          useClass: GqlThrottlerGuard,
         },
       ],
     };
@@ -105,7 +105,7 @@ export class NestjsThrottlerModule {
       providers: [
         {
           provide: APP_GUARD,
-          useClass: ThrottlerGuard,
+          useClass: GqlThrottlerGuard,
         },
       ],
     };

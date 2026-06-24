@@ -11,4 +11,5 @@ export {
   type ThrottlerTierOptions,
   validateNestjsThrottlerModuleOptions,
 } from './config/nestjs-throttler.options';
+export { GqlThrottlerGuard } from './guards/gql-throttler.guard';
 export { NestjsThrottlerModule } from './modules/nestjs-throttler.module';
