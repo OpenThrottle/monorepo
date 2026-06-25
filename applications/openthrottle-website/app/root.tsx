@@ -12,6 +12,7 @@ import {
 import type { ShouldRevalidateFunction } from 'react-router';
 import { artwork, OPENTHROTTLE_BUCKET } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
@@ -112,6 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="flex min-h-screen flex-col">
+        <GlobalHeader />
         {children}
         <ScrollRestoration />
 
