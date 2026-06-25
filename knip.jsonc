@@ -382,10 +382,6 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
     },
-    "packages/openthrottle-postgres": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"],
-    },
     "packages/openthrottle-workflows": {
       "entry": ["src/index.ts", "codegen.ts"],
       "project": ["src/**/*.ts", "graphql/**/*.graphql"],
