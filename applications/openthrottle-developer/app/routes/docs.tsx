@@ -46,12 +46,12 @@ export default function Component(
   return (
     <GlobalScreen>
       <div className="flex flex-col gap-8 md:flex-row">
-        <aside className="md:w-56 md:shrink-0">
-          <DocsNav groups={docsNav} />
-        </aside>
         <div className="min-w-0 flex-1">
           <Outlet />
         </div>
+        <aside className="md:w-56 md:shrink-0">
+          <DocsNav groups={docsNav} />
+        </aside>
       </div>
     </GlobalScreen>
   );

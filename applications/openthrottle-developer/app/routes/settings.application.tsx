@@ -4,7 +4,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { CogIcon } from 'lucide-react';
+import { BinaryIcon } from 'lucide-react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -62,7 +62,7 @@ export default function Component(
         <GlobalHeading
           className="mb-4"
           heading="h3"
-          icon={CogIcon}
+          icon={BinaryIcon}
           title="Application"
         />
         <p className="text-muted-foreground mb-4 text-sm">
