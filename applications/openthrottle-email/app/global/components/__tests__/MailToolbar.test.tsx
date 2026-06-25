@@ -1,14 +1,22 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import {
   SidebarProvider,
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MailToolbar } from '../MailToolbar';
 import type { MailToolbarProps } from '../MailToolbar';
+
+const navigateMock = vi.fn();
+
+vi.mock('react-router', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-router')>('react-router');
+  return { ...actual, useNavigate: () => navigateMock };
+});
 
 describe('MailToolbar Component', () => {
   let component: RenderResult;
@@ -75,5 +83,94 @@ describe('MailToolbar Component', () => {
     const trigger = component.getByTestId('MailToolbar-sidebarTrigger');
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-label', 'Toggle sidebar');
+  });
+});
+
+// Driven with `fireEvent.change` rather than `userEvent`: under fake timers
+// `userEvent`'s internal scheduling deadlocks, and repo precedent
+// (packages/react-router-ide WorkspaceFilePalette.test, useDebouncedValue.test)
+// exercises the debounce timer directly the same way.
+describe('MailToolbar search debounce', () => {
+  const renderOnSearchPage = (): RenderResult => {
+    const Component = () => (
+      <TooltipProvider>
+        <SidebarProvider>
+          <MailToolbar />
+        </SidebarProvider>
+      </TooltipProvider>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/mail/search' }]);
+
+    return render(<RoutesStub initialEntries={['/mail/search']} />);
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    navigateMock.mockClear();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  test('debounces navigation to the search route while typing', () => {
+    const component = renderOnSearchPage();
+    const input = component.getByRole('searchbox', { name: /search mail/i });
+
+    act(() => {
+      fireEvent.change(input, { target: { value: 'hel' } });
+      fireEvent.change(input, { target: { value: 'hello' } });
+    });
+
+    // Nothing fires before the debounce window elapses.
+    expect(navigateMock).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    // Only the final value navigates (debounced, not once per keystroke).
+    expect(navigateMock).toHaveBeenCalledTimes(1);
+    expect(navigateMock).toHaveBeenCalledWith('/mail/search?q=hello', {
+      replace: true,
+      viewTransition: true,
+    });
+  });
+
+  test('encodes the query and trims whitespace', () => {
+    const component = renderOnSearchPage();
+    const input = component.getByRole('searchbox', { name: /search mail/i });
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '  a&b c  ' } });
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      `/mail/search?q=${encodeURIComponent('a&b c')}`,
+      { replace: true, viewTransition: true },
+    );
+  });
+
+  test('navigates to the bare search route when the query is empty', () => {
+    const component = renderOnSearchPage();
+    const input = component.getByRole('searchbox', { name: /search mail/i });
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '   ' } });
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(navigateMock).toHaveBeenCalledWith('/mail/search', {
+      replace: true,
+      viewTransition: true,
+    });
   });
 });
