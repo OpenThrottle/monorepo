@@ -1,43 +1,56 @@
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+const executeGraphqlWithAuth = vi.fn();
+
+vi.mock('@openthrottle/react-router-graphql', () => ({
+  executeGraphqlWithAuth: (...args: unknown[]) =>
+    executeGraphqlWithAuth(...args),
+}));
+
 import * as RouteModule from '../auth.logout';
 
-describe('routes/auth.logout.tsx', () => {
-  test('renders logo before sign-in form is unlocked', () => {
-    const RoutesStub = createRoutesStub([
-      // createRoutesStub route component typing differs from generated route module types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- stub route component
-      { Component: RouteModule.default as any, path: '/' },
-    ]);
-    render(<RoutesStub />);
-
-    expect(screen.getByTestId('OpenThrottleLogo')).toBeInTheDocument();
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(
-      screen.queryByTestId('OpenThrottleAuthForm'),
-    ).not.toBeInTheDocument();
+const createArgs = () => {
+  const request = new Request('http://localhost/auth/logout', {
+    headers: { cookie: 'ot_auth=token' },
+    method: 'POST',
   });
 
-  test('reveals sign-in form after five clicks on the screen', async () => {
-    const user = userEvent.setup();
-    const RoutesStub = createRoutesStub([
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- stub route component
-      { Component: RouteModule.default as any, path: '/' },
-    ]);
-    render(<RoutesStub />);
+  // createArgs only needs request for the loader/action under test
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal loader/action args stub
+  return { request } as any;
+};
 
-    const logo = screen.getByTestId('OpenThrottleLogo');
-    await user.click(logo);
-    await user.click(logo);
-    await user.click(logo);
-    await user.click(logo);
-    await user.click(logo);
+describe('routes/auth.logout.tsx', () => {
+  beforeEach(() => {
+    executeGraphqlWithAuth.mockReset();
+    executeGraphqlWithAuth.mockResolvedValue({});
+  });
 
-    expect(screen.getByTestId('OpenThrottleAuthForm')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+  test('loader signs out, clears the auth cookie, and redirects to index', async () => {
+    const response = await RouteModule.loader(createArgs());
+
+    expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('/');
+    expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
+  });
+
+  test('action signs out, clears the auth cookie, and redirects to index', async () => {
+    const response = await RouteModule.action(createArgs());
+
+    expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('/');
+    expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
+  });
+
+  test('still clears the cookie and redirects when server signout fails', async () => {
+    executeGraphqlWithAuth.mockRejectedValueOnce(new Error('token invalid'));
+
+    const response = await RouteModule.loader(createArgs());
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('/');
+    expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
   });
 });

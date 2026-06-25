@@ -12,21 +12,6 @@ query getRootHealth {
   }
 }
 
-fragment RootMetrics on ServerMetricsObject {
-  cpuSystemMs
-  cpuUserMs
-  externalMb
-  heapTotalMb
-  heapUsedMb
-  rssMb
-}
-
-query getRootMetrics {
-  serverMetrics {
-    ...RootMetrics
-  }
-}
-
 query getMe {
   me {
     createdAt
@@ -35,14 +20,6 @@ query getMe {
     githubUsername
     id
     updatedAt
-  }
-}
-
-mutation register($input: RegisterInput!) {
-  register(input: $input) {
-    accessToken
-    email
-    id
   }
 }
 
@@ -55,12 +32,5 @@ mutation login($input: LoginInput!) {
 mutation signout {
   signout {
     success
-  }
-}
-
-query adminHealthTest {
-  databaseHealth
-  serverHealth {
-    ...HealthCard
   }
 }
