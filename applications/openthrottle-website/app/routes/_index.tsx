@@ -63,9 +63,15 @@ export default function Component(
     <main className="flex flex-1 flex-col">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-24 lg:p-12">
         <div className="mx-auto my-40">
+          {/*
+            The GitHub stars count is no longer fetched in the root loader (it
+            was blocking, uncached, and rate-limited). When the beta gate is
+            lifted, refetch it in this route's loader behind a short-TTL cache +
+            AbortController timeout + graceful fallback, then thread it through.
+          */}
           <OpenThrottleProductGetStarted
             repo={data?.repo ?? 'openthrottle/openthrottle'}
-            stars={data?.stars ?? '0'}
+            stars="0"
           />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />

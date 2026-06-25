@@ -43,22 +43,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   // FIXME: Replace with the actual repo when we launch
   // const repo = `facebook/react`;
   const repo = `openthrottle/openthrottle`;
-  const url = `https://api.github.com/repos/${repo}`;
-  let stars = '0';
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    const count = data?.stargazers_count ?? 0;
-
-    stars = count.toLocaleString();
-
-    console.error('🟢 🟢 🟢 success fetch gh stars:', stars);
-  } catch (error) {
-    console.error('🔴 🔴 🔴 error fetch gh stars:', error);
-  }
-
-  return { canonical, env, repo, stars };
+  // NOTE: The GitHub stars count is intentionally not fetched here. A blocking,
+  // uncached, untimed `fetch` in the root loader runs on every SSR request and
+  // would mostly fail in production (GitHub's unauthenticated rate limit is
+  // 60/hr/IP) while adding latency/TTFB. The value is only consumed by
+  // `OpenThrottleProductGetStarted`, which is gated behind the beta flag on the
+  // home route. When the beta gate is lifted, refetch this in the home route
+  // loader behind a short-TTL cache + `AbortController` timeout + graceful
+  // fallback rather than reinstating it here.
+  return { canonical, env, repo };
 };
 
 /**
