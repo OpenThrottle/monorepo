@@ -1,30 +1,28 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import type { RenderResult } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
 import Component from '../faq._index';
 
 describe('routes/faq._index.tsx', () => {
-  test('renders the FAQ heading and questions from docs-content', () => {
-    const view = render(
-      <MemoryRouter>
-        <Component
-          actionData={undefined}
-          loaderData={{}}
-          matches={[] as never}
-          params={{}}
-        />
-      </MemoryRouter>,
-    );
+  let component: RenderResult;
 
+  beforeEach(() => {
+    const RoutesStub = createRoutesStub([{ Component, path: '/faq' }]);
+
+    component = render(<RoutesStub initialEntries={['/faq']} />);
+  });
+
+  test('renders the FAQ heading and questions from docs-content', () => {
     expect(
-      view.getByRole('heading', {
+      component.getByRole('heading', {
         level: 1,
         name: 'Frequently asked questions',
       }),
     ).toBeInTheDocument();
     expect(
-      view.getByRole('button', { name: 'What is OpenThrottle?' }),
+      component.getByRole('button', { name: 'What is OpenThrottle?' }),
     ).toBeInTheDocument();
   });
 });
