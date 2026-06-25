@@ -120,7 +120,7 @@ export const formatMetricsSummary = (
   return [
     `RSS ${formatMb(metrics.rssMb)} MB`,
     `Heap ${formatMb(metrics.heapUsedMb)} MB`,
-    `CPU ${formatCpuMs(metrics.cpuUserMs)} ms`,
+    `CPU ${formatCpuMs(metrics.cpuUserMs).toLocaleString()} ms`,
   ].join(' · ');
 };
 
