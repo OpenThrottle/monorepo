@@ -274,8 +274,6 @@ export const action = async (args: Route.ActionArgs) => {
 
       const cookie = buildAuthCookie(token);
 
-      // console.log('🟢  login success', cookie);
-
       return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },
       });
