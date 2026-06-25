@@ -24,8 +24,12 @@ vi.mock('./embedding.js', () => ({
   embedQuery,
 }));
 
-const { getChunkById, runSemanticSearch, searchPlansBySemanticQuery } =
-  await import('./cortex-client.js');
+const {
+  getChunkById,
+  runSemanticSearch,
+  searchAgentAssets,
+  searchPlansBySemanticQuery,
+} = await import('./cortex-client.js');
 
 const EMBEDDING = Array.from({ length: 1536 }, () => 0);
 
@@ -243,6 +247,77 @@ describe('searchPlansBySemanticQuery', () => {
 
     expect(result).toEqual({ plans: [], totalCount: 0 });
     expect(query).not.toHaveBeenCalled();
+  });
+});
+
+describe('searchAgentAssets', () => {
+  const AGENT_EMBEDDING = Array.from({ length: 1536 }, () => 0);
+
+  function row(
+    overrides: Partial<{
+      content: string;
+      custom_prompt_id: string;
+      id: string;
+      labels: unknown;
+      similarity: string | number;
+    }>,
+  ): Record<string, unknown> {
+    return {
+      content: 'chunk',
+      custom_prompt_id: 'cp-1',
+      description: null,
+      file_path: null,
+      id: 'e-1',
+      labels: [],
+      project_id: null,
+      prompt_type: 'skills',
+      similarity: '0.9',
+      title: 'Asset',
+      ...overrides,
+    };
+  }
+
+  test('de-dupes by custom_prompt_id keeping the first (best-ranked) chunk per asset', async () => {
+    // Rows arrive already ordered by the pgvector distance (best first). Two
+    // chunks belong to cp-1; only the first should survive de-dup.
+    query.mockResolvedValueOnce([
+      row({ custom_prompt_id: 'cp-1', id: 'e-1a', similarity: '0.95' }),
+      row({ custom_prompt_id: 'cp-1', id: 'e-1b', similarity: '0.80' }),
+      row({ custom_prompt_id: 'cp-2', id: 'e-2', similarity: '0.70' }),
+    ]);
+
+    const result = await searchAgentAssets(AGENT_EMBEDDING, 10);
+
+    expect(result.map((c) => c.customPromptId)).toEqual(['cp-1', 'cp-2']);
+    expect(result.map((c) => c.id)).toEqual(['e-1a', 'e-2']);
+    // similarity coerced to a number.
+    expect(result[0]?.similarity).toBe(0.95);
+    expect(result.every((c) => typeof c.similarity === 'number')).toBe(true);
+  });
+
+  test('stops collecting once the distinct-asset limit is reached', async () => {
+    query.mockResolvedValueOnce([
+      row({ custom_prompt_id: 'cp-1', id: 'e-1' }),
+      row({ custom_prompt_id: 'cp-2', id: 'e-2' }),
+      row({ custom_prompt_id: 'cp-3', id: 'e-3' }),
+    ]);
+
+    const result = await searchAgentAssets(AGENT_EMBEDDING, 2);
+
+    expect(result).toHaveLength(2);
+    expect(result.map((c) => c.customPromptId)).toEqual(['cp-1', 'cp-2']);
+  });
+
+  test('normalizes pg-style { rows } results and coerces non-array labels to []', async () => {
+    query.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [row({ custom_prompt_id: 'cp-1', labels: 'not-an-array' })],
+    });
+
+    const result = await searchAgentAssets(AGENT_EMBEDDING, 10);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.labels).toEqual([]);
   });
 });
 

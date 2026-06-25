@@ -4,6 +4,8 @@
  * @see https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings
  */
 
+import { EMBEDDING_MAX_INPUT_CHARS } from './constants.js';
+
 const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
 const DEFAULT_OLLAMA_EMBEDDING_MODEL = 'nomic-embed-text';
 
@@ -62,7 +64,7 @@ export async function embedWithOllama(
   const url = `${resolved.baseUrl}/api/embeddings`;
   const body = JSON.stringify({
     model: resolved.model,
-    prompt: text.slice(0, 8192),
+    prompt: text.slice(0, EMBEDDING_MAX_INPUT_CHARS),
   });
 
   try {
@@ -73,6 +75,9 @@ export async function embedWithOllama(
     });
 
     if (!response.ok) {
+      console.error(
+        `[ai-mcp] Ollama embedding request failed (model=${resolved.model}, status=${response.status}); skipping embedding.`,
+      );
       return undefined;
     }
 
@@ -80,11 +85,16 @@ export async function embedWithOllama(
     const embedding = data?.embedding;
 
     if (!Array.isArray(embedding) || embedding.length === 0) {
+      console.error(
+        `[ai-mcp] Ollama embedding returned empty result (model=${resolved.model}); skipping embedding.`,
+      );
       return undefined;
     }
 
     return embedding;
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[ai-mcp] Ollama embedding request failed: ${message}`);
     return undefined;
   }
 }

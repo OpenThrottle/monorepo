@@ -7,6 +7,11 @@ import { CodeVectorStore } from './code-vector-store';
 
 const WORKSPACE = '/Users/dev/repo';
 
+/** A well-formed 1536-dim embedding (matches the code_embeddings column width). */
+function buildEmbedding(): number[] {
+  return Array.from({ length: 1536 }, (_unused, i) => i / 1536);
+}
+
 function buildStoredChunk(
   overrides: Partial<StoredChunk['chunk']> = {},
 ): StoredChunk {
@@ -95,13 +100,13 @@ describe('CodeVectorStore', () => {
         },
       ]);
 
-      const embedding = [0.1, 0.2, 0.3];
+      const embedding = buildEmbedding();
       const matches = await store.query(WORKSPACE, embedding, 5);
 
       const [sql, params] = queryMock().mock.calls[0];
       expect(sql).toContain('1 - (embedding <=> $1::vector) AS similarity');
       expect(sql).toContain('ORDER BY embedding <=> $1::vector');
-      expect(params).toEqual(['[0.1,0.2,0.3]', WORKSPACE, 5]);
+      expect(params).toEqual([`[${embedding.join(',')}]`, WORKSPACE, 5]);
 
       expect(matches).toEqual([
         {
@@ -115,6 +120,31 @@ describe('CodeVectorStore', () => {
           score: 0.87,
         },
       ]);
+    });
+
+    it('rejects an embedding whose width differs from the column (no query)', async () => {
+      await expect(store.query(WORKSPACE, [0.1, 0.2, 0.3], 5)).rejects.toThrow(
+        /3 dimensions.*1536/u,
+      );
+      expect(queryMock()).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-finite embedding slot (no query)', async () => {
+      const embedding = buildEmbedding();
+      embedding[10] = Number.NaN;
+      await expect(store.query(WORKSPACE, embedding, 5)).rejects.toThrow(
+        /non-finite.*index 10/u,
+      );
+      expect(queryMock()).not.toHaveBeenCalled();
+    });
+
+    it('rejects an Infinity embedding slot (no query)', async () => {
+      const embedding = buildEmbedding();
+      embedding[7] = Number.POSITIVE_INFINITY;
+      await expect(store.query(WORKSPACE, embedding, 5)).rejects.toThrow(
+        /non-finite.*index 7/u,
+      );
+      expect(queryMock()).not.toHaveBeenCalled();
     });
   });
 
@@ -140,6 +170,26 @@ describe('CodeVectorStore', () => {
       expect(params[1]).toBe(WORKSPACE);
       expect(params[6]).toBe(hashContent(record.chunk.content));
       expect(params[7]).toBe(`[${record.embedding.join(',')}]`);
+    });
+
+    it('rejects a record whose embedding width differs from the column (no insert)', async () => {
+      const record = buildStoredChunk();
+      const malformed: StoredChunk = { ...record, embedding: [0.1, 0.2, 0.3] };
+      await expect(store.upsert(WORKSPACE, [malformed])).rejects.toThrow(
+        /3 dimensions.*1536/u,
+      );
+      expect(queryMock()).not.toHaveBeenCalled();
+    });
+
+    it('rejects a record with a non-finite embedding slot (no insert)', async () => {
+      const record = buildStoredChunk();
+      const embedding = [...record.embedding];
+      embedding[42] = Number.NEGATIVE_INFINITY;
+      const malformed: StoredChunk = { ...record, embedding };
+      await expect(store.upsert(WORKSPACE, [malformed])).rejects.toThrow(
+        /non-finite.*index 42/u,
+      );
+      expect(queryMock()).not.toHaveBeenCalled();
     });
 
     it('batches large record sets into multiple INSERTs', async () => {

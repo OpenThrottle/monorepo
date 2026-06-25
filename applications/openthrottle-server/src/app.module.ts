@@ -6,7 +6,10 @@ import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+import {
+  isBullBoardEnabled,
+  NestjsBullmqBoardModule,
+} from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import {
   NestjsGraphqlModule,
@@ -91,7 +94,12 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     MetricsModule,
     NestjsAuthModule.forRoot(),
     NestjsBullmqModule,
-    NestjsBullmqBoardModule,
+    // The Bull Board dashboard exposes job payloads, queue internals, and
+    // retry/remove/clean actions behind only a single static basic-auth
+    // credential. Keep it out of production; mount the UI only outside prod.
+    NestjsBullmqBoardModule.forRoot({
+      enabled: isBullBoardEnabled(),
+    }),
     NestjsGraphqlModule.forRoot({
       // Subscriptions return the NotificationEvent interface, so its concrete
       // implementing types are orphaned — register them explicitly so they make

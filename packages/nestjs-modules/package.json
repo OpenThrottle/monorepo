@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nestjs-utils": "workspace:^",
     "logform": "catalog:",
     "nestjs-cls": "catalog:",
     "winston": "catalog:",

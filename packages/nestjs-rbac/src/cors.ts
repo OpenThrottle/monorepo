@@ -40,16 +40,22 @@ export function getCorsOptions(): CorsOptions {
         .filter(Boolean)
     : [];
 
-  const origin: CorsOptions['origin'] =
-    originsRaw === undefined || originsRaw === '' || originsRaw === '*'
-      ? true
-      : originList.length === 0
-        ? true
-        : originList;
+  const originIsAllowAll =
+    originsRaw === undefined ||
+    originsRaw === '' ||
+    originsRaw === '*' ||
+    originList.length === 0;
 
+  const origin: CorsOptions['origin'] = originIsAllowAll ? true : originList;
+
+  // Browsers reject `Access-Control-Allow-Origin: *` together with credentials,
+  // so the cors middleware reflects the request origin instead — effectively
+  // "allow any origin with credentials," which is an unsafe default. Require an
+  // explicit CORS_CREDENTIALS=true opt-in to enable credentials when the origin
+  // is allow-all. With an explicit origin allowlist, credentials default to true.
   const credentials =
     credentialsRaw === undefined || credentialsRaw === ''
-      ? true
+      ? !originIsAllowAll
       : credentialsRaw === 'true';
 
   const methods =

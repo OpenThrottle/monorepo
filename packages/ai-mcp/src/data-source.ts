@@ -55,6 +55,19 @@ export async function getOrCreateDataSource(): Promise<DataSource> {
   return ds;
 }
 
+/**
+ * @description Destroys all cached DataSources and clears the cache, releasing every pooled
+ * Postgres connection. Call from a shutdown hook on the long-lived stdio server so connections
+ * are not held open per connection string for the lifetime of the process.
+ */
+export async function destroyDataSources(): Promise<void> {
+  const sources = [...cache.values()];
+  cache.clear();
+  await Promise.allSettled(
+    sources.map((ds) => (ds.isInitialized ? ds.destroy() : Promise.resolve())),
+  );
+}
+
 interface QueryResult<T = unknown> {
   readonly rowCount: number;
   readonly rows: T[];

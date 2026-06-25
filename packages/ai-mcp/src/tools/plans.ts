@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDefaultGitHubUser } from '../config.js';
+import { getDefaultGitHubUser, resolveActor } from '../config.js';
 import {
   createPlan as cortexCreatePlan,
   deletePlan as cortexDeletePlan,
@@ -107,7 +107,7 @@ export function registerPlanTools(server: McpServer): void {
         const defaultGh = getDefaultGitHubUser();
         const planInput = {
           ...parsed.data,
-          assignee: defaultGh ?? parsed.data.assignee ?? null,
+          assignee: resolveActor(parsed.data.assignee, defaultGh),
           author: defaultGh ?? parsed.data.author,
         };
         const plan = await cortexCreatePlan(planInput);
@@ -215,9 +215,13 @@ export function registerPlanTools(server: McpServer): void {
       try {
         const { id, ...rest } = parsed.data;
         const defaultGh = getDefaultGitHubUser();
-        if (defaultGh !== undefined) {
-          if (rest.author !== undefined) rest.author = defaultGh;
-          if (rest.assignee !== undefined) rest.assignee = defaultGh;
+        // Uniform precedence (see resolveActor): GITHUB_USER wins when set; otherwise caller value.
+        // Only touch fields the caller actually supplied so absent fields stay untouched.
+        if (rest.author !== undefined) {
+          rest.author = defaultGh ?? rest.author;
+        }
+        if (rest.assignee !== undefined) {
+          rest.assignee = resolveActor(rest.assignee, defaultGh);
         }
         const plan = await cortexUpdatePlan(id, rest);
         if (!plan) {

@@ -32,8 +32,17 @@ export const PERMISSIONS = {
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 /**
- * Default mapping: which permissions each role has. Stored in package config;
- * guards use this (or an app-provided mapping) to check access.
+ * Default / seed mapping ONLY: which permissions each built-in role has.
+ *
+ * This static table is NOT the production source of truth. Apps with a
+ * database-backed authorization model (e.g. openthrottle-server, which resolves
+ * permissions via `RolesService` and enforces them through `GqlPermissionsGuard`)
+ * MUST NOT rely on this map. It exists solely as the built-in default for the
+ * package's JWT-claim-based {@link RolesGuard} / {@link PermissionsGuard}, and as
+ * a seed/reference for apps that have no DB. Pass a custom mapping to
+ * {@link roleHasPermission} (third argument) to override.
+ *
+ * @see README.md — keep the documented mapping in sync with this table.
  */
 export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   [ROLES.ADMIN]: [

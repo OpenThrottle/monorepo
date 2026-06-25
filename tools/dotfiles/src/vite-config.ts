@@ -1,7 +1,8 @@
 import { existsSync } from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { join, resolve } from 'path';
+import { join } from 'path';
+import { calculateOutputDir } from './calculate-output-dir.ts';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
@@ -57,37 +58,8 @@ export interface CreateViteConfigOptions {
 /**
  * @description Calculates the cache directory path relative to the package
  */
-const calculateCacheDir = (packagePath: string): string => {
-  // packagePath is __dirname from the config file
-  const packageAbsolutePath = resolve(packagePath);
-  const pathParts = packageAbsolutePath.split('/').filter(Boolean);
-
-  // Find packages/ or tools/ in the path
-  const packagesIndex = pathParts.lastIndexOf('packages');
-  const toolsIndex = pathParts.lastIndexOf('tools');
-  const baseIndex = Math.max(packagesIndex, toolsIndex);
-
-  if (baseIndex === -1) {
-    throw new Error(
-      `Could not find 'packages' or 'tools' in path: ${packageAbsolutePath}`,
-    );
-  }
-
-  // Calculate depth: how many directories from package to root
-  // packages/openthrottle/react-hooks = 3 parts, need to go up 2 levels (../../)
-  // packages/openthrottle/surveys = 3 parts, need to go up 2 levels (../../)
-  // But wait, let's check actual examples...
-  // Actually, depth is: pathParts.length - baseIndex - 1
-  // packages/openthrottle/react-hooks: length=3, baseIndex=0, depth=2 -> ../../
-  const depth = pathParts.length - baseIndex - 1;
-  const relativeUp = '../'.repeat(depth);
-
-  // Get the package path relative to packages/ or tools/
-  const packageRelativePath = pathParts.slice(baseIndex + 1).join('/');
-  const baseDir = pathParts[baseIndex]; // 'packages' or 'tools'
-
-  return `${relativeUp}node_modules/.vite/${baseDir}/${packageRelativePath}`;
-};
+const calculateCacheDir = (packagePath: string): string =>
+  calculateOutputDir(packagePath, 'node_modules/.vite');
 
 /**
  * @description Auto-detects entry points (checks for index.css)

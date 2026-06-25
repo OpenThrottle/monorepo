@@ -12,7 +12,6 @@
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "openai": "catalog:",
-    "pidusage": "catalog:",
     "pg": "catalog:",
     "typeorm": "catalog:",
     "zod": "catalog:"
