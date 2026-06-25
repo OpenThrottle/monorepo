@@ -2097,13 +2097,67 @@ importers:
 
   applications/openthrottle-email:
     dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: 'catalog:'
+        version: 3.2.0(graphql@16.14.0)
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:^
+        version: link:../../packages/react-router-shadcn
+      '@openthrottle/react-router-ui':
+        specifier: workspace:^
+        version: link:../../packages/react-router-ui
+      '@openthrottle/react-router-ui-global':
+        specifier: workspace:^
+        version: link:../../packages/react-router-ui-global
+      '@openthrottle/react-router-utils':
+        specifier: workspace:^
+        version: link:../../packages/react-router-utils
+      '@phosphor-icons/react':
+        specifier: 'catalog:'
+        version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@react-router/node':
+        specifier: 'catalog:'
+        version: 7.17.0(react-router@7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@6.0.3)
+      classnames:
+        specifier: 'catalog:'
+        version: 2.5.1
+      focus-formik-error:
+        specifier: 'catalog:'
+        version: 1.1.0(formik@2.4.9(@types/react@19.2.7)(react@19.2.4))(react@19.2.4)
+      formik:
+        specifier: 'catalog:'
+        version: 2.4.9(@types/react@19.2.7)(react@19.2.4)
+      isbot:
+        specifier: 'catalog:'
+        version: 5.1.40
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      react-router:
+        specifier: 'catalog:'
+        version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-router-dom:
+        specifier: 'catalog:'
+        version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      yup:
+        specifier: 'catalog:'
+        version: 1.7.1
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
+      '@faker-js/faker':
+        specifier: 'catalog:'
+        version: 10.4.0
       '@openthrottle/react-router-testing':
         specifier: workspace:^
         version: link:../../packages/react-router-testing

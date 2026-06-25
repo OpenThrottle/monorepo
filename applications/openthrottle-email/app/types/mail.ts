@@ -18,6 +18,23 @@ export interface MailFolder {
   readonly label: string;
 }
 
+/**
+ * Single source of truth for the user-facing folder list (id + label), in display order.
+ * Sidebar folders, mock folder metadata, and unread-count maps all derive from this so a
+ * folder change happens in exactly one place. Search/Settings/Compose are nav-only (not folders).
+ */
+export const MAIL_FOLDERS: readonly MailFolder[] = [
+  { id: MAIL_FOLDER_IDS.inbox, label: 'Inbox' },
+  { id: MAIL_FOLDER_IDS.sent, label: 'Sent' },
+  { id: MAIL_FOLDER_IDS.drafts, label: 'Drafts' },
+  { id: MAIL_FOLDER_IDS.trash, label: 'Trash' },
+];
+
+/** Ordered folder ids derived from {@link MAIL_FOLDERS}. Use for iteration and keyed records. */
+export const MAIL_FOLDER_IDS_LIST: readonly MailFolderId[] = MAIL_FOLDERS.map(
+  (folder) => folder.id,
+);
+
 export interface MailMessageSummary {
   readonly date: string;
   readonly from: string;

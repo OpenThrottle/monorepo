@@ -122,7 +122,7 @@ export const MessageDetail = (
   }
 
   // Loading skeleton for header + body (e.g. when loader uses defer or async fetch)
-  if (loading) {
+  if (loading || message == null) {
     return (
       <div className={classnames('p-4', className)} data-testid="MessageDetail">
         <Card>
@@ -155,11 +155,9 @@ export const MessageDetail = (
     );
   }
 
-  // Message is non-null here after short circuits
-
-  // FIXME: Swap out eventually
-
-  const msg = message as MailMessageDetail;
+  // Message is non-null here: the short circuits above return for null/loading,
+  // so TS narrows `message` to MailMessageDetail without a cast.
+  const msg = message;
 
   const attachments = msg.attachments ?? [];
   const hasAttachments = attachments.length > 0;
