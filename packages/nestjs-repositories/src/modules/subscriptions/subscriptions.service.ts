@@ -3,6 +3,10 @@ import { In } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import {
+  type ListPaginationInput,
+  resolveListPagination,
+} from '../../common/list-pagination';
 import { Subscription } from './subscription.entity';
 
 @Injectable()
@@ -41,11 +45,19 @@ export class SubscriptionsService {
   }
 
   /**
-   * @description Finds all subscriptions for a user, ordered by created_at descending.
+   * @description Finds subscriptions for a user, ordered by created_at
+   * descending. Accepts an optional clamped `{ limit, offset }` so the result
+   * set stays bounded.
    */
-  async findByUserId(userId: string): Promise<Subscription[]> {
+  async findByUserId(
+    userId: string,
+    pagination?: ListPaginationInput,
+  ): Promise<Subscription[]> {
+    const { skip, take } = resolveListPagination(pagination);
     return this.subscriptionRepository.find({
       order: { createdAt: 'DESC' },
+      skip,
+      take,
       where: { userId },
     });
   }

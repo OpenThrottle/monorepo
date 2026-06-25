@@ -151,7 +151,14 @@ export class AgentConversationsService {
       const conversationRepo = manager.getRepository(AgentConversation);
       const messageRepo = manager.getRepository(AgentConversationMessage);
 
+      // Take a row lock on the parent conversation before reading MAX(sort_order)
+      // so concurrent appends to the same conversation serialize. Under READ
+      // COMMITTED the MAX read alone does not lock the gap, so two writers could
+      // otherwise compute the same currentMax and assign duplicate sort_order
+      // values (which the (conversation_id, sort_order) unique index would reject
+      // with a 23505 rollback). The lock makes the read see committed prior rows.
       const conversation = await conversationRepo.findOne({
+        lock: { mode: 'pessimistic_write' },
         where: { id: conversationId, userId },
       });
 
@@ -231,7 +238,10 @@ export class AgentConversationsService {
       const conversationRepo = manager.getRepository(AgentConversation);
       const messageRepo = manager.getRepository(AgentConversationMessage);
 
+      // Row-lock the parent conversation before reading MAX(sort_order) so
+      // concurrent appends serialize (see appendTurn for the full rationale).
       const conversation = await conversationRepo.findOne({
+        lock: { mode: 'pessimistic_write' },
         where: { id: conversationId, userId },
       });
 
