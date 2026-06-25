@@ -11,13 +11,13 @@
     "@modelcontextprotocol/sdk": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/nodejs-graphql": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
     "zod": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
-  "devDependencies": {},
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -114,7 +114,6 @@
       }
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted"

@@ -1972,6 +1972,9 @@ importers:
 
   applications/openthrottle-admin:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -1982,6 +1985,9 @@ importers:
 
   applications/openthrottle-developer:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../../packages/openthrottle-agentic-utils
@@ -2091,6 +2097,9 @@ importers:
 
   applications/openthrottle-email:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -2263,6 +2272,9 @@ importers:
 
   applications/openthrottle-website:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -2753,6 +2765,9 @@ importers:
 
   packages/openthrottle-agentic-ralph:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
@@ -2784,7 +2799,11 @@ importers:
 
   packages/openthrottle-agentic-workflow: {}
 
-  packages/openthrottle-developer-codegen: {}
+  packages/openthrottle-developer-codegen:
+    dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
 
   packages/openthrottle-ide:
     dependencies:
@@ -2812,6 +2831,9 @@ importers:
       '@nestjs/core':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
@@ -2837,6 +2859,9 @@ importers:
 
   packages/openthrottle-workflows:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
@@ -3199,6 +3224,9 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: 'catalog:'
         version: 3.2.0(graphql@16.14.0)
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@vscode/vsce':
         specifier: 'catalog:'
         version: 3.9.1
