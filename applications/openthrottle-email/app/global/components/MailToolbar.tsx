@@ -215,29 +215,45 @@ export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
           </TooltipTrigger>
           <TooltipContent>New message</TooltipContent>
         </Tooltip>
+        {/* Refresh/Archive/Delete are disabled until the mail API is wired; tooltips flag them as upcoming so they don't read as broken no-ops. */}
         <Tooltip>
           <TooltipTrigger asChild={true}>
-            <Button aria-label="Refresh" size="icon" variant="outline">
+            <Button
+              aria-label="Refresh"
+              disabled={true}
+              size="icon"
+              variant="outline"
+            >
               <ArrowsClockwiseIcon aria-hidden={true} className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Refresh</TooltipContent>
+          <TooltipContent>Refresh (coming soon)</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild={true}>
-            <Button aria-label="Archive" size="icon" variant="outline">
+            <Button
+              aria-label="Archive"
+              disabled={true}
+              size="icon"
+              variant="outline"
+            >
               <ArchiveIcon aria-hidden={true} className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Archive selected</TooltipContent>
+          <TooltipContent>Archive selected (coming soon)</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild={true}>
-            <Button aria-label="Delete" size="icon" variant="outline">
+            <Button
+              aria-label="Delete"
+              disabled={true}
+              size="icon"
+              variant="outline"
+            >
               <TrashIcon aria-hidden={true} className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete selected</TooltipContent>
+          <TooltipContent>Delete selected (coming soon)</TooltipContent>
         </Tooltip>
         <Popover>
           <PopoverTrigger asChild={true}>

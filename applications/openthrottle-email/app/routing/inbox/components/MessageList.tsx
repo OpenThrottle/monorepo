@@ -196,14 +196,9 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
           <span className="text-muted-foreground text-sm">
             {selectedSet.size} selected
           </span>
-          <Button
-            onClick={() => {
-              /* TODO: wire to mark-read API */
-            }}
-            size="sm"
-            variant="outline"
-          >
-            Mark read
+          {/* Disabled until the mark-read API is wired, so it doesn't read as a broken no-op. */}
+          <Button disabled={true} size="sm" variant="outline">
+            Mark read (coming soon)
           </Button>
           <Button
             data-testid="MessageList-bulkDelete"
@@ -220,7 +215,10 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem>Mark unread</DropdownMenuItem>
+              {/* Disabled until the mark-unread API is wired. */}
+              <DropdownMenuItem disabled={true}>
+                Mark unread (coming soon)
+              </DropdownMenuItem>
               <MoveToFolderDropdown
                 currentFolderId={folderId}
                 folders={MOCK_FOLDERS}
