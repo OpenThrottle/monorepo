@@ -62,6 +62,12 @@ export class NestjsBullmqBoardModule {
               validationSchema: configValidationSchema,
             }),
             BullBoardModule.forRootAsync({
+              // forRootAsync builds its own BullBoardRootModule, which is a
+              // separate injector scope from this module. Import the namespaced
+              // config there so its options factory can resolve the
+              // `bullmqBoard` config token (the sibling ConfigModule.forRoot
+              // below is not visible across the module boundary).
+              imports: [ConfigModule.forFeature(bullmqBoardConfig)],
               inject: [bullmqBoardConfig.KEY],
               useFactory: (config: ConfigType<typeof bullmqBoardConfig>) => ({
                 adapter: ExpressAdapter,
