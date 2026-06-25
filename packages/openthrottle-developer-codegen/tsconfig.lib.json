@@ -16,6 +16,9 @@
   "references": [
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
+    },
+    {
+      "path": "../graphql-codegen/tsconfig.lib.json"
     }
   ]
 }

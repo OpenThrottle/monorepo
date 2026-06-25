@@ -1,62 +1,9 @@
-import { resolve } from 'path';
-import * as dotenv from 'dotenv';
-import { CodegenConfig } from '@graphql-codegen/cli';
+import { defineCodegen, type CodegenConfig } from '@openthrottle/graphql-codegen';
 
-dotenv.config();
-
-/** Use repo schema file so codegen/typecheck work without a running server. */
-const schemaFile = resolve(__dirname, '../../schema.gql');
-
-const url = process.env.API_URL_INTERNAL;
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-if (isDevelopment && !url) {
-  throw new Error('🚨 API_URL_INTERNAL is required');
-}
-
-const config: CodegenConfig = {
-  documents: [
-    'app/*.graphql',
-    'app/**/*.graphql',
-    'app/**/*.ts',
-    '!app/__generated__/**/*',
-  ],
-  generates: {
-    './app/__generated__/': {
-      overwrite: true,
-      preset: 'client',
-      presetConfig: {
-        fragmentMasking: false,
-      },
-    },
-    './app/__generated__/schemas.ts': {
-      config: {
-        importFrom: './graphql.js',
-        scalars: {
-          DateTime: Date,
-        },
-        schema: 'zod',
-        strictScalars: true,
-        zodImportPath: 'zod/v3', // FIXME: See zodImportPath ~ https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
-      },
-      overwrite: true,
-      plugins: ['typescript-validation-schema'],
-    },
-  },
-  hooks: {
-    afterAllFileWrite: ['prettier --write'],
-  },
-  schema: schemaFile,
-  // schema: isDevelopment ? `${url}/graphql` : `../../schema.gql`,
-
-  // schema: {
-  //   [supabaseURL]: {
-  //     headers: {
-  //       Authorization: `Bearer ${supabaseJWT}`,
-  //       apikey: supabaseJWT,
-  //     },
-  //   },
-  // },
-};
+const config: CodegenConfig = defineCodegen({
+  dirname: __dirname,
+  documents: ['app/**/*.graphql', 'app/**/*.ts', '!app/__generated__/**/*'],
+  outputDir: './app/__generated__/',
+});
 
 export default config;

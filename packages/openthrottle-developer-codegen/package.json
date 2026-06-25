@@ -7,8 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/graphql-codegen": "workspace:^"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -35,7 +36,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",
