@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-notifications",
-  "description": "Shared WebSocket notification event names and payload types for OpenThrottle server and openthrottle-developer.",
+  "description": "Shared notification event names, severity, and payload types (graphql-ws subscription contract) for OpenThrottle server and openthrottle-developer.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -9,16 +9,6 @@
   },
   "dependencies": {},
   "devDependencies": {},
-  "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "import": "./src/index.ts",
-      "require": "./dist/*.js"
-    }
-  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -35,10 +25,8 @@
       "type:package"
     ],
     "targets": {
+      "__build": {},
       "__build-package": {},
-      "build": {
-        "executor": "@nx/js:tsc"
-      },
       "lint": {},
       "test": {},
       "typecheck": {},

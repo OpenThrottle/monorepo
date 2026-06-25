@@ -1,13 +1,9 @@
-import type {
-  Plan,
-  PlanOutputStreamChunk,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
 import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
 import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
-import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 
 const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
@@ -26,28 +22,9 @@ const planOutputStreamRepo = {
 const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
   getRepository: vi.fn().mockReturnValue(planOutputStreamRepo),
 });
-const mockPlanLoad = vi.fn().mockResolvedValue(null);
-const mockLoaders: PlanOutputStreamLoaders = {
-  planLoader: { load: mockPlanLoad },
-} as unknown as PlanOutputStreamLoaders;
 
 describe('PlanOutputStreamResolver', () => {
   let resolver: PlanOutputStreamResolver;
-
-  const mockPlan: Plan = {
-    assignee: null,
-    author: 'Plan author',
-    category: 'Plan category',
-    createdAt: new Date('2026-02-01T22:00:00.000Z'),
-    description: 'Plan description',
-    id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
-    project: null,
-    projectId: null,
-    status: 'IN_PROGRESS',
-    summary: null,
-    title: 'Plan title',
-    updatedAt: new Date('2026-02-01T22:00:00.000Z'),
-  } as Plan;
 
   const mockChunk: PlanOutputStreamChunk = {
     content: 'Iteration output chunk',
@@ -65,7 +42,6 @@ describe('PlanOutputStreamResolver', () => {
           provide: PlanOutputStreamService,
           useValue: mockPlanOutputStreamService,
         },
-        { provide: PlanOutputStreamLoaders, useValue: mockLoaders },
         { provide: PUB_SUB, useValue: mockPubSub },
       ],
     }).compile();
@@ -196,61 +172,6 @@ describe('PlanOutputStreamResolver', () => {
       expect(() => resolver.planOutputChunkAdded(mockChunk.planId, {})).toThrow(
         /authenticated connection/,
       );
-    });
-  });
-
-  describe('plan (ResolveField)', () => {
-    test('resolves the plan through planLoader when planId is set', async () => {
-      mockPlanLoad.mockResolvedValueOnce(mockPlan);
-
-      const parent = {
-        content: mockChunk.content,
-        createdAt: mockChunk.createdAt,
-        id: mockChunk.id,
-        iteration: mockChunk.iteration,
-        plan: null,
-        planId: mockChunk.planId,
-      };
-
-      const result = await resolver.plan(parent);
-
-      expect(mockPlanLoad).toHaveBeenCalledWith(mockChunk.planId);
-      expect(result).toBe(mockPlan);
-    });
-
-    test('returns null without hitting the loader when planId is missing', async () => {
-      mockPlanLoad.mockClear();
-
-      const parent = {
-        content: mockChunk.content,
-        createdAt: mockChunk.createdAt,
-        id: mockChunk.id,
-        iteration: mockChunk.iteration,
-        plan: null,
-        planId: '',
-      };
-
-      const result = await resolver.plan(parent);
-
-      expect(result).toBeNull();
-      expect(mockPlanLoad).not.toHaveBeenCalled();
-    });
-
-    test('returns null when planLoader resolves null', async () => {
-      mockPlanLoad.mockResolvedValueOnce(null);
-
-      const parent = {
-        content: mockChunk.content,
-        createdAt: mockChunk.createdAt,
-        id: mockChunk.id,
-        iteration: mockChunk.iteration,
-        plan: null,
-        planId: 'non-existent-plan-id',
-      };
-
-      const result = await resolver.plan(parent);
-
-      expect(result).toBeNull();
     });
   });
 });

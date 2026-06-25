@@ -5,6 +5,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPostgresConfig } from '../config.js';
+import type { SemanticSearchChunk } from '../cortex-client.js';
 import {
   getChunkById,
   listSources,
@@ -17,6 +18,44 @@ import {
   semanticSearchInputSchema,
 } from '../schemas.js';
 import { configMissingSearchContent, invalidArgsContent } from './errors.js';
+
+/**
+ * @description Human-readable label for a chunk, branched by source so documentation hits
+ * (which have no plan/task title) show their path/repo instead of blank titles.
+ */
+function chunkLabel(chunk: SemanticSearchChunk): string {
+  if (chunk.source === 'documentation') {
+    const where = [chunk.repo, chunk.path].filter(Boolean).join(':');
+    return where || chunk.documentationId || '(documentation)';
+  }
+  return [chunk.planTitle, chunk.taskTitle].filter(Boolean).join(' ');
+}
+
+/**
+ * @description Maps a chunk to structuredContent, including documentation-source fields
+ * (path/repo/sha/prNumber/documentationId/authors) that are otherwise dropped for doc hits.
+ */
+function chunkToStructured(
+  chunk: SemanticSearchChunk,
+): Record<string, unknown> {
+  return {
+    authors: chunk.authors,
+    content: chunk.content,
+    documentationId: chunk.documentationId,
+    id: chunk.id,
+    metadata: chunk.metadata,
+    path: chunk.path,
+    planId: chunk.planId,
+    planTitle: chunk.planTitle,
+    prNumber: chunk.prNumber,
+    repo: chunk.repo,
+    sha: chunk.sha,
+    similarity: chunk.similarity,
+    source: chunk.source,
+    taskId: chunk.taskId,
+    taskTitle: chunk.taskTitle,
+  };
+}
 
 export function registerSearchTools(server: McpServer): void {
   server.registerTool(
@@ -55,7 +94,7 @@ export function registerSearchTools(server: McpServer): void {
         const textSummary = chunks
           .map(
             (c) =>
-              `[${c.source}] ${c.planTitle ?? ''} ${c.taskTitle ?? ''} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`,
+              `[${c.source}] ${chunkLabel(c)} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`,
           )
           .join('\n\n---\n\n');
         return {
@@ -66,17 +105,7 @@ export function registerSearchTools(server: McpServer): void {
             },
           ],
           structuredContent: {
-            chunks: chunks.map((c) => ({
-              content: c.content,
-              id: c.id,
-              metadata: c.metadata,
-              planId: c.planId,
-              planTitle: c.planTitle,
-              similarity: c.similarity,
-              source: c.source,
-              taskId: c.taskId,
-              taskTitle: c.taskTitle,
-            })),
+            chunks: chunks.map(chunkToStructured),
           },
         };
       } catch (error) {
@@ -121,19 +150,10 @@ export function registerSearchTools(server: McpServer): void {
             isError: true,
           };
         }
-        const text = `[${chunk.source}] ${chunk.planTitle ?? ''} ${chunk.taskTitle ?? ''}\n${chunk.content}`;
+        const text = `[${chunk.source}] ${chunkLabel(chunk)}\n${chunk.content}`;
         return {
           content: [{ text, type: 'text' as const }],
-          structuredContent: {
-            content: chunk.content,
-            id: chunk.id,
-            metadata: chunk.metadata,
-            planId: chunk.planId,
-            planTitle: chunk.planTitle,
-            source: chunk.source,
-            taskId: chunk.taskId,
-            taskTitle: chunk.taskTitle,
-          },
+          structuredContent: chunkToStructured(chunk),
         };
       } catch (error) {
         const isError = error instanceof Error;

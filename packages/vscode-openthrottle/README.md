@@ -1,5 +1,12 @@
 # vscode-openthrottle
 
+> **This is the canonical, deployable VS Code/Cursor extension.** All extension
+> code — activation/lifecycle, commands, secret storage, trees, and webviews — lives
+> here. The similarly named sibling [`@openthrottle/openthrottle-vscode`](../openthrottle-vscode)
+> is a separate, non-deployable **logic library** for editor-agnostic helpers and must
+> not host extension code. Keep the lib-vs-deployable split intact; do not duplicate
+> code across the two.
+
 OpenThrottle plans and tasks extension for VS Code and Cursor. One codebase targets both editors; see [VSCode and Cursor extension compatibility](../../../docs/openthrottle/vscode-cursor-extension-compatibility.md) for details.
 
 ## Prerequisites

@@ -12,42 +12,40 @@ import { logger } from './logger.config';
  */
 @Injectable()
 export class LoggerService implements DefaultLoggerService {
-  // private logger: typeof logger;
-
-  // constructor(readonly name?: string) {
-  //   // this.logger = getLogger();
-  //
-  //   logger.info(`LoggerService initialized for ${name}`);
-  // }
-
+  /**
+   * Winston has no `fatal` level, so fatal logs are emitted at `error`
+   * level with a `severity: 'fatal'` meta marker to preserve the
+   * distinction for downstream log processors (the reserved Winston
+   * `level` field stays `error` so transports and level filters behave).
+   */
   fatal(message: any, ...optionalParams: any[]) {
-    logger.error(message, optionalParams);
+    logger.error(message, ...optionalParams, { severity: 'fatal' });
   }
 
   error(message: any, ...optionalParams: any[]) {
-    logger.error(message, optionalParams);
+    logger.error(message, ...optionalParams);
   }
 
   warn(message: any, ...optionalParams: any[]) {
-    logger.warn(message, optionalParams);
+    logger.warn(message, ...optionalParams);
   }
 
   debug(message: any, ...optionalParams: any[]) {
-    logger.debug(message, optionalParams);
+    logger.debug(message, ...optionalParams);
   }
 
   info(message: any, ...optionalParams: any[]) {
-    logger.info(message, optionalParams);
+    logger.info(message, ...optionalParams);
   }
 
   verbose(message: any, ...optionalParams: any[]) {
-    logger.verbose(message, optionalParams);
+    logger.verbose(message, ...optionalParams);
   }
 
   /**
    * @deprecated Use `info` instead.
    */
   log(message: any, ...optionalParams: any[]) {
-    logger.info(message, optionalParams);
+    logger.info(message, ...optionalParams);
   }
 }

@@ -42,6 +42,13 @@ const PRIOR_SNAPSHOT: WorkspaceFileHash[] = [
 
 const WORKSPACE = '/Users/dev/repo';
 
+/**
+ * The service wraps the resolved provider in a dimension guard before handing it to the engine, so
+ * the engine receives a delegating wrapper rather than the bare mock. Assert structural shape, not
+ * object identity.
+ */
+const GUARDED_PROVIDER = { embed: expect.any(Function) };
+
 const OPENAI_CONFIG: EmbeddingsConfig = {
   apiKey: 'sk-test',
   baseUrl: 'https://api.openai.com/v1',
@@ -106,7 +113,7 @@ describe('CodeSearchService', () => {
       // No prior snapshot → full mode: indexWorkspace called WITHOUT a diff.
       expect(indexWorkspace).toHaveBeenCalledWith(
         { root: WORKSPACE },
-        { provider, store },
+        { provider: GUARDED_PROVIDER, store },
       );
       expect(diffSnapshots).not.toHaveBeenCalled();
       // Snapshot persisted after a successful index.
@@ -127,7 +134,7 @@ describe('CodeSearchService', () => {
       // Prior snapshot → incremental mode: indexWorkspace called WITH the diff.
       expect(indexWorkspace).toHaveBeenCalledWith(
         { root: WORKSPACE },
-        { diff, provider, store },
+        { diff, provider: GUARDED_PROVIDER, store },
       );
       // Fresh snapshot persisted (becomes the next baseline).
       expect(snapshotStore.save).toHaveBeenCalledWith(WORKSPACE, NEXT_SNAPSHOT);
@@ -163,6 +170,43 @@ describe('CodeSearchService', () => {
     });
   });
 
+  describe('dimension guard', () => {
+    it('rejects vectors whose width differs from the column, naming the model and dims', async () => {
+      // Drive the real engine so the wrapped provider's embed() actually runs: indexWorkspace
+      // invokes the provider, which here yields a 768-dim vector (the nomic-embed-text default).
+      vi.mocked(snapshotStore.load).mockResolvedValue(null);
+      vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue({
+        baseUrl: 'http://localhost:11434',
+        kind: 'ollama',
+        model: 'nomic-embed-text',
+      });
+      vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
+        await options.provider.embed(['some chunk']);
+        return { deletedPaths: 0, embedded: 1 };
+      });
+      provider.embed.mockResolvedValue([new Array(768).fill(0)]);
+
+      await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(
+        /nomic-embed-text.*768.*1536|768.*1536/u,
+      );
+      expect(snapshotStore.save).not.toHaveBeenCalled();
+    });
+
+    it('passes vectors of the expected width through unchanged', async () => {
+      vi.mocked(snapshotStore.load).mockResolvedValue(null);
+      const embedded = [new Array(1536).fill(0.5)];
+      vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
+        const out = await options.provider.embed(['some chunk']);
+        expect(out).toEqual(embedded);
+        return { deletedPaths: 0, embedded: 1 };
+      });
+      provider.embed.mockResolvedValue(embedded);
+
+      const out = await service.indexCodeWorkspace(WORKSPACE);
+      expect(out).toEqual({ deletedPaths: 0, embedded: 1 });
+    });
+  });
+
   describe('codeSemanticSearch', () => {
     it('returns [] for a blank query without resolving a provider', async () => {
       const matches = await service.codeSemanticSearch(WORKSPACE, '   ');
@@ -187,7 +231,7 @@ describe('CodeSearchService', () => {
       expect(semanticSearch).toHaveBeenCalledWith(
         'find user',
         { root: WORKSPACE },
-        { provider, store, topK: 5 },
+        { provider: GUARDED_PROVIDER, store, topK: 5 },
       );
       expect(out).toEqual(matches);
     });
@@ -198,7 +242,35 @@ describe('CodeSearchService', () => {
       expect(semanticSearch).toHaveBeenCalledWith(
         'query',
         { root: WORKSPACE },
-        { provider, store, topK: 10 },
+        { provider: GUARDED_PROVIDER, store, topK: 10 },
+      );
+    });
+
+    it.each([
+      [0, 1],
+      [-5, 1],
+      [1000, 50],
+      [3.9, 3],
+    ])(
+      'clamps topK %d to %d (defense-in-depth over the resolver)',
+      async (input, expected) => {
+        vi.mocked(semanticSearch).mockResolvedValue([]);
+        await service.codeSemanticSearch(WORKSPACE, 'query', input);
+        expect(semanticSearch).toHaveBeenCalledWith(
+          'query',
+          { root: WORKSPACE },
+          { provider: GUARDED_PROVIDER, store, topK: expected },
+        );
+      },
+    );
+
+    it('falls back to the default topK for a non-finite value', async () => {
+      vi.mocked(semanticSearch).mockResolvedValue([]);
+      await service.codeSemanticSearch(WORKSPACE, 'query', Number.NaN);
+      expect(semanticSearch).toHaveBeenCalledWith(
+        'query',
+        { root: WORKSPACE },
+        { provider: GUARDED_PROVIDER, store, topK: 10 },
       );
     });
   });

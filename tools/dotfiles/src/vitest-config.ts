@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { calculateOutputDir } from './calculate-output-dir.ts';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
@@ -50,32 +50,8 @@ export interface CreateVitestConfigOptions {
 /**
  * @description Calculates the coverage directory path relative to the package
  */
-const calculateCoverageDirectory = (packagePath: string): string => {
-  // packagePath is __dirname from the config file
-  const packageAbsolutePath = resolve(packagePath);
-  const pathParts = packageAbsolutePath.split('/').filter(Boolean);
-
-  // Find packages/ or tools/ in the path
-  const packagesIndex = pathParts.lastIndexOf('packages');
-  const toolsIndex = pathParts.lastIndexOf('tools');
-  const baseIndex = Math.max(packagesIndex, toolsIndex);
-
-  if (baseIndex === -1) {
-    throw new Error(
-      `Could not find 'packages' or 'tools' in path: ${packageAbsolutePath}`,
-    );
-  }
-
-  // Calculate depth: how many directories from package to root
-  const depth = pathParts.length - baseIndex - 1;
-  const relativeUp = '../'.repeat(depth);
-
-  // Get the package path relative to packages/ or tools/
-  const packageRelativePath = pathParts.slice(baseIndex + 1).join('/');
-  const baseDir = pathParts[baseIndex]; // 'packages' or 'tools'
-
-  return `${relativeUp}coverage/${baseDir}/${packageRelativePath}`;
-};
+const calculateCoverageDirectory = (packagePath: string): string =>
+  calculateOutputDir(packagePath, 'coverage');
 
 /**
  * @description Base configuration options for environment-specific configs

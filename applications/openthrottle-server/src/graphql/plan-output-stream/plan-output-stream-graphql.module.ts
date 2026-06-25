@@ -4,11 +4,16 @@
 
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
+import { PlanOutputStreamFieldsResolver } from './plan-output-stream-fields.resolver';
 import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 
 @Module({
   imports: [NestjsRepositoriesModule],
-  providers: [PlanOutputStreamLoaders, PlanOutputStreamResolver],
+  providers: [
+    PlanOutputStreamFieldsResolver,
+    PlanOutputStreamLoaders,
+    PlanOutputStreamResolver,
+  ],
 })
 export class PlanOutputStreamGraphqlModule {}

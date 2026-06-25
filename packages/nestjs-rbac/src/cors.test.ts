@@ -33,7 +33,7 @@ describe('getCorsOptions', () => {
   });
 
   describe('when no env is set', () => {
-    it('returns allow-all origin, credentials true, default methods', () => {
+    it('returns allow-all origin, credentials false (safe default), default methods', () => {
       withEnv(
         {
           [CORS_ALLOWED_METHODS]: undefined,
@@ -43,7 +43,7 @@ describe('getCorsOptions', () => {
         () => {
           const opts = getCorsOptions();
           expect(opts.origin).toBe(true);
-          expect(opts.credentials).toBe(true);
+          expect(opts.credentials).toBe(false);
           expect(opts.methods).toEqual([
             'DELETE',
             'GET',
@@ -72,9 +72,32 @@ describe('getCorsOptions', () => {
         expect(opts.origin).toBe(true);
       });
     });
+
+    it('defaults credentials to true when an explicit origin allowlist is set', () => {
+      withEnv({ [CORS_ORIGINS]: 'https://a.com' }, () => {
+        const opts = getCorsOptions();
+        expect(opts.origin).toEqual(['https://a.com']);
+        expect(opts.credentials).toBe(true);
+      });
+    });
+
+    it('defaults credentials to false when origin is allow-all ("*")', () => {
+      withEnv({ [CORS_ORIGINS]: '*' }, () => {
+        const opts = getCorsOptions();
+        expect(opts.credentials).toBe(false);
+      });
+    });
   });
 
   describe('when CORS_CREDENTIALS is set', () => {
+    it('honors explicit CORS_CREDENTIALS=true even with allow-all origin', () => {
+      withEnv({ [CORS_CREDENTIALS]: 'true', [CORS_ORIGINS]: '*' }, () => {
+        const opts = getCorsOptions();
+        expect(opts.origin).toBe(true);
+        expect(opts.credentials).toBe(true);
+      });
+    });
+
     it('returns credentials false when CORS_CREDENTIALS is "false"', () => {
       withEnv({ [CORS_CREDENTIALS]: 'false' }, () => {
         const opts = getCorsOptions();

@@ -45,7 +45,16 @@ function intFromEnv(
   return Number.isInteger(parsed) && parsed >= min ? parsed : fallback;
 }
 
-/** Joi schema for the env knobs this package reads (all optional). */
+/**
+ * Joi schema for the env knobs this package reads (all optional). Applied by
+ * {@link buildModelDiscoveryConfig} on every config build, so malformed values
+ * (e.g. `LLM_PROBE_TIMEOUT_MS=abc`) are rejected up front rather than silently
+ * coerced to defaults. Unknown keys are ignored so the schema can validate the
+ * full `process.env`. Also exported so a consumer can compose it into a
+ * top-level `ConfigModule.forRoot({ validationSchema })`.
+ *
+ * @publicApi
+ */
 export const configValidationSchema = Joi.object({
   LLM_DISCOVERY_CACHE_TTL_MS: Joi.number().integer().min(0).optional(),
   LLM_DISCOVERY_CONCURRENCY: Joi.number().integer().min(1).optional(),
@@ -56,12 +65,25 @@ export const configValidationSchema = Joi.object({
   LM_STUDIO_URL: Joi.string().uri().optional(),
   OLLAMA_BASE_URL: Joi.string().uri().optional(),
   OLLAMA_URL: Joi.string().uri().optional(),
-});
+}).unknown(true);
 
-/** Build a {@link ModelDiscoveryConfig} from an env-like object. */
+/**
+ * Build a {@link ModelDiscoveryConfig} from an env-like object. Validates the
+ * env against {@link configValidationSchema} first, throwing on malformed
+ * values instead of silently coercing them to defaults.
+ */
 export function buildModelDiscoveryConfig(
   env: NodeJS.ProcessEnv,
 ): ModelDiscoveryConfig {
+  const { error } = configValidationSchema.validate(env, {
+    abortEarly: false,
+  });
+  if (error !== undefined) {
+    throw new Error(
+      `Invalid model-discovery env configuration: ${error.message}`,
+    );
+  }
+
   return {
     cacheTtlMs: intFromEnv(
       env.LLM_DISCOVERY_CACHE_TTL_MS,

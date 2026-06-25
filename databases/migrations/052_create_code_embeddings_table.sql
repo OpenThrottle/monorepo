@@ -48,6 +48,14 @@ CREATE INDEX IF NOT EXISTS idx_code_embeddings_workspace_path
 
 -- HNSW vector index for cosine similarity search (matches the 1 - (embedding <=> q) scoring
 -- the engine's pgvector VectorStore expects).
+--
+-- Recall/scale note: this is a single global HNSW index with default build params, while every
+-- query also filters `workspace_root = $N`. HNSW returns the global nearest neighbors first, which
+-- are THEN filtered by workspace_root — so a small workspace co-located with much larger ones can
+-- under-fill `topK` or see degraded recall. This is acceptable under the current low-workspace-count
+-- (effectively single-tenant) assumption. If/when many large workspaces share this table, revisit:
+-- per-workspace partial indexes (`WHERE workspace_root = '…'`) or tuned `m` / `ef_construction`
+-- build params and a per-query `hnsw.ef_search`.
 CREATE INDEX IF NOT EXISTS idx_code_embeddings_vector
   ON code_embeddings USING hnsw (embedding vector_cosine_ops);
 

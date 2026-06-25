@@ -73,10 +73,15 @@ export default createVitestConfigJsdom({
 
 ## Development
 
+This is a source-first package: `main`/`types` point at `./src/index.ts` and
+consumers transpile it directly, so there is **no `build` target** and no
+`dist/` output. Import it by name (`@tools/dotfiles`) from consuming projects;
+within this package itself use relative `./src/...` imports (the
+`@nx/enforce-module-boundaries` rule forbids self-referencing by package name).
+
 From the monorepo root:
 
 ```bash
-pnpm nx run @tools/dotfiles:build
 pnpm nx run @tools/dotfiles:lint
 pnpm nx run @tools/dotfiles:test
 ```

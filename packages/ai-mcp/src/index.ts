@@ -5,6 +5,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { getServerName, SERVER_VERSION } from './constants.js';
+import { destroyDataSources } from './data-source.js';
 import { registerKnowledgeBaseResource } from './resources/knowledge-base.js';
 import {
   registerActivityTools,
@@ -38,4 +39,19 @@ export async function runServer(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  // Shutdown hook: release pooled Postgres connections held by cached DataSources so the
+  // long-lived stdio process doesn't hold connections open per connection string forever.
+  let shuttingDown = false;
+  const shutdown = (): void => {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+    void destroyDataSources().finally(() => {
+      process.exit(0);
+    });
+  };
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }

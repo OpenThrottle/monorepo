@@ -1,19 +1,22 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Permissions } from '../decorators/permissions.decorator';
 import { PERMISSIONS, ROLES } from '../roles';
 import { PermissionsGuard } from './permissions.guard';
 
 function createMockContext(
-  user: { roles?: readonly string[] } | undefined,
+  user: { roles?: unknown } | undefined,
+  handler: () => void = () => undefined,
+  klass: unknown = class {},
 ): ExecutionContext {
   const request = { user };
 
   // FIXME: Swap out eventually
 
   return {
-    getClass: vi.fn(),
-    getHandler: vi.fn(),
+    getClass: vi.fn(() => klass),
+    getHandler: vi.fn(() => handler),
     switchToHttp: vi.fn(() => ({
       getRequest: () => request,
     })),
@@ -64,6 +67,62 @@ describe('PermissionsGuard', () => {
         PERMISSIONS.USERS_WRITE,
       ]);
       expect(() => guard.canActivate(ctx)).toThrow(
+        'Missing permission: users:write',
+      );
+    });
+
+    it('requires ALL permissions (AND): throws on the one the user lacks', () => {
+      // user role has USERS_READ but not USERS_WRITE.
+      const ctx = createMockContext({ roles: [ROLES.USER] });
+      vi.spyOn(Reflector.prototype, 'getAllAndOverride').mockReturnValue([
+        PERMISSIONS.USERS_READ,
+        PERMISSIONS.USERS_WRITE,
+      ]);
+      expect(() => guard.canActivate(ctx)).toThrow(
+        'Missing permission: users:write',
+      );
+    });
+
+    it('treats a non-array roles claim as no roles (defensive)', () => {
+      // A hand-crafted JWT with `roles: "admin"` (string) must not be trusted:
+      // string .includes / per-char iteration could otherwise grant access.
+      const ctx = createMockContext({ roles: 'admin' });
+      vi.spyOn(Reflector.prototype, 'getAllAndOverride').mockReturnValue([
+        PERMISSIONS.USERS_WRITE,
+      ]);
+      expect(() => guard.canActivate(ctx)).toThrow('No roles assigned');
+    });
+  });
+
+  describe('class-level @Permissions() metadata', () => {
+    // Use a real Reflector against a decorated class so getAllAndOverride
+    // actually resolves metadata from getClass() (not just the handler).
+    const realGuard = new PermissionsGuard(new Reflector());
+
+    @Permissions(PERMISSIONS.USERS_WRITE)
+    class WriteScopedController {}
+
+    // Earlier describe blocks spy on Reflector.prototype.getAllAndOverride;
+    // restore so the real implementation resolves the class metadata here.
+    beforeEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('honors class-level metadata when the handler has none', () => {
+      const handler = (): void => undefined;
+      const allowCtx = createMockContext(
+        { roles: [ROLES.ADMIN] },
+        handler,
+        WriteScopedController,
+      );
+      expect(realGuard.canActivate(allowCtx)).toBe(true);
+
+      const denyCtx = createMockContext(
+        { roles: [ROLES.VIEWER] },
+        handler,
+        WriteScopedController,
+      );
+      expect(() => realGuard.canActivate(denyCtx)).toThrow(
         'Missing permission: users:write',
       );
     });

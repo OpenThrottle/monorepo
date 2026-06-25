@@ -7,7 +7,6 @@ export { getCorsConfiguration, getCorsOptions, type CorsOptions } from './cors';
 export { PermissionsGuard } from './guards/permissions.guard';
 export { RolesGuard, type RbacUser } from './guards/roles.guard';
 export { NestjsRbacModule } from './nestjs-rbac.module';
-export { NestjsRbacService } from './nestjs-rbac.service';
 export {
   PERMISSIONS,
   type Permission,

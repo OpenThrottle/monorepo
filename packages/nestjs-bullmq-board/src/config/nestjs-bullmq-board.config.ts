@@ -9,8 +9,8 @@ import * as Joi from 'joi';
  * down our environment variables per-package.
  */
 export const configValidationSchema = Joi.object({
-  BULLMQ_BOARD_ADMIN_PASSWORD: Joi.string().required(),
-  BULLMQ_BOARD_ADMIN_USERNAME: Joi.string().required(),
+  BULLMQ_BOARD_ADMIN_PASSWORD: Joi.string().min(16).required(),
+  BULLMQ_BOARD_ADMIN_USERNAME: Joi.string().min(1).required(),
 });
 
 export const bullmqBoardConfig = registerAs('bullmqBoard', () => {
@@ -22,11 +22,3 @@ export const bullmqBoardConfig = registerAs('bullmqBoard', () => {
 
   return { password, username };
 });
-// .unkonwn()
-
-/**
- * allowUnknown defaults to true to account for other system environment variables and prevent errors.
- *
- * @external Link: According to a GitHub discussion https://github.com/nestjs/config/issues/618
- * @external Link: a Medium article https://mdjamilkashemporosh.medium.com/nestjs-environment-variables-best-practices-for-validating-and-structuring-configs-a24a8e8d93c1
- */
