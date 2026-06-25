@@ -9,6 +9,7 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 import type { IdeWorkspaceListing } from '../data/view-models';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 /** Default cap on rendered matches to keep the DOM bounded on large repos. */
 export const DEFAULT_FILE_PALETTE_LIMIT = 200;
@@ -46,11 +47,25 @@ export const WorkspaceFilePalette = (
 
   // Setup
   const trimmed = query.trim().toLowerCase();
+  // Debounce the filter term so a large path set is scanned at most once per
+  // quiet window rather than on every keystroke.
+  const debouncedTrimmed = useDebouncedValue({ value: trimmed });
+  // Lowercase every path once per `listing.paths` identity instead of on each
+  // keystroke; pair each lowercased entry with its original for rendering.
+  const lowercasedPaths = React.useMemo(
+    () =>
+      listing.paths.map(
+        (path) => ({ lower: path.toLowerCase(), path }) as const,
+      ),
+    [listing.paths],
+  );
   const matches = React.useMemo(() => {
-    if (trimmed === '') return [];
+    if (debouncedTrimmed === '') return [];
 
-    return listing.paths.filter((path) => path.toLowerCase().includes(trimmed));
-  }, [listing.paths, trimmed]);
+    return lowercasedPaths
+      .filter((entry) => entry.lower.includes(debouncedTrimmed))
+      .map((entry) => entry.path);
+  }, [debouncedTrimmed, lowercasedPaths]);
   const visible = matches.slice(0, maxResults);
   const hiddenCount = matches.length - visible.length;
 
@@ -73,7 +88,7 @@ export const WorkspaceFilePalette = (
         value={query}
       />
       <CommandList>
-        {trimmed === '' ? (
+        {debouncedTrimmed === '' ? (
           <div className="text-muted-foreground p-4 text-sm">
             Type to filter {listing.paths.length} files in{' '}
             {listing.repository.displayName}.

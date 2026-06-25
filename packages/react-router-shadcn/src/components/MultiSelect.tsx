@@ -1,6 +1,16 @@
 import * as React from 'react';
+import { Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { Badge } from './Badge';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from './Command';
+import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 
 export interface MultiSelectOption {
   readonly label: string;
@@ -9,72 +19,55 @@ export interface MultiSelectOption {
 
 export interface MultiSelectProps {
   readonly className?: string;
+  readonly emptyText?: string;
   readonly onChange: (value: string[]) => void;
   readonly options: readonly MultiSelectOption[];
   readonly placeholder?: string;
+  readonly searchPlaceholder?: string;
   readonly value: readonly string[];
 }
 
 /**
- * @description Multi-select dropdown built on Select/DropdownMenu styling. Supports multiple selection with checkboxes; selected values shown as tags in the trigger.
+ * @description Multi-select dropdown built on the cmdk Command primitive (via Popover). Fully keyboard accessible: arrow keys move the active option, Enter toggles selection, Escape closes. Selected values are shown as tags in the trigger.
  */
-export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
-  (props, ref): React.JSX.Element => {
-    const {
-      className,
-      onChange,
-      options,
-      placeholder = 'Select…',
-      value,
-    } = props;
+export const MultiSelect = React.forwardRef<
+  HTMLButtonElement,
+  MultiSelectProps
+>((props, ref): React.JSX.Element => {
+  const {
+    className,
+    emptyText = 'No options found.',
+    onChange,
+    options,
+    placeholder = 'Select…',
+    searchPlaceholder = 'Search…',
+    value,
+  } = props;
 
-    const [open, setOpen] = React.useState(false);
-    const containerRef = React.useRef<HTMLDivElement>(null);
+  // Hooks
+  const [open, setOpen] = React.useState(false);
 
-    const setRefs = React.useCallback(
-      (el: HTMLDivElement | null): void => {
-        (containerRef as React.RefObject<HTMLDivElement | null>).current = el;
+  // Setup
+  const selectedOptions = options.filter((opt) => value.includes(opt.value));
 
-        if (typeof ref === 'function') {
-          ref(el);
-        } else if (ref != null) {
-          (ref as React.RefObject<HTMLDivElement | null>).current = el;
-        }
-      },
-      [ref],
-    );
+  // Handlers
+  const toggleOption = (optionValue: string): void => {
+    const next = value.includes(optionValue)
+      ? value.filter((v) => v !== optionValue)
+      : [...value, optionValue];
 
-    React.useEffect((): (() => void) | undefined => {
-      const handleMouseDown = (event: MouseEvent): void => {
-        const target = event.target as Node;
-        if (
-          containerRef.current != null &&
-          !containerRef.current.contains(target)
-        ) {
-          setOpen(false);
-        }
-      };
+    onChange(next);
+  };
 
-      if (open) {
-        document.addEventListener('mousedown', handleMouseDown);
-        return () => document.removeEventListener('mousedown', handleMouseDown);
-      }
+  // Markup
 
-      return undefined;
-    }, [open]);
+  // Life Cycle
 
-    const toggleOption = (optionValue: string): void => {
-      const next = value.includes(optionValue)
-        ? value.filter((v) => v !== optionValue)
-        : [...value, optionValue];
+  // 🔌 Short Circuit
 
-      onChange(next);
-    };
-
-    const selectedOptions = options.filter((opt) => value.includes(opt.value));
-
-    return (
-      <div className={cn('relative', className)} ref={setRefs}>
+  return (
+    <Popover onOpenChange={setOpen} open={open}>
+      <PopoverTrigger asChild={true}>
         <button
           aria-expanded={open}
           aria-haspopup="listbox"
@@ -87,79 +80,60 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             'placeholder:text-muted-foreground',
             'focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
+            className,
           )}
-          onClick={() => setOpen((prev) => !prev)}
+          ref={ref}
           type="button"
         >
           {selectedOptions.length === 0 ? (
             <span className="text-muted-foreground">{placeholder}</span>
           ) : (
             selectedOptions.map((opt) => (
-              <Badge
-                className="truncate"
-                // className="max-w-32 truncate"
-                key={opt.value}
-                variant="secondary"
-              >
+              <Badge className="truncate" key={opt.value} variant="secondary">
                 {opt.label}
               </Badge>
             ))
           )}
         </button>
-        {open && (
-          <div
-            className={cn(
-              'bg-popover text-popover-foreground absolute top-full left-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border p-1 shadow-md',
-            )}
-            role="listbox"
-          >
-            {options.map((opt) => {
-              const selected = value.includes(opt.value);
-              return (
-                <div
-                  aria-selected={selected}
-                  className={cn(
-                    'focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-                    'hover:bg-accent hover:text-white',
-                  )}
-                  key={opt.value}
-                  onClick={() => toggleOption(opt.value)}
-                  role="option"
-                >
-                  <span
-                    aria-hidden={true}
-                    className={cn(
-                      'absolute left-2 flex h-4 w-4 items-center justify-center rounded border',
-                      selected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-input',
-                    )}
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[--radix-popover-trigger-width] min-w-32 p-0"
+      >
+        <Command>
+          <CommandInput placeholder={searchPlaceholder} />
+          <CommandList>
+            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandGroup>
+              {options.map((opt) => {
+                const selected = value.includes(opt.value);
+                return (
+                  <CommandItem
+                    key={opt.value}
+                    onSelect={() => toggleOption(opt.value)}
+                    value={opt.label}
                   >
-                    {selected ? (
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M5 12l5 5L19 7"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : null}
-                  </span>
-                  {opt.label}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  },
-);
+                    <span
+                      aria-hidden={true}
+                      className={cn(
+                        'mr-2 flex h-4 w-4 items-center justify-center rounded border',
+                        selected
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-input',
+                      )}
+                    >
+                      {selected ? <Check className="h-3 w-3" /> : null}
+                    </span>
+                    {opt.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+});
 
 MultiSelect.displayName = 'MultiSelect';

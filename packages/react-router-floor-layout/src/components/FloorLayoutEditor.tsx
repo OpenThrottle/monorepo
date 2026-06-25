@@ -16,7 +16,11 @@ import {
   type FloorElementType,
   type FloorLayout,
 } from '../types';
-import { clampPointToRect, type Point } from '../utils/geometry';
+import {
+  clampPointToRect,
+  type Point,
+  snapValueToGrid,
+} from '../utils/geometry';
 import { createFloorElement, floorBounds } from '../utils/elements';
 import {
   type ElementPatch,
@@ -32,6 +36,9 @@ import { FloorElementView } from './FloorElementView';
 import { FloorToolbar } from './FloorToolbar';
 import { PropertyPanel } from './PropertyPanel';
 import { SelectionHandles } from './SelectionHandles';
+
+/** Rotation snap step (degrees) — mirrors SelectionHandles' handle-drag snap. */
+const ROTATE_SNAP_DEGREES = 15;
 
 let fallbackIdCounter = 0;
 
@@ -69,7 +76,17 @@ export interface FloorLayoutEditorProps {
   readonly onChange?: (layout: FloorLayout) => void;
   /** Fired when the selection changes. */
   readonly onSelectionChange?: (elementId: string | null) => void;
-  /** Controlled layout value. */
+  /**
+   * Controlled layout value.
+   *
+   * Controlled contract: the editor re-syncs from `value` only when its object
+   * **identity** changes from the last value it emitted via `onChange`. To echo
+   * back a layout the editor just emitted (e.g. round-tripping through your
+   * store) without re-syncing, pass the same reference. To force a re-sync —
+   * including a reset back to a previously-emitted layout — always pass a **new
+   * object identity** (e.g. a fresh `{ ...layout }` or a deserialized copy);
+   * mutating in place or reusing a prior reference will be silently ignored.
+   */
   readonly value?: FloorLayout;
 }
 
@@ -230,10 +247,16 @@ export function FloorLayoutEditor(props: FloorLayoutEditorProps): ReactElement {
   const handleRotate = useCallback(
     (deltaDegrees: number) => {
       if (!selected) return;
-      const rotation = (((selected.rotation + deltaDegrees) % 360) + 360) % 360;
+      const normalized =
+        (((selected.rotation + deltaDegrees) % 360) + 360) % 360;
+      // Match SelectionHandles' 15° snap so all rotation entry points (drag
+      // handle, `[`/`]` keys) share the same snapping semantics when enabled.
+      const rotation = snapEnabled
+        ? snapValueToGrid(normalized, ROTATE_SNAP_DEGREES)
+        : normalized;
       commitLayout(updateElement(committed, selected.id, { rotation }));
     },
-    [commitLayout, committed, selected],
+    [commitLayout, committed, selected, snapEnabled],
   );
 
   // Markup

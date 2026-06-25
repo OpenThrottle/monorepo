@@ -22,6 +22,9 @@
       "path": "../openthrottle-ide/tsconfig.lib.json"
     },
     {
+      "path": "../react-router-testing/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

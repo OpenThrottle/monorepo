@@ -22,6 +22,18 @@ export type CompiledMarkdown = Awaited<ReturnType<typeof evaluate>>['default'];
  * is a synchronous remark plugin (so it works with both `evaluate` and
  * `evaluateSync`). The compiled component reads component overrides from the
  * nearest `MDXProvider` via `useMDXComponents`.
+ *
+ * @remarks
+ * Security boundary: this config renders Markdown as **literal text with no
+ * raw HTML and no JSX** — it is safe for trusted, repo-authored content only.
+ * `format: 'md'` means `<...>`/`{...}` are treated as literal text rather than
+ * evaluated, and no `rehype-raw` plugin is present, so embedded HTML is dropped
+ * and never reaches the DOM as live markup.
+ * Do NOT switch to `format: 'mdx'` or add `rehype-raw` to "support HTML in
+ * docs" without first adding `rehype-sanitize` to the `rehypePlugins` chain —
+ * otherwise a `<script>` (or `onerror=` attribute) in source becomes a live
+ * XSS sink, including in the browser since manifests are built client-side.
+ * The regression guard in `compileMarkdown.test.tsx` asserts this invariant.
  */
 const EVALUATE_OPTIONS = {
   ...runtime,
@@ -51,6 +63,12 @@ export const compileMarkdown = async (
  * deferred to a client-side effect. Safe here because the only remark plugin
  * (`remark-gfm`) is synchronous; `evaluateSync` throws if an async plugin is
  * supplied.
+ *
+ * @remarks
+ * Inherits the security boundary documented on {@link EVALUATE_OPTIONS}: input
+ * is rendered as literal text (no raw HTML, no JSX) and is safe for trusted
+ * content only. Enabling raw-HTML or MDX-JSX evaluation requires adding
+ * `rehype-sanitize` first.
  */
 export const compileMarkdownSync = (
   options: CompileMarkdownOptions,

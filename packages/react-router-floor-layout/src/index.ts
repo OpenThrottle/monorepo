@@ -36,6 +36,7 @@ export * from './utils/elements';
 export * from './utils/geometry';
 export * from './utils/layout-operations';
 export * from './utils/seats';
+export * from './utils/selection-transform';
 export * from './utils/serialization';
 export * from './utils/units';
 export * from './utils/viewport';

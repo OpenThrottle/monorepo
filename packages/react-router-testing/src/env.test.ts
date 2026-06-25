@@ -1,5 +1,31 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { createTestEnv, installTestEnv } from './env';
+
+// Compile-time contract: the set of keys the fixture must contain, derived from
+// the type rather than hardcoded. This map has one boolean per key of
+// Required<OpenThrottleEnv>; if a key is added to OpenThrottleEnv (required or
+// optional) this object literal fails to compile (missing key) — pinning the
+// runtime length assertion below to the type so the magic number can't drift
+// silently from OpenThrottleEnv and throw in consumers' getEnvironment().
+const EXPECTED_ENV_KEYS = {
+  API_URL_EXTERNAL: true,
+  API_URL_INTERNAL: true,
+  APP_ENV: true,
+  APP_NAME: true,
+  APP_NAME_SHORT: true,
+  APP_URL: true,
+  APP_URL_ADMIN: true,
+  APP_URL_CMS: true,
+  APP_URL_DEVELOPER: true,
+  APP_URL_EMAIL: true,
+  APP_URL_SERVER: true,
+  APP_URL_WEBSITE: true,
+  APP_VERSION: true,
+  FEATURE_BETA_PREVIEW: true,
+  NODE_ENV: true,
+  ROLLBAR_TOKEN: true,
+} satisfies Record<keyof Required<OpenThrottleEnv>, true>;
 
 describe('createTestEnv', () => {
   test('returns the full env with realistic localhost defaults', () => {
@@ -15,7 +41,11 @@ describe('createTestEnv', () => {
   test('every key is present and non-empty (satisfies getEnvironment())', () => {
     const env = createTestEnv();
 
-    expect(Object.keys(env)).toHaveLength(15);
+    // Count is derived from the type-checked key map, not a magic number, so
+    // adding a key to OpenThrottleEnv breaks EXPECTED_ENV_KEYS at compile time
+    // before this runtime assertion can drift.
+    const expectedKeys = Object.keys(EXPECTED_ENV_KEYS).sort();
+    expect(Object.keys(env).sort()).toEqual(expectedKeys);
     for (const value of Object.values(env)) {
       expect(value).toBeTruthy();
     }
@@ -46,4 +76,19 @@ describe('installTestEnv', () => {
 
     expect(window.env.APP_NAME).toBe('openthrottle-website');
   });
+
+  test('warns and no-ops when window is undefined (non-jsdom suite)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal('window', undefined);
+
+    installTestEnv();
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0][0]).toContain("test.environment='jsdom'");
+  });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });

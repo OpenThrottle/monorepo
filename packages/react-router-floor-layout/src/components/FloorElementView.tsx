@@ -2,6 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import {
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
+  memo,
+  useMemo,
 } from 'react';
 
 import { type FloorElement, FloorElementType } from '../types';
@@ -36,7 +38,7 @@ function describe(element: FloorElement): string {
  *
  * @publicApi
  */
-export function FloorElementView(props: FloorElementViewProps): ReactElement {
+function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
   // const {} = props;
 
   // Hooks
@@ -49,7 +51,14 @@ export function FloorElementView(props: FloorElementViewProps): ReactElement {
   const isZone = type === FloorElementType.ZONE;
   const isRound = type === FloorElementType.TABLE_ROUND;
   const isStool = type === FloorElementType.STOOL;
-  const seats = 'seats' in element ? seatPositions(element) : [];
+  const elementSeats = 'seats' in element ? element.seats : undefined;
+  // Keyed on the table geometry/seat-count that drive placement, so the pure
+  // `seatPositions` walk only re-runs when one of them changes (not on every
+  // unrelated parent render or live-drag frame).
+  const seats = useMemo(
+    () => ('seats' in element ? seatPositions(element) : []),
+    [elementSeats, height, type, width, x, y],
+  );
 
   const shapeClass = cn(
     'transition-[stroke,fill] [vector-effect:non-scaling-stroke]',
@@ -80,12 +89,14 @@ export function FloorElementView(props: FloorElementViewProps): ReactElement {
       transform={`rotate(${rotation} ${x} ${y})`}
     >
       <title>{describe(element)}</title>
-      {seats.map((seat) => (
+      {seats.map((seat, index) => (
         <circle
           className="fill-muted stroke-muted-foreground/50"
           cx={seat.x}
           cy={seat.y}
-          key={`${seat.x}:${seat.y}`}
+          // Positional + stable per render; coords can collide on degenerate
+          // (near-zero-size) tables, so an index key avoids duplicate-key glitches.
+          key={index}
           pointerEvents="none"
           r={7}
           strokeWidth={1}
@@ -128,3 +139,13 @@ export function FloorElementView(props: FloorElementViewProps): ReactElement {
     </g>
   );
 }
+
+/**
+ * @description Memoized SVG view of a single floor element. Memoizing keeps the
+ * O(n) per-pointermove cost of a live drag down to just the element(s) whose
+ * props actually changed: during a move only the dragged element's geometry
+ * changes, so the other 50–150 elements skip re-render entirely.
+ *
+ * @publicApi
+ */
+export const FloorElementView = memo(FloorElementViewComponent);

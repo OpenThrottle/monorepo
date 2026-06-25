@@ -21,7 +21,7 @@ declare global {
  * values are realistic (not sentinels) so tests that assert on constructed URLs
  * keep working. Per-app differences (notably `APP_NAME`) come in via overrides.
  */
-const DEFAULT_TEST_ENV: OpenThrottleEnv = {
+const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   API_URL_EXTERNAL: 'http://localhost:6021',
   API_URL_INTERNAL: 'http://localhost:6021',
   APP_ENV: 'test',
@@ -35,6 +35,12 @@ const DEFAULT_TEST_ENV: OpenThrottleEnv = {
   APP_URL_SERVER: 'http://localhost:6026',
   APP_URL_WEBSITE: 'http://localhost:6027',
   APP_VERSION: '1.0.0',
+  // Optional in OpenThrottleEnv, but pinned here via Required<> so the fixture
+  // is exhaustive: adding a key to the type — required or optional — now breaks
+  // this object literal at compile time (missing key), instead of silently
+  // drifting from the type and surfacing as a `getEnvironment()` throw in
+  // consumers. The runtime length assertion in env.test.ts backstops the count.
+  FEATURE_BETA_PREVIEW: 'false',
   NODE_ENV: 'test',
   ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',
 };
@@ -56,12 +62,20 @@ export const createTestEnv = (
  * Assign the test env fixture onto `window.env` (the contract
  * `getEnvironment()` reads in jsdom). No-op outside a browser-like environment.
  *
+ * When there is no `window`, this is almost always a misconfigured suite — the
+ * Vitest `test.environment` was not set to `jsdom` — so we surface a one-line
+ * warning. Without it the caller gets an empty `window.env` and a confusing
+ * downstream `getEnvironment()` failure instead of an actionable hint.
+ *
  * @publicApi
  */
 export const installTestEnv = (
   overrides: Partial<OpenThrottleEnv> = {},
 ): void => {
   if (typeof window === 'undefined') {
+    console.warn(
+      "installTestEnv() called outside a jsdom environment — window is undefined, so window.env was not set. Set Vitest test.environment='jsdom' for this suite.",
+    );
     return;
   }
 

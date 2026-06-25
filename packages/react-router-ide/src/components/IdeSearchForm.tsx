@@ -23,6 +23,7 @@ export const IdeSearchForm = (
 
   // Hooks
   const [query, setQuery] = React.useState(defaultQuery);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Setup
 
@@ -35,7 +36,13 @@ export const IdeSearchForm = (
   // Markup
 
   // Life Cycle
+  // Sync from `defaultQuery` only when the user isn't mid-type: a route
+  // revalidation can re-derive `defaultQuery` from the URL while focused, and
+  // an unconditional reset would clobber in-flight keystrokes.
   React.useEffect(() => {
+    if (document.activeElement === inputRef.current) {
+      return;
+    }
     setQuery(defaultQuery);
   }, [defaultQuery]);
 
@@ -56,6 +63,7 @@ export const IdeSearchForm = (
           name="q"
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search the workspace…"
+          ref={inputRef}
           type="search"
           value={query}
         />

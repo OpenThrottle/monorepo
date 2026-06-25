@@ -4,25 +4,10 @@ import { usePointerDrag } from '../hooks/usePointerDrag';
 import { type UseViewportResult } from '../hooks/useViewport';
 import { type FloorElement } from '../types';
 import {
-  type Point,
-  angleBetween,
-  rotatePoint,
-  snapValueToGrid,
-} from '../utils/geometry';
-
-const MIN_SIZE = 6;
-const ROTATE_SNAP_DEGREES = 15;
-
-/**
- * A patch produced by dragging a handle.
- *
- * @publicApi
- */
-export type SelectionTransform = Partial<{
-  readonly height: number;
-  readonly rotation: number;
-  readonly width: number;
-}>;
+  type SelectionTransform,
+  computeRotation,
+  computeSize,
+} from '../utils/selection-transform';
 
 /**
  * Props for {@link SelectionHandles}.
@@ -73,43 +58,34 @@ export function SelectionHandles(props: SelectionHandlesProps): ReactElement {
   const halfH = height / 2;
   const handle = Math.max(6, viewport.viewBox.width * 0.014);
   const stalk = handle * 2;
-
-  const computeSize = (pointer: Point): SelectionTransform => {
-    const local = rotatePoint(
-      { x: pointer.x - x, y: pointer.y - y },
-      -rotation,
-    );
-    const rawW = Math.abs(local.x) * 2;
-    const rawH = Math.abs(local.y) * 2;
-    const snappedW = snapEnabled ? snapValueToGrid(rawW, gridSize) : rawW;
-    const snappedH = snapEnabled ? snapValueToGrid(rawH, gridSize) : rawH;
-    return {
-      height: Math.max(MIN_SIZE, snappedH),
-      width: Math.max(MIN_SIZE, snappedW),
-    };
-  };
-
-  const computeRotation = (pointer: Point): SelectionTransform => {
-    const raw = angleBetween({ x, y }, pointer) + 90;
-    const normalized = ((raw % 360) + 360) % 360;
-    return {
-      rotation: snapEnabled
-        ? snapValueToGrid(normalized, ROTATE_SNAP_DEGREES)
-        : normalized,
-    };
-  };
+  const anchor = { rotation, x, y };
 
   const resize = usePointerDrag({
     clientToWorld: viewport.clientToWorld,
-    onEnd: (context) => onTransform(computeSize(context.rawWorld), 'commit'),
-    onMove: (context) => onTransform(computeSize(context.rawWorld), 'move'),
+    onEnd: (context) =>
+      onTransform(
+        computeSize(anchor, context.rawWorld, gridSize, snapEnabled),
+        'commit',
+      ),
+    onMove: (context) =>
+      onTransform(
+        computeSize(anchor, context.rawWorld, gridSize, snapEnabled),
+        'move',
+      ),
   });
 
   const rotate = usePointerDrag({
     clientToWorld: viewport.clientToWorld,
     onEnd: (context) =>
-      onTransform(computeRotation(context.rawWorld), 'commit'),
-    onMove: (context) => onTransform(computeRotation(context.rawWorld), 'move'),
+      onTransform(
+        computeRotation(anchor, context.rawWorld, snapEnabled),
+        'commit',
+      ),
+    onMove: (context) =>
+      onTransform(
+        computeRotation(anchor, context.rawWorld, snapEnabled),
+        'move',
+      ),
   });
 
   // Handlers

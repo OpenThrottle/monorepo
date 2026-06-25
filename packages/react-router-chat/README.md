@@ -1,6 +1,16 @@
 # @openthrottle/react-router-chat
 
-Reusable modal chat UI for React Router apps: dialog or sheet shell, scrollable message thread, composer, and Markdown rendering for assistant/system content via `@openthrottle/react-router-shadcn`.
+Reusable modal chat UI for React Router apps: dialog or sheet shell, scrollable message thread, composer, and preformatted-text rendering for assistant/system content via `@openthrottle/react-router-shadcn`'s `Markdown`.
+
+> [!Warning]
+> **Assistant/system bodies are NOT rendered as Markdown — they are shown as escaped preformatted text.** `ChatMessageBody` passes the body to `@openthrottle/react-router-shadcn`'s `Markdown`, which currently emits the raw string inside `<pre>` (no Markdown parsing). The component name is aspirational.
+>
+> Assistant/system bodies originate from **untrusted sources** — server LLM output and persisted conversation history (see `src/map-persisted-messages.ts`). Before swapping in a real Markdown renderer you **must** keep raw HTML disabled. Mandatory requirements for any renderer change:
+>
+> - Use a renderer with HTML disabled by default (e.g. `react-markdown` **without** `rehype-raw`), or sanitize output with DOMPurify. Never enable raw HTML passthrough.
+> - Add an XSS regression test asserting that an assistant body containing `<img src=x onerror=...>` / `<script>` does not execute or inject markup.
+>
+> The workspace already has a real renderer at `@openthrottle/react-router-markdown` (`MarkdownRenderer`); evaluate it against these requirements before reusing it here.
 
 ## Installation
 
@@ -16,6 +26,9 @@ Import app styles once in the host app (same pattern as other `@openthrottle/rea
 ```ts
 import '@openthrottle/react-router-chat/src/index.css';
 ```
+
+> [!Note]
+> **This package does not implement streaming or cancellation.** `ChatComposer`'s `isStreaming` prop is a purely presentational in-flight affordance: when `true` it swaps Send for a Stop button and blocks submit, but the package performs no token streaming and no real cancellation. Wiring an actual streaming transport and deciding what `onStop` cancels is the **host app's** responsibility (see `openthrottle-developer`'s `useConversationStream.tsx`). The turn fetcher (`useChatTurnFetcher`) is request/response — it appends the assistant reply once the fetcher returns idle, not incrementally.
 
 ## Public API
 
@@ -132,10 +145,10 @@ Server design (GraphQL CRUD, `persist` contract, pagination): [applications/open
 
 ## Dependencies
 
-| Package                             | Role                                                      |
-| ----------------------------------- | --------------------------------------------------------- |
-| `@openthrottle/react-router-shadcn` | Dialog/Sheet, `TextArea`, `Markdown` for assistant bodies |
-| `@openthrottle/react-router-ui`     | Shared OpenThrottle UI patterns                           |
+| Package                             | Role                                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| `@openthrottle/react-router-shadcn` | Dialog/Sheet, `TextArea`, `Markdown` (preformatted text) for assistant bodies |
+| `@openthrottle/react-router-ui`     | Shared OpenThrottle UI patterns                                               |
 
 ## Nx targets
 

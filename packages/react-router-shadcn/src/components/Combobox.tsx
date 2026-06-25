@@ -85,7 +85,10 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             variant="outline"
           >
             {selected ? getOptionLabel(selected) : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown
+              aria-hidden="true"
+              className="ml-2 h-4 w-4 shrink-0 opacity-50"
+            />
           </Button>
         </PopoverTrigger>
         <PopoverContent

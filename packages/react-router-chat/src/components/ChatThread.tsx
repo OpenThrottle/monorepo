@@ -1,7 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { ChatMessageBody } from './ChatMessageBody';
-import { formatChatTimestamp } from '../utils/index';
+import { ChatThreadMessage } from './ChatThreadMessage';
 import type { ChatMessage } from '../types';
 
 export interface ChatThreadProps {
@@ -10,14 +9,15 @@ export interface ChatThreadProps {
   readonly messages: readonly ChatMessage[];
 }
 
-const roleLabel: Record<ChatMessage['role'], string> = {
-  assistant: 'Assistant',
-  system: 'System',
-  user: 'You',
-};
+/** Distance (px) from the bottom within which auto-scroll stays engaged. */
+const NEAR_BOTTOM_THRESHOLD_PX = 64;
 
 /**
- * @description Scrollable message list for modal chat with role-aware body rendering.
+ * @description Scrollable message list for modal chat with role-aware body
+ * rendering. Rows are memoized (see {@link ChatThreadMessage}) so appends do
+ * not re-render the whole thread. Auto-scroll only fires while the user is
+ * near the bottom — scrolling up to read history is not hijacked — and the
+ * first paint (bulk history hydration) jumps without smooth animation.
  */
 export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   const {
@@ -27,17 +27,44 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   } = props;
 
   // Hooks
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const endRef = React.useRef<HTMLDivElement>(null);
+  const isNearBottomRef = React.useRef<boolean>(true);
+  const hasRenderedRef = React.useRef<boolean>(false);
 
   // Setup
 
   // Handlers
+  const handleScroll = React.useCallback((): void => {
+    const container = containerRef.current;
+    if (container == null) {
+      return;
+    }
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    isNearBottomRef.current = distanceFromBottom <= NEAR_BOTTOM_THRESHOLD_PX;
+  }, []);
 
   // Markup
 
   // Life Cycle
   React.useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Nothing to scroll to on an empty thread — skip the no-op scroll that
+    // would otherwise fire on every empty mount (and in jsdom).
+    if (messages.length === 0) {
+      return;
+    }
+    // Skip smooth-scroll on the first paint (bulk history hydration); jump
+    // straight to the bottom instead. Afterwards, only follow new messages
+    // when the user is already reading at the bottom.
+    if (!hasRenderedRef.current) {
+      hasRenderedRef.current = true;
+      endRef.current?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+    if (isNearBottomRef.current) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // 🔌 Short Circuit
@@ -51,57 +78,15 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
         className,
       )}
       data-testid="ChatThread"
+      onScroll={handleScroll}
+      ref={containerRef}
       role="log"
     >
       {messages.length === 0 ? (
         <p className="text-muted-foreground text-sm">{emptyStateLabel}</p>
       ) : (
         messages.map((message) => (
-          <article
-            className={classnames('flex flex-col gap-1 text-sm', {
-              'items-end': message.role === 'user',
-              'items-start': message.role !== 'user',
-            })}
-            data-testid={`ChatThread-message-${message.id}`}
-            key={message.id}
-          >
-            <div
-              className={classnames(
-                'flex flex-wrap items-baseline gap-x-2 gap-y-0.5',
-                {
-                  'justify-end': message.role === 'user',
-                  'justify-start': message.role !== 'user',
-                },
-              )}
-            >
-              <span className="text-muted-foreground text-xs font-medium">
-                {roleLabel[message.role]}
-              </span>
-              {message.createdAt ? (
-                <time
-                  className="text-muted-foreground text-xs"
-                  dateTime={message.createdAt}
-                >
-                  {formatChatTimestamp(message.createdAt)}
-                </time>
-              ) : null}
-            </div>
-            <div
-              className={classnames('max-w-[85%] rounded-lg px-3 py-2', {
-                'bg-muted text-foreground': message.role === 'assistant',
-                'bg-primary text-primary-foreground': message.role === 'user',
-                'text-muted-foreground border border-dashed':
-                  message.role === 'system',
-              })}
-            >
-              <ChatMessageBody body={message.body} role={message.role} />
-              {message.footer != null && message.footer.trim() !== '' ? (
-                <p className="text-muted-foreground border-border/60 mt-2 border-t pt-2 font-mono text-xs">
-                  {message.footer}
-                </p>
-              ) : null}
-            </div>
-          </article>
+          <ChatThreadMessage key={message.id} message={message} />
         ))
       )}
       <div ref={endRef} />
