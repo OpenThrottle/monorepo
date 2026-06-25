@@ -10,7 +10,13 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { artwork, OPENTHROTTLE_BUCKET } from '@openthrottle/react-router-utils';
+import {
+  artwork,
+  OPENTHROTTLE_AUTHOR,
+  OPENTHROTTLE_BUCKET,
+  OPENTHROTTLE_GITHUB_URL,
+  OPENTHROTTLE_META_DESCRIPTION,
+} from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { SITE_TITLE } from '#/app/global/config/settings';
@@ -20,6 +26,12 @@ import type { Route } from '@/app/+types/root';
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
+
+/**
+ * Default Open Graph / Twitter share image. Uses the largest branding icon in
+ * the production assets bucket so shared link previews are never blank.
+ */
+const SITE_OG_IMAGE = `${OPENTHROTTLE_BUCKET}/branding/icons/red/icon-512.png`;
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
@@ -60,7 +72,26 @@ export const loader = async (args: Route.LoaderArgs) => {
  * @link https://reactrouter.com/start/framework/route-module#meta
  */
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `Welcome | ${SITE_TITLE}` }];
+  const title = `Welcome | ${SITE_TITLE}`;
+
+  return [
+    { title },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
+
+    // Open Graph (Facebook, LinkedIn, Slack, etc.)
+    { content: OPENTHROTTLE_META_DESCRIPTION, property: 'og:description' },
+    { content: SITE_OG_IMAGE, property: 'og:image' },
+    { content: SITE_TITLE, property: 'og:site_name' },
+    { content: title, property: 'og:title' },
+    { content: 'website', property: 'og:type' },
+    { content: APP_URL, property: 'og:url' },
+
+    // Twitter / X
+    { content: 'summary_large_image', name: 'twitter:card' },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'twitter:description' },
+    { content: SITE_OG_IMAGE, name: 'twitter:image' },
+    { content: title, name: 'twitter:title' },
+  ];
 };
 
 /**
@@ -78,6 +109,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const manifest = `/manifest.json`;
 
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
+
+  // Structured data so search engines and social platforms can render rich
+  // results for the organization and the site as a whole.
+  const jsonLd = JSON.stringify([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      founder: { '@type': 'Person', name: OPENTHROTTLE_AUTHOR },
+      logo: SITE_OG_IMAGE,
+      name: SITE_TITLE,
+      sameAs: [OPENTHROTTLE_GITHUB_URL],
+      url: APP_URL,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      description: OPENTHROTTLE_META_DESCRIPTION,
+      name: SITE_TITLE,
+      url: APP_URL,
+    },
+  ]);
 
   // Handlers
 
@@ -98,7 +150,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         */}
         <Meta />
 
-        <link href={APP_URL} rel="canonical" />
+        {/*
+          The canonical URL is emitted per-route via `meta()` (see route
+          modules) so it can vary per page. Don't hard-code a single canonical
+          here — that would conflict with the route-level one.
+        */}
         <link href="https://fonts.googleapis.com" rel="preconnect" />
         <link href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
@@ -109,6 +165,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
         <link href={manifest} rel="manifest" />
         <Links />
+
+        <script
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
+          type="application/ld+json"
+        />
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>

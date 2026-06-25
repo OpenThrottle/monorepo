@@ -2,6 +2,11 @@ import * as React from 'react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
+  APP_URL,
+  mergeRouteModuleMeta,
+  OPENTHROTTLE_META_DESCRIPTION,
+} from '@openthrottle/react-router-utils';
+import {
   FEATURES,
   OpenThrottleLogo,
   OpenThrottleProductFeatures,
@@ -17,9 +22,20 @@ import type { Route } from '@/app/routes/+types/_index';
 //   return {};
 // };
 
-export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: SITE_TITLE }];
-};
+export const meta = mergeRouteModuleMeta<Route.MetaArgs>(() => {
+  return [
+    { title: SITE_TITLE },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
+
+    // Per-route canonical URL so duplicate-content signals stay correct.
+    { href: APP_URL, rel: 'canonical', tagName: 'link' },
+
+    // Override the inherited root OG/Twitter title with the home title.
+    { content: SITE_TITLE, property: 'og:title' },
+    { content: APP_URL, property: 'og:url' },
+    { content: SITE_TITLE, name: 'twitter:title' },
+  ];
+});
 
 export default function Component(
   props: Route.ComponentProps,
