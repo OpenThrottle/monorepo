@@ -2293,9 +2293,6 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.21.0
-      pidusage:
-        specifier: 'catalog:'
-        version: 4.0.1
       typeorm:
         specifier: 'catalog:'
         version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@6.0.3))
@@ -2557,6 +2554,9 @@ importers:
 
   packages/nestjs-modules:
     dependencies:
+      '@openthrottle/nestjs-utils':
+        specifier: workspace:^
+        version: link:../nestjs-utils
       logform:
         specifier: 'catalog:'
         version: 2.7.0
@@ -3273,7 +3273,6 @@ importers:
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
-    publishDirectory: ./
 
   tools/generators:
     dependencies:

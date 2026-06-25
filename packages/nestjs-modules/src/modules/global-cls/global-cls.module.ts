@@ -3,13 +3,35 @@ import { ClsModule, ClsService } from 'nestjs-cls';
 import {
   HEADER_APP_NAME,
   HEADER_APP_VERSION,
-} from '@openthrottle/nestjs-utils/src/config/index';
+} from '@openthrottle/nestjs-utils';
 import type { GlobalClsUser } from './global-cls-user';
 import {
   applyGlobalClsUser,
   GlobalClsService,
   type GlobalClsStore,
 } from './global-cls.service';
+
+/**
+ * @description CLS middleware setup hook: reads the `x-app-name` /
+ * `x-app-version` request headers and seeds the `app` context. Empty-string or
+ * missing headers fall back to a sentinel so downstream consumers always read a
+ * non-empty value. Extracted from the {@link ClsModule.forRoot} config so it can
+ * be unit-tested directly.
+ */
+export const setupGlobalCls = (
+  cls: ClsService,
+  req: { headers: Record<string, string | undefined> },
+): void => {
+  const headerAppName = req.headers[HEADER_APP_NAME];
+  const headerAppVersion = req.headers[HEADER_APP_VERSION];
+
+  const app: GlobalClsStore['app'] = {
+    name: headerAppName || 'x-app-name - unknown',
+    version: headerAppVersion || 'x-app-version - unknown',
+  };
+
+  cls.set('app', app);
+};
 
 /**
  * @external https://papooch.github.io/nestjs-cls
@@ -25,18 +47,7 @@ import {
       global: true,
       middleware: {
         mount: true,
-        setup: (cls, req) => {
-          const headerAppName = req.headers[HEADER_APP_NAME];
-          const headerAppVersion = req.headers[HEADER_APP_VERSION];
-
-          // FIXME: Looks back into this
-          // console.log('🔒 GlobalCLS', { headerAppName, headerAppVersion });
-
-          cls.set('app', {
-            name: headerAppName || 'x-app-name - unknown',
-            version: headerAppVersion || 'x-app-version - unknown',
-          });
-        },
+        setup: setupGlobalCls,
       },
     }),
   ],
@@ -52,7 +63,7 @@ import {
         });
 
         // nestjs-cls exposes one ClsService singleton; attach setUser without replacing the instance.
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- structural GlobalClsService for DI
+
         return augmented as GlobalClsService;
       },
     },

@@ -15,17 +15,14 @@ const formatColors = format.colorize({
  * @description We have a few flavors of log formatters, some are more concise
  * and others are more verbose, more useful for debugging.
  */
-export const formatters: Record<string, ReturnType<typeof format.combine>> = {
+export const formatters = {
   compact: format.combine(
     format.errors({ stack: true }),
     format.timestamp(),
     format.printf(({ level, message, ...rest }: TransformableInfo) => {
       const data = JSON.stringify(rest);
       const pid = process.pid;
-      // const memory = process.memoryUsage();
-      // const memoryUsage = `${memory.heapUsed / 1024 / 1024} MB`;
 
-      // return `${timestamp} [${level}]: ${message} \n${data}\n`;
       return `[LoggerService] ${pid} ${level}: ${message} \n${data}\n`;
     }),
     formatColors,
@@ -43,22 +40,21 @@ export const formatters: Record<string, ReturnType<typeof format.combine>> = {
     formatColors,
   ),
 
-  production: format.combine(
-    format.errors({ stack: true }),
-    // format.timestamp(),
-    format.json(),
-  ),
+  production: format.combine(format.errors({ stack: true }), format.json()),
 
-  testing: format.combine(
-    format.simple(),
-    // format.errors({ stack: true }),
-    // format.prettyPrint(),
-    // format.json(),
-    // format.label(),
-    // format.metadata({
-    //   fillExcept: ['service', 'level', '0'],
-    // }),
-    // format.timestamp(),
-    formatColors,
-  ),
-};
+  testing: format.combine(format.simple(), formatColors),
+} as const;
+
+/**
+ * @description The known formatter names. Use {@link isFormatterName} to
+ * narrow an arbitrary `LOG_FORMAT` string before indexing {@link formatters}.
+ */
+export type FormatterName = keyof typeof formatters;
+
+const formatterNames = Object.keys(formatters) as FormatterName[];
+
+/**
+ * @description Type guard: is the given string a known formatter name?
+ */
+export const isFormatterName = (value: string): value is FormatterName =>
+  formatterNames.includes(value as FormatterName);

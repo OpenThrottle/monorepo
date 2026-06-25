@@ -84,8 +84,19 @@ interface DocumentationEmbeddingSearchRow {
 /**
  * @description Runs cosine-similarity search over plan_embeddings, task_embeddings, and documentation_embeddings; merges and returns top chunks.
  * Uses TypeORM DataSource with raw SQL so pgvector operator `<=>` and existing HNSW indexes are preserved (TypeORM has no built-in pgvector API).
+ *
+ * Performance note — intentional 3x fan-out: this issues three separate `ORDER BY <=> LIMIT $limit`
+ * queries (one HNSW index scan per embeddings table: plan, task, documentation) and over-fetches
+ * up to `limit` rows from each before merging in JS and slicing back down to `limit`. So a single
+ * call performs 3 HNSW scans and can read up to `3 * limit` rows (e.g. 150 rows for limit=50). This
+ * is accepted as-is: each table has its own HNSW index and pgvector offers no cross-table union
+ * index, so a global top-`limit` requires either per-table top-`limit` candidates merged in app code
+ * (this approach) or a single `UNION ALL` of the three SELECTs wrapped in an outer
+ * `ORDER BY similarity LIMIT $limit` — the latter trims the merge to one slice but still scans all
+ * three indexes, so it does not reduce the HNSW scan count. Keep `limit` modest on hot paths.
+ *
  * @param embedding 1536-dim query embedding (e.g. from OpenAI text-embedding-3-small).
- * @param limit Max number of chunks to return (default 10).
+ * @param limit Max number of chunks to return per table before the merged result is sliced to `limit`.
  */
 export async function runSemanticSearch(
   embedding: number[],

@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-vscode",
-  "description": "TODO: Add a description",
+  "description": "Editor-agnostic logic library for the OpenThrottle VS Code/Cursor extension. The deployable extension itself lives in the sibling vscode-openthrottle package.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

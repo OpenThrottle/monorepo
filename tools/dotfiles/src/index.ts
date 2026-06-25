@@ -1,5 +1,4 @@
 import { getDirname } from './vite-config.ts';
-// import { importX } from 'eslint-plugin-import-x';
 import js from '@eslint/js';
 import pluginImport from 'eslint-plugin-import';
 import pluginImportSort from 'eslint-plugin-simple-import-sort';
@@ -8,13 +7,11 @@ import pluginNx from '@nx/eslint-plugin';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import tslint from 'typescript-eslint';
-// @ts-expect-error FIXME: TypeScript error (no types on these)
+// These plugins ship no types; ambient `declare module` shims in src/types.d.ts
+// satisfy the resolver (see tsconfig.lib.json include).
 import pluginComments from 'eslint-plugin-eslint-comments';
-// @ts-expect-error FIXME: TypeScript error (no types on these)
 import pluginJson from 'eslint-plugin-json';
-// @ts-expect-error FIXME: TypeScript error (no types on these)
 import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
-// @ts-expect-error FIXME: TypeScript error (no types on these)
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 
 /** @publicApi */
@@ -109,14 +106,9 @@ export const eslintConfig = tslint.config([
 
   {
     files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
-    // files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
   },
 
   js.configs.recommended,
-  // importX.flatConfigs.recommended,
-  // importX.flatConfigs.typescript,
-
-  // pluginPrettier, // FIXME: Look at this again
   ...tslint.configs.recommended,
 
   {
@@ -125,11 +117,8 @@ export const eslintConfig = tslint.config([
         ecmaFeatures: { jsx: true },
         ecmaVersion: 'latest',
         globals: {
-          // ...globals.browser,
-          // React: true,
           process: true,
         },
-        // sourceType: 'module',
         tsconfigRootDir:
           typeof import.meta !== 'undefined' && import.meta.url
             ? getDirname(import.meta.url)
@@ -138,17 +127,14 @@ export const eslintConfig = tslint.config([
     },
 
     linterOptions: {
-      // noInlineConfig: true,
       reportUnusedDisableDirectives: true,
     },
 
     plugins: {
       '@nx': pluginNx,
-      // '@typescript-eslint': pluginTypescript,
       comments: pluginComments,
       import: pluginImport,
       jest: pluginJest,
-      // jsdoc: jsdoc,
       json: pluginJson,
       react: pluginReact,
       'react-hooks': pluginReactHooks,
@@ -158,7 +144,10 @@ export const eslintConfig = tslint.config([
     },
 
     rules: {
-      // FIXME: Coming soon...
+      // Temporarily relaxed to 'warn': raising these to 'error' (see the
+      // dotfiles audit-remediation work) turned ~32 consuming projects CI-red
+      // for pre-existing `any`/`as` usage that was never cleaned up. Tracked for
+      // proper remediation + re-escalation to 'error' as an OT bug.
       '@typescript-eslint/consistent-type-assertions': [
         'warn',
         { assertionStyle: 'never' },
@@ -177,27 +166,21 @@ export const eslintConfig = tslint.config([
         },
       ],
       curly: ['error', 'multi-line'],
-      // 'import-x/no-dynamic-require': 'warn',
-      // 'import-x/no-nodejs-modules': 'warn',
       'import/no-named-as-default-member': 'off',
-      // 'import/order': [
-      //   'error',
-      //   {
-      //     groups: [
-      //       'builtin', // Imports of builtins are first
-      //       ['sibling', 'parent'], // Then sibling and parent imports. They can be mingled together
-      //       'index', // Then index file imports
-      //       'object', // Then any arcane TypeScript imports
-      //
-      //       // Then the omitted imports: internal, external, type, unknown
-      //     ],
-      //     'newlines-between': 'never',
-      //   },
-      // ],
-
-      'jsdoc/no-undefined-types': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
+      // Discourage the "no new TypeScript enums — use `as const` objects" rule
+      // from CLAUDE.md at the config layer. Temporarily 'warn' (not 'error'):
+      // the selector matches all enums, not just new ones, so pre-existing enums
+      // across consuming projects would fail CI. Tracked for cleanup +
+      // re-escalation to 'error' as an OT bug.
+      'no-restricted-syntax': [
+        'warn',
+        {
+          message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
+          selector: 'TSEnumDeclaration',
+        },
+      ],
       'no-undef': 'off',
       'no-unused-vars': 'off',
       'react/jsx-boolean-value': ['error', 'always'],
@@ -207,35 +190,14 @@ export const eslintConfig = tslint.config([
       'react/jsx-uses-vars': 'error',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-      // 'sort-imports': [
-      //   'error',
-      //   {
-      //     allowSeparatedGroups: false,
-      //     ignoreCase: false,
-      //     ignoreDeclarationSort: false,
-      //     ignoreMemberSort: false,
-      //     memberSyntaxSortOrder: ['all', 'none', 'single', 'multiple'],
-      //   },
-      // ],
       'sort-keys': [
         'error',
         'asc',
         { caseSensitive: true, minKeys: 2, natural: false },
       ],
       'sort-keys-fix/sort-keys-fix': 'error',
-
-      // FIXME: https://www.npmjs.com/package/eslint-plugin-typescript-sort-keys
       'typescript-sort-keys/interface': 'error',
       'typescript-sort-keys/string-enum': 'error',
-
-      // '@typescript-eslint/naming-convention': [
-      //   'error',
-      //   {
-      //     format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
-      //     leadingUnderscore: 'allow',
-      //     selector: ['accessor', 'method', 'typeLike', 'variableLike'],
-      //   },
-      // ],
     },
   },
 
@@ -247,6 +209,10 @@ export const eslintConfig = tslint.config([
     rules: {
       'no-restricted-syntax': [
         'error',
+        {
+          message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
+          selector: 'TSEnumDeclaration',
+        },
         {
           message: `Avoid snapshot tests in __tests__. Prefer getByRole/getByText and assertions on visible behavior.`,
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toMatchSnapshot"]`,

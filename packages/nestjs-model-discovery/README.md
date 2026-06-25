@@ -44,7 +44,11 @@ this.discovery.invalidate();                                        // drop the 
 ## Configuration (env)
 
 Read once at the wrapper boundary via a `registerAs('modelDiscovery')` namespace —
-the pure core never reads `process.env`. All optional.
+the pure core never reads `process.env`. All optional. Values are validated against
+the exported `configValidationSchema` on every config build, so a malformed value
+(e.g. `LLM_PROBE_TIMEOUT_MS=abc`) throws on boot rather than being silently coerced
+to its default. The schema is also exported so a consumer can compose it into a
+top-level `ConfigModule.forRoot({ validationSchema })`.
 
 | Env var                                            | Purpose                                             | Default                               |
 | -------------------------------------------------- | --------------------------------------------------- | ------------------------------------- |

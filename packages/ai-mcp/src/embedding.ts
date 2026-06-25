@@ -5,6 +5,7 @@
  */
 
 import OpenAI from 'openai';
+import { EMBEDDING_MAX_INPUT_CHARS } from './constants.js';
 import {
   embedWithOllama,
   isOllamaEmbeddingConfigured as isOllamaConfigured,
@@ -28,17 +29,27 @@ async function embedQueryWithOpenAI(
   }
 
   const openai = new OpenAI({ apiKey });
-  const response = await openai.embeddings.create({
-    input: text.slice(0, 8191),
-    model: EMBEDDING_MODEL,
-  });
 
-  const embedding = response.data[0]?.embedding;
-  if (!embedding || embedding.length !== EMBEDDING_DIM) {
+  try {
+    const response = await openai.embeddings.create({
+      input: text.slice(0, EMBEDDING_MAX_INPUT_CHARS),
+      model: EMBEDDING_MODEL,
+    });
+
+    const embedding = response.data[0]?.embedding;
+    if (!embedding || embedding.length !== EMBEDDING_DIM) {
+      console.error(
+        `[ai-mcp] OpenAI embedding returned unexpected shape (model=${EMBEDDING_MODEL}, expected dim=${EMBEDDING_DIM}); skipping embedding.`,
+      );
+      return undefined;
+    }
+
+    return embedding;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[ai-mcp] OpenAI embedding request failed: ${message}`);
     return undefined;
   }
-
-  return embedding;
 }
 
 /**

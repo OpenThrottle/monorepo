@@ -46,14 +46,7 @@
       "build-package": {},
       "codegen-graphql": {},
       "lint": {},
-      "test": {
-        "dependsOn": [
-          "@tools/dotfiles:build"
-        ],
-        "options": {
-          "configFile": "{projectRoot}/vitest.config.mjs"
-        }
-      },
+      "test": {},
       "typecheck": {},
       "typecheck-tests": {}
     }
