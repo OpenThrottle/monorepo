@@ -6,6 +6,7 @@ import {
   mergeRouteModuleMeta,
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
+import { canonicalMeta } from '~/global/utils/canonical';
 import {
   FEATURES,
   OpenThrottleLogo,
@@ -22,13 +23,13 @@ import type { Route } from '@/app/routes/+types/_index';
 //   return {};
 // };
 
-export const meta = mergeRouteModuleMeta<Route.MetaArgs>(() => {
+export const meta = mergeRouteModuleMeta<Route.MetaArgs>((args) => {
   return [
     { title: SITE_TITLE },
     { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
 
     // Per-route canonical URL so duplicate-content signals stay correct.
-    { href: APP_URL, rel: 'canonical', tagName: 'link' },
+    canonicalMeta(args.location.pathname),
 
     // Override the inherited root OG/Twitter title with the home title.
     { content: SITE_TITLE, property: 'og:title' },

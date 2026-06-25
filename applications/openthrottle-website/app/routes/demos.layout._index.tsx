@@ -6,6 +6,7 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { canonicalMeta } from '~/global/utils/canonical';
 import type { Route } from '@/app/routes/+types/demos.layout._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -23,8 +24,13 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
-export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `Floor layout demo | ${SITE_TITLE}` }];
+export const meta = (args: Route.MetaArgs) => {
+  return [
+    { title: `Floor layout demo | ${SITE_TITLE}` },
+
+    // Per-route canonical URL so duplicate-content signals stay correct.
+    canonicalMeta(args.location.pathname),
+  ];
 };
 
 /**

@@ -49,7 +49,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
-  const canonical: string = args.url.href;
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
@@ -65,7 +64,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // home route. When the beta gate is lifted, refetch this in the home route
   // loader behind a short-TTL cache + `AbortController` timeout + graceful
   // fallback rather than reinstating it here.
-  return { canonical, env, repo };
+  return { env, repo };
 };
 
 /**
