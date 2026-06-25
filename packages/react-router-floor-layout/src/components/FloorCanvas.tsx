@@ -151,6 +151,31 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
     [layout.elements, move, onElementPointerDown, viewport],
   );
 
+  // Per-element pointer-down closures, cached by id so each `FloorElementView`
+  // receives a referentially stable `onPointerDown`. Without this, a fresh
+  // inline arrow per element per render would defeat `FloorElementView`'s
+  // `React.memo` and re-render every element on every live-drag frame. The
+  // cached closures read the latest handler through a ref, so they stay stable
+  // even though `handleElementPointerDown` changes identity every frame (the
+  // live `layout` is rebuilt during a drag).
+  const handlerRef = useRef(handleElementPointerDown);
+  handlerRef.current = handleElementPointerDown;
+  const pointerDownCache = useRef(
+    new Map<string, (event: ReactPointerEvent) => void>(),
+  );
+  const elementPointerDown = useCallback(
+    (id: string): ((event: ReactPointerEvent) => void) => {
+      const cache = pointerDownCache.current;
+      const existing = cache.get(id);
+      if (existing) return existing;
+      const handler = (event: ReactPointerEvent): void =>
+        handlerRef.current(id, event);
+      cache.set(id, handler);
+      return handler;
+    },
+    [],
+  );
+
   const handleBackgroundPointerDown = useCallback(
     (event: ReactPointerEvent): void => {
       onBackgroundPointerDown?.(event);
@@ -185,7 +210,7 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
           element={element}
           isSelected={element.id === selectedId}
           key={element.id}
-          onPointerDown={(event) => handleElementPointerDown(element.id, event)}
+          onPointerDown={elementPointerDown(element.id)}
         />
       ))}
       {children}

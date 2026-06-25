@@ -10,7 +10,14 @@ export interface ChatMessageBodyProps {
 const EMPTY_BODY_LABEL = '(No content)';
 
 /**
- * @description Renders a message body: plain text for user; {@link Markdown} for assistant/system.
+ * @description Renders a message body: plain text for user; assistant/system
+ * bodies are passed to {@link Markdown}, which currently shows the raw string
+ * as escaped preformatted text (NOT parsed Markdown).
+ *
+ * Assistant/system bodies are untrusted (server LLM output + persisted history,
+ * see `map-persisted-messages.ts`). Any future swap to a real Markdown renderer
+ * MUST disable raw HTML (e.g. `react-markdown` without `rehype-raw`) or sanitize
+ * with DOMPurify, and add an XSS regression test — see this package's README.
  */
 export const ChatMessageBody = (
   props: ChatMessageBodyProps,

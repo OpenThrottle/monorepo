@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ChatThread } from '../ChatThread';
 import type { ChatThreadProps } from '../ChatThread';
 import type { ChatMessage } from '../../types';
@@ -122,6 +122,35 @@ describe('ChatThread Component', () => {
         emptyStateLabel: 'Start the conversation',
       });
       expect(component.getByText('Start the conversation')).toBeInTheDocument();
+    });
+  });
+
+  // Auto-scroll guards. jsdom has no layout engine and no real scrollIntoView,
+  // so we can't assert pixel positions (see Recharts/jsdom caveat). Instead we
+  // spy on scrollIntoView and assert the effect's guards: skip the no-op scroll
+  // on an empty thread, and jump to the bottom on the first non-empty paint.
+  describe('auto-scroll effect guards', () => {
+    let scrollIntoView: ReturnType<typeof vi.fn<Element['scrollIntoView']>>;
+
+    beforeEach(() => {
+      scrollIntoView = vi.fn<Element['scrollIntoView']>();
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    test('should not scroll when the thread is empty', () => {
+      renderThread({ messages: [] });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    test('should jump to the bottom on the first non-empty paint', () => {
+      renderThread({
+        messages: [{ body: 'Hello', id: '1', role: 'user' }],
+      });
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto' });
     });
   });
 });

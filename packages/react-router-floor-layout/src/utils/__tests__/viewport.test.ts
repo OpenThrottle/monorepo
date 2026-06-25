@@ -99,4 +99,29 @@ describe('pinchViewBox', () => {
     );
     expect(next.width).toBeLessThan(VB.width);
   });
+
+  it('keeps the world point under the midpoint invariant across a combined pinch+pan step', () => {
+    // Two pointers that BOTH spread apart (pinch) AND shift right (pan): the
+    // midpoint moves from x=50 to x=60. The world point under the previous
+    // midpoint must end up under the next midpoint — no double-counted slide.
+    const prev: readonly [{ x: number; y: number }, { x: number; y: number }] =
+      [
+        { x: 40, y: 50 },
+        { x: 60, y: 50 },
+      ];
+    const next: readonly [{ x: number; y: number }, { x: number; y: number }] =
+      [
+        { x: 30, y: 50 },
+        { x: 90, y: 50 },
+      ];
+    const prevMid = { x: 50, y: 50 };
+    const nextMid = { x: 60, y: 50 };
+    const worldUnderPrevMid = clientToWorld(prevMid, RECT, VB);
+
+    const result = pinchViewBox(VB, prev, next, RECT, LIMITS);
+
+    const worldUnderNextMidAfter = clientToWorld(nextMid, RECT, result);
+    expect(worldUnderNextMidAfter.x).toBeCloseTo(worldUnderPrevMid.x, 6);
+    expect(worldUnderNextMidAfter.y).toBeCloseTo(worldUnderPrevMid.y, 6);
+  });
 });

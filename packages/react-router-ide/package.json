@@ -11,7 +11,9 @@
     "@openthrottle/openthrottle-ide": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {

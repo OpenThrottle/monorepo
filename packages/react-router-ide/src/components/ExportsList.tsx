@@ -113,14 +113,18 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
           <p className="text-muted-foreground px-3 text-xs font-medium">
             {group.path}
           </p>
-          {group.symbols.map((symbol) => (
-            <SymbolRow
-              key={symbolKey(symbol)}
-              onSelect={onSelectSymbol}
-              selected={symbolKey(symbol) === selectedKey}
-              symbol={symbol}
-            />
-          ))}
+          {group.symbols.map((symbol) => {
+            const key = symbolKey(symbol);
+
+            return (
+              <SymbolRow
+                key={key}
+                onSelect={onSelectSymbol}
+                selected={key === selectedKey}
+                symbol={symbol}
+              />
+            );
+          })}
         </div>
       ))}
       {result.truncated ? (

@@ -55,7 +55,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <Component
-        className={cn(buttonVariants({ className, size, variant }))}
+        className={cn(buttonVariants({ size, variant }), className)}
         data-size={size}
         data-slot="button"
         data-variant={variant}

@@ -24,4 +24,10 @@ describe('githubBlobHref', () => {
       'https://github.com/o/r/blob/main/a.ts',
     );
   });
+
+  test('URL-encodes spaces and `#` in segments while preserving separators', () => {
+    expect(
+      githubBlobHref({ line: 9, path: 'my dir/a#b.ts', repo: 'owner/repo' }),
+    ).toBe('https://github.com/owner/repo/blob/main/my%20dir/a%23b.ts#L9');
+  });
 });

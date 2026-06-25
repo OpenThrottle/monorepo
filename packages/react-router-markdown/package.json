@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/react-router-markdown",
-  "description": "TODO: Add a description",
+  "description": "SSR-capable Markdown renderer for OpenThrottle React Router apps — compiles trusted CommonMark + GFM to React components via MDX (literal text, no raw HTML).",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

@@ -89,8 +89,7 @@ export default function Component() {
 ```
 
 ```tsx
-// app/routes/docs._index.tsx  -> renders the /docs page
-// app/routes/docs.$.tsx       -> looks up `/docs/${params['*']}` and renders it
+// app/routes/docs._index.tsx -> renders the /docs page
 import { DocPageView } from '@openthrottle/react-router-docs';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 
@@ -100,10 +99,42 @@ export default function Component() {
 }
 ```
 
-See `openthrottle-developer` for a complete reference wiring (layout + index +
+```tsx
+// app/routes/docs.$.tsx -> looks up `/docs/${params['*']}` and renders it
+import { DocPageView } from '@openthrottle/react-router-docs';
+import { docsManifest } from '~/routing/docs/data/docsManifest';
+import type { Route } from '@/app/routes/+types/docs.$';
+
+// Build the lookup once at module scope, not per render.
+const docsBySlug = new Map(
+  docsManifest
+    .filter((entry) => entry.section === 'docs')
+    .map((entry) => [entry.path, entry]),
+);
+
+export const loader = async (args: Route.LoaderArgs) => {
+  const entry = docsBySlug.get(`/docs/${args.params['*']}`);
+
+  if (!entry) {
+    throw new Response('Not Found', { status: 404 });
+  }
+
+  return { title: entry.title };
+};
+
+export default function Component(props: Route.ComponentProps) {
+  const entry = docsBySlug.get(`/docs/${props.params['*']}`);
+
+  return entry ? <DocPageView entry={entry} /> : null;
+}
+```
+
+See `openthrottle-developer` for the complete reference wiring (layout + index +
 splat + tests). For the **public website**, also emit a `description` meta tag
 from `entry.description` for SEO — the renderer is SSR-capable, so content is in
-the server HTML.
+the server HTML. `openthrottle-website`'s `docs.$.tsx` is the reference: its
+loader returns `entry.description` and its `meta` appends a `name: 'description'`
+tag when present.
 
 ## Public API
 
