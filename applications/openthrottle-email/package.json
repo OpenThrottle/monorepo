@@ -8,8 +8,26 @@
     "url": "https://openthrottle-email.com"
   },
   "dependencies": {
+    "@faker-js/faker": "catalog:",
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
-    "@openthrottle/react-router-docs": "workspace:^"
+    "@openthrottle/react-router-docs": "workspace:^",
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-ui": "workspace:^",
+    "@openthrottle/react-router-ui-global": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
+    "@phosphor-icons/react": "catalog:",
+    "@react-router/node": "catalog:",
+    "classnames": "catalog:",
+    "focus-formik-error": "catalog:",
+    "formik": "catalog:",
+    "isbot": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:",
+    "react-router-dom": "catalog:",
+    "yup": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"
