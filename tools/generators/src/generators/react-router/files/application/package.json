@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://<%= name %>.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/graphql-codegen": "workspace:^"
+  },
   "description": "FIXME: Add a description...",
   "devDependencies": {},
   "engines": {

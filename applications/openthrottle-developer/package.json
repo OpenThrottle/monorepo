@@ -8,6 +8,7 @@
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
+    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",

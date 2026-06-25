@@ -20,6 +20,9 @@
       "path": "../../tools/dotfiles"
     },
     {
+      "path": "../../packages/graphql-codegen"
+    },
+    {
       "path": "../../packages/react-router-docs"
     },
     {
