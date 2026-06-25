@@ -92,12 +92,13 @@ const parseFrontmatter = (
 
 /**
  * Parse and normalize an app-provided content module map into a flat list of
- * {@link DocEntry}. Frontmatter is parsed with `gray-matter`; route paths, slugs,
+ * {@link DocEntry}. Frontmatter is parsed with the pure-JS `yaml` parser; route paths, slugs,
  * groups, ordering, and draft flags follow the content convention
  * (docs/openthrottle/docs-faq-convention.md). Entries are returned sorted within
  * each group (by `order`, then `title`); cross-group sequencing is left to the
- * nav layer. Malformed entries (missing/invalid `title`) throw — a real
- * misconfiguration is surfaced early rather than silently dropped.
+ * nav layer. Malformed entries (missing/invalid `title`) and two entries
+ * normalizing to the same route `path` throw — a real misconfiguration is
+ * surfaced early rather than silently dropped or resolved last-wins downstream.
  *
  * @publicApi
  */
@@ -157,6 +158,17 @@ export const buildDocsManifest = (
       title,
     };
   });
+
+  const seenPaths = new Map<string, string>();
+  for (const entry of entries) {
+    const previousTitle = seenPaths.get(entry.path);
+    if (previousTitle !== undefined) {
+      throw new Error(
+        `react-router-docs: duplicate route path "${entry.path}" — both "${previousTitle}" and "${entry.title}" normalize to it. Give one a distinct frontmatter "slug".`,
+      );
+    }
+    seenPaths.set(entry.path, entry.title);
+  }
 
   return entries
     .filter((entry) => includeDrafts || !entry.draft)

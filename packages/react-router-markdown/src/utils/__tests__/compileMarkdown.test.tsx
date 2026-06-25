@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import type { CompileMarkdownOptions } from '../compileMarkdown';
 import { compileMarkdown } from '../compileMarkdown';
@@ -48,5 +49,24 @@ describe('compileMarkdown', () => {
     expect(
       component.getByRole('columnheader', { name: 'A' }),
     ).toBeInTheDocument();
+  });
+
+  // Regression guard for the security boundary documented on EVALUATE_OPTIONS:
+  // raw HTML in source must never reach the rendered output as live markup.
+  // With `format: 'md'` the HTML tags are stripped entirely; if this fails, a
+  // config change (format: 'mdx' / rehype-raw without rehype-sanitize) has
+  // opened an XSS sink.
+  test('never emits raw HTML from source as live markup', async () => {
+    const options: CompileMarkdownOptions = {
+      source:
+        'Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.',
+    };
+
+    const Content = await compileMarkdown(options);
+    const html = renderToStaticMarkup(<Content />);
+
+    expect(html).not.toContain('<script');
+    expect(html).not.toContain('onerror');
+    expect(html).not.toContain('<img');
   });
 });

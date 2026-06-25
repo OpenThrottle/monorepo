@@ -174,11 +174,15 @@ export function pinchViewBox(
   const nextDist = distance(next[0], next[1]);
   if (prevDist <= 0 || nextDist <= 0) return viewBox;
   const factor = nextDist / prevDist;
-  const focusWorld = clientToWorld(midpoint(next[0], next[1]), rect, viewBox);
-  const zoomed = zoomViewBoxAt(viewBox, factor, focusWorld, limits);
-  // Also follow the midpoint's client translation so the pinch can pan.
+  // Anchor on a FIXED focal point — the world point under the *previous*
+  // midpoint — then pan by the full midpoint client delta so that point
+  // tracks the fingers. Anchoring on the moving (next) midpoint and ALSO
+  // panning double-counts the translation, sliding content faster than the
+  // fingers; pick one. We anchor + pan so a pure two-finger drag still pans.
   const prevMid = midpoint(prev[0], prev[1]);
   const nextMid = midpoint(next[0], next[1]);
+  const focusWorld = clientToWorld(prevMid, rect, viewBox);
+  const zoomed = zoomViewBoxAt(viewBox, factor, focusWorld, limits);
   return panViewBoxByClient(
     zoomed,
     nextMid.x - prevMid.x,

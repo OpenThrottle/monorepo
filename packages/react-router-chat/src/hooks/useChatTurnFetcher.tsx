@@ -103,13 +103,11 @@ const parseChatTurnResult = (data: unknown): ChatTurnResult | null => {
 
   const d = data as Record<string, unknown>;
 
-  if (
-    !('assistantText' in d) ||
-    !('errorMessage' in d) ||
-    !('mcpTool' in d) ||
-    !('structuredPayloadJson' in d) ||
-    !('toolMetadataJson' in d)
-  ) {
+  // Only require the load-bearing fields. A minimal valid turn carrying just
+  // `assistantText` + `errorMessage` must parse — the remaining fields are
+  // additive metadata and default below, so a stricter presence check would
+  // silently drop replies if the server contract grows or shrinks keys.
+  if (!('assistantText' in d) || !('errorMessage' in d)) {
     return null;
   }
 
@@ -280,6 +278,9 @@ export const useChatTurnFetcher = (
 
   const startNewChat = React.useCallback((): void => {
     clearConversationIdFromStorage(conversationIdStorageKey);
+    // Unlatch the one-shot history loader so a later persisted send (which can
+    // mint a fresh stored id) is allowed to load history again on this mount.
+    historyRequestedRef.current = false;
     setConversationId(null);
     setErrorMessage(null);
     setLastTurn(null);

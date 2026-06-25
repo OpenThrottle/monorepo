@@ -3,6 +3,7 @@ import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { installTestEnv } from './env';
+import type { InstallPolyfillsOptions } from './polyfills';
 import { installPolyfills } from './polyfills';
 
 /** Options for {@link setupReactRouterTest}. */
@@ -14,6 +15,12 @@ export type SetupReactRouterTestOptions = {
    * `false` only for the rare suite that must run without the shims.
    */
   polyfills?: boolean;
+  /**
+   * Opt the `ResizeObserver` shim into reporting a non-zero size so recharts
+   * `ResponsiveContainer` / Schedule-X render real geometry under jsdom. No-op
+   * by default. See {@link InstallPolyfillsOptions.resizeObserverSize}.
+   */
+  resizeObserverSize?: InstallPolyfillsOptions['resizeObserverSize'];
 };
 
 /**
@@ -38,14 +45,14 @@ export type SetupReactRouterTestOptions = {
 export const setupReactRouterTest = (
   options: SetupReactRouterTestOptions = {},
 ): void => {
-  const { env, polyfills = true } = options;
+  const { env, polyfills = true, resizeObserverSize } = options;
 
   afterEach(() => {
     cleanup();
   });
 
   if (polyfills) {
-    installPolyfills();
+    installPolyfills({ resizeObserverSize });
   }
 
   installTestEnv(env);

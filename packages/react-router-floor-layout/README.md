@@ -147,6 +147,21 @@ and the `useViewport`, `usePointerDrag`, `useFloorLayout`,
 lives in pure, tested helpers (`utils/geometry`, `utils/viewport`,
 `utils/seats`, `utils/units`).
 
+### Layout state: `useFloorLayout` vs `useFloorLayoutHistory`
+
+Two interchangeable state primitives back the layout model — pick one per
+custom editor; `<FloorLayoutEditor>` itself uses the history hook:
+
+- **`useFloorLayoutHistory(initial)`** — snapshot-based state **with** undo/redo
+  (`commit`, `undo`, `redo`, `canUndo`, `canRedo`, `reset`). Use this when you
+  want the built-in editor's undo behavior.
+- **`useFloorLayout(initial)`** — a thin `useState` wrapper over the same pure
+  layout operations (`addElement`, `moveElement`, `updateElement`,
+  `removeElement`, `setLayout`) **without** history. Use this standalone
+  primitive for simpler editors or non-interactive views that don't need
+  undo/redo. It is a deliberate alternative to the history hook, not used by
+  `<FloorLayoutEditor>`.
+
 ## Scope (v1) and deferred work
 
 **In v1:** tables/stools/zones/walls, live drag + pan/zoom, real-world units,
