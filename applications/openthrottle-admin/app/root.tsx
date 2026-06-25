@@ -35,6 +35,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import {
   GetMeDocument,
+  GetRootHealthDocument,
   LoginDocument,
   ServerHealthObject,
   SignoutDocument,
@@ -91,15 +92,23 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const canonical: string = url.href;
-  const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
-  const serverHealth: ServerHealthObject = {
-    api: 'ok',
-    database: 'ok',
-    redis: 'ok',
-    websocket: 'ok',
+  // Seed an "unreachable" baseline (never all-green): if the health query is
+  // skipped or throws, the ops shell must not falsely read as healthy.
+  let serverHealth: ServerHealthObject = {
+    api: 'unreachable',
+    database: 'unreachable',
+    redis: 'unreachable',
+    websocket: 'unreachable',
   };
+
+  try {
+    const res = await executeGraphqlWithAuth(request, GetRootHealthDocument);
+    serverHealth = res.serverHealth;
+  } catch (error) {
+    console.error('Failed to load server health in root loader', error);
+  }
 
   return { canonical, env, serverHealth, user };
 };
@@ -130,12 +139,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;
   const manifest = '/manifest.json';
 
-  const isProduction = process.env.NODE_ENV === 'production';
-  const source = isProduction ? `https://*` : `http://*`;
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
-  const _valueCSP = isProduction
-    ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
-    : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
 
   // Markup
 
@@ -148,7 +152,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
-        {/* <meta content={_valueCSP} httpEquiv="Content-Security-Policy" /> */}
         <Meta />
 
         <link href={APP_URL} rel="canonical" />
@@ -263,8 +266,6 @@ export const action = async (args: Route.ActionArgs) => {
       }
 
       const cookie = buildAuthCookie(token);
-
-      // console.log('🟢  login success', cookie);
 
       return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },
