@@ -86,9 +86,6 @@
       "path": "./packages/openthrottle-vscode"
     },
     {
-      "path": "./packages/openthrottle-postgres"
-    },
-    {
       "path": "./packages/nestjs-bullmq-board"
     },
     {
