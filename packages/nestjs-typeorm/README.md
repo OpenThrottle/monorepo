@@ -1,6 +1,6 @@
 # @openthrottle/nestjs-typeorm
 
-TypeORM integration module for NestJS applications with database providers and migration support. This package provides TypeORM database connectivity, repository patterns, and migration utilities for NestJS applications.
+TypeORM integration module for NestJS applications with database providers. This package provides TypeORM database connectivity and repository patterns for NestJS applications. Migrations are owned by the consuming application (the DataSource reads `POSTGRES_PATH_MIGRATIONS` at runtime); this package does not ship a migration CLI.
 
 **Resources:**
 

@@ -6,5 +6,3 @@ export * from './nestjs-typeorm.module';
 export * from './modules/database/database.constants';
 export * from './modules/database/database.module';
 export * from './modules/database/database.providers';
-
-// Repositories (sample user.entity retained for generator reference; not exported)
