@@ -24,6 +24,7 @@ import {
   NotebookTabsIcon,
   NotebookTextIcon,
   Search,
+  StickyNoteIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
   UserCircleIcon,
@@ -168,7 +169,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
             {
               children: 'Notes',
               disabled: false, // 🔴 🟠
-              icon: NotebookTextIcon,
+              icon: StickyNoteIcon,
               to: '/notes',
             },
             {
@@ -191,19 +192,19 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         children: 'License',
         disabled: false, // 🔴 🟠 🟡 🟢
-        icon: NotebookTabsIcon,
+        icon: BookOpenIcon,
         to: '/legal/license',
       },
       {
         children: 'Privacy Policy',
         disabled: false, // 🔴 🟠 🟡 🟢
-        icon: NotebookTabsIcon,
+        icon: BookOpenIcon,
         to: '/legal/privacy-policy',
       },
       {
         children: 'Terms of Use',
         disabled: false, // 🔴 🟠 🟡 🟢
-        icon: NotebookTabsIcon,
+        icon: BookOpenIcon,
         to: '/legal/terms-of-use',
       },
     ],

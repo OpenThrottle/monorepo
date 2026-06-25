@@ -18,7 +18,7 @@ export const OpenThrottleLogo = (
 
   // Setup
   const containerClasses = cn(
-    'flex items-center gap-2 px-2 py-2 text-sidebar-foreground h-10',
+    'font-sans flex items-center gap-2 px-2 py-2 text-sidebar-foreground h-10',
     className,
   );
 
@@ -31,7 +31,7 @@ export const OpenThrottleLogo = (
       {name ? (
         <>
           <span className="text-muted-foreground/50 font-extralight">|</span>
-          <span className="text-highlight font-normal">{name}</span>
+          <span className="text-highlight font-semibold">{name}</span>
         </>
       ) : null}
     </>

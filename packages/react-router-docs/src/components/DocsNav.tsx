@@ -41,8 +41,9 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
             {group.label}
           </p>
-          <ul className="flex flex-col gap-0.5">
-            {group.items.map((item) => (
+
+          <ul className="mt-4 flex flex-col gap-0.5">
+            {group.items.map((item, _index) => (
               <li key={item.path}>
                 <NavLink
                   className={({ isActive }) =>
@@ -53,6 +54,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
                         : 'text-muted-foreground hover:text-foreground',
                     )
                   }
+                  end={true}
                   to={item.path}
                 >
                   {item.title}
