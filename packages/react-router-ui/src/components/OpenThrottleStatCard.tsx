@@ -40,7 +40,7 @@ export const OpenThrottleStatCard = (
 
   return (
     <Card
-      className={cn('gap-2 p-4', className)}
+      className={cn('gap-2 p-2 md:p-4', className)}
       data-testid="OpenThrottleStatCard"
     >
       <CardHeader className="flex items-center gap-2 p-0 pb-2">

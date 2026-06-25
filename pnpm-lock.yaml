@@ -2678,6 +2678,15 @@ importers:
 
   packages/nestjs-typeorm:
     dependencies:
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: 'catalog:'
+        version: 4.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       joi:
         specifier: 'catalog:'
         version: 18.2.1

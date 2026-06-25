@@ -100,6 +100,6 @@ describe('formatMetricsSummary', () => {
         heapUsedMb: 87.456,
         rssMb: 145.219,
       }),
-    ).toBe('RSS 145.22 MB · Heap 87.46 MB · CPU 12341 ms');
+    ).toBe('RSS 145.22 MB · Heap 87.46 MB · CPU 12,341 ms');
   });
 });

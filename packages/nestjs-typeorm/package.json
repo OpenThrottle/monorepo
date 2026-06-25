@@ -8,6 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "joi": "catalog:",
     "pg": "catalog:",
     "typeorm": "catalog:"
@@ -61,12 +64,6 @@
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
-  "scripts": {
-    "typeorm": "ts-node ./node_modules/typeorm/cli.js",
-    "typeorm:generate-migration": "npm run typeorm -- -d ./dataSource.ts migration:generate ./migrations/$npm_config_name",
-    "typeorm:run-migrations": "npm run typeorm -- -d ./dataSource.ts migration:run",
-    "typeorm:revert-migration": "npm run typeorm -- -d ./dataSource.ts migration:revert"
-  },
   "type": "commonjs",
   "types": "./src/index.ts"
 }
