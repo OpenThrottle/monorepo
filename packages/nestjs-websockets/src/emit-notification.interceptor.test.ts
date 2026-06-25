@@ -1,5 +1,6 @@
 import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
+import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type {
@@ -191,5 +192,71 @@ describe('EmitNotificationInterceptor', () => {
       planId: 'p1',
       status: 'COMPLETED',
     });
+  });
+
+  it('does not fail the response stream when the emitter throws synchronously, and logs the failure', async () => {
+    const metadata: EmitNotificationMetadata = { event: 'plan.updated' };
+    const reflector = {
+      get: vi.fn().mockReturnValue(metadata),
+    } as unknown as Reflector;
+    const emitter = {
+      emit: vi.fn().mockImplementation(() => {
+        throw new Error('boom');
+      }),
+    } as unknown as EmitNotificationEmitter;
+    const loggerError = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const interceptor = new EmitNotificationInterceptor(reflector, emitter);
+    const result = { plan: { id: 'p1' } };
+    const next = {
+      handle: vi.fn().mockReturnValue(of(result)),
+    } as unknown as CallHandler;
+    const context = createMockContext(() => undefined);
+
+    const value = await firstValueFrom(interceptor.intercept(context, next));
+    expect(value).toBe(result);
+    expect(emitter.emit).toHaveBeenCalledTimes(1);
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(loggerError.mock.calls[0]?.[0]).toContain('plan.updated');
+
+    loggerError.mockRestore();
+  });
+
+  it('continues emitting remaining entries after one entry throws', async () => {
+    const metadata: EmitNotificationMetadata[] = [
+      { event: 'plan.updated' },
+      { event: 'plan.status_changed' },
+    ];
+    const reflector = {
+      get: vi.fn().mockReturnValue(metadata),
+    } as unknown as Reflector;
+    const emitter = {
+      emit: vi.fn().mockImplementationOnce(() => {
+        throw new Error('boom');
+      }),
+    } as unknown as EmitNotificationEmitter;
+    const loggerError = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const interceptor = new EmitNotificationInterceptor(reflector, emitter);
+    const result = { id: 'p1' };
+    const next = {
+      handle: vi.fn().mockReturnValue(of(result)),
+    } as unknown as CallHandler;
+    const context = createMockContext(() => undefined);
+
+    const value = await firstValueFrom(interceptor.intercept(context, next));
+    expect(value).toBe(result);
+    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      2,
+      'plan.status_changed',
+      result,
+    );
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(loggerError.mock.calls[0]?.[0]).toContain('plan.updated');
+
+    loggerError.mockRestore();
   });
 });

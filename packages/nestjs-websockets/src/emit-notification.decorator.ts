@@ -1,8 +1,7 @@
-// FIXME: Swap out eventually
-
 /**
  * @description Metadata and decorator for declaring socket notification emissions on resolver/handler methods.
- * Use with {@link EmitNotificationInterceptor} so the interceptor reads this metadata and calls the emitter after the method returns.
+ * Use with {@link EmitNotificationInterceptor} so the interceptor reads this metadata and calls the emitter after the method returns,
+ * skipping emission when the resolved payload is nullish (null/undefined).
  */
 
 import { SetMetadata } from '@nestjs/common';
@@ -11,11 +10,11 @@ import { SetMetadata } from '@nestjs/common';
 export const EMIT_NOTIFICATION_KEY = 'emitNotification';
 
 /**
- * @description Shape of metadata set by {@link EmitNotification}. The interceptor reads this and, when present and the payload mapper returns non-null, emits via the injected emitter.
+ * @description Shape of metadata set by {@link EmitNotification}. The interceptor reads this and, when present and the resolved payload is non-nullish (null/undefined skipped), emits via the injected emitter.
  */
 export interface EmitNotificationMetadata {
   readonly event: string;
-  /** Optional mapper from method return value to payload; if it returns null, no emission. */
+  /** Optional mapper from method return value to payload; if it returns a nullish value (null/undefined), no emission. */
   readonly payload?: (ret: unknown) => unknown | null;
 }
 
@@ -51,7 +50,7 @@ function normalizeOne(
  * async updatePlan(...) { ... }
  * ```
  *
- * @example Event and payload mapper (emit only when mapper returns non-null)
+ * @example Event and payload mapper (emit only when the resolved payload is non-nullish)
  * ```ts
  * @EmitNotification('plan.updated', (ret) => ret?.plan ?? null)
  * async updatePlan(...) { return { plan }; }

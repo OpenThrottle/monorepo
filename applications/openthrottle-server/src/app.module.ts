@@ -1,9 +1,6 @@
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import {
-  EmitNotificationInterceptor,
-  NestjsWebsocketsModule,
-} from '@openthrottle/nestjs-websockets';
+import { EmitNotificationInterceptor } from '@openthrottle/nestjs-websockets';
 import { GithubGraphqlModule } from '@openthrottle/nestjs-github';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
@@ -116,7 +113,6 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     NestjsRbacModule,
     NestjsRepositoriesModule,
     NestjsThrottlerModule,
-    NestjsWebsocketsModule,
     NotificationsModule,
     PubSubModule,
     ...(isOpenthrottleServerDevJsonlLoggingEnabled()

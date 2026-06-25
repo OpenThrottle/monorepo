@@ -12,7 +12,7 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { ScrollText } from 'lucide-react';
+import { TerminalSquareIcon } from 'lucide-react';
 import {
   clearClientLogSink,
   CLIENT_LOG_BUFFER_MAX_ENTRIES,
@@ -161,7 +161,7 @@ export const SettingsLogsPanel = (
         <GlobalHeading
           className="mb-4"
           heading="h3"
-          icon={ScrollText}
+          icon={TerminalSquareIcon}
           title="Logs"
         />
         <p className="text-muted-foreground mb-4 text-sm">
