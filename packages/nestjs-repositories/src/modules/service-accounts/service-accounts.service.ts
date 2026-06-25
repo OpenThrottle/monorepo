@@ -8,6 +8,10 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
 import { IsNull, Repository } from 'typeorm';
+import {
+  type ListPaginationInput,
+  resolveListPagination,
+} from '../../common/list-pagination';
 import { ServiceAccountCredential } from './service-account-credential.entity';
 import { ServiceAccount } from './service-account.entity';
 import {
@@ -55,11 +59,15 @@ export class ServiceAccountsService {
   }
 
   /**
-   * @description Returns all service accounts, newest first.
+   * @description Returns service accounts, newest first. Accepts an optional
+   * clamped `{ limit, offset }` so the result set stays bounded.
    */
-  async findAll(): Promise<ServiceAccount[]> {
+  async findAll(pagination?: ListPaginationInput): Promise<ServiceAccount[]> {
+    const { skip, take } = resolveListPagination(pagination);
     return this.serviceAccountRepository.find({
       order: { createdAt: 'DESC' },
+      skip,
+      take,
     });
   }
 
@@ -273,6 +281,14 @@ export class ServiceAccountsService {
     return this.randomAlphanumeric(ServiceAccountsService.SECRET_LENGTH);
   }
 
+  /**
+   * @description Picks a credential prefix not currently in use. Best-effort:
+   * generates several candidates and filters by an existing-prefix lookup.
+   * Note (awareness): a TOCTOU window exists between this check and the insert
+   * in {@link createCredential}; the prefix column's DB uniqueness is the real
+   * guarantee. With 12-char alphanumeric prefixes a collision is astronomically
+   * unlikely, so this is acceptable as-is.
+   */
   private async generateUniquePrefix(): Promise<string> {
     const candidates = Array.from({ length: 8 }, () =>
       this.randomAlphanumeric(ServiceAccountsService.PREFIX_LENGTH),

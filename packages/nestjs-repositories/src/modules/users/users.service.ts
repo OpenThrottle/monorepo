@@ -4,6 +4,10 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import type { DeepPartial } from 'typeorm/common/DeepPartial';
+import {
+  type ListPaginationInput,
+  resolveListPagination,
+} from '../../common/list-pagination';
 import { User } from './user.entity';
 
 @Injectable()
@@ -72,11 +76,15 @@ export class UsersService {
   }
 
   /**
-   * @description Returns all users, ordered by created_at descending.
+   * @description Returns users ordered by created_at descending. Accepts an
+   * optional clamped `{ limit, offset }` so the result set stays bounded.
    */
-  async findAll(): Promise<User[]> {
+  async findAll(pagination?: ListPaginationInput): Promise<User[]> {
+    const { skip, take } = resolveListPagination(pagination);
     return this.userRepository.find({
       order: { createdAt: 'DESC' },
+      skip,
+      take,
     });
   }
 

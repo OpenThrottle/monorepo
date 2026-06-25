@@ -67,7 +67,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
   });
 
   describe('listByUserId', () => {
-    it('returns repositories ordered by the repository query', async () => {
+    it('returns repositories ordered by the repository query with default bounds', async () => {
       vi.mocked(mockRepository.find).mockResolvedValue([mockEntity]);
 
       const result = await service.listByUserId(userId);
@@ -75,6 +75,21 @@ describe('WorkspaceLocalRepositoriesService', () => {
       expect(result).toEqual([mockEntity]);
       expect(mockRepository.find).toHaveBeenCalledWith({
         order: { createdAt: 'DESC' },
+        skip: 0,
+        take: 50,
+        where: { userId },
+      });
+    });
+
+    it('clamps caller-supplied pagination into take/skip bounds', async () => {
+      vi.mocked(mockRepository.find).mockResolvedValue([mockEntity]);
+
+      await service.listByUserId(userId, { limit: 10_000, offset: 25 });
+
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+        skip: 25,
+        take: 200,
         where: { userId },
       });
     });

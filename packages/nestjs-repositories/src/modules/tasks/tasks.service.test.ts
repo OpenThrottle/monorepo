@@ -135,8 +135,10 @@ describe('TasksService', () => {
     };
 
     const txQueryBuilder = {
+      getOne: vi.fn().mockResolvedValue(null),
       getRawOne: vi.fn(),
       select: vi.fn().mockReturnThis(),
+      setLock: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
     };
     const txRepo = createMock<Repository<Task>>({
@@ -150,6 +152,8 @@ describe('TasksService', () => {
 
     beforeEach(() => {
       vi.mocked(txQueryBuilder.getRawOne).mockReset();
+      vi.mocked(txQueryBuilder.setLock).mockClear();
+      vi.mocked(txQueryBuilder.where).mockClear();
       vi.mocked(txRepo.create).mockClear();
       vi.mocked(txRepo.save).mockClear();
       vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
@@ -197,6 +201,23 @@ describe('TasksService', () => {
         500,
         TASK_SORT_ORDER_GAP,
       ]);
+    });
+
+    // Guards the race-safety claim in the createTasksBatch JSDoc: the parent
+    // plan must be row-locked with pessimistic_write before MAX(sort_order) is
+    // read, so concurrent batch creates serialize instead of computing the same
+    // existingMax and colliding on the (plan_id, sort_order) unique index.
+    it('row-locks the parent plan with pessimistic_write before computing sort_order', async () => {
+      vi.mocked(txQueryBuilder.getRawOne).mockResolvedValue({ max: '1000' });
+
+      await service.createTasksBatch(planId, [
+        { ...baseItem, sortOrder: null, title: 'a' },
+      ]);
+
+      expect(txQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
+      expect(txQueryBuilder.where).toHaveBeenCalledWith('plan.id = :planId', {
+        planId,
+      });
     });
   });
 

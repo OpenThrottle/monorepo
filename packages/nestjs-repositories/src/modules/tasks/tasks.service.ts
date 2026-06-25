@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, Not, Repository } from 'typeorm';
+import { Plan } from '../plans/plan.entity';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 
@@ -86,6 +87,20 @@ export class TasksService {
 
     return this.taskRepository.manager.transaction(async (manager) => {
       const taskRepo = manager.getRepository(Task);
+
+      // Row-lock the parent plan before reading MAX(sort_order) so concurrent
+      // batch creates against the same plan serialize. Under READ COMMITTED the
+      // MAX read alone does not lock the gap, so two writers could otherwise
+      // compute the same existingMax and assign duplicate sort_order values
+      // (which the (plan_id, sort_order) unique index rejects with a 23505,
+      // rolling back the whole batch). The lock makes the read see committed
+      // prior rows.
+      await manager
+        .getRepository(Plan)
+        .createQueryBuilder('plan')
+        .setLock('pessimistic_write')
+        .where('plan.id = :planId', { planId })
+        .getOne();
 
       const maxResult = await taskRepo
         .createQueryBuilder('task')
