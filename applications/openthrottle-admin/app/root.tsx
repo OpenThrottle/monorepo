@@ -35,6 +35,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import {
   GetMeDocument,
+  GetRootHealthDocument,
   LoginDocument,
   ServerHealthObject,
   SignoutDocument,
@@ -94,12 +95,21 @@ export const loader = async (args: Route.LoaderArgs) => {
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
-  const serverHealth: ServerHealthObject = {
-    api: 'ok',
-    database: 'ok',
-    redis: 'ok',
-    websocket: 'ok',
+  // Seed an "unreachable" baseline (never all-green): if the health query is
+  // skipped or throws, the ops shell must not falsely read as healthy.
+  let serverHealth: ServerHealthObject = {
+    api: 'unreachable',
+    database: 'unreachable',
+    redis: 'unreachable',
+    websocket: 'unreachable',
   };
+
+  try {
+    const res = await executeGraphqlWithAuth(request, GetRootHealthDocument);
+    serverHealth = res.serverHealth;
+  } catch (error) {
+    console.error('Failed to load server health in root loader', error);
+  }
 
   return { canonical, env, serverHealth, user };
 };
