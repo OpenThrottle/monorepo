@@ -1,14 +1,21 @@
 /**
- * @description Shared notification event types and payloads for the OpenThrottle
- * server–developer app WebSocket contract. Server emits these events via Socket.IO;
- * developer app subscribes and surfaces them in the UI.
+ * @description Shared notification event names, severity, and payload shapes for the
+ * OpenThrottle server–developer app contract. Real-time delivery is over GraphQL
+ * subscriptions (graphql-ws); the Socket.IO path has been retired.
+ *
+ * Source-of-truth split: these types define the event-name discriminators and
+ * severity used across server and developer app. The actual on-the-wire payloads
+ * are the code-first `NotificationEvent` types in the server GraphQL schema — treat
+ * those schema types as authoritative for wire shape, and these interfaces as the
+ * discriminator/severity contract they map onto.
  */
 
-import type { NotificationSeverity } from './types.js';
+import type { NotificationSeverity } from './types.ts';
 
 /**
- * @description Well-known notification event names. Use these as Socket.IO event
- * names when emitting (server) or subscribing (developer app).
+ * @description Well-known notification event names. Used as the event-name
+ * discriminator when emitting (server) or handling (developer app) notifications
+ * delivered over graphql-ws subscriptions.
  */
 export const NOTIFICATION_EVENT_NAMES = {
   DEBUG: 'debug',
@@ -30,6 +37,17 @@ export type NotificationEventName =
  */
 export interface NotificationPayloadBase {
   /**
+   * Optional id of the user this notification pertains to (the actor who
+   * triggered the event or the owner of the affected resource).
+   *
+   * Additive, versioned contract field: when present, the server can route the
+   * notification to a per-user topic (`userNotificationsTopic(actorUserId)`)
+   * instead of (or in addition to) the firehose, so authenticated subscribers
+   * only receive notifications they own. When absent, the server falls back to
+   * the existing firehose/plan/system fan-out, preserving prior behavior.
+   */
+  readonly actorUserId?: string;
+  /**
    * Optional app-relative path for click-through (e.g. `/plans/:id`).
    * When present, the developer app can show a "View plan" (or similar) link.
    */
@@ -46,6 +64,14 @@ export interface NotificationPayloadBase {
  * @description Payload for debugging purposes, we accept a raw `data` object.
  */
 export interface DebugPayload extends NotificationPayloadBase {
+  /**
+   * Arbitrary debug payload, JSON-stringified by the server and fanned out to the
+   * firehose. The contract cannot enforce runtime limits, so callers MUST keep this
+   * small, non-sensitive, and JSON-serializable: no secrets/PII, no large blobs, and
+   * no circular references (stringify would throw). Enforce real size/shape guards in
+   * the emitting consumer — broadcasting a large or circular object reaches every
+   * subscriber.
+   */
   readonly data: unknown;
 }
 
@@ -119,24 +145,36 @@ export interface PlanWaitingForWorktreePayload extends NotificationPayloadBase {
 }
 
 /**
- * @description Payload for plan.status_changed. Emit when a plan's status is updated.
- * Used by the developer app to revalidate plan detail (e.g. plans/$planId) without manual refresh.
+ * @description Shared base for status-change events.
+ *
+ * Status-change events are intentionally display-less **revalidation signals**, not
+ * user-facing toasts. They deliberately do NOT extend {@link NotificationPayloadBase}
+ * (no `message`/`severity`/`link`) and are deliberately excluded from the
+ * {@link NotificationPayload} union — a generic toast/list handler iterating
+ * `NotificationPayload` will never receive one. Consumers handle these separately to
+ * revalidate plan/task detail (e.g. `plans/$planId`) without a manual refresh; do not
+ * write code assuming every event carries a `message`.
  */
-export interface PlanStatusChangedPayload {
+export interface StatusChangeBase {
   readonly planId: string;
   readonly status: string;
   readonly timestamp: string;
 }
 
 /**
- * @description Payload for task.status_changed. Emit when a task's status is updated.
- * Used by the developer app to revalidate plan detail so tasks list stays in sync.
+ * @description Payload for plan.status_changed. Emit when a plan's status is updated.
+ * Intentionally display-less (see {@link StatusChangeBase}): used by the developer app
+ * to revalidate plan detail (e.g. plans/$planId) without manual refresh, not to toast.
  */
-export interface TaskStatusChangedPayload {
-  readonly planId: string;
-  readonly status: string;
+export type PlanStatusChangedPayload = StatusChangeBase;
+
+/**
+ * @description Payload for task.status_changed. Emit when a task's status is updated.
+ * Intentionally display-less (see {@link StatusChangeBase}): used by the developer app
+ * to revalidate plan detail so the tasks list stays in sync, not to toast.
+ */
+export interface TaskStatusChangedPayload extends StatusChangeBase {
   readonly taskId: string;
-  readonly timestamp: string;
 }
 
 /**

@@ -12,6 +12,7 @@ describe('AppConfigService', () => {
     vi.stubEnv('OPENAI_EMBEDDING_MODEL', '');
     vi.stubEnv('OLLAMA_BASE_URL', '');
     vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
+    vi.stubEnv('OLLAMA_VERIFIED_EMBEDDING_MODELS', '');
     service = new AppConfigService();
   });
 
@@ -73,8 +74,38 @@ describe('AppConfigService', () => {
       expect(service.isEmbeddingsConfigured()).toBe(true);
     });
 
-    it('is true for Ollama (no key required)', () => {
+    it('is false for Ollama with the default (768-dim) model — not dimension-verified', () => {
       vi.stubEnv('OLLAMA_BASE_URL', 'http://ollama:11434');
+      expect(service.isEmbeddingsConfigured()).toBe(false);
+    });
+
+    it('is false for an unknown Ollama embedding model', () => {
+      vi.stubEnv('OLLAMA_EMBEDDING_MODEL', 'mxbai-embed-large');
+      expect(service.isEmbeddingsConfigured()).toBe(false);
+    });
+
+    it('flags the mismatched-dim hazard: Ollama resolves to the 768-dim default but is reported unavailable', () => {
+      // Selecting Ollama by base URL alone resolves to the default model, which emits 768-dim
+      // vectors — narrower than the code_embeddings column (1536). getEmbeddingsConfig still
+      // resolves it (so the engine COULD be built), but isEmbeddingsConfigured must report it
+      // unavailable so the UI never shows search as ready right up until indexing fails the guard.
+      vi.stubEnv('OLLAMA_BASE_URL', 'http://ollama:11434');
+      expect(service.getEmbeddingsConfig().model).toBe('nomic-embed-text');
+      expect(service.isEmbeddingsConfigured()).toBe(false);
+    });
+
+    it('is true for an Ollama model opted in via OLLAMA_VERIFIED_EMBEDDING_MODELS', () => {
+      vi.stubEnv('OLLAMA_EMBEDDING_MODEL', 'custom-1536-embed');
+      vi.stubEnv(
+        'OLLAMA_VERIFIED_EMBEDDING_MODELS',
+        'some-other-model, custom-1536-embed',
+      );
+      expect(service.isEmbeddingsConfigured()).toBe(true);
+    });
+
+    it('matches the verified env allowlist case-insensitively', () => {
+      vi.stubEnv('OLLAMA_EMBEDDING_MODEL', 'Custom-1536-Embed');
+      vi.stubEnv('OLLAMA_VERIFIED_EMBEDDING_MODELS', 'custom-1536-embed');
       expect(service.isEmbeddingsConfigured()).toBe(true);
     });
   });

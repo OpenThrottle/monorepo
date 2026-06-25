@@ -262,26 +262,26 @@ Do **not** add a standalone `build` target to these libraries unless you are del
 
 ### All projects without `build` (18)
 
-| Nx project                                     | Role                                                                    |
-| ---------------------------------------------- | ----------------------------------------------------------------------- |
-| `@openthrottle/react-router-auth`              | Shared React Router auth UI and hooks                                   |
-| `@openthrottle/react-router-chat`              | Shared chat UI                                                          |
-| `@openthrottle/react-router-docs`              | Docs/FAQ rendering layer over a per-app Markdown content folder         |
-| `@openthrottle/react-router-editor`            | Monaco-based editor                                                     |
-| `@openthrottle/react-router-graphql`           | GraphQL client helpers for React Router apps                            |
-| `@openthrottle/react-router-notifications`     | Notifications UI                                                        |
-| `@openthrottle/react-router-profiling`         | Profiling utilities                                                     |
-| `@openthrottle/react-router-shadcn`            | shadcn-based primitives for OpenThrottle apps                           |
-| `@openthrottle/react-router-testing`           | Shared Vitest setup: jsdom polyfills + `window.env` fixture             |
-| `@openthrottle/react-router-ui`                | Shared UI components                                                    |
-| `@openthrottle/react-router-ui-global`         | Global UI shell pieces                                                  |
-| `@openthrottle/react-router-utils`             | Config, env, logging, metadata utilities                                |
-| `@openthrottle/openthrottle-developer-codegen` | GraphQL/codegen outputs for `openthrottle-developer`                    |
-| `@openthrottle/openthrottle-mcp`               | MCP-related React Router package (source consumed by apps/tools)        |
-| `@openthrottle/graphql-codegen`                | Shared GraphQL codegen utilities                                        |
-| `@openthrottle/openthrottle-skills`            | Skills package (TypeScript source)                                      |
-| `@openthrottle/openthrottle-vscode`            | VS Code extension sources (built via extension tooling, not Nx `build`) |
-| `infra`                                        | Terraform (`type:infrastructure`); no application bundle                |
+| Nx project                                     | Role                                                                                                                              |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `@openthrottle/react-router-auth`              | Shared React Router auth UI and hooks                                                                                             |
+| `@openthrottle/react-router-chat`              | Shared chat UI                                                                                                                    |
+| `@openthrottle/react-router-docs`              | Docs/FAQ rendering layer over a per-app Markdown content folder                                                                   |
+| `@openthrottle/react-router-editor`            | Monaco-based editor                                                                                                               |
+| `@openthrottle/react-router-graphql`           | GraphQL client helpers for React Router apps                                                                                      |
+| `@openthrottle/react-router-notifications`     | Notifications UI                                                                                                                  |
+| `@openthrottle/react-router-profiling`         | Profiling utilities                                                                                                               |
+| `@openthrottle/react-router-shadcn`            | shadcn-based primitives for OpenThrottle apps                                                                                     |
+| `@openthrottle/react-router-testing`           | Shared Vitest setup: jsdom polyfills + `window.env` fixture                                                                       |
+| `@openthrottle/react-router-ui`                | Shared UI components                                                                                                              |
+| `@openthrottle/react-router-ui-global`         | Global UI shell pieces                                                                                                            |
+| `@openthrottle/react-router-utils`             | Config, env, logging, metadata utilities                                                                                          |
+| `@openthrottle/openthrottle-developer-codegen` | GraphQL/codegen outputs for `openthrottle-developer`                                                                              |
+| `@openthrottle/openthrottle-mcp`               | MCP-related React Router package (source consumed by apps/tools)                                                                  |
+| `@openthrottle/graphql-codegen`                | Shared GraphQL codegen utilities                                                                                                  |
+| `@openthrottle/openthrottle-skills`            | Skills package (TypeScript source)                                                                                                |
+| `@openthrottle/openthrottle-vscode`            | Editor-agnostic logic lib for the VS Code/Cursor extension (the deployable extension itself is the `vscode-openthrottle` project) |
+| `infra`                                        | Terraform (`type:infrastructure`); no application bundle                                                                          |
 
 The **13** projects tagged `technology:react-router` in this list are the shared UI/library layer for OpenThrottle React Router apps.
 

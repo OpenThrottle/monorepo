@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { hashContent } from '@openthrottle/openthrottle-ide';
+import {
+  EMBEDDING_DIMENSIONS,
+  hashContent,
+} from '@openthrottle/openthrottle-ide';
 import type {
   StoredChunk,
   VectorMatch,
@@ -24,8 +27,26 @@ interface CodeMatchRow {
 /**
  * @description Serializes an embedding to the Postgres pgvector text literal (`[v1,v2,…]`), passed as a
  * bound parameter and cast with `::vector` in SQL.
+ *
+ * Asserts the embedding has the expected width and that every slot is finite first: a `NaN`/`Infinity`/
+ * `undefined` slot would stringify to `NaN`/`Infinity`/empty and produce a malformed `::vector` literal,
+ * surfacing as an opaque pg parse error deep in a query. This is not an injection vector (numbers only,
+ * bound param) — it's a robustness guard for a provider returning a degenerate vector, failing fast with
+ * an actionable message instead.
  */
 function toVectorLiteral(embedding: number[]): string {
+  if (embedding.length !== EMBEDDING_DIMENSIONS) {
+    throw new Error(
+      `Embedding has ${embedding.length} dimensions, but code_embeddings requires ${EMBEDDING_DIMENSIONS}.`,
+    );
+  }
+  for (let i = 0; i < embedding.length; i += 1) {
+    if (!Number.isFinite(embedding[i])) {
+      throw new Error(
+        `Embedding contains a non-finite value (${String(embedding[i])}) at index ${i}; cannot serialize to a pgvector literal.`,
+      );
+    }
+  }
   return `[${embedding.join(',')}]`;
 }
 

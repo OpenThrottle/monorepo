@@ -112,10 +112,22 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
     process.env.NODE_ENV !== 'production',
 
   /**
-   * Pin the landing page explicitly. The legacy `playground` flag does nothing
-   * in Apollo Server 4/5, so relying on it gave a false sense the editor was
-   * controlled. Sandbox locally, minimal production page in prod. Always merged
-   * ahead of caller plugins so a forRoot caller can still override it.
+   * Disable the `@nestjs/apollo` driver's own landing page. The driver always
+   * appends one landing-page plugin to `plugins` based on `playground`: with
+   * `playground` unset it adds the legacy GraphQL Playground in non-production,
+   * which then collides with our pinned plugin below ("Only one plugin can
+   * implement renderLandingPage"). Setting `playground: false` makes the driver
+   * append the no-op `ApolloServerPluginLandingPageDisabled` marker instead (it
+   * has no renderLandingPage hook), leaving our pinned plugin as the single
+   * landing page in every NODE_ENV.
+   */
+  playground: false,
+
+  /**
+   * Pin the landing page explicitly: the embedded Apollo Sandbox (with
+   * introspection) in non-production, and the minimal production landing page in
+   * prod. Always merged ahead of caller plugins so a forRoot caller can still
+   * override it.
    */
   plugins: [createLandingPagePlugin()],
 

@@ -5,7 +5,7 @@
 /* eslint-disable no-await-in-loop */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDefaultGitHubUser } from '../config.js';
+import { getDefaultGitHubUser, resolveActor } from '../config.js';
 import type { TaskRow } from '../cortex-client.js';
 import {
   createTask as cortexCreateTask,
@@ -62,7 +62,7 @@ async function createTasksHandler(
     const defaultGh = getDefaultGitHubUser();
     for (const item of data.tasks) {
       const task = await cortexCreateTask({
-        assignee: defaultGh ?? item.assignee ?? null,
+        assignee: resolveActor(item.assignee, defaultGh),
         category: item.category ?? null,
         description: item.description ?? null,
         planId: data.planId,
@@ -141,7 +141,7 @@ export function registerTaskTools(server: McpServer): void {
   server.registerTool(
     'create_task',
     {
-      description: `Create a new task in Cortex. Requires planId and title; optional description, category, status (default: pending), requirements (array), summary (per-task wrap-up: actions, usage notes, or why blocked), assignee (GitHub username), project (NX project name from the project graph).`,
+      description: `Create a new task in Cortex. Requires planId and title; optional description, category, status (default: pending), requirements (array), summary (per-task wrap-up: actions, usage notes, or why blocked), assignee (GitHub username), project (NX project name from the project graph). Side effect: if the parent plan is CANCELED, COMPLETED, or SKIPPED, adding a task flips the plan back to IN_PROGRESS (upward reconcile).`,
       inputSchema: {
         assignee: z.string().nullable().optional(),
         category: z.string().nullable().optional(),
@@ -164,7 +164,7 @@ export function registerTaskTools(server: McpServer): void {
         const defaultGh = getDefaultGitHubUser();
         const taskInput = {
           ...parsed.data,
-          assignee: defaultGh ?? parsed.data.assignee ?? null,
+          assignee: resolveActor(parsed.data.assignee, defaultGh),
         };
 
         const task = await cortexCreateTask(taskInput);
@@ -197,7 +197,7 @@ export function registerTaskTools(server: McpServer): void {
   server.registerTool(
     'create_tasks',
     {
-      description: `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project (NX project name)). Returns created task ids and summaries.`,
+      description: `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project (NX project name)). Returns created task ids and summaries. Side effect: if the parent plan is CANCELED, COMPLETED, or SKIPPED, adding tasks flips the plan back to IN_PROGRESS (upward reconcile).`,
       inputSchema: {
         planId: createTasksInputSchema.shape.planId,
         tasks: createTasksInputSchema.shape.tasks,
@@ -364,12 +364,10 @@ export function registerTaskTools(server: McpServer): void {
         const { id, ...rest } = parsed.data;
         const defaultGh = getDefaultGitHubUser();
 
-        if (
-          defaultGh !== undefined &&
-          rest.assignee !== undefined &&
-          rest.assignee !== null
-        ) {
-          rest.assignee = defaultGh;
+        // Uniform precedence (see resolveActor): GITHUB_USER wins when set; otherwise caller value.
+        // Only touch assignee when the caller actually supplied it so absent stays untouched.
+        if (rest.assignee !== undefined) {
+          rest.assignee = resolveActor(rest.assignee, defaultGh);
         }
 
         const task = await cortexUpdateTask(id, rest);
