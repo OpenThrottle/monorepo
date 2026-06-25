@@ -47,15 +47,10 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
-  const [count, setCount] = React.useState(0);
 
   // Setup
-  const isFormEnabled = count >= 5;
 
   // Handlers
-  const onIncrementCount = () => {
-    setCount(count + 1);
-  };
 
   // Markup
 
@@ -64,13 +59,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen
-      className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
-      onClick={onIncrementCount}
-    >
+    <GlobalScreen className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center p-4 md:p-8 lg:p-12">
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-8">
         <OpenThrottleLogo className="mx-auto text-2xl" name={SITE_SUBDOMAIN} />
-        {isFormEnabled ? <OpenThrottleAuthForm action="/" /> : null}
+        <OpenThrottleAuthForm action="/" />
       </div>
     </GlobalScreen>
   );
