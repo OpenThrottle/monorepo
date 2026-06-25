@@ -34,7 +34,7 @@ export const links: Route.LinksFunction = () => {
 const SITE_OG_IMAGE = `${OPENTHROTTLE_BUCKET}/branding/icons/red/icon-512.png`;
 
 /**
- * @external https://remix.run/docs/en/main/route/should-revalidate
+ * @external https://reactrouter.com/start/framework/route-module#shouldrevalidate
  * @description We only need to revalidate when we login or logout which
  * is already taken care of by the auth routes. So we don't need to revalidate
  * (refetch) to data at this level.
@@ -104,7 +104,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
 
-  const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
+  // Favicons are served from the app's own static `public/` assets (a single
+  // source of truth) rather than the GCS bucket, so they match the committed
+  // `public/favicon.{ico,png}` files and don't depend on bucket availability.
+  const faviconIco = `/favicon.ico`;
+  const faviconPng = `/favicon.png`;
   const manifest = `/manifest.json`;
 
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
@@ -158,10 +162,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
         <link href="https://www.googletagmanager.com" rel="preconnect" />
-        <link href={favicon} rel="apple-touch-icon" sizes="48x48" />
-        <link href={favicon} rel="favicon" />
-        <link href={favicon} rel="icon" type="image/svg+xml" />
-        <link href={favicon} rel="mask-icon" type="image/svg+xml" />
+        <link href={faviconPng} rel="apple-touch-icon" sizes="48x48" />
+        <link href={faviconIco} rel="icon" type="image/x-icon" />
+        <link href={faviconPng} rel="icon" type="image/png" />
         <link href={manifest} rel="manifest" />
         <Links />
 

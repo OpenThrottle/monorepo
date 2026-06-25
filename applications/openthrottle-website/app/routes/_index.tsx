@@ -48,6 +48,11 @@ export default function Component(
   const [count, setCount] = React.useState(0);
 
   // Setup
+  // PRE-LAUNCH GATE: the real landing content (GetStarted/Features/Testimonials)
+  // is intentionally hidden behind 5 clicks on the logo while OpenThrottle is in
+  // private beta — it is deliberately not discoverable or crawlable yet.
+  // TODO(launch): remove this click-gate (render the landing content
+  // unconditionally) when the site goes public so crawlers can index it.
   const isBeta = count >= 5;
 
   // Handlers

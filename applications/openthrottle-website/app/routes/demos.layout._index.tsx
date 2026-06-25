@@ -3,8 +3,10 @@ import {
   DEMO_LAYOUT,
   FloorLayoutEditor,
 } from '@openthrottle/react-router-floor-layout';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  type GlobalLayoutBreadcrumbsHandle,
+} from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { canonicalMeta } from '~/global/utils/canonical';
 import type { Route } from '@/app/routes/+types/demos.layout._index';
