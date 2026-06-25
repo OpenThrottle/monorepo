@@ -11,6 +11,7 @@ npx nx configure-ai-agents
 # Skills.sh
 npx skills add https://github.com/shadcn/ui --skill shadcn
 npx skills add https://github.com/mattpocock/skills --skill grill-me
+npx skills add https://github.com/mattpocock/skills --skill grilling
 
 # npx skills add https://github.com/BuilderIO/skills --skill visual-plan visual-recap
 ```

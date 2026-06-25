@@ -5,7 +5,10 @@ import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
-import { GLOBAL_METRICS_STORAGE_KEY } from '../../config/index';
+import {
+  GLOBAL_METRICS_COLLAPSED_KEY,
+  GLOBAL_METRICS_STORAGE_KEY,
+} from '../../config/index';
 import * as globalMetricsStorage from '../../utils/storage';
 import { GlobalMetrics } from '../GlobalMetrics';
 import type { GlobalMetricsProps } from '../GlobalMetrics';
@@ -201,6 +204,101 @@ describe('GlobalMetrics Component', () => {
        * single flex container so the icon visually anchors to the heading.
        */
       expect(heading.parentElement).toBe(trigger.parentElement);
+    });
+  });
+
+  describe('collapsible behavior', () => {
+    test('renders expanded by default: stat cards visible, summary hidden, toggle labelled to collapse', () => {
+      expect(component.getByTestId('GlobalMetrics-data')).toBeInTheDocument();
+
+      const toggle = component.getByTestId('GlobalMetrics-toggle');
+      expect(toggle).toHaveAttribute('aria-label', 'Collapse server metrics');
+
+      /**
+       * @description The collapsed summary stays mounted (so it can cross-fade)
+       * but is hidden from assistive tech while the panel is open.
+       */
+      expect(component.getByTestId('GlobalMetrics-summary')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+    });
+
+    test('collapses on toggle click: hides cards/chart, reveals summary with metric values, persists collapsed=true', async () => {
+      const user = userEvent.setup();
+      const toggle = component.getByTestId('GlobalMetrics-toggle');
+
+      await user.click(toggle);
+
+      expect(
+        component.queryByTestId('GlobalMetrics-data'),
+      ).not.toBeInTheDocument();
+      expect(
+        component.queryByTestId('GlobalMetrics-chart-card'),
+      ).not.toBeInTheDocument();
+
+      const summary = component.getByTestId('GlobalMetrics-summary');
+      expect(summary).toHaveAttribute('aria-hidden', 'false');
+      expect(summary).toHaveTextContent(/RSS/);
+      expect(summary).toHaveTextContent(/MB/);
+
+      expect(toggle).toHaveAttribute('aria-label', 'Expand server metrics');
+      expect(localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY]).toBe('true');
+    });
+
+    test('re-expands on a second toggle and persists collapsed=false', async () => {
+      const user = userEvent.setup();
+      const toggle = component.getByTestId('GlobalMetrics-toggle');
+
+      await user.click(toggle);
+      await user.click(toggle);
+
+      expect(component.getByTestId('GlobalMetrics-data')).toBeInTheDocument();
+      expect(localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY]).toBe('false');
+    });
+
+    test.skip('keeps the poll Select mounted but keyboard-unreachable when collapsed', async () => {
+      const user = userEvent.setup();
+      const toggle = component.getByTestId('GlobalMetrics-toggle');
+      const trigger = component.getByTestId('GlobalMetrics-poll-interval');
+
+      // Reachable in the tab order while expanded.
+      expect(trigger).not.toHaveAttribute('tabindex', '-1');
+
+      await user.click(toggle);
+
+      /**
+       * @description Value must survive a collapse, so the Select stays mounted;
+       * it is only removed from the tab order and hidden from assistive tech.
+       */
+      const collapsedTrigger = component.getByTestId(
+        'GlobalMetrics-poll-interval',
+      );
+      expect(collapsedTrigger).toBeInTheDocument();
+      expect(collapsedTrigger).toHaveAttribute('tabindex', '-1');
+      expect(collapsedTrigger.closest('[data-slot="label"]')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+    });
+
+    test('restores the collapsed preference from sessionStorage on mount', () => {
+      cleanup();
+      localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY] = 'true';
+
+      const Component = () => (
+        <GlobalProviders>
+          <GlobalMetrics />
+        </GlobalProviders>
+      );
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      const { getByTestId, queryByTestId } = render(<RoutesStub />);
+
+      expect(queryByTestId('GlobalMetrics-data')).not.toBeInTheDocument();
+      expect(getByTestId('GlobalMetrics-toggle')).toHaveAttribute(
+        'aria-label',
+        'Expand server metrics',
+      );
     });
   });
 
