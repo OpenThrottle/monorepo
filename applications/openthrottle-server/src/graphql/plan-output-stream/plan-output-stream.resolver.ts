@@ -2,19 +2,14 @@
  * @description Resolver for PlanOutputStreamChunk queries and mutations. Injects PlanOutputStreamService from @openthrottle/nestjs-repositories and maps entities to PlanOutputStreamChunkObject.
  */
 
-import type {
-  Plan,
-  PlanOutputStreamChunk,
-} from '@openthrottle/nestjs-repositories';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
 import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
 import {
   Args,
   Context,
   ID,
   Mutation,
-  Parent,
   Query,
-  ResolveField,
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
@@ -25,9 +20,7 @@ import {
 } from '@openthrottle/nestjs-graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import { ForbiddenException, Inject } from '@nestjs/common';
-import { PlanObject } from '../plans/plan.object';
 import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
-import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
 import {
   AppendPlanOutputInput,
   GetPlanOutputStreamChunkInput,
@@ -35,25 +28,15 @@ import {
 } from './plan-output-stream.input';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
+// Must stay a singleton: it registers a @Subscription(). The request-scoped
+// `plan` field resolution lives in PlanOutputStreamFieldsResolver so the
+// request-scoped DataLoader doesn't promote this resolver to request scope.
 @Resolver(() => PlanOutputStreamChunkObject)
 export class PlanOutputStreamResolver {
   constructor(
-    private readonly loaders: PlanOutputStreamLoaders,
     private readonly planOutputStreamService: PlanOutputStreamService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
-
-  @ResolveField(() => PlanObject, {
-    description: `Resolved plan entity when planId is set`,
-    nullable: true,
-  })
-  async plan(
-    @Parent() parent: PlanOutputStreamChunkObject,
-  ): Promise<Plan | null> {
-    if (!parent.planId) return null;
-
-    return this.loaders.planLoader.load(parent.planId);
-  }
 
   @Query(() => PlanOutputStreamChunkObject, {
     description: `Get a plan output stream chunk by ID`,
