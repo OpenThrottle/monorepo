@@ -30,9 +30,28 @@ import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspa
 import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
 /**
+ * @description Resolves a positive integer from an env var, or undefined when
+ * unset/blank/invalid. Used for the optional slow-query threshold.
+ */
+function parsePositiveIntEnv(raw: string | undefined): number | undefined {
+  if (raw == null || raw.trim() === '') return undefined;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
+  return parsed;
+}
+
+/**
  * @description Returns TypeORM DataSource options for Cortex. Use when registering TypeOrmModule (e.g. forRootAsync).
+ *
+ * Logging: full SQL logging stays gated to development. In any env, setting
+ * `POSTGRES_SLOW_QUERY_MS` to a positive integer sets `maxQueryExecutionTime`,
+ * so TypeORM logs a `query is slow` warning for queries exceeding the threshold
+ * (slow-query logging is emitted independently of the `logging` level) — a
+ * production-safe DX hook for latency investigations.
  */
 export function getTypeOrmOptions(): DataSourceOptions {
+  const slowQueryMs = parsePositiveIntEnv(process.env.POSTGRES_SLOW_QUERY_MS);
+
   return {
     entities: [
       AgentConversation,
@@ -60,6 +79,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       WorkspaceLocalRepository,
     ],
     logging: process.env.NODE_ENV === 'development',
+    ...(slowQueryMs != null && { maxQueryExecutionTime: slowQueryMs }),
     type: 'postgres',
     url: getPostgresUrl(),
   };

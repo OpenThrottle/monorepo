@@ -17,7 +17,14 @@ export const vectorTransformer: ValueTransformer = {
     const trimmed = value.replace(/^\[|\]$/g, '').trim();
     if (!trimmed) return null;
 
-    return trimmed.split(',').map((s) => Number(s.trim()));
+    const parsed = trimmed.split(',').map((s) => Number(s.trim()));
+
+    // Reject malformed vectors loudly rather than feeding NaN / wrong-length
+    // data into similarity math. Mirrors the length guard on `to`.
+    if (parsed.length !== VECTOR_DIM) return null;
+    if (parsed.some((n) => Number.isNaN(n))) return null;
+
+    return parsed;
   },
   to(value: unknown): string | null {
     if (value == null) return null;

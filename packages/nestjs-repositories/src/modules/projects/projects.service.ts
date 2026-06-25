@@ -3,6 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 import type { DeepPartial } from 'typeorm/common/DeepPartial';
+import {
+  type ListPaginationInput,
+  resolveListPagination,
+} from '../../common/list-pagination';
 import { Project } from './project.entity';
 
 @Injectable()
@@ -30,11 +34,15 @@ export class ProjectsService {
   }
 
   /**
-   * @description Returns all projects, ordered by created_at descending.
+   * @description Returns projects ordered by created_at descending. Accepts an
+   * optional clamped `{ limit, offset }` so the result set stays bounded.
    */
-  async findAll(): Promise<Project[]> {
+  async findAll(pagination?: ListPaginationInput): Promise<Project[]> {
+    const { skip, take } = resolveListPagination(pagination);
     return this.projectRepository.find({
       order: { createdAt: 'DESC' },
+      skip,
+      take,
     });
   }
 
