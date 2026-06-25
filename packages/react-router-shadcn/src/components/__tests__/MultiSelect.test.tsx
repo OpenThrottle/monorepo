@@ -12,7 +12,7 @@ const OPTIONS: readonly { label: string; value: string }[] = [
 
 describe('MultiSelect', () => {
   it('renders with placeholder when no value selected', () => {
-    const { container } = render(
+    const { getByRole } = render(
       <MultiSelect
         onChange={() => {}}
         options={OPTIONS}
@@ -20,22 +20,26 @@ describe('MultiSelect', () => {
         value={[]}
       />,
     );
-    const trigger = container.querySelector('button');
+    const trigger = getByRole('button', { name: 'Select statuses' });
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveTextContent('Select statuses');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('opens dropdown on trigger click and shows options', async () => {
     const user = userEvent.setup();
-    const { container } = render(
-      <MultiSelect onChange={() => {}} options={OPTIONS} value={[]} />,
+    const { getByRole, findAllByRole } = render(
+      <MultiSelect
+        onChange={() => {}}
+        options={OPTIONS}
+        placeholder="Select"
+        value={[]}
+      />,
     );
-    const trigger = container.querySelector('button');
-    expect(trigger).toBeInTheDocument();
-    await user.click(trigger as HTMLButtonElement);
-    const listbox = container.querySelector('[role="listbox"]');
-    expect(listbox).toBeInTheDocument();
-    const options = container.querySelectorAll('[role="option"]');
+    const trigger = getByRole('button', { name: 'Select' });
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    const options = await findAllByRole('option');
     expect(options).toHaveLength(3);
     expect(options[0]).toHaveTextContent('Alpha');
     expect(options[1]).toHaveTextContent('Beta');
@@ -45,29 +49,33 @@ describe('MultiSelect', () => {
   it('calls onChange with added value when option clicked', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    const { container } = render(
-      <MultiSelect onChange={onChange} options={OPTIONS} value={[]} />,
+    const { getByRole, findByRole } = render(
+      <MultiSelect
+        onChange={onChange}
+        options={OPTIONS}
+        placeholder="Select"
+        value={[]}
+      />,
     );
-    const trigger = container.querySelector('button');
-    await user.click(trigger as HTMLButtonElement);
-    const optionBeta = container.querySelector('[role="option"]');
-    expect(optionBeta).toHaveTextContent('Alpha');
-    await user.click(optionBeta as HTMLElement);
+    await user.click(getByRole('button', { name: 'Select' }));
+    const optionAlpha = await findByRole('option', { name: 'Alpha' });
+    await user.click(optionAlpha);
     expect(onChange).toHaveBeenCalledWith(['alpha']);
   });
 
   it('shows selected values as badges in trigger', () => {
-    const { container } = render(
+    const { getByRole } = render(
       <MultiSelect
         onChange={() => {}}
         options={OPTIONS}
+        placeholder="Select"
         value={['alpha', 'gamma']}
       />,
     );
-    const trigger = container.querySelector('button');
+    const trigger = getByRole('button', { name: 'Select' });
     expect(trigger).toBeInTheDocument();
-    const badges = container.querySelectorAll('[class*="inline-flex"]');
-    expect(badges.length).toBeGreaterThanOrEqual(2);
+    const badges = trigger.querySelectorAll('[data-slot="badge"]');
+    expect(badges).toHaveLength(2);
     expect(trigger).toHaveTextContent('Alpha');
     expect(trigger).toHaveTextContent('Gamma');
   });
@@ -75,20 +83,35 @@ describe('MultiSelect', () => {
   it('calls onChange with removed value when selected option clicked again', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    const { container } = render(
+    const { getByRole, findByRole } = render(
       <MultiSelect
         onChange={onChange}
         options={OPTIONS}
+        placeholder="Select"
         value={['alpha', 'beta']}
       />,
     );
-    const trigger = container.querySelector('button');
-    await user.click(trigger as HTMLButtonElement);
-    const options = container.querySelectorAll('[role="option"]');
-    const alphaOption = Array.from(options).find((el) =>
-      el.textContent?.includes('Alpha'),
-    );
-    await user.click(alphaOption as HTMLElement);
+    await user.click(getByRole('button', { name: 'Select' }));
+    const alphaOption = await findByRole('option', { name: 'Alpha' });
+    await user.click(alphaOption);
     expect(onChange).toHaveBeenCalledWith(['beta']);
+  });
+
+  it('supports keyboard navigation and selection', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { getByRole } = render(
+      <MultiSelect
+        onChange={onChange}
+        options={OPTIONS}
+        placeholder="Select"
+        value={[]}
+      />,
+    );
+    await user.click(getByRole('button', { name: 'Select' }));
+    // Focus lands on the search input inside the Command; arrow + Enter select.
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0][0]).toEqual(['beta']);
   });
 });

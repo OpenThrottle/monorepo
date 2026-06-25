@@ -25,4 +25,10 @@ describe('editorHref', () => {
       editorHref({ absolutePath: '/abs/a.ts', line: 3, scheme: 'cursor' }),
     ).toBe('cursor://file/abs/a.ts:3');
   });
+
+  test('URL-encodes spaces and `#` in segments while preserving separators', () => {
+    expect(editorHref({ absolutePath: '/abs/my dir/a#b.ts', line: 7 })).toBe(
+      'vscode://file/abs/my%20dir/a%23b.ts:7',
+    );
+  });
 });

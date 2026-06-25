@@ -39,29 +39,33 @@ export function useJobTaskRunMetrics(
       return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
 
     void (async () => {
       try {
-        const result = await fetchJobTaskRunMetrics(apiBaseUrl, jobId);
-        if (!cancelled) {
+        const result = await fetchJobTaskRunMetrics(
+          apiBaseUrl,
+          jobId,
+          controller.signal,
+        );
+        if (!controller.signal.aborted) {
           setJob(result);
         }
       } catch (e) {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setError(e instanceof Error ? e : new Error(String(e)));
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [apiBaseUrl, jobId]);
 

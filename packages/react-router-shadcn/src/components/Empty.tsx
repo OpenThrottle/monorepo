@@ -50,7 +50,7 @@ function EmptyMedia({
 }: React.ComponentProps<'div'> & VariantProps<typeof emptyMediaVariants>) {
   return (
     <div
-      className={cn(emptyMediaVariants({ className, variant }))}
+      className={cn(emptyMediaVariants({ variant }), className)}
       data-slot="empty-icon"
       data-variant={variant}
       {...props}

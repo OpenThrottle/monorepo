@@ -15,7 +15,10 @@ const mockTurnSubmit = vi.fn();
 const mockHistorySubmit = vi.fn();
 
 let turnFetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
-let turnFetcherData: ChatTurnResult | undefined;
+// The real fetcher exposes `data` as untyped JSON; the hook re-validates it via
+// parseChatTurnResult. Allowing a partial record here lets tests exercise the
+// parser's tolerance of minimal/extra payloads without a type assertion.
+let turnFetcherData: ChatTurnResult | Record<string, unknown> | undefined;
 let historyFetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
 let historyFetcherData: LoadAgentConversationMessagesResult | undefined;
 
@@ -332,6 +335,105 @@ describe('useChatTurnFetcher', () => {
     expect(
       sessionStorage.getItem('openthrottle.chat.conversationId'),
     ).toBeNull();
+  });
+
+  test('should parse a minimal turn payload carrying only assistantText and errorMessage', async () => {
+    const { result, rerender } = renderHook(() => useChatTurnFetcher({}));
+
+    act(() => {
+      result.current.sendUserMessage('Hello');
+    });
+
+    turnFetcherState = 'submitting';
+    rerender();
+
+    // Server returns only the two load-bearing keys; the additive metadata
+    // fields are absent. parseChatTurnResult must still accept this and default
+    // the rest, rather than silently dropping the reply.
+    turnFetcherData = {
+      assistantText: 'Minimal reply',
+      errorMessage: null,
+    };
+    turnFetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.messages).toHaveLength(2);
+    });
+
+    const lastTurn = result.current.lastTurn;
+    expect(result.current.messages[1]?.role).toBe('assistant');
+    expect(result.current.messages[1]?.body).toBe('Minimal reply');
+    expect(lastTurn?.assistantText).toBe('Minimal reply');
+    expect(lastTurn?.conversationId).toBeNull();
+    // Absent boolean field defaults to the safe read-only value.
+    expect(lastTurn?.readOnlyAgentsChat).toBe(true);
+    expect(lastTurn?.routingConfidence).toBeNull();
+  });
+
+  test('should re-fetch history for a fresh stored id after startNewChat clears the latch', async () => {
+    sessionStorage.setItem(
+      'openthrottle.chat.conversationId',
+      'first-server-id',
+    );
+
+    const { result, rerender } = renderHook(() =>
+      useChatTurnFetcher({ persist: true }),
+    );
+
+    // One-shot history loader fires once for the initial stored id.
+    expect(mockHistorySubmit).toHaveBeenCalledTimes(1);
+    expect(mockHistorySubmit).toHaveBeenLastCalledWith(
+      expect.objectContaining({ conversationId: 'first-server-id' }),
+      expect.any(Object),
+    );
+
+    // History load errors out: error surfaces and stored id is cleared.
+    historyFetcherData = {
+      conversationId: null,
+      errorMessage: 'Conversation not found',
+      messages: [],
+    };
+    historyFetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.errorMessage).toBe('Conversation not found');
+    });
+    expect(result.current.conversationId).toBeNull();
+
+    // While the latch is still set, a fresh stored id must NOT trigger a reload.
+    sessionStorage.setItem(
+      'openthrottle.chat.conversationId',
+      'second-server-id',
+    );
+    rerender();
+    expect(mockHistorySubmit).toHaveBeenCalledTimes(1);
+
+    // startNewChat unlatches historyRequestedRef; the effect can re-fetch.
+    historyFetcherData = undefined;
+    act(() => {
+      result.current.startNewChat();
+    });
+
+    // startNewChat also clears sessionStorage, so reinstate a stored id to
+    // represent a later persisted send minting a fresh server conversation.
+    sessionStorage.setItem(
+      'openthrottle.chat.conversationId',
+      'third-server-id',
+    );
+    rerender();
+
+    await waitFor(() => {
+      expect(mockHistorySubmit).toHaveBeenCalledTimes(2);
+    });
+    expect(mockHistorySubmit).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        conversationId: 'third-server-id',
+        intent: LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
+      }),
+      expect.any(Object),
+    );
   });
 
   test('should mint a new server conversation on next send after startNewChat', async () => {

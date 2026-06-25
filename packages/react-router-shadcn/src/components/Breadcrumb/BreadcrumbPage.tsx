@@ -26,7 +26,6 @@ export const BreadcrumbPage = React.forwardRef<
       aria-current="page"
       className={cn('text-foreground font-normal', className)}
       ref={ref}
-      role="link"
       {...rest}
     />
   );

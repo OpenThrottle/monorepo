@@ -73,4 +73,102 @@ describe('buildDocsManifest', () => {
       }),
     ).toThrow(/missing a required string "title"/);
   });
+
+  test('throws on a duplicate route path (frontmatter slug shadows index root)', () => {
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          // A second file pinned to the same slug as another page collides.
+          './docs-content/docs/alias.md': md(
+            'title: Alias\nslug: getting-started',
+            '# Alias',
+          ),
+
+          './docs-content/docs/getting-started.md': md(
+            'title: Getting Started',
+            '# Getting Started',
+          ),
+        },
+      }),
+    ).toThrow(/duplicate route path "\/docs\/getting-started"/);
+  });
+
+  test('throws on two faq entries sharing a slug', () => {
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          './docs-content/faq/a.md': md('title: First\nslug: billing', 'A.'),
+          './docs-content/faq/b.md': md('title: Second\nslug: billing', 'B.'),
+        },
+      }),
+    ).toThrow(/duplicate route path "\/faq\/billing"/);
+  });
+
+  test('throws when a content file is not under a docs/ or faq/ section', () => {
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          './docs-content/blog/post.md': md('title: A Post', '# Post'),
+        },
+      }),
+    ).toThrow(/is not under a "docs\/" or "faq\/" section/);
+  });
+
+  test('treats a non-string frontmatter title as a missing title (number)', () => {
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          './docs-content/docs/numeric.md': md('title: 42', '# Body'),
+        },
+      }),
+    ).toThrow(/missing a required string "title"/);
+  });
+
+  test('treats a non-object YAML frontmatter root as empty data, so title throws', () => {
+    // A scalar root (just a string) parses to a non-object, hitting the
+    // `{ ...parsed }` guard in parseFrontmatter and yielding empty data — so the
+    // missing-title throw fires rather than a crash.
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          './docs-content/docs/scalar.md':
+            '---\njust a scalar\n---\n\n# Body\n',
+        },
+      }),
+    ).toThrow(/missing a required string "title"/);
+  });
+
+  test('treats a YAML list frontmatter root as having no title, so title throws', () => {
+    // An array spreads to index-keyed data ({ 0: 'one', ... }) with no `title`,
+    // so the missing-title throw fires.
+    expect(() =>
+      buildDocsManifest({
+        modules: {
+          './docs-content/docs/list.md': '---\n- one\n- two\n---\n\n# Body\n',
+        },
+      }),
+    ).toThrow(/missing a required string "title"/);
+  });
+
+  test('keeps draft FAQ entries out by default, in when includeDrafts is set', () => {
+    const modules: DocsContentModules = {
+      './docs-content/faq/published.md': md(
+        'title: Published FAQ\ngroup: Billing',
+        'Answer.',
+      ),
+      './docs-content/faq/wip.md': md(
+        'title: Draft FAQ\ngroup: Billing\ndraft: true',
+        'Hidden.',
+      ),
+    };
+
+    expect(
+      buildDocsManifest({ modules }).some((e) => e.title === 'Draft FAQ'),
+    ).toBe(false);
+    expect(
+      buildDocsManifest({ includeDrafts: true, modules }).some(
+        (e) => e.title === 'Draft FAQ',
+      ),
+    ).toBe(true);
+  });
 });

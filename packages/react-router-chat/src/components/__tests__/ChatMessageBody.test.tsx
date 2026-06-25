@@ -63,4 +63,36 @@ describe('ChatMessageBody Component', () => {
       expect(component.getByText('(No content)')).toBeInTheDocument();
     });
   });
+
+  // XSS / HTML-injection regression. Assistant/system bodies are untrusted
+  // (server LLM output + persisted history). The body MUST be rendered as
+  // literal text, never injected as live DOM. This guards the current escaped
+  // renderer and will fail loudly if a future real Markdown renderer enables
+  // raw HTML without sanitization.
+  describe('when an untrusted body contains HTML injection payloads', () => {
+    const SCRIPT_PAYLOAD = '<script>window.__xss = true;</script>';
+    const IMG_PAYLOAD = '<img src=x onerror="window.__xss = true">';
+
+    for (const role of ['assistant', 'system'] as const) {
+      describe(`role ${role}`, () => {
+        test('should render a <script> payload as literal text, not a live element', () => {
+          component = renderBody({ body: SCRIPT_PAYLOAD, role });
+
+          expect(component.getByText(SCRIPT_PAYLOAD)).toBeInTheDocument();
+          expect(
+            component.container.querySelector('script'),
+          ).not.toBeInTheDocument();
+        });
+
+        test('should render an <img onerror> payload as literal text, not a live element', () => {
+          component = renderBody({ body: IMG_PAYLOAD, role });
+
+          expect(component.getByText(IMG_PAYLOAD)).toBeInTheDocument();
+          expect(
+            component.container.querySelector('img'),
+          ).not.toBeInTheDocument();
+        });
+      });
+    }
+  });
 });

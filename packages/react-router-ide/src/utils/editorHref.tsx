@@ -21,5 +21,13 @@ export const editorHref = (options: EditorHrefOptions): string => {
   const columnSuffix =
     line === undefined || column === undefined ? '' : `:${column}`;
 
-  return `${scheme}://file${absolutePath}${lineSuffix}${columnSuffix}`;
+  // Encode each path segment so URL-significant characters (spaces, `#`, `?`,
+  // …) in legal filenames don't truncate or corrupt the deep link; preserve the
+  // `/` separators by encoding segment-by-segment.
+  const encodedPath = absolutePath
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+
+  return `${scheme}://file${encodedPath}${lineSuffix}${columnSuffix}`;
 };

@@ -21,5 +21,14 @@ export const githubBlobHref = (options: GithubBlobHrefOptions): string => {
   const ref = sha != null && sha !== '' ? sha : 'main';
   const anchor = line === undefined ? '' : `#L${line}`;
 
-  return `https://github.com/${repo}/blob/${ref}/${path}${anchor}`;
+  // Encode each path segment so URL-significant characters (spaces, `#`, `?`,
+  // …) in legal filenames don't truncate or corrupt the link — a `#` in a
+  // filename would otherwise silently anchor the URL. Preserve the `/`
+  // separators by encoding segment-by-segment.
+  const encodedPath = path
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+
+  return `https://github.com/${repo}/blob/${ref}/${encodedPath}${anchor}`;
 };

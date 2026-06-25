@@ -1,6 +1,3 @@
-// Config
-export * from './config/badgeVariants';
-
 // Components
 export * from './components/Accordion/index';
 export * from './components/AlertDialog/index';

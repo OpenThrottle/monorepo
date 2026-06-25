@@ -1,5 +1,5 @@
 import { Button, Input, Label, cn } from '@openthrottle/react-router-shadcn';
-import { type ReactElement, useId } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 
 import { type DisplayUnit, type FloorElement } from '../types';
 import { formatDimensions } from '../utils/units';
@@ -31,6 +31,54 @@ export interface PropertyPanelProps {
   readonly onChange: (patch: ElementEditPatch) => void;
   /** Delete the selected element. */
   readonly onDelete: () => void;
+}
+
+interface NumberFieldProps {
+  readonly id: string;
+  /** Round committed values to a whole number (e.g. seat counts). */
+  readonly integer?: boolean;
+  readonly label: string;
+  readonly min?: number;
+  /** Commit a parsed numeric value (empty/invalid input is never committed). */
+  readonly onCommit: (value: number) => void;
+  /** Canonical numeric value reflected when the field is not being edited. */
+  readonly value: number;
+}
+
+/**
+ * @description Number input that holds a local string draft while focused so the
+ * field can be cleared and retyped freely. The draft is committed on every valid
+ * parse and reconciled to the canonical `value` on blur; empty/intermediate input
+ * is allowed transiently and never committed.
+ */
+function NumberField(props: NumberFieldProps): ReactElement {
+  // Setup
+  const { id, integer, label, min, onCommit, value } = props;
+
+  // Hooks
+  const [draft, setDraft] = useState<string | null>(null);
+
+  // Markup
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        min={min}
+        onBlur={() => setDraft(null)}
+        onChange={(event) => {
+          const raw = event.target.value;
+          setDraft(raw);
+          const parsed = Number.parseFloat(raw);
+          if (Number.isNaN(parsed)) return;
+          const rounded = integer === true ? Math.round(parsed) : parsed;
+          onCommit(min === undefined ? rounded : Math.max(min, rounded));
+        }}
+        type="number"
+        value={draft ?? String(value)}
+      />
+    </div>
+  );
 }
 
 /**
@@ -84,33 +132,24 @@ export function PropertyPanel(props: PropertyPanelProps): ReactElement {
       </div>
 
       {isTable ? (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${fieldId}-seats`}>Seats</Label>
-          <Input
-            id={`${fieldId}-seats`}
-            min={0}
-            onChange={(event) => {
-              const next = Number.parseInt(event.target.value, 10);
-              if (!Number.isNaN(next)) onChange({ seats: Math.max(0, next) });
-            }}
-            type="number"
-            value={element.seats}
-          />
-        </div>
+        <NumberField
+          id={`${fieldId}-seats`}
+          integer={true}
+          key={`${element.id}-seats`}
+          label="Seats"
+          min={0}
+          onCommit={(value) => onChange({ seats: value })}
+          value={element.seats}
+        />
       ) : null}
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${fieldId}-rotation`}>Rotation (°)</Label>
-        <Input
-          id={`${fieldId}-rotation`}
-          onChange={(event) => {
-            const next = Number.parseFloat(event.target.value);
-            if (!Number.isNaN(next)) onChange({ rotation: next });
-          }}
-          type="number"
-          value={Math.round(element.rotation)}
-        />
-      </div>
+      <NumberField
+        id={`${fieldId}-rotation`}
+        key={`${element.id}-rotation`}
+        label="Rotation (°)"
+        onCommit={(value) => onChange({ rotation: value })}
+        value={Math.round(element.rotation)}
+      />
 
       <div className="flex flex-col gap-1">
         <span className="text-muted-foreground text-xs font-medium">

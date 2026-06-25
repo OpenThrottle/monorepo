@@ -21,6 +21,9 @@ const modules: DocsContentModules = import.meta.glob<string>(
 const manifest = buildDocsManifest({ modules });
 const faqEntries = manifest.filter((entry) => entry.section === 'faq');
 
+const md = (frontmatter: string, body: string): string =>
+  `---\n${frontmatter}\n---\n\n${body}\n`;
+
 describe('docs rendering pipeline (fixture)', () => {
   test('the fixture loads into a manifest', () => {
     expect(manifest.length).toBeGreaterThanOrEqual(5);
@@ -77,5 +80,50 @@ describe('docs rendering pipeline (fixture)', () => {
     await user.click(question);
 
     expect(component.getByText(/Billing is monthly/i)).toBeInTheDocument();
+  });
+
+  test('FaqView groups draft entries by group when drafts are included', () => {
+    // includeDrafts surfaces the draft FAQ entry, which must flow through the
+    // FaqView grouping path (grouped under its frontmatter `group`).
+    const draftModules: DocsContentModules = {
+      './docs-content/faq/secret.md': md(
+        'title: A secret question?\ngroup: Hidden\ndraft: true',
+        'A secret answer.',
+      ),
+    };
+
+    const draftManifest = buildDocsManifest({
+      includeDrafts: true,
+      modules: draftModules,
+    });
+    const draftFaq = draftManifest.filter((entry) => entry.section === 'faq');
+
+    const component = render(<FaqView entries={draftFaq} />);
+
+    expect(component.getByText('Hidden')).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: 'A secret question?' }),
+    ).toBeInTheDocument();
+  });
+
+  // Regression guard for the docs-layer security boundary: raw HTML embedded in
+  // a doc's Markdown body must never reach the rendered output as live markup
+  // (DocPageView delegates to MarkdownRenderer, which uses `format: 'md'` with no
+  // rehype-raw). If this fails, an XSS sink has been opened at the docs layer.
+  test('DocPageView never emits raw HTML from source as live markup', () => {
+    const xssEntry = buildDocsManifest({
+      modules: {
+        './docs-content/docs/xss.md': md(
+          'title: XSS',
+          'Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.',
+        ),
+      },
+    })[0];
+
+    const html = renderToStaticMarkup(<DocPageView entry={xssEntry} />);
+
+    expect(html).not.toContain('<script');
+    expect(html).not.toContain('onerror');
+    expect(html).not.toContain('<img');
   });
 });

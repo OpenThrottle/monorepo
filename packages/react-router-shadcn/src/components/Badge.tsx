@@ -15,6 +15,13 @@ const badgeVariants = cva(
       variant: 'default',
     },
     variants: {
+      // Intentional fixed-palette accent colors. Unlike `variant` (which uses
+      // semantic theme tokens), these `color` options are a deliberate, stable
+      // set of named hues for categorical/status tagging (e.g. labels, chips)
+      // and are NOT meant to follow theme/dark-mode token overrides. `accent`
+      // and `default` are the only theme-aware entries here; the rest map to
+      // raw Tailwind palette colors on purpose. Treat this list as a public,
+      // versioned contract — do not silently remap to semantic tokens.
       color: {
         accent: `border-accent/50 bg-accent/20 hover:bg-accent/50`,
         amber: `border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/50`,
@@ -39,12 +46,12 @@ const badgeVariants = cva(
         xs: 'text-xs px-1.5 py-0.5',
       },
       variant: {
-        default: `--bg-primary --text-primary-foreground [a&]:hover:--bg-primary/90`,
-        destructive: `--bg-destructive --text-white focus-visible:ring-destructive/20 dark:--bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:--bg-destructive/90`,
-        ghost: `[a&]:hover:--bg-accent [a&]:hover:text-accent-foreground`,
+        default: `bg-primary text-primary-foreground [a&]:hover:bg-primary/90`,
+        destructive: `bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90`,
+        ghost: `[a&]:hover:bg-accent [a&]:hover:text-accent-foreground`,
         link: `text-primary underline-offset-4 [a&]:hover:underline`,
-        outline: `border-border --text-foreground [a&]:hover:--bg-accent [a&]:hover:text-accent-foreground`,
-        secondary: `--bg-secondary --text-secondary-foreground [a&]:hover:--bg-secondary/90`,
+        outline: `border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground`,
+        secondary: `bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90`,
       },
     },
   },

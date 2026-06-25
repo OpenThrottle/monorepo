@@ -93,6 +93,20 @@ describe('Button', () => {
     expect(button).toHaveClass('custom-class');
   });
 
+  it('should let a conflicting className override the variant utility', () => {
+    // Regression: cn()/tailwind-merge must resolve a conflicting background
+    // utility in favour of the caller's className, dropping the variant's
+    // own bg-primary. Guards against cva-placement/merge-order regressions.
+    const { container } = render(
+      <Button className="bg-red-500" variant="default">
+        Override
+      </Button>,
+    );
+    const button = container.querySelector('button');
+    expect(button).toHaveClass('bg-red-500');
+    expect(button).not.toHaveClass('bg-primary');
+  });
+
   it('should forward ref', () => {
     const ref = React.createRef<HTMLButtonElement>();
     render(<Button ref={ref}>Ref</Button>);
