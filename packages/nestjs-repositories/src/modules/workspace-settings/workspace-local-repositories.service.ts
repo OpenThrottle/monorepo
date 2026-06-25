@@ -10,6 +10,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { QueryFailedError, Repository } from 'typeorm';
+import {
+  type ListPaginationInput,
+  resolveListPagination,
+} from '../../common/list-pagination';
 import { ProjectsService } from '../projects/projects.service';
 import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 
@@ -53,11 +57,18 @@ export class WorkspaceLocalRepositoriesService {
   }
 
   /**
-   * @description Lists repositories for a user, newest first.
+   * @description Lists repositories for a user, newest first. Accepts an
+   * optional clamped `{ limit, offset }` so the result set stays bounded.
    */
-  async listByUserId(userId: string): Promise<WorkspaceLocalRepository[]> {
+  async listByUserId(
+    userId: string,
+    pagination?: ListPaginationInput,
+  ): Promise<WorkspaceLocalRepository[]> {
+    const { skip, take } = resolveListPagination(pagination);
     return this.repository.find({
       order: { createdAt: 'DESC' },
+      skip,
+      take,
       where: { userId },
     });
   }

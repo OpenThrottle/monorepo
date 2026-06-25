@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { DailyStat } from './daily-stat.entity';
 
 @Injectable()
@@ -22,7 +23,10 @@ export class DailyStatsService {
   }
 
   /**
-   * @description Upserts one row for the given date. Inserts or updates by unique date.
+   * @description Upserts one row for the given date. Atomic single-statement
+   * insert-or-update keyed on the unique `date` column, so concurrent writers
+   * merge instead of racing a read-then-write (which would surface a 23505
+   * unique-violation to the loser).
    */
   async upsertForDate(
     date: string,
@@ -38,25 +42,7 @@ export class DailyStatsService {
     },
   ): Promise<DailyStat> {
     const repo = this.getRepository();
-    const existing = await repo.findOne({
-      where: {
-        date: new Date(date),
-      },
-    });
-
-    if (existing) {
-      existing.plansByStatus = { ...data.plansByStatus };
-      existing.plansCompleted = data.plansCompleted;
-      existing.plansCreated = data.plansCreated;
-      existing.plansUpdated = data.plansUpdated;
-      existing.tasksByStatus = { ...data.tasksByStatus };
-      existing.tasksCompleted = data.tasksCompleted;
-      existing.tasksCreated = data.tasksCreated;
-      existing.tasksUpdated = data.tasksUpdated;
-      return repo.save(existing);
-    }
-
-    const row = repo.create({
+    const rowInput = {
       date,
       plansByStatus: data.plansByStatus,
       plansCompleted: data.plansCompleted,
@@ -66,8 +52,18 @@ export class DailyStatsService {
       tasksCompleted: data.tasksCompleted,
       tasksCreated: data.tasksCreated,
       tasksUpdated: data.tasksUpdated,
-    });
+    };
 
-    return repo.save(row);
+    await repo.upsert(rowInput as QueryDeepPartialEntity<DailyStat>, ['date']);
+
+    const row = repo.create(rowInput);
+
+    return (
+      (await repo.findOne({
+        where: {
+          date: new Date(date),
+        },
+      })) ?? row
+    );
   }
 }
