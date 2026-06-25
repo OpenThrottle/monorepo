@@ -82,12 +82,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
   const manifest = `/manifest.json`;
 
-  const isProduction = process.env.NODE_ENV === 'production';
-  const source = isProduction ? `https://*` : `http://*`;
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
-  const _valueCSP = isProduction
-    ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
-    : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
 
   // Handlers
 
@@ -102,7 +97,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
-        {/* <meta content={_valueCSP} httpEquiv="Content-Security-Policy" /> */}
+        {/*
+          Content-Security-Policy is delivered as an HTTP response header via
+          `vercel.json` (preferred over a <meta> tag on Vercel). Keep it there.
+        */}
         <Meta />
 
         <link href={APP_URL} rel="canonical" />
