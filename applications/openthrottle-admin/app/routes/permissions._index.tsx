@@ -29,7 +29,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   try {
     const data = await executeGraphqlWithAuth(request, GetPermissionsDocument);
-    console.log('data', data);
 
     return { permissions: data.permissions };
   } catch (error) {
