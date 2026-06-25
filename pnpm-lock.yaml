@@ -2097,9 +2097,6 @@ importers:
 
   applications/openthrottle-email:
     dependencies:
-      '@faker-js/faker':
-        specifier: 'catalog:'
-        version: 10.4.0
       '@graphql-typed-document-node/core':
         specifier: 'catalog:'
         version: 3.2.0(graphql@16.14.0)
@@ -2158,6 +2155,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@faker-js/faker':
+        specifier: 'catalog:'
+        version: 10.4.0
       '@openthrottle/react-router-testing':
         specifier: workspace:^
         version: link:../../packages/react-router-testing

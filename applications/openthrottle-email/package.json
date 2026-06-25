@@ -8,7 +8,6 @@
     "url": "https://openthrottle-email.com"
   },
   "dependencies": {
-    "@faker-js/faker": "catalog:",
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",
@@ -30,6 +29,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@faker-js/faker": "catalog:",
     "@openthrottle/react-router-testing": "workspace:^"
   },
   "engines": {
