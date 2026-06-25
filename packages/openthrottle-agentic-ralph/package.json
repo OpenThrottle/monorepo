@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^"

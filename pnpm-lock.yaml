@@ -1692,7 +1692,7 @@ importers:
         version: 22.7.4(@babel/traverse@7.29.0)(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21))(@typescript-eslint/parser@8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3))(eslint-config-prettier@10.1.8(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))(typescript@6.0.3)
       '@nx/gcs-cache':
         specifier: 'catalog:'
-        version: 5.0.4(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))
+        version: 5.0.4(debug@4.4.3)(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))
       '@nx/js':
         specifier: 'catalog:'
         version: 22.7.4(@babel/traverse@7.29.0)(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21))(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))
@@ -1975,6 +1975,9 @@ importers:
 
   applications/openthrottle-admin:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -1985,6 +1988,9 @@ importers:
 
   applications/openthrottle-developer:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../../packages/openthrottle-agentic-utils
@@ -2094,6 +2100,9 @@ importers:
 
   applications/openthrottle-email:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -2266,6 +2275,9 @@ importers:
 
   applications/openthrottle-website:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
@@ -2756,6 +2768,9 @@ importers:
 
   packages/openthrottle-agentic-ralph:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
@@ -2787,7 +2802,11 @@ importers:
 
   packages/openthrottle-agentic-workflow: {}
 
-  packages/openthrottle-developer-codegen: {}
+  packages/openthrottle-developer-codegen:
+    dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
 
   packages/openthrottle-ide:
     dependencies:
@@ -2815,6 +2834,9 @@ importers:
       '@nestjs/core':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
@@ -2842,6 +2864,9 @@ importers:
 
   packages/openthrottle-workflows:
     dependencies:
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
@@ -3204,6 +3229,9 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: 'catalog:'
         version: 3.2.0(graphql@16.14.0)
+      '@openthrottle/graphql-codegen':
+        specifier: workspace:^
+        version: link:../graphql-codegen
       '@vscode/vsce':
         specifier: 'catalog:'
         version: 3.9.1
@@ -24948,11 +24976,11 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/gcs-cache@5.0.4(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))':
+  '@nx/gcs-cache@5.0.4(debug@4.4.3)(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))':
     dependencies:
       '@google-cloud/storage': 7.19.0(encoding@0.1.13)
       '@nx/devkit': 22.6.5(nx@22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))
-      '@nx/key': 5.0.4
+      '@nx/key': 5.0.4(debug@4.4.3)
       nx: 22.7.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@6.0.3))(@swc/core@1.15.33(@swc/helpers@0.5.21))
       semver: 7.5.4
       tar-stream: 3.2.0
@@ -25059,11 +25087,11 @@ snapshots:
   '@nx/key-win32-x64-msvc@5.0.4':
     optional: true
 
-  '@nx/key@5.0.4':
+  '@nx/key@5.0.4(debug@4.4.3)':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.12
-      axios: 1.15.0
-      axios-retry: 4.5.0(axios@1.15.0)
+      axios: 1.15.0(debug@4.4.3)
+      axios-retry: 4.5.0(axios@1.15.0(debug@4.4.3))
       chalk: 4.1.2
       enquirer: 2.4.1
       ora: 5.4.1
@@ -29927,12 +29955,12 @@ snapshots:
 
   axe-core@4.11.4: {}
 
-  axios-retry@4.5.0(axios@1.15.0):
+  axios-retry@4.5.0(axios@1.15.0(debug@4.4.3)):
     dependencies:
-      axios: 1.15.0
+      axios: 1.15.0(debug@4.4.3)
       is-retry-allowed: 2.2.0
 
-  axios@1.15.0:
+  axios@1.15.0(debug@4.4.3):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.5

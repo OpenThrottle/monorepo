@@ -8,6 +8,7 @@
     "url": "https://openthrottle-email.com"
   },
   "dependencies": {
+    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^"
   },
   "devDependencies": {
