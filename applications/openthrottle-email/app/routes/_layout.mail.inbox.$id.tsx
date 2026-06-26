@@ -9,6 +9,11 @@ import type { Route } from '@/app/routes/+types/_layout.mail.inbox.$id';
 export const loader = async ({ params }: Route.LoaderArgs) => {
   const id = params.id;
   const message = id != null ? getMockMessageById(id) : undefined;
+
+  if (id != null && message == null) {
+    throw new Response('Not Found', { status: 404 });
+  }
+
   return { message };
 };
 
