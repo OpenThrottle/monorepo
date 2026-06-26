@@ -15,6 +15,9 @@ import type { Route } from '@/app/routes/+types/auth.logout';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
+/** Clicks required on the logout screen before the auth form is revealed. */
+const REVEAL_CLICK_THRESHOLD = 5;
+
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Logout',
   links: (_match) => [{ children: 'Auth', to: '/auth' }],
@@ -50,7 +53,14 @@ export default function Component(
   const [count, setCount] = React.useState(0);
 
   // Setup
-  const isFormEnabled = count >= 5;
+  /**
+   * Intentional reveal gate: the auth form on the logout screen stays hidden
+   * until the screen has been clicked {@link REVEAL_CLICK_THRESHOLD} times. This
+   * is a deliberate low-friction guard (not dead code) so the post-logout screen
+   * does not double as an always-on login surface. The screen-level `onClick`
+   * increments the counter.
+   */
+  const isFormEnabled = count >= REVEAL_CLICK_THRESHOLD;
 
   // Handlers
   const onIncrementCount = () => {
@@ -75,9 +85,5 @@ export default function Component(
     </GlobalScreen>
   );
 }
-
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
 
 export const ErrorBoundary = GlobalErrorBoundary;

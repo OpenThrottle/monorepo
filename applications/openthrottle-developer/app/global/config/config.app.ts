@@ -3,10 +3,12 @@ export const PROTECTED_PATH_PREFIXES = [
   '/dashboard',
   '/generators',
   '/notes',
+  '/personas',
   '/plans',
   '/projects',
   '/pull-requests',
   '/queues',
   '/search',
   '/settings',
+  '/skills',
 ];

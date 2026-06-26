@@ -70,31 +70,29 @@ export const loader = async (args: Route.LoaderArgs) => {
   const q = searchParams.get('q')?.trim() ?? null;
   const titleSubstring = q && q.length > 0 ? q : null;
 
-  let assigneeOptions: string[] = [];
+  const [result, statusCountsResult, assigneeOptionsResult] = await Promise.all(
+    [
+      executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
+        input: {
+          assignees: assignees.length > 0 ? assignees : null,
+          limit,
+          offset,
+          statuses: statuses.length > 0 ? statuses : null,
+          titleSubstring,
+        },
+      }),
+      executeGraphqlWithAuth(args.request, GetPlanCountsByStatusDocument).catch(
+        () => null,
+      ),
+      executeGraphqlWithAuth(
+        args.request,
+        GetPlanAssigneeOptionsDocument,
+      ).catch(() => null),
+    ],
+  );
 
-  const assigneeOptionsResult = await executeGraphqlWithAuth(
-    args.request,
-    GetPlanAssigneeOptionsDocument,
-  ).catch(() => null);
-
-  if (assigneeOptionsResult != null) {
-    assigneeOptions = assigneeOptionsResult.listDistinctAuthorsAndAssignees;
-  }
-
-  const [result, statusCountsResult] = await Promise.all([
-    executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
-      input: {
-        assignees: assignees.length > 0 ? assignees : null,
-        limit,
-        offset,
-        statuses: statuses.length > 0 ? statuses : null,
-        titleSubstring,
-      },
-    }),
-    executeGraphqlWithAuth(args.request, GetPlanCountsByStatusDocument).catch(
-      () => null,
-    ),
-  ]);
+  const assigneeOptions: string[] =
+    assigneeOptionsResult?.listDistinctAuthorsAndAssignees ?? [];
 
   const statusCounts = statusCountsResult?.planCountsByStatus ?? [];
 
