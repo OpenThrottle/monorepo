@@ -99,18 +99,25 @@ export default function Component(
     seedMessages: EMPTY_SEED,
   });
 
-  // Streamed assistant bodies overlay the ordered placeholders by message id.
+  // Streamed assistant turns overlay the ordered placeholders by message id,
+  // carrying both the flat body (fallback) and the structured `events`
+  // timeline (thinking / tool calls / output) so the thread renders the rich,
+  // collapsible turn rather than the flat text.
   const streamedById = useMemo(
-    () => new Map(stream.messages.map((message) => [message.id, message.body])),
+    () => new Map(stream.messages.map((message) => [message.id, message])),
     [stream.messages],
   );
 
   const threadMessages = useMemo(() => {
     return messages.map((message) => {
       const streamed = streamedById.get(message.id);
-      const isUndefined = streamed === undefined;
+      if (streamed === undefined) {
+        return message;
+      }
 
-      return isUndefined ? message : { ...message, body: streamed };
+      return streamed.events !== undefined
+        ? { ...message, body: streamed.body, events: streamed.events }
+        : { ...message, body: streamed.body };
     });
   }, [messages, streamedById]);
 

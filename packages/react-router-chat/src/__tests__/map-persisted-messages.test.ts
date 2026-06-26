@@ -56,4 +56,53 @@ describe('mapPersistedAgentConversationMessages', () => {
 
     expect(messages).toHaveLength(0);
   });
+
+  test('hydrates structured events for an assistant turn with persisted tool metadata', () => {
+    const [message] = mapPersistedAgentConversationMessages([
+      baseMessage({
+        content: 'the final answer',
+        id: 'msg-rich',
+        role: 'assistant',
+        toolMetadataJson: JSON.stringify({
+          events: [
+            { delta: 'thinking hard', kind: 'thinking', metadata: null },
+            {
+              delta: '',
+              kind: 'tool_call',
+              metadata: { callId: 'c1', toolCall: { readToolCall: {} } },
+            },
+            {
+              delta: '',
+              kind: 'tool_result',
+              metadata: {
+                callId: 'c1',
+                toolCall: { readToolCall: { ok: true } },
+              },
+            },
+          ],
+        }),
+      }),
+    ]);
+
+    expect(message?.events).toBeDefined();
+    expect(message?.events?.some((e) => e.kind === 'thinking')).toBe(true);
+    expect(message?.events?.some((e) => e.kind === 'tool')).toBe(true);
+    // body still preserved as a trailing text segment + flat fallback
+    expect(message?.events?.some((e) => e.kind === 'text')).toBe(true);
+    expect(message?.body).toBe('the final answer');
+  });
+
+  test('omits events for a plain assistant turn (flat body fallback)', () => {
+    const [message] = mapPersistedAgentConversationMessages([
+      baseMessage({
+        content: 'just text',
+        id: 'msg-plain',
+        role: 'assistant',
+        toolMetadataJson: JSON.stringify({ tool: 'semantic_search' }),
+      }),
+    ]);
+
+    expect(message?.events).toBeUndefined();
+    expect(message?.body).toBe('just text');
+  });
 });
