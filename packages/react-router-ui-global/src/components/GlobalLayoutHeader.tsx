@@ -161,7 +161,7 @@ export const GlobalLayoutHeader = (
         title="OpenThrottle Assistant"
         triggerLabel="Chat"
         // variant="sheet"
-        variant="dialog"
+        // variant="dialog"
       />
 
       {searchField}

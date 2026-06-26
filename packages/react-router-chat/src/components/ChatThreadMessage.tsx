@@ -1,6 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { ChatMessageBody } from './ChatMessageBody';
+import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { formatChatTimestamp } from '../utils/index';
 import type { ChatMessage } from '../types';
 
@@ -22,6 +23,12 @@ const ChatThreadMessageComponent = (
   props: ChatThreadMessageProps,
 ): React.ReactElement => {
   const { message } = props;
+
+  // Setup
+  const hasTimeline =
+    message.role === 'assistant' &&
+    message.events !== undefined &&
+    message.events.length > 0;
 
   // 🔌 Short Circuit
 
@@ -63,7 +70,11 @@ const ChatThreadMessageComponent = (
             message.role === 'system',
         })}
       >
-        <ChatMessageBody body={message.body} role={message.role} />
+        {hasTimeline && message.events !== undefined ? (
+          <ChatTurnTimeline events={message.events} />
+        ) : (
+          <ChatMessageBody body={message.body} role={message.role} />
+        )}
         {message.footer != null && message.footer.trim() !== '' ? (
           <p className="text-muted-foreground border-border/60 mt-2 border-t pt-2 font-mono text-xs">
             {message.footer}

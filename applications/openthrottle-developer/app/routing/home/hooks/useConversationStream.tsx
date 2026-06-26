@@ -9,7 +9,18 @@
  * the seed version wins (dedup by id).
  */
 import * as React from 'react';
-import type { ChatMessage } from '@openthrottle/react-router-chat';
+import type {
+  ChatMessage,
+  ChatTurnEvent,
+} from '@openthrottle/react-router-chat';
+import {
+  appendTurnTextEvent,
+  applyTurnToolCall,
+  applyTurnToolResult,
+  failRunningTurnTools,
+  parseChunkMetadata,
+  toolLabelFromMetadataJson,
+} from '@openthrottle/react-router-chat';
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import type { ConversationStreamChunkAddedSubscription } from '~/__generated__/graphql';
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
@@ -19,8 +30,10 @@ type StreamChunk =
   ConversationStreamChunkAddedSubscription['conversationStreamChunkAdded'];
 
 export interface StreamState {
-  /** Accumulated assistant body keyed by messageId. */
+  /** Accumulated assistant body keyed by messageId (flat markdown fallback). */
   readonly bodies: ReadonlyMap<string, string>;
+  /** Structured, ordered turn events keyed by messageId. */
+  readonly events: ReadonlyMap<string, readonly ChatTurnEvent[]>;
   /** True while a stream is in flight (between the first delta and `done`). */
   readonly isStreaming: boolean;
   /** Seen `messageId:sortOrder` keys for dedupe. */
@@ -29,43 +42,10 @@ export interface StreamState {
 
 export const INITIAL_STREAM_STATE: StreamState = {
   bodies: new Map(),
+  events: new Map(),
   isStreaming: false,
   seen: new Set(),
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
-/**
- * Best-effort tool name from a tool_call chunk's metadataJson; falls back to 'tool'.
- */
-export function toolActivityLabel(
-  metadataJson: string | null | undefined,
-): string {
-  if (
-    metadataJson === null ||
-    metadataJson === undefined ||
-    metadataJson === ''
-  ) {
-    return 'tool';
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(metadataJson);
-    if (!isRecord(parsed) || !isRecord(parsed.toolCall)) {
-      return 'tool';
-    }
-
-    const name = Object.keys(parsed.toolCall).find(
-      (key) => key !== 'toolCallId' && key !== 'hookAdditionalContexts',
-    );
-
-    return name === undefined ? 'tool' : name.replace(/ToolCall$/, '');
-  } catch {
-    return 'tool';
-  }
-}
 
 /** Pure reducer: fold one streamed chunk into the accumulation state. */
 export function reduceStreamChunk(
@@ -81,29 +61,89 @@ export function reduceStreamChunk(
   seen.add(dedupeKey);
 
   const bodies = new Map(state.bodies);
+  const events = new Map(state.events);
   const current = bodies.get(chunk.messageId) ?? '';
+  const currentEvents = events.get(chunk.messageId) ?? [];
 
   if (chunk.done) {
     if (chunk.error) {
       bodies.set(chunk.messageId, `${current}\n\n_Error: ${chunk.error}_`);
     }
 
-    return { bodies, isStreaming: false, seen };
+    // The terminal chunk carries usage/result metadata; record it as a usage
+    // event and resolve any tool still mid-flight to failed when the turn errored.
+    const meta = parseChunkMetadata(chunk.metadataJson);
+    const withUsage: readonly ChatTurnEvent[] = [
+      ...currentEvents,
+      {
+        error: chunk.error ?? null,
+        kind: 'usage',
+        result: meta.usageResult,
+        sortOrder: chunk.sortOrder,
+        usageJson: meta.usageJson,
+      },
+    ];
+    events.set(
+      chunk.messageId,
+      chunk.error ? failRunningTurnTools(withUsage, chunk.error) : withUsage,
+    );
+
+    return { bodies, events, isStreaming: false, seen };
   }
 
-  // Assistant text accumulates into the body; tool calls show a dim one-line
-  // marker in arrival order. thinking/tool_result/usage/session stream for
-  // liveness but are not rendered inline in v1 (richer rendering is a follow-up).
+  // Assistant text accumulates into the flat body; tool calls show a dim
+  // one-line marker in arrival order (unchanged back-compat rendering). In
+  // parallel, every non-terminal kind folds into the structured `events` list.
   if (chunk.kind === 'text') {
     bodies.set(chunk.messageId, current + chunk.delta);
+    events.set(
+      chunk.messageId,
+      appendTurnTextEvent(currentEvents, 'text', chunk.delta, chunk.sortOrder),
+    );
+  } else if (chunk.kind === 'thinking') {
+    events.set(
+      chunk.messageId,
+      appendTurnTextEvent(
+        currentEvents,
+        'thinking',
+        chunk.delta,
+        chunk.sortOrder,
+      ),
+    );
   } else if (chunk.kind === 'tool_call') {
     bodies.set(
       chunk.messageId,
-      `${current}\n\n_🔧 ${toolActivityLabel(chunk.metadataJson)}_`,
+      `${current}\n\n_🔧 ${toolLabelFromMetadataJson(chunk.metadataJson)}_`,
     );
+    events.set(
+      chunk.messageId,
+      applyTurnToolCall(
+        currentEvents,
+        parseChunkMetadata(chunk.metadataJson),
+        chunk.sortOrder,
+      ),
+    );
+  } else if (chunk.kind === 'tool_result') {
+    events.set(
+      chunk.messageId,
+      applyTurnToolResult(
+        currentEvents,
+        parseChunkMetadata(chunk.metadataJson),
+        chunk.sortOrder,
+      ),
+    );
+  } else if (chunk.kind === 'session') {
+    events.set(chunk.messageId, [
+      ...currentEvents,
+      {
+        kind: 'session',
+        sessionId: parseChunkMetadata(chunk.metadataJson).sessionId,
+        sortOrder: chunk.sortOrder,
+      },
+    ]);
   }
 
-  return { bodies, isStreaming: true, seen };
+  return { bodies, events, isStreaming: true, seen };
 }
 
 /**
@@ -112,11 +152,18 @@ export function reduceStreamChunk(
 export function toThreadMessages(
   seedMessages: readonly ChatMessage[],
   bodies: ReadonlyMap<string, string>,
+  events: ReadonlyMap<string, readonly ChatTurnEvent[]> = new Map(),
 ): ChatMessage[] {
   const seedIds = new Set(seedMessages.map((message) => message.id));
   const streamed: ChatMessage[] = Array.from(bodies.entries())
     .filter(([messageId]) => !seedIds.has(messageId))
-    .map(([messageId, body]) => ({ body, id: messageId, role: 'assistant' }));
+    .map(([messageId, body]) => {
+      const turnEvents = events.get(messageId);
+
+      return turnEvents !== undefined && turnEvents.length > 0
+        ? { body, events: turnEvents, id: messageId, role: 'assistant' }
+        : { body, id: messageId, role: 'assistant' };
+    });
 
   return [...seedMessages, ...streamed];
 }
@@ -167,8 +214,8 @@ export function useConversationStream(
   // 🔌 Short Circuit
 
   const messages = React.useMemo(
-    () => toThreadMessages(seedMessages, state.bodies),
-    [seedMessages, state.bodies],
+    () => toThreadMessages(seedMessages, state.bodies, state.events),
+    [seedMessages, state.bodies, state.events],
   );
 
   return {
