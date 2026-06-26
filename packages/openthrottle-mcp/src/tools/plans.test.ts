@@ -115,10 +115,11 @@ describe('createPlanToolHandler', () => {
   });
 
   describe('when GraphQL throws', () => {
-    it('returns an error result with the message', async () => {
+    it('returns a sanitized error result without leaking backend detail', async () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
       vi.mocked(executeGraphqlWithAuth).mockRejectedValue(
-        new Error('network down'),
+        new Error('network down: connect ECONNREFUSED 127.0.0.1:6020'),
       );
 
       const result = await createPlanToolHandler({
@@ -127,10 +128,12 @@ describe('createPlanToolHandler', () => {
         title: 'Improve test coverage',
       });
 
-      expect(result).toEqual({
-        content: [{ text: 'create_plan failed: network down', type: 'text' }],
-        isError: true,
-      });
+      expect(result).toMatchObject({ isError: true });
+      const [content] = result.content;
+      expect(content.text).toBe(
+        'create_plan failed: Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
+      );
+      expect(content.text).not.toContain('127.0.0.1');
     });
   });
 });

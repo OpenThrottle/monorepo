@@ -15,7 +15,7 @@ import {
 } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.js';
 import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
+import { invalidArgsContent, SafeToolError } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 
 const SEARCH_DEFAULT_LIMIT = 20;
@@ -65,7 +65,7 @@ export async function getDocumentToolHandler(
 
       const chunk = result?.getDocument ?? null;
       if (!chunk) {
-        throw new Error(`No document found for id: ${parsed.data.id}`);
+        throw new SafeToolError(`No document found for id: ${parsed.data.id}`);
       }
 
       const text = `[${chunk.source}] ${chunk.planTitle ?? ''} ${chunk.taskTitle ?? ''}\n${chunk.content}`;

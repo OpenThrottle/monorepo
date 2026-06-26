@@ -90,16 +90,19 @@ describe('discoverLocalModelsToolHandler', () => {
     });
   });
 
-  it('returns an error result when GraphQL throws', async () => {
-    vi.mocked(executeGraphql).mockRejectedValue(new Error('network down'));
+  it('returns a sanitized error result when GraphQL throws', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.mocked(executeGraphql).mockRejectedValue(
+      new Error('network down: connect ECONNREFUSED 127.0.0.1:6020'),
+    );
 
     const result = await discoverLocalModelsToolHandler({});
 
-    expect(result).toEqual({
-      content: [
-        { text: 'discover_local_models failed: network down', type: 'text' },
-      ],
-      isError: true,
-    });
+    expect(result).toMatchObject({ isError: true });
+    const [content] = result.content;
+    expect(content.text).toBe(
+      'discover_local_models failed: Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
+    );
+    expect(content.text).not.toContain('127.0.0.1');
   });
 });

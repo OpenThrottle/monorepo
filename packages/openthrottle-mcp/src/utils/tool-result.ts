@@ -3,6 +3,7 @@
  */
 
 import type { GenericResult } from '../types/index.js';
+import { toSanitizedClientMessage } from './errors.js';
 
 /**
  * @description Runs an async thunk and normalizes success/throw into a {@link GenericResult}.
@@ -31,8 +32,7 @@ export async function runTool<T extends Record<string, unknown>>(
       structuredContent: result.structuredContent,
     };
   } catch (error: unknown) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
+    const message = toSanitizedClientMessage(toolName, error);
     const text = `${toolName} failed: ${message}`;
 
     return {

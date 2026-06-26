@@ -9,6 +9,7 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { GetDocumentDocument } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/get-auth-token.js';
+import { toSanitizedClientMessage } from '../utils/errors.js';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;
@@ -78,8 +79,10 @@ export async function readKnowledgeBaseChunk(
       contents: [{ text, type: 'text' as const, uri: uriStr }],
     };
   } catch (err: unknown) {
-    const isError = err instanceof Error;
-    const message = isError ? err.message : String(err);
+    const message = toSanitizedClientMessage(
+      knowledgeBaseChunkResourceName,
+      err,
+    );
 
     result = {
       contents: [
