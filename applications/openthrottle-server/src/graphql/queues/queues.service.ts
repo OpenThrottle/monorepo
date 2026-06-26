@@ -2,6 +2,7 @@
  * @description Aggregates BullMQ queue(s) and exposes job counts per queue via getJobCounts(). Supports dynamic queue creation via createQueue().
  */
 
+import { posix } from 'node:path';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
@@ -83,6 +84,46 @@ export function normalizeIdempotencyKey(
   }
 
   return { key: trimmed };
+}
+
+/**
+ * @description Validate doc-ingestion directory/file paths before enqueue. The
+ * downstream `openthrottle:import-docs` script resolves each path against
+ * `WORKSPACE_ROOT`, so a path that is absolute or traverses upward (`../`) could
+ * escape the workspace. Reject those at the API boundary (defense-in-depth — the
+ * spawn args themselves are fixed, so this is not command injection). Returns the
+ * trimmed, POSIX-normalized paths on success or `{ error }` on the first bad path.
+ */
+export function normalizeWorkspaceRelativePaths(
+  raw: readonly string[],
+  label: string,
+): { readonly paths: readonly string[] } | { readonly error: string } {
+  const normalized: string[] = [];
+
+  for (const entry of raw) {
+    const trimmed = entry.trim();
+    if (trimmed === '') {
+      return { error: `${label} must not contain empty paths` };
+    }
+
+    if (posix.isAbsolute(trimmed) || /^[A-Za-z]:[\\/]/.test(trimmed)) {
+      return {
+        error: `${label} must be relative to the workspace root: "${entry}"`,
+      };
+    }
+
+    // Collapse `.`/`..` segments; a leading `..` means the path escapes the root.
+    const collapsed = posix.normalize(trimmed.replace(/\\/g, '/'));
+    if (collapsed === '..' || collapsed.startsWith('../')) {
+      return {
+        error: `${label} must not escape the workspace root: "${entry}"`,
+      };
+    }
+
+    normalized.push(collapsed);
+  }
+
+  return { paths: normalized };
 }
 
 /** @description Union of all queue job data types for methods that work across static and dynamic queues. */
@@ -489,7 +530,28 @@ export class QueuesService implements OnModuleDestroy {
       };
     }
 
-    const job = await this.docIngestionQueue.add('doc-ingestion', payload);
+    const normalizedDirectories = normalizeWorkspaceRelativePaths(
+      directories,
+      'directories',
+    );
+    if ('error' in normalizedDirectories) {
+      return { error: normalizedDirectories.error };
+    }
+
+    const normalizedFiles = normalizeWorkspaceRelativePaths(files, 'files');
+    if ('error' in normalizedFiles) {
+      return { error: normalizedFiles.error };
+    }
+
+    const safePayload: DocIngestionJobPayload = {
+      ...payload,
+      ...(directories.length > 0
+        ? { directories: normalizedDirectories.paths }
+        : {}),
+      ...(files.length > 0 ? { files: normalizedFiles.paths } : {}),
+    };
+
+    const job = await this.docIngestionQueue.add('doc-ingestion', safePayload);
     if (job.id == null) {
       return { error: 'Failed to get new job id' };
     }

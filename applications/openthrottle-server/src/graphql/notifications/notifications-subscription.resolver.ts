@@ -49,6 +49,16 @@ export class NotificationsSubscriptionResolver {
     @Args('planId', { type: () => ID }) planId: string,
     @Context() context: { userId?: string },
   ): AsyncIterator<NotificationEnvelope> {
+    // Object-level authz: plans are globally readable in this workspace (the
+    // `plans` table has no per-user ownership column — only nullable
+    // author/assignee usernames — and PlansResolver's plan(id)/plans()/
+    // listPlansByStatus queries return any plan to any authenticated principal).
+    // There is therefore no (userId, planId) access relation to verify here, so
+    // an authenticated connection is the correct and sufficient gate — matching
+    // the sibling planOutputChunkAdded(planId) subscription, which streams the
+    // far more sensitive plan output log under the same stance. If plans ever
+    // gain per-user scoping (ownership column + migration), this resolver must
+    // be updated to verify access before returning the async iterator.
     this.requireAuthenticatedConnection(context);
 
     return this.pubSub.asyncIterator(planLifecycleTopic(planId));

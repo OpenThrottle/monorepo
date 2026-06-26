@@ -7,6 +7,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { JobsOptions, Queue } from 'bullmq';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
 import { resolveDatabaseBackupSchedule } from './database-backup.env';
 import type {
@@ -44,7 +45,11 @@ export class DatabaseBackupRepeatableService implements OnModuleInit {
     const job = await this.queue.add(
       schedule.jobName,
       {},
-      { jobId: schedule.repeatJobId, repeat },
+      {
+        ...REPEATABLE_JOB_OPTIONS,
+        jobId: schedule.repeatJobId,
+        repeat,
+      },
     );
 
     const tzValue = schedule.tz !== undefined ? schedule.tz : 'UTC';

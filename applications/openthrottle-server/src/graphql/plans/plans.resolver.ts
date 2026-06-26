@@ -81,6 +81,15 @@ const MAX_PLAN_RUNS_LIMIT = 100;
 const DEFAULT_PLANS_LIMIT = 100;
 /** Hard ceiling for plans() even when an explicit limit is supplied. */
 const MAX_PLANS_LIMIT = 500;
+/**
+ * Safety cap for the filter-UI aggregation/distinct queries
+ * (planCountsByStatus, listDistinctCategories, listDistinctAuthorsAndAssignees).
+ * These power filter dropdowns where the cardinality of distinct
+ * statuses/categories/authors/assignees is inherently small; the cap bounds the
+ * result set so a degenerate dataset can never stream an unbounded full-scan
+ * result back to the client.
+ */
+const MAX_FILTER_FACET_ROWS = 1000;
 
 /**
  * @description Resolve the actor user id to persist on a run record. Only a user
@@ -396,7 +405,7 @@ export class PlansResolver {
   private async fetchPlanCountsByStatus(): Promise<PlanStatusCount[]> {
     const repo = this.plansService.getRepository();
     const rows = (await repo.query(
-      'SELECT status, COUNT(*)::int AS count FROM plans GROUP BY status ORDER BY status',
+      `SELECT status, COUNT(*)::int AS count FROM plans GROUP BY status ORDER BY status LIMIT ${MAX_FILTER_FACET_ROWS}`,
     )) as { count: number; status: string }[];
 
     return rows.map((r) => {
@@ -416,7 +425,7 @@ export class PlansResolver {
   async listDistinctCategories(): Promise<string[]> {
     const repo = this.plansService.getRepository();
     const rows = (await repo.query(
-      'SELECT DISTINCT category FROM plans ORDER BY category',
+      `SELECT DISTINCT category FROM plans ORDER BY category LIMIT ${MAX_FILTER_FACET_ROWS}`,
     )) as { category: string }[];
 
     return rows.map((r) => r.category);
@@ -434,7 +443,8 @@ export class PlansResolver {
        (SELECT assignee AS person FROM plans WHERE assignee IS NOT NULL)
        UNION
        (SELECT assignee AS person FROM tasks WHERE assignee IS NOT NULL)
-       ORDER BY person`,
+       ORDER BY person
+       LIMIT ${MAX_FILTER_FACET_ROWS}`,
     )) as { person: string }[];
 
     return rows.map((r) => r.person);

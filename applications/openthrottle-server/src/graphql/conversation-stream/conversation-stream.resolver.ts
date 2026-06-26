@@ -7,6 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Args,
   Context,
@@ -130,6 +131,7 @@ export class ConversationStreamResolver {
   constructor(
     private readonly conversations: AgentConversationsService,
     private readonly customPrompts: CustomPromptsService,
+    private readonly logger: LoggerService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
     private readonly repositories: WorkspaceLocalRepositoriesService,
@@ -363,7 +365,14 @@ export class ConversationStreamResolver {
 
     try {
       await this.conversations.getConversationForUser(userId, conversationId);
-    } catch {
+    } catch (error: unknown) {
+      this.logger.debug(
+        `cancelConversationStream: ownership check failed for conversation ${conversationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        ConversationStreamResolver.name,
+      );
+
       return false;
     }
 
@@ -416,7 +425,14 @@ export class ConversationStreamResolver {
       );
 
       return existing.id;
-    } catch {
+    } catch (error: unknown) {
+      this.logger.debug(
+        `resolveConversationId: conversation ${conversationId} not owned by user ${userId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        ConversationStreamResolver.name,
+      );
+
       return null;
     }
   }
