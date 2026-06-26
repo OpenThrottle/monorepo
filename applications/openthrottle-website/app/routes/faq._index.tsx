@@ -2,18 +2,22 @@ import * as React from 'react';
 import { FaqView } from '@openthrottle/react-router-docs';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { canonicalMeta } from '~/global/utils/canonical';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/faq._index';
 
 const faqEntries = docsManifest.filter((entry) => entry.section === 'faq');
 
-export const meta = (_args: Route.MetaArgs) => {
+export const meta = (args: Route.MetaArgs) => {
   return [
     { title: `FAQ | ${SITE_TITLE}` },
     {
       content: 'Frequently asked questions about OpenThrottle.',
       name: 'description',
     },
+
+    // Per-route canonical URL so duplicate-content signals stay correct.
+    canonicalMeta(args.location.pathname),
   ];
 };
 
