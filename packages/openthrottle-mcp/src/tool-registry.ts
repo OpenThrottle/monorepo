@@ -1,5 +1,16 @@
 /**
  * @description Single source of truth for the developer MCP tool surface. Both the stdio `runServerLocal` path and the Nest `McpDeveloperMcpSurface` are registered from (and validated against) this array, so a tool added once is exposed to every consumer. The parity test in `tool-registry.test.ts` asserts the Nest surface's `@Tool` decorators reference the exact same name/parameters entries.
+ *
+ * Validation note: every dispatch path validates `arguments` against the tool's
+ * `parameters` schema *before* the handler runs — the MCP SDK's `validateToolInput`
+ * (stdio, `@modelcontextprotocol/sdk`) and `@rekog/mcp-nest`'s `McpToolsHandler`
+ * (Nest) both `safeParse` and reject invalid input first. The redundant-looking
+ * `schema.safeParse(args)` at the top of each handler in `src/tools/*` is therefore
+ * NOT for the dispatch path; it is the guard for direct, in-process invocation —
+ * the handlers are exported standalone functions and are unit-tested by calling
+ * them with invalid args (e.g. `tasks.test.ts` asserts the "Invalid arguments…"
+ * result). Keeping it preserves that standalone contract; do not remove it on the
+ * assumption the framework already validated.
  */
 
 import type {

@@ -14,11 +14,3 @@ export {
   withMcpDeveloperAuthTokenAsync,
   withMcpDeveloperAuthToken,
 } from './auth/get-auth-token.js';
-// export { NestjsMcpDeveloperModule, NestjsMcpDeveloperService } from './nest/index.js';
-// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-openthrottle-mcp-bootstrap-options.interface.js';
-// export { NestjsMcpDeveloperService } from './nest/nestjs-openthrottle-mcp.service.js';
-// export { NestjsMcpDeveloperModule } from './nest/nestjs-openthrottle-mcp.module.js';
-// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-openthrottle-mcp-bootstrap-options.interface.js';
-// export { NestjsMcpDeveloperService } from './nest/nestjs-openthrottle-mcp.service.js';
-// export { NestjsMcpDeveloperModule } from './nest/nestjs-openthrottle-mcp.module.js';
-// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-openthrottle-mcp-bootstrap-options.interface.js';

@@ -8,8 +8,18 @@ import * as Th from '../nest-tool-handlers.js';
 import { z } from 'zod';
 
 /**
- * @description Bridges Zod codegen schemas to `@rekog/mcp-nest` `@Tool` parameter typing (`z.ZodType`).
+ * @description Bridges the codegen tool-parameter schemas to `@rekog/mcp-nest`'s
+ * `@Tool({ parameters })` typing. The cast is unavoidable, not papering over a bug:
+ * the generated `*ToolParameters` schemas import from `zod/v3` (see
+ * `src/__generated__/schemas.ts`), while `@rekog/mcp-nest` types `parameters` as the
+ * `z.ZodType` from zod v4 (`zod@4`). The v3 and v4 `ZodType` are distinct nominal
+ * types and not mutually assignable, so no structural typing can connect them — only
+ * an explicit assertion. At runtime both are valid Zod schemas with a working
+ * `safeParse`, which is all `@rekog/mcp-nest` calls on the value before dispatch.
+ * Input takes `unknown` (not `z.ZodType` from either version) so callers cannot
+ * accidentally satisfy it with a non-schema value.
  */
+
 const asMcpParameters = (schema: unknown): z.ZodType => schema as z.ZodType;
 
 /**
