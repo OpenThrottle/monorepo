@@ -1,7 +1,7 @@
 /**
- * By default, Remix will handle generating the HTTP Response for you.
+ * By default, React Router will handle generating the HTTP Response for you.
  * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `react-router reveal` ✨
- * For more information, see https://remix.run/file-conventions/entry.server
+ * For more information, see https://reactrouter.com/explanation/special-files#entryservertsx
  */
 
 import * as React from 'react';

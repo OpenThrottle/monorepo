@@ -1,5 +1,16 @@
 {
   "git": {
     "deploymentEnabled": true
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; child-src 'none'; connect-src 'self' https://*; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self'; img-src 'self' data: https://*; object-src 'none'; script-src 'self' 'unsafe-inline' https://*; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; worker-src 'self';"
+        }
+      ]
+    }
+  ]
 }

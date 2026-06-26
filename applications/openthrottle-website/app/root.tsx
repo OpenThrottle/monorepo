@@ -10,8 +10,15 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { artwork, OPENTHROTTLE_BUCKET } from '@openthrottle/react-router-utils';
+import {
+  artwork,
+  OPENTHROTTLE_AUTHOR,
+  OPENTHROTTLE_BUCKET,
+  OPENTHROTTLE_GITHUB_URL,
+  OPENTHROTTLE_META_DESCRIPTION,
+} from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
@@ -21,7 +28,13 @@ export const links: Route.LinksFunction = () => {
 };
 
 /**
- * @external https://remix.run/docs/en/main/route/should-revalidate
+ * Default Open Graph / Twitter share image. Uses the largest branding icon in
+ * the production assets bucket so shared link previews are never blank.
+ */
+const SITE_OG_IMAGE = `${OPENTHROTTLE_BUCKET}/branding/icons/red/icon-512.png`;
+
+/**
+ * @external https://reactrouter.com/start/framework/route-module#shouldrevalidate
  * @description We only need to revalidate when we login or logout which
  * is already taken care of by the auth routes. So we don't need to revalidate
  * (refetch) to data at this level.
@@ -36,36 +49,48 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
-  const canonical: string = args.url.href;
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
   // FIXME: Replace with the actual repo when we launch
   // const repo = `facebook/react`;
   const repo = `openthrottle/openthrottle`;
-  const url = `https://api.github.com/repos/${repo}`;
-  let stars = '0';
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    const count = data?.stargazers_count ?? 0;
-
-    stars = count.toLocaleString();
-
-    console.error('🟢 🟢 🟢 success fetch gh stars:', stars);
-  } catch (error) {
-    console.error('🔴 🔴 🔴 error fetch gh stars:', error);
-  }
-
-  return { canonical, env, repo, stars };
+  // NOTE: The GitHub stars count is intentionally not fetched here. A blocking,
+  // uncached, untimed `fetch` in the root loader runs on every SSR request and
+  // would mostly fail in production (GitHub's unauthenticated rate limit is
+  // 60/hr/IP) while adding latency/TTFB. The value is only consumed by
+  // `OpenThrottleProductGetStarted`, which is gated behind the beta flag on the
+  // home route. When the beta gate is lifted, refetch this in the home route
+  // loader behind a short-TTL cache + `AbortController` timeout + graceful
+  // fallback rather than reinstating it here.
+  return { env, repo };
 };
 
 /**
  * @link https://reactrouter.com/start/framework/route-module#meta
  */
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `Welcome | ${SITE_TITLE}` }];
+  const title = `Welcome | ${SITE_TITLE}`;
+
+  return [
+    { title },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
+
+    // Open Graph (Facebook, LinkedIn, Slack, etc.)
+    { content: OPENTHROTTLE_META_DESCRIPTION, property: 'og:description' },
+    { content: SITE_OG_IMAGE, property: 'og:image' },
+    { content: SITE_TITLE, property: 'og:site_name' },
+    { content: title, property: 'og:title' },
+    { content: 'website', property: 'og:type' },
+    { content: APP_URL, property: 'og:url' },
+
+    // Twitter / X
+    { content: 'summary_large_image', name: 'twitter:card' },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'twitter:description' },
+    { content: SITE_OG_IMAGE, name: 'twitter:image' },
+    { content: title, name: 'twitter:title' },
+  ];
 };
 
 /**
@@ -79,15 +104,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
 
-  const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
+  // Favicons are served from the app's own static `public/` assets (a single
+  // source of truth) rather than the GCS bucket, so they match the committed
+  // `public/favicon.{ico,png}` files and don't depend on bucket availability.
+  const faviconIco = `/favicon.ico`;
+  const faviconPng = `/favicon.png`;
   const manifest = `/manifest.json`;
 
-  const isProduction = process.env.NODE_ENV === 'production';
-  const source = isProduction ? `https://*` : `http://*`;
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
-  const _valueCSP = isProduction
-    ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
-    : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
+
+  // Structured data so search engines and social platforms can render rich
+  // results for the organization and the site as a whole.
+  const jsonLd = JSON.stringify([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      founder: { '@type': 'Person', name: OPENTHROTTLE_AUTHOR },
+      logo: SITE_OG_IMAGE,
+      name: SITE_TITLE,
+      sameAs: [OPENTHROTTLE_GITHUB_URL],
+      url: APP_URL,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      description: OPENTHROTTLE_META_DESCRIPTION,
+      name: SITE_TITLE,
+      url: APP_URL,
+    },
+  ]);
 
   // Handlers
 
@@ -102,24 +147,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
-        {/* <meta content={_valueCSP} httpEquiv="Content-Security-Policy" /> */}
+        {/*
+          Content-Security-Policy is delivered as an HTTP response header via
+          `vercel.json` (preferred over a <meta> tag on Vercel). Keep it there.
+        */}
         <Meta />
 
-        <link href={APP_URL} rel="canonical" />
+        {/*
+          The canonical URL is emitted per-route via `meta()` (see route
+          modules) so it can vary per page. Don't hard-code a single canonical
+          here — that would conflict with the route-level one.
+        */}
         <link href="https://fonts.googleapis.com" rel="preconnect" />
         <link href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
         <link href="https://www.googletagmanager.com" rel="preconnect" />
-        <link href={favicon} rel="apple-touch-icon" sizes="48x48" />
-        <link href={favicon} rel="favicon" />
-        <link href={favicon} rel="icon" type="image/svg+xml" />
-        <link href={favicon} rel="mask-icon" type="image/svg+xml" />
+        <link href={faviconPng} rel="apple-touch-icon" sizes="48x48" />
+        <link href={faviconIco} rel="icon" type="image/x-icon" />
+        <link href={faviconPng} rel="icon" type="image/png" />
         <link href={manifest} rel="manifest" />
         <Links />
+
+        <script
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
+          type="application/ld+json"
+        />
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="flex min-h-screen flex-col">
+        <GlobalHeader />
         {children}
         <ScrollRestoration />
 

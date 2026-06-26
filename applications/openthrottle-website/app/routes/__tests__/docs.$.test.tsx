@@ -1,24 +1,24 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import type { RenderResult } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
 import Component from '../docs.$';
 
 describe('routes/docs.$.tsx', () => {
-  test('renders the doc page matching the splat path', () => {
-    const view = render(
-      <MemoryRouter>
-        <Component
-          actionData={undefined}
-          loaderData={{ description: null, title: 'Getting Started' }}
-          matches={[] as never}
-          params={{ '*': 'getting-started' }}
-        />
-      </MemoryRouter>,
-    );
+  let component: RenderResult;
 
+  beforeEach(() => {
+    const RoutesStub = createRoutesStub([{ Component, path: '/docs/*' }]);
+
+    component = render(
+      <RoutesStub initialEntries={['/docs/getting-started']} />,
+    );
+  });
+
+  test('renders the doc page matching the splat path', () => {
     expect(
-      view.getByRole('heading', { level: 1, name: 'Getting Started' }),
+      component.getByRole('heading', { level: 1, name: 'Getting Started' }),
     ).toBeInTheDocument();
   });
 });
