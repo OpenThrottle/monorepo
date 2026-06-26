@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
 import type { AggregateDailyStatsJobData } from './daily-stats.types';
 
@@ -25,7 +26,7 @@ export class DailyStatsRepeatableService implements OnModuleInit {
     const job = await this.queue.add(
       JOB_NAME,
       {},
-      { repeat: { pattern: CRON_PATTERN } },
+      { ...REPEATABLE_JOB_OPTIONS, repeat: { pattern: CRON_PATTERN } },
     );
     this.logger.info(
       `Daily stats repeatable job registered: pattern=${CRON_PATTERN}, repeatJobKey=${job.repeatJobKey ?? 'n/a'}`,

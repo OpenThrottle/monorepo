@@ -107,10 +107,11 @@ describe('DatabaseBackupRepeatableService', () => {
       expect(queueAdd).toHaveBeenCalledWith(
         DATABASE_BACKUP_JOB_NAME,
         {},
-        {
+        expect.objectContaining({
+          attempts: 3,
           jobId: DATABASE_BACKUP_REPEATABLE_JOB_ID,
           repeat: { pattern: '0 0 0 * * *' },
-        },
+        }),
       );
     });
 
@@ -144,10 +145,11 @@ describe('DatabaseBackupRepeatableService', () => {
       expect(queueAdd).toHaveBeenCalledWith(
         DATABASE_BACKUP_JOB_NAME,
         {},
-        {
+        expect.objectContaining({
+          attempts: 3,
           jobId: DATABASE_BACKUP_REPEATABLE_JOB_ID,
           repeat: { pattern: '0 0 0 * * *', tz: 'America/Los_Angeles' },
-        },
+        }),
       );
     });
   });

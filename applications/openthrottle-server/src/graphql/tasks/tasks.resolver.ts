@@ -62,6 +62,30 @@ const isSortOrderUniqueViolation = (error: unknown): boolean => {
   return driverError?.code === '23505';
 };
 
+/**
+ * Defensively parse the user-supplied requirements JSON string into an array.
+ * Returns [] when the input is null/undefined; throws BadRequestException for
+ * malformed JSON or non-array payloads so bad input surfaces as a 400, not a 500.
+ */
+const parseRequirements = (
+  requirements: string | null | undefined,
+): unknown[] => {
+  if (requirements == null) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(requirements);
+  } catch {
+    throw new BadRequestException('Invalid requirements JSON');
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new BadRequestException('requirements JSON must be an array');
+  }
+
+  return parsed;
+};
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => TaskObject)
 export class TasksResolver {
@@ -227,9 +251,7 @@ export class TasksResolver {
     @Args('input', { type: () => CreateTaskInput }) input: CreateTaskInput,
   ): Promise<Task> {
     const repo = this.tasksService.getRepository();
-    const requirementsArr = input.requirements
-      ? (JSON.parse(input.requirements) as unknown[])
-      : [];
+    const requirementsArr = parseRequirements(input.requirements);
 
     const sortOrder =
       input.sortOrder != null
@@ -287,9 +309,7 @@ export class TasksResolver {
       description: item.description ?? null,
       project: item.project ?? null,
       projectId: item.projectId ?? null,
-      requirements: item.requirements
-        ? (JSON.parse(item.requirements) as unknown[])
-        : [],
+      requirements: parseRequirements(item.requirements),
       sortOrder: item.sortOrder ?? null,
       status: (item.status ?? 'PENDING').toUpperCase(),
       summary: item.summary ?? null,
@@ -375,7 +395,7 @@ export class TasksResolver {
 
     if (input.planId != null) entity.planId = input.planId;
     if (input.requirements != null) {
-      entity.requirements = JSON.parse(input.requirements) as unknown[];
+      entity.requirements = parseRequirements(input.requirements);
     }
     if (input.status != null) entity.status = input.status.toUpperCase();
     if (input.title != null) entity.title = input.title;

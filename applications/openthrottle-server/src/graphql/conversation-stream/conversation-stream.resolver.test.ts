@@ -5,6 +5,7 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AgentConversationsService,
   CustomPromptsService,
@@ -92,9 +93,14 @@ function build(): {
     start: vi.fn(),
   });
   const asyncIterator = vi.fn().mockReturnValue({ next: vi.fn() });
+  const logger = createMock<LoggerService>({
+    debug: vi.fn(),
+    warn: vi.fn(),
+  });
   const resolver = new ConversationStreamResolver(
     conversations,
     customPrompts,
+    logger,
     modelDiscovery,
     {
       asyncIterator,
