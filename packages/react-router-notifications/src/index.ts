@@ -6,6 +6,7 @@ export { NotificationItem } from './components/NotificationItem';
 export { NotificationPermissionAvailable } from './components/NotificationPermissionAvailable';
 export { NotificationPermissionDenied } from './components/NotificationPermissionDenied';
 export { NotificationPermissionUnsupported } from './components/NotificationPermissionUnsupported';
+export { NotificationsAnnouncer } from './components/NotificationsAnnouncer';
 export { NotificationsSocketBridge } from './components/NotificationsSocketBridge';
 export { NotificationsSocketProvider } from './components/NotificationsSocketProvider';
 export { NotificationsStoreProvider } from './components/NotificationsStoreProvider';

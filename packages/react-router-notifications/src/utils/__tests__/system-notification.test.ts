@@ -9,6 +9,12 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import type { NavigateFunction } from 'react-router';
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import {
+  DEFAULT_NOTIFICATIONS_STORAGE_KEY,
+  loadFromStorage,
+  saveToStorage,
+} from '../../data/notifications-store.context';
+import type { NotificationInstance } from '../../types';
+import {
   getSystemNotificationsPreference,
   setSystemNotificationsPreference,
   showSystemNotification,
@@ -66,6 +72,64 @@ describe('getSystemNotificationsPreference / setSystemNotificationsPreference', 
       enabled: true,
       onlyWhenBackground: true,
     });
+  });
+});
+
+describe('preference key vs notification list key', () => {
+  let storage: Record<string, string>;
+
+  beforeEach(() => {
+    storage = {};
+    vi.stubGlobal('localStorage', {
+      clear: () => {
+        for (const key of Object.keys(storage)) delete storage[key];
+      },
+      getItem: (key: string) => storage[key] ?? null,
+      key: () => null,
+      length: 0,
+      removeItem: (key: string) => {
+        delete storage[key];
+      },
+      setItem: (key: string, value: string) => {
+        storage[key] = value;
+      },
+    });
+    vi.stubGlobal('window', { localStorage: globalThis.localStorage });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('preference key and notification list key are distinct', () => {
+    expect(NOTIFICATIONS_STORAGE_KEY).not.toBe(
+      DEFAULT_NOTIFICATIONS_STORAGE_KEY,
+    );
+  });
+
+  test('preference and notification list round-trip independently without clobbering', () => {
+    const notification: NotificationInstance = {
+      createdAt: new Date().toISOString(),
+      dismissed: false,
+      event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
+      id: 'n-1',
+      payload: systemAlertPayload,
+      read: false,
+    };
+
+    // Persist the notification list first.
+    saveToStorage(DEFAULT_NOTIFICATIONS_STORAGE_KEY, [notification]);
+    // Then persist the preference — must not wipe the list.
+    setSystemNotificationsPreference({ enabled: true });
+
+    expect(getSystemNotificationsPreference()).toEqual({ enabled: true });
+    expect(loadFromStorage(DEFAULT_NOTIFICATIONS_STORAGE_KEY)).toEqual([
+      notification,
+    ]);
+
+    // Saving the list again must not wipe the preference.
+    saveToStorage(DEFAULT_NOTIFICATIONS_STORAGE_KEY, [notification]);
+    expect(getSystemNotificationsPreference()).toEqual({ enabled: true });
   });
 });
 

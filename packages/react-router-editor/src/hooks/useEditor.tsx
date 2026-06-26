@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router';
 import { editorAtom, filteredFilesAtom } from '../data/atom.editor';
 import type { EditorFile } from '../data/atom.editor';
-import type { FileExtension, PromptType } from '../config';
+import type { PromptType } from '../config';
 import { getLanguageFromExt } from '../utils';
 
 export interface UseEditorOptions {
@@ -55,11 +55,7 @@ export const useEditor = (options?: UseEditorOptions) => {
 
       const extension = filename.split('.').pop() ?? 'md';
 
-      // FIXME: Swap out eventually
-      const language = getLanguageFromExt(
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        extension as unknown as FileExtension,
-      );
+      const language = getLanguageFromExt(extension);
 
       const newFile: EditorFile = existingFile ?? {
         directory: '.',

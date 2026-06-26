@@ -3,6 +3,8 @@ import { NotificationSocketStatus } from '../types';
 
 /**
  * @description Formats an ISO timestamp as a short relative label for notification UI.
+ *
+ * @publicApi
  */
 export function formatRelativeTime(iso: string): string {
   const d = new Date(iso);
@@ -25,6 +27,8 @@ export function formatRelativeTime(iso: string): string {
 /**
  * @description Small UI indicator for the notifications WebSocket connection status.
  * Renders a colored dot for use in layout (e.g. footer).
+ *
+ * @publicApi
  */
 export function formatStatusToColor(status: NotificationSocketStatus): string {
   switch (status) {
@@ -46,6 +50,8 @@ export function formatStatusToColor(status: NotificationSocketStatus): string {
 
 /**
  * @description Maps notification severity to a Tailwind background class for the item dot.
+ *
+ * @publicApi
  */
 export function formatSeverityToColor(severity: NotificationSeverity): string {
   switch (severity) {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router';
-import {
+import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
@@ -26,6 +26,7 @@ export interface NotificationsSocketBridgeProps {
   readonly webSocketUrl: string;
 }
 
+/** @publicApi */
 export const NotificationsSocketBridge = (
   props: NotificationsSocketBridgeProps,
 ): React.ReactElement => {

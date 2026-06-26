@@ -77,13 +77,21 @@ navigation/view toolbar (shadcn `Button` + `ToggleGroup`), and `<Calendar>`.
 
 | Prop          | Type              | Default         | Description                   |
 | ------------- | ----------------- | --------------- | ----------------------------- |
-| `events`      | `CalendarEvent[]` | `[]`            | Events to display.            |
+| `events`      | `CalendarEvent[]` | `[]`            | Events to display (see note). |
 | `views`       | `CalendarView[]`  | `[Week, Month]` | Enabled views.                |
 | `defaultView` | `CalendarView`    | `Week`          | Initially active view.        |
 | `defaultDate` | `Date \| string`  | today           | Initially selected date.      |
 | `height`      | `string`          | `600px`         | Calendar height (CSS length). |
 | `slots`       | `CalendarSlots`   | —               | Custom render slots.          |
 | `className`   | `string`          | —               | Class on the layout root.     |
+
+> **`events` is seed-plus-replace.** The schedule is seeded from `events` on
+> mount. Passing a **new array reference** afterward replaces the displayed
+> events (the array _identity_ is the trigger — memoize it or hold it in state
+> when loading async data; a new array on every render would thrash the store).
+> Mutating the same array in place is **not** observed. For incremental
+> add/update/remove, drive `useSchedule` directly and call
+> `schedule.add` / `update` / `remove` / `set`.
 
 ### `<Calendar />`
 
@@ -125,6 +133,13 @@ schedule.set(events); // replace all
 
 Returns `{ instance, plugins, all, getById, add, update, remove, set }`.
 `instance` / `plugins` are advanced escape hatches (coupling to the engine).
+
+> `config.events` (and `views` / `defaultView` / `date`) are **read once**, when
+> the instance is created — the instance is intentionally stable across renders
+> so view and selection state survive re-renders. Later changes to `config` are
+> ignored; mutate events through `add` / `update` / `remove` / `set`. (The
+> `<CalendarLayout>` wrapper layers a prop-diffing effect on top of this so its
+> `events` prop can be replaced — see its note above.)
 
 ### `useCalendar(schedule, options?)`
 

@@ -1,7 +1,9 @@
-import { Temporal } from 'temporal-polyfill';
 import { describe, expect, it } from 'vitest';
 
 import type { CalendarEvent } from '../../types';
+// Use the ambient global `Temporal` (installed via `../datetime` ->
+// `temporal-polyfill/global`) rather than the module export, matching the
+// source-mandated global form; the two class identities are non-assignable.
 import { temporalToISOString, toZonedDateTime } from '../datetime';
 import { fromEngineEvent, toEngineEvent } from '../events';
 

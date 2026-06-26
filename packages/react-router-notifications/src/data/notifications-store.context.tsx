@@ -10,6 +10,7 @@ import type {
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import {
+  NOTIFICATIONS_DEDUP_WINDOW_MS,
   NOTIFICATIONS_MAX_STORED,
   NOTIFICATIONS_MAX_PERSISTED,
 } from '../config/index';
@@ -17,8 +18,13 @@ import { NotificationInstance } from '../types';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /**
- * @description Default localStorage key for persisted notifications. Apps migrating from
- * an older key may pass {@link NotificationsStoreProviderProps.storageKey}.
+ * @description Default localStorage key for the persisted notification **list** (array).
+ * Distinct from the system-notification **preference** key
+ * (`NOTIFICATIONS_STORAGE_KEY` = `${APP_NAME}:notifications:prefs`) so the two writers
+ * never clobber each other. Apps migrating from an older key may pass
+ * {@link NotificationsStoreProviderProps.storageKey}.
+ *
+ * @publicApi
  */
 export const DEFAULT_NOTIFICATIONS_STORAGE_KEY = `${APP_NAME}:notifications`;
 
@@ -103,8 +109,27 @@ export function reducer(
 ): NotificationInstance[] {
   switch (action.type) {
     case 'add': {
+      const now = Date.now();
+
+      // Coalesce identical re-emits (same event + message + link) that arrive
+      // within NOTIFICATIONS_DEDUP_WINDOW_MS. The payload union has no stable id,
+      // so dedup is content + time based; reconnect replays commonly re-deliver
+      // the same events in a short window. Only the newest entry is compared —
+      // older matches are intentional repeats the user already saw.
+      const newest = state[0];
+      if (
+        newest !== undefined &&
+        newest.event === action.event &&
+        newest.payload.message === action.payload.message &&
+        newest.payload.link === action.payload.link &&
+        now - new Date(newest.createdAt).getTime() <
+          NOTIFICATIONS_DEDUP_WINDOW_MS
+      ) {
+        return [...state];
+      }
+
       const created: NotificationInstance = {
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(now).toISOString(),
         dismissed: false,
         event: action.event,
         id: generateId(),
@@ -144,6 +169,7 @@ export function reducer(
   }
 }
 
+/** @publicApi */
 export interface NotificationsStoreContextValue {
   /** Add a notification (e.g. from WebSocket handler). */
   readonly addNotification: (
@@ -161,10 +187,15 @@ export interface NotificationsStoreContextValue {
   readonly visibleNotifications: readonly NotificationInstance[];
 }
 
+/** @publicApi */
 export const NotificationsStoreContext =
   React.createContext<NotificationsStoreContextValue | null>(null);
 
-/** Maps notification severity to sonner toast method; optional action to open payload.link. */
+/**
+ * Maps notification severity to sonner toast method; optional action to open payload.link.
+ *
+ * @publicApi
+ */
 export function toastForNotification(
   payload: NotificationPayload,
   navigate?: (path: string) => void,

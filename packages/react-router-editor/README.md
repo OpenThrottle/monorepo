@@ -6,7 +6,7 @@ Monaco-based editor components for managing custom AI prompts in OpenThrottle ap
 
 - **Monaco Editor Integration**: Full-featured code editor with syntax highlighting
 - **Tab Management**: Drag-and-drop reorderable tabs with keyboard shortcuts
-- **File Sidebar**: Browsable file tree with search and filter capabilities
+- **File Sidebar**: Browsable flat file list with search and filter capabilities
 - **Prompt Type Filtering**: Filter files by type (agents, commands, prompts, skills)
 - **Jotai State Management**: Global editor state with derived atoms for filtering
 - **React Router Integration**: Navigation-aware file opening and URL sync
@@ -45,11 +45,28 @@ Container for open file tabs with drag-and-drop reordering.
 
 ### `<EditorSidebar />`
 
-File tree sidebar showing filtered files based on search and type selection.
+Sidebar showing a flat list of filtered files based on search and type selection.
 
 ### `<EditorWindow />`
 
 Monaco editor wrapper with sensible defaults for prompt editing.
+
+`value` is the content of the **currently active file only** — it is not an
+aggregate of every open tab. When editing multiple files (the tab model in
+`atom.editor.ts`), you must also pass `path` (the active file's unique path)
+so Monaco keys one text model per file. Swapping `value` without `path` reuses
+a single shared model, which causes the undo/redo stack, cursor, and scroll
+state to bleed across tabs. Change `value` and `path` together whenever the
+active tab changes:
+
+```tsx
+<EditorWindow
+  path={activeFile.filename}
+  value={content}
+  onChange={(next) => setContent(next)}
+  language="markdown"
+/>
+```
 
 ### `<EditorNewFileForm />`
 
@@ -120,6 +137,49 @@ interface EditorAtom {
   readonly tabIndex: number;
   readonly tabs: readonly EditorFile[];
 }
+```
+
+## Self-hosting Monaco (no CDN)
+
+By default `@monaco-editor/react` lazy-loads the Monaco bundle and its language
+workers from the public `cdn.jsdelivr.net` CDN at runtime. That breaks
+air-gapped / offline deployments and is a supply-chain surface (a CDN
+compromise would inject arbitrary code into the editor).
+
+This package vendors `monaco-editor` as a direct dependency and exposes
+`configureEditorLoader()`, which points the loader at the local module instead.
+Call it **once on the client** before any editor mounts — for example from a
+root client entry or a top-level `useEffect`:
+
+```tsx
+import { configureEditorLoader } from '@openthrottle/react-router-editor';
+
+// e.g. in your app's client entry / root client loader
+void configureEditorLoader();
+```
+
+It is idempotent, resolves once the loader is configured, imports
+`monaco-editor` dynamically (so it stays out of SSR and test collection), and
+is a no-op on the server.
+
+### Workers (Vite consumers)
+
+`configureEditorLoader()` handles the main Monaco bundle. To also keep the
+language **workers** off the CDN, configure `MonacoEnvironment` in the
+consuming Vite app's client entry using Vite's `?worker` imports:
+
+```ts
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+
+self.MonacoEnvironment = {
+  getWorker(_workerId, label) {
+    if (label === 'json') return new JsonWorker();
+    if (label === 'typescript' || label === 'javascript') return new TsWorker();
+    return new EditorWorker();
+  },
+};
 ```
 
 ## Peer Dependencies

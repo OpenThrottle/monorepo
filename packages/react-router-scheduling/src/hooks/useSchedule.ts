@@ -94,6 +94,13 @@ function createSchedule(config: ScheduleConfig): UseScheduleResult {
  * can be used with no calendar view (e.g. an agenda list) or handed to
  * `useCalendar` / `<Calendar>` for a calendar surface.
  *
+ * `config` is read **once**, when the instance is created: `events`, `views`,
+ * `defaultView`, and `date` are seed values, and later changes to `config` are
+ * ignored (keeping the instance — and thus view/selection state — stable across
+ * renders). Mutate events through the returned `add` / `update` / `remove` /
+ * `set` instead. `<CalendarLayout>` adds a prop-diffing effect on top so its
+ * `events` prop can be replaced after mount.
+ *
  * @publicApi
  */
 export function useSchedule(config: ScheduleConfig = {}): UseScheduleResult {
