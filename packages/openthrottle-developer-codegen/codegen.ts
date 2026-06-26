@@ -23,9 +23,21 @@ const __dirname = dirname(__filename);
  *    which the app's own codegen cannot provide. Adding `enumsAsTypes` here, or
  *    "consolidating" the two configs, silently breaks `PromptsTable` at runtime.
  *
- * 2. A `.ts`-free document scope. The app codegen scans `app/**\/*.ts` for inline
- *    `graphql(...)` calls; this package scans only `*.graphql` files, giving it a
- *    stable, transpile-independent document set that consuming packages can import.
+ * 2. A `.ts`-free document scope. The app codegen ALSO scans `app/**\/*.ts` to
+ *    catch any inline `graphql(...)` calls; this package scans only `*.graphql`
+ *    files, giving it a stable, transpile-independent document set that consuming
+ *    packages can import. This is safe — and complete — because the developer app
+ *    keeps every operation in a sidecar `<route>.tsx.graphql` file (today there
+ *    are zero inline `graphql(...)` calls in `app/**\/*.ts`/`.tsx`), so the
+ *    `.graphql`-only glob already sees the full document set. Do NOT add
+ *    `*.ts`/`*.tsx` here: it would re-scan the app's own generated output and
+ *    duplicate the app's pass for no new operations.
+ *
+ * The document glob is anchored to `__dirname` via `join(...)` (mirroring
+ * `envPath` below) rather than a bare `'../../...'` relative string, so it stays
+ * correct regardless of the codegen process cwd and is less brittle if either
+ * project moves. The `!` ignore glob stays package-relative — it targets THIS
+ * package's `src/__generated__/` output, not the app.
  *
  * Keep this comment and `withZodSchemas: false` in sync with the cross-reference
  * note in `applications/openthrottle-developer/codegen.ts`.
@@ -33,8 +45,11 @@ const __dirname = dirname(__filename);
 const config: CodegenConfig = defineCodegen({
   dirname: __dirname,
   documents: [
-    '../../applications/openthrottle-developer/app/**/*.graphql',
-    // '../../packages/*/src/**/*.graphql',
+    join(
+      __dirname,
+      '../../applications/openthrottle-developer/app/**/*.graphql',
+    ),
+    // join(__dirname, '../../packages/*/src/**/*.graphql'),
     // 'src/graphql/ralph/**/*.graphql',
     '!src/__generated__/**/*',
   ],
