@@ -17,6 +17,13 @@ const okResponse = (): Response =>
     status: 200,
   });
 
+const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
+  new Response(JSON.stringify(body), {
+    headers: { 'Content-Type': 'application/json' },
+    status: 200,
+    ...init,
+  });
+
 describe('executeGraphqlV2 timeout wiring', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -88,5 +95,109 @@ describe('executeGraphqlV2 timeout wiring', () => {
     );
 
     expect(error).toBe(original);
+  });
+});
+
+describe('executeGraphqlV2 result branches', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('throws with status and message when the response is non-OK', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse(
+        { errors: [{ message: 'boom' }] },
+        { status: 500, statusText: 'Server Error' },
+      ),
+    );
+
+    const error = await executeGraphqlV2(doc, undefined, { url }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    if (error instanceof Error) {
+      expect(error.message).toContain('GraphQL error 500');
+      expect(error.message).toContain('boom');
+    }
+  });
+
+  it('throws when HTTP OK but the body carries graphql errors', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ data: null, errors: [{ message: 'nope' }] }),
+    );
+
+    const error = await executeGraphqlV2(doc, undefined, { url }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    if (error instanceof Error) {
+      expect(error.message).toBe('GraphQL errors: nope');
+    }
+  });
+
+  it('throws when HTTP OK with no errors but data is missing', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
+
+    const error = await executeGraphqlV2(doc, undefined, { url }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    if (error instanceof Error) {
+      expect(error.message).toBe('GraphQL response missing data');
+    }
+  });
+});
+
+describe('executeGraphqlV2 auth header construction', () => {
+  const originalToken = process.env.API_TOKEN;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    if (originalToken === undefined) {
+      delete process.env.API_TOKEN;
+    } else {
+      process.env.API_TOKEN = originalToken;
+    }
+  });
+
+  it('sends Authorization: Bearer from options.token', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(okResponse());
+
+    await executeGraphqlV2(doc, undefined, { token: 'tok-123', url });
+
+    const init = fetchSpy.mock.calls[0]?.[1];
+    const headers = init?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer tok-123');
+  });
+
+  it('falls back to API_TOKEN when no options.token is given', async () => {
+    process.env.API_TOKEN = 'env-token';
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(okResponse());
+
+    await executeGraphqlV2(doc, undefined, { url });
+
+    const init = fetchSpy.mock.calls[0]?.[1];
+    const headers = init?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer env-token');
+  });
+
+  it('omits Authorization when token is empty and API_TOKEN is unset', async () => {
+    delete process.env.API_TOKEN;
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(okResponse());
+
+    await executeGraphqlV2(doc, undefined, { token: '', url });
+
+    const init = fetchSpy.mock.calls[0]?.[1];
+    const headers = init?.headers as Record<string, string>;
+    expect(headers.Authorization).toBeUndefined();
   });
 });

@@ -212,6 +212,104 @@ describe('executeGraphql_v2', () => {
     expect((result.error as CodeFailure).code).toBe('E_MISSING');
   });
 
+  it('returns http failure even when a data payload is present on a non-OK status', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse(
+          { status: 503, statusText: 'Service Unavailable' },
+          { data: { __typename: 'Query' }, errors: [{ message: 'degraded' }] },
+        ),
+      );
+
+    const result = await executeGraphql_v2(emptyVarsDoc, undefined, {
+      fetch: fetchMock,
+      url: 'https://api.example/graphql',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+
+    expect(result.error.kind).toBe('http');
+    expect(result.error.httpStatus).toBe(503);
+    expect(result.error.message).toBe('degraded');
+  });
+
+  it('returns unknown kind for an empty response body (rawBody === "")', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('', { status: 200 }));
+
+    const result = await executeGraphql_v2(emptyVarsDoc, undefined, {
+      fetch: fetchMock,
+      url: 'https://api.example/graphql',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+
+    expect(result.error.kind).toBe('unknown');
+  });
+
+  it('merges requestInit into fetch without clobbering method, body, or signal', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ status: 200 }, { data: { __typename: 'Query' } }),
+      );
+    const controller = new AbortController();
+
+    await executeGraphql_v2(emptyVarsDoc, undefined, {
+      fetch: fetchMock,
+      requestInit: { cache: 'no-store', keepalive: true },
+      signal: controller.signal,
+      url: 'https://api.example/graphql',
+    });
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.cache).toBe('no-store');
+    expect(init.keepalive).toBe(true);
+    expect(init.method).toBe('POST');
+    expect(typeof init.body).toBe('string');
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it('keeps executor-owned method, body, and signal when requestInit tries to set them', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ status: 200 }, { data: { __typename: 'Query' } }),
+      );
+    const callerSignal = new AbortController().signal;
+
+    // The `requestInit` type Omits body/headers/method/signal, so they cannot be
+    // passed through the typed API. Build the literal separately and spread it to
+    // probe the executor's runtime precedence: it spreads requestInit first, then
+    // overwrites these reserved keys. The signature still rejects them statically.
+    const reservedOverrides = {
+      body: 'evil',
+      method: 'GET',
+      signal: new AbortController().signal,
+    };
+
+    await executeGraphql_v2(emptyVarsDoc, undefined, {
+      fetch: fetchMock,
+      requestInit: { ...reservedOverrides, cache: 'no-store' },
+      signal: callerSignal,
+      url: 'https://api.example/graphql',
+    });
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.method).toBe('POST');
+    expect(init.body).not.toBe('evil');
+    expect(init.signal).toBe(callerSignal);
+    expect(init.cache).toBe('no-store');
+  });
+
   it('sets Authorization Bearer after custom headers so token wins', async () => {
     const fetchMock = vi
       .fn()
