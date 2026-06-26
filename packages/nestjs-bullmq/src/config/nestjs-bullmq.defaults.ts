@@ -3,7 +3,7 @@
  * Queues that use these (or extend them) get stalled-job detection: after a restart,
  * active jobs become stalled when the lock expires and re-enter the waiting queue.
  *
- * Use in @Processor(queueName, { ...defaultWorkerOptionsdefaultWorkerOptionsdefaultWorkerOptions, concurrency: 1 }).
+ * Use in @Processor(queueName, { ...defaultWorkerOptions, concurrency: 1 }).
  * Plans queue uses longer lockDuration via its own constants; other queues can import these.
  */
 

@@ -4,7 +4,10 @@ import type { ConfigType } from '@nestjs/config';
 import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { redisConfig } from '../config/nestjs-bullmq.config';
+import {
+  configValidationSchema,
+  redisConfig,
+} from '../config/nestjs-bullmq.config';
 
 /**
  * Root BullMQ defaults. Worker-level options (lockDuration, stalledInterval) are not set here;
@@ -13,8 +16,11 @@ import { redisConfig } from '../config/nestjs-bullmq.config';
 const defaultJobOptions = {
   attempts: 3,
   backoff: { delay: 2000, type: 'exponential' as const },
-  delay: 1000,
   keepLogs: 100,
+  // Bound Redis growth: completed/failed job records are otherwise retained
+  // forever in their ZSETs (cron + on-demand queues on shared Redis).
+  removeOnComplete: { age: 86400, count: 1000 },
+  removeOnFail: { age: 604800 },
 };
 
 @Module({
@@ -22,18 +28,20 @@ const defaultJobOptions = {
   exports: [],
   imports: [
     LoggerModule,
+    // Fail fast at bootstrap: validate REDIS_* env vars against the Joi schema
+    // instead of letting a missing/invalid REDIS_HOST surface as a late runtime
+    // throw at first connection. allowUnknown keeps unrelated system env vars
+    // from tripping validation; validationOptions.abortEarly: false reports all
+    // misconfigured vars at once.
     ConfigModule.forRoot({
       cache: true,
       load: [redisConfig],
-      // validatePredefined: true,
-      // validationSchema: configValidationSchema,
+      validationOptions: {
+        abortEarly: false,
+        allowUnknown: true,
+      },
+      validationSchema: configValidationSchema,
     }),
-    // ConfigModule.forRoot({
-    //   cache: true,
-    //   load: [redisConfig],
-    //   // validatePredefined: true,
-    //   // validationSchema: configValidationSchema,
-    // }),
     // forRootAsync defers the REDIS_HOST read to bootstrap; importing this
     // package must not require Redis env vars (e.g. unit tests of consumers).
     BullModule.forRootAsync({
@@ -41,8 +49,15 @@ const defaultJobOptions = {
       inject: [redisConfig.KEY],
       useFactory: (redis: ConfigType<typeof redisConfig>) => ({
         connection: {
+          db: redis.db,
+          enableReadyCheck: redis.enableReadyCheck,
+          family: redis.family,
           host: redis.host,
-          port: Number(redis.port),
+          maxRetriesPerRequest: redis.maxRetriesPerRequest,
+          password: redis.password,
+          port: redis.port,
+          tls: redis.tls,
+          username: redis.username,
         },
         defaultJobOptions,
       }),

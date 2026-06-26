@@ -2,31 +2,66 @@ import { Logger } from '@nestjs/common';
 
 const LOG_CONTEXT = 'ProfileResponseTime';
 
+interface ReflectWithKeys {
+  defineMetadata: (
+    key: string | symbol,
+    value: unknown,
+    target: object,
+    propertyKey?: string | symbol,
+  ) => void;
+  getMetadata: (
+    key: string | symbol,
+    target: object,
+    propertyKey?: string | symbol,
+  ) => unknown;
+  getMetadataKeys: (
+    target: object,
+    propertyKey?: string | symbol,
+  ) => (string | symbol)[];
+}
+
+function getReflectWithKeys(): ReflectWithKeys | undefined {
+  if (
+    typeof Reflect === 'undefined' ||
+    typeof (Reflect as { getMetadataKeys?: unknown }).getMetadataKeys !==
+      'function'
+  ) {
+    return undefined;
+  }
+
+  return Reflect as unknown as ReflectWithKeys;
+}
+
 /**
- * @description Copies Reflect metadata from source to target so NestJS (and other decorator-based frameworks) still discover the wrapped method.
+ * @description Copies Reflect metadata from the original method to the wrapper so NestJS
+ * (and other decorator-based frameworks) still discover the wrapped handler.
+ *
+ * NestJS GraphQL/HTTP param decorators (`@Args`, `design:paramtypes`, route metadata) store
+ * their metadata two ways: some on the function value itself, others keyed on the class
+ * prototype for `propertyKey`. We copy both:
+ *  - function-object metadata: original method value -> wrapper value, and
+ *  - prototype-level metadata: prototype[propertyKey] mirrored onto the wrapper value,
+ * so the metadata survives regardless of which location a framework reads.
  */
 function copyMethodMetadata(
+  prototype: object,
+  propertyKey: string | symbol,
   source: (...args: unknown[]) => unknown,
   target: (...args: unknown[]) => unknown,
 ): void {
-  if (
-    typeof Reflect === 'undefined' ||
-    typeof (Reflect as { getMetadataKeys?: (t: object) => (string | symbol)[] })
-      .getMetadataKeys !== 'function'
-  ) {
+  const reflect = getReflectWithKeys();
+  if (reflect === undefined) {
     return;
   }
 
-  const ReflectWithKeys = Reflect as {
-    defineMetadata: (key: string | symbol, value: unknown, t: object) => void;
-    getMetadata: (key: string | symbol, t: object) => unknown;
-    getMetadataKeys: (t: object) => (string | symbol)[];
-  };
+  for (const key of reflect.getMetadataKeys(source)) {
+    reflect.defineMetadata(key, reflect.getMetadata(key, source), target);
+  }
 
-  const keys = ReflectWithKeys.getMetadataKeys(source);
-  for (const key of keys) {
-    const value = ReflectWithKeys.getMetadata(key, source);
-    ReflectWithKeys.defineMetadata(key, value, target);
+  for (const key of reflect.getMetadataKeys(prototype, propertyKey)) {
+    const value = reflect.getMetadata(key, prototype, propertyKey);
+    reflect.defineMetadata(key, value, target);
+    reflect.defineMetadata(key, value, prototype, propertyKey);
   }
 }
 
@@ -39,7 +74,7 @@ export function ProfileResponseTime(label?: string): MethodDecorator {
   const logger = new Logger(LOG_CONTEXT);
 
   return (
-    _target: object,
+    target: object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor,
   ): PropertyDescriptor => {
@@ -70,7 +105,7 @@ export function ProfileResponseTime(label?: string): MethodDecorator {
       return result;
     };
 
-    copyMethodMetadata(originalMethod, wrapper);
+    copyMethodMetadata(target, propertyKey, originalMethod, wrapper);
     descriptor.value = wrapper;
 
     return descriptor;

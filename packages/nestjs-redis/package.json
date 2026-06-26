@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-redis",
-  "description": "NestJS module with Joi-validated Redis env config (REDIS_HOST, REDIS_PORT) and an injectable NestjsRedisService scaffold.",
+  "description": "NestJS Redis integration: a fault-tolerant Apollo Server Redis cache backend (getRedisCache) and a module that closes those connections on shutdown.",
   "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",

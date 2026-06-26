@@ -215,6 +215,13 @@ export interface ParentJobEnsureCommitFailureDirty {
  * Failure: lint, typecheck, or typecheck-tests failed.
  * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
  * Retained in the union so existing consumer narrowing keeps type-checking during transition.
+ *
+ * Removal plan: drop this member (and the `base`/`runChecks` no-op options on
+ * {@link ParentJobEnsureCommitOptions}) once no consumer narrows on
+ * `reason: 'checks_failed'`. Grep `checks_failed` across the workspace; when only
+ * this declaration and its tests remain, delete the member, simplify
+ * {@link ParentJobEnsureCommitResult} to success | dirty, and remove the deprecated
+ * options from `parentJobEnsureCommitBeforeRelease` in `utils/parent-job.ts`.
  */
 export interface ParentJobEnsureCommitFailureChecks {
   readonly check: 'lint' | 'typecheck' | 'typecheck-tests';

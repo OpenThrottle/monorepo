@@ -73,13 +73,51 @@ export function deriveBranchName(lockedBy: string, planTitle?: string): string {
 }
 
 /**
+ * @description Rejects a git argument that would be parsed as an option rather than a
+ * positional value. An empty value, or one beginning with `-` (e.g. `--track`, `-f`),
+ * is unsafe to pass as a branch name, base ref, or path because git interprets it as a
+ * flag. This guards against git-arg (option) injection from explicit/untrusted inputs.
+ */
+function isOptionLikeArg(value: string): boolean {
+  return value.length === 0 || value.startsWith('-');
+}
+
+/**
  * @description Creates a new branch in the worktree at worktreePath. Returns true on success.
+ *
+ * Hardening: `branchName`, `baseBranch`, and `worktreePath` are rejected up front if they
+ * are empty or begin with `-`, so an explicit (un-slugified) branch name or a malicious
+ * target path cannot smuggle a git option (e.g. `--track`) into the argv. (A `--` separator
+ * is not usable here: for `git checkout -b <branch> <start-point>`, git would treat anything
+ * after `--` as a pathspec rather than the start-point ref, so the leading-dash guard is the
+ * correct defense for the ref arguments.)
  */
 export function createBranchInWorktree(
   worktreePath: string,
   branchName: string,
   baseBranch: string,
 ): { ok: true } | { ok: false; stderr: string } {
+  if (isOptionLikeArg(worktreePath)) {
+    return {
+      ok: false,
+      stderr: `unsafe worktree path (option-like or empty): ${worktreePath}`,
+    };
+  }
+
+  if (isOptionLikeArg(branchName)) {
+    return {
+      ok: false,
+      stderr: `unsafe branch name (option-like or empty): ${branchName}`,
+    };
+  }
+
+  if (isOptionLikeArg(baseBranch)) {
+    return {
+      ok: false,
+      stderr: `unsafe base branch (option-like or empty): ${baseBranch}`,
+    };
+  }
+
   const child = spawnSync(
     'git',
     ['-C', worktreePath, 'checkout', '-b', branchName, baseBranch],
@@ -183,6 +221,23 @@ export function isWorktreeClean(worktreePath: string): boolean {
 /**
  * @description Returns true if the current branch has commits ahead of the remote.
  * Used to determine if there's work to push before releasing the worktree.
+ *
+ * Fail-open contract (intentional): the function returns `true` (i.e. "treat as
+ * having work to push") in two distinct non-zero-exit cases, so a caller using it
+ * to gate a push never *suppresses* a push that might be needed:
+ *
+ *   1. No upstream configured. A fresh `ralph/*` branch created in the worktree has
+ *      no `@{upstream}`, so `rev-list @{upstream}..HEAD` exits non-zero with a
+ *      "no upstream configured" message. This is the normal first-push case and is
+ *      genuinely "has work" — the branch's commits exist only locally. The caller
+ *      should push with `-u` (as `pushBranchToRemote` already does) to set it.
+ *   2. Genuine git errors (not a repo, bad ref, etc.). We cannot prove there is no
+ *      work, so we err toward pushing rather than silently dropping commits.
+ *
+ * `workflow.ts` does not currently call this (it always pushes on loop success); the
+ * fail-open behavior is the safe default for any future gating caller. If a caller
+ * needs to *distinguish* "no upstream" from a real error (e.g. for logging), inspect
+ * stderr for the no-upstream message rather than relying on the boolean alone.
  */
 export function hasCommitsAheadOfRemote(worktreePath: string): boolean {
   const child = spawnSync(
@@ -192,6 +247,8 @@ export function hasCommitsAheadOfRemote(worktreePath: string): boolean {
   );
 
   if (child.status !== 0) {
+    // Fail open: no upstream (normal first push) and genuine errors both land
+    // here; treat as "has work to push" so a gating caller never drops commits.
     return true;
   }
 
