@@ -8,6 +8,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants';
 import type {
   DocIngestionJobPayload,
@@ -72,6 +73,7 @@ export class DocIngestionRepeatableService implements OnModuleInit {
     }
 
     const job = await this.queue.add(JOB_NAME, payload, {
+      ...REPEATABLE_JOB_OPTIONS,
       repeat: { pattern },
     });
     this.logger.info(

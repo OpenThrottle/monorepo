@@ -6,12 +6,14 @@
  */
 
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { EMIT_NOTIFICATION_EMITTER } from '@openthrottle/nestjs-websockets';
 import { NotificationEmitterAdapter } from './notification-emitter.adapter';
 import { NotificationsService } from './notifications.service';
 
 @Module({
   exports: [NotificationsService, EMIT_NOTIFICATION_EMITTER],
+  imports: [LoggerModule],
   providers: [
     // NotificationEmitterAdapter,
     NotificationsService,

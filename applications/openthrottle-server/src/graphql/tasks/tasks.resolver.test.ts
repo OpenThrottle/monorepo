@@ -776,6 +776,84 @@ describe('TasksResolver', () => {
     });
   });
 
+  describe('createTask — requirements parsing', () => {
+    const planId = mockTask.planId as string;
+
+    const baseInput = {
+      assignee: null,
+      category: null,
+      description: null,
+      planId,
+      project: null,
+      projectId: null,
+      sortOrder: 1000,
+      status: 'PENDING',
+      summary: null,
+      title: 'Requirements task',
+    };
+
+    test('throws BadRequestException on malformed requirements JSON', async () => {
+      await expect(
+        resolver.createTask({ ...baseInput, requirements: '{not json' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    test('throws BadRequestException when requirements JSON is not an array', async () => {
+      await expect(
+        resolver.createTask({ ...baseInput, requirements: '{"a":1}' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    test('parses a valid requirements JSON array', async () => {
+      vi.mocked(repo.save).mockResolvedValue(mockTask);
+
+      await resolver.createTask({
+        ...baseInput,
+        requirements: '["one","two"]',
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ requirements: ['one', 'two'] }),
+      );
+    });
+
+    test('treats null requirements as an empty array', async () => {
+      vi.mocked(repo.save).mockResolvedValue(mockTask);
+
+      await resolver.createTask({ ...baseInput, requirements: null });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ requirements: [] }),
+      );
+    });
+  });
+
+  describe('updateTask — requirements parsing', () => {
+    test('throws BadRequestException on malformed requirements JSON', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue(mockTask);
+
+      await expect(
+        resolver.updateTask({
+          assignee: undefined,
+          category: undefined,
+          description: undefined,
+          id: mockTask.id,
+          planId: null,
+          project: undefined,
+          projectId: undefined,
+          requirements: 'not-json',
+          sortOrder: null,
+          status: null,
+          summary: undefined,
+          title: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+  });
+
   describe('createTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits when new task is created as IN_PROGRESS and plan was promoted', async () => {
       const planId = mockTask.planId as string;
