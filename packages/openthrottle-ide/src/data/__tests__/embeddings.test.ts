@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FetchLike } from '../embeddings.js';
+import type { FetchLike } from '../embeddings.ts';
 import {
   createEmbeddingsProvider,
   DEFAULT_OLLAMA_BASE_URL,
@@ -9,7 +9,7 @@ import {
   DEFAULT_OPENAI_EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
   MAX_EMBEDDING_CHARS,
-} from '../embeddings.js';
+} from '../embeddings.ts';
 
 /** Parse a recorded fetch call's JSON request body into a known shape. */
 function parsedBody(call: RecordedCall | undefined): {

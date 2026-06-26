@@ -1,9 +1,9 @@
 import { basename } from 'node:path';
 
-import { parsePersonaFrontmatter } from './parse-persona-frontmatter.js';
-import { parseRuleFrontmatter } from './parse-rule-frontmatter.js';
-import { parseSkillFrontmatter } from './parse-skill-frontmatter.js';
-import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.js';
+import { parsePersonaFrontmatter } from './parse-persona-frontmatter.ts';
+import { parseRuleFrontmatter } from './parse-rule-frontmatter.ts';
+import { parseSkillFrontmatter } from './parse-skill-frontmatter.ts';
+import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
 
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'rules' | 'skills';
 

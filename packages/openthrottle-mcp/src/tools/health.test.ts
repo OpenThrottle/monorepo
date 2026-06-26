@@ -1,6 +1,6 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { healthToolHandler } from './health.js';
+import { healthToolHandler } from './health.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphql: vi.fn(),

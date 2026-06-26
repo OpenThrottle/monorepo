@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { hashContent } from '../../utils/hash.js';
-import type { WorkspaceFileHash } from '../workspace.js';
-import { diffSnapshots, hashWorkspace, listFiles } from '../workspace.js';
+import { hashContent } from '../../utils/hash.ts';
+import type { WorkspaceFileHash } from '../workspace.ts';
+import { diffSnapshots, hashWorkspace, listFiles } from '../workspace.ts';
 
 describe('workspace enumeration', () => {
   let root: string;

@@ -22,7 +22,7 @@ import {
   GetTasksDocument,
   ReorderPlanTasksDocument,
   UpdateTaskDocument,
-} from '../__generated__/graphql.js';
+} from '../__generated__/graphql.ts';
 import {
   CreateTaskInputSchema,
   DeleteTaskInputSchema,
@@ -30,12 +30,12 @@ import {
   ReorderPlanTasksInputSchema,
   TasksByPlanIdInputSchema,
   UpdateTaskInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { filterTasksByCategory } from '../utils/filters.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { filterTasksByCategory } from '../utils/filters.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 export type TaskListItem = GetTasksQuery['tasks'][number];
 

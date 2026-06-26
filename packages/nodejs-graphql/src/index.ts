@@ -12,7 +12,7 @@ import {
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
   rethrowAsTimeoutIfAborted,
-} from './utils.js';
+} from './utils.ts';
 
 export type {
   ExecuteGraphqlV2,
@@ -28,15 +28,15 @@ export type {
   GraphqlV2Result,
   GraphqlV2RetryOn,
   GraphqlV2RetryOptions,
-} from './graphql-v2.js';
-export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.js';
-export { executeGraphqlV2 } from './index-v2.js';
-export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
-export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
+} from './graphql-v2.ts';
+export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
+export { executeGraphqlV2 } from './index-v2.ts';
+export { getGraphQLUrl, parseDateTimeInResponse } from './utils.ts';
+export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.ts';
 export {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
-} from './utils.js';
+} from './utils.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.

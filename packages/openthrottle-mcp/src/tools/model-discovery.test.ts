@@ -1,7 +1,7 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { discoverLocalModelsToolHandler } from './model-discovery.js';
+import { discoverLocalModelsToolHandler } from './model-discovery.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphql: vi.fn(),

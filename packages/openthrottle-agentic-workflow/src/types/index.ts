@@ -1,5 +1,5 @@
-import { WorkflowConfigLegacy } from './config.js';
-import { WORKFLOW_EVENT } from '../config/index.js';
+import { WorkflowConfigLegacy } from './config.ts';
+import { WORKFLOW_EVENT } from '../config/index.ts';
 
 /**
  * Align structured logs using `correlationId` (and optionally `queueJobId`,

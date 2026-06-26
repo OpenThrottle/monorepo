@@ -1,4 +1,4 @@
-import type { AgentParseControlKind } from './contract/step-results.js';
+import type { AgentParseControlKind } from './contract/step-results.ts';
 
 /** Matches `<ralph:task-complete>uuid</ralph:task-complete>`. */
 const RALPH_COMPLETE_TASK_REGEX =

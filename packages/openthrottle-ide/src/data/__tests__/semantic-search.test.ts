@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CodeChunk } from '../chunk.js';
-import type { EmbeddingsProvider } from '../embeddings.js';
-import { semanticSearch } from '../semantic.js';
-import type { VectorMatch, VectorStore } from '../semantic.js';
+import type { CodeChunk } from '../chunk.ts';
+import type { EmbeddingsProvider } from '../embeddings.ts';
+import { semanticSearch } from '../semantic.ts';
+import type { VectorMatch, VectorStore } from '../semantic.ts';
 
 function chunk(path: string, content: string): CodeChunk {
   return { content, endLine: 1, id: `${path}:${content}`, path, startLine: 1 };

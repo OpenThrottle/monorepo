@@ -5,7 +5,7 @@
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { executeGraphqlAtUrl } from './graphql/index.js';
+import { executeGraphqlAtUrl } from './graphql/index.ts';
 import {
   CreatePlanDocument,
   GetListDistinctCategoriesDocument,
@@ -13,9 +13,9 @@ import {
   GetPlansByStatusVsCodeDocument,
   GetTasksByPlanIdDocument,
   CreatePlanInput,
-} from './__generated__/graphql.js';
-import { UnauthenticatedError } from './errors.js';
-import { sortPlanTasksByListOrder } from './sort-plan-tasks-by-list-order.js';
+} from './__generated__/graphql.ts';
+import { UnauthenticatedError } from './errors.ts';
+import { sortPlanTasksByListOrder } from './sort-plan-tasks-by-list-order.ts';
 
 type GetToken = () => Promise<string | undefined>;
 

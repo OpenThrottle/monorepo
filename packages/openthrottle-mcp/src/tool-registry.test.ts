@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 import type { z } from 'zod';
-import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.js';
-import { developerMcpToolDefinitions } from './tool-registry.js';
+import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.ts';
+import { developerMcpToolDefinitions } from './tool-registry.ts';
 
 /**
  * @description `@rekog/mcp-nest` stores `@Tool` options under this Reflect metadata key on the decorated method.

@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import type { Node, Project } from 'ts-morph';
 import { Node as TsNode, Project as TsProject, ts } from 'ts-morph';
 
-import type { WorkspaceConfig } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
-import { hashContent } from '../utils/hash.js';
-import { listFiles } from './workspace.js';
+import type { WorkspaceConfig } from '../config/workspace-config.ts';
+import { resolveWorkspaceConfig } from '../config/workspace-config.ts';
+import { hashContent } from '../utils/hash.ts';
+import { listFiles } from './workspace.ts';
 
 /**
  * An embeddable slice of a source file. Chunks are the unit the semantic layer

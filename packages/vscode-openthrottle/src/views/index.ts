@@ -3,10 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
-import { registerPlansView } from './plans-view.js';
-import { registerTabsView } from './tabs-view.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
+import { registerPlansView } from './plans-view.ts';
+import { registerTabsView } from './tabs-view.ts';
 
 interface RegisteredViews {
   readonly treeProvider: PlansTreeDataProvider;

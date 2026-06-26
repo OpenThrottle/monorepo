@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 
 import { rgPath } from '@vscode/ripgrep';
 
-import type { ResolvedWorkspaceConfig } from '../config/workspace-config.js';
+import type { ResolvedWorkspaceConfig } from '../config/workspace-config.ts';
 
 const execFileAsync = promisify(execFile);
 

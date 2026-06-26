@@ -4,9 +4,9 @@
 
 import { z } from 'zod';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
-import { GetServerHealthDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { runTool } from '../utils/tool-result.js';
+import { GetServerHealthDocument } from '../__generated__/graphql.ts';
+import type { GenericResult } from '../types/index.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type HealthStructured = {
   serverHealth: {

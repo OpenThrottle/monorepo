@@ -1,8 +1,8 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { executeGraphqlV2 } from './index-v2.js';
-import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from './utils.js';
+import { executeGraphqlV2 } from './index-v2.ts';
+import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from './utils.ts';
 
 const doc = parse('{ __typename }') as TypedDocumentNode<
   { readonly __typename: string },

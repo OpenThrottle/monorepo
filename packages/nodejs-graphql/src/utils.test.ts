@@ -3,7 +3,7 @@ import {
   getGraphQLToken,
   getGraphQLUrl,
   parseDateTimeInResponse,
-} from './utils.js';
+} from './utils.ts';
 
 describe('getGraphQLUrl', () => {
   const original = process.env.API_URL_INTERNAL;

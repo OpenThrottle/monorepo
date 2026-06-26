@@ -2,8 +2,8 @@
  * @description MCP developer package: tool registrations for Cortex/OpenThrottle over GraphQL.
  */
 
-export { registerKnowledgeBaseResource } from './resources/index.js';
-export { runServer, runServerLocal } from './run-server.js';
+export { registerKnowledgeBaseResource } from './resources/index.ts';
+export { runServer, runServerLocal } from './run-server.ts';
 
 /**
  * @description Public `./auth` subpath — consumed via `@openthrottle/openthrottle-mcp/auth` and `@openthrottle/nestjs-openthrottle-mcp`.
@@ -13,4 +13,4 @@ export {
   getAuthToken,
   withMcpDeveloperAuthTokenAsync,
   withMcpDeveloperAuthToken,
-} from './auth/get-auth-token.js';
+} from './auth/get-auth-token.ts';

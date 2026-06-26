@@ -3,13 +3,13 @@ import { join } from 'node:path';
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
-} from '../config/workspace-config.js';
+} from '../config/workspace-config.ts';
 import {
   filterRealPathsInsideRoot,
   resolveWorkspaceConfig,
-} from '../config/workspace-config.js';
-import { hashFile } from '../utils/hash.js';
-import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
+} from '../config/workspace-config.ts';
+import { hashFile } from '../utils/hash.ts';
+import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.ts';
 
 /** A single file's path and content fingerprint, used for incremental sync. */
 export interface WorkspaceFileHash {

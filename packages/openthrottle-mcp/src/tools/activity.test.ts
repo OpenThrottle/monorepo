@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getActivityByDateToolHandler,
   getLastActivityToolHandler,
-} from './activity.js';
+} from './activity.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

@@ -9,7 +9,7 @@ import {
   pinNxWorkspaceRootToOpenThrottle,
   prependOpenThrottleBinToPath,
   resolveOpenThrottleBinDir,
-} from '../nodejs.js';
+} from '../nodejs.ts';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;

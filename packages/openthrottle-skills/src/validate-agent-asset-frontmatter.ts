@@ -1,17 +1,17 @@
 import type { ZodError } from 'zod';
 
-import { parsePersonaFrontmatterForValidation } from './parse-persona-frontmatter.js';
-import { parseRuleFrontmatterForValidation } from './parse-rule-frontmatter.js';
-import { parseSkillFrontmatterForValidation } from './parse-skill-frontmatter.js';
+import { parsePersonaFrontmatterForValidation } from './parse-persona-frontmatter.ts';
+import { parseRuleFrontmatterForValidation } from './parse-rule-frontmatter.ts';
+import { parseSkillFrontmatterForValidation } from './parse-skill-frontmatter.ts';
 import type {
   AgentAssetKind,
   AgentAssetValidationIssue,
-} from './schemas/agent-asset-frontmatter.schemas.js';
+} from './schemas/agent-asset-frontmatter.schemas.ts';
 import {
   personaFrontmatterSchema,
   ruleFrontmatterSchema,
   skillFrontmatterSchema,
-} from './schemas/agent-asset-frontmatter.schemas.js';
+} from './schemas/agent-asset-frontmatter.schemas.ts';
 
 const zodIssuesToValidationIssues = (
   path: string,

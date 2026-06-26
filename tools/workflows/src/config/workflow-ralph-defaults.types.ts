@@ -5,7 +5,7 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowRalphTransport } from '../utils/workflow-transport.js';
+import type { WorkflowRalphTransport } from '../utils/workflow-transport.ts';
 
 /**
  * Debug shim level aligned with {@link WorkflowDebug} in openthrottle-workflows.

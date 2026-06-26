@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   resolveInsideRoot,
   resolveWorkspaceConfig,
-} from '../workspace-config.js';
+} from '../workspace-config.ts';
 
 describe('resolveInsideRoot', () => {
   const resolved = resolveWorkspaceConfig({ root: `${sep}repo` });

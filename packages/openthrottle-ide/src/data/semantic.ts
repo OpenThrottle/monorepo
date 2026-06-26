@@ -3,15 +3,15 @@ import { readFile } from 'node:fs/promises';
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
-} from '../config/workspace-config.js';
+} from '../config/workspace-config.ts';
 import {
   resolveInsideRoot,
   resolveWorkspaceConfig,
-} from '../config/workspace-config.js';
-import type { ChunkOptions, CodeChunk } from './chunk.js';
-import { chunkFile, chunkWorkspace } from './chunk.js';
-import type { EmbeddingsProvider } from './embeddings.js';
-import type { SnapshotDiff } from './workspace.js';
+} from '../config/workspace-config.ts';
+import type { ChunkOptions, CodeChunk } from './chunk.ts';
+import { chunkFile, chunkWorkspace } from './chunk.ts';
+import type { EmbeddingsProvider } from './embeddings.ts';
+import type { SnapshotDiff } from './workspace.ts';
 
 /** A {@link CodeChunk} paired with its embedding vector, ready to persist. */
 export interface StoredChunk {

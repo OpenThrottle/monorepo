@@ -16,12 +16,12 @@
 import type {
   McpServer,
   ToolCallback,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+} from '@modelcontextprotocol/sdk/server/mcp.ts';
 import type {
   AnySchema,
   ZodRawShapeCompat,
-} from '@modelcontextprotocol/sdk/server/zod-compat.js';
-import * as Th from './nest-tool-handlers.js';
+} from '@modelcontextprotocol/sdk/server/zod-compat.ts';
+import * as Th from './nest-tool-handlers.ts';
 
 /**
  * @description The schema types `McpServer.registerTool` accepts for `inputSchema` — a zod v3 or v4 schema, or a raw shape. The codegen-derived `*ToolParameters` mix zod v3 and v4, so the registry mirrors the SDK's own compat union to stay version-agnostic.

@@ -4,12 +4,12 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { hashContent } from '../../utils/hash.js';
+import { hashContent } from '../../utils/hash.ts';
 import {
   chunkFile,
   chunkWorkspace,
   DEFAULT_CHUNK_WINDOW_LINES,
-} from '../chunk.js';
+} from '../chunk.ts';
 
 describe('chunkFile', () => {
   it('chunks TypeScript at top-level declaration boundaries (AST-aware)', () => {

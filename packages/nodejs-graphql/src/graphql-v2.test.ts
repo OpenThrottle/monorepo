@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type {
   GraphqlV2Failure,
   GraphqlV2FailureContext,
-} from './graphql-v2.js';
-import { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.js';
+} from './graphql-v2.ts';
+import { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
 
 const emptyVarsDoc = parse('{ __typename }') as TypedDocumentNode<
   { readonly __typename: string },

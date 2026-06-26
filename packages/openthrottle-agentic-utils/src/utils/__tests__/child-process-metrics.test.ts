@@ -6,7 +6,7 @@ vi.mock('pidusage', () => ({
   default: (pid: number) => mockPidusage(pid),
 }));
 
-import { createChildProcessMetricsCollector } from '../metrics.js';
+import { createChildProcessMetricsCollector } from '../metrics.ts';
 
 describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
   beforeEach(() => {

@@ -12,11 +12,11 @@ import {
   GetDocumentDocument,
   ListSourcesDocument,
   SearchDocument,
-} from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent, SafeToolError } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/graphql.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 const SEARCH_DEFAULT_LIMIT = 20;
 const SEARCH_MAX_LIMIT = 50;

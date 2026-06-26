@@ -14,15 +14,15 @@ import {
   GetNoteDocument,
   GetNotesDocument,
   UpdateNoteDocument,
-} from '../__generated__/graphql.js';
+} from '../__generated__/graphql.ts';
 import {
   CreateNoteInputSchema,
   UpdateNoteInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type CreateNoteResult = GenericResult<{
   note: CreateNoteMutation['createNote'];

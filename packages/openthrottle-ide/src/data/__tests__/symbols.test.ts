@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { findDefinition, findReferences, listExports } from '../symbols.js';
-import { resetProjectCache } from '../ts-project.js';
+import { findDefinition, findReferences, listExports } from '../symbols.ts';
+import { resetProjectCache } from '../ts-project.ts';
 
 describe('listExports', () => {
   let root: string;
@@ -43,9 +43,9 @@ describe('listExports', () => {
     await writeFile(
       join(root, 'src', 'index.ts'),
       [
-        "export { add, PI } from './math.js';",
-        "export type { Point } from './math.js';",
-        "export { default as Widget } from './widget.js';",
+        "export { add, PI } from './math.ts';",
+        "export type { Point } from './math.ts';",
+        "export { default as Widget } from './widget.ts';",
       ].join('\n'),
     );
   });

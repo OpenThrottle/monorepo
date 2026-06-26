@@ -10,7 +10,7 @@ import {
   getTasksByPlanIdToolHandler,
   reorderPlanTasksToolHandler,
   updateTaskToolHandler,
-} from './tasks.js';
+} from './tasks.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

@@ -11,14 +11,14 @@ import { Node, ts } from 'ts-morph';
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
-} from '../config/workspace-config.js';
+} from '../config/workspace-config.ts';
 import {
   filterRealPathsInsideRoot,
   resolveInsideRoot,
   resolveWorkspaceConfig,
-} from '../config/workspace-config.js';
-import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
-import { loadProject } from './ts-project.js';
+} from '../config/workspace-config.ts';
+import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.ts';
+import { loadProject } from './ts-project.ts';
 
 /** A symbol exported from the workspace, resolved to its declaration site. */
 export interface ExportedSymbol {

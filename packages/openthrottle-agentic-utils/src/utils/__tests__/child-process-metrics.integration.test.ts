@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createChildProcessMetricsCollector } from '../metrics.js';
+import { createChildProcessMetricsCollector } from '../metrics.ts';
 
 describe('createChildProcessMetricsCollector with real pidusage', () => {
   it('collects metrics from the current process', async () => {

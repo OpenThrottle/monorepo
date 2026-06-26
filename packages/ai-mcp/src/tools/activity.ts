@@ -2,18 +2,18 @@
  * @description Registers activity tools: get_activity_by_date, get_last_activity.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
-import type { LastActivityResult as CortexLastActivityResult } from '../cortex-client.js';
+import { getPostgresConfig } from '../config.ts';
+import type { LastActivityResult as CortexLastActivityResult } from '../cortex-client.ts';
 import {
   getActivityByDateRange as cortexGetActivityByDateRange,
   getLastActivityForPlanOrTask as cortexGetLastActivityForPlanOrTask,
-} from '../cortex-client.js';
+} from '../cortex-client.ts';
 import {
   getActivityByDateInputSchema,
   getLastActivityInputSchema,
-} from '../schemas.js';
+} from '../schemas.ts';
 
 type ActivityByDateResult = {
   content: { text: string; type: 'text' }[];

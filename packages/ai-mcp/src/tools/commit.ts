@@ -2,12 +2,12 @@
  * @description Registers commit link tool: link_commit.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
-import { createCommitLink as cortexCreateCommitLink } from '../cortex-client.js';
-import { linkCommitInputSchema } from '../schemas.js';
-import { configMissingContent, invalidArgsContent } from './errors.js';
+import { getPostgresConfig } from '../config.ts';
+import { createCommitLink as cortexCreateCommitLink } from '../cortex-client.ts';
+import { linkCommitInputSchema } from '../schemas.ts';
+import { configMissingContent, invalidArgsContent } from './errors.ts';
 
 export function registerCommitTools(server: McpServer): void {
   server.registerTool(

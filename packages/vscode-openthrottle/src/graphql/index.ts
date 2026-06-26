@@ -4,7 +4,7 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
-import { parseDateTimeInResponse } from './utils.js';
+import { parseDateTimeInResponse } from './utils.ts';
 
 interface ExecuteGraphqlAtUrlOptions {
   /** When set, sent as Authorization: Bearer <token>. Omit for unauthenticated requests. */

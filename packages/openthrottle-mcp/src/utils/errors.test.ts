@@ -4,7 +4,7 @@ import {
   errorCategory,
   sanitizedMessageForCategory,
   toSanitizedClientMessage,
-} from './errors.js';
+} from './errors.ts';
 
 describe('classifyError', () => {
   it('classifies auth errors', () => {

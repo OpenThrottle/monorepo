@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { createWallClockMetrics, formatWallClockMetrics } from '../metrics.js';
-import type { WallClockMetrics } from '../metrics.js';
+import { createWallClockMetrics, formatWallClockMetrics } from '../metrics.ts';
+import type { WallClockMetrics } from '../metrics.ts';
 
 describe('createWallClockMetrics', () => {
   test('computes correct metrics for CPU-bound job (ratio ~1)', () => {

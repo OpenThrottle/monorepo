@@ -4,7 +4,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { ResourceTemplate, Tool } from '@rekog/mcp-nest';
-import * as Th from '../nest-tool-handlers.js';
+import * as Th from '../nest-tool-handlers.ts';
 import { z } from 'zod';
 
 /**

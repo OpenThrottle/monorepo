@@ -1,12 +1,12 @@
-import type { PlanFragment, TaskFragment } from '../__generated__/graphql.js';
-import { sortTasksByPlanListOrder } from './plan-task-list-order.js';
+import type { PlanFragment, TaskFragment } from '../__generated__/graphql.ts';
+import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 export {
   comparePlanTaskListOrder,
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
-} from './plan-task-list-order.js';
-export type { PlanTaskSortFields } from './plan-task-list-order.js';
+} from './plan-task-list-order.ts';
+export type { PlanTaskSortFields } from './plan-task-list-order.ts';
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with

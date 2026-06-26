@@ -1,12 +1,12 @@
 import type {
   ModelEndpoint,
   ModelProvider,
-} from '../../types/model-discovery.js';
+} from '../../types/model-discovery.ts';
 import {
   DEFAULT_FINGERPRINT_TIMEOUT_MS,
   DEFAULT_MAX_CONCURRENCY,
   DEFAULT_PROBE_TIMEOUT_MS,
-} from './constants.js';
+} from './constants.ts';
 
 /** Per-probe timeout knobs. */
 export interface ProbeOptions {

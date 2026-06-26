@@ -1,4 +1,4 @@
-import type { TaskByPlanResponseFragment } from './__generated__/graphql.js';
+import type { TaskByPlanResponseFragment } from './__generated__/graphql.ts';
 
 /**
  * @description Compares plan tasks by sortOrder ASC, then createdAt ASC (matches server plan list order).

@@ -3,11 +3,11 @@
  */
 
 import * as vscode from 'vscode';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
-import { runCreatePlanFromText } from './create-plan-from-text.js';
-import { runLogin } from './login.js';
-import { runLogout } from './logout.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
+import { runCreatePlanFromText } from './create-plan-from-text.ts';
+import { runLogin } from './login.ts';
+import { runLogout } from './logout.ts';
 
 /**
  * @description Register all OpenThrottle commands. Call once from activate after views are registered.

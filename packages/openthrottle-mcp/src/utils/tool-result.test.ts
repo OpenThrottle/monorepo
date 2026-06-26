@@ -4,8 +4,8 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SafeToolError } from './errors.js';
-import { runTool } from './tool-result.js';
+import { SafeToolError } from './errors.ts';
+import { runTool } from './tool-result.ts';
 
 describe('runTool', () => {
   afterEach(() => {

@@ -3,7 +3,7 @@ import {
   executeGraphqlWithAuth,
 } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.js';
+import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphql: vi.fn(),

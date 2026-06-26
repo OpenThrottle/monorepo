@@ -8,8 +8,8 @@ import {
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
   WORKFLOW_RUNNER_IDS,
-} from '../config/index.js';
-import { toContainerPath } from './workspace-paths.js';
+} from '../config/index.ts';
+import { toContainerPath } from './workspace-paths.ts';
 
 /**
  * Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root.

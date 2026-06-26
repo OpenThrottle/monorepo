@@ -3,8 +3,8 @@ import * as path from 'node:path';
 import {
   setWorkspaceRoot,
   workspaceRoot,
-} from 'nx/src/utils/workspace-root.js';
-import { getOpenThrottleRoot } from './workflow.js';
+} from 'nx/src/utils/workspace-root.ts';
+import { getOpenThrottleRoot } from './workflow.ts';
 
 /**
  * Nx env var that overrides workspace-root detection (read before the cwd walk-up).

@@ -10,7 +10,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import { executeGraphqlV2, getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 
-export { buildRalphFlowContextFromPlanRunTuning } from './context.js';
+export { buildRalphFlowContextFromPlanRunTuning } from './context.ts';
 
 /**
  * @description Configuration for building {@link ExecuteGraphqlOptionsV2} (auth, optional endpoint override, extra headers).

@@ -1,4 +1,4 @@
-import type { PlanFragment } from '../../../__generated__/graphql.js';
+import type { PlanFragment } from '../../../__generated__/graphql.ts';
 
 /** Task fields consumed by {@link formatPlanAndTasksForPrompt} (GraphQL fragment or TypeORM entity). */
 interface FormatPlanTaskForPrompt {

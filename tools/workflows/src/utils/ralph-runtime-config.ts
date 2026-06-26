@@ -10,7 +10,7 @@ import {
   loadWorkflowRalphDefaultsFileV1,
   normalizeWorkflowRalphDefaultsFileV1,
   readWorkflowRalphConfigEnv,
-} from '../config/load-workflow-ralph-config.js';
+} from '../config/load-workflow-ralph-config.ts';
 import type { Writable } from '../type';
 
 export {
@@ -18,7 +18,7 @@ export {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
   WORKFLOW_RALPH_ENV,
-} from '../config/load-workflow-ralph-config.js';
+} from '../config/load-workflow-ralph-config.ts';
 
 /** Repo-local JSON file (cwd); optional. */
 export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;

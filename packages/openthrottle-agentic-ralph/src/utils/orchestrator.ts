@@ -10,7 +10,7 @@ import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
   WorkflowOrchestrator,
-} from '../types.js';
+} from '../types.ts';
 import {
   GetPlanDocument,
   GetServerHealthDocument,
@@ -18,22 +18,22 @@ import {
   GetTasksByPlanIdDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
-} from '../__generated__/graphql.js';
+} from '../__generated__/graphql.ts';
 import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { WorkflowContext } from '../types.js';
-import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
+import type { WorkflowContext } from '../types.ts';
+import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.ts';
 import {
   parseAgentOutput,
   parseAgentCompleteTaskSignals,
   agentOutputHasPromiseComplete,
-} from '../utils/output.js';
+} from '../utils/output.ts';
 import {
   formatPlanAndTasksForPrompt,
   pickRalphTaskForIteration,
-} from '../utils/index.js';
+} from '../utils/index.ts';
 
 /**
  * @description Agent cwd and foreign-repo scoping for orchestrator prompts (parity with `ralph.ts`).

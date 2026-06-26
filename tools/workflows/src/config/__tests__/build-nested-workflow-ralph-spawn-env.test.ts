@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { WORKFLOW_RALPH_OT_ROOT_ENV } from '@openthrottle/openthrottle-agentic-utils';
-import { WORKFLOW_RALPH_SPAWN_HOME_ENV } from '../workflow-ralph-spawn-env.js';
+import { WORKFLOW_RALPH_SPAWN_HOME_ENV } from '../workflow-ralph-spawn-env.ts';
 import {
   applyWorkflowRalphOtRootFromConfig,
   buildNestedWorkflowRalphSpawnEnv,

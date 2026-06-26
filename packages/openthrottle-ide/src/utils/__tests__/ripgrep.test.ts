@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { ResolvedWorkspaceConfig } from '../../config/workspace-config.js';
-import { runRipgrep, workspaceRipgrepArgs } from '../ripgrep.js';
+import type { ResolvedWorkspaceConfig } from '../../config/workspace-config.ts';
+import { runRipgrep, workspaceRipgrepArgs } from '../ripgrep.ts';
 
 const resolved = (
   overrides: Partial<ResolvedWorkspaceConfig> = {},

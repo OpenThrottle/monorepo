@@ -2,9 +2,9 @@ import type {
   DiscoverModelsOptions,
   DiscoveryResult,
   ModelEndpoint,
-} from '../../types/model-discovery.js';
-import { HOST_PREFERENCE } from './constants.js';
-import { probeAll } from './probe.js';
+} from '../../types/model-discovery.ts';
+import { HOST_PREFERENCE } from './constants.ts';
+import { probeAll } from './probe.ts';
 
 /**
  * Rank a host against {@link HOST_PREFERENCE}: lower is preferred. Hosts not in

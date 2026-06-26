@@ -1,6 +1,6 @@
 import { sanitizePostgresUrlForLogs } from '@openthrottle/openthrottle-agentic-utils';
 
-import { loadWorkflowRalphConfig } from '../config/load-workflow-ralph-config.js';
+import { loadWorkflowRalphConfig } from '../config/load-workflow-ralph-config.ts';
 
 /**
  * @description Opt-in diagnostics for comparing OpenThrottle DB/API identity across BullMQ worker → nested `workflow-ralph` when using `workingDirectory`. Never logs passwords.

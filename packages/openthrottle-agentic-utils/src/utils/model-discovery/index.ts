@@ -6,7 +6,7 @@
  * reads (callers pass an env-like object to {@link resolveHosts} /
  * {@link resolvePorts}).
  */
-export * from './constants.js';
-export * from './discover.js';
-export * from './hosts.js';
-export * from './probe.js';
+export * from './constants.ts';
+export * from './discover.ts';
+export * from './hosts.ts';
+export * from './probe.ts';

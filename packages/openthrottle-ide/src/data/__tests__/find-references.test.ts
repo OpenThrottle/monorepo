@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { findReferences } from '../symbols.js';
-import { resetProjectCache } from '../ts-project.js';
+import { findReferences } from '../symbols.ts';
+import { resetProjectCache } from '../ts-project.ts';
 
 describe('findReferences', () => {
   let root: string;
@@ -33,7 +33,7 @@ describe('findReferences', () => {
     await writeFile(
       join(root, 'src', 'app.ts'),
       [
-        "import { count } from './counter.js';",
+        "import { count } from './counter.ts';",
         'export const current = count;',
       ].join('\n'),
     );

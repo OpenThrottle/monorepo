@@ -5,11 +5,11 @@
 import {
   ResourceTemplate,
   type McpServer,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+} from '@modelcontextprotocol/sdk/server/mcp.ts';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
-import { GetDocumentDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { toSanitizedClientMessage } from '../utils/errors.js';
+import { GetDocumentDocument } from '../__generated__/graphql.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { toSanitizedClientMessage } from '../utils/errors.ts';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;

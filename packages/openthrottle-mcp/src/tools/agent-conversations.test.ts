@@ -11,7 +11,7 @@ import {
   getAgentConversationMessagesToolDescription,
   listAgentConversationsToolDescription,
   listAgentConversationsToolHandler,
-} from './agent-conversations.js';
+} from './agent-conversations.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

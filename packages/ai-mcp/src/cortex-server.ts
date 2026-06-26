@@ -3,18 +3,18 @@
  * Use this entry point to avoid pulling in the full MCP server.
  */
 
-export { getPostgresConfig } from './config.js';
-export type { CortexPostgresConfig } from './config.js';
-export { embedQuery } from './embedding.js';
+export { getPostgresConfig } from './config.ts';
+export type { CortexPostgresConfig } from './config.ts';
+export { embedQuery } from './embedding.ts';
 export {
   getChunkById,
   listSources,
   runSemanticSearch,
   searchAgentAssets,
   searchPlansBySemanticQuery,
-} from './cortex-client.js';
+} from './cortex-client.ts';
 export type {
   AgentAssetSearchChunk,
   PlanStatusCount,
   SemanticSearchChunk,
-} from './cortex-client.js';
+} from './cortex-client.ts';

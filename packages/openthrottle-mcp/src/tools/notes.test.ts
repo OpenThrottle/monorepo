@@ -10,7 +10,7 @@ import {
   getNoteToolHandler,
   listNotesToolHandler,
   updateNoteToolHandler,
-} from './notes.js';
+} from './notes.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

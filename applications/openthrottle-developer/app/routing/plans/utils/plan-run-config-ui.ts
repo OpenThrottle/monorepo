@@ -9,7 +9,7 @@ import {
   planRunConfigFromWorkflowUiState,
   serializePlanRunConfigForGraphql,
   workflowUiStateFromPlanRunConfig,
-} from '../../../../../../packages/nestjs-repositories/src/modules/plans/plan-run-config/index.js';
+} from '../../../../../../packages/nestjs-repositories/src/modules/plans/plan-run-config/index.ts';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanRunConfigUiState {

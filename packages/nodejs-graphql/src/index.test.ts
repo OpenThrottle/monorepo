@@ -7,7 +7,7 @@ import {
   executeGraphql,
   executeGraphqlAtUrl,
   executeGraphqlWithAuth,
-} from './index.js';
+} from './index.ts';
 
 const doc = parse('{ __typename }') as TypedDocumentNode<
   { readonly __typename: string },

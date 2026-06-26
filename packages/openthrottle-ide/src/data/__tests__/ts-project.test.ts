@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { ts } from 'ts-morph';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { loadProject, resetProjectCache } from '../ts-project.js';
+import { loadProject, resetProjectCache } from '../ts-project.ts';
 
 describe('loadProject', () => {
   let root: string;

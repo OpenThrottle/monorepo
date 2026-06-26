@@ -2,8 +2,8 @@
  * @description Shared helpers for MCP tool handlers that return {@link GenericResult}.
  */
 
-import type { GenericResult } from '../types/index.js';
-import { toSanitizedClientMessage } from './errors.js';
+import type { GenericResult } from '../types/index.ts';
+import { toSanitizedClientMessage } from './errors.ts';
 
 /**
  * @description Runs an async thunk and normalizes success/throw into a {@link GenericResult}.

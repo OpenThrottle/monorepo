@@ -9,7 +9,7 @@ import {
   LoadAverageMetrics,
   PsiCpuMetrics,
   SystemCpuMetrics,
-} from '../types/metrics.js';
+} from '../types/metrics.ts';
 
 /**
  * @description Creates a LoadAverageMetrics snapshot from os.loadavg().

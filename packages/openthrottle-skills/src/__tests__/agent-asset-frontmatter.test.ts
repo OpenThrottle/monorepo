@@ -9,7 +9,7 @@ import {
   parseSkillFrontmatter,
   validateAgentAssetFrontmatter,
   validateAgentAssetsOnDisk,
-} from '../index.js';
+} from '../index.ts';
 
 const monorepoRoot = join(import.meta.dirname, '../../../..');
 

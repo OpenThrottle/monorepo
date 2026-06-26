@@ -27,7 +27,7 @@ vi.mock('./tool-registry.js', () => ({
   registerDeveloperMcpTools: vi.fn(),
 }));
 
-import { runServerLocal } from './run-server.js';
+import { runServerLocal } from './run-server.ts';
 
 describe('runServerLocal token preflight', () => {
   const originalToken = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;

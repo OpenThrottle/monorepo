@@ -13,7 +13,7 @@ import {
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
   rethrowAsTimeoutIfAborted,
-} from './utils.js';
+} from './utils.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.

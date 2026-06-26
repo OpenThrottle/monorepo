@@ -8,7 +8,7 @@ import {
   createPlanToolHandler,
   createPlansToolHandler,
   listPlansByStatusToolHandler,
-} from './plans.js';
+} from './plans.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
