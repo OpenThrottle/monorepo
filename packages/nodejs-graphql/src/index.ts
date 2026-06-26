@@ -26,8 +26,10 @@ export type {
   GraphqlV2OkResult,
   GraphqlV2ResponsePayload,
   GraphqlV2Result,
+  GraphqlV2RetryOn,
+  GraphqlV2RetryOptions,
 } from './graphql-v2.js';
-export { executeGraphql_v2 } from './graphql-v2.js';
+export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.js';
 export { executeGraphqlV2 } from './index-v2.js';
 export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';

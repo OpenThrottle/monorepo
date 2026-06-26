@@ -28,6 +28,18 @@
  * - Optional `mapFailure` transforms the default failure before return (e.g. workflow codes).
  * - Success path: when `parseDateTime !== false`, apply the same DateTime walk as V1 (`utils`
  *   `parseDateTimeInResponse`) to `data`.
+ *
+ * ## Retry (opt-in)
+ *
+ * - `retry` is **off by default** so loader semantics never change silently. When supplied, the
+ *   executor re-runs the request up to `retry.attempts` extra times after the first try, sleeping
+ *   `retry.backoffMs * 2^(retryIndex)` (exponential) between attempts.
+ * - The default {@link defaultRetryOn} predicate retries **only** transient transport failures:
+ *   `network` and `http` with a 5xx status. It never retries `graphql_errors` or `missing_data`
+ *   (deterministic), nor `invalid_json` / `unknown`.
+ * - **Mutations:** retrying is not safe for non-idempotent operations. Retry is opt-in precisely so
+ *   mutation callers do not get automatic retries; only enable `retry` for queries or idempotent
+ *   mutations.
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -93,6 +105,51 @@ export type GraphqlV2MapFailure<
 > = (context: GraphqlV2FailureContext) => TFailure;
 
 /**
+ * @description Predicate deciding whether a {@link GraphqlV2Failure} should be retried.
+ */
+export type GraphqlV2RetryOn = (failure: GraphqlV2Failure) => boolean;
+
+/**
+ * @description Opt-in retry policy for {@link executeGraphql_v2}. Off by default so loader
+ * semantics do not change silently. Not safe for non-idempotent mutations — see module docs.
+ */
+export interface GraphqlV2RetryOptions {
+  /**
+   * @description Number of *extra* attempts after the first try (so total tries = `attempts + 1`).
+   * Values `<= 0` disable retrying.
+   */
+  readonly attempts: number;
+  /**
+   * @description Base delay in milliseconds between attempts. The actual wait grows exponentially:
+   * `backoffMs * 2^(retryIndex)` where `retryIndex` starts at 0 for the first retry. Values
+   * `<= 0` retry immediately with no delay.
+   */
+  readonly backoffMs: number;
+  /**
+   * @description Predicate deciding whether a given failure is retryable. Defaults to
+   * {@link defaultRetryOn} (retry only `network` and 5xx `http`).
+   */
+  readonly retryOn?: GraphqlV2RetryOn | undefined;
+}
+
+/**
+ * @description Default retry predicate: retry only transient transport failures — `network` errors
+ * and `http` failures with a 5xx status. Never retries `graphql_errors`, `missing_data`,
+ * `invalid_json`, or `unknown` (deterministic / not safely retryable).
+ */
+export const defaultRetryOn: GraphqlV2RetryOn = (failure) => {
+  if (failure.kind === 'network') {
+    return true;
+  }
+
+  if (failure.kind === 'http') {
+    return failure.httpStatus != null && failure.httpStatus >= 500;
+  }
+
+  return false;
+};
+
+/**
  * @description Successful V2 execution after HTTP OK, no GraphQL errors, and non-null `data`.
  */
 export interface GraphqlV2OkResult<TData> {
@@ -150,6 +207,11 @@ export interface GraphqlV2ExecuteOptions<
     | Omit<RequestInit, 'body' | 'headers' | 'method' | 'signal'>
     | undefined;
   /**
+   * @description Opt-in retry policy for transient transport failures. Off by default. Not safe
+   * for non-idempotent mutations — see {@link GraphqlV2RetryOptions} and module docs.
+   */
+  readonly retry?: GraphqlV2RetryOptions | undefined;
+  /**
    * @description Passed to `fetch` as `signal`.
    */
   readonly signal?: AbortSignal | undefined;
@@ -195,9 +257,28 @@ const buildV2Headers = (
 };
 
 /**
- * @description Execute a GraphQL operation with explicit URL and non-throwing {@link GraphqlV2Result}.
+ * @description Outcome of one execution attempt: the discriminated result plus the *raw*
+ * (pre-`mapFailure`) failure, so the retry loop can decide retryability on the base failure shape.
  */
-export const executeGraphql_v2: ExecuteGraphqlV2 = async <
+interface GraphqlV2AttemptOutcome<TData, TFailure extends GraphqlV2Failure> {
+  readonly rawFailure: GraphqlV2Failure | null;
+  readonly result: GraphqlV2Result<TData, TFailure>;
+}
+
+/**
+ * @description Sleep for `ms` milliseconds (no-op when `ms <= 0`).
+ */
+const delay = (ms: number): Promise<void> =>
+  ms > 0
+    ? new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      })
+    : Promise.resolve();
+
+/**
+ * @description Run a single GraphQL attempt with explicit URL and non-throwing result.
+ */
+const executeGraphqlV2Once = async <
   TData,
   TVariables extends Record<string, unknown>,
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -205,13 +286,13 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
   document: TypedDocumentNode<TData, TVariables>,
   variables: TVariables | undefined,
   options: GraphqlV2ExecuteOptions<TFailure>,
-): Promise<GraphqlV2Result<TData, TFailure>> => {
+): Promise<GraphqlV2AttemptOutcome<TData, TFailure>> => {
   const finishFailure = (
     failure: GraphqlV2Failure,
     parsedPayload: GraphqlV2ResponsePayload<unknown> | null,
     body: string | undefined,
     res: Response | null,
-  ): GraphqlV2ErrResult<TFailure> => {
+  ): GraphqlV2AttemptOutcome<TData, TFailure> => {
     const context: GraphqlV2FailureContext = {
       failure,
       parsed: parsedPayload,
@@ -223,7 +304,7 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
       ? options.mapFailure(context)
       : (failure as TFailure);
 
-    return { error, ok: false };
+    return { rawFailure: failure, result: { error, ok: false } };
   };
 
   const fetchFn = options.fetch ?? fetch;
@@ -380,7 +461,54 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
       : parseDateTimeInResponse(parsed.data);
 
   return {
-    data: data as TData,
-    ok: true,
+    rawFailure: null,
+    result: {
+      data: data as TData,
+      ok: true,
+    },
   };
+};
+
+/**
+ * @description Execute a GraphQL operation with explicit URL and non-throwing {@link GraphqlV2Result}.
+ *
+ * When `options.retry` is supplied, transient transport failures (per
+ * `options.retry.retryOn`, defaulting to {@link defaultRetryOn}) are retried with exponential
+ * backoff. Retry is off by default and is not safe for non-idempotent mutations (see module docs).
+ */
+export const executeGraphql_v2: ExecuteGraphqlV2 = async <
+  TData,
+  TVariables extends Record<string, unknown>,
+  TFailure extends GraphqlV2Failure = GraphqlV2Failure,
+>(
+  document: TypedDocumentNode<TData, TVariables>,
+  variables: TVariables | undefined,
+  options: GraphqlV2ExecuteOptions<TFailure>,
+): Promise<GraphqlV2Result<TData, TFailure>> => {
+  const retry = options.retry;
+  const maxRetries = retry != null && retry.attempts > 0 ? retry.attempts : 0;
+  const retryOn = retry?.retryOn ?? defaultRetryOn;
+  const baseBackoffMs = retry?.backoffMs ?? 0;
+
+  let outcome = await executeGraphqlV2Once(document, variables, options);
+
+  for (let retryIndex = 0; retryIndex < maxRetries; retryIndex += 1) {
+    if (outcome.rawFailure == null || !retryOn(outcome.rawFailure)) {
+      break;
+    }
+
+    if (options.signal?.aborted === true) {
+      break;
+    }
+
+    // Retries are intentionally sequential: each attempt waits for the prior failure and its
+    // backoff, so awaiting inside the loop is required.
+    // eslint-disable-next-line no-await-in-loop -- sequential backoff between dependent attempts
+    await delay(baseBackoffMs * 2 ** retryIndex);
+
+    // eslint-disable-next-line no-await-in-loop -- next attempt depends on the previous outcome
+    outcome = await executeGraphqlV2Once(document, variables, options);
+  }
+
+  return outcome.result;
 };
