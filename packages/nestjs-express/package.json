@@ -7,7 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@nestjs/common": "catalog:"
+  },
   "devDependencies": {},
   "exports": {
     ".": {
@@ -30,7 +32,7 @@
     "sourceRoot": "./",
     "tags": [
       "name:@openthrottle/nestjs-express",
-      "production:true",
+      "production:false",
       "publish:false",
       "technology:nestjs",
       "type:package"

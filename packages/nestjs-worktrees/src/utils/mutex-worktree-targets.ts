@@ -28,10 +28,27 @@ export interface IMutexWorktreeTargetsTracker {
    */
   acquire(options: { id?: string; lockedBy: string }): Promise<AcquireResult>;
 
-  /** First available target, or undefined if none (no mutex needed for read). */
+  /**
+   * First available target, or undefined if none (no mutex needed for read).
+   *
+   * Read-only and outside the mutex, so the result is eventual-consistency: a
+   * target reported available here may be locked by a concurrent job before you
+   * act on it. Treat the value as a hint only — do NOT gate an acquire on it.
+   * To actually claim a target, call `acquire()` and branch on its result
+   * (`reason: 'all_locked'` means none were free under lock); that re-checks
+   * availability inside the critical section and is the only race-free path.
+   */
   getAvailableTarget(): WorktreeTargetAvailable | undefined;
 
-  /** Whether at least one target is available (no mutex needed for read). */
+  /**
+   * Whether at least one target is available (no mutex needed for read).
+   *
+   * Read-only and outside the mutex, so this is an eventual-consistency hint:
+   * a `true` here can become stale before a subsequent `acquire()`. Do NOT use
+   * a `hasAvailableTarget()` then `acquire()` pattern as a gate — that
+   * reintroduces the TOCTOU race the mutex exists to close. Just call
+   * `acquire()` and rely on its result (`all_locked` when none are free).
+   */
   hasAvailableTarget(): boolean;
 
   /** All registered targets and their current status (no mutex needed for read). */
@@ -52,6 +69,13 @@ export interface IMutexWorktreeTargetsTracker {
  * acquire/release for BullMQ workers with CONCURRENCY > 1. Read-only methods (listTargets,
  * hasAvailableTarget, getAvailableTarget) do not acquire the mutex (eventual consistency
  * is acceptable for checks; acquire/release are the critical sections).
+ *
+ * Usage note (TOCTOU): the read methods are hints only. Callers MUST NOT gate an
+ * acquire on a prior `hasAvailableTarget()`/`getAvailableTarget()` — a target seen as
+ * available can be locked by a concurrent job in the gap before `acquire()`, which
+ * reopens the very race this mutex closes. Call `acquire()` and branch on its result
+ * (`reason: 'all_locked'` = none were free under lock); only that re-checks under the
+ * mutex. The reads exist for observability/metrics/logging, not allocation control.
  */
 export class MutexWorktreeTargetsTracker implements IMutexWorktreeTargetsTracker {
   constructor(
