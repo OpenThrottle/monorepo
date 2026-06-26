@@ -668,6 +668,47 @@ describe('QueuesService', () => {
 
       expect(result).toEqual({ error: 'Failed to get new job id' });
     });
+
+    test('rejects directories that traverse outside the workspace root', async () => {
+      mockDocIngestionAdd.mockClear();
+
+      const result = await service.enqueueDocIngestion({
+        directories: ['../../etc'],
+      });
+
+      expect(result).toEqual({
+        error: 'directories must not escape the workspace root: "../../etc"',
+      });
+      expect(mockDocIngestionAdd).not.toHaveBeenCalled();
+    });
+
+    test('rejects absolute file paths', async () => {
+      mockDocIngestionAdd.mockClear();
+
+      const result = await service.enqueueDocIngestion({
+        files: ['/etc/passwd'],
+      });
+
+      expect(result).toEqual({
+        error: 'files must be relative to the workspace root: "/etc/passwd"',
+      });
+      expect(mockDocIngestionAdd).not.toHaveBeenCalled();
+    });
+
+    test('normalizes safe relative paths before enqueue', async () => {
+      mockDocIngestionAdd.mockClear();
+
+      const result = await service.enqueueDocIngestion({
+        directories: ['docs/./guides'],
+        files: ['docs/a/../b.md'],
+      });
+
+      expect(result).toEqual({ jobId: 'doc-ingestion-job-id' });
+      expect(mockDocIngestionAdd).toHaveBeenCalledWith('doc-ingestion', {
+        directories: ['docs/guides'],
+        files: ['docs/b.md'],
+      });
+    });
   });
 
   describe('enqueuePlanRalphOrchestrator', () => {

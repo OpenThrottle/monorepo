@@ -3,6 +3,7 @@
  */
 
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
 import { MetricsModule } from '../../metrics/metrics.module';
 import { PlansQueueModule } from '../../queues/plans/plans-queue.module';
@@ -11,7 +12,12 @@ import { HealthService } from './health.service';
 
 @Module({
   exports: [HealthService],
-  imports: [MetricsModule, NestjsRepositoriesModule, PlansQueueModule],
+  imports: [
+    LoggerModule,
+    MetricsModule,
+    NestjsRepositoriesModule,
+    PlansQueueModule,
+  ],
   providers: [HealthResolver, HealthService],
 })
 export class HealthGraphqlModule {}

@@ -1,12 +1,15 @@
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NotificationsService } from './notifications.service';
 
 const publish = vi.fn().mockResolvedValue(undefined);
+const warn = vi.fn();
 
 function makeService(): NotificationsService {
   const pubSub = { publish } as unknown as PubSubEngine;
-  return new NotificationsService(pubSub);
+  const logger = { warn } as unknown as LoggerService;
+  return new NotificationsService(pubSub, logger);
 }
 
 /** Topics passed to publish across all calls. */

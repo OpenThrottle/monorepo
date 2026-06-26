@@ -20,6 +20,7 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { Inject, Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PUB_SUB,
   notificationsFirehoseTopic,
@@ -56,7 +57,10 @@ type NotificationEventObject = Record<string, unknown> & { event: string };
 
 @Injectable()
 export class NotificationsService {
-  constructor(@Inject(PUB_SUB) private readonly pubSub: PubSubEngine) {}
+  constructor(
+    @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
+    private readonly logger: LoggerService,
+  ) {}
 
   /**
    * @description Fan an event out to its PubSub topics. The firehose topic always
@@ -69,7 +73,16 @@ export class NotificationsService {
 
     void Promise.all(
       all.map((topic) => this.pubSub.publish(topic, { event })),
-    ).catch(() => undefined);
+    ).catch((error: unknown) => {
+      // Fire-and-forget: a publish failure must not break the originating
+      // mutation, but a dropped notification should still be observable.
+      this.logger.warn(
+        `Failed to publish notification event "${event.event}" to topics [${all.join(', ')}]: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        NotificationsService.name,
+      );
+    });
   }
 
   /**

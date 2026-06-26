@@ -4,6 +4,7 @@
 
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { InjectQueue } from '@nestjs/bullmq';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlansService } from '@openthrottle/nestjs-repositories';
@@ -24,6 +25,7 @@ export class HealthService {
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
     private readonly plansService: PlansService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**
@@ -40,7 +42,12 @@ export class HealthService {
       await repo.manager.query('SELECT 1');
 
       return 'ok';
-    } catch {
+    } catch (error: unknown) {
+      this.logger.warn(
+        `Database health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        HealthService.name,
+      );
+
       return 'unreachable';
     }
   }
@@ -58,7 +65,12 @@ export class HealthService {
       await client.ping();
 
       return 'ok';
-    } catch {
+    } catch (error: unknown) {
+      this.logger.warn(
+        `Redis health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        HealthService.name,
+      );
+
       return 'unreachable';
     }
   }
