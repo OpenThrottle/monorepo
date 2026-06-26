@@ -55,9 +55,15 @@ export type {
   ReferenceLocation,
   SymbolName,
   SymbolPosition,
+  SymbolScopeOptions,
   SymbolTarget,
 } from './data/symbols.js';
-export { findDefinition, findReferences, listExports } from './data/symbols.js';
+export {
+  DEFAULT_MAX_SYMBOL_FILES,
+  findDefinition,
+  findReferences,
+  listExports,
+} from './data/symbols.js';
 
 export type { LoadProjectOptions } from './data/ts-project.js';
 export { loadProject, resetProjectCache } from './data/ts-project.js';

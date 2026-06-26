@@ -84,4 +84,28 @@ describe('findReferences', () => {
 
     expect(references).toEqual([]);
   });
+
+  it('bounds the by-name scan to maxFiles: a cap of 0 loads no files', async () => {
+    // With no files loaded, the by-name target resolves to no declarations, so
+    // the search surface is empty — proving the cap is applied before ts-morph
+    // reads the (potentially huge) tree.
+    const references = await findReferences(
+      { root },
+      { name: 'count' },
+      { maxFiles: 0 },
+    );
+
+    expect(references).toEqual([]);
+  });
+
+  it('respects the globs scope for a by-name target', async () => {
+    const references = await findReferences(
+      { root },
+      { name: 'count' },
+      { globs: ['**/counter.ts'] },
+    );
+    const files = new Set(references.map((reference) => reference.path));
+
+    expect(files).toEqual(new Set(['src/counter.ts']));
+  });
 });
