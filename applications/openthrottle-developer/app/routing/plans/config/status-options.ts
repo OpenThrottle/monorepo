@@ -32,9 +32,16 @@ export const STATUS_OPTIONS: readonly string[] = PLAN_STATUS_FILTER_OPTIONS.map(
   (opt) => opt.value,
 );
 
-export const VALID_STATUSES = new Set(
+export const VALID_STATUSES: ReadonlySet<string> = new Set(
   PLAN_STATUS_FILTER_OPTIONS.map((opt) => opt.value),
 );
+
+/** Type guard: narrows an arbitrary string to a valid {@link PlanStatusFilterValue}. */
+export function isPlanStatusFilterValue(
+  value: string,
+): value is PlanStatusFilterValue {
+  return VALID_STATUSES.has(value);
+}
 
 /**
  * @description Returns the status from the URL or default. Invalid values
@@ -44,9 +51,7 @@ export function parseStatusFromSearchParams(
   searchParams: URLSearchParams,
 ): PlanStatusFilterValue {
   const raw = searchParams.get('status')?.toUpperCase() ?? DEFAULT_PLAN_STATUS;
-  return (
-    VALID_STATUSES.has(raw as PlanStatusFilterValue) ? raw : DEFAULT_PLAN_STATUS
-  ) as PlanStatusFilterValue;
+  return isPlanStatusFilterValue(raw) ? raw : DEFAULT_PLAN_STATUS;
 }
 
 /**
@@ -62,9 +67,7 @@ export function parseStatusesFromSearchParams(
     .map((s) => s.trim().toUpperCase())
     .filter(Boolean);
 
-  const valid = raw.filter((s) =>
-    VALID_STATUSES.has(s as PlanStatusFilterValue),
-  );
+  const valid = raw.filter(isPlanStatusFilterValue);
 
   return valid.length > 0 ? valid : [...DEFAULT_STATUSES];
 }

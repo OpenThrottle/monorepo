@@ -113,27 +113,29 @@ const trimOptional = (value: unknown, field: string): string | undefined => {
   return trimmed;
 };
 
+export const isJobRunHookPhase = (value: unknown): value is JobRunHookPhase =>
+  typeof value === 'string' &&
+  JOB_RUN_HOOK_PHASES.some((phase) => phase === value);
+
+const isJobRunHookOnFailure = (value: unknown): value is JobRunHookOnFailure =>
+  typeof value === 'string' &&
+  JOB_RUN_HOOK_ON_FAILURE.some((onFailure) => onFailure === value);
+
 const parsePhase = (value: unknown): JobRunHookPhase => {
-  if (
-    typeof value !== 'string' ||
-    !JOB_RUN_HOOK_PHASES.includes(value as JobRunHookPhase)
-  ) {
+  if (!isJobRunHookPhase(value)) {
     throw new Error(`phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`);
   }
-  return value as JobRunHookPhase;
+  return value;
 };
 
 const parseOnFailure = (value: unknown): JobRunHookOnFailure | undefined => {
   if (value === undefined || value === null) return undefined;
-  if (
-    typeof value !== 'string' ||
-    !JOB_RUN_HOOK_ON_FAILURE.includes(value as JobRunHookOnFailure)
-  ) {
+  if (!isJobRunHookOnFailure(value)) {
     throw new Error(
       `onFailure must be one of: ${JOB_RUN_HOOK_ON_FAILURE.join(', ')}`,
     );
   }
-  return value as JobRunHookOnFailure;
+  return value;
 };
 
 const parseHookEntryFromRecord = (
