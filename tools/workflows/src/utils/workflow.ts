@@ -56,10 +56,18 @@ export async function runWorktreeWorkflow(
 
   let ensureCommit: ParentJobEnsureCommitResult | undefined;
   if (loopResult.ok) {
-    ensureCommit = await parentJobEnsureCommitBeforeRelease(
-      handoff,
-      ensureCommitOptions,
-    );
+    try {
+      ensureCommit = await parentJobEnsureCommitBeforeRelease(
+        handoff,
+        ensureCommitOptions,
+      );
+    } catch (error) {
+      // ensureCommit shells out via spawnSync git, which can throw. Treat any
+      // throw as a failed ensure-commit so the target below is still released
+      // (matching the runLoop guard); never leak the lock on the commit tail.
+      const msg = error instanceof Error ? error.message : String(error);
+      ensureCommit = { detail: msg, ok: false, reason: 'working_tree_dirty' };
+    }
   }
 
   const releaseResult = await tracker.release({ id: targetId, lockedBy });

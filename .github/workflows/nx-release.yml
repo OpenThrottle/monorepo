@@ -1,16 +1,9 @@
 name: '🚀 NX Release'
 on:
-  pull_request:
-    types: [opened, synchronize]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
+  # 💰 Cost-gated: manual-only for now. Kept as a live, runnable job (workflow_dispatch)
+  # rather than `if: false` dead code so the nx.json release config stays exercisable
+  # on demand and does not silently rot. Re-add pull_request/push triggers to automate.
+  workflow_dispatch:
 
 concurrency:
   cancel-in-progress: true
@@ -34,8 +27,6 @@ permissions:
 
 jobs:
   release:
-    # if: ${{ github.actor != 'dependabot[bot]' }}
-    if: false # FIXME: 💰 Re-enable when we want to spend more
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

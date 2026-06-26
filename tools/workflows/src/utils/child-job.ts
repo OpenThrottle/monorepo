@@ -18,13 +18,13 @@ import type { WorkflowRalphConfig } from './openthrottle-ralph';
 import {
   appendPlanOutput,
   ensureCortexReachable,
-  getTasksByPlanId,
   RALPH_FATAL_REQUIRED_GRAPHQL,
   RALPH_FATAL_REQUIRED_POSTGRES,
+  reconcilePlanCompletionIfAllTasksTerminal,
   resolveWorkflowRalphConfig,
-  updatePlanStatus,
 } from './openthrottle-ralph';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { escalateKill } from './child-kill';
 import { createPlanOutputStreamer } from './plan-output-streamer';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';
@@ -34,9 +34,6 @@ import type { ChildProcessMetricsCollector } from './child-process-metrics';
 
 /** Microseconds per millisecond for CPU time conversion. */
 const MICROSECONDS_PER_MS = 1000;
-
-/** Grace period in ms after SIGTERM before sending SIGKILL. */
-const SIGKILL_GRACE_MS = 10_000;
 
 interface RalphSpawnResult {
   readonly killReason?: 'timeout' | 'abort';
@@ -117,19 +114,7 @@ function runRalphAsync(
       if (killReason !== undefined) return;
       killReason = reason;
 
-      if (child.killed) return;
-      child.kill('SIGTERM');
-
-      const killTimeout = setTimeout(() => {
-        // After SIGTERM, Node sets `killed` to true; still send SIGKILL if the child has not exited.
-        try {
-          child.kill('SIGKILL');
-        } catch {
-          /* process may have exited */
-        }
-      }, SIGKILL_GRACE_MS);
-
-      child.once('close', () => clearTimeout(killTimeout));
+      escalateKill(child);
     };
 
     const onAbort = (): void => {
@@ -451,20 +436,17 @@ export async function runChildJob(
     };
   }
 
-  const tasks = await getTasksByPlanId(config, planId);
-  const allDone =
-    tasks.length > 0 &&
-    tasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
-  if (allDone) {
-    await updatePlanStatus(config, planId, 'COMPLETED');
-  }
+  const planCompleted = await reconcilePlanCompletionIfAllTasksTerminal(
+    config,
+    planId,
+  );
 
   return {
     branchName,
     childProcessMetrics: childMetrics,
     commitSha,
     ok: true,
-    planCompleted: allDone,
+    planCompleted,
     wallClockMetrics,
     ...(planOutputStreamSummary && planOutputStreamSummary.failed > 0
       ? {

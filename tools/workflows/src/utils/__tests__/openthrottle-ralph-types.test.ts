@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  areAllTasksTerminal,
   formatPlanAndTasksForPrompt,
   type PlanRow,
   type TaskRow,
@@ -38,6 +39,34 @@ const baseTask = (overrides: Partial<TaskRow> = {}): TaskRow => ({
   title: 'Test task',
   updatedAt: ISO,
   ...overrides,
+});
+
+describe('areAllTasksTerminal', () => {
+  it('returns false for an empty task set', () => {
+    expect(areAllTasksTerminal([])).toBe(false);
+  });
+
+  it('returns true when every task is COMPLETED or SKIPPED', () => {
+    expect(
+      areAllTasksTerminal([
+        baseTask({ id: 'a', status: 'COMPLETED' }),
+        baseTask({ id: 'b', status: 'SKIPPED' }),
+      ]),
+    ).toBe(true);
+  });
+
+  it('returns false when any task is not terminal', () => {
+    expect(
+      areAllTasksTerminal([
+        baseTask({ id: 'a', status: 'COMPLETED' }),
+        baseTask({ id: 'b', status: 'PENDING' }),
+      ]),
+    ).toBe(false);
+
+    expect(
+      areAllTasksTerminal([baseTask({ id: 'c', status: 'IN_PROGRESS' })]),
+    ).toBe(false);
+  });
 });
 
 describe('formatPlanAndTasksForPrompt', () => {

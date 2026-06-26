@@ -1,6 +1,6 @@
 {
   "name": "@tools/generators",
-  "description": "Nx plugin with generators for scaffolding Remix, React, React Native, NestJS, packages, and folder layouts in this monorepo.",
+  "description": "Nx plugin with generators for scaffolding React, React Router, NestJS, packages, and folder layouts in this monorepo.",
   "version": "3.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",

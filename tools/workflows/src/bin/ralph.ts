@@ -14,6 +14,7 @@ import {
   getTaskById,
   getTasksByPlanId,
   RALPH_WORKFLOW_FATAL_PREFIX,
+  reconcilePlanCompletionIfAllTasksTerminal,
   updatePlanStatus,
   updateTaskStatus,
 } from '../utils/openthrottle-ralph';
@@ -345,6 +346,32 @@ export const main = async (): Promise<void> => {
 
       console.warn(
         `⚠️ Could not reset task ${lastIterationTaskId} to PENDING: ${message}`,
+      );
+    }
+  }
+
+  // Terminal reconcile: on this clean exit path (loop finished / max iterations),
+  // re-fetch tasks and, if all are COMPLETED/SKIPPED, flip the plan to COMPLETED so
+  // it is never stranded IN_PROGRESS. When the last task was just reset to PENDING
+  // above, the set is no longer terminal and this is a no-op. Plan-centric only;
+  // task-centric runs do not own the plan lifecycle.
+  if (!task) {
+    try {
+      const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+        cortexConfig,
+        effectivePlanId,
+      );
+      if (reconciled) {
+        console.log(
+          ` - 📋 All tasks for plan ${COLORS.green}${effectivePlanId}${COLORS.reset} are terminal; marked the plan COMPLETED.`,
+        );
+      }
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      console.warn(
+        `⚠️ Could not reconcile plan ${effectivePlanId} completion: ${message}`,
       );
     }
   }

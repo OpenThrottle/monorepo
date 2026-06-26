@@ -1,31 +1,38 @@
-import type { UserConfig } from '@commitlint/types';
-// import nxScopes from '@commitlint/config-nx-scopes';
-// import { RuleConfigSeverity } from '@commitlint/types';
-// // const { utils: { getProjects } } = require('@commitlint/config-nx-scopes');
+import nxScopes from '@commitlint/config-nx-scopes';
+import type {
+  RuleConfigCondition,
+  RuleConfigSeverity,
+  UserConfig,
+} from '@commitlint/types';
 
-// const { getProjects } = nxScopes.utils;
-// const customScopes = ['ci', 'release'];
+/**
+ * `@commitlint/config-nx-scopes` ships no type declarations, so describe the
+ * single util we consume. `getProjects` resolves the workspace's Nx project
+ * names, which we use as the allowed commit scopes.
+ */
+interface NxScopesUtils {
+  getProjects: (context: { cwd?: string }) => Promise<string[]> | string[];
+}
+
+const { getProjects }: NxScopesUtils = nxScopes.utils;
+
+// Valid scopes that are not Nx projects (workflow / automation scopes).
+const customScopes = ['ci', 'release'];
+
+const error: RuleConfigSeverity.Error = 2;
+const always: RuleConfigCondition = 'always';
 
 const Configuration: UserConfig = {
   extends: ['@commitlint/config-conventional', '@commitlint/config-nx-scopes'],
   rules: {
-    // 'scope-enum': [
-    //   async (ctx: any): Promise<[RuleConfigSeverity, 'always', string[]]> => [
-    //     RuleConfigSeverity.Error,
-    //     'always',
-    //     [...getProjects(ctx), ...customScopes],
-    //   ],
-    // ] as any, // FIXME: This is a hack to bypass the strict static check for the async function
-    // 'scope-enum': [
-    //   async (ctx: any): Promise<[RuleConfigSeverity, 'always', string[]]> => [
-    //     RuleConfigSeverity.Error,
-    //     'always',
-    //     [...(await getProjects(ctx)), ...customScopes],
-    //   ],
-    // ] as any, // FIXME: This is a hack to bypass the strict static check for the async function
-    // 'type-enum': [RuleConfigSeverity.Error, 'always', ['foo']],
+    'scope-enum': async (
+      context,
+    ): Promise<[RuleConfigSeverity, RuleConfigCondition, string[]]> => [
+      error,
+      always,
+      [...(await getProjects(context ?? {})), ...customScopes],
+    ],
   },
-  // ...
 };
 
 export default Configuration;

@@ -13,13 +13,17 @@ import { getProjectsByTag } from './projects';
 export const getGithubUsername = () => {
   if (process.env.NODE_ENV === 'test') return 'test-username';
 
-  const getUsername = "gh api user | jq -r '.login'";
-  const value = execSync(getUsername).toString().replace(/\n/g, '');
+  // `gh`/`jq` may be missing (CI, fresh machines). Fall back to the existing
+  // 'localhost' sentinel instead of crashing the generator with a shell error.
+  try {
+    const getUsername = "gh api user | jq -r '.login'";
+    const value = execSync(getUsername).toString().replace(/\n/g, '');
 
-  const isValid = value !== 'null';
-  const username = isValid ? value : 'localhost';
-
-  return username;
+    const isValid = value !== 'null' && value !== '';
+    return isValid ? value : 'localhost';
+  } catch {
+    return 'localhost';
+  }
 };
 
 /**
@@ -32,11 +36,7 @@ export const getGeneratorOverview = async (name: string, overview: string) => {
   logger.log(`  ${overview} \n`);
   logger.log(`\n ----------------------------------------- \n\n`);
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true);
-    }, 1000);
-  });
+  return Promise.resolve(true);
 };
 
 /**
@@ -49,30 +49,58 @@ const getMonorepoRoot = () => {
   return path;
 };
 
-export const getRemixRoutingFolders = (application: string) => {
+/**
+ * Rejects application names that could escape the intended
+ * `applications/<application>/...` directory (path traversal / disclosure).
+ */
+const assertSafeApplicationName = (application: string) => {
+  const isUnsafe =
+    application.includes('..') ||
+    application.includes('/') ||
+    application.includes('\\') ||
+    application.trim() === '';
+
+  if (isUnsafe) {
+    throw new Error(
+      `Invalid application name "${application}": must not be empty or contain path separators or "..".`,
+    );
+  }
+};
+
+/**
+ * Reads the immediate child directories of an application folder, filtering out
+ * the `__template__` directory. Throws an actionable error naming the expected
+ * path when the directory is missing or unreadable.
+ */
+const readApplicationFolders = (application: string, relative: string) => {
+  assertSafeApplicationName(application);
+
   const root = getMonorepoRoot();
-  const routing = `applications/${application}/app/routing`;
-  const folder = join(root, routing);
-  const items = readdirSync(folder, { withFileTypes: true });
+  const expected = `applications/${application}/app/${relative}`;
+  const folder = join(root, expected);
 
-  // Filter our the template directory
-  const filters = ['__template__'];
-  const filtered = items.filter((item) => !filters.includes(item.name));
+  try {
+    const items = readdirSync(folder, { withFileTypes: true });
 
-  return filterDirectories(filtered);
+    // Filter out the template directory
+    const filters = ['__template__'];
+    const filtered = items.filter((item) => !filters.includes(item.name));
+
+    return filterDirectories(filtered);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Unable to read "${expected}" (resolved to "${folder}"): ${reason}`,
+    );
+  }
+};
+
+export const getRemixRoutingFolders = (application: string) => {
+  return readApplicationFolders(application, 'routing');
 };
 
 export const getRemixServiceFolders = (application: string) => {
-  const root = getMonorepoRoot();
-  const services = `applications/${application}/app/services`;
-  const folder = join(root, services);
-  const items = readdirSync(folder, { withFileTypes: true });
-
-  // Filter our the template directory
-  const filters = ['__template__'];
-  const filtered = items.filter((item) => !filters.includes(item.name));
-
-  return filterDirectories(filtered);
+  return readApplicationFolders(application, 'services');
 };
 
 /**

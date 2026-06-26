@@ -430,7 +430,7 @@ Nx exposes two different targets for test-related work. They are **not** interch
 
 **`typecheck-tests` does not run Vitest and does not execute test bodies.** A green `typecheck-tests` result only means test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution.
 
-CI runs both at different priorities: P0 affected **`lint`**, **`typecheck`**, and **`typecheck-tests`** on every PR; P2 runs **`test`** only for phased projects (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck-tests` and affected `test` as separate steps.
+CI runs both at different priorities: P0 affected **`lint`**, **`typecheck`**, and **`typecheck-tests`** on every PR; P2 runs **`test`** for **all affected projects** (no per-project exclude — see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck-tests` and affected `test` (via `check:local:affected-test`, `nx affected --target=test --parallel --nxBail`) as separate steps, mirroring the same affected test set CI runs.
 
 ### Shared React Router test setup
 
