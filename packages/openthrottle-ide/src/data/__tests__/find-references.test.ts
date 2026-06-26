@@ -85,6 +85,20 @@ describe('findReferences', () => {
     expect(references).toEqual([]);
   });
 
+  it('returns an empty array for a position path that escapes the workspace root', async () => {
+    const traversal = await findReferences(
+      { root },
+      { column: 1, line: 1, path: '../../../../../../etc/passwd' },
+    );
+    const absolute = await findReferences(
+      { root },
+      { column: 1, line: 1, path: '/etc/passwd' },
+    );
+
+    expect(traversal).toEqual([]);
+    expect(absolute).toEqual([]);
+  });
+
   it('bounds the by-name scan to maxFiles: a cap of 0 loads no files', async () => {
     // With no files loaded, the by-name target resolves to no declarations, so
     // the search surface is empty — proving the cap is applied before ts-morph
