@@ -164,7 +164,7 @@ function createOllamaProvider(
           const response = await doFetch(`${baseUrl}/api/embeddings`, {
             body: JSON.stringify({
               model,
-              prompt: text.slice(0, MAX_EMBEDDING_CHARS + 1),
+              prompt: text.slice(0, MAX_EMBEDDING_CHARS),
             }),
             headers: { 'Content-Type': 'application/json' },
             method: 'POST',
