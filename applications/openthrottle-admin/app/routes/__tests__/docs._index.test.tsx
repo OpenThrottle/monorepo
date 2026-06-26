@@ -18,7 +18,7 @@ describe('routes/docs._index.tsx', () => {
     );
 
     expect(
-      view.getByRole('heading', { level: 1, name: 'Admin Documentation' }),
+      view.getByRole('heading', { level: 2, name: 'Admin Documentation' }),
     ).toBeInTheDocument();
   });
 });

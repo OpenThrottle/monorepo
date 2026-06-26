@@ -2,12 +2,12 @@ import * as React from 'react';
 import { Markdown } from '@openthrottle/react-router-shadcn';
 import type { ChatMessageRole } from '../types';
 
+const EMPTY_BODY_LABEL = '(No content)';
+
 export interface ChatMessageBodyProps {
   readonly body: string;
   readonly role: ChatMessageRole;
 }
-
-const EMPTY_BODY_LABEL = '(No content)';
 
 /**
  * @description Renders a message body: plain text for user; assistant/system
@@ -23,8 +23,19 @@ export const ChatMessageBody = (
   props: ChatMessageBodyProps,
 ): React.ReactElement => {
   const { body, role } = props;
+
+  // Hooks
+
+  // Setup
   const trimmed = body.trim();
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!trimmed) {
     return (
       <p className="text-muted-foreground text-sm italic">{EMPTY_BODY_LABEL}</p>
