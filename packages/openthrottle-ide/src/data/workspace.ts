@@ -4,7 +4,10 @@ import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
 } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
+import {
+  filterRealPathsInsideRoot,
+  resolveWorkspaceConfig,
+} from '../config/workspace-config.js';
 import { hashFile } from '../utils/hash.js';
 import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
 
@@ -81,12 +84,8 @@ export function diffSnapshots(
  */
 export async function listFiles(config: WorkspaceConfig): Promise<string[]> {
   const resolved = resolveWorkspaceConfig(config);
-  const { stdout } = await runRipgrep(
-    [...workspaceRipgrepArgs(resolved), '--files'],
-    resolved,
-  );
 
-  return splitLines(stdout);
+  return listFilesResolved(resolved);
 }
 
 /**
@@ -118,7 +117,17 @@ async function listFilesResolved(
     resolved,
   );
 
-  return splitLines(stdout);
+  const paths = splitLines(stdout);
+
+  // `rg --follow` can enumerate a symlinked path whose real target lives
+  // outside `root`. ripgrep only restricts the path it *prints*, not where it
+  // resolves to, so before any downstream layer hashes or reads these paths we
+  // drop the ones whose canonical location escapes the workspace.
+  if (!resolved.followSymlinks) {
+    return paths;
+  }
+
+  return filterRealPathsInsideRoot(resolved, paths);
 }
 
 function splitLines(stdout: string): string[] {

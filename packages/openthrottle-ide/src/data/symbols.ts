@@ -13,6 +13,7 @@ import type {
   WorkspaceConfig,
 } from '../config/workspace-config.js';
 import {
+  filterRealPathsInsideRoot,
   resolveInsideRoot,
   resolveWorkspaceConfig,
 } from '../config/workspace-config.js';
@@ -464,11 +465,18 @@ async function addWorkspaceSourceFiles(
   }
 
   const { stdout } = await runRipgrep(args, resolved);
-  const relativePaths = stdout
+  const matchedPaths = stdout
     .split('\n')
     .filter(
       (line) => SCRIPT_FILE_PATTERN.test(line) && !line.endsWith('.d.ts'),
     );
+
+  // With `followSymlinks`, `rg --follow` can list a symlinked file whose real
+  // target is outside `root`; drop those before ts-morph reads them so symbol
+  // resolution stays scoped to the workspace (mirrors listFilesResolved).
+  const relativePaths = resolved.followSymlinks
+    ? await filterRealPathsInsideRoot(resolved, matchedPaths)
+    : matchedPaths;
 
   return relativePaths.map((relativePath) => {
     const absolutePath = join(resolved.root, relativePath);
