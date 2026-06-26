@@ -21,10 +21,19 @@
       "{projectRoot}/src/**/*.graphql",
       "{projectRoot}/src/**/*.ts",
       "!{projectRoot}/**/__generated__/**",
-      { "externalDependencies": ["@graphql-codegen/cli"] }
+      {
+        "externalDependencies": [
+          "@graphql-codegen/cli"
+        ]
+      }
     ],
-    "noMarkdown": ["!{projectRoot}/**/*.md"],
-    "production": ["default", "!{projectRoot}/jest.config.ts"]
+    "noMarkdown": [
+      "!{projectRoot}/**/*.md"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/jest.config.ts"
+    ]
   },
   "plugins": [
     {
@@ -99,7 +108,10 @@
       "commit": true,
       "commitMessage": "chore(monorepo): [skip ci] release {version}"
     },
-    "projects": ["tag:publish:true", "!tag:production:false"],
+    "projects": [
+      "tag:publish:true",
+      "!tag:production:false"
+    ],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,
@@ -120,7 +132,11 @@
   },
   "targetDefaults": {
     "@nx/js:tsc": {
-      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router"
+      ],
       "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen).",
       "executor": "@nx/js:tsc",
       "options": {
@@ -144,7 +160,9 @@
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "build": {
       "cache": true,
@@ -156,7 +174,10 @@
         "^codegen-react-router",
         "^typecheck"
       ],
-      "inputs": ["noMarkdown", "^noMarkdown"],
+      "inputs": [
+        "noMarkdown",
+        "^noMarkdown"
+      ],
       "options": {
         "buildLibsFromSource": true,
         "emptyOutDir": true,
@@ -166,14 +187,18 @@
     },
     "build-package": {
       "cache": true,
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "description": "Generate the publishable {projectRoot}/dist/package.json via scripts/pnpm-package.ts (runs after build).",
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{workspaceRoot}",
         "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
       },
-      "outputs": ["{projectRoot}/dist/package.json"]
+      "outputs": [
+        "{projectRoot}/dist/package.json"
+      ]
     },
     "codegen": {
       "description": "Run code generation for the project (configurations: graphql, graphql-watch, react-router, react-router-watch).",
@@ -181,21 +206,29 @@
       "configurations": {
         "graphql": {
           "command": "graphql-codegen",
-          "dependsOn": ["^build"]
+          "dependsOn": [
+            "^build"
+          ]
         },
         "graphql-watch": {
           "command": "graphql-codegen --watch",
           "continuous": true,
-          "dependsOn": ["^build"]
+          "dependsOn": [
+            "^build"
+          ]
         },
         "react-router": {
           "command": "react-router typegen",
-          "dependsOn": ["^build"]
+          "dependsOn": [
+            "^build"
+          ]
         },
         "react-router-watch": {
           "command": "react-router typegen --watch",
           "continuous": true,
-          "dependsOn": ["^build"]
+          "dependsOn": [
+            "^build"
+          ]
         }
       },
       "options": {
@@ -206,12 +239,16 @@
       "cache": true,
       "description": "Generate GraphQL types and typed operations for the project with graphql-codegen.",
       "executor": "nx:run-commands",
-      "inputs": ["codegenGraphqlInputs"],
+      "inputs": [
+        "codegenGraphqlInputs"
+      ],
       "options": {
         "command": "graphql-codegen",
         "cwd": "{projectRoot}"
       },
-      "outputs": ["{projectRoot}/**/__generated__"]
+      "outputs": [
+        "{projectRoot}/**/__generated__"
+      ]
     },
     "codegen-graphql-watch": {
       "continuous": true,
@@ -232,13 +269,20 @@
         "{projectRoot}/app/**/*.tsx",
         "!{projectRoot}/**/__generated__/**",
         "!{projectRoot}/.react-router/**",
-        { "externalDependencies": ["@react-router/dev", "react-router"] }
+        {
+          "externalDependencies": [
+            "@react-router/dev",
+            "react-router"
+          ]
+        }
       ],
       "options": {
         "command": "react-router typegen",
         "cwd": "{projectRoot}"
       },
-      "outputs": ["{projectRoot}/.react-router/types"]
+      "outputs": [
+        "{projectRoot}/.react-router/types"
+      ]
     },
     "codegen-react-router-watch": {
       "continuous": true,
@@ -316,7 +360,20 @@
     },
     "knip": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
+      "description": "🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo '🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being"
+      }
+    },
+    "knip-backup": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
       "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking — run on demand with `pnpm nx run monorepo:knip`.",
       "executor": "nx:run-commands",
       "options": {
@@ -333,7 +390,10 @@
       "cache": true,
       "description": "Lint the project with ESLint using the workspace eslint.config.ts.",
       "executor": "nx:run-commands",
-      "inputs": ["noMarkdown", "^noMarkdown"],
+      "inputs": [
+        "noMarkdown",
+        "^noMarkdown"
+      ],
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"
@@ -345,17 +405,23 @@
       "configurations": {
         "build": {
           "command": "nest build --path ./tsconfig.app.json",
-          "dependsOn": ["^build"]
+          "dependsOn": [
+            "^build"
+          ]
         },
         "debug": {
           "continuous": true,
           "command": "NEST_DEBUG nest start --debug --path ./tsconfig.app.json --watch",
-          "dependsOn": ["^dev"]
+          "dependsOn": [
+            "^dev"
+          ]
         },
         "dev": {
           "continuous": true,
           "command": "nest start --path ./tsconfig.app.json --watch",
-          "dependsOn": ["^dev"]
+          "dependsOn": [
+            "^dev"
+          ]
         },
         "repl": {
           "command": "nest start --entryFile ./src/repl.js --path ./tsconfig.app.json --watch"
@@ -369,7 +435,10 @@
       }
     },
     "nx-release-publish": {
-      "dependsOn": ["build-package", "^build-package"],
+      "dependsOn": [
+        "build-package",
+        "^build-package"
+      ],
       "description": "Publish the package to the registry via Nx release (@nx/js:release-publish).",
       "executor": "@nx/js:release-publish",
       "options": {
@@ -378,17 +447,25 @@
     },
     "test": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}.",
       "executor": "@nx/vitest:test",
-      "inputs": ["default", "^default", "^production"],
+      "inputs": [
+        "default",
+        "^default",
+        "^production"
+      ],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
         "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
         "watch": false
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ]
     },
     "test-e2e": {
       "configurations": {
@@ -402,7 +479,9 @@
           "command": "maestro test --config tests/maestro.yml -c"
         }
       },
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "description": "Run the project end-to-end suite (configurations: record, studio, watch).",
       "executor": "nx:run-commands",
       "options": {
@@ -438,7 +517,11 @@
       ],
       "description": "Type-check test files only with `tsc --noEmit -p tsconfig.test.json` — does not execute tests.",
       "executor": "nx:run-commands",
-      "inputs": ["default", "^default", "{projectRoot}/tsconfig.test.json"],
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/tsconfig.test.json"
+      ],
       "options": {
         "command": "pnpm exec tsc --noEmit -p tsconfig.test.json",
         "cwd": "{projectRoot}"
