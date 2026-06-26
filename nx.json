@@ -21,7 +21,9 @@
       "{projectRoot}/src/**/*.graphql",
       "{projectRoot}/src/**/*.ts",
       "!{projectRoot}/**/__generated__/**",
-      { "externalDependencies": ["@graphql-codegen/cli"] }
+      {
+        "externalDependencies": ["@graphql-codegen/cli"]
+      }
     ],
     "noMarkdown": ["!{projectRoot}/**/*.md"],
     "production": ["default", "!{projectRoot}/jest.config.ts"]
@@ -232,7 +234,9 @@
         "{projectRoot}/app/**/*.tsx",
         "!{projectRoot}/**/__generated__/**",
         "!{projectRoot}/.react-router/**",
-        { "externalDependencies": ["@react-router/dev", "react-router"] }
+        {
+          "externalDependencies": ["@react-router/dev", "react-router"]
+        }
       ],
       "options": {
         "command": "react-router typegen",
@@ -315,6 +319,15 @@
       }
     },
     "knip": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "description": "🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo '🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being"
+      }
+    },
+    "knip-backup": {
       "cache": true,
       "dependsOn": ["^build"],
       "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking — run on demand with `pnpm nx run monorepo:knip`.",

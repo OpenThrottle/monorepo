@@ -8,14 +8,14 @@ import {
   OPENTHROTTLE_POSTGRES_URL_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.js';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.ts';
 import {
   applyWorkflowRalphSpawnIdentityOverrides,
   buildWorkflowRalphSpawnEnv,
   resolveCortexPostgresConnectionStringFromEnv,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
-} from '../../config/workflow-ralph-spawn-env.js';
+} from '../../config/workflow-ralph-spawn-env.ts';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;

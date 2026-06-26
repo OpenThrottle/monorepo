@@ -4,9 +4,9 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { getServerName, SERVER_VERSION } from './constants.js';
-import { destroyDataSources } from './data-source.js';
-import { registerKnowledgeBaseResource } from './resources/knowledge-base.js';
+import { getServerName, SERVER_VERSION } from './constants.ts';
+import { destroyDataSources } from './data-source.ts';
+import { registerKnowledgeBaseResource } from './resources/knowledge-base.ts';
 import {
   registerActivityTools,
   registerCommitTools,
@@ -16,7 +16,7 @@ import {
   registerPlanTools,
   registerSearchTools,
   registerTaskTools,
-} from './tools/index.js';
+} from './tools/index.ts';
 
 /**
  * @description Starts the MCP server on stdio. Used by the CLI bin and by `nx run mattscholta-ai-mcp:serve`.

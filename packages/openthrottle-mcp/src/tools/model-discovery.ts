@@ -1,5 +1,5 @@
 /**
- * @description Registers the model-discovery tool: discover_local_models. Lists locally-running
+ * @description Model-discovery tool handler + schema: discover_local_models. Lists locally-running
  * OpenAI-compatible model servers (Ollama-primary) and their models via the discoverLocalModels
  * GraphQL query only — GraphQL-only boundary, no core import, no Nest bootstrap in this process.
  *
@@ -8,13 +8,12 @@
  * from this MCP process.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
 import { DiscoverLocalModelsDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { runTool } from '../utils/tool-result.js';
+import type { GenericResult } from '../types/index.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type ModelEndpoint = {
   baseUrl: string;
@@ -80,20 +79,5 @@ export async function discoverLocalModelsToolHandler(
         text,
       };
     },
-  );
-}
-
-/**
- * @description Registers the discover_local_models tool. Lists local OpenAI-compatible model
- * servers and their models from the discoverLocalModels GraphQL query (GraphQL-only).
- */
-export function registerModelDiscoveryTool(server: McpServer): void {
-  server.registerTool(
-    'discover_local_models',
-    {
-      description: discoverLocalModelsToolDescription,
-      inputSchema: discoverLocalModelsToolParameters,
-    },
-    discoverLocalModelsToolHandler,
   );
 }

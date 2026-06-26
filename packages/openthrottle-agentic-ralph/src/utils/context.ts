@@ -9,13 +9,13 @@
  */
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
-import type { WorkflowContext } from '../types.js';
+import type { WorkflowContext } from '../types.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
   DEFAULT_RUNNER,
-} from '../config/index.js';
+} from '../config/index.ts';
 
 /**
  * Known backend ids; aligned with tools/workflows / GraphQL.

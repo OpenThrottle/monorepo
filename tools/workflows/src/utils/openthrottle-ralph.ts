@@ -51,7 +51,7 @@ import {
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
 } from './openthrottle-ralph-types';
-import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 export type {

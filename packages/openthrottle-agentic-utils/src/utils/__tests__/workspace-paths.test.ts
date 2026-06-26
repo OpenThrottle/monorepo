@@ -6,7 +6,7 @@ import {
   getWorkspacePathMapping,
   toContainerPath,
   toHostPath,
-} from '../workspace-paths.js';
+} from '../workspace-paths.ts';
 
 /** Env with the bridge mapping active (macOS-style host root). */
 const mappedEnv: NodeJS.ProcessEnv = {

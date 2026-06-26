@@ -7,7 +7,7 @@ import type {
   HttpArgumentsHost,
   RpcArgumentsHost,
   WsArgumentsHost,
-} from '@nestjs/common/interfaces/features/arguments-host.interface.js';
+} from '@nestjs/common/interfaces/features/arguments-host.interface.ts';
 import {
   EmitNotificationInterceptor,
   type EmitNotificationEmitter,

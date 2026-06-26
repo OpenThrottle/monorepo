@@ -1,8 +1,7 @@
 /**
- * @description Registers task CRUD tools: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, delete_task.
+ * @description Task CRUD tool handlers + schemas: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, delete_task. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -31,12 +30,12 @@ import {
   ReorderPlanTasksInputSchema,
   TasksByPlanIdInputSchema,
   UpdateTaskInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { filterTasksByCategory } from '../utils/filters.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { filterTasksByCategory } from '../utils/filters.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 export type TaskListItem = GetTasksQuery['tasks'][number];
 
@@ -404,88 +403,5 @@ export async function updateTaskToolHandler(
       const text = `Updated task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
       return { structuredContent: { task }, text };
     },
-  );
-}
-
-export function registerTaskTools(server: McpServer): void {
-  server.registerTool(
-    'create_task',
-    {
-      description: createTaskToolDescription,
-      inputSchema: createTaskToolParameters,
-    },
-    createTaskToolHandler,
-  );
-
-  server.registerTool(
-    'create_tasks',
-    {
-      description: createTasksToolDescription,
-      inputSchema: createTasksToolParameters,
-    },
-    createTasksToolHandler,
-  );
-
-  server.registerTool(
-    'delete_task',
-    {
-      description: deleteTaskToolDescription,
-      inputSchema: deleteTaskToolParameters,
-    },
-    deleteTaskToolHandler,
-  );
-
-  server.registerTool(
-    'get_task',
-    {
-      description: getTaskToolDescription,
-      inputSchema: getTaskToolParameters,
-    },
-    getTaskToolHandler,
-  );
-
-  server.registerTool(
-    'get_tasks_by_plan_id',
-    {
-      description: getTasksByPlanIdToolDescription,
-      inputSchema: getTasksByPlanIdToolParameters,
-    },
-    getTasksByPlanIdToolHandler,
-  );
-
-  server.registerTool(
-    'get_remaining_tasks_for_plan',
-    {
-      description: getRemainingTasksForPlanToolDescription,
-      inputSchema: getRemainingTasksForPlanToolParameters,
-    },
-    getRemainingTasksForPlanToolHandler,
-  );
-
-  server.registerTool(
-    'list_tasks_by_category',
-    {
-      description: listTasksByCategoryToolDescription,
-      inputSchema: listTasksByCategoryToolParameters,
-    },
-    listTasksByCategoryToolHandler,
-  );
-
-  server.registerTool(
-    'reorder_plan_tasks',
-    {
-      description: reorderPlanTasksToolDescription,
-      inputSchema: reorderPlanTasksToolParameters,
-    },
-    reorderPlanTasksToolHandler,
-  );
-
-  server.registerTool(
-    'update_task',
-    {
-      description: updateTaskToolDescription,
-      inputSchema: updateTaskToolParameters,
-    },
-    updateTaskToolHandler,
   );
 }

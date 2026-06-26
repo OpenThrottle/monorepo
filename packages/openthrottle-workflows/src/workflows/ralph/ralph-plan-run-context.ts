@@ -11,13 +11,13 @@ import type {
   WorkflowDebug,
   WorkflowOptions,
   WorkflowMode,
-} from './contract/flow-context.js';
+} from './contract/flow-context.ts';
 import {
   DEFAULT_RALPH_RUNNER,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
-} from './contract/flow-context.js';
+} from './contract/flow-context.ts';
 
 /**
  * @description Maps GraphQL {@link RalphNestedDebugCli} to {@link WorkflowDebug}.

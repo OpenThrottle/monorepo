@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mapCursorEvent } from '../events.js';
+import { mapCursorEvent } from '../events.ts';
 
 // Fixtures are the verbatim shapes captured in
 // docs/openthrottle/cursor-agent-stream-json-schema.md.

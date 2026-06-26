@@ -14,7 +14,7 @@ export {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
   resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning,
-} from './ralph-plan-run-context.js';
+} from './ralph-plan-run-context.ts';
 
 /**
  * @description Configuration for building {@link ExecuteGraphqlOptionsV2} (auth, optional endpoint override, extra headers).

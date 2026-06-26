@@ -1,4 +1,4 @@
-import { extractFrontmatterBody } from './extract-frontmatter-body.js';
+import { extractFrontmatterBody } from './extract-frontmatter-body.ts';
 
 export type FrontmatterScalar = string | boolean | undefined;
 

@@ -2,7 +2,7 @@
  * @description Builds text content for plan/task embeddings (used by MCP tool handlers).
  */
 
-import type { PlanRow, TaskRow } from './cortex-client.js';
+import type { PlanRow, TaskRow } from './cortex-client.ts';
 
 /** @description Builds text content for plan embedding (title, description, summary, author, category). */
 export function buildPlanContentForEmbedding(plan: PlanRow): string {

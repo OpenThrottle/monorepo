@@ -3,7 +3,7 @@ import {
   getAuthToken,
   requestAuthTokenStorage,
   withMcpDeveloperAuthToken,
-} from './get-auth-token.js';
+} from './get-auth-token.ts';
 
 describe('getAuthToken', () => {
   const originalEnvToken = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;

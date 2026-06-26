@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { openAiConversationBackend } from '../openai.js';
+import { openAiConversationBackend } from '../openai.ts';
 
 const { streamChatCompletionMock } = vi.hoisted(() => ({
   streamChatCompletionMock: vi.fn(),

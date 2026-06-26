@@ -12,12 +12,12 @@ import type {
   WorkflowRalphDefaultsFileV1Json,
   WorkflowRalphDefaultsSpawnJson,
   WorkflowRalphResolvedDefaults,
-} from './workflow-ralph-defaults.types.js';
-import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from './workflow-ralph-defaults.types.js';
+} from './workflow-ralph-defaults.types.ts';
+import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from './workflow-ralph-defaults.types.ts';
 import {
   DEFAULT_RALPH_RUNNER,
   parseRalphExecutionBackendId,
-} from '../utils/ralph-execution-backend.js';
+} from '../utils/ralph-execution-backend.ts';
 import {
   isWorkflowVerboseEnvTruthy,
   readWorkflowDebugLevelFromEnv,
@@ -29,12 +29,12 @@ import {
 import {
   WORKFLOW_RALPH_TRANSPORT_ENV,
   type WorkflowRalphTransport,
-} from '../utils/workflow-transport.js';
+} from '../utils/workflow-transport.ts';
 import {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
-} from '../utils/ot-diagnostics.js';
-import type { Writable } from '../type.js';
+} from '../utils/ot-diagnostics.ts';
+import type { Writable } from '../type.ts';
 
 export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;

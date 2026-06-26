@@ -1,13 +1,13 @@
-import type { AgentAssetValidationIssue } from './schemas/agent-asset-frontmatter.schemas.js';
+import type { AgentAssetValidationIssue } from './schemas/agent-asset-frontmatter.schemas.ts';
 import {
   mergeValidationResults,
   validateAgentAssetFrontmatter,
-} from './validate-agent-asset-frontmatter.js';
-import type { ValidateAgentAssetsResult } from './validate-agent-asset-frontmatter.js';
+} from './validate-agent-asset-frontmatter.ts';
+import type { ValidateAgentAssetsResult } from './validate-agent-asset-frontmatter.ts';
 import {
   walkAgentAssetFiles,
   type WalkAgentAssetsOptions,
-} from './walk-agent-assets-on-disk.js';
+} from './walk-agent-assets-on-disk.ts';
 
 /**
  * @description Walks `.agents/` SSOT trees and validates frontmatter per D5.

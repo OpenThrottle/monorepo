@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { MAX_LIMIT } from './constants.js';
+import { MAX_LIMIT } from './constants.ts';
 
 // Note CRUD
 export const createNoteInputSchema = z.object({

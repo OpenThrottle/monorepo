@@ -12,8 +12,8 @@ import {
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphIterationRunner,
-} from '../../contract/ralph-orchestrator-deps.js';
-import { createWorkflowRalphOrchestrator } from '../orchestrator.js';
+} from '../../contract/ralph-orchestrator-deps.ts';
+import { createWorkflowRalphOrchestrator } from '../orchestrator.ts';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';

@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { ModelEndpoint } from '../../../types/model-discovery.js';
-import { DEFAULT_PORTS } from '../constants.js';
-import { resolveHosts, resolvePorts } from '../hosts.js';
+import type { ModelEndpoint } from '../../../types/model-discovery.ts';
+import { DEFAULT_PORTS } from '../constants.ts';
+import { resolveHosts, resolvePorts } from '../hosts.ts';
 import {
   createLimiter,
   fingerprintProvider,
   probeAll,
   probeEndpoint,
-} from '../probe.js';
-import { dedupeEndpoints, discoverModels } from '../discover.js';
+} from '../probe.ts';
+import { dedupeEndpoints, discoverModels } from '../discover.ts';
 
 /** Build a JSON 200 Response. */
 function json(body: unknown): Response {

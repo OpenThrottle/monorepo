@@ -9,14 +9,14 @@ import {
   isWorkflowRunnerId,
   parseWorkflowRunnerId,
   readWorkflowDebugLevelFromEnv,
-} from '../workflow.js';
+} from '../workflow.ts';
 import {
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
   WORKFLOW_RUNNER_IDS,
-} from '../../config/index.js';
+} from '../../config/index.ts';
 
 /** Marker file that identifies the OpenThrottle monorepo root. */
 const OPENTHROTTLE_WORKSPACE_MARKER = '.openthrottle.mjs';

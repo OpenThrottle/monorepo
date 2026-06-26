@@ -3,10 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import { DocsTreeDataProvider } from '../trees/docs-tree.js';
-import { LoginTreeDataProvider } from '../trees/login-tree.js';
-import { WelcomeTreeDataProvider } from '../trees/welcome-tree.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import { DocsTreeDataProvider } from '../trees/docs-tree.ts';
+import { LoginTreeDataProvider } from '../trees/login-tree.ts';
+import { WelcomeTreeDataProvider } from '../trees/welcome-tree.ts';
 
 /**
  * @description Register Welcome, Login, and Docs tree data providers. Call once from {@link registerViews}.

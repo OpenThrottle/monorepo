@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
 
-import type { AgentAssetKind } from './schemas/agent-asset-frontmatter.schemas.js';
+import type { AgentAssetKind } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface AgentAssetFileEntry {
   readonly content: string;

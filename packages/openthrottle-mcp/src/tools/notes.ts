@@ -1,8 +1,7 @@
 /**
- * @description Registers note CRUD tools: create_note, get_note, list_notes, update_note, delete_note.
+ * @description Note CRUD tool handlers + schemas: create_note, get_note, list_notes, update_note, delete_note. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -19,11 +18,11 @@ import {
 import {
   CreateNoteInputSchema,
   UpdateNoteInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type CreateNoteResult = GenericResult<{
   note: CreateNoteMutation['createNote'];
@@ -172,52 +171,5 @@ export async function updateNoteToolHandler(
       const text = `Updated note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
       return { structuredContent: { note }, text };
     },
-  );
-}
-
-export function registerNoteTools(server: McpServer): void {
-  server.registerTool(
-    'create_note',
-    {
-      description: createNoteToolDescription,
-      inputSchema: createNoteToolParameters,
-    },
-    createNoteToolHandler,
-  );
-
-  server.registerTool(
-    'delete_note',
-    {
-      description: deleteNoteToolDescription,
-      inputSchema: deleteNoteToolParameters,
-    },
-    deleteNoteToolHandler,
-  );
-
-  server.registerTool(
-    'get_note',
-    {
-      description: getNoteToolDescription,
-      inputSchema: getNoteToolParameters,
-    },
-    getNoteToolHandler,
-  );
-
-  server.registerTool(
-    'list_notes',
-    {
-      description: listNotesToolDescription,
-      inputSchema: listNotesToolParameters,
-    },
-    listNotesToolHandler,
-  );
-
-  server.registerTool(
-    'update_note',
-    {
-      description: updateNoteToolDescription,
-      inputSchema: updateNoteToolParameters,
-    },
-    updateNoteToolHandler,
   );
 }

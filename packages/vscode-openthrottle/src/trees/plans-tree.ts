@@ -7,8 +7,8 @@ import {
   PlanResponseFragment,
   TaskByPlanResponseFragment,
 } from 'src/__generated__/graphql.js';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import { UnauthenticatedError } from '../errors.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import { UnauthenticatedError } from '../errors.ts';
 
 const STATUS_ORDER: readonly string[] = [
   'BLOCKED',

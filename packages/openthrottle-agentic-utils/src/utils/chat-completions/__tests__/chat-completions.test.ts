@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { streamChatCompletion } from '../stream.js';
+import { streamChatCompletion } from '../stream.ts';
 
 const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
 

@@ -6,8 +6,8 @@
  * docs/openthrottle/cursor-agent-stream-json-schema.md §6.
  */
 
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.js';
-import type { ConversationStreamChunk } from '../types.js';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
+import type { ConversationStreamChunk } from '../types.ts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   const isObject = typeof value === 'object';

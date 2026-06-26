@@ -1,5 +1,5 @@
-import { WorkflowConfig } from '../types/config.js';
-import { LifecycleHooksChildJobsOptions } from '../types/lifecycle.js';
+import { WorkflowConfig } from '../types/config.ts';
+import { LifecycleHooksChildJobsOptions } from '../types/lifecycle.ts';
 
 /**
  * @description Returns argv segments after `--plan <uuid>` (or `--task`) for nested workflow-ralph invocations.

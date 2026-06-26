@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPlanAndTasksForPrompt } from './index.js';
+import { formatPlanAndTasksForPrompt } from './index.ts';
 
 const PLAN_ID = '9207a6b7-4de7-4e06-8d10-779503b497ae';
 const TASK_ID = '2e53b3d4-13db-4137-8c01-3331f9fd8fea';

@@ -53,7 +53,7 @@ imports `pg`.
 
 All operations below already exist as codegen documents in
 `packages/openthrottle-agentic-ralph/src/graphql/ralph/{queries,mutations,fragments}.graphql` and are
-generated into `src/__generated__/graphql.ts` as `*Document`. **No new documents are required for the
+generated into `src/__generated__/graphql.js` as `*Document`. **No new documents are required for the
 core Ralph loop**; the gaps are the Postgres-direct paths that must be _re-pointed_ at these existing
 documents (next section).
 
@@ -158,7 +158,7 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 - Health resolver: `applications/openthrottle-server/src/graphql/health/health.resolver.ts`
   (`@Public()`), object: `server-health.object.ts`.
 - Codegen documents: `packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql` →
-  `src/__generated__/graphql.ts`.
+  `src/__generated__/graphql.js`.
 - Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; this task: `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
 - Migration spin-out: task `978a661f` (creates the `@tools/workflows` → `nestjs-agentic-workflow`
   cutover plan); multi-project design: task `2bdf0145`

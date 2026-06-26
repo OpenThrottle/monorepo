@@ -14,9 +14,9 @@ import {
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphIterationRunner,
-} from '../../contract/ralph-orchestrator-deps.js';
-import type { WorkflowContext } from '../../types.js';
-import { createWorkflowRalphOrchestrator } from '../orchestrator.js';
+} from '../../contract/ralph-orchestrator-deps.ts';
+import type { WorkflowContext } from '../../types.ts';
+import { createWorkflowRalphOrchestrator } from '../orchestrator.ts';
 
 let otRoot: string;
 let foreignRoot: string;

@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { findDefinition } from '../symbols.js';
-import { resetProjectCache } from '../ts-project.js';
+import { findDefinition } from '../symbols.ts';
+import { resetProjectCache } from '../ts-project.ts';
 
 describe('findDefinition', () => {
   let root: string;
@@ -34,7 +34,7 @@ describe('findDefinition', () => {
     await writeFile(
       join(root, 'src', 'app.ts'),
       [
-        "import { add } from './math.js';",
+        "import { add } from './math.ts';",
         'export const total = add(3, 4);',
       ].join('\n'),
     );
@@ -87,6 +87,20 @@ describe('findDefinition', () => {
         path: 'src/math.ts',
       }),
     ]);
+  });
+
+  it('returns an empty array for a path that escapes the workspace root', async () => {
+    const traversal = await findDefinition(
+      { root },
+      { column: 1, line: 1, path: '../../../../../../etc/passwd' },
+    );
+    const absolute = await findDefinition(
+      { root },
+      { column: 1, line: 1, path: '/etc/passwd' },
+    );
+
+    expect(traversal).toEqual([]);
+    expect(absolute).toEqual([]);
   });
 
   it('returns an empty array when nothing resolves', async () => {

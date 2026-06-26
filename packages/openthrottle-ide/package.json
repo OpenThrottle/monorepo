@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-ide",
-  "description": "TODO: Add a description",
+  "description": "Headless code-intelligence engine for agent-driven IDE experiences: gitignore-aware enumeration, ripgrep text search, ts-morph symbols, incremental sync, and pgvector semantic search over arbitrary workspaces.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

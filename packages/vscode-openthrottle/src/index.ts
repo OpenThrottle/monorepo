@@ -3,11 +3,11 @@
  */
 
 import * as vscode from 'vscode';
-import { OpenThrottleApiClient } from './api-client.js';
-import { getStoredToken } from './auth.js';
-import { getApiBaseUrl } from './config.js';
-import { registerCommands } from './commands/index.js';
-import { registerViews } from './views/index.js';
+import { OpenThrottleApiClient } from './api-client.ts';
+import { getStoredToken } from './auth.ts';
+import { getApiBaseUrl } from './config.ts';
+import { registerCommands } from './commands/index.ts';
+import { registerViews } from './views/index.ts';
 
 /**
  * @description Called when the extension is activated (e.g. when the user opens the OpenThrottle Plans view).

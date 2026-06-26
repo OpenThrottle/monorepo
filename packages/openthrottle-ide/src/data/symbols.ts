@@ -11,10 +11,14 @@ import { Node, ts } from 'ts-morph';
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
-} from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
-import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
-import { loadProject } from './ts-project.js';
+} from '../config/workspace-config.ts';
+import {
+  filterRealPathsInsideRoot,
+  resolveInsideRoot,
+  resolveWorkspaceConfig,
+} from '../config/workspace-config.ts';
+import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.ts';
+import { loadProject } from './ts-project.ts';
 
 /** A symbol exported from the workspace, resolved to its declaration site. */
 export interface ExportedSymbol {
@@ -30,14 +34,41 @@ export interface ExportedSymbol {
   path: string;
 }
 
-/** Options that scope {@link listExports}. */
-export interface ListExportsOptions {
+/**
+ * Bounds the work the by-name symbol resolvers ({@link listExports},
+ * {@link findDefinition}, {@link findReferences}) do, so a single request can't
+ * pull an unbounded slice of a large monorepo into ts-morph. Both options cap
+ * how many files are type-checked per call.
+ */
+export interface SymbolScopeOptions {
   /**
    * Restrict enumeration to these ripgrep globs, e.g. `['src/**\/*.ts']`.
    * Applied on top of `.gitignore` and the workspace exclude globs.
    */
   globs?: string[];
+  /**
+   * Hard cap on the number of workspace script files loaded into ts-morph for
+   * this call. Defaults to {@link DEFAULT_MAX_SYMBOL_FILES}. Files pulled in by
+   * import resolution while analyzing the capped set are not counted against
+   * this limit. Set to a larger value to widen the scope when you know the
+   * workspace is small.
+   */
+  maxFiles?: number;
 }
+
+/** Options that scope {@link listExports}. */
+export type ListExportsOptions = SymbolScopeOptions;
+
+/**
+ * Default cap on the number of workspace script files a single by-name symbol
+ * request loads into ts-morph. Bounds worst-case latency/memory on large
+ * monorepos where loading the entire tree per request is O(all files) of
+ * type-checking. Callers that need the whole tree can raise
+ * {@link SymbolScopeOptions.maxFiles}.
+ *
+ * @publicApi
+ */
+export const DEFAULT_MAX_SYMBOL_FILES = 2000;
 
 /** Script extensions the symbol layer parses. */
 const SCRIPT_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/;
@@ -56,11 +87,7 @@ export async function listExports(
 ): Promise<ExportedSymbol[]> {
   const resolved = resolveWorkspaceConfig(config);
   const project = loadProject(config);
-  const sourceFiles = await addWorkspaceSourceFiles(
-    project,
-    resolved,
-    options.globs,
-  );
+  const sourceFiles = await addWorkspaceSourceFiles(project, resolved, options);
 
   const seen = new Set<string>();
   const symbols: ExportedSymbol[] = [];
@@ -124,18 +151,23 @@ export interface DefinitionLocation {
  * {@link SymbolName}. Resolves imported symbols across files. Returns an empty
  * array — never throws — when nothing resolves.
  *
+ * For a {@link SymbolName} target the workspace is scanned for matching
+ * declarations; pass {@link SymbolScopeOptions} to bound that scan (it is
+ * ignored for a {@link SymbolPosition} target, which loads only the one file).
+ *
  * @publicApi
  */
 export async function findDefinition(
   config: WorkspaceConfig,
   target: SymbolTarget,
+  options: SymbolScopeOptions = {},
 ): Promise<DefinitionLocation[]> {
   const resolved = resolveWorkspaceConfig(config);
   const project = loadProject(config);
 
   const declarations = isPositionTarget(target)
     ? definitionsAtPosition(project, resolved, target)
-    : await definitionsByName(project, resolved, target.name);
+    : await definitionsByName(project, resolved, target.name, options);
 
   return dedupeLocations(
     declarations.map((node) => toDefinitionLocation(node, resolved)),
@@ -171,8 +203,9 @@ async function definitionsByName(
   project: Project,
   resolved: ResolvedWorkspaceConfig,
   name: string,
+  options: SymbolScopeOptions,
 ): Promise<Node[]> {
-  const sourceFiles = await addWorkspaceSourceFiles(project, resolved);
+  const sourceFiles = await addWorkspaceSourceFiles(project, resolved, options);
 
   return sourceFiles.flatMap((sourceFile) =>
     namedDeclarations(sourceFile).filter(
@@ -232,7 +265,13 @@ function getOrAddSourceFile(
   resolved: ResolvedWorkspaceConfig,
   relativePath: string,
 ): SourceFile | undefined {
-  const absolutePath = join(resolved.root, relativePath);
+  // FS-scoping boundary: reject paths that escape the workspace root (absolute
+  // segments or `../` traversal) before any read.
+  const absolutePath = resolveInsideRoot(resolved, relativePath);
+
+  if (absolutePath === undefined) {
+    return undefined;
+  }
 
   return (
     project.getSourceFile(absolutePath) ??
@@ -283,16 +322,24 @@ export interface ReferenceLocation {
  * inverse of {@link findDefinition}. Returns an empty array (never throws) when
  * the target resolves to nothing.
  *
+ * References can live in any file, so the loaded set is what bounds the search;
+ * pass {@link SymbolScopeOptions} to cap how many files are pulled into
+ * ts-morph (it defaults to {@link DEFAULT_MAX_SYMBOL_FILES}). Narrowing the
+ * scope can miss references outside it — widen `maxFiles`/`globs` when
+ * completeness matters more than latency.
+ *
  * @publicApi
  */
 export async function findReferences(
   config: WorkspaceConfig,
   target: SymbolTarget,
+  options: SymbolScopeOptions = {},
 ): Promise<ReferenceLocation[]> {
   const resolved = resolveWorkspaceConfig(config);
   const project = loadProject(config);
-  // References can live in any file, so the whole workspace must be loaded.
-  const sourceFiles = await addWorkspaceSourceFiles(project, resolved);
+  // References can live in any file, so the (bounded) loaded set is the search
+  // surface; the file cap keeps a single request from scanning the whole tree.
+  const sourceFiles = await addWorkspaceSourceFiles(project, resolved, options);
 
   const targets = isPositionTarget(target)
     ? identifierAtPosition(project, resolved, target)
@@ -439,36 +486,60 @@ function getDeclaredName(node: Node): string | undefined {
 
 /**
  * Add the workspace's script files to the project so symbol resolution sees
- * the whole tree. Honors `.gitignore`, the workspace exclude globs, and the
- * optional glob filter; existing source files (e.g. pulled in by import
- * resolution) are reused rather than re-added.
+ * the tree. Honors `.gitignore`, the workspace exclude globs, and the optional
+ * glob filter; existing source files (e.g. pulled in by import resolution) are
+ * reused rather than re-added.
+ *
+ * The result is capped at `options.maxFiles` (default
+ * {@link DEFAULT_MAX_SYMBOL_FILES}) so a single request can't pull an unbounded
+ * slice of a large monorepo into ts-morph — the dominant cost is per-file
+ * type-checking, so this bounds worst-case latency and memory.
  */
 async function addWorkspaceSourceFiles(
   project: Project,
   resolved: ResolvedWorkspaceConfig,
-  globs?: string[],
+  options: SymbolScopeOptions = {},
 ): Promise<SourceFile[]> {
   const args = [...workspaceRipgrepArgs(resolved), '--files'];
 
-  for (const glob of globs ?? []) {
+  for (const glob of options.globs ?? []) {
     args.push('--glob', glob);
   }
 
   const { stdout } = await runRipgrep(args, resolved);
-  const relativePaths = stdout
+  const matchedPaths = stdout
     .split('\n')
     .filter(
       (line) => SCRIPT_FILE_PATTERN.test(line) && !line.endsWith('.d.ts'),
     );
 
-  return relativePaths.map((relativePath) => {
-    const absolutePath = join(resolved.root, relativePath);
+  // With `followSymlinks`, `rg --follow` can list a symlinked file whose real
+  // target is outside `root`; drop those before ts-morph reads them so symbol
+  // resolution stays scoped to the workspace (mirrors listFilesResolved).
+  const containedPaths = resolved.followSymlinks
+    ? await filterRealPathsInsideRoot(resolved, matchedPaths)
+    : matchedPaths;
 
-    return (
-      project.getSourceFile(absolutePath) ??
-      project.addSourceFileAtPath(absolutePath)
-    );
-  });
+  // Bound the per-request file count: type-checking every script file in a
+  // large monorepo is O(all files) and can pin a CPU / spike memory per call.
+  const maxFiles = options.maxFiles ?? DEFAULT_MAX_SYMBOL_FILES;
+  const relativePaths =
+    maxFiles >= 0 ? containedPaths.slice(0, maxFiles) : containedPaths;
+
+  // Use the non-throwing `addSourceFileAtPathIfExists` (mirrors
+  // getOrAddSourceFile): a file deleted between ripgrep enumeration and the add
+  // (TOCTOU) would otherwise throw ENOENT and reject the whole call, breaking
+  // the "never throws" contract. Filter out the undefined misses.
+  return relativePaths
+    .map((relativePath) => {
+      const absolutePath = join(resolved.root, relativePath);
+
+      return (
+        project.getSourceFile(absolutePath) ??
+        project.addSourceFileAtPathIfExists(absolutePath)
+      );
+    })
+    .filter((sourceFile): sourceFile is SourceFile => sourceFile !== undefined);
 }
 
 function toRelativePath(

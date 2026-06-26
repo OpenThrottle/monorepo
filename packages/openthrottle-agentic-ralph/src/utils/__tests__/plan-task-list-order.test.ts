@@ -3,7 +3,7 @@ import {
   comparePlanTaskListOrder,
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
-} from '../plan-task-list-order.js';
+} from '../plan-task-list-order.ts';
 
 const task = (
   id: string,

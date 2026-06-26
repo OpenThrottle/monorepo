@@ -1,12 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
-import type { WorkspaceConfig } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
-import type { ChunkOptions, CodeChunk } from './chunk.js';
-import { chunkFile, chunkWorkspace } from './chunk.js';
-import type { EmbeddingsProvider } from './embeddings.js';
-import type { SnapshotDiff } from './workspace.js';
+import type {
+  ResolvedWorkspaceConfig,
+  WorkspaceConfig,
+} from '../config/workspace-config.ts';
+import {
+  resolveInsideRoot,
+  resolveWorkspaceConfig,
+} from '../config/workspace-config.ts';
+import type { ChunkOptions, CodeChunk } from './chunk.ts';
+import { chunkFile, chunkWorkspace } from './chunk.ts';
+import type { EmbeddingsProvider } from './embeddings.ts';
+import type { SnapshotDiff } from './workspace.ts';
 
 /** A {@link CodeChunk} paired with its embedding vector, ready to persist. */
 export interface StoredChunk {
@@ -123,7 +128,7 @@ export async function indexWorkspace(
   }
 
   const targetPaths = [...diff.added, ...diff.changed];
-  const chunks = await chunkPaths(resolved.root, targetPaths, chunkOptions);
+  const chunks = await chunkPaths(resolved, targetPaths, chunkOptions);
   const embedded = await embedAndUpsert(
     resolved.root,
     chunks,
@@ -137,14 +142,21 @@ export async function indexWorkspace(
 
 /** Read and chunk a specific set of workspace-relative paths (incremental mode). */
 async function chunkPaths(
-  root: string,
+  resolved: ResolvedWorkspaceConfig,
   paths: string[],
   options: ChunkOptions,
 ): Promise<CodeChunk[]> {
   const perFile = await Promise.all(
     paths.map(async (path) => {
+      // FS-scoping boundary: skip caller-supplied diff paths that escape the
+      // workspace root (absolute segments or `../` traversal) before any read.
+      const absolutePath = resolveInsideRoot(resolved, path);
+      if (absolutePath === undefined) {
+        return [];
+      }
+
       try {
-        const content = await readFile(join(root, path), 'utf8');
+        const content = await readFile(absolutePath, 'utf8');
         return chunkFile(path, content, options);
       } catch {
         // The file vanished between the diff and the read; treat as nothing.

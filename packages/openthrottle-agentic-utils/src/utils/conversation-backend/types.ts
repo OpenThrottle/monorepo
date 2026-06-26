@@ -10,7 +10,7 @@
  * client renderer can derive from a single source.
  */
 
-import type { ChatCompletionMessage } from '../chat-completions/index.js';
+import type { ChatCompletionMessage } from '../chat-completions/index.ts';
 
 /**
  * Event kinds a backend can emit. `text` is plain assistant output; the rest

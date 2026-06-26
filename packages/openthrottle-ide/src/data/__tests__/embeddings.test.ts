@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FetchLike } from '../embeddings.js';
+import type { FetchLike } from '../embeddings.ts';
 import {
   createEmbeddingsProvider,
   DEFAULT_OLLAMA_BASE_URL,
@@ -8,16 +8,38 @@ import {
   DEFAULT_OPENAI_BASE_URL,
   DEFAULT_OPENAI_EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
-} from '../embeddings.js';
+  MAX_EMBEDDING_CHARS,
+} from '../embeddings.ts';
+
+/** Parse a recorded fetch call's JSON request body into a known shape. */
+function parsedBody(call: RecordedCall | undefined): {
+  input?: unknown;
+  prompt?: unknown;
+} {
+  if (call?.body === undefined) {
+    throw new Error('expected a JSON request body');
+  }
+  const parsed: unknown = JSON.parse(call.body);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('expected a JSON object request body');
+  }
+  const record: Record<string, unknown> = { ...parsed };
+  return { input: record.input, prompt: record.prompt };
+}
+
+interface RecordedCall {
+  body?: string;
+  input: string;
+}
 
 /** Build a fake `fetch` that returns a canned JSON body and records its calls. */
 function fakeFetch(body: unknown): {
-  calls: { init?: unknown; input: string }[];
+  calls: RecordedCall[];
   fetch: FetchLike;
 } {
-  const calls: { init?: unknown; input: string }[] = [];
+  const calls: RecordedCall[] = [];
   const fetch: FetchLike = async (input, init) => {
-    calls.push({ init, input });
+    calls.push({ body: init?.body, input });
     return {
       json: async () => body,
       ok: true,
@@ -69,6 +91,31 @@ describe('createEmbeddingsProvider (OpenAI)', () => {
     expect(calls).toHaveLength(0);
   });
 
+  it('caps each text at MAX_EMBEDDING_CHARS before sending', async () => {
+    const { calls, fetch } = fakeFetch({
+      data: [{ embedding: [0.1], index: 0 }],
+    });
+    const provider = createEmbeddingsProvider(
+      {
+        apiKey: 'k',
+        baseUrl: DEFAULT_OPENAI_BASE_URL,
+        kind: 'openai',
+        model: DEFAULT_OPENAI_EMBEDDING_MODEL,
+      },
+      fetch,
+    );
+
+    await provider.embed(['x'.repeat(MAX_EMBEDDING_CHARS + 100)]);
+
+    const { input } = parsedBody(calls[0]);
+    expect(Array.isArray(input)).toBe(true);
+    const [first] = Array.isArray(input) ? input : [];
+    expect(typeof first).toBe('string');
+    expect(typeof first === 'string' ? first.length : -1).toBe(
+      MAX_EMBEDDING_CHARS,
+    );
+  });
+
   it('throws when the API key is missing', async () => {
     const { fetch } = fakeFetch({ data: [] });
     const provider = createEmbeddingsProvider(
@@ -102,6 +149,26 @@ describe('createEmbeddingsProvider (Ollama)', () => {
     expect(calls).toHaveLength(3);
     expect(calls[0]?.input).toBe('http://localhost:11434/api/embeddings');
     expect(vectors).toEqual([[0.5], [0.5], [0.5]]);
+  });
+
+  it('caps each prompt at the same MAX_EMBEDDING_CHARS as OpenAI', async () => {
+    const { calls, fetch } = fakeFetch({ embedding: [0.5] });
+    const provider = createEmbeddingsProvider(
+      {
+        baseUrl: DEFAULT_OLLAMA_BASE_URL,
+        kind: 'ollama',
+        model: DEFAULT_OLLAMA_EMBEDDING_MODEL,
+      },
+      fetch,
+    );
+
+    await provider.embed(['y'.repeat(MAX_EMBEDDING_CHARS + 100)]);
+
+    const { prompt } = parsedBody(calls[0]);
+    expect(typeof prompt).toBe('string');
+    expect(typeof prompt === 'string' ? prompt.length : -1).toBe(
+      MAX_EMBEDDING_CHARS,
+    );
   });
 });
 

@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDefaultGitHubUser, resolveActor } from '../config.js';
+import { getDefaultGitHubUser, resolveActor } from '../config.ts';
 import {
   createPlan as cortexCreatePlan,
   deletePlan as cortexDeletePlan,
@@ -14,17 +14,17 @@ import {
   insertPlanEmbedding as cortexInsertPlanEmbedding,
   listPlansByStatus,
   updatePlan as cortexUpdatePlan,
-} from '../cortex-client.js';
-import { embedQuery } from '../embedding.js';
-import { buildPlanContentForEmbedding } from '../embedding-content.js';
+} from '../cortex-client.ts';
+import { embedQuery } from '../embedding.ts';
+import { buildPlanContentForEmbedding } from '../embedding-content.ts';
 import {
   createPlanInputSchema,
   deletePlanInputSchema,
   getPlanInputSchema,
   listPlansByStatusInputSchema,
   updatePlanInputSchema,
-} from '../schemas.js';
-import { invalidArgsContent } from './errors.js';
+} from '../schemas.ts';
+import { invalidArgsContent } from './errors.ts';
 
 export function registerPlanTools(server: McpServer): void {
   server.registerTool(

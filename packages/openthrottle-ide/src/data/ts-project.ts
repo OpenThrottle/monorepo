@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import type { ProjectOptions } from 'ts-morph';
 import { Project, ts } from 'ts-morph';
 
-import type { WorkspaceConfig } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
+import type { WorkspaceConfig } from '../config/workspace-config.ts';
+import { resolveWorkspaceConfig } from '../config/workspace-config.ts';
 
 /** Options that tune how {@link loadProject} builds its ts-morph project. */
 export interface LoadProjectOptions {

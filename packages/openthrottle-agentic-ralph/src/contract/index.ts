@@ -1,2 +1,2 @@
-export * from './ralph-orchestrator-deps.js';
-export * from './step-results.js';
+export * from './ralph-orchestrator-deps.ts';
+export * from './step-results.ts';

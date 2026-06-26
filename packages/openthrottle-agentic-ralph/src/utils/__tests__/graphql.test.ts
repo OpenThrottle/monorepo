@@ -4,7 +4,7 @@ import {
   resolveWorkflowAuthTokenFromEnv,
   resolveWorkflowGraphqlConfigFromEnv,
   resolveWorkflowGraphqlUrlOverrideFromEnv,
-} from '../graphql.js';
+} from '../graphql.ts';
 
 const INTERNAL_BASE = 'http://localhost:6021';
 

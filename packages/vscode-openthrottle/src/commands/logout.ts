@@ -3,9 +3,9 @@
  */
 
 import * as vscode from 'vscode';
-import { deleteStoredToken } from '../auth.js';
-import { getApiBaseUrl } from '../config.js';
-import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
+import { deleteStoredToken } from '../auth.ts';
+import { getApiBaseUrl } from '../config.ts';
+import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
 
 /**
  * @description Run sign out: clear token from SecretStorage and refresh the plans tree.

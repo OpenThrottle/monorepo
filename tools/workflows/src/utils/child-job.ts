@@ -5,7 +5,7 @@
 
 import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
-import { buildNestedWorkflowRalphSpawnEnv } from '../config/build-nested-workflow-ralph-spawn-env.js';
+import { buildNestedWorkflowRalphSpawnEnv } from '../config/build-nested-workflow-ralph-spawn-env.ts';
 import type { ChildProcessMetrics } from '../types/child-process-metrics';
 import type { WallClockMetrics } from '../types/wall-clock-metrics';
 import { createWallClockMetrics } from '../types/wall-clock-metrics';
@@ -23,7 +23,7 @@ import {
   reconcilePlanCompletionIfAllTasksTerminal,
   resolveWorkflowRalphConfig,
 } from './openthrottle-ralph';
-import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import { escalateKill } from './child-kill';
 import { createPlanOutputStreamer } from './plan-output-streamer';
 import { ralphDebugLogger } from './ralph-debug-logger';
