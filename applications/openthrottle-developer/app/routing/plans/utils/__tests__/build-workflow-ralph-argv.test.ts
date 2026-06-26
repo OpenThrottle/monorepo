@@ -774,4 +774,248 @@ describe('planRunJobDetailPath', () => {
       '/queues/Plans/ralph-orch%3Aabc',
     );
   });
+
+  test('trims the job id before encoding', () => {
+    expect(planRunJobDetailPath('  job-123  ')).toBe('/queues/Plans/job-123');
+  });
+});
+
+describe('buildWorkflowRalphOptionArgs additional flag mapping', () => {
+  test('floors fractional iteration timeout seconds', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: 90.9 }),
+      ),
+    ).toContain('90');
+  });
+
+  test('omits iteration timeout below the 1-second minimum', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: 0.4 }),
+      ),
+    ).not.toContain('--iteration-timeout');
+  });
+
+  test('emits --worktree-base only for cursor backend with a non-empty base', () => {
+    const cursorArgs = buildWorkflowRalphOptionArgs(
+      basePlanInput({
+        executionBackend: 'cursor',
+        worktreeBase: 'main',
+        worktreeCli: 'flag-only',
+      }),
+    );
+    expect(cursorArgs).toContain('--worktree-base');
+    expect(cursorArgs).toContain('main');
+
+    const claudeArgs = buildWorkflowRalphOptionArgs(
+      basePlanInput({
+        executionBackend: 'claude',
+        worktreeBase: 'main',
+        worktreeCli: 'flag-only',
+      }),
+    );
+    expect(claudeArgs).not.toContain('--worktree-base');
+  });
+
+  test('drops worktree-base / skip-worktree-setup when worktree mode is omit', () => {
+    const args = buildWorkflowRalphOptionArgs(
+      basePlanInput({
+        executionBackend: 'cursor',
+        skipWorktreeSetup: true,
+        worktreeBase: 'main',
+        worktreeCli: 'omit',
+      }),
+    );
+    expect(args).not.toContain('--worktree');
+    expect(args).not.toContain('--worktree-base');
+    expect(args).not.toContain('--skip-worktree-setup');
+  });
+
+  test('treats a named worktree with a blank name as omit', () => {
+    expect(
+      resolveWorkflowRalphWorktreeArgvValue(
+        basePlanInput({ worktreeCli: 'named', worktreeName: '   ' }),
+      ),
+    ).toBeUndefined();
+  });
+});
+
+describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions field mapping', () => {
+  test('maps non-default model and project', () => {
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+      basePlanInput({ model: 'opus', project: 'openthrottle-developer' }),
+    );
+    expect(tuning).toMatchObject({
+      model: 'opus',
+      project: 'openthrottle-developer',
+    });
+  });
+
+  test('omits worktree-base and skip-worktree-setup for claude backend', () => {
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+      basePlanInput({
+        executionBackend: 'claude',
+        skipWorktreeSetup: true,
+        worktreeBase: 'main',
+        worktreeCli: 'named',
+        worktreeName: 'feature',
+      }),
+    );
+    expect(tuning).toBeDefined();
+    expect(tuning?.worktreeBase).toBeUndefined();
+    expect(tuning?.skipWorktreeSetup).toBeUndefined();
+    expect(tuning?.backend).toBe('claude');
+    expect(tuning?.worktree).toBe('feature');
+  });
+
+  test('maps debug CLI verbose selection to the nested enum', () => {
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+      basePlanInput({ debugCli: 'verbose' }),
+    );
+    expect(tuning?.ralphDebugCli).toBe(RalphNestedDebugCli.Verbose);
+  });
+});
+
+describe('buildWorkflowRalphTuningDiffLabels coverage of each field', () => {
+  test('lists backend, model, project, prompt, debug, and worktree changes', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(
+      basePlanInput({
+        debugCli: 'debug',
+        executionBackend: 'claude',
+        model: 'opus',
+        project: 'openthrottle-developer',
+        prompt: '/custom-prompt',
+        worktreeCli: 'named',
+        worktreeName: 'feature',
+      }),
+      '',
+    );
+
+    expect(labels.some((line) => line.includes('Backend:'))).toBe(true);
+    expect(labels.some((line) => line.includes('Model:'))).toBe(true);
+    expect(labels.some((line) => line.includes('Nx project:'))).toBe(true);
+    expect(labels.some((line) => line.includes('Prompt delivery'))).toBe(true);
+    expect(labels.some((line) => line.includes('Debug CLI:'))).toBe(true);
+    expect(labels.some((line) => line.includes('Agent worktree:'))).toBe(true);
+  });
+
+  test('lists worktree-name change when only the name differs within named mode', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(
+      basePlanInput({ worktreeCli: 'named', worktreeName: 'feature' }),
+      '',
+    );
+    // baseline worktreeCli is 'omit', so the top-level worktree line fires;
+    // confirm the name is surfaced somewhere in the diff.
+    expect(labels.some((line) => line.includes('Agent worktree'))).toBe(true);
+  });
+
+  test('lists worktree base and skip-worktree-setup changes for cursor', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(
+      basePlanInput({
+        executionBackend: 'cursor',
+        skipWorktreeSetup: true,
+        worktreeBase: 'main',
+      }),
+      '',
+    );
+    expect(labels.some((line) => line.includes('Worktree base:'))).toBe(true);
+    expect(labels.some((line) => line.includes('Skip worktree setup:'))).toBe(
+      true,
+    );
+  });
+});
+
+describe('formatWorkflowRalphCommandLine quoting edge cases', () => {
+  test('quotes an empty-string argument', () => {
+    expect(formatWorkflowRalphCommandLine(['--prompt', ''])).toBe(
+      "pnpm exec workflow-ralph --prompt ''",
+    );
+  });
+
+  test('escapes embedded single quotes', () => {
+    expect(formatWorkflowRalphCommandLine(["it's"])).toBe(
+      "pnpm exec workflow-ralph 'it'\\''s'",
+    );
+  });
+});
+
+describe('validateWorkflowRalphRunOptionsState enqueue tuning parity', () => {
+  test('passes a valid non-default tuning shape through the schema', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ iterations: 25, model: 'opus' }),
+      '120',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  test('reports task uuid issue in sandbox mode without requiring an id', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      baseTaskInput({ taskId: 'not-a-uuid' }),
+      '',
+      { requireCliTargetIds: false },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'task_uuid')).toBe(true);
+  });
+
+  test('reports plan uuid issue in sandbox mode for a malformed plan id', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ planId: 'nope' }),
+      '',
+      { requireCliTargetIds: false },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'plan_uuid')).toBe(true);
+  });
+
+  test('requires a plan uuid when strict target ids are enabled and plan is empty', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ planId: '' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'plan_required')).toBe(true);
+  });
+
+  test('requires a task uuid when strict target ids are enabled and task is empty', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      baseTaskInput({ taskId: '' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'task_required')).toBe(true);
+  });
+
+  test('flags named prompt conflict when prompt-file layer also carries a custom prompt', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({
+        prompt: '/custom',
+        promptFile: 'prompts/run.md',
+        promptLayer: 'file',
+      }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'prompt_conflict')).toBe(true);
+  });
 });

@@ -31,6 +31,7 @@
     "@react-router/node": "catalog:",
     "@react-router/serve": "catalog:",
     "@tanstack/react-table": "catalog:",
+    "@vercel/analytics": "catalog:",
     "classnames": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",

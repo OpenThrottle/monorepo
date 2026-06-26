@@ -36,7 +36,7 @@ export const DashboardToolbar = (
   const onChangeOrg = (value: GithubOrg): void => {
     const next = new URLSearchParams(searchParams);
     const nextRepos = GITHUB_REPOSITORIES[value];
-    const nextRepo = nextRepos[0] as GithubRepo;
+    const nextRepo = nextRepos[0];
 
     next.set('owner', value);
     next.set('repo', nextRepo);

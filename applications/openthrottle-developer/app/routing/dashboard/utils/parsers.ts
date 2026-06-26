@@ -37,7 +37,7 @@ export function parseDashboardGithubParams(
     ? repoRaw
     : owner === DEFAULT_OWNER
       ? DEFAULT_REPO
-      : (reposForOwner[0] as GithubRepo);
+      : reposForOwner[0];
 
   return { owner, repo };
 }
