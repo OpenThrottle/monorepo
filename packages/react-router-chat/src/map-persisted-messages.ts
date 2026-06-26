@@ -1,4 +1,5 @@
 import { buildAgentsChatAssistantFooter } from './agents-chat-footer';
+import { foldPersistedTurnEvents } from './turn-events';
 import type { ChatMessage, ChatTurnResult } from './types';
 
 export interface PersistedAgentConversationMessage {
@@ -74,9 +75,17 @@ export const mapPersistedAgentConversationMessages = (
       continue;
     }
 
+    // Hydrate the rich timeline for assistant turns that persisted non-text
+    // events (thinking/tool). Plain turns fold to [] and keep the flat body.
+    const events =
+      role === 'assistant'
+        ? foldPersistedTurnEvents(message.toolMetadataJson, message.content)
+        : [];
+
     mapped.push({
       body: message.content,
       createdAt: message.createdAt,
+      ...(events.length > 0 ? { events } : {}),
       footer: role === 'assistant' ? toAssistantFooter(message) : null,
       id: message.id,
       role,

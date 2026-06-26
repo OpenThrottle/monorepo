@@ -1,10 +1,115 @@
 /** Who authored a chat message in the thread. */
 export type ChatMessageRole = 'assistant' | 'system' | 'user';
 
+/**
+ * Rendered event kinds within an assistant turn. The backend wire stream emits
+ * `tool_call` and `tool_result` separately; the client correlates them into a
+ * single `tool` event, so the rendered kinds collapse those two into one.
+ *
+ * @publicApi
+ */
+export const ChatTurnEventKind = {
+  session: 'session',
+  text: 'text',
+  thinking: 'thinking',
+  tool: 'tool',
+  usage: 'usage',
+} as const;
+
+/** Union of {@link ChatTurnEventKind} values. @publicApi */
+export type ChatTurnEventKind =
+  (typeof ChatTurnEventKind)[keyof typeof ChatTurnEventKind];
+
+/**
+ * Lifecycle of a single tool invocation. `running` once the tool_call is seen,
+ * `succeeded` once its tool_result arrives, `failed` if the turn errors while
+ * the call is still outstanding.
+ *
+ * @publicApi
+ */
+export const ChatToolStatus = {
+  failed: 'failed',
+  running: 'running',
+  succeeded: 'succeeded',
+} as const;
+
+/** Union of {@link ChatToolStatus} values. @publicApi */
+export type ChatToolStatus =
+  (typeof ChatToolStatus)[keyof typeof ChatToolStatus];
+
+/** Streamed assistant text segment (coalesced consecutive deltas). @publicApi */
+export interface ChatTurnTextEvent {
+  readonly kind: 'text';
+  /** sortOrder of the first chunk in this segment; orders the event in the turn. */
+  readonly sortOrder: number;
+  readonly text: string;
+}
+
+/** Streamed reasoning segment (coalesced consecutive deltas). @publicApi */
+export interface ChatTurnThinkingEvent {
+  readonly kind: 'thinking';
+  readonly sortOrder: number;
+  readonly text: string;
+}
+
+/** A correlated tool_call/tool_result pair as one logical invocation. @publicApi */
+export interface ChatTurnToolEvent {
+  /** Raw tool arguments payload as JSON (from the tool_call), when present. */
+  readonly argsJson: string | null;
+  /** Correlation id linking the call to its result; null if the backend omits it. */
+  readonly callId: string | null;
+  /** Error text when the invocation failed. */
+  readonly error: string | null;
+  readonly kind: 'tool';
+  /** Best-effort tool name (e.g. `read`, `edit`); `tool` when unknown. */
+  readonly name: string;
+  /** Raw tool result payload as JSON (from the tool_result), when present. */
+  readonly resultJson: string | null;
+  readonly sortOrder: number;
+  readonly status: ChatToolStatus;
+}
+
+/** Terminal token-accounting / result summary for the turn. @publicApi */
+export interface ChatTurnUsageEvent {
+  readonly error: string | null;
+  readonly kind: 'usage';
+  /** Final assistant result text reported by the backend, when present. */
+  readonly result: string | null;
+  readonly sortOrder: number;
+  /** Raw usage payload (token counts, etc.) as JSON, when present. */
+  readonly usageJson: string | null;
+}
+
+/** Backend session handle confirmation (e.g. a resumed cursor chat id). @publicApi */
+export interface ChatTurnSessionEvent {
+  readonly kind: 'session';
+  readonly sessionId: string | null;
+  readonly sortOrder: number;
+}
+
+/**
+ * One structured event within an assistant turn, ordered by `sortOrder`.
+ * Discriminated on `kind`.
+ *
+ * @publicApi
+ */
+export type ChatTurnEvent =
+  | ChatTurnSessionEvent
+  | ChatTurnTextEvent
+  | ChatTurnThinkingEvent
+  | ChatTurnToolEvent
+  | ChatTurnUsageEvent;
+
 /** Single message in a modal chat thread. */
 export interface ChatMessage {
   readonly body: string;
   readonly createdAt?: string;
+  /**
+   * Structured, ordered events for an assistant turn (thinking, tool calls,
+   * text, usage). Optional and additive: when absent, renderers fall back to
+   * the flat markdown `body`.
+   */
+  readonly events?: readonly ChatTurnEvent[];
   readonly footer?: string | null;
   readonly id: string;
   readonly role: ChatMessageRole;
