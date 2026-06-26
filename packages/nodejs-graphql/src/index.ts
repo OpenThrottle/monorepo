@@ -40,6 +40,7 @@ export {
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
+ * @publicApi
  */
 export interface GraphqlResponse<TData> {
   readonly data?: TData;
@@ -51,6 +52,7 @@ export interface GraphqlResponse<TData> {
 
 /**
  * @description Optional options for executeGraphql (e.g. auth headers).
+ * @publicApi
  */
 export interface ExecuteGraphqlOptions {
   readonly headers?: Record<string, string>;
@@ -73,6 +75,7 @@ export interface ExecuteGraphqlOptions {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphql<
   TData,
@@ -124,11 +127,17 @@ export async function executeGraphql<
     throw new Error('GraphQL response missing data');
   }
 
+  // `as TData` is sound here despite the repo's no-`as` convention: this is the
+  // post-validation success path (HTTP OK, no GraphQL errors, non-null `data`),
+  // and `parseDateTimeInResponse` returns `unknown` only because the recursive
+  // Date-walk erases the type. The codegen `TypedDocumentNode` guarantees the
+  // shape. Do not "tighten" this away — there is no runtime type to narrow to.
   return parseDateTimeInResponse(json.data) as TData;
 }
 
 /**
  * @description Options for executeGraphqlAtUrl (e.g. auth token for Bearer header).
+ * @publicApi
  */
 export interface ExecuteGraphqlAtUrlOptions {
   /**
@@ -159,6 +168,7 @@ export interface ExecuteGraphqlAtUrlOptions {
  * @param options - Optional token for Authorization: Bearer.
  *
  * @returns The `data` portion of the response; throws if errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphqlAtUrl<
   TData,
@@ -213,11 +223,15 @@ export async function executeGraphqlAtUrl<
     throw new Error('GraphQL response missing data');
   }
 
+  // `as TData` is sound here: post-validation success path; the cast only
+  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
+  // `unknown` return erases. See the note on the cast in `executeGraphql`.
   return parseDateTimeInResponse(json.data) as TData;
 }
 
 /**
  * @description Options for {@link executeGraphqlWithAuth}.
+ * @publicApi
  */
 export interface ExecuteGraphqlWithAuthOptions {
   /**
@@ -230,6 +244,7 @@ export interface ExecuteGraphqlWithAuthOptions {
 
 /**
  * @description Runs executeGraphql with Authorization: Bearer <token> when the request has an auth cookie. Use in loaders/actions that have access to the request.
+ * @publicApi
  */
 export async function executeGraphqlWithAuth<
   TData,

@@ -48,6 +48,7 @@ import { asGraphqlPayload, parseDateTimeInResponse } from './utils.js';
 
 /**
  * @description Wire-level GraphQL response (aligned with V1 {@link GraphqlResponse}).
+ * @publicApi
  */
 export interface GraphqlV2ResponsePayload<TData> {
   readonly data?: TData;
@@ -56,6 +57,7 @@ export interface GraphqlV2ResponsePayload<TData> {
 
 /**
  * @description Single GraphQL error object from the response body.
+ * @publicApi
  */
 export interface GraphqlV2GraphqlErrorItem {
   readonly message: string;
@@ -65,6 +67,7 @@ export interface GraphqlV2GraphqlErrorItem {
 /**
  * @description Normalized failure for V2 (transport, GraphQL errors,
  * missing data, or unknown).
+ * @publicApi
  */
 export type GraphqlV2FailureKind =
   | 'graphql_errors'
@@ -76,6 +79,7 @@ export type GraphqlV2FailureKind =
 
 /**
  * @description Structured error returned when `ok` is false (unless remapped by `mapFailure`).
+ * @publicApi
  */
 export interface GraphqlV2Failure {
   readonly cause: unknown | undefined;
@@ -88,6 +92,7 @@ export interface GraphqlV2Failure {
 
 /**
  * @description Context passed to {@link GraphqlV2MapFailure} for richer mapping (workflow parity).
+ * @publicApi
  */
 export interface GraphqlV2FailureContext {
   readonly failure: GraphqlV2Failure;
@@ -99,6 +104,7 @@ export interface GraphqlV2FailureContext {
 /**
  * @description Optional hook to map or replace the default {@link GraphqlV2Failure} (e.g. attach
  * domain codes). Return value becomes `error` on the err branch of {@link GraphqlV2Result}.
+ * @publicApi
  */
 export type GraphqlV2MapFailure<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -106,12 +112,14 @@ export type GraphqlV2MapFailure<
 
 /**
  * @description Predicate deciding whether a {@link GraphqlV2Failure} should be retried.
+ * @publicApi
  */
 export type GraphqlV2RetryOn = (failure: GraphqlV2Failure) => boolean;
 
 /**
  * @description Opt-in retry policy for {@link executeGraphql_v2}. Off by default so loader
  * semantics do not change silently. Not safe for non-idempotent mutations — see module docs.
+ * @publicApi
  */
 export interface GraphqlV2RetryOptions {
   /**
@@ -136,6 +144,7 @@ export interface GraphqlV2RetryOptions {
  * @description Default retry predicate: retry only transient transport failures — `network` errors
  * and `http` failures with a 5xx status. Never retries `graphql_errors`, `missing_data`,
  * `invalid_json`, or `unknown` (deterministic / not safely retryable).
+ * @publicApi
  */
 export const defaultRetryOn: GraphqlV2RetryOn = (failure) => {
   if (failure.kind === 'network') {
@@ -151,6 +160,7 @@ export const defaultRetryOn: GraphqlV2RetryOn = (failure) => {
 
 /**
  * @description Successful V2 execution after HTTP OK, no GraphQL errors, and non-null `data`.
+ * @publicApi
  */
 export interface GraphqlV2OkResult<TData> {
   readonly data: TData;
@@ -159,6 +169,7 @@ export interface GraphqlV2OkResult<TData> {
 
 /**
  * @description Failed V2 execution (`ok: false`).
+ * @publicApi
  */
 export interface GraphqlV2ErrResult<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -169,6 +180,7 @@ export interface GraphqlV2ErrResult<
 
 /**
  * @description Discriminated result of {@link executeGraphql_v2} (non-throwing).
+ * @publicApi
  */
 export type GraphqlV2Result<
   TData,
@@ -178,6 +190,7 @@ export type GraphqlV2Result<
 /**
  * @description Options for {@link executeGraphql_v2}: explicit endpoint, auth, DateTime parsing,
  * fetch overrides, and optional failure mapping.
+ * @publicApi
  */
 export interface GraphqlV2ExecuteOptions<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -227,6 +240,7 @@ export interface GraphqlV2ExecuteOptions<
 
 /**
  * @description Type of `executeGraphql_v2` (to be exported from this package once implemented).
+ * @publicApi
  */
 export type ExecuteGraphqlV2 = <
   TData,
@@ -240,6 +254,13 @@ export type ExecuteGraphqlV2 = <
 
 /**
  * @description Build request headers: `Content-Type` → `options.headers` → Bearer from `token`.
+ *
+ * `Content-Type: application/json` is set first and may be overridden by
+ * `options.headers` (unlike `requestInit`, which excludes `headers`). No
+ * `Accept` header is set, so a caller wanting GraphQL-over-HTTP content
+ * negotiation (e.g. `application/graphql-response+json`) must supply both
+ * `Accept` and `Content-Type` via `options.headers`. Low impact today;
+ * tracked for future GraphQL-over-HTTP spec compliance.
  */
 const buildV2Headers = (
   options: GraphqlV2ExecuteOptions,
@@ -463,6 +484,11 @@ const executeGraphqlV2Once = async <
   return {
     rawFailure: null,
     result: {
+      // `as TData` is sound here: post-validation success path (HTTP OK, no
+      // GraphQL errors, non-null `data`). The cast only re-attaches the
+      // codegen-guaranteed shape that `parseDateTimeInResponse`'s `unknown`
+      // return erases (and `parsed.data` is already `unknown`). Do not
+      // "tighten" away — there is no runtime type to narrow to.
       data: data as TData,
       ok: true,
     },
@@ -475,6 +501,7 @@ const executeGraphqlV2Once = async <
  * When `options.retry` is supplied, transient transport failures (per
  * `options.retry.retryOn`, defaulting to {@link defaultRetryOn}) are retried with exponential
  * backoff. Retry is off by default and is not safe for non-idempotent mutations (see module docs).
+ * @publicApi
  */
 export const executeGraphql_v2: ExecuteGraphqlV2 = async <
   TData,

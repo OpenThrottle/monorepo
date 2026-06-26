@@ -17,6 +17,7 @@ import {
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
+ * @publicApi
  */
 export interface GraphqlResponseV2<TData> {
   readonly data?: TData;
@@ -28,6 +29,7 @@ export interface GraphqlResponseV2<TData> {
 
 /**
  * @description Optional options for {@link executeGraphqlV2} (URL override, auth, extra headers).
+ * @publicApi
  */
 export interface ExecuteGraphqlOptionsV2 {
   /**
@@ -61,6 +63,7 @@ export interface ExecuteGraphqlOptionsV2 {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphqlV2<
   TData,
@@ -117,5 +120,8 @@ export async function executeGraphqlV2<
     throw new Error('GraphQL response missing data');
   }
 
+  // `as TData` is sound here: post-validation success path; the cast only
+  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
+  // `unknown` return erases. See the note on the cast in `executeGraphql`.
   return parseDateTimeInResponse(json.data) as TData;
 }

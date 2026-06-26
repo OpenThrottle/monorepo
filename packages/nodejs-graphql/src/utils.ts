@@ -3,6 +3,7 @@
  * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
  * Bounds a request so a stalled openthrottle-server connection cannot hold the
  * request open indefinitely.
+ * @publicApi
  */
 export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
 
@@ -10,6 +11,7 @@ export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
  * @description Marker prefix on the message of the `Error` thrown when a
  * request exceeds its timeout. Consumers match on this to classify the failure
  * as a distinct timeout kind rather than a generic network error.
+ * @publicApi
  */
 export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
   'openthrottle-server GraphQL request timed out';
@@ -70,7 +72,9 @@ export function rethrowAsTimeoutIfAborted(
 
 /**
  * @description Base URL for openthrottle-server. Use in loaders/actions (server).
- * PRs and other data are fetched via GraphQL (graphql-client.ts).
+ * Reads `API_URL_INTERNAL` from the environment (base URL without a trailing
+ * `/graphql`; this helper appends `/graphql`) and throws when it is unset.
+ * @publicApi
  */
 export function getGraphQLUrl(): string {
   const url = process.env.API_URL_INTERNAL;
@@ -85,7 +89,10 @@ export function getGraphQLUrl(): string {
 }
 
 /**
- * @description ...
+ * @description Read the bearer auth token for V1's `executeGraphqlV2` from the
+ * environment. Returns the value of the `API_TOKEN` env var, or `undefined`
+ * when it is unset (the request is then sent without an `Authorization`
+ * header). Callers may override this by passing `options.token`.
  */
 export function getGraphQLToken(): string | undefined {
   const token = process.env.API_TOKEN;
@@ -95,6 +102,12 @@ export function getGraphQLToken(): string | undefined {
 
 /**
  * @description Recursively walks JSON and parses string values that look like ISO date-time into Date so loaders receive Date (codegen keeps DateTime → Date).
+ *
+ * Returns `unknown` (not a generic) because the recursive Date-walk rebuilds the
+ * value structurally and erases the input type. Callers that know the codegen
+ * `TData` shape narrow the result with a single `as TData` cast on the trusted
+ * success path; see the executors in `index.ts` / `index-v2.ts` / `graphql-v2.ts`.
+ * @publicApi
  */
 export function parseDateTimeInResponse(value: unknown): unknown {
   if (value === null || value === undefined) {
