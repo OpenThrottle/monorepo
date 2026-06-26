@@ -22,7 +22,7 @@ import {
   GetTasksDocument,
   ReorderPlanTasksDocument,
   UpdateTaskDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import {
   CreateTaskInputSchema,
   DeleteTaskInputSchema,

@@ -4,8 +4,8 @@
  * with the workflow flow-context contract (`contract/flow-context`).
  */
 import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import { RalphNestedDebugCli } from '../../__generated__/graphql.ts';
-import type { RalphPlanRunTuningInput } from '../../__generated__/graphql.ts';
+import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
+import type { RalphPlanRunTuningInput } from '../../__generated__/graphql.js';
 import type {
   WorkflowRalphContext,
   WorkflowDebug,

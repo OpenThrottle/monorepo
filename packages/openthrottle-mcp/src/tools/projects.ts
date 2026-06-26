@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
-import { DeleteProjectDocument } from '../__generated__/graphql.ts';
+import { DeleteProjectDocument } from '../__generated__/graphql.js';
 import { DeleteProjectInputSchema } from '../__generated__/schemas.ts';
 import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';

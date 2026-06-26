@@ -9,7 +9,7 @@ import {
   type GetPlanOutputStreamChunksQuery,
   AppendPlanOutputDocument,
   GetPlanOutputStreamChunksDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,
   ListPlanOutputStreamChunksInputSchema,

@@ -12,7 +12,7 @@ import {
   GetDocumentDocument,
   ListSourcesDocument,
   SearchDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';

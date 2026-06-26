@@ -8,7 +8,7 @@
  * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import type { RalphPlanRunTuningInput } from '../__generated__/graphql.ts';
+import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.ts';
 import {
   DEFAULT_ITERATIONS,

@@ -96,7 +96,7 @@ import {
   UpdateWorkspaceProfileInput,
   WallClockInterpretation,
   WorkspaceEditorId,
-} from './graphql.ts';
+} from './graphql.js';
 
 type Properties<T> = Required<{
   [K in keyof T]: z.ZodType<T[K], any, T[K]>;

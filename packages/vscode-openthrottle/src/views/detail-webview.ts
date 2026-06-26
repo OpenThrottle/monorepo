@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import {
   PlanResponseFragment,
   TaskByPlanResponseFragment,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 
 function escapeHtml(s: string): string {
   return s

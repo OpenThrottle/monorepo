@@ -11,7 +11,7 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
-import { DiscoverLocalModelsDocument } from '../__generated__/graphql.ts';
+import { DiscoverLocalModelsDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { runTool } from '../utils/tool-result.ts';
 

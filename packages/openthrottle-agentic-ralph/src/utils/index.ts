@@ -1,4 +1,4 @@
-import type { PlanFragment, TaskFragment } from '../__generated__/graphql.ts';
+import type { PlanFragment, TaskFragment } from '../__generated__/graphql.js';
 import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 export {

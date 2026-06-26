@@ -13,7 +13,7 @@ import {
   GetPlansByStatusVsCodeDocument,
   GetTasksByPlanIdDocument,
   CreatePlanInput,
-} from './__generated__/graphql.ts';
+} from './__generated__/graphql.js';
 import { UnauthenticatedError } from './errors.ts';
 import { sortPlanTasksByListOrder } from './sort-plan-tasks-by-list-order.ts';
 

@@ -4,8 +4,8 @@
 
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
-import type { LinkCommitMutation } from '../__generated__/graphql.ts';
-import { LinkCommitDocument } from '../__generated__/graphql.ts';
+import type { LinkCommitMutation } from '../__generated__/graphql.js';
+import { LinkCommitDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { invalidArgsContent } from '../utils/errors.ts';

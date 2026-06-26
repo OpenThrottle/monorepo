@@ -61,7 +61,7 @@ Or from repo root with API_URL set:
 API_URL=http://localhost:6010/graphql pnpm nx run @openthrottle/openthrottle-mcp:codegen-graphql
 ```
 
-This regenerates `src/__generated__/graphql.ts` and `src/__generated__/schemas.ts` (types and Zod schemas) from the schema and the .graphql documents.
+This regenerates `src/__generated__/graphql.js` and `src/__generated__/schemas.ts` (types and Zod schemas) from the schema and the .graphql documents.
 
 ## Manual smoke test: `delete_project`
 

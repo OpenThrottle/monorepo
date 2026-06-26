@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { storeToken } from '../auth.ts';
 import { getApiBaseUrl } from '../config.ts';
 import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
-import { LoginDocument } from '../__generated__/graphql.ts';
+import { LoginDocument } from '../__generated__/graphql.js';
 
 interface GraphqlResponse<T> {
   readonly data?: T;

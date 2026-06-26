@@ -11,14 +11,14 @@ import {
   GetPlanDocument,
   ListPlansByStatusDocument,
   UpdatePlanDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import type {
   CreatePlanMutation,
   CreatePlansMutation,
   GetPlanQuery,
   ListPlansByStatusQuery,
   UpdatePlanMutation,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import {
   CreatePlanInputSchema,
   CreatePlansInputSchema,

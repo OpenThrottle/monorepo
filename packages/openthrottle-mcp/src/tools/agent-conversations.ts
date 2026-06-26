@@ -12,7 +12,7 @@ import {
   GetAgentConversationDocument,
   GetAgentConversationMessagesDocument,
   ListAgentConversationsDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import {
   GetAgentConversationMessagesInputSchema,
   ListAgentConversationsInputSchema,

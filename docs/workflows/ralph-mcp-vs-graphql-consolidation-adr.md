@@ -71,7 +71,7 @@ Cursor agent runner.
 - Output: `src/tools/output.ts` — append/get.
 - Commit: `src/tools/commit.ts` — link_commit.
 - Transport: `executeGraphqlWithAuth(getAuthToken(), document, vars)` from
-  `@openthrottle/nodejs-graphql`; documents in `src/__generated__/graphql.ts`
+  `@openthrottle/nodejs-graphql`; documents in `src/__generated__/graphql.js`
   (codegen from `src/graphql/*.graphql`, schema = root `schema.gql`).
 - Auth: `src/auth/get-auth-token.ts` — request-scoped `AsyncLocalStorage` token **or**
   `OPENTHROTTLE_MCP_AUTH_TOKEN` env.

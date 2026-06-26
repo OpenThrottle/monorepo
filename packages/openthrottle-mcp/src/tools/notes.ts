@@ -14,7 +14,7 @@ import {
   GetNoteDocument,
   GetNotesDocument,
   UpdateNoteDocument,
-} from '../__generated__/graphql.ts';
+} from '../__generated__/graphql.js';
 import {
   CreateNoteInputSchema,
   UpdateNoteInputSchema,
