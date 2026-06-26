@@ -1,5 +1,5 @@
 /**
- * @description Re-exports MCP tool handlers, Zod parameters, descriptions, and knowledge-base resource helpers for Nest (`@rekog/mcp-nest`) integration. GraphQL-only; same surface as {@link registerHealthTool} and siblings.
+ * @description Re-exports MCP tool handlers, Zod parameters, descriptions, and knowledge-base resource helpers for Nest (`@rekog/mcp-nest`) integration. GraphQL-only; the canonical tool list assembled from these exports lives in {@link developerMcpToolDefinitions}.
  */
 
 export * from './resources/knowledge-base.js';

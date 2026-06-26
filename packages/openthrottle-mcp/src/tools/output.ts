@@ -1,8 +1,7 @@
 /**
- * @description Registers plan output tools: append_plan_output, get_plan_output.
+ * @description Plan output tool handlers + schemas: append_plan_output, get_plan_output. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -100,24 +99,4 @@ export async function getPlanOutputToolHandler(
 
     return { structuredContent: { chunks }, text };
   });
-}
-
-export function registerOutputTools(server: McpServer): void {
-  server.registerTool(
-    'append_plan_output',
-    {
-      description: appendPlanOutputToolDescription,
-      inputSchema: appendPlanOutputToolParameters,
-    },
-    appendPlanOutputToolHandler,
-  );
-
-  server.registerTool(
-    'get_plan_output',
-    {
-      description: getPlanOutputToolDescription,
-      inputSchema: getPlanOutputToolParameters,
-    },
-    getPlanOutputToolHandler,
-  );
 }

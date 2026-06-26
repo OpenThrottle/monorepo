@@ -1,8 +1,7 @@
 /**
- * @description Registers plan CRUD tools: list_plans_by_status, create_plan, get_plan, update_plan, delete_plan.
+ * @description Plan CRUD tool handlers + schemas: list_plans_by_status, create_plan, create_plans, get_plan, update_plan, delete_plan. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -232,60 +231,4 @@ export async function deletePlanToolHandler(
 
     return { structuredContent: { deleted }, text };
   });
-}
-
-export function registerPlanTools(server: McpServer): void {
-  server.registerTool(
-    'create_plan',
-    {
-      description: createPlanToolDescription,
-      inputSchema: createPlanToolParameters,
-    },
-    createPlanToolHandler,
-  );
-
-  server.registerTool(
-    'create_plans',
-    {
-      description: createPlansToolDescription,
-      inputSchema: createPlansToolParameters,
-    },
-    createPlansToolHandler,
-  );
-
-  server.registerTool(
-    'delete_plan',
-    {
-      description: deletePlanToolDescription,
-      inputSchema: deletePlanToolParameters,
-    },
-    deletePlanToolHandler,
-  );
-
-  server.registerTool(
-    'get_plan',
-    {
-      description: getPlanToolDescription,
-      inputSchema: getPlanToolParameters,
-    },
-    getPlanToolHandler,
-  );
-
-  server.registerTool(
-    'list_plans_by_status',
-    {
-      description: listPlansByStatusToolDescription,
-      inputSchema: listPlansByStatusToolParameters,
-    },
-    listPlansByStatusToolHandler,
-  );
-
-  server.registerTool(
-    'update_plan',
-    {
-      description: updatePlanToolDescription,
-      inputSchema: updatePlanToolParameters,
-    },
-    updatePlanToolHandler,
-  );
 }

@@ -3,7 +3,6 @@
  * agent_conversation_list, agent_conversation_get, agent_conversation_get_messages.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -178,33 +177,4 @@ export async function getAgentConversationMessagesToolHandler(
 
     return { structuredContent: { messages, totalCount }, text };
   });
-}
-
-export function registerAgentConversationTools(server: McpServer): void {
-  server.registerTool(
-    'agent_conversation_get',
-    {
-      description: getAgentConversationToolDescription,
-      inputSchema: getAgentConversationToolParameters,
-    },
-    getAgentConversationToolHandler,
-  );
-
-  server.registerTool(
-    'agent_conversation_get_messages',
-    {
-      description: getAgentConversationMessagesToolDescription,
-      inputSchema: getAgentConversationMessagesToolParameters,
-    },
-    getAgentConversationMessagesToolHandler,
-  );
-
-  server.registerTool(
-    'agent_conversation_list',
-    {
-      description: listAgentConversationsToolDescription,
-      inputSchema: listAgentConversationsToolParameters,
-    },
-    listAgentConversationsToolHandler,
-  );
 }

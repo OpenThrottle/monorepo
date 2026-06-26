@@ -6,20 +6,8 @@ import {
   SERVER_INSTRUCTIONS,
   SERVER_VERSION,
 } from './config/index.js';
-import {
-  registerActivityTools,
-  registerAgentConversationTools,
-  registerCommitTools,
-  registerHealthTool,
-  registerKnowledgeBaseResource,
-  registerModelDiscoveryTool,
-  registerNoteTools,
-  registerOutputTools,
-  registerPlanTools,
-  registerProjectTools,
-  registerSearchTools,
-  registerTaskTools,
-} from './nest-tool-handlers.js';
+import { registerKnowledgeBaseResource } from './nest-tool-handlers.js';
+import { registerDeveloperMcpTools } from './tool-registry.js';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.js';
 
 /**
@@ -46,18 +34,8 @@ export async function runServerLocal(): Promise<void> {
     },
   );
 
-  registerActivityTools(server);
-  registerAgentConversationTools(server);
-  registerCommitTools(server);
-  registerHealthTool(server);
+  registerDeveloperMcpTools(server);
   registerKnowledgeBaseResource(server);
-  registerModelDiscoveryTool(server);
-  registerNoteTools(server);
-  registerOutputTools(server);
-  registerPlanTools(server);
-  registerProjectTools(server);
-  registerSearchTools(server);
-  registerTaskTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
