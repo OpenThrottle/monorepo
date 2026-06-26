@@ -13,8 +13,13 @@ import { toContainerPath } from './workspace-paths.ts';
 
 /**
  * Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root.
+ *
+ * Exported so docs and call sites reference the single source of truth rather
+ * than re-typing the literal (which previously drifted to `pnpm-workspace.yaml`).
+ *
+ * @publicApi
  */
-const OPENTHROTTLE_WORKSPACE_MARKER = `.openthrottle.mjs`;
+export const OPENTHROTTLE_WORKSPACE_MARKER = `.openthrottle.mjs`;
 
 /**
  * Returns true when `dir` exists and is a directory. Never throws.

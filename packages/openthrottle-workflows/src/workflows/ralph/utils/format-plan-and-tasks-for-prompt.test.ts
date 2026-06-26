@@ -104,4 +104,66 @@ describe('formatPlanAndTasksForPrompt', () => {
       /Do the work\n {4}Requirements: must match reference format/,
     );
   });
+
+  it('orders tasks by ascending sortOrder', () => {
+    const output = formatPlanAndTasksForPrompt(basePlan(), [
+      baseTask({
+        id: '00000000-0000-0000-0000-000000000002',
+        sortOrder: 2000,
+        title: 'Second',
+      }),
+      baseTask({
+        id: '00000000-0000-0000-0000-000000000001',
+        sortOrder: 1000,
+        title: 'First',
+      }),
+    ]);
+
+    expect(output.indexOf('First')).toBeLessThan(output.indexOf('Second'));
+  });
+
+  it('breaks sortOrder ties by ascending createdAt', () => {
+    const output = formatPlanAndTasksForPrompt(basePlan(), [
+      baseTask({
+        createdAt: '2026-06-08T12:00:02.000Z',
+        id: '00000000-0000-0000-0000-000000000002',
+        sortOrder: 1000,
+        title: 'Later',
+      }),
+      baseTask({
+        createdAt: '2026-06-08T12:00:01.000Z',
+        id: '00000000-0000-0000-0000-000000000001',
+        sortOrder: 1000,
+        title: 'Earlier',
+      }),
+    ]);
+
+    expect(output.indexOf('Earlier')).toBeLessThan(output.indexOf('Later'));
+  });
+
+  it('treats a missing sortOrder as 0 when ordering', () => {
+    const output = formatPlanAndTasksForPrompt(basePlan(), [
+      baseTask({
+        id: '00000000-0000-0000-0000-000000000002',
+        sortOrder: 500,
+        title: 'Positive order',
+      }),
+      baseTask({
+        id: '00000000-0000-0000-0000-000000000001',
+        sortOrder: undefined,
+        title: 'No order',
+      }),
+    ]);
+
+    expect(output.indexOf('No order')).toBeLessThan(
+      output.indexOf('Positive order'),
+    );
+  });
+
+  it('renders the (none) placeholder when there are no tasks', () => {
+    const output = formatPlanAndTasksForPrompt(basePlan(), []);
+
+    expect(output).toContain('Tasks:');
+    expect(output).toContain('  (none)');
+  });
 });

@@ -6,7 +6,12 @@
   },
   "dependencies": {
     "@openthrottle/graphql-codegen": "workspace:^",
-    "@openthrottle/nodejs-graphql": "workspace:^"
+    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:^"
   },
   "description": "GraphQL-first workflow building blocks for OpenThrottle: typed GraphQL client, Ralph flow contract types, and blueprints (no CLI; see tools/workflows for shipped workflow-ralph).",
   "exports": {

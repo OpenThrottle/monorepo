@@ -95,6 +95,28 @@ const parseKeyLine = (
 
 /**
  * @description Parses supported YAML frontmatter keys from markdown/mdc content.
+ *
+ * This is a deliberately minimal parser for the constrained agent-asset
+ * frontmatter dialect — NOT a general-purpose YAML implementation. Only the
+ * following subset is understood:
+ *
+ * - Top-level `key: scalar` pairs (no nesting; keys match `[A-Za-z0-9_-]+`).
+ * - Single- or double-quoted scalars (the surrounding quotes are stripped, but
+ *   escapes and embedded same-quote characters are not interpreted).
+ * - `true` / `false` literals, coerced to booleans (case-insensitive).
+ * - Folded block scalars introduced by `>` or `>-` (joined with spaces).
+ * - Literal block scalars introduced by `|` or `|-` (joined with newlines).
+ *   Continuation lines are any blank line or any line indented by >= 2 spaces.
+ *
+ * Anything outside this subset is mishandled rather than rejected, producing a
+ * wrong-but-non-failing value. Known unsupported constructs include: flow
+ * scalars and inline lists/maps (`[a, b]`, `{a: 1}`), explicit chomping or
+ * indentation indicators on block scalars (`>2`, `|+`), trailing comments after
+ * a value (`name: foo # bar` keeps `# bar`), and YAML truthy/falsy aliases
+ * other than `true`/`false` (`yes`, `no`, `on`, `off`) — those stay strings.
+ *
+ * If asset authors hit these surprises, migrate to the `yaml` package behind
+ * this same interface rather than extending the hand-rolled parser.
  */
 export const parseYamlFrontmatter = (
   fileContent: string,
@@ -127,13 +149,6 @@ export const parseYamlFrontmatter = (
 
     if (/^\|-?\s*$/.test(rest)) {
       const block = parseIndentedBlock(lines, index + 1, 'newline');
-      fields[key] = block.value;
-      index = block.nextIndex;
-      continue;
-    }
-
-    if (/^>\s*$/.test(rest)) {
-      const block = parseIndentedBlock(lines, index + 1, 'space');
       fields[key] = block.value;
       index = block.nextIndex;
       continue;

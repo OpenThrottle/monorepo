@@ -22,7 +22,7 @@ export const WORKFLOW_RALPH_DEBUG_LEGACY_ENV = `RALPH_DEBUG`;
  * the `workflow-ralph` binary (`<root>/node_modules/.bin`) so nested spawns
  * resolve it deterministically — even when `cwd` is a foreign checkout and
  * the dev shell PATH is not inherited (clean/Docker envs). Set this when the
- * marker file (`pnpm-workspace.yaml`) is not reachable by walking up from the
+ * marker file (`.openthrottle.mjs`) is not reachable by walking up from the
  * module or `cwd`.
  */
 export const WORKFLOW_RALPH_OT_ROOT_ENV = `WORKFLOW_RALPH_OT_ROOT`;

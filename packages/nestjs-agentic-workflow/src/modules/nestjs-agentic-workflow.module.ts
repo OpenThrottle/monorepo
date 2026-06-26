@@ -61,6 +61,14 @@ export class NestjsAgenticWorkflowModule {
    * side-by-side WITHOUT changing the dispatcher. Each workflow is built by its `useFactory`
    * (which may inject the per-workflow deps token via `inject`), so all workflow-specific wiring
    * stays in the concrete workflow + its registration.
+   *
+   * Scope: only {@link AGENTIC_WORKFLOW_REGISTRY} (plus the worker GraphQL defaults in
+   * `moduleExports`) is exported. The per-workflow `providers` (for example
+   * `AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS`) are INTENTIONALLY module-private: they exist only
+   * to feed each workflow's `useFactory` and are not part of this module's public surface. Consumers
+   * inject the registry and resolve workflows by id, not the per-workflow deps tokens. If a future
+   * sibling module ever needs a per-workflow token, expose it from that token's own provider module
+   * rather than widening this module's `exports`.
    */
   static registerWorkflow(
     options: AgenticWorkflowRegisterWorkflowOptions,

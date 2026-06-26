@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-agentic-workflow",
-  "description": "TODO: Add a description",
+  "description": "NestJS module that registers agentic workflows (Ralph and future side-by-side workflows) into an id-keyed registry, wiring worker GraphQL auth and an executeGraphqlV2 executor for the openthrottle-server orchestrator.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -15,19 +15,19 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "import": "./src/index.ts",
+      "require": "./src/index.ts",
+      "types": "./src/index.ts"
     },
     "./testing": {
-      "import": "./dist/src/testing/index.js",
-      "require": "./dist/src/testing/index.js",
-      "types": "./dist/src/testing/index.d.ts"
+      "import": "./src/testing/index.ts",
+      "require": "./src/testing/index.ts",
+      "types": "./src/testing/index.ts"
     },
     "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js",
-      "types": "./dist/*.d.ts"
+      "import": "./src/*.ts",
+      "require": "./src/*.ts",
+      "types": "./src/*.ts"
     }
   },
   "main": "./src/index.ts",

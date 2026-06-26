@@ -142,6 +142,16 @@ export async function probeEndpoint(
 /**
  * Create a p-limit-style limiter capping concurrent tasks to `concurrency`.
  * Promise-based — NOT one thread per target.
+ *
+ * Accounting note: `run` increments `active` and `drain` decrements it, kept
+ * balanced because every code path through `run` reaches its `finally` (the
+ * task's rejection is caught and routed to `reject`, not rethrown). The queued
+ * wrapper `() => void run()` deliberately discards the inner promise — `run`
+ * itself never rejects. This holds only while `task()` is invoked lazily inside
+ * `run`; the limiter is internal to {@link probeAll}, whose task is
+ * {@link probeEndpoint} (never throws). If this is ever exposed for arbitrary
+ * tasks, audit that a task throwing synchronously before `active += 1` cannot
+ * skew the count.
  */
 export function createLimiter(concurrency: number): LimitFunction {
   const max = Math.max(1, Math.floor(concurrency));

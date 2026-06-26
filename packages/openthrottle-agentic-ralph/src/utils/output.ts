@@ -25,21 +25,32 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /**
- * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns unique task ids (lowercase).
+ * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns the unique task ids
+ * in their **original casing** (as emitted by the agent). Deduplication is case-insensitive — a UUID
+ * repeated in mixed case yields a single entry (first-seen casing wins) — but the returned id is sent
+ * verbatim to `UpdateTaskDocument`, so a case-sensitive server-side UUID lookup still resolves it.
+ * Callers that need to compare against an internally-tracked id should lowercase both sides.
  */
 export const parseAgentCompleteTaskSignals = (
   result: string,
 ): readonly string[] => {
   const ids: string[] = [];
+  const seen = new Set<string>();
   let m: RegExpExecArray | null;
 
   TASK_COMPLETE_REGEX.lastIndex = 0;
 
   while ((m = TASK_COMPLETE_REGEX.exec(result)) !== null) {
-    ids.push(m[1]!.toLowerCase());
+    const id = m[1]!;
+    const key = id.toLowerCase();
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      ids.push(id);
+    }
   }
 
-  return [...new Set(ids)];
+  return ids;
 };
 
 /**

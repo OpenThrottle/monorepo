@@ -1,6 +1,6 @@
 # @openthrottle/openthrottle-workflows
 
-GraphQL-first building blocks for OpenThrottle workflows: codegen-backed GraphQL via `**executeWorkflowGraphqlV2**` (wraps `@openthrottle/nodejs-graphql` `**executeGraphqlV2**` with workflow env and URL options), env helpers, Ralph flow-context tuning, discriminated `**WorkflowStepResult**` types, Ralph-oriented blueprints, and a **GraphQL-backed Ralph orchestrator** (`createWorkflowRalphOrchestrator`). The primary end-user entrypoint for interactive runs is still `**workflow-ralph` in `tools/workflows`; this package holds the typed contract, documents, and orchestration you can call from tests, workers, or other hosts without duplicating query shapes.
+GraphQL-first building blocks for OpenThrottle workflows: codegen-backed GraphQL via `**executeWorkflowGraphqlV2**` (wraps `@openthrottle/nodejs-graphql` `**executeGraphqlV2**` with workflow env and URL options), env helpers, Ralph flow-context tuning, discriminated `**WorkflowStepResult**` types, and Ralph-oriented blueprints / contract types. The runnable **GraphQL-backed Ralph orchestrator** (`createWorkflowRalphOrchestrator`) is **not** implemented here — it lives in the sibling package `@openthrottle/openthrottle-agentic-ralph` (`src/utils/orchestrator.ts`); this package only contributes the typed contract (`WorkflowOrchestrator`, `WorkflowRalphIterationRunner`, …) and GraphQL documents that such an orchestrator consumes. The primary end-user entrypoint for interactive runs is still `**workflow-ralph` in `tools/workflows`; this package holds the typed contract, documents, and parity notes you can reuse from tests, workers, or other hosts without duplicating query shapes.
 
 > **Which path runs when?** This package is GraphQL-first building blocks; the **active** server
 > orchestrator is `@openthrottle/openthrottle-agentic-ralph` (this one is the older sibling, a
@@ -15,10 +15,10 @@ GraphQL-first building blocks for OpenThrottle workflows: codegen-backed GraphQL
 
 Import from the package root; public API is re-exported from `src/index.ts` (Ralph contract, GraphQL client, parity notes).
 
-- **GraphQL:** `executeWorkflowGraphqlV2`, `buildWorkflowExecuteGraphqlV2Options`, `resolveWorkflowGraphqlConfigFromEnv` / token and URL override helpers (runtime in `src/ralph/workflow-graphql.ts`). On failure, `**executeGraphqlV2`** throws `Error` (HTTP status and first message in the string, or `GraphQL errors: …` for top-level GraphQL errors); use try/catch when you need to branch. **Documents only* in `src/ralph/graphql/*.graphql`.
-- **Contract:** `RalphFlowContext`, `WorkflowOrchestrator`, `WorkflowStepResult` variants, `WorkflowError` (see `src/ralph/contract/`).
-- **Ralph orchestrator:** `createWorkflowRalphOrchestrator` in `src/ralph/ralph-orchestrator.ts` implements `WorkflowOrchestrator<WorkflowRalphContext>`: it calls codegen queries/mutations only (no ad-hoc HTTP), runs the same logical steps as `tools/workflows/src/bin/ralph.ts`, and requires an injected `**WorkflowRalphIterationRunner`** for layer-2 execution (subprocess, Cursor, etc.). Unit tests use a mocked `**executeGraphqlV2\*\*`; see `src/ralph/ralph-orchestrator.test.ts`.
-- **Blueprints / parity:** step mapping and `main()` alignment notes live in `src/ralph/openthrottle-ralph-parity.ts` and JSDoc on the contract modules (compare `tools/workflows/src/bin/ralph.ts`).
+- **GraphQL:** `executeWorkflowGraphqlV2`, `buildWorkflowExecuteGraphqlV2Options`, `resolveWorkflowGraphqlConfigFromEnv` / token and URL override helpers (runtime in `src/workflows/ralph/workflow-graphql.ts`). On failure, `**executeGraphqlV2`** throws `Error` (HTTP status and first message in the string, or `GraphQL errors: …` for top-level GraphQL errors); use try/catch when you need to branch. **Documents only* in `src/workflows/ralph/graphql/*.graphql`.
+- **Contract:** `RalphFlowContext`, `WorkflowOrchestrator`, `WorkflowStepResult` variants, `WorkflowError`, plus orchestrator dependency types (`WorkflowExecuteGraphqlV2`, `WorkflowRalphIterationRunner`, `WorkflowRalphOrchestratorDeps`) — see `src/workflows/ralph/contract/`.
+- **Ralph orchestrator (implemented elsewhere):** `createWorkflowRalphOrchestrator` is **not** exported from this package — it is implemented in the sibling `@openthrottle/openthrottle-agentic-ralph` (`src/utils/orchestrator.ts`), with its own unit tests at `src/utils/__tests__/orchestrator.test.ts`. That implementation consumes the `WorkflowOrchestrator` / `WorkflowRalphIterationRunner` contract types this package defines and runs the same logical steps as `tools/workflows/src/bin/ralph.ts`, requiring an injected `**WorkflowRalphIterationRunner`\*\* for layer-2 execution (subprocess, Cursor, etc.).
+- **Blueprints / parity:** step mapping and `main()` alignment notes live in `src/workflows/ralph/openthrottle-ralph-parity.ts` and JSDoc on the contract modules (compare `tools/workflows/src/bin/ralph.ts`).
 
 ### Auth and GraphQL URL (orchestrator + `executeWorkflowGraphqlV2`)
 
@@ -29,7 +29,7 @@ Import from the package root; public API is re-exported from `src/index.ts` (Ral
 ### Relationship to `workflow-ralph`
 
 - `**pnpm exec workflow-ralph`** (see `tools/workflows`) is the CLI humans and nested jobs use: it parses argv/env, builds `**RalphFlowContext**`, runs `**runIteration\*\*`/ Cursor, and may evolve alongside`ralph.ts`.
-- `**createWorkflowRalphOrchestrator**` _is the package-level orchestration loop: same GraphQL operations and exit reasons, but **iteration execution is always injected** so the package stays free of Cursor or subprocess details. Use the orchestrator when embedding Ralph in another process; use the CLI for local agent runs._
+- `**createWorkflowRalphOrchestrator**` (in `@openthrottle/openthrottle-agentic-ralph`) _is the package-level orchestration loop: same GraphQL operations and exit reasons, but **iteration execution is always injected** so it stays free of Cursor or subprocess details. Use that orchestrator when embedding Ralph in another process; use the CLI for local agent runs._
 
 ### Embedded Ralph: streaming agent output (injected runner)
 
@@ -43,7 +43,7 @@ For CLI behavior, nesting, and runtime tuning, see `[tools/workflows` README](..
 
 ## Extending
 
-- **New OpenThrottle operations:** add documents under `src/ralph/graphql/*.graphql`, run `pnpm nx run @openthrottle/openthrottle-workflows:codegen-graphql`, then call `**executeWorkflowGraphqlV2`\* from thin helpers in `src/ralph/`
+- **New OpenThrottle operations:** add documents under `src/workflows/ralph/graphql/*.graphql`, run `pnpm nx run @openthrottle/openthrottle-workflows:codegen-graphql`, then call `**executeWorkflowGraphqlV2`\* from thin helpers in `src/workflows/ralph/`
 - **New flows:** implement `WorkflowOrchestrator` with step functions that return discriminated `WorkflowStepResult` values; keep transport in the GraphQL layer only.
 - **Do not** wire new CLIs or IDE triggers from this package until a dedicated cutover plan; keep parity with `tools/workflows` behavior when changing semantics.
 
@@ -56,6 +56,8 @@ pnpm nx run @openthrottle/openthrottle-workflows:build
 pnpm nx run @openthrottle/openthrottle-workflows:test
 pnpm nx run @openthrottle/openthrottle-workflows:lint
 ```
+
+> **Prerequisite — run `codegen-graphql` first.** This package both defines GraphQL documents in `src/workflows/ralph/graphql/*.graphql` and imports their generated output from `src/__generated__/graphql.ts` (e.g. in `ralph-plan-run-context.ts` and `utils/index.ts`). `src/__generated__` is committed empty (`.gitkeep` only), so a fresh worktree fails `typecheck`/`test` at collection until `codegen-graphql` has been run at least once. Run it before the other targets after a clean checkout or branch switch.
 
 Watch GraphQL codegen: `pnpm nx run @openthrottle/openthrottle-workflows:codegen-graphql-watch`.
 

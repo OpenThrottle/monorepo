@@ -187,6 +187,29 @@ describe('NestjsAgenticWorkflowModule', () => {
       expect(registry.ids()).toEqual(['ralph']);
     });
 
+    it('resolves an async workflow factory before building the registry', async () => {
+      const moduleRef = await compileAgenticWorkflowTestingModule([
+        NestjsAgenticWorkflowModule.registerWorkflow({
+          executeGraphqlV2: createExecuteGraphqlV2Stub(),
+          workerGraphqlAuth: workerAuthFixture(),
+          workflows: [
+            {
+              useFactory: async () => new StubWorkflow('ralph', 'async-marker'),
+            },
+          ],
+        }),
+      ]);
+
+      const registry = moduleRef.get<AgenticWorkflowRegistry>(
+        AGENTIC_WORKFLOW_REGISTRY,
+      );
+
+      const resolved = registry.resolve('ralph');
+      expect(resolved).toBeInstanceOf(StubWorkflow);
+      expect((resolved as StubWorkflow).describeMarker()).toBe('async-marker');
+      expect(registry.ids()).toEqual(['ralph']);
+    });
+
     it('throws on unknown id from the resolved registry', async () => {
       const moduleRef = await compileAgenticWorkflowTestingModule([
         NestjsAgenticWorkflowModule.registerWorkflow({

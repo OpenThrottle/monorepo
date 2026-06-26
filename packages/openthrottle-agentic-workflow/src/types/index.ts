@@ -48,6 +48,11 @@ export interface WorkflowExecutionHooks {
 /**
  * Immutable snapshot of inputs driving a workflow run: shared
  * {@link WorkflowConfigLegacy} plus optional {@link WorkflowExecutionHooks}.
+ *
+ * @todo Migration: rebase this onto the newer {@link WorkflowConfig} and drop
+ * the dependency on the deprecated {@link WorkflowConfigLegacy}. Until this and
+ * `openthrottle-agentic-ralph/src/types.ts` are migrated, `WorkflowConfigLegacy`
+ * cannot be removed — it is still the live base of this context.
  */
 export interface WorkflowRunContext
   extends WorkflowConfigLegacy, WorkflowExecutionHooks {}

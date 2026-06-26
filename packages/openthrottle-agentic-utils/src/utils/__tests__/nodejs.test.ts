@@ -23,7 +23,10 @@ const initialWorkspaceRoot = workspaceRoot;
 beforeAll(() => {
   emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-empty-'));
   otRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-pin-root-'));
-  fs.writeFileSync(path.join(otRoot, 'pnpm-workspace.yaml'), 'packages: []\n');
+  fs.writeFileSync(
+    path.join(otRoot, '.openthrottle.mjs'),
+    'export default {};\n',
+  );
   otBinDir = path.join(otRoot, 'node_modules', '.bin');
   fs.mkdirSync(otBinDir, { recursive: true });
 });

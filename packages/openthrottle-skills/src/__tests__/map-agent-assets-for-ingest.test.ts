@@ -80,6 +80,43 @@ Rule body
       expect(record.title).toBe('default-exports');
       expect(record.labels).toEqual(['coding']);
     });
+
+    test('adds commands label from rule path', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+description: A command rule
+globs: **/*.ts
+---
+
+Rule body
+`,
+        kind: 'rule',
+        path: '.agents/rules/commands/release.mdc',
+        slug: undefined,
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.labels).toEqual(['commands']);
+    });
+
+    test('emits no labels for a rule outside coding/ and commands/', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+description: A general rule
+---
+
+Rule body
+`,
+        kind: 'rule',
+        path: '.agents/rules/general.mdc',
+        slug: undefined,
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.labels).toEqual([]);
+    });
   });
 
   describe('when kind is prompt', () => {
