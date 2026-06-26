@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import {
   PlanResponseFragment,
   TaskByPlanResponseFragment,
-} from 'src/__generated__/graphql.ts';
+} from 'src/__generated__/graphql.js';
 import type { OpenThrottleApiClient } from '../api-client.ts';
 import { UnauthenticatedError } from '../errors.ts';
 
