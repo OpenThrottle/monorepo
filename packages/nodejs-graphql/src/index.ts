@@ -7,9 +7,11 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import {
+  buildTimeoutSignal,
   getGraphQLUrl,
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
+  rethrowAsTimeoutIfAborted,
 } from './utils.js';
 
 export type {
@@ -29,69 +31,10 @@ export { executeGraphql_v2 } from './graphql-v2.js';
 export { executeGraphqlV2 } from './index-v2.js';
 export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
-
-/**
- * @description Default per-request timeout (milliseconds) applied to the
- * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
- * Bounds an SSR loader/action so a stalled openthrottle-server connection
- * cannot hold the request open indefinitely.
- */
-export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
-
-/**
- * @description Marker prefix on the message of the `Error` thrown when a
- * request exceeds its timeout. Consumers (e.g. `@openthrottle/react-router-graphql`)
- * match on this to classify the failure as a distinct timeout kind rather than a
- * generic network error.
- */
-export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
-  'openthrottle-server GraphQL request timed out';
-
-/**
- * @description Build the `AbortSignal` enforcing the per-request timeout.
- * `0` or a negative value disables the timeout (no signal). Defaults to
- * {@link DEFAULT_GRAPHQL_TIMEOUT_MS} when `timeoutMs` is `undefined`.
- */
-function buildTimeoutSignal(
-  timeoutMs: number | undefined,
-): AbortSignal | undefined {
-  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
-
-  if (ms <= 0) {
-    return undefined;
-  }
-
-  return AbortSignal.timeout(ms);
-}
-
-/**
- * @description Wrap a thrown `fetch` rejection: when it is the abort raised by
- * our timeout signal (`TimeoutError`/`AbortError`), rethrow a recognizable
- * timeout `Error` (message prefixed with {@link GRAPHQL_TIMEOUT_ERROR_PREFIX});
- * otherwise rethrow the original error unchanged.
- */
-function rethrowAsTimeoutIfAborted(
-  error: unknown,
-  timeoutMs: number | undefined,
-): never {
-  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
-
-  if (
-    error instanceof Error &&
-    (error.name === 'TimeoutError' || error.name === 'AbortError')
-  ) {
-    // Preserve the original abort as the cause via Object.assign rather than
-    // the ES2022 two-arg `Error(message, { cause })` constructor: this package
-    // is consumed source-first by ES2020 targets (e.g. @tools/workflows), whose
-    // lib lacks the es2022.error overload.
-    throw Object.assign(
-      new Error(`${GRAPHQL_TIMEOUT_ERROR_PREFIX} after ${ms}ms`),
-      { cause: error },
-    );
-  }
-
-  throw error;
-}
+export {
+  DEFAULT_GRAPHQL_TIMEOUT_MS,
+  GRAPHQL_TIMEOUT_ERROR_PREFIX,
+} from './utils.js';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
