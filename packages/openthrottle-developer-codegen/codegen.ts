@@ -49,8 +49,6 @@ const config: CodegenConfig = defineCodegen({
       __dirname,
       '../../applications/openthrottle-developer/app/**/*.graphql',
     ),
-    // join(__dirname, '../../packages/*/src/**/*.graphql'),
-    // 'src/graphql/ralph/**/*.graphql',
     '!src/__generated__/**/*',
   ],
   envPath: join(__dirname, '../../applications/openthrottle-developer/.env'),

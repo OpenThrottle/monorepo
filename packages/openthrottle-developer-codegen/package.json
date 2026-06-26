@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-developer-codegen",
-  "description": "TODO: Add a description",
+  "description": "Workspace-only GraphQL codegen output for the openthrottle-developer app, emitting runtime enum objects (no enumsAsTypes) that the app's own codegen cannot provide; consumed via workspace:^ and regenerated with the codegen-graphql target.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
