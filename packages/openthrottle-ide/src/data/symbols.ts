@@ -526,14 +526,20 @@ async function addWorkspaceSourceFiles(
   const relativePaths =
     maxFiles >= 0 ? containedPaths.slice(0, maxFiles) : containedPaths;
 
-  return relativePaths.map((relativePath) => {
-    const absolutePath = join(resolved.root, relativePath);
+  // Use the non-throwing `addSourceFileAtPathIfExists` (mirrors
+  // getOrAddSourceFile): a file deleted between ripgrep enumeration and the add
+  // (TOCTOU) would otherwise throw ENOENT and reject the whole call, breaking
+  // the "never throws" contract. Filter out the undefined misses.
+  return relativePaths
+    .map((relativePath) => {
+      const absolutePath = join(resolved.root, relativePath);
 
-    return (
-      project.getSourceFile(absolutePath) ??
-      project.addSourceFileAtPath(absolutePath)
-    );
-  });
+      return (
+        project.getSourceFile(absolutePath) ??
+        project.addSourceFileAtPathIfExists(absolutePath)
+      );
+    })
+    .filter((sourceFile): sourceFile is SourceFile => sourceFile !== undefined);
 }
 
 function toRelativePath(
