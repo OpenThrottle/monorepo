@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { Analytics } from '@vercel/analytics/react';
-import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
+import {
+  APP_URL,
+  getEnvironment,
+  getPublicEnv,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalLayout,
@@ -10,6 +14,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
 import {
+  data,
   Links,
   Meta,
   Outlet,
@@ -77,6 +82,7 @@ import {
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
+import { useNonce } from '~/global/utils/csp';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import {
   callLoginMutation,
@@ -112,7 +118,17 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const canonical: string = url.href;
   const cookieHeader = request.headers.get('cookie') ?? '';
-  const env = getEnvironment();
+
+  /**
+   * Server-side env (public + server-only tiers) is read here for diagnostics
+   * such as the internal GraphQL base URL below. The server-only tier (e.g.
+   * `API_URL_INTERNAL`) MUST NOT reach the browser, so the loader returns only
+   * {@link getPublicEnv} as `env` — that is what {@link Layout} serializes into
+   * `window.env`. `ROLLBAR_TOKEN` stays in the public tier intentionally: it is
+   * a Rollbar client post (write-only) token meant to ship to the browser.
+   */
+  const serverEnv = getEnvironment();
+  const env = getPublicEnv();
 
   /**
    * Seed an unknown/`unconfigured` baseline (amber), never all-green: if the
@@ -127,7 +143,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 
   const diagnostics: RootLoaderDiagnostics = {
-    graphQlRequestBaseUrl: env.API_URL_INTERNAL.replace(/\/$/, ''),
+    graphQlRequestBaseUrl: serverEnv.API_URL_INTERNAL.replace(/\/$/, ''),
   };
 
   let rootLoaderFailure: RootLoaderFailure | null = null;
@@ -148,8 +164,19 @@ export const loader = async (args: Route.LoaderArgs) => {
     return redirect('/auth');
   }
 
+  /**
+   * The health probe and the `me` query are independent, so fire them
+   * concurrently rather than serially (health→user). Each settles into its own
+   * `*Failure` so the user-step failure can still take precedence below.
+   */
+  let healthFailure: RootLoaderFailure | null = null;
+  let userFailure: RootLoaderFailure | null = null;
+
   /** In development, always poll server health so API misconfiguration surfaces even when auth is off. */
-  if (FEATURE_BETA_PREVIEW) {
+  const healthProbe = async (): Promise<void> => {
+    if (!FEATURE_BETA_PREVIEW) {
+      return;
+    }
     const t0 = Date.now();
     try {
       const response = await executeGraphqlWithAuth(
@@ -164,16 +191,19 @@ export const loader = async (args: Route.LoaderArgs) => {
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
       const healthMessage = rootLoaderErrorMessage(error);
       const healthHttpStatus = httpStatusFromRootLoaderError(error);
-      rootLoaderFailure = {
+      healthFailure = {
         kind: classifyRootLoaderError(error),
         message: healthMessage,
         step: 'health',
         ...(healthHttpStatus != null ? { httpStatus: healthHttpStatus } : {}),
       };
     }
-  }
+  };
 
-  if (!isTokenNull) {
+  const userProbe = async (): Promise<void> => {
+    if (isTokenNull) {
+      return;
+    }
     const t0 = Date.now();
     try {
       const queryMyUser = await executeGraphqlWithAuth(
@@ -188,17 +218,21 @@ export const loader = async (args: Route.LoaderArgs) => {
       console.error('root loader: GetMyUser failed', error);
       user = null;
       userLoadOk = false;
-      // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
       const userMessage = rootLoaderErrorMessage(error);
       const userHttpStatus = httpStatusFromRootLoaderError(error);
-      rootLoaderFailure = {
+      userFailure = {
         kind: classifyRootLoaderError(error),
         message: userMessage,
         step: 'user',
         ...(userHttpStatus != null ? { httpStatus: userHttpStatus } : {}),
       };
     }
-  }
+  };
+
+  await Promise.all([healthProbe(), userProbe()]);
+
+  // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
+  rootLoaderFailure = userFailure ?? healthFailure;
 
   if (FEATURE_BETA_PREVIEW && userLoadOk && user === null) {
     const pathname = url.pathname;
@@ -243,6 +277,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>('root');
   const [_user, setUser] = useAtom(userAtom);
   const [config] = useAtom(configAtom);
+  const nonce = useNonce();
 
   // Setup
   const env = data?.env ?? {};
@@ -250,12 +285,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
 
-  const isProduction = process.env.NODE_ENV === 'production';
-  const source = isProduction ? `https://*` : `http://*`;
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
-  const _valueCSP = isProduction
-    ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
-    : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
 
   const _health = data?.serverHealth ?? {};
 
@@ -291,7 +321,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
-        {/* <meta content={_valueCSP} httpEquiv="Content-Security-Policy" /> */}
+        {/*
+          CSP is shipped per-request as a (report-only) response header with a
+          nonce — see app/entry.server.tsx and app/global/utils/csp.ts — not a
+          <meta> tag. The nonce below authorizes the inline bootstrap scripts.
+        */}
         <Meta />
 
         <link href={APP_URL} rel="canonical" />
@@ -314,20 +348,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
           `}</style>
         ) : null}
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} />
+        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
       </head>
       <body className="relative flex h-screen flex-col">
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
-        <ScrollRestoration />
+        <ScrollRestoration nonce={nonce} />
         <Analytics />
 
-        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} />
+        {/*
+          🚨 Any env added here is 100% visible to the world 🚨
+          `data.env` is the public tier only (loader returns getPublicEnv()), so
+          server-only keys such as API_URL_INTERNAL never reach window.env.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
 
         {/* Now we add our scripts as they may use the env */}
-        <Scripts />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
@@ -620,11 +658,23 @@ export const action = async (args: Route.ActionArgs) => {
           headers: { 'Set-Cookie': getClearAuthCookieHeader() },
         });
       }
+
+      // Clear the local auth cookie even when the server reports failure so the
+      // user is not left authenticated client-side after attempting to log out.
+      return data(
+        { error: 'Logout failed' },
+        { headers: { 'Set-Cookie': getClearAuthCookieHeader() } },
+      );
     } catch (error) {
       const isError = error instanceof Error;
-      const message = isError ? error.message : 'Login failed';
+      const message = isError ? error.message : 'Logout failed';
 
-      return { error: message };
+      // Clear the local auth cookie even when the mutation throws so the user is
+      // not left authenticated client-side after attempting to log out.
+      return data(
+        { error: message },
+        { headers: { 'Set-Cookie': getClearAuthCookieHeader() } },
+      );
     }
   }
 

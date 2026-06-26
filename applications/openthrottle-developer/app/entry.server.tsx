@@ -17,6 +17,12 @@ import {
   logger,
 } from '@openthrottle/react-router-utils';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  CSP_HEADER_NAME,
+  NonceContext,
+  buildCspValue,
+  generateCspNonce,
+} from '~/global/utils/csp';
 
 export default function handleRequest(
   request: Request,
@@ -37,18 +43,28 @@ export default function handleRequest(
     });
   }
 
+  /**
+   * Mint a per-request CSP nonce and emit the (report-only) policy via a
+   * response header. The same nonce is threaded into the React tree so the
+   * inline bootstrap scripts in `root.tsx` carry a matching `nonce` attribute.
+   */
+  const nonce = generateCspNonce();
+  responseHeaders.set(CSP_HEADER_NAME, buildCspValue(nonce));
+
   return isbot(request.headers.get('user-agent') || '')
     ? handleBotRequest(
         request,
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        nonce,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        nonce,
       );
 }
 
@@ -57,11 +73,18 @@ function handleBotRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter
+          context={reactRouterContext}
+          nonce={nonce}
+          url={request.url}
+        />
+      </NonceContext.Provider>,
       {
         onAllReady() {
           shellRendered = true;
@@ -103,11 +126,18 @@ function handleBrowserRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter
+          context={reactRouterContext}
+          nonce={nonce}
+          url={request.url}
+        />
+      </NonceContext.Provider>,
       {
         onError(error: unknown) {
           responseStatusCode = 500;

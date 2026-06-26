@@ -17,6 +17,7 @@ import type {
 } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   createDefaultJobRunHookDraftRow,
+  isJobRunHookPhase,
   jobRunHookDefaultTimeoutHint,
   jobRunHookKindLabel,
   jobRunHookPhaseLabel,
@@ -262,12 +263,11 @@ export const PlanWorkflowConfigHooks = (
                     <div className="space-y-2">
                       <Label htmlFor={`hook-phase-${row.draftId}`}>Phase</Label>
                       <Select
-                        onValueChange={(value) =>
-                          handlePhaseChange(
-                            row.draftId,
-                            value as JobRunHookPhase,
-                          )
-                        }
+                        onValueChange={(value) => {
+                          if (isJobRunHookPhase(value)) {
+                            handlePhaseChange(row.draftId, value);
+                          }
+                        }}
                         value={row.phase}
                       >
                         <SelectTrigger id={`hook-phase-${row.draftId}`}>
