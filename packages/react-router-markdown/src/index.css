@@ -142,44 +142,11 @@
 
 .markdown code {
   overflow: auto;
-  counter-reset: line;
 }
 
 .markdown code * {
   font-weight: var(--font-weight-500, 500);
   font-family: monospace;
-}
-
-.markdown code[data-line-numbers] > [data-line]::before {
-  color: var(--color-gray-6);
-  margin-right: 1rem;
-  display: inline-block;
-  width: 1rem;
-  text-align: right;
-  counter-increment: line;
-  content: counter(line);
-}
-
-.markdown code[data-line-numbers-max-digits='2'] > [data-line]::before {
-  width: 2rem;
-}
-
-.markdown code[data-line-numbers-max-digits='3'] > [data-line]::before {
-  width: 3rem;
-}
-
-.markdown code [data-highlighted-chars] {
-  outline: 2px dotted var(--color-accent);
-  outline-offset: 0;
-  border-radius: 0.375rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.markdown code [data-highlighted-line] {
-  background-color: color-mix(in srgb, var(--color-gray-5) 20%, transparent);
 }
 
 .markdown :is(p, ol, ul) code {
@@ -191,14 +158,4 @@
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
   font-size: var(--text-xs, 12px);
-}
-
-.markdown [data-rehype-pretty-code-title] {
-  color: var(--color-accent);
-  margin-left: 1rem;
-  margin-top: 2rem;
-}
-
-.markdown [data-rehype-pretty-code-fragment] code {
-  overflow: auto;
 }

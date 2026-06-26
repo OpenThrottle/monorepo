@@ -70,7 +70,15 @@ export function Calendar(props: CalendarProps): ReactElement | null {
 
   // Setup
   const wrapperStyle: CSSProperties = { height, width, ...style };
-  const customComponents = buildCustomComponents(slots);
+  // Memoize so the `customComponents` map (and its wrapper component
+  // identities) is stable across renders; Schedule-X/Preact treats new
+  // component types as different and would otherwise fully remount the custom
+  // event cards and header slots on every parent render. Consumers should pass
+  // a memoized/stable `slots` object to keep this referentially stable.
+  const customComponents = React.useMemo(
+    () => buildCustomComponents(slots),
+    [slots],
+  );
 
   // Handlers
 
@@ -84,7 +92,12 @@ export function Calendar(props: CalendarProps): ReactElement | null {
   }
 
   return (
-    <div className={classnames('h-full', className)} style={wrapperStyle}>
+    <div
+      aria-label="Calendar"
+      className={classnames('h-full', className)}
+      role="region"
+      style={wrapperStyle}
+    >
       <ScheduleXCalendar
         calendarApp={schedule.instance}
         customComponents={customComponents}

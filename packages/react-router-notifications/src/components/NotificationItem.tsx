@@ -20,6 +20,8 @@ export interface NotificationItemProps {
 /**
  * @description Single row in the notification dropdown: message, optional link,
  * relative time, mark-read and dismiss actions.
+ *
+ * @publicApi
  */
 export const NotificationItem = (
   props: NotificationItemProps,

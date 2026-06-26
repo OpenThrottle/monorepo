@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import * as slotsModule from '../slots';
 import { useSchedule } from '../../hooks/useSchedule';
 import { CalendarView } from '../../types';
 import { Calendar } from '../Calendar';
@@ -64,5 +65,25 @@ describe('Calendar', () => {
     expect(
       component.container.querySelector('.sx-react-calendar-wrapper'),
     ).not.toBeNull();
+  });
+
+  // Slot-remount stability: `customComponents` is memoized on `slots`, so a
+  // re-render with the SAME `slots` reference must not rebuild the map (a new
+  // map identity makes Schedule-X/Preact remount every custom event card).
+  // Counting `buildCustomComponents` calls locks the memoization in.
+  it('does not rebuild customComponents when re-rendered with a stable slots reference', () => {
+    const spy = vi.spyOn(slotsModule, 'buildCustomComponents');
+    const slots: CalendarSlots = {
+      timeGridEvent: ({ calendarEvent }) => <div>{calendarEvent.title}</div>,
+    };
+
+    const component = render(<Harness slots={slots} />);
+    const callsAfterMount = spy.mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+
+    component.rerender(<Harness slots={slots} />);
+    expect(spy.mock.calls.length).toBe(callsAfterMount);
+
+    spy.mockRestore();
   });
 });

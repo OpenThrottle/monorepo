@@ -6,6 +6,7 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import type { ReactElement } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   DEFAULT_VIEW,
   DEFAULT_VIEW_LABELS,
@@ -25,7 +26,13 @@ export interface CalendarLayoutProps {
   readonly defaultDate?: Date | string;
   /** Initially active view (defaults to the package default view). */
   readonly defaultView?: CalendarView;
-  /** Events to display. */
+  /**
+   * Events to display. The schedule is seeded from this on mount; afterward,
+   * passing a new array reference replaces the displayed events (the array
+   * identity is the trigger, so memoize or hold it in state when loading async
+   * data). For incremental changes, prefer `useSchedule` directly and call
+   * `schedule.add` / `update` / `remove` / `set`.
+   */
   readonly events?: CalendarEvent[];
   /** Calendar height as a CSS length (default `600px`). */
   readonly height?: string;
@@ -34,6 +41,10 @@ export interface CalendarLayoutProps {
   /** Enabled views (defaults to week + month). */
   readonly views?: readonly CalendarView[];
 }
+
+// Stable empty default so an omitted `events` prop keeps the same array
+// identity across renders (the events-sync effect diffs by reference).
+const NO_EVENTS: CalendarEvent[] = [];
 
 /**
  * @description Batteries-included scheduling surface: composes `useSchedule`,
@@ -48,7 +59,7 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
     className,
     defaultDate,
     defaultView = DEFAULT_VIEW,
-    events = [],
+    events = NO_EVENTS,
     height = '600px',
     slots,
     views = DEFAULT_VIEWS,
@@ -57,6 +68,11 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
   // Hooks
   const schedule = useSchedule({ defaultView, events, views });
   const calendar = useCalendar(schedule, { defaultDate, defaultView });
+  // `useSchedule` seeds the event store from the first `events` value only
+  // (the instance is created once and cached). Track that seed reference so a
+  // later prop change replaces the events without recreating the instance
+  // (which would reset view/selection state).
+  const seededEvents = useRef(events);
 
   // Setup
   const dateLabel = calendar.date.toLocaleDateString(undefined, {
@@ -75,18 +91,29 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
   // Markup
 
   // Life Cycle
+  useEffect(() => {
+    if (events === seededEvents.current) {
+      return;
+    }
+
+    seededEvents.current = events;
+    schedule.set(events);
+  }, [events, schedule]);
 
   // 🔌 Short Circuit
 
   return (
     <div
+      aria-label="Calendar"
       className={
         className ? `sx-scheduling-layout ${className}` : 'sx-scheduling-layout'
       }
+      role="group"
     >
       <div className="sx-scheduling-toolbar flex items-center justify-between gap-2 pb-2">
         <div className="flex items-center gap-1">
           <Button
+            aria-label="Previous period"
             onClick={calendar.prev}
             size="sm"
             type="button"
@@ -95,6 +122,7 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
             Previous
           </Button>
           <Button
+            aria-label="Go to today"
             onClick={calendar.today}
             size="sm"
             type="button"
@@ -103,6 +131,7 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
             Today
           </Button>
           <Button
+            aria-label="Next period"
             onClick={calendar.next}
             size="sm"
             type="button"
@@ -110,11 +139,15 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
           >
             Next
           </Button>
-          <span className="text-muted-foreground ml-2 text-sm">
+          <span
+            aria-live="polite"
+            className="text-muted-foreground ml-2 text-sm"
+          >
             {dateLabel}
           </span>
         </div>
         <ToggleGroup
+          aria-label="Calendar view"
           onValueChange={handleViewChange}
           type="single"
           value={calendar.view}

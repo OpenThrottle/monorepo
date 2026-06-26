@@ -4,7 +4,10 @@ import { NotificationsStoreContext } from '../data/index';
 export interface UseNotificationsStoreOptions {}
 
 /**
- * @description TODO: Add a description or delete the comment, dealers choice.
+ * @description Returns the notifications store context. Throws when used outside a
+ * {@link NotificationsStoreProvider}.
+ *
+ * @publicApi
  */
 export const useNotificationsStore = (
   _options?: UseNotificationsStoreOptions,

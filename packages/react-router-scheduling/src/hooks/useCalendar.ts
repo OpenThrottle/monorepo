@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DEFAULT_VIEW } from '../config/defaults';
 import { CalendarView } from '../types';
 import { temporalToDate, toPlainDate } from '../utils/datetime';
-import { toEngineViewName } from '../utils/views';
+import { fromEngineViewName, toEngineViewName } from '../utils/views';
 import type { UseScheduleResult } from './useSchedule';
 
 // useCalendar is a thin view/navigation lens over a schedule. It does NOT own
@@ -121,6 +121,46 @@ export function useCalendar(
   const prev = useCallback(() => {
     step(-1);
   }, [step]);
+
+  // Mirror engine-driven view/date changes back into React state. Schedule-X can
+  // navigate itself (its own header controls, date-picker, drag navigation)
+  // without going through `setView`/`setDate`, which would otherwise leave the
+  // toolbar showing a stale view/date. Subscribe to the engine's reactive
+  // signals and write the React state directly (NOT via `setView`/`setDate`,
+  // which push back into the engine and would loop). The first emission is the
+  // signal's current value, fired synchronously on subscribe — skip it so the
+  // engine's seed (e.g. "today") never clobbers this hook's `defaultDate`.
+  useEffect(() => {
+    const app = controls?.$app;
+    if (app === undefined) {
+      return;
+    }
+
+    let primedView = false;
+    let primedDate = false;
+
+    const unsubscribeView = app.calendarState.view.subscribe((name) => {
+      if (!primedView) {
+        primedView = true;
+        return;
+      }
+      setViewState(fromEngineViewName(name));
+    });
+    const unsubscribeDate = app.datePickerState.selectedDate.subscribe(
+      (plainDate) => {
+        if (!primedDate) {
+          primedDate = true;
+          return;
+        }
+        setDateState(temporalToDate(plainDate));
+      },
+    );
+
+    return () => {
+      unsubscribeView();
+      unsubscribeDate();
+    };
+  }, [controls]);
 
   return { date, next, prev, setDate, setView, today, view };
 }

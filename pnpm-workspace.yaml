@@ -256,6 +256,7 @@ catalog:
   'markdown-it': '^14.1.1'
   'memoize-one': '^6.0.0'
   'ml-distance': '^4.0.1'
+  'monaco-editor': '^0.55.1'
   'morgan': '^1.10.1'
   'motion': '^12.26.2'
   'nestjs-cls': '^6.2.0'

@@ -23,6 +23,7 @@ export interface NotificationsSocketProviderProps {
   readonly webSocketUrl: string;
 }
 
+/** @publicApi */
 export const NotificationsSocketProvider = (
   props: NotificationsSocketProviderProps,
 ): React.ReactElement => {
@@ -77,7 +78,9 @@ export const NotificationsSocketProvider = (
     s.on('connect', handleConnect);
     s.on('disconnect', handleDisconnect);
     s.on('connect_error', handleConnectError);
-    s.on('reconnect_attempt', handleReconnectAttempt);
+    // `reconnect_attempt` is a Manager event in socket.io-client v4, not a socket
+    // event — register it on `s.io`, otherwise `'reconnecting'` is never set.
+    s.io.on('reconnect_attempt', handleReconnectAttempt);
 
     const unsubscribes = NOTIFICATIONS_SOCKET_EVENTS.map((eventName) => {
       const handler = (payload: NotificationPayload): void => {
@@ -96,7 +99,7 @@ export const NotificationsSocketProvider = (
       s.off('connect', handleConnect);
       s.off('disconnect', handleDisconnect);
       s.off('connect_error', handleConnectError);
-      s.off('reconnect_attempt', handleReconnectAttempt);
+      s.io.off('reconnect_attempt', handleReconnectAttempt);
 
       s.removeAllListeners();
       s.disconnect();

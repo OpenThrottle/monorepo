@@ -71,4 +71,30 @@ describe('useSchedule', () => {
     rerender();
     expect(result.current.instance).toBe(first);
   });
+
+  // `config` (including `events`) is read ONCE at instance creation; later
+  // `events` prop changes are intentionally ignored by the hook itself
+  // (consumers mutate via set()/add() or use CalendarLayout's diffing effect).
+  // Pin that initial-only behavior so it can't regress silently into a
+  // recreate-on-prop-change.
+  it('ignores a changed events prop after the first render (initial-only seeding)', () => {
+    const { result, rerender } = renderHook(
+      ({ events }: { events: CalendarEvent[] }) => useSchedule({ events }),
+      { initialProps: { events: [event('a', 'Alpha')] } },
+    );
+
+    const firstInstance = result.current.instance;
+    expect(result.current.all().map((e) => e.id)).toEqual(['a']);
+
+    // Re-render with a brand-new events array. The store and the instance must
+    // both stay on the initial seed.
+    rerender({ events: [event('b', 'Beta'), event('c', 'Gamma')] });
+    expect(result.current.all().map((e) => e.id)).toEqual(['a']);
+    expect(result.current.instance).toBe(firstInstance);
+
+    // The escape hatch (set) still mutates the store on the same instance.
+    result.current.set([event('z', 'Zeta')]);
+    expect(result.current.all().map((e) => e.id)).toEqual(['z']);
+    expect(result.current.instance).toBe(firstInstance);
+  });
 });

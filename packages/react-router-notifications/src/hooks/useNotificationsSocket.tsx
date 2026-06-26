@@ -8,6 +8,8 @@ import {
  * @description Socket and status when inside {@link NotificationsSocketProvider};
  * `null` when used outside the provider (optional consumption, like the store’s
  * optional hook).
+ *
+ * @publicApi
  */
 export function useNotificationsSocket(): NotificationsSocketContextValue | null {
   // Hooks

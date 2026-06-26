@@ -1,7 +1,14 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { useFetcher } from 'react-router';
-import { PROMPT_TYPE_OPTIONS } from '../config';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
+import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import type { PromptType } from '../config';
 import { getFilenameError, validateFilename } from '../utils';
 
@@ -76,10 +83,12 @@ export const EditorNewFileForm = (
     setError('');
   };
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    // FIXME: Tighten this up
+  const handleTypeChange = (value: string): void => {
+    const nextType = PROMPT_TYPE_VALUES.find((type) => type === value);
 
-    setPromptType(e.target.value as PromptType);
+    if (nextType) {
+      setPromptType(nextType);
+    }
   };
 
   // Markup
@@ -156,21 +165,18 @@ export const EditorNewFileForm = (
           />
         </div>
 
-        <select
-          className={classnames(
-            'rounded-md px-3 py-2 text-sm',
-            'border border-gray-700 bg-gray-900',
-            'focus:border-blue-500 focus:outline-none',
-          )}
-          onChange={handleTypeChange}
-          value={promptType}
-        >
-          {PROMPT_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.name}
-            </option>
-          ))}
-        </select>
+        <Select onValueChange={handleTypeChange} value={promptType}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PROMPT_TYPE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <div className="flex gap-2">
           <button

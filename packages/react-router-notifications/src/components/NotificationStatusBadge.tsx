@@ -5,6 +5,7 @@ import { formatStatusToColor } from '../utils/formatters';
 
 export interface NotificationStatusBadgeProps {}
 
+/** @publicApi */
 export const NotificationStatusBadge = (
   _props: NotificationStatusBadgeProps,
 ): React.ReactElement | null => {

@@ -18,6 +18,24 @@ export interface MarkdownRendererProps {
   readonly source: string;
 }
 
+/**
+ * Renders a Markdown `source` string as React, compiling it synchronously
+ * during render (see {@link compileMarkdownSync}) so the output is present in
+ * the server-rendered HTML.
+ *
+ * @remarks
+ * **All-or-nothing compilation.** The entire `source` is compiled in one pass.
+ * If any part of it fails to compile (CommonMark rarely throws, but GFM table
+ * edge cases can), the renderer degrades to a single `role="alert"` element
+ * showing the error message — the *whole* `source` renders as an error, not
+ * just the offending fragment. There is no per-fragment error isolation here.
+ *
+ * Consumers that join several independently-sourced fragments (e.g. streamed
+ * agent/task output chunks) into one `source` therefore risk one malformed
+ * fragment blanking the entire output. To degrade gracefully, render each
+ * fragment through its own `<MarkdownRenderer>` instance so a compile failure
+ * is contained to that fragment rather than the whole document.
+ */
 export const MarkdownRenderer = (
   props: MarkdownRendererProps,
 ): React.ReactElement => {

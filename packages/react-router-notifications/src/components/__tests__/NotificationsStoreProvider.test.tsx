@@ -12,11 +12,14 @@ describe('NotificationsStoreProvider Component', () => {
     props = { children: null };
   });
 
-  test('renders without visible UI when children is null', () => {
+  test('renders only the visually-hidden announcer when children is null', () => {
     const Component = () => <NotificationsStoreProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { container } = render(<RoutesStub />);
+    const { container, getByTestId } = render(<RoutesStub />);
 
-    expect(container).toBeEmptyDOMElement();
+    const announcer = getByTestId('notifications-announcer');
+    expect(announcer).toHaveClass('sr-only');
+    expect(announcer).toBeEmptyDOMElement();
+    expect(container.firstChild).toBe(announcer);
   });
 });

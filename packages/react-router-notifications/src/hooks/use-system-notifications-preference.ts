@@ -27,6 +27,7 @@ import {
   type SystemNotificationsPreference,
 } from '../utils/system-notification';
 
+/** @publicApi */
 export interface UseSystemNotificationsPreferenceResult {
   readonly preference: SystemNotificationsPreference;
   readonly setPreference: (pref: SystemNotificationsPreference) => void;
@@ -34,6 +35,8 @@ export interface UseSystemNotificationsPreferenceResult {
 
 /**
  * @description Returns current system notification preference and a setter that persists to localStorage.
+ *
+ * @publicApi
  */
 export function useNotificationsSystemPreferences(): UseSystemNotificationsPreferenceResult {
   const [preference, setPreferenceState] =
@@ -43,16 +46,12 @@ export function useNotificationsSystemPreferences(): UseSystemNotificationsPrefe
 
   React.useEffect(() => {
     return subscribeToNotificationsPreferenceStorageEvents(() => {
-      // console.log('🟢 5 - subscribeToNotificationsPreferenceStorageEvents');
-
       setPreferenceState(getSystemNotificationsPreference());
     });
   }, []);
 
   const setPreference = React.useCallback(
     (pref: SystemNotificationsPreference) => {
-      // console.log('🟢 4 - preference', pref);
-
       setSystemNotificationsPreference(pref);
       setPreferenceState(getSystemNotificationsPreference());
     },
