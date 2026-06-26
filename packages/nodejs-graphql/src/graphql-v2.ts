@@ -32,7 +32,7 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
-import { parseDateTimeInResponse } from './utils.js';
+import { asGraphqlPayload, parseDateTimeInResponse } from './utils.js';
 
 /**
  * @description Wire-level GraphQL response (aligned with V1 {@link GraphqlResponse}).
@@ -175,54 +175,6 @@ export type ExecuteGraphqlV2 = <
   variables: TVariables | undefined,
   options: GraphqlV2ExecuteOptions<TFailure>,
 ) => Promise<GraphqlV2Result<TData, TFailure>>;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
-const isGraphqlPathSegment = (p: unknown): p is string | number =>
-  typeof p === 'string' || typeof p === 'number';
-
-/**
- * @description Narrow JSON body to {@link GraphqlV2ResponsePayload} when shape matches.
- */
-const asGraphqlPayload = (
-  parsed: unknown,
-): GraphqlV2ResponsePayload<unknown> | null => {
-  if (!isRecord(parsed)) {
-    return null;
-  }
-
-  const data = 'data' in parsed ? parsed.data : undefined;
-  const errorsRaw = 'errors' in parsed ? parsed.errors : undefined;
-  let errors: ReadonlyArray<GraphqlV2GraphqlErrorItem> | undefined;
-
-  if (Array.isArray(errorsRaw)) {
-    const items: GraphqlV2GraphqlErrorItem[] = [];
-
-    for (const item of errorsRaw) {
-      if (!isRecord(item) || typeof item.message !== 'string') {
-        continue;
-      }
-
-      const pathRaw = item.path;
-      let path: ReadonlyArray<string | number> | undefined;
-
-      if (Array.isArray(pathRaw) && pathRaw.every(isGraphqlPathSegment)) {
-        path = pathRaw;
-      }
-
-      items.push(
-        path !== undefined
-          ? { message: item.message, path }
-          : { message: item.message },
-      );
-    }
-
-    errors = items.length > 0 ? items : undefined;
-  }
-
-  return { data, errors };
-};
 
 /**
  * @description Build request headers: `Content-Type` → `options.headers` → Bearer from `token`.

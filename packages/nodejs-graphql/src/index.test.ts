@@ -80,3 +80,58 @@ describe('executeGraphqlAtUrl timeout wiring', () => {
     expect(DEFAULT_GRAPHQL_TIMEOUT_MS).toBe(15_000);
   });
 });
+
+describe('executeGraphqlAtUrl response body parsing', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('throws a meaningful error when the body is not valid JSON', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html>502 Bad Gateway</html>', {
+        headers: { 'Content-Type': 'text/html' },
+        status: 502,
+        statusText: 'Bad Gateway',
+      }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+
+    if (error instanceof Error) {
+      expect(error.message).toContain('was not valid JSON');
+      expect(error.message).toContain('502');
+    }
+  });
+
+  it('throws a meaningful error when JSON has an unexpected shape', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(['not', 'an', 'object']), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+        statusText: 'OK',
+      }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+
+    if (error instanceof Error) {
+      expect(error.message).toContain('unexpected shape');
+    }
+  });
+
+  it('returns data for a well-formed JSON body', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+
+    const data = await executeGraphqlAtUrl(url, doc, undefined);
+
+    expect(data.__typename).toBe('Query');
+  });
+});

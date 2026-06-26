@@ -6,7 +6,11 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
-import { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
+import {
+  getGraphQLUrl,
+  parseDateTimeInResponse,
+  parseGraphqlResponseBody,
+} from './utils.js';
 
 export type {
   ExecuteGraphqlV2,
@@ -157,9 +161,7 @@ export async function executeGraphql<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  // FIXME: Tighten this up
-
-  const json = (await res.json()) as GraphqlResponse<TData>;
+  const json = await parseGraphqlResponseBody(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -176,8 +178,6 @@ export async function executeGraphql<
   if (json.data == null) {
     throw new Error('GraphQL response missing data');
   }
-
-  // FIXME: Tighten this up
 
   return parseDateTimeInResponse(json.data) as TData;
 }
@@ -250,9 +250,8 @@ export async function executeGraphqlAtUrl<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  // FIXME: Tighten this up
+  const json = await parseGraphqlResponseBody(res);
 
-  const json = (await res.json()) as GraphqlResponse<TData>;
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
     throw new Error(
@@ -268,8 +267,6 @@ export async function executeGraphqlAtUrl<
   if (json.data == null) {
     throw new Error('GraphQL response missing data');
   }
-
-  // FIXME: Tighten this up
 
   return parseDateTimeInResponse(json.data) as TData;
 }

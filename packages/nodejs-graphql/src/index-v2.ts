@@ -10,6 +10,7 @@ import {
   getGraphQLToken,
   getGraphQLUrl,
   parseDateTimeInResponse,
+  parseGraphqlResponseBody,
 } from './utils.js';
 
 /**
@@ -76,9 +77,7 @@ export async function executeGraphqlV2<
     method: 'POST',
   });
 
-  // FIXME: Tighten this up
-
-  const json = (await res.json()) as GraphqlResponseV2<TData>;
+  const json = await parseGraphqlResponseBody(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -95,8 +94,6 @@ export async function executeGraphqlV2<
   if (json.data == null) {
     throw new Error('GraphQL response missing data');
   }
-
-  // FIXME: Tighten this up
 
   return parseDateTimeInResponse(json.data) as TData;
 }
