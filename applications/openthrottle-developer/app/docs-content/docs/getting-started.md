@@ -1,10 +1,11 @@
 ---
 description: Run the developer app locally.
+group: 00. General
 order: 2
 title: Getting Started
 ---
 
-# Getting Started
+## Getting Started
 
 Start the developer app from the workspace root:
 

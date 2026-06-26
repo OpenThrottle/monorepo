@@ -104,7 +104,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen className="flex w-full max-w-3xl flex-col gap-6 p-4 md:p-8">
+    <GlobalScreen>
       <div className="flex items-center justify-between gap-4">
         <span className="text-muted-foreground text-sm">
           {note.author ? (

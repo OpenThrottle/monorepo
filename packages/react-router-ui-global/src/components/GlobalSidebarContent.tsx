@@ -44,6 +44,7 @@ export const GlobalSidebarContent = (
 
   // Hooks
   const location = useLocation();
+  const activeItemRef = React.useRef<HTMLLIElement | null>(null);
 
   // Setup
   const sections = Object.keys(data ?? {});
@@ -64,11 +65,15 @@ export const GlobalSidebarContent = (
 
     const toPath = getPathFromTo(to);
     const key = `${toPath}-${index}`;
-
-    const isActive = isLinkActive(item);
+    const isActive = location.pathname === toPath;
 
     return (
-      <SidebarMenuItem className="m-0" key={key} style={{ margin: 0 }}>
+      <SidebarMenuItem
+        className="m-0"
+        key={key}
+        ref={isActive ? activeItemRef : undefined}
+        style={{ margin: 0 }}
+      >
         <SidebarMenuButton
           asChild={true}
           isActive={isActive}
@@ -97,6 +102,29 @@ export const GlobalSidebarContent = (
   };
 
   // Life Cycle
+
+  // Keep the active link (and its group) in view when the route changes —
+  // including direct navigation and back/forward — so items below the fold
+  // (e.g. legal links) auto-reveal instead of requiring a manual scroll.
+  // block:'nearest' avoids jumping when the item is already visible and
+  // scopes the scroll to the nearest scrollable ancestor (SidebarContent).
+  React.useEffect(() => {
+    const node = activeItemRef.current;
+
+    if (node == null) {
+      return;
+    }
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    node.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'nearest',
+    });
+  }, [location.pathname]);
 
   // 🔌 Short Circuit
 

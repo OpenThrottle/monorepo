@@ -16,6 +16,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
+  Link,
   redirect,
   useFetcher,
   useRevalidator,
@@ -188,6 +189,10 @@ export default function Component(
   );
   const status =
     plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
+
+  const completedTaskCount = tasks.filter(
+    (task) => task.status === 'COMPLETED',
+  ).length;
 
   const ralphTuningJson = React.useMemo((): string => {
     const merged: WorkflowRalphRunOptionsInput = {
@@ -438,13 +443,24 @@ export default function Component(
             title={plan.title ?? 'Untitled'}
           />
           <div className="text-muted-foreground line-clamp-3 flex items-center gap-2 text-sm">
-            <PlanStatusBadge status={status} />
+            <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
             <span>&bull;</span>
-            <Badge color="slate" size="xs">
-              {plan.projectRelation?.name
-                ? plan.projectRelation.name
-                : plan.project}
-            </Badge>
+            {plan.projectRelation?.id != null ? (
+              <Badge asChild={true} color="slate" size="xs">
+                <Link
+                  to={`/projects/${plan.projectRelation.id}`}
+                  viewTransition={true}
+                >
+                  {plan.projectRelation.name}
+                </Link>
+              </Badge>
+            ) : (
+              <Badge color="slate" size="xs">
+                {plan.projectRelation?.name
+                  ? plan.projectRelation.name
+                  : plan.project}
+              </Badge>
+            )}
             <span>&bull;</span>
             <span>Last updated</span>
             <span>&bull;</span>
@@ -504,7 +520,7 @@ export default function Component(
                 value="tasks"
               >
                 <LayoutListIcon />
-                Tasks ({tasks.length})
+                Tasks ({completedTaskCount}/{tasks.length})
               </TabsTrigger>
               <TabsTrigger
                 className="flex-0 cursor-pointer"

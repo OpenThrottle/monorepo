@@ -111,6 +111,7 @@ export const buildCommanderEmptyStateExtras = (
   handlers: CommanderEmptyStateExtrasHandlers,
 ): readonly CommanderItem[] => {
   const { submitCommanderSearch: submit } = handlers;
+
   const q = query.trim();
   if (q.length === 0) {
     return [];

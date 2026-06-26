@@ -7,7 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
 
@@ -25,6 +25,8 @@ export const GlobalSidebar = (
   const { data } = props;
 
   // Hooks
+  const location = useLocation();
+  const activeItemRef = React.useRef<HTMLLIElement | null>(null);
 
   // Setup
   const sections = Object.keys(data ?? {});
@@ -35,9 +37,10 @@ export const GlobalSidebar = (
   const renderLink = (item: GlobalSidebarLinkProps): React.ReactElement => {
     const Icon = item.icon;
     const toPath = getPathFromTo(item.to);
+    const isActive = location.pathname === toPath;
 
     return (
-      <SidebarMenuItem key={toPath}>
+      <SidebarMenuItem key={toPath} ref={isActive ? activeItemRef : undefined}>
         <SidebarMenuButton tooltip={String(item.children)}>
           <NavLink
             className="text-muted-foreground"
@@ -53,6 +56,28 @@ export const GlobalSidebar = (
   };
 
   // Life Cycle
+  // Keep the active link (and its group) in view when the route changes —
+  // including direct navigation and back/forward — so items below the fold
+  // (e.g. legal links) auto-reveal instead of requiring a manual scroll.
+  // block:'nearest' avoids jumping when the item is already visible and
+  // scopes the scroll to the nearest scrollable ancestor (SidebarContent).
+  React.useEffect(() => {
+    const node = activeItemRef.current;
+
+    if (node == null) {
+      return;
+    }
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    node.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'nearest',
+    });
+  }, [location.pathname]);
 
   // 🔌 Short Circuit
 
