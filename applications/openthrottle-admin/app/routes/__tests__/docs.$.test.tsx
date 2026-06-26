@@ -18,7 +18,7 @@ describe('routes/docs.$.tsx', () => {
     );
 
     expect(
-      view.getByRole('heading', { level: 1, name: 'Getting Started' }),
+      view.getByRole('heading', { level: 2, name: 'Getting Started' }),
     ).toBeInTheDocument();
   });
 });
