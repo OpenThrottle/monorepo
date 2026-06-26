@@ -170,7 +170,6 @@ jobs:
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
 
       - name: '🎨 Prettier format-check'
-        continue-on-error: true
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:format-check --verbose
 
       - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
