@@ -427,6 +427,11 @@ export const action = async (args: Route.ActionArgs) => {
       return { ok: true };
     }
   } catch (error) {
+    // 🚨 Let redirects (and other Responses) escape — they are control flow, not failures.
+    if (error instanceof Response) {
+      throw error;
+    }
+
     const isError = error instanceof Error;
     const message = isError ? error.message : 'Action failed';
 
