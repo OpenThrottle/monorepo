@@ -12,7 +12,10 @@ import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
 } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
+import {
+  resolveInsideRoot,
+  resolveWorkspaceConfig,
+} from '../config/workspace-config.js';
 import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
 import { loadProject } from './ts-project.js';
 
@@ -232,7 +235,13 @@ function getOrAddSourceFile(
   resolved: ResolvedWorkspaceConfig,
   relativePath: string,
 ): SourceFile | undefined {
-  const absolutePath = join(resolved.root, relativePath);
+  // FS-scoping boundary: reject paths that escape the workspace root (absolute
+  // segments or `../` traversal) before any read.
+  const absolutePath = resolveInsideRoot(resolved, relativePath);
+
+  if (absolutePath === undefined) {
+    return undefined;
+  }
 
   return (
     project.getSourceFile(absolutePath) ??

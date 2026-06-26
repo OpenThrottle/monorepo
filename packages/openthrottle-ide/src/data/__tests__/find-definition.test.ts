@@ -89,6 +89,20 @@ describe('findDefinition', () => {
     ]);
   });
 
+  it('returns an empty array for a path that escapes the workspace root', async () => {
+    const traversal = await findDefinition(
+      { root },
+      { column: 1, line: 1, path: '../../../../../../etc/passwd' },
+    );
+    const absolute = await findDefinition(
+      { root },
+      { column: 1, line: 1, path: '/etc/passwd' },
+    );
+
+    expect(traversal).toEqual([]);
+    expect(absolute).toEqual([]);
+  });
+
   it('returns an empty array when nothing resolves', async () => {
     const onWhitespace = await findDefinition(
       { root },

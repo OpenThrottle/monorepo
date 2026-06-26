@@ -1,4 +1,4 @@
-import { isAbsolute, resolve } from 'node:path';
+import { isAbsolute, resolve, sep } from 'node:path';
 
 /**
  * Describes a code workspace to be scanned. This is the single configuration
@@ -58,4 +58,35 @@ export function resolveWorkspaceConfig(
     respectGitignore: config.respectGitignore ?? true,
     root: isAbsolute(config.root) ? config.root : resolve(config.root),
   };
+}
+
+/**
+ * Resolve a caller-supplied, workspace-relative path against `resolved.root`
+ * and verify the result stays inside the root. This is the engine's FS-scoping
+ * boundary: every read driven by an attacker-reachable path must route through
+ * here so a traversal (`../../etc/passwd`) or an absolute segment
+ * (`/etc/passwd`) cannot escape the workspace.
+ *
+ * Returns the contained absolute path, or `undefined` when the path is absolute
+ * or escapes the root. Callers in the symbol/semantic layers treat `undefined`
+ * as "nothing resolves" (their never-throw contract).
+ */
+export function resolveInsideRoot(
+  resolved: ResolvedWorkspaceConfig,
+  relativePath: string,
+): string | undefined {
+  if (isAbsolute(relativePath)) {
+    return undefined;
+  }
+
+  const absolutePath = resolve(resolved.root, relativePath);
+
+  if (
+    absolutePath !== resolved.root &&
+    !absolutePath.startsWith(resolved.root + sep)
+  ) {
+    return undefined;
+  }
+
+  return absolutePath;
 }
