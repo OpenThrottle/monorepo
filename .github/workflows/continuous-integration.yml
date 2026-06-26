@@ -9,6 +9,9 @@
 ################################################################################
 name: '🤖 Continuous Integration'
 on:
+  # workflow_dispatch enables the cost-gated nx-dependency-graph job to be run on demand
+  # (it is gated to manual dispatch below) instead of being dead `if: false` code.
+  workflow_dispatch:
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -69,6 +72,22 @@ jobs:
       jobCount: 1 # must be in sync with "jobIndex"
     runs-on: blacksmith-4vcpu-ubuntu-2204
 
+    # ⚠️ SCALING RISK (deferred by design — DO NOT silently "fix"):
+    #   The whole suite (`lint,typecheck,typecheck-tests,test`) runs on ONE box
+    #   (`jobCount: 1`, `jobIndex: [1]`, single `target` string) with a 15-minute
+    #   `timeout-minutes` ceiling below. `scripts/parallelize-tasks.ts` sharding
+    #   and the `merge_group` trigger are already wired but currently NO-OPs — the
+    #   gate is the single matrix box, not distributed execution / a merge queue.
+    #
+    #   This is a deliberate cost tradeoff (every 💰 marker below), NOT a bug. As
+    #   the affected graph grows the 15m timeout becomes the hard ceiling and CI
+    #   wall-clock degrades. When that ceiling is hit, re-enable distribution by:
+    #     1. Bumping `jobCount` and `jobIndex` together (they MUST stay in sync).
+    #     2. Splitting `target` into one entry per box, OR uncommenting the
+    #        `parallelize-tasks.ts` shard loop near the bottom of this job.
+    #     3. Optionally enabling the GitHub merge queue so `merge_group` gates merges
+    #        instead of relying on the ready-PR push.
+    #   Re-evaluate cost vs. wall-clock at that point — see AGENTS.md / MONOREPO.md.
     # FIXME: 💰 Increase as needed - balance with cost and time to completion
     strategy:
       matrix:
@@ -150,11 +169,13 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
 
-      # FIXME: Bring this back when we have time to investigate
-      # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
-      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
-      #   env:
-      #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
+      - name: '🎨 Prettier format-check'
+        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:format-check
+
+      - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
+        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
+        env:
+          MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"
@@ -170,9 +191,10 @@ jobs:
       #     done
 
   nx-dependency-graph:
-    # FIXME: 💰 Re-enable when we want to spend more
+    # 💰 Cost-gated: manual-only via workflow_dispatch (was `if: false`) so the job stays
+    # live/lintable and runnable on demand. Restore the actor/ref guard below to automate.
     # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
-    if: false
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204
     timeout-minutes: 10
 

@@ -51,6 +51,18 @@ vi.mock('../openthrottle-ralph', () => ({
   getTasksByPlanId: vi
     .fn()
     .mockImplementation(async () => mockCortexState.tasks),
+  reconcilePlanCompletionIfAllTasksTerminal: vi
+    .fn()
+    .mockImplementation(async (_config: unknown, planId: string) => {
+      const tasks = mockCortexState.tasks;
+      const allDone =
+        tasks.length > 0 &&
+        tasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
+      if (allDone) {
+        mockCortexState.updatePlanStatusCalls.push(planId);
+      }
+      return allDone;
+    }),
   resolveWorkflowRalphConfig: vi.fn(() => mockConfig),
   updatePlanStatus: vi
     .fn()
@@ -344,11 +356,11 @@ describe('runChildJob', () => {
         expect(result.commitSha).toBe(commitSha);
         expect(result.planCompleted).toBe(true);
       }
-      const { updatePlanStatus } = await import('../openthrottle-ralph.js');
-      expect(updatePlanStatus).toHaveBeenCalledWith(
+      const { reconcilePlanCompletionIfAllTasksTerminal } =
+        await import('../openthrottle-ralph.js');
+      expect(reconcilePlanCompletionIfAllTasksTerminal).toHaveBeenCalledWith(
         expect.anything(),
         '2f94f33c-562d-4a70-8c08-c6d9510317e5',
-        'COMPLETED',
       );
     } finally {
       rmSync(dir, { force: true, recursive: true });
@@ -910,15 +922,14 @@ describe('runChildJob', () => {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
     };
-    const { updatePlanStatus } = await import('../openthrottle-ralph.js');
-    vi.mocked(updatePlanStatus).mockClear();
+    mockCortexState.updatePlanStatusCalls = [];
     try {
       const result = await runChildJob(input);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.planCompleted).toBe(false);
       }
-      expect(updatePlanStatus).not.toHaveBeenCalled();
+      expect(mockCortexState.updatePlanStatusCalls).toEqual([]);
     } finally {
       rmSync(dir, { force: true, recursive: true });
     }

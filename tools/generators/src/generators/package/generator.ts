@@ -11,7 +11,12 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { getOrganizationName, getPackageName } from '../../utils/questions';
+import { ORGANIZATIONS } from '../../utils/organizations';
+import {
+  getConfigConfirmation,
+  getOrganizationName,
+  getPackageName,
+} from '../../utils/questions';
 import { getCommonVariables } from '../../utils/index';
 import { REGEX_SLUG } from '../../utils/regex';
 import { writeJsonToStdout } from '../../utils/output';
@@ -38,7 +43,7 @@ export async function packageGenerator(
       list: {
         organizations: {
           description: 'Static organization scopes.',
-          values: ['@openthrottle'],
+          values: [...ORGANIZATIONS],
         },
         types: {
           description: 'Static package types.',
@@ -48,7 +53,7 @@ export async function packageGenerator(
       options: {
         name: { pattern: 'slug', required: true, type: 'string' },
         organization: {
-          enum: ['@openthrottle'],
+          enum: [...ORGANIZATIONS],
           required: true,
           type: 'string',
         },
@@ -71,7 +76,7 @@ export async function packageGenerator(
     }
 
     if (listKey === 'organizations') {
-      writeJsonToStdout(['@openthrottle']);
+      writeJsonToStdout([...ORGANIZATIONS]);
       return;
     }
 
@@ -126,7 +131,9 @@ export async function packageGenerator(
   const variables = getCommonVariables(name);
 
   const data = { ...variables, destination, org, orgName, source, type };
-  // await getConfigConfirmation(data);
+  if (interactive) {
+    await getConfigConfirmation(data);
+  }
 
   generateFiles(tree, common, destination, data);
   generateFiles(tree, source, destination, data);

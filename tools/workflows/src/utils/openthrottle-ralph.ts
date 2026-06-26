@@ -47,6 +47,7 @@ import type {
   WorkflowRalphConfig,
 } from './openthrottle-ralph-types';
 import {
+  areAllTasksTerminal,
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
 } from './openthrottle-ralph-types';
@@ -64,6 +65,7 @@ export type {
 };
 
 export {
+  areAllTasksTerminal,
   formatPlanAndTasksForPrompt,
   RALPH_FATAL_UNREACHABLE_SUFFIX,
   taskRequirementsFromRow,
@@ -249,6 +251,27 @@ export const updatePlanStatus = async (
   isPostgresTransport(config)
     ? updatePlanStatusPostgres(config, planId, status)
     : updatePlanStatusGraphql(planId, status);
+
+/**
+ * @description Terminal reconcile for plan completion. Re-fetches the plan's tasks and,
+ * if the set is non-empty and every task is terminal (`COMPLETED`/`SKIPPED`), flips the
+ * plan to `COMPLETED`. Safe to call on any clean exit path (successful child run, end of
+ * the Ralph loop, max-iterations) so a plan whose tasks are all done is never stranded in
+ * `IN_PROGRESS`. Returns `true` when it set the plan to `COMPLETED`, `false` otherwise.
+ * Shares the {@link areAllTasksTerminal} predicate so the CLI and child-job stay in sync.
+ */
+export const reconcilePlanCompletionIfAllTasksTerminal = async (
+  config: WorkflowRalphConfig,
+  planId: string,
+): Promise<boolean> => {
+  const tasks = await getTasksByPlanId(config, planId);
+  if (!areAllTasksTerminal(tasks)) {
+    return false;
+  }
+
+  await updatePlanStatus(config, planId, 'COMPLETED');
+  return true;
+};
 
 export const appendPlanOutput = async (
   config: WorkflowRalphConfig,

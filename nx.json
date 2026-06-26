@@ -314,14 +314,17 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "knip___DISABLED_ON_PURPOSE___": {
+    "knip": {
       "cache": true,
       "dependsOn": ["^build"],
+      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking — run on demand with `pnpm nx run monorepo:knip`.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "knip --config knip.jsonc",
+        "command": "knip --config knip.jsonc --no-exit-code",
         "cwd": "{workspaceRoot}",
         "env": {
+          "API_URL": "http://localhost/graphql",
+          "API_URL_INTERNAL": "http://localhost/graphql",
           "APP_NAME": "openthrottle-developer"
         }
       }

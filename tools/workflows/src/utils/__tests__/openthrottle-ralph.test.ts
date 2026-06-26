@@ -12,6 +12,7 @@ const mockConfig = {
 const mockState = {
   connectReject: undefined as Error | undefined,
   planStatus: 'PENDING' as string,
+  planTaskStatuses: [] as string[],
   queryLog: [] as string[],
 };
 
@@ -50,6 +51,23 @@ vi.mock('pg', () => ({
 
           return Promise.resolve({
             rows: [{ ...planRow, status: 'IN_PROGRESS' }],
+          });
+        }
+
+        if (sql.includes('FROM tasks WHERE plan_id')) {
+          return Promise.resolve({
+            rows: mockState.planTaskStatuses.map((status, index) => ({
+              category: null,
+              created_at: '2026-01-01T00:00:00.000Z',
+              description: null,
+              id: `task-${index + 1}`,
+              plan_id: 'plan-1',
+              requirements: [],
+              sort_order: (index + 1) * 1000,
+              status,
+              title: `Task ${index + 1}`,
+              updated_at: '2026-01-02T00:00:00.000Z',
+            })),
           });
         }
 
@@ -211,5 +229,64 @@ describe('updateTaskStatus (postgres-direct)', () => {
     expect(
       mockState.queryLog.some((sql) => sql.includes("status != 'IN_PROGRESS'")),
     ).toBe(true);
+  });
+});
+
+describe('reconcilePlanCompletionIfAllTasksTerminal (postgres-direct)', () => {
+  beforeEach(() => {
+    mockState.planStatus = 'IN_PROGRESS';
+    mockState.planTaskStatuses = [];
+    mockState.queryLog = [];
+    vi.resetModules();
+    vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('marks the plan COMPLETED when all tasks are terminal', async () => {
+    mockState.planTaskStatuses = ['COMPLETED', 'SKIPPED'];
+    const { reconcilePlanCompletionIfAllTasksTerminal } =
+      await import('../openthrottle-ralph.js');
+
+    const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(reconciled).toBe(true);
+    expect(
+      mockState.queryLog.some((sql) => sql.includes('UPDATE plans SET status')),
+    ).toBe(true);
+  });
+
+  it('leaves the plan untouched when a task is still pending', async () => {
+    mockState.planTaskStatuses = ['COMPLETED', 'PENDING'];
+    const { reconcilePlanCompletionIfAllTasksTerminal } =
+      await import('../openthrottle-ralph.js');
+
+    const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(reconciled).toBe(false);
+    expect(
+      mockState.queryLog.some((sql) => sql.includes('UPDATE plans SET status')),
+    ).toBe(false);
+  });
+
+  it('does not complete a plan with no tasks', async () => {
+    mockState.planTaskStatuses = [];
+    const { reconcilePlanCompletionIfAllTasksTerminal } =
+      await import('../openthrottle-ralph.js');
+
+    const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(reconciled).toBe(false);
   });
 });

