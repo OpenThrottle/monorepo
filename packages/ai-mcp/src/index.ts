@@ -2,8 +2,8 @@
  * @description MCP server for plans knowledge base (semantic search over Cortex Postgres).
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.ts';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { getServerName, SERVER_VERSION } from './constants.ts';
 import { destroyDataSources } from './data-source.ts';
 import { registerKnowledgeBaseResource } from './resources/knowledge-base.ts';

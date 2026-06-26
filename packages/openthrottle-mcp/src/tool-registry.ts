@@ -16,11 +16,11 @@
 import type {
   McpServer,
   ToolCallback,
-} from '@modelcontextprotocol/sdk/server/mcp.ts';
+} from '@modelcontextprotocol/sdk/server/mcp.js';
 import type {
   AnySchema,
   ZodRawShapeCompat,
-} from '@modelcontextprotocol/sdk/server/zod-compat.ts';
+} from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import * as Th from './nest-tool-handlers.ts';
 
 /**

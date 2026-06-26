@@ -5,7 +5,7 @@
 import {
   ResourceTemplate,
   type McpServer,
-} from '@modelcontextprotocol/sdk/server/mcp.ts';
+} from '@modelcontextprotocol/sdk/server/mcp.js';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { GetDocumentDocument } from '../__generated__/graphql.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';

@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.ts';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.ts';
 import {
   getServerName,

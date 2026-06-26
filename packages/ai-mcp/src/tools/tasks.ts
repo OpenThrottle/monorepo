@@ -3,7 +3,7 @@
  */
 
 /* eslint-disable no-await-in-loop */
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDefaultGitHubUser, resolveActor } from '../config.ts';
 import type { TaskRow } from '../cortex-client.ts';

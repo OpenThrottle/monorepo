@@ -2,7 +2,7 @@
  * @description Registers activity tools: get_activity_by_date, get_last_activity.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPostgresConfig } from '../config.ts';
 import type { LastActivityResult as CortexLastActivityResult } from '../cortex-client.ts';

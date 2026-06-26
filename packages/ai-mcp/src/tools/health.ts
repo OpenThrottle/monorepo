@@ -2,7 +2,7 @@
  * @description Registers health check tool: health. Returns server ok and optionally Cortex DB reachable.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getOrCreateDataSource, runQuery } from '../data-source.ts';
 

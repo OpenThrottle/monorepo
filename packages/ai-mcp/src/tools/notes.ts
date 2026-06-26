@@ -2,7 +2,7 @@
  * @description Registers note CRUD tools: create_note, get_note, list_notes, update_note, delete_note.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { NoteRow } from '../cortex-client.ts';
 import {

@@ -1,9 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {
-  setWorkspaceRoot,
-  workspaceRoot,
-} from 'nx/src/utils/workspace-root.ts';
+import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
 import { getOpenThrottleRoot } from './workflow.ts';
 
 /**

@@ -2,7 +2,7 @@
  * @description Registers plan CRUD tools: create_plan, get_plan, update_plan, delete_plan, list_plans_by_status.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.ts';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDefaultGitHubUser, resolveActor } from '../config.ts';
 import {
