@@ -9,6 +9,26 @@ export {
 export type { PlanTaskSortFields } from './plan-task-list-order.ts';
 
 /**
+ * @description Safely parse a task's `requirementsJson` into a list of string
+ * requirements. A non-array payload or invalid JSON on a single task must not
+ * throw — that would collapse the entire orchestration to `workflow_unhandled`
+ * before any iteration runs. Malformed input yields an empty list instead.
+ */
+const parseRequirements = (requirementsJson: string): string[] => {
+  try {
+    const parsed: unknown = JSON.parse(requirementsJson);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.map((requirement) => String(requirement));
+  } catch {
+    return [];
+  }
+};
+
+/**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with
  * `formatPlanAndTasksForPrompt` in `tools/workflows` `openthrottle-ralph.ts`).
  */
@@ -50,8 +70,11 @@ export const formatPlanAndTasksForPrompt = (
       }
 
       if (t.requirementsJson) {
-        const requirements = JSON.parse(t.requirementsJson);
-        lines.push(`    Requirements: ${requirements.join(', ')}`);
+        const requirements = parseRequirements(t.requirementsJson);
+
+        if (requirements.length > 0) {
+          lines.push(`    Requirements: ${requirements.join(', ')}`);
+        }
       }
     }
   }

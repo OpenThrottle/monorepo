@@ -1,3 +1,4 @@
+import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import { describe, expect, it } from 'vitest';
 import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
 import type { WorkflowOptions } from './contract/flow-context.ts';
@@ -47,6 +48,29 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     });
 
     expect(ctx.runner).toBe('claude');
+  });
+
+  it('maps backend opencode to runner opencode (no silent downgrade)', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      mode: 'plan',
+      planId,
+      ralph: { backend: 'opencode' },
+    });
+
+    expect(ctx.runner).toBe('opencode');
+    expect(ctx.runner).not.toBe(DEFAULT_RALPH_RUNNER);
+  });
+
+  it('maps every canonical backend id to its own runner (no silent downgrade)', () => {
+    for (const id of WORKFLOW_RUNNER_IDS) {
+      const ctx = buildRalphFlowContextFromPlanRunTuning({
+        mode: 'plan',
+        planId,
+        ralph: { backend: id },
+      });
+
+      expect(ctx.runner).toBe(id);
+    }
   });
 
   it('uses executionBackend when ralph omits backend', () => {
@@ -234,6 +258,27 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     });
 
     expect(ctx.prompt).toBe(DEFAULT_RALPH_PROMPT);
+  });
+});
+
+describe('WORKFLOW_RUNNER_IDS parity (canonical @openthrottle/openthrottle-agentic-utils)', () => {
+  it('includes claude, cursor, and opencode', () => {
+    expect(WORKFLOW_RUNNER_IDS).toEqual(
+      expect.arrayContaining(['claude', 'cursor', 'opencode']),
+    );
+  });
+
+  it('every canonical id resolves to itself (drift would surface as a downgrade)', () => {
+    const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
+
+    for (const id of WORKFLOW_RUNNER_IDS) {
+      const shape = resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning({
+        planId,
+        ralph: { backend: id },
+      });
+
+      expect(shape.runner).toBe(id);
+    }
   });
 });
 

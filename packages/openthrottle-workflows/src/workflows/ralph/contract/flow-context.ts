@@ -44,7 +44,7 @@
  * worker uses env + `.workflow-ralph.json` in the worktree cwd (CLI > env > file > built-ins).
  */
 
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** @description Default `--backend` for workflow-ralph; aligned with `tools/workflows` / UI. */
 export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner = 'cursor';

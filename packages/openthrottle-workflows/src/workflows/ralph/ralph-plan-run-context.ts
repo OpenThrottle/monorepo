@@ -3,7 +3,8 @@
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
  */
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import { isWorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
 import type { RalphPlanRunTuningInput } from '../../__generated__/graphql.js';
 import type {
@@ -44,12 +45,11 @@ const mapRalphNestedDebugCliToWorkflowDebugCli = (
   }
 };
 
-/** @description Known ids; aligned with `RALPH_EXECUTION_BACKEND_IDS` in tools/workflows. */
-const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
-
 /**
  * @description Maps GraphQL / job `backend` string to {@link WorkflowConfigRunner}; unknown values fall back
- * to {@link DEFAULT_RALPH_RUNNER}.
+ * to {@link DEFAULT_RALPH_RUNNER}. Recognized ids come from the canonical `WORKFLOW_RUNNER_IDS`
+ * (via `isWorkflowRunnerId`) in `@openthrottle/openthrottle-agentic-utils` — no local copy, so the
+ * set cannot drift (e.g. `opencode` is honored, not silently downgraded).
  */
 const resolveExecutionBackend = (
   raw: string | null | undefined,
@@ -60,8 +60,8 @@ const resolveExecutionBackend = (
 
   const n = raw.trim().toLowerCase();
 
-  if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as unknown as WorkflowConfigRunner;
+  if (isWorkflowRunnerId(n)) {
+    return n;
   }
 
   return DEFAULT_RALPH_RUNNER;

@@ -8,6 +8,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =
+  | 'workflow_budget_exhausted'
   | 'workflow_complete'
   | 'workflow_cancelled'
   | 'workflow_max_iterations'

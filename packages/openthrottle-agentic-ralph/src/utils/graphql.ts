@@ -4,7 +4,10 @@
  * Ralph plan-run helpers are re-exported from {@link context.js}; codegen documents live
  * under `graphql/*.graphql`.
  *
- * FIXME: richer thrown errors (full `errors[]`, extensions, HTTP metadata) when `@openthrottle/nodejs-graphql` exposes them.
+ * NOTE (upstream-blocked): richer thrown errors (full `errors[]`, extensions, HTTP status/metadata)
+ * are not surfaced here because `@openthrottle/nodejs-graphql`'s `executeGraphqlV2` only throws the
+ * first error message today. When upstream exposes structured failures, wrap them here; until then
+ * callers branch/log via try/catch (see the orchestrator's `emitDiagnostic`).
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
@@ -81,7 +84,8 @@ export async function executeWorkflowGraphqlV2<
     resolveWorkflowGraphqlConfigFromEnv(),
   );
 
-  // FIXME: wrap with structured error mapping (status, errors[], extensions) when upstream exposes it; callers use try/catch today
+  // NOTE (upstream-blocked): wrap with structured error mapping (HTTP status, errors[], extensions)
+  // once `@openthrottle/nodejs-graphql` exposes them; today it throws the first message, so callers use try/catch.
   return executeGraphqlV2(document, variables, options);
 }
 

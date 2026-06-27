@@ -78,4 +78,7 @@ export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts'
 
 /** @publicApi */
 export { walkAgentAssetFiles } from './walk-agent-assets-on-disk.ts';
-export type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
+export type {
+  AgentAssetFileEntry,
+  WalkAgentAssetFilesResult,
+} from './walk-agent-assets-on-disk.ts';

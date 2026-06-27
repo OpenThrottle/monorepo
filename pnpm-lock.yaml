@@ -2929,6 +2929,16 @@ importers:
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-workflow
+    devDependencies:
+      '@openthrottle/openthrottle-agentic-ralph':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-ralph
 
   packages/react-router-auth: {}
 
