@@ -9,7 +9,12 @@ describe('PlanWorkflowConfigHooks', () => {
   test('renders empty state and add hook control', async () => {
     const onChange = vi.fn();
     const { getByTestId, getByText } = render(
-      <PlanWorkflowConfigHooks hooks={[]} onChange={onChange} />,
+      <PlanWorkflowConfigHooks
+        heading="08. Job Run Hooks"
+        hooks={[]}
+        onChange={onChange}
+        onSave={vi.fn()}
+      />,
     );
 
     expect(getByTestId('PlanWorkflowConfigHooks')).toBeInTheDocument();
@@ -26,6 +31,7 @@ describe('PlanWorkflowConfigHooks', () => {
     const row = createDefaultJobRunHookDraftRow();
     const { getByTestId } = render(
       <PlanWorkflowConfigHooks
+        heading="08. Job Run Hooks"
         hooks={[row]}
         onChange={vi.fn()}
         onSave={onSave}

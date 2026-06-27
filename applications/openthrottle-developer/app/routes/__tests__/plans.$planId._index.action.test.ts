@@ -7,6 +7,7 @@ import {
   PlanDetailUpdatePlanRunConfigDocument,
   type PlanDetailCancelPlanRunMutation,
 } from '~/__generated__/graphql';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -40,10 +41,11 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
 
     await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -90,10 +92,11 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
 
     await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -132,10 +135,11 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
 
     await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -177,10 +181,11 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
 
     await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -210,10 +215,11 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
@@ -271,10 +277,11 @@ describe('routes/plans.$planId._index action (saveRunConfig)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -310,10 +317,11 @@ describe('routes/plans.$planId._index action (saveRunConfig)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
@@ -355,10 +363,11 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -386,10 +395,11 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(result).toEqual({ cancelPlanRunError: 'network down' });
@@ -410,10 +420,11 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
     );
 
     const result = await action({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
+      url: new URL(request.url),
     });
 
     expect(result).toEqual({

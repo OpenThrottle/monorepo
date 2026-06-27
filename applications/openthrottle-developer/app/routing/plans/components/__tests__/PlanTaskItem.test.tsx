@@ -84,7 +84,7 @@ describe('PlanTaskItem Component', () => {
         description: null,
         requirementsJson: '[]',
         summary: null,
-        title: null,
+        title: '',
       },
     };
 

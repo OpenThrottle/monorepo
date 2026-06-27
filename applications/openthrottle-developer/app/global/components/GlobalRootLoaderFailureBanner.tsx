@@ -28,7 +28,7 @@ interface GlobalRootLoaderFailureBannerProps {
  */
 export const GlobalRootLoaderFailureBanner = (
   props: GlobalRootLoaderFailureBannerProps,
-): React.ReactElement => {
+): React.ReactElement | null => {
   const { diagnostics, failure, isRevalidating, onRetry, userLoadOk } = props;
 
   // Hooks

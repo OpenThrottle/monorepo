@@ -145,8 +145,6 @@ export const loader = async (args: Route.LoaderArgs) => {
     graphQlRequestBaseUrl: serverEnv.API_URL_INTERNAL.replace(/\/$/, ''),
   };
 
-  let rootLoaderFailure: RootLoaderFailure | null = null;
-
   const authToken = getAuthTokenFromCookie(cookieHeader);
   const isTokenNull = authToken === null;
 
@@ -168,13 +166,10 @@ export const loader = async (args: Route.LoaderArgs) => {
    * concurrently rather than serially (health→user). Each settles into its own
    * `*Failure` so the user-step failure can still take precedence below.
    */
-  let healthFailure: RootLoaderFailure | null = null;
-  let userFailure: RootLoaderFailure | null = null;
-
   /** In development, always poll server health so API misconfiguration surfaces even when auth is off. */
-  const healthProbe = async (): Promise<void> => {
+  const healthProbe = async (): Promise<RootLoaderFailure | null> => {
     if (!FEATURE_BETA_PREVIEW) {
-      return;
+      return null;
     }
     const t0 = Date.now();
     try {
@@ -184,13 +179,14 @@ export const loader = async (args: Route.LoaderArgs) => {
       );
       diagnostics.healthLatencyMs = Date.now() - t0;
       serverHealth = response?.serverHealth;
+      return null;
     } catch (error) {
       diagnostics.healthLatencyMs = Date.now() - t0;
       console.error('root loader: GetRootHealth failed', error);
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
       const healthMessage = rootLoaderErrorMessage(error);
       const healthHttpStatus = httpStatusFromRootLoaderError(error);
-      healthFailure = {
+      return {
         kind: classifyRootLoaderError(error),
         message: healthMessage,
         step: 'health',
@@ -199,9 +195,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     }
   };
 
-  const userProbe = async (): Promise<void> => {
+  const userProbe = async (): Promise<RootLoaderFailure | null> => {
     if (isTokenNull) {
-      return;
+      return null;
     }
     const t0 = Date.now();
     try {
@@ -212,6 +208,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       diagnostics.userLatencyMs = Date.now() - t0;
       user = queryMyUser.me ?? null;
       userLoadOk = true;
+      return null;
     } catch (error) {
       diagnostics.userLatencyMs = Date.now() - t0;
       console.error('root loader: GetMyUser failed', error);
@@ -219,7 +216,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       userLoadOk = false;
       const userMessage = rootLoaderErrorMessage(error);
       const userHttpStatus = httpStatusFromRootLoaderError(error);
-      userFailure = {
+      return {
         kind: classifyRootLoaderError(error),
         message: userMessage,
         step: 'user',
@@ -228,10 +225,16 @@ export const loader = async (args: Route.LoaderArgs) => {
     }
   };
 
-  await Promise.all([healthProbe(), userProbe()]);
+  // Probes return their own failure so the values stay properly typed (a `let`
+  // assigned only inside these closures would be narrowed back to `null`,
+  // dropping `RootLoaderFailure` from the loader's inferred return type).
+  const [healthFailure, userFailure] = await Promise.all([
+    healthProbe(),
+    userProbe(),
+  ]);
 
   // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
-  rootLoaderFailure = userFailure ?? healthFailure;
+  const rootLoaderFailure = userFailure ?? healthFailure;
 
   if (FEATURE_BETA_PREVIEW && userLoadOk && user === null) {
     const pathname = url.pathname;

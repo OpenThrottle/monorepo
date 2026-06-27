@@ -14,7 +14,7 @@ const emptyTotals = {
   tasksCompleted: 0,
   tasksCreated: 0,
   tasksUpdated: 0,
-} as const;
+};
 
 /**
  * @description JSON bundle for support: date range, per-day rows, and series totals. Does not add new metrics—makes existing rollups copy-pasteable.

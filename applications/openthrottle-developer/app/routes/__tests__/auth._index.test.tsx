@@ -9,7 +9,11 @@ describe('routes/auth._index.tsx', () => {
     renderRoutesStub(
       <AuthIndex
         actionData={undefined}
-        loaderData={{}}
+        loaderData={{
+          models: [{ id: 'model-1', label: 'GPT-4' }],
+          personas: [{ id: 'persona-1', label: 'Engineer' }],
+          repositories: [{ displayName: 'monorepo', id: 'repo-1' }],
+        }}
         matches={[] as never}
         params={{}}
       />,

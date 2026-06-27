@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import type { Dirent } from 'node:fs';
 import { basename, join } from 'node:path';
 
 import { parsePersonaFrontmatter } from '~/routing/agents/data/parse-persona-frontmatter.server';
@@ -54,7 +55,7 @@ const scanPersonasDir = (monorepoRoot: string): RepoPersonaEntry[] => {
     return [];
   }
 
-  let dirents: ReturnType<typeof readdirSync>;
+  let dirents: Dirent<string>[];
   try {
     dirents = readdirSync(absolutePersonasDir, { withFileTypes: true });
   } catch {

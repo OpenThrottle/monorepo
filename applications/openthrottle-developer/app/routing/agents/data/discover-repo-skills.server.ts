@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import type { Dirent } from 'node:fs';
 import { join } from 'node:path';
 
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
@@ -82,7 +83,7 @@ const readSkillEntry = (
 const isSkillFolder = (
   absoluteSkillsDir: string,
   folderName: string,
-  dirent: ReturnType<typeof readdirSync>[number],
+  dirent: Dirent<string>,
 ): boolean => {
   if (dirent.isDirectory()) {
     return true;
@@ -108,7 +109,7 @@ const scanSkillsLayout = (
     return [];
   }
 
-  let dirents: ReturnType<typeof readdirSync>;
+  let dirents: Dirent<string>[];
   try {
     dirents = readdirSync(absoluteSkillsDir, { withFileTypes: true });
   } catch {

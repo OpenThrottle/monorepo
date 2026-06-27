@@ -6,6 +6,7 @@ import {
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
 } from '~/routing/settings/utils/settings-keys-action';
 import type { Route } from '@/app/routes/+types/settings.keys';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -44,10 +45,10 @@ describe('routes/settings.keys.tsx', () => {
 
   describe('loader', () => {
     const loaderArgs = (url: string): Route.LoaderArgs => ({
-      context: {},
+      context: createTestRouterContext(),
       params: {},
+      pattern: '/settings/keys',
       request: new Request(url),
-      unstable_pattern: '/settings/keys',
       url: new URL(url),
     });
 
@@ -111,13 +112,14 @@ describe('routes/settings.keys.tsx', () => {
 
   describe('action', () => {
     const actionArgs = (formData: FormData): Route.ActionArgs => ({
-      context: {},
+      context: createTestRouterContext(),
       params: {},
+      pattern: '/settings/keys',
       request: new Request('http://localhost/settings/keys', {
         body: formData,
         method: 'POST',
       }),
-      unstable_pattern: '/settings/keys',
+      url: new URL('http://localhost/settings/keys'),
     });
 
     test('createCredential passes optional label and expiresAt to mutation', async () => {

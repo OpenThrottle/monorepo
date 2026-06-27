@@ -36,6 +36,9 @@ describe('discoverRepoSkills monorepo integration', () => {
   test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
     'dedupes symlinked cursor skills and reports unique slugs per layout',
     () => {
+      if (monorepoRoot === null) {
+        throw new Error('monorepoRoot should be resolved when test runs');
+      }
       const entries = discoverRepoSkills(monorepoRoot);
       const counts = getRepoSkillsRegistryCounts(entries);
       const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
@@ -63,6 +66,9 @@ describe('discoverRepoSkills monorepo integration', () => {
   test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
     'repoRelativePath values point at existing SKILL.md files',
     () => {
+      if (monorepoRoot === null) {
+        throw new Error('monorepoRoot should be resolved when test runs');
+      }
       const entries = discoverRepoSkills(monorepoRoot);
 
       for (const entry of entries) {

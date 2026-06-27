@@ -41,7 +41,7 @@ describe('SkillsTable Component', () => {
   describe('when entries are provided', () => {
     beforeEach(() => {
       cleanup();
-      props = { entries: mockEntries };
+      props = { entries: [...mockEntries] };
     });
 
     test('renders table shell and column headers', () => {

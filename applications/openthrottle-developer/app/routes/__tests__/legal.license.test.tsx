@@ -10,7 +10,7 @@ describe('routes/legal.license.tsx', () => {
       <MemoryRouter>
         <License
           actionData={undefined}
-          loaderData={undefined}
+          loaderData={{}}
           matches={[] as never}
           params={{}}
         />

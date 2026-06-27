@@ -63,7 +63,7 @@ describe('DashboardQueueStats Component', () => {
   describe('when data is provided', () => {
     beforeEach(() => {
       cleanup();
-      props = { data: twoQueues };
+      props = { data: [...twoQueues] };
       component = renderDashboardQueueStats(props);
     });
 
