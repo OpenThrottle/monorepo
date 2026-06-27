@@ -5,7 +5,7 @@ order: 1
 title: Documentation
 ---
 
-## Documentation
+# Documentation
 
 Welcome to the OpenThrottle developer documentation. Use the sidebar to browse guides, or jump to the [FAQ](/faq) for quick answers.
 

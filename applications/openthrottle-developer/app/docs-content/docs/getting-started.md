@@ -5,7 +5,7 @@ order: 2
 title: Getting Started
 ---
 
-## Getting Started
+# Getting Started
 
 Start the developer app from the workspace root:
 
