@@ -9,6 +9,7 @@
  * release() is correctly scoped by lockedBy (wrong owner or double-release fail).
  */
 
+import { isAbsolute } from 'node:path';
 import type {
   AcquireResult,
   IWorktreeTargetsTracker,
@@ -17,6 +18,21 @@ import type {
   WorktreeTargetAvailable,
   WorktreeTargetLocked,
 } from '../types/worktree';
+
+/**
+ * @description Validates that a worktree target path is safe to use as a `git -C`
+ * working directory. Paths must be non-empty, absolute, and free of any `..`
+ * traversal segment. Today targets come only from trusted operator config
+ * (WORKTREE_TARGETS env), so this is defense-in-depth: if a less-trusted source
+ * ever registers a target, a relative or `..`-laden path cannot smuggle git into
+ * an unintended directory.
+ */
+function isSafeWorktreePath(path: string): boolean {
+  if (path.trim().length === 0) return false;
+  if (!isAbsolute(path)) return false;
+  // Reject any `..` segment (covers `/a/../b`, leading `../`, trailing `/..`).
+  return !path.split(/[\\/]/).includes('..');
+}
 
 interface TargetState {
   readonly id: string;
@@ -34,6 +50,8 @@ export class WorktreeTargetsTracker implements IWorktreeTargetsTracker {
 
   constructor(initialTargets: readonly { id: string; path: string }[] = []) {
     for (const { id, path } of initialTargets) {
+      if (!isSafeWorktreePath(path)) continue;
+
       this.targets.set(id, {
         id,
         lockedBy: undefined,
@@ -43,8 +61,16 @@ export class WorktreeTargetsTracker implements IWorktreeTargetsTracker {
     }
   }
 
-  /** Register an additional target (no-op if id already exists). */
+  /**
+   * Register an additional target. No-op if the id already exists, or if `path`
+   * is not a safe worktree path (absolute, non-empty, no `..` traversal segment).
+   * The path guard is defense-in-depth: registered paths become `git -C <path>`
+   * working dirs, so a relative or traversal path is silently rejected rather
+   * than allowed to point git at an unintended directory.
+   */
   register(id: string, path: string): void {
+    if (!isSafeWorktreePath(path)) return;
+
     if (!this.targets.has(id)) {
       this.targets.set(id, {
         id,

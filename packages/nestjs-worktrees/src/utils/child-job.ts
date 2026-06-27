@@ -99,10 +99,14 @@ export async function runChildJob(
     }),
   ];
 
+  // SECURITY: never pass `shell: true` here. With a shell, Node joins argv into a
+  // single string run through `/bin/sh -c`, so shell metacharacters in any
+  // caller-controlled arg (planId, prompt, promptFile, project, model) would be
+  // interpreted — arbitrary command execution on the worker host. Passing the args
+  // array directly (no shell) makes each element a literal argv entry to `pnpm`.
   const ralph = spawnSync('pnpm', ralphArgs, {
     cwd: worktreePath,
     encoding: 'utf-8',
-    shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
 
