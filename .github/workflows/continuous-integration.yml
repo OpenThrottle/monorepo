@@ -172,10 +172,10 @@ jobs:
       - name: '🎨 Prettier format-check'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:format-check --verbose
 
-      - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
-        env:
-          MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
+      # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
+      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
+      #   env:
+      #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"

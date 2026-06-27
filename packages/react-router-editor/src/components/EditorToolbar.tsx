@@ -10,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { PROMPT_TYPE_OPTIONS } from '../config';
-import type { PromptType } from '../config';
+import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import { useEditor } from '../hooks/useEditor';
 import { EditorNewFileForm } from './EditorNewFileForm';
 
@@ -49,49 +48,40 @@ export const EditorToolbar = (
   };
 
   const handleTypeChange = (value: string): void => {
-    // FIXME: Tighten this up
+    const type = PROMPT_TYPE_VALUES.find((option) => option === value);
 
-    const type = value as PromptType | '';
-
-    setSelectedType(type || undefined);
+    setSelectedType(type);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchQuery(e.target.value);
   };
 
-  const handleKeyDown = React.useCallback(
-    (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
-        e.preventDefault();
-        setShowCreateForm(true);
-        return;
-      }
+  // Scoped to the toolbar subtree (see the wrapping div's onKeyDown) so the
+  // Ctrl/Cmd+N shortcut only fires when focus is inside this editor, rather
+  // than hijacking the shortcut for the entire page via a document listener.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      e.preventDefault();
+      setShowCreateForm(true);
+      return;
+    }
 
-      if (e.key === 'Escape' && showCreateForm) {
-        e.preventDefault();
-        setShowCreateForm(false);
-        return;
-      }
-    },
-    [showCreateForm],
-  );
+    if (e.key === 'Escape' && showCreateForm) {
+      e.preventDefault();
+      setShowCreateForm(false);
+      return;
+    }
+  };
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
 
   // 🔌 Short Circuit
 
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <div
         className={classnames(
           'flex items-center justify-between border-b border-gray-700 bg-gray-900 p-4',
@@ -146,6 +136,6 @@ export const EditorToolbar = (
         onCancel={() => setShowCreateForm(false)}
         onSuccess={handleFileCreated}
       />
-    </>
+    </div>
   );
 };

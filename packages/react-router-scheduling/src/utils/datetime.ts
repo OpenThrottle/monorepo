@@ -57,7 +57,16 @@ export function toZonedDateTime(
 /**
  * Convert a `Date` or ISO 8601 string to a `Temporal.PlainDate` (calendar date,
  * no time). A date-only string (`YYYY-MM-DD`) is taken verbatim; any other value
- * uses its local calendar date. Use for all-day events.
+ * uses its **host-local** calendar date (`getFullYear/getMonth/getDate`). Use for
+ * all-day events.
+ *
+ * Prefer a `YYYY-MM-DD` string for all-day values: it is unambiguous and
+ * host-timezone-independent. A `Date` (or instant-bearing string) near midnight
+ * resolves to a different calendar day depending on the host `TZ` — e.g. the
+ * instant `2026-06-15T23:30:00Z` is June 15 in UTC but June 16 in `Asia/Tokyo` —
+ * so the all-day day can differ from the instant-based timed path
+ * ({@link temporalToISOString}). This is by design (an all-day date has no zone),
+ * but the only way to pin a specific calendar day is to pass the date-only string.
  *
  * @publicApi
  */

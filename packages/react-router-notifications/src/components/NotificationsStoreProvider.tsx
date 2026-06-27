@@ -1,4 +1,4 @@
-import {
+import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
@@ -11,6 +11,7 @@ import {
   reducer,
   saveToStorage,
 } from '../data';
+import { NotificationsAnnouncer } from './NotificationsAnnouncer';
 
 export interface NotificationsStoreProviderProps {
   readonly children: React.ReactNode;
@@ -22,6 +23,8 @@ export interface NotificationsStoreProviderProps {
 /**
  * @description Provider that holds notifications state (in-memory, optional localStorage).
  * Does not connect to WebSocket; use with NotificationsSocketProvider and onNotification.
+ *
+ * @publicApi
  */
 export function NotificationsStoreProvider(
   props: NotificationsStoreProviderProps,
@@ -33,8 +36,17 @@ export function NotificationsStoreProvider(
   const [state, dispatch] = React.useReducer(reducer, [], (initial) =>
     persist ? loadFromStorage(resolvedStorageKey) : initial,
   );
+  const [announcement, setAnnouncement] = React.useState<{
+    message: string;
+    severity: NotificationPayload['severity'];
+  } | null>(null);
 
   // Setup
+  // Tracks the newest notification id already announced so hydration / read /
+  // dismiss reducer passes (which keep the head id stable) never re-announce.
+  const lastAnnouncedIdRef = React.useRef<string | null>(
+    state.length > 0 ? state[0].id : null,
+  );
 
   // Handlers
   const addNotification = React.useCallback(
@@ -77,6 +89,18 @@ export function NotificationsStoreProvider(
     if (persist) saveToStorage(resolvedStorageKey, state);
   }, [persist, resolvedStorageKey, state]);
 
+  React.useEffect(() => {
+    const newest = state[0];
+    if (newest === undefined) return;
+    if (newest.id === lastAnnouncedIdRef.current) return;
+
+    lastAnnouncedIdRef.current = newest.id;
+    setAnnouncement({
+      message: newest.payload.message,
+      severity: newest.payload.severity,
+    });
+  }, [state]);
+
   const value: NotificationsStoreContextValue = React.useMemo(
     () => ({
       addNotification,
@@ -104,6 +128,10 @@ export function NotificationsStoreProvider(
 
   return (
     <NotificationsStoreContext.Provider value={value}>
+      <NotificationsAnnouncer
+        message={announcement?.message ?? null}
+        severity={announcement?.severity ?? null}
+      />
       {children}
     </NotificationsStoreContext.Provider>
   );

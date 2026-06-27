@@ -12,6 +12,7 @@ import type {
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { NOTIFICATIONS_STORAGE_KEY } from '../config/index';
 
+/** @publicApi */
 export interface SystemNotificationsPreference {
   readonly enabled: boolean;
   /** When true, show system notification only when the tab is not focused. */
@@ -29,10 +30,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * @description Reads system notification preference from localStorage.
  * Defaults to disabled so we only show system notifications after the user opts in.
+ *
+ * @publicApi
  */
 export function getSystemNotificationsPreference(): SystemNotificationsPreference {
-  // console.log('🟢 6 - getSystemNotificationsPreference');
-
   if (!IS_BROWSER) {
     return DEFAULT_PREFERENCE;
   }
@@ -48,8 +49,6 @@ export function getSystemNotificationsPreference(): SystemNotificationsPreferenc
     const enabled = o.enabled === true;
     const onlyWhenBackground = o.onlyWhenBackground === true ? true : undefined;
 
-    // console.log('🟢 7 - ', { enabled, onlyWhenBackground });
-
     return { enabled, onlyWhenBackground };
   } catch {
     return DEFAULT_PREFERENCE;
@@ -59,6 +58,8 @@ export function getSystemNotificationsPreference(): SystemNotificationsPreferenc
 /**
  * @description Writes system notification preference to localStorage.
  * Use from UI (e.g. NotificationBell footer) to persist user choices.
+ *
+ * @publicApi
  */
 export function setSystemNotificationsPreference(
   pref: SystemNotificationsPreference,
@@ -92,6 +93,8 @@ function isSupportedAndGranted(): boolean {
  * Only runs when: API supported, permission granted, user preference enabled, and
  * (if onlyWhenBackground) tab is not visible. On click: focus window and navigate to
  * payload.link if present.
+ *
+ * @publicApi
  */
 export function showSystemNotification(
   event: NotificationEventName,
@@ -132,12 +135,6 @@ export function showSystemNotification(
       notification.close();
     };
   } catch {
-    console.error('🔴 Error showing system notification', {
-      event,
-      navigate,
-      payload,
-    });
-
     // Ignore constructor or onclick errors (e.g. some browsers restrict behavior).
   }
 }

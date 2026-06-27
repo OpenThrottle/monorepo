@@ -22,7 +22,6 @@ export interface EditorAtom {
   readonly isLoading: boolean;
   readonly searchQuery: string;
   readonly selectedType: PromptType | undefined;
-  readonly tabIndex: number;
   readonly tabs: readonly EditorFile[];
 }
 
@@ -35,7 +34,6 @@ export const editorAtomDefaults: EditorAtom = {
   isLoading: false,
   searchQuery: '',
   selectedType: undefined,
-  tabIndex: 0,
   tabs: [],
 };
 

@@ -3,17 +3,18 @@ import {
   REGEX_KEBAB_CASE,
   REGEX_PASCAL_CASE,
 } from '../config';
-import type { EditorLanguage, FileExtension } from '../config';
+import type { EditorLanguage } from '../config';
 import type { EditorFile } from '../data/atom.editor';
+
+const FILE_EXTENSION_LANGUAGES: Readonly<Record<string, EditorLanguage>> =
+  FILE_EXTENSIONS;
 
 /**
  * @description Get the Monaco language identifier from a file extension.
+ * Accepts any raw extension string; unknown extensions fall back to `markdown`.
  */
-export const getLanguageFromExt = (ext: FileExtension): EditorLanguage => {
-  // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const lowerExt = ext.toLowerCase() as FileExtension;
-  const language = FILE_EXTENSIONS[lowerExt];
+export const getLanguageFromExt = (ext: string): EditorLanguage => {
+  const language = FILE_EXTENSION_LANGUAGES[ext.toLowerCase()];
 
   if (!language) {
     return 'markdown';
@@ -38,9 +39,7 @@ export const parseFilePath = (
   const name = parts[parts.length - 1] ?? '';
   const extension = name.split('.').pop() ?? '';
 
-  // FIXME: Swap out eventually
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const language = getLanguageFromExt(extension as unknown as FileExtension);
+  const language = getLanguageFromExt(extension);
 
   return {
     extension,
@@ -153,6 +152,15 @@ export const getFilenameError = (filename: string): string => {
   if (extension === 'tsx' || extension === 'jsx') {
     if (!REGEX_PASCAL_CASE.test(nameWithoutExt)) {
       return 'TSX/JSX component files must be in PascalCase (e.g., MyComponent.tsx)';
+    }
+  }
+
+  if (extension === 'md' || extension === 'mdc') {
+    if (
+      !REGEX_KEBAB_CASE.test(nameWithoutExt) &&
+      !REGEX_PASCAL_CASE.test(nameWithoutExt)
+    ) {
+      return 'Markdown files must be in kebab-case (e.g., my-prompt.md) or PascalCase (e.g., MyPrompt.md)';
     }
   }
 

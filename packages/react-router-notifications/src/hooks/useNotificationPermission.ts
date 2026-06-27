@@ -8,6 +8,7 @@ import * as React from 'react';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { NotificationPermissionState } from '../types';
 
+/** @publicApi */
 export interface UseNotificationPermissionResult {
   /** Whether the page is in a secure context (HTTPS or localhost). */
   readonly isSecureContext: boolean;
@@ -36,6 +37,8 @@ function getPermission(): NotificationPermissionState {
 /**
  * @description Exposes Web Notifications API permission state and a request function.
  * Use for "Enable desktop notifications" UI and to gate showing system notifications.
+ *
+ * @publicApi
  */
 export const useNotificationPermission =
   (): UseNotificationPermissionResult => {

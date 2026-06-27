@@ -8,7 +8,8 @@
     "@monaco-editor/react": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "classnames": "catalog:",
-    "jotai": "catalog:"
+    "jotai": "catalog:",
+    "monaco-editor": "catalog:"
   },
   "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
   "devDependencies": {},

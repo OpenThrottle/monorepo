@@ -3,6 +3,8 @@
  * Defines prompt types, validation patterns, and shared constants.
  */
 
+export * from './loader';
+
 /**
  * @description Prompt document types representing different AI workflow document purposes.
  * These match the database schema types for custom prompts.

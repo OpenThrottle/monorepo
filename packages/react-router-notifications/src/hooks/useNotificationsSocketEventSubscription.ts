@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { NotificationSocketEventListener } from '../types';
 import { useNotificationsSocket } from './useNotificationsSocket';
 
+/** @publicApi */
 export interface UseNotificationsSocketEventSubscriptionOptions {
   readonly enabled?: boolean;
 }
@@ -10,6 +11,8 @@ export interface UseNotificationsSocketEventSubscriptionOptions {
  * @description Append to a debugger log (or similar) from the shared notifications socket
  * without registering duplicate `socket.on` handlers. Requires
  * {@link NotificationsSocketProvider} above in the tree.
+ *
+ * @publicApi
  */
 export const useNotificationsSocketEventSubscription = (
   onEvent: NotificationSocketEventListener | undefined,

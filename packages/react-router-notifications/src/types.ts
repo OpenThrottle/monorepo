@@ -3,6 +3,7 @@ import type {
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 
+/** @publicApi */
 export interface NotificationInstance {
   /** ISO 8601 when the app received the notification. */
   readonly createdAt: string;
@@ -13,14 +14,22 @@ export interface NotificationInstance {
   readonly read: boolean;
 }
 
-/** Permission state: API supported and permission result, or unsupported (no API / not secure). */
+/**
+ * Permission state: API supported and permission result, or unsupported (no API / not secure).
+ *
+ * @publicApi
+ */
 export type NotificationPermissionState =
   | 'default'
   | 'denied'
   | 'granted'
   | 'unsupported';
 
-/** Connection status for the notifications socket. */
+/**
+ * Connection status for the notifications socket.
+ *
+ * @publicApi
+ */
 export type NotificationSocketStatus =
   | 'connected'
   | 'connecting'
@@ -28,7 +37,11 @@ export type NotificationSocketStatus =
   | 'error'
   | 'reconnecting';
 
-/** @description Listener invoked for each Socket.IO notification event (shared socket fan-out). */
+/**
+ * @description Listener invoked for each Socket.IO notification event (shared socket fan-out).
+ *
+ * @publicApi
+ */
 export type NotificationSocketEventListener = (
   event: NotificationEventName,
   payload: NotificationPayload,
