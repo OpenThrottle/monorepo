@@ -16,22 +16,26 @@ export const PlanTabOutput = (
   const { chunks, className: _className } = props;
 
   // Hooks
+  const markdown = React.useMemo(
+    () =>
+      chunks
+        .map((chunk) => {
+          const iter =
+            chunk.iteration != null
+              ? `iteration ${chunk.iteration}`
+              : 'iteration ?';
+          const when =
+            typeof chunk.createdAt === 'string'
+              ? chunk.createdAt
+              : String(chunk.createdAt);
+
+          return `### ${when} (${iter})\n\n${chunk.content}`;
+        })
+        .join('\n\n---\n\n'),
+    [chunks],
+  );
 
   // Setup
-  const markdown = chunks
-    .map((chunk) => {
-      const iter =
-        chunk.iteration != null
-          ? `iteration ${chunk.iteration}`
-          : 'iteration ?';
-      const when =
-        typeof chunk.createdAt === 'string'
-          ? chunk.createdAt
-          : String(chunk.createdAt);
-
-      return `### ${when} (${iter})\n\n${chunk.content}`;
-    })
-    .join('\n\n---\n\n');
 
   // Handlers
 
