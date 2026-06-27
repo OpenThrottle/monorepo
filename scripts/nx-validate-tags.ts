@@ -1,9 +1,10 @@
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'node:url';
 
 /**
  * @description Valid technology tag values as defined in the reference document
  */
-const VALID_TECHNOLOGY_TAGS = [
+export const VALID_TECHNOLOGY_TAGS = [
   'llm',
   'nestjs',
   'nodejs',
@@ -20,33 +21,35 @@ type ValidTechnologyTag = (typeof VALID_TECHNOLOGY_TAGS)[number];
 /**
  * @description Validates that a technology tag value is in the allowed list
  */
-const isValidTechnologyTag = (tag: string): tag is ValidTechnologyTag => {
+export const isValidTechnologyTag = (
+  tag: string,
+): tag is ValidTechnologyTag => {
   return VALID_TECHNOLOGY_TAGS.includes(tag as ValidTechnologyTag);
 };
 
 /**
  * @description Extracts technology tags from project tags
  */
-const extractTechnologyTags = (tags: readonly string[]): string[] => {
+export const extractTechnologyTags = (tags: readonly string[]): string[] => {
   return tags
     .filter((tag) => tag.startsWith('technology:'))
     .map((tag) => tag.replace('technology:', ''));
 };
 
-const VALID_PRODUCTION_VALUES = ['true', 'false'] as const;
+export const VALID_PRODUCTION_VALUES = ['true', 'false'] as const;
 
 type ValidProductionValue = (typeof VALID_PRODUCTION_VALUES)[number];
 
 /**
  * @description Extracts production tag values from project tags
  */
-const extractProductionTags = (tags: readonly string[]): string[] => {
+export const extractProductionTags = (tags: readonly string[]): string[] => {
   return tags
     .filter((tag) => tag.startsWith('production:'))
     .map((tag) => tag.replace('production:', ''));
 };
 
-const isValidProductionValue = (
+export const isValidProductionValue = (
   value: string,
 ): value is ValidProductionValue => {
   return VALID_PRODUCTION_VALUES.includes(value as ValidProductionValue);
@@ -55,7 +58,7 @@ const isValidProductionValue = (
 /**
  * @description Validates technology and production tags for a single project
  */
-interface ValidationResult {
+export interface ValidationResult {
   readonly conflictingNodejsTypescript: boolean;
   readonly hasProductionTag: boolean;
   readonly hasTechnologyTag: boolean;
@@ -66,7 +69,7 @@ interface ValidationResult {
   readonly technologyTags: readonly string[];
 }
 
-const validateProjectTags = (
+export const validateProjectTags = (
   projectName: string,
   tags: readonly string[],
 ): ValidationResult => {
@@ -95,9 +98,28 @@ const validateProjectTags = (
 };
 
 /**
+ * @description True when a single result carries any tag violation (missing/duplicate/invalid
+ * technology or production tags, or the conflicting nodejs+typescript combination).
+ */
+export const resultHasErrors = (result: ValidationResult): boolean =>
+  !result.hasTechnologyTag ||
+  !result.hasProductionTag ||
+  result.multipleProductionTags ||
+  result.invalidTechnologyTags.length > 0 ||
+  result.invalidProductionTags.length > 0 ||
+  result.conflictingNodejsTypescript;
+
+/**
+ * @description True when any project in the set has a tag violation.
+ */
+export const hasValidationErrors = (
+  results: readonly ValidationResult[],
+): boolean => results.some(resultHasErrors);
+
+/**
  * @description Formats validation results for display
  */
-const formatResults = (results: readonly ValidationResult[]): string => {
+export const formatResults = (results: readonly ValidationResult[]): string => {
   const missingTechnologyTags = results.filter((r) => !r.hasTechnologyTag);
   const missingProductionTags = results.filter((r) => !r.hasProductionTag);
   const multipleProductionTags = results.filter(
@@ -267,17 +289,7 @@ const main = async (): Promise<void> => {
     const output = formatResults(results);
     console.log(output);
 
-    const hasErrors = results.some(
-      (r) =>
-        !r.hasTechnologyTag ||
-        !r.hasProductionTag ||
-        r.multipleProductionTags ||
-        r.invalidTechnologyTags.length > 0 ||
-        r.invalidProductionTags.length > 0 ||
-        r.conflictingNodejsTypescript,
-    );
-
-    if (hasErrors) {
+    if (hasValidationErrors(results)) {
       console.log('📚 For more information, see: docs/monorepo/NX/tags.md');
       console.log(
         "\n💡 To view a project's tags, run: nx show project <project-name>",
@@ -294,4 +306,6 @@ const main = async (): Promise<void> => {
   process.exit(0);
 };
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}

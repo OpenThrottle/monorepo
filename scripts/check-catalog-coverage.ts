@@ -2,6 +2,7 @@
 
 import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * @description Enforces 100% pnpm catalog coverage: every external dependency in every
@@ -10,7 +11,7 @@ import { join } from 'node:path';
  * policy — intentionally wide peer ranges on published packages stay literal.
  */
 
-const WORKSPACE_GLOBS = [
+export const WORKSPACE_GLOBS = [
   'package.json',
   'applications/*/package.json',
   'infra/package.json',
@@ -18,21 +19,56 @@ const WORKSPACE_GLOBS = [
   'tools/*/package.json',
 ];
 
-const CHECKED_SECTIONS = [
+export const CHECKED_SECTIONS = [
   'dependencies',
   'devDependencies',
   'optionalDependencies',
 ] as const;
 
-interface Violation {
+export interface Violation {
   dependency: string;
   file: string;
   section: string;
   spec: string;
 }
 
-const isAllowedSpec = (spec: string): boolean =>
+type Manifest = Record<string, Record<string, string> | undefined>;
+
+interface FileManifest {
+  file: string;
+  manifest: Manifest;
+}
+
+/**
+ * @description A dependency spec is allowed when it uses the `catalog:` protocol or a
+ * `workspace:` reference; everything else is a literal version and a violation.
+ */
+export const isAllowedSpec = (spec: string): boolean =>
   spec.startsWith('catalog:') || spec.startsWith('workspace:');
+
+/**
+ * @description Pure violation collector — given parsed manifests, returns every checked
+ * dependency whose spec is not catalog/workspace-protocol. Exported for unit testing.
+ */
+export const findCatalogViolations = (
+  manifests: readonly FileManifest[],
+): Violation[] => {
+  const violations: Violation[] = [];
+
+  for (const { file, manifest } of manifests) {
+    for (const section of CHECKED_SECTIONS) {
+      for (const [dependency, spec] of Object.entries(
+        manifest[section] ?? {},
+      )) {
+        if (!isAllowedSpec(spec)) {
+          violations.push({ dependency, file, section, spec });
+        }
+      }
+    }
+  }
+
+  return violations;
+};
 
 async function main(): Promise<void> {
   const files = (
@@ -48,23 +84,11 @@ async function main(): Promise<void> {
       file,
       manifest: JSON.parse(
         await readFile(join(process.cwd(), file), 'utf8'),
-      ) as Record<string, Record<string, string> | undefined>,
+      ) as Manifest,
     })),
   );
 
-  const violations: Violation[] = [];
-
-  for (const { file, manifest } of manifests) {
-    for (const section of CHECKED_SECTIONS) {
-      for (const [dependency, spec] of Object.entries(
-        manifest[section] ?? {},
-      )) {
-        if (!isAllowedSpec(spec)) {
-          violations.push({ dependency, file, section, spec });
-        }
-      }
-    }
-  }
+  const violations = findCatalogViolations(manifests);
 
   if (violations.length > 0) {
     console.error('❌ Non-catalog external dependency specs found:\n');
@@ -80,4 +104,6 @@ async function main(): Promise<void> {
   console.log('✅ pnpm catalog coverage is 100%.');
 }
 
-await main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  await main();
+}

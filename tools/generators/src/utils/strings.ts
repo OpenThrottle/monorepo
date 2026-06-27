@@ -1,12 +1,11 @@
 /**
  * Splits a comma-separated string into normalized values.
- * Collapses repeated spaces, trims items, and supports `a,b` and `a, b`.
+ * Trims each item and drops empty entries, so `a,b`, `a, b` and `a,,b` all
+ * yield the non-empty tokens.
  */
 export const parseCommaSeparatedValues = (value: string): string[] => {
-  let normalized = value.trim();
-
-  normalized = normalized.replace(/\s+/g, ' ');
-  normalized = normalized.replace(', ', ',');
-
-  return normalized.split(',').map((n) => n.trim());
+  return value
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean);
 };

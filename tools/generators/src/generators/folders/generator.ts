@@ -3,7 +3,10 @@ import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { getCommonVariables } from '../../utils/index';
-import { getTargetApplication } from '../../utils/questions';
+import {
+  getConfigConfirmation,
+  getTargetApplication,
+} from '../../utils/questions';
 import { REGEX_SLUG } from '../../utils/regex';
 import { getMonorepoApplications } from '../../utils';
 import { writeJsonToStdout } from '../../utils/output';
@@ -138,7 +141,9 @@ export async function foldersGenerator(
   const templates = join(__dirname, 'files');
 
   const data = { ...variables, destination, templates };
-  // await getConfigConfirmation(data);
+  if (interactive) {
+    await getConfigConfirmation(data);
+  }
 
   generateFiles(tree, templates, destination, data);
 

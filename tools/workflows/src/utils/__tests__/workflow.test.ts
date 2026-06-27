@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { runWorktreeWorkflow } from '../workflow';
 import { WorktreeTargetsTracker } from '../worktree-targets';
 
@@ -161,6 +161,56 @@ describe('runWorktreeWorkflow', () => {
       expect(result.released).toBe(true);
     } finally {
       rmSync(dir, { force: true, recursive: true });
+    }
+  });
+});
+
+describe('runWorktreeWorkflow with throwing ensureCommit', () => {
+  it('releases the target and reports a failed ensureCommit when ensureCommit throws', async () => {
+    // ensureCommit shells out via spawnSync git and could throw (now or via a
+    // future hook). Stub it to throw and assert the lock is still released so
+    // the in-memory pool never permanently loses a slot.
+    vi.resetModules();
+    vi.doMock('../parent-job', async () => {
+      const actual =
+        await vi.importActual<typeof import('../parent-job')>('../parent-job');
+      return {
+        ...actual,
+        parentJobEnsureCommitBeforeRelease: () => {
+          throw new Error('ensure-commit spawn boom');
+        },
+      };
+    });
+
+    const { runWorktreeWorkflow: runWithMock } = await import('../workflow');
+    const { WorktreeTargetsTracker: TrackerWithMock } =
+      await import('../worktree-targets');
+
+    const dir = createTempGitRepo();
+    const tracker = new TrackerWithMock([{ id: 'wt1', path: dir }]);
+    try {
+      const result = await runWithMock({
+        acquire: {
+          baseBranch: 'main',
+          branchName: 'ralph/throw-ensure',
+          lockedBy: 'job-1',
+        },
+        ensureCommit: { runChecks: false },
+        runLoop: async () => ({ ok: true }),
+        tracker,
+      });
+      expect(result.acquire.ok).toBe(true);
+      expect(result.loop?.ok).toBe(true);
+      expect(result.ensureCommit?.ok).toBe(false);
+      if (result.ensureCommit && !result.ensureCommit.ok) {
+        expect(result.ensureCommit.reason).toBe('working_tree_dirty');
+      }
+      expect(result.released).toBe(true);
+      expect(tracker.hasAvailableTarget()).toBe(true);
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+      vi.doUnmock('../parent-job');
+      vi.resetModules();
     }
   });
 });

@@ -8,10 +8,11 @@ import {
 } from '@nx/devkit';
 import { getCommonVariables, getGeneratorOverview } from '../../utils';
 import {
+  getComponentNames,
+  getConfigConfirmation,
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions';
-import { getComponentNames } from '../../utils/questions';
 
 export interface ReactComponentGeneratorSchema {
   readonly destination?: string;
@@ -63,7 +64,9 @@ export async function componentGenerator(
     const variables = getCommonVariables(name);
 
     const data = { ...variables, destination, name, templates };
-    // await getConfigConfirmation(data);
+    if (interactive) {
+      await getConfigConfirmation(data);
+    }
 
     generateFiles(tree, templates, destination, data);
   }

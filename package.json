@@ -384,12 +384,22 @@
       "format-write": {},
       "ingest-agent-assets": {},
       "validate-agent-assets-frontmatter": {},
-      "DISABLED______knip": {},
+      "knip": {},
       "lint": {
         "executor": "nx:noop"
       },
       "test": {
-        "executor": "nx:noop"
+        "executor": "@nx/vitest:test",
+        "cache": true,
+        "options": {
+          "configFile": "{projectRoot}/vitest.config.ts",
+          "passWithNoTests": true,
+          "reportsDirectory": "{workspaceRoot}/coverage/monorepo",
+          "watch": false
+        },
+        "outputs": [
+          "{workspaceRoot}/coverage/monorepo"
+        ]
       },
       "typecheck": {}
     }
@@ -412,13 +422,13 @@
     "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",
-    "check:local:affected-test": "pnpm nx affected --target=test --exclude='*,!@tools/workflows' --parallel --nxBail",
+    "check:local:affected-test": "pnpm nx affected --target=test --parallel --nxBail",
     "check:local:affected-typecheck-tests": "pnpm nx affected --target=typecheck-tests --parallel",
     "check:local:codegen": "pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel",
     "check:local:format": "pnpm nx run monorepo:format-check",
     "check:local:validate-tags": "pnpm nx:validate-tags",
+    "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:verify": "pnpm nx run openthrottle-server:verify-graphql-schema-sync && pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
-    "___check:local:knip": "pnpm nx run monorepo:knip",
     "clean": "pnpm run \"/^clean:.*/\"",
     "format": "pnpm nx run monorepo:format-write",
     "format:check": "pnpm nx run monorepo:format-check",
@@ -433,20 +443,18 @@
     "clean:react-router": "pnpm dlx rimraf --glob **/.react-router",
     "clean:tsbuildinfo": "pnpm dlx rimraf --glob **/*.tsbuildinfo",
     "clean:vercel": "pnpm dlx rimraf --glob **/.vercel",
+    "clean:snapshots": "pnpm dlx rimraf --glob **/__snapshots__",
     "clean:vite": "pnpm dlx rimraf --glob **/vite*.config.ts.timestamp*",
-    "__clean:snapshots": "pnpm dlx rimraf --glob **/__snapshots__",
     "database:backup": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-backup.ts",
     "database:build": "docker compose build redis postgres",
     "database:import-agent-assets": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-ingest-agent-assets.ts",
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
     "database:bootstrap-default-user": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/bootstrap-default-user.ts",
     "database:bootstrap-service-accounts": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/bootstrap-service-account-credentials.ts",
-    "___database:migrate": "pnpm run database:backup && ",
     "database:migrate": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-migrations.ts",
     "database:reset": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-reset.ts",
     "database:start": "docker compose up -d redis postgres",
     "database:stop": "docker compose down --remove-orphans",
-    "__database:import-docs": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-ingest-docs.ts",
     "generate": "pnpm run generate:list",
     "generate:folders": "nx generate @tools/generators:folders --interactive",
     "generate:generator": "nx generate @nx/plugin:generator $1 --nameAndDirectoryFormat=derived --project=@tools/generators",
@@ -465,14 +473,12 @@
     "start": "pnpm run start:docker && pnpm run start:openthrottle",
     "start:docker": "pnpm run database:start",
     "start:openthrottle": "nx run-many -t start -p openthrottle-developer openthrottle-server",
-    "__sync:openthrottle:profile:force": "git push openthrottle-profile `git subtree split --prefix applications/openthrottle main`:main --force",
     "sync": "pnpm run \"/^sync:openthrottle:.*/\"",
     "sync:openthrottle": "git subtree push --prefix=applications/openthrottle openthrottle main",
     "sync:openthrottle:developer": "git subtree push --prefix=applications/openthrottle-developer openthrottle-developer main",
     "sync:openthrottle:profile": "git subtree push --prefix=applications/openthrottle openthrottle-profile main",
     "sync:openthrottle:server": "git subtree push --prefix=applications/openthrottle-server openthrottle-server main",
     "sync:openthrottle:website": "git subtree push --prefix=applications/openthrottle-website openthrottle-website main",
-    "tools:args": "node --env-file .env --experimental-strip-types ./scripts/_temp.ts",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts"
   },

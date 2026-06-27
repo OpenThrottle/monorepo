@@ -10,7 +10,7 @@ This table is the published outcome of the **Repository health, DX, and correctn
 | -------- | ------------------------------------------------------------- | ------------------------------------------------- |
 | **P0**   | Contract and type safety on every affected change             | **Yes** — must pass                               |
 | **P1**   | Structural integrity (graph, package-specific codegen guards) | **Yes** — must pass                               |
-| **P2**   | Automated tests with **phased** project scope                 | **Yes** when affected projects are in scope       |
+| **P2**   | Automated tests for **all affected** projects                 | **Yes** when affected projects are in scope       |
 | **P3**   | Hygiene / debt ceilings (report-only, no `knip --fix` in CI)  | **Yes** — fails when issue count exceeds baseline |
 | **P4**   | Informational, cost-deferred, or not yet rolled out           | **No** (disabled or local-only)                   |
 
@@ -26,32 +26,28 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md#testing-typecheck-tests-versus-test)
 
 ## Gate table (P0–P4)
 
-| Priority | Gate                                          | CI job / step                              | Command / target                                                                                                                 | Owner                                     | Merge blocker    | Status                                                                    |
-| -------- | --------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------- |
-| **P0**   | Affected GraphQL + React Router codegen drift | `build` → Codegen Tasks                    | `nx affected --target=codegen-graphql,codegen-react-router` then `git diff --exit-code`                                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P0**   | Lint, typecheck, typecheck-tests (affected)   | `build`                                    | `nx affected --target=lint,typecheck,typecheck-tests`                                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P1**   | Nx project graph circular dependencies        | `nx-circular-dependencies`                 | `pnpm exec tsx ./scripts/nx-circular-dependencies.ts`                                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P1**   | Root `schema.gql` matches server schema       | `build`                                    | `nx run openthrottle-server:verify-graphql-schema-sync`                                                                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P1**   | Agentic Ralph GraphQL codegen drift           | `build` → GraphQL codegen drift guard      | `nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp` | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P1**   | MCP developer GraphQL codegen drift           | `build` → GraphQL codegen drift guard      | (same step as Agentic Ralph row)                                                                                                 | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
-| **P2**   | Vitest (phased: server, MCP, workflows)       | `build` → NX affected Vitest (phased gate) | `nx affected --target=test` with exclude `*,!openthrottle-server,!@openthrottle/openthrottle-mcp,!@tools/workflows`              | [visormatt](https://github.com/visormatt) | Yes (affected)   | **On** (phased)                                                           |
-| **P3**   | Knip dead-code baseline                       | `knip-report`                              | `nx run monorepo:knip-ci` — see [Knip.md](./Knip.md)                                                                             | [visormatt](https://github.com/visormatt) | Yes (regression) | **On**                                                                    |
-| **P4**   | Full monorepo `test` (all apps/packages)      | — (commented `parallelize-tasks` matrix)   | `scripts/parallelize-tasks.ts` + `nx affected --target=test`                                                                     | [visormatt](https://github.com/visormatt) | —                | **Off** — track via OT plan _Improve test coverage and CI test execution_ |
-| **P4**   | Knip report without baseline (local / ad hoc) | —                                          | `nx run monorepo:knip`                                                                                                           | [visormatt](https://github.com/visormatt) | No               | Local / optional                                                          |
-| **P4**   | Nx dependency graph HTML artifact             | `nx-dependency-graph`                      | `scripts/nx-dependency-graph.ts`                                                                                                 | [visormatt](https://github.com/visormatt) | No               | **Off** (`if: false`) — see [nx-graph.md](./nx-graph.md)                  |
-| **P4**   | `nx release` publish                          | `nx-release` workflow                      | `nx release`                                                                                                                     | [visormatt](https://github.com/visormatt) | No               | **Off** (workflow disabled)                                               |
+| Priority | Gate                                          | CI job / step                            | Command / target                                                                                                                 | Owner                                     | Merge blocker    | Status                                                                                             |
+| -------- | --------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| **P0**   | Affected GraphQL + React Router codegen drift | `build` → Codegen Tasks                  | `nx affected --target=codegen-graphql,codegen-react-router` then `git diff --exit-code`                                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P0**   | Lint, typecheck, typecheck-tests (affected)   | `build`                                  | `nx affected --target=lint,typecheck,typecheck-tests`                                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P1**   | Nx project graph circular dependencies        | `nx-circular-dependencies`               | `pnpm exec tsx ./scripts/nx-circular-dependencies.ts`                                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P1**   | Root `schema.gql` matches server schema       | `build`                                  | `nx run openthrottle-server:verify-graphql-schema-sync`                                                                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P1**   | Agentic Ralph GraphQL codegen drift           | `build` → GraphQL codegen drift guard    | `nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp` | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P1**   | MCP developer GraphQL codegen drift           | `build` → GraphQL codegen drift guard    | (same step as Agentic Ralph row)                                                                                                 | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                                             |
+| **P2**   | Vitest (all affected projects)                | `build` → `NX <target> affected` step    | `nx affected --target=lint,typecheck,typecheck-tests,test` (the matrix `target`; no exclude)                                     | [visormatt](https://github.com/visormatt) | Yes (affected)   | **On** (full affected)                                                                             |
+| **P3**   | Knip dead-code baseline                       | `knip-report`                            | `nx run monorepo:knip-ci` — see [Knip.md](./Knip.md)                                                                             | [visormatt](https://github.com/visormatt) | Yes (regression) | **On**                                                                                             |
+| **P4**   | Parallelized full monorepo `test` (sharded)   | — (commented `parallelize-tasks` matrix) | `scripts/parallelize-tasks.ts` + `nx affected --target=test`                                                                     | [visormatt](https://github.com/visormatt) | —                | **Off** — sharding optimization, tracked via OT plan _Improve test coverage and CI test execution_ |
+| **P4**   | Knip report without baseline (local / ad hoc) | —                                        | `nx run monorepo:knip`                                                                                                           | [visormatt](https://github.com/visormatt) | No               | Local / optional                                                                                   |
+| **P4**   | Nx dependency graph HTML artifact             | `nx-dependency-graph`                    | `scripts/nx-dependency-graph.ts`                                                                                                 | [visormatt](https://github.com/visormatt) | No               | **Off** (`if: false`) — see [nx-graph.md](./nx-graph.md)                                           |
+| **P4**   | `nx release` publish                          | `nx-release` workflow                    | `nx release`                                                                                                                     | [visormatt](https://github.com/visormatt) | No               | **Off** (workflow disabled)                                                                        |
 
 **Owner** is the GitHub username accountable for keeping the gate green, tuning scope, and owning follow-up OT plans. Infra gates (P0–P1, workflow wiring) and phased test rollout are currently owned by **visormatt**; expand owners when another maintainer takes a gate (update this table in the same PR).
 
-## Phased test gate (P2)
+## Test gate (P2)
 
-The P2 gate intentionally does **not** run Vitest for the full monorepo. Only these projects are in the allowlist when affected:
+The P2 gate runs Vitest (`test`) for **all affected projects** — there is no per-project allowlist or exclude. CI runs the matrix target `lint,typecheck,typecheck-tests,test` in a single `nx affected` invocation (see `.github/workflows/continuous-integration.yml`, step `NX <target> affected`). The earlier "phased gate" step that excluded everything except `openthrottle-server`, `@openthrottle/openthrottle-mcp`, and `@tools/workflows` is commented out in the workflow.
 
-- `openthrottle-server`
-- `@openthrottle/openthrottle-mcp`
-- `@tools/workflows`
-
-React Router applications (for example `openthrottle-developer`) and other packages remain out of CI test until their suites are stable. Expanding P2 is tracked under **Improve test coverage and CI test execution** (OpenThrottle).
+To mirror this locally, `pnpm run check:local:affected-test` runs `nx affected --target=test --parallel --nxBail` (no exclude), so a green `check:local` exercises the same affected test set CI does. The P4 row below tracks an optional sharding optimization (`parallelize-tasks.ts`), not a narrower scope.
 
 ## Related OpenThrottle plans (audit unwind)
 
@@ -78,10 +74,8 @@ pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 pnpm nx run openthrottle-server:verify-graphql-schema-sync
 pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
-# P2 — phased tests
-pnpm dlx nx affected --target=test \
-  --exclude='*,!openthrottle-server,!@openthrottle/openthrottle-mcp,!@tools/workflows' \
-  --parallel --nxBail
+# P2 — tests (all affected projects, mirrors CI; same as `pnpm run check:local:affected-test`)
+pnpm dlx nx affected --target=test --parallel --nxBail
 
 # P3 — Knip baseline
 pnpm nx run monorepo:knip-ci

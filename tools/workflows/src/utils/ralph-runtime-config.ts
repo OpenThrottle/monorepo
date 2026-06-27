@@ -24,6 +24,43 @@ export {
 export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;
 
 /**
+ * @description Largest delay Node's timers accept (`2^31 - 1` ms, ~24.8 days).
+ * Anything above this silently overflows `setTimeout` back to ~1ms, so an
+ * iteration timeout would fire almost immediately with a misleading message.
+ */
+export const MAX_ITERATION_TIMEOUT_MS = 2_147_483_647 as const;
+
+/** @description Upper bound for `--iteration-timeout` in **seconds**, derived from {@link MAX_ITERATION_TIMEOUT_MS}. */
+export const MAX_ITERATION_TIMEOUT_SECONDS = Math.floor(
+  MAX_ITERATION_TIMEOUT_MS / 1000,
+);
+
+/**
+ * @description Validates an iteration timeout in **seconds** and converts it to milliseconds.
+ * Rejects non-positive values and any value whose millisecond product would overflow
+ * Node's `setTimeout` range (see {@link MAX_ITERATION_TIMEOUT_MS}). Returns `undefined`
+ * for `undefined`/`< 1` inputs so callers can treat "unset" uniformly.
+ *
+ * @throws if `seconds` is positive but `seconds * 1000` exceeds {@link MAX_ITERATION_TIMEOUT_MS}.
+ */
+export function resolveIterationTimeoutMs(
+  seconds: number | undefined,
+): number | undefined {
+  if (seconds === undefined || seconds < 1) {
+    return undefined;
+  }
+
+  const ms = seconds * 1000;
+  if (ms > MAX_ITERATION_TIMEOUT_MS) {
+    throw new Error(
+      `--iteration-timeout must be <= ${MAX_ITERATION_TIMEOUT_SECONDS} seconds (Node timer limit); got ${seconds}`,
+    );
+  }
+
+  return ms;
+}
+
+/**
  * @description Subset of fields allowed in `.workflow-ralph.json` (same semantics as env).
  * `iterationTimeout` is in **seconds** (matches CLI `--iteration-timeout`).
  */
@@ -135,10 +172,9 @@ export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
  */
 export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
   const resolved = loadWorkflowRalphConfig(cwd);
-  const iterationTimeoutMs =
-    resolved.iterationTimeout !== undefined && resolved.iterationTimeout >= 1
-      ? resolved.iterationTimeout * 1000
-      : undefined;
+  const iterationTimeoutMs = resolveIterationTimeoutMs(
+    resolved.iterationTimeout,
+  );
 
   return {
     backend: resolved.backend,

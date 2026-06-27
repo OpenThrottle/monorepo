@@ -3,6 +3,10 @@
 # See plan "Docs folder watch and re-index on main"
 name: '📚 Docs watch (main)'
 on:
+  # 💰 Cost-gated: manual-only for now via workflow_dispatch (was `if: false`), so the job
+  # stays live/lintable and runnable on demand. The push trigger documents the intended
+  # automation; the job is gated below to manual dispatch to avoid auto-spend until enabled.
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,7 +15,7 @@ on:
 
 jobs:
   docs-changed:
-    if: false # FIXME: 💰 Re-enable when we want to spend more
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:

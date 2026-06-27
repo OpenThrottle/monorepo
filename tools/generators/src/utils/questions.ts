@@ -1,6 +1,7 @@
 import { logger } from '@nx/devkit';
 import prompts from 'prompts';
 import { MESSAGE_ON_CANCEL } from './messages';
+import { ORGANIZATIONS } from './organizations';
 import { getProjectsByTags } from './projects';
 import { parseCommaSeparatedValues } from './strings';
 import { validatePascalCase, validatePort, validateSlug } from './validation';
@@ -109,7 +110,7 @@ export const getConfigConfirmation = async (
 };
 
 export const getOrganizationName = async (): Promise<string> => {
-  const options: string[] = ['@openthrottle', '@tools'];
+  const options = [...ORGANIZATIONS];
 
   const { organization } = await prompts<string>({
     choices: options.map((option) => ({ title: option, value: option })),

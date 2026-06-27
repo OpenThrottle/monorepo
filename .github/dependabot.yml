@@ -17,7 +17,7 @@ updates:
       - '/packages/*'
     labels:
       - 'dependencies'
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 10
     package-ecosystem: 'npm'
     rebase-strategy: 'auto'
     schedule:

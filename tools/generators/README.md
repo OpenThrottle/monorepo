@@ -68,18 +68,6 @@ pnpm nx g @tools/generators:nestjs \
   --port=4010
 ```
 
-#### React Native
-
-React Native uses `--type` (not `--subGenerator`):
-
-```bash
-pnpm nx g @tools/generators:react-native \
-  --type=package \
-  --packageType=package \
-  --organization=@openthrottle \
-  --name=react-native-example-package
-```
-
 #### Package + Folders
 
 ```bash

@@ -15,6 +15,7 @@ import {
 } from '../config/load-workflow-ralph-config';
 import {
   mergeRalphRuntimeSeed,
+  resolveIterationTimeoutMs,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
@@ -286,7 +287,8 @@ export const parseRalphArgs = (): RalphArgs => {
         const message = `--iteration-timeout must be a positive integer (seconds)`;
         throw new Error(message);
       }
-      parsed.iterationTimeoutMs = value * 1000;
+      // Clamps/validates against Node's setTimeout overflow ceiling (~24.8 days).
+      parsed.iterationTimeoutMs = resolveIterationTimeoutMs(value);
       i++;
     } else if (arg === '--model' && i + 1 < args.length) {
       parsed.model = args[i + 1];
