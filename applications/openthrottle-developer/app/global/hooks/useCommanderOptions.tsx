@@ -6,11 +6,9 @@ import {
   CalendarDaysIcon,
   ChartLineIcon,
   FolderIcon,
-  FolderPlusIcon,
   HomeIcon,
   MapIcon,
   NotebookIcon,
-  PlusCircleIcon,
   SettingsIcon,
   SpeechIcon,
 } from 'lucide-react';
@@ -102,39 +100,39 @@ export function useCommanderOptions(): CommanderGroup[] {
         },
       ],
     },
-    {
-      heading: 'Actions',
-      items: [
-        {
-          icon: <PlusCircleIcon className="h-3! w-3!" />,
-          id: 'action-plan-create',
-          label: 'Create plan',
-          onSelect: nav('/plans/create'),
-        },
-        {
-          icon: <FolderPlusIcon className="h-3! w-3!" />,
-          id: 'action-project-create',
-          label: 'Create project',
-          onSelect: nav('/projects/create'),
-        },
-        // {
-        //   icon: <ChartLineIcon className="w-3! h-3!" />,
-        //   id: 'action-queue-create',
-        //   label: 'Create queue',
-        //   onSelect: nav('/queues/create'),
-        // },
-        // {
-        //   id: 'action-note-create',
-        //   label: 'Create note',
-        //   onSelect: nav('/notes/create'),
-        // },
-        // {
-        //   id: 'action-generator-create',
-        //   label: 'Create generator',
-        //   onSelect: nav('/generators/create'),
-        // },
-      ],
-    },
+    // {
+    //   heading: 'Actions',
+    //   items: [
+    //     {
+    //       icon: <PlusCircleIcon className="h-3! w-3!" />,
+    //       id: 'action-plan-create',
+    //       label: 'Create plan',
+    //       onSelect: nav('/plans/create'),
+    //     },
+    //     {
+    //       icon: <FolderPlusIcon className="h-3! w-3!" />,
+    //       id: 'action-project-create',
+    //       label: 'Create project',
+    //       onSelect: nav('/projects/create'),
+    //     },
+    //     // {
+    //     //   icon: <ChartLineIcon className="w-3! h-3!" />,
+    //     //   id: 'action-queue-create',
+    //     //   label: 'Create queue',
+    //     //   onSelect: nav('/queues/create'),
+    //     // },
+    //     // {
+    //     //   id: 'action-note-create',
+    //     //   label: 'Create note',
+    //     //   onSelect: nav('/notes/create'),
+    //     // },
+    //     // {
+    //     //   id: 'action-generator-create',
+    //     //   label: 'Create generator',
+    //     //   onSelect: nav('/generators/create'),
+    //     // },
+    //   ],
+    // },
     // {
     //   heading: 'Filters',
     //   items: [
