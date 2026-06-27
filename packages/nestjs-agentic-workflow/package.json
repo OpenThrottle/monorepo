@@ -16,18 +16,18 @@
   "exports": {
     ".": {
       "import": "./src/index.ts",
-      "require": "./src/index.ts",
-      "types": "./src/index.ts"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./testing": {
       "import": "./src/testing/index.ts",
-      "require": "./src/testing/index.ts",
-      "types": "./src/testing/index.ts"
+      "require": "./dist/src/testing/index.js",
+      "types": "./dist/src/testing/index.d.ts"
     },
     "./*": {
-      "import": "./src/*.ts",
-      "require": "./src/*.ts",
-      "types": "./src/*.ts"
+      "import": "./*.ts",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "main": "./src/index.ts",
