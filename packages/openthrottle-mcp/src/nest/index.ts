@@ -3,12 +3,12 @@
  */
 
 /** @publicApi */
-export { bootstrapMcpDeveloperApp } from './bootstrap-openthrottle-mcp-app.js';
+export { bootstrapMcpDeveloperApp } from './bootstrap-openthrottle-mcp-app.ts';
 /** @publicApi */
 export { McpTransportType } from '@rekog/mcp-nest';
 /** @publicApi */
-export type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.js';
+export type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 
-export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.js';
-export { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.js';
-export { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.js';
+export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
+export { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.ts';
+export { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';

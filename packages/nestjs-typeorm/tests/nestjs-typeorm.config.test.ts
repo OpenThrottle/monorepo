@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Schema } from '../src/nestjs-typeorm.config';
 import { getTypeormConfig, schema } from '../src/nestjs-typeorm.config';
 
@@ -124,6 +124,29 @@ const fullConfig: Schema = {
 };
 
 describe('getTypeormConfig', () => {
+  // `getOrThrow` falls back to `process.env`, and Nx loads the repo `.env` into
+  // the task process — so `POSTGRES_*` vars are present locally (but not in CI's
+  // clean env). Strip them around each test so the injected `ConfigService` is
+  // the only config source and an omitted key genuinely has no fallback.
+  const savedPostgresEnv: Record<string, string | undefined> = {};
+  beforeEach(() => {
+    for (const key of Object.keys(process.env)) {
+      if (key.startsWith('POSTGRES_')) {
+        savedPostgresEnv[key] = process.env[key];
+        delete process.env[key];
+      }
+    }
+  });
+  afterEach(() => {
+    for (const key of Object.keys(savedPostgresEnv)) {
+      const value = savedPostgresEnv[key];
+      if (value !== undefined) {
+        process.env[key] = value;
+      }
+      delete savedPostgresEnv[key];
+    }
+  });
+
   it('returns every key from the config service', () => {
     const config = getTypeormConfig(buildConfigService(fullConfig));
 

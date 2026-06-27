@@ -7,13 +7,17 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import {
+  buildTimeoutSignal,
   getGraphQLToken,
   getGraphQLUrl,
   parseDateTimeInResponse,
-} from './utils.js';
+  parseGraphqlResponseBody,
+  rethrowAsTimeoutIfAborted,
+} from './utils.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
+ * @publicApi
  */
 export interface GraphqlResponseV2<TData> {
   readonly data?: TData;
@@ -25,6 +29,7 @@ export interface GraphqlResponseV2<TData> {
 
 /**
  * @description Optional options for {@link executeGraphqlV2} (URL override, auth, extra headers).
+ * @publicApi
  */
 export interface ExecuteGraphqlOptionsV2 {
   /**
@@ -32,6 +37,19 @@ export interface ExecuteGraphqlOptionsV2 {
    * over any `Authorization` here).
    */
   readonly headers?: Readonly<Record<string, string>> | undefined;
+  /**
+   * @description Optional caller `AbortSignal` forwarded to `fetch`. Combined
+   * with the timeout signal (the request aborts when either fires).
+   */
+  readonly signal?: AbortSignal | undefined;
+  /**
+   * @description Per-request timeout in milliseconds, enforced via
+   * `AbortSignal.timeout`. Defaults to {@link DEFAULT_GRAPHQL_TIMEOUT_MS}.
+   * Pass `0` or a negative value to disable the timeout. On timeout the call
+   * rejects with an `Error` whose message starts with
+   * {@link GRAPHQL_TIMEOUT_ERROR_PREFIX}.
+   */
+  readonly timeoutMs?: number | undefined;
   readonly token?: string | undefined;
   readonly url?: string | undefined;
 }
@@ -45,6 +63,7 @@ export interface ExecuteGraphqlOptionsV2 {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphqlV2<
   TData,
@@ -70,15 +89,20 @@ export async function executeGraphqlV2<
     variables: variables ?? undefined,
   });
 
-  const res = await fetch(url, {
-    body,
-    headers,
-    method: 'POST',
-  });
+  let res: Response;
 
-  // FIXME: Tighten this up
+  try {
+    res = await fetch(url, {
+      body,
+      headers,
+      method: 'POST',
+      signal: buildTimeoutSignal(options?.timeoutMs, options?.signal),
+    });
+  } catch (error) {
+    rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
+  }
 
-  const json = (await res.json()) as GraphqlResponseV2<TData>;
+  const json = await parseGraphqlResponseBody(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -96,7 +120,8 @@ export async function executeGraphqlV2<
     throw new Error('GraphQL response missing data');
   }
 
-  // FIXME: Tighten this up
-
+  // `as TData` is sound here: post-validation success path; the cast only
+  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
+  // `unknown` return erases. See the note on the cast in `executeGraphql`.
   return parseDateTimeInResponse(json.data) as TData;
 }

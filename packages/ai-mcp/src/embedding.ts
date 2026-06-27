@@ -5,11 +5,11 @@
  */
 
 import OpenAI from 'openai';
-import { EMBEDDING_MAX_INPUT_CHARS } from './constants.js';
+import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
 import {
   embedWithOllama,
   isOllamaEmbeddingConfigured as isOllamaConfigured,
-} from './ollama-embedding.js';
+} from './ollama-embedding.ts';
 
 /** Re-export for callers that need to check if an embedding provider is available (e.g. cortex:import). */
 const EMBEDDING_MODEL = 'text-embedding-3-small';

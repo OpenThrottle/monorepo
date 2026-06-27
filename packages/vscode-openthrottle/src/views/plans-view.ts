@@ -3,10 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import { UnauthenticatedError } from '../errors.js';
-import { showPlanDetail, showTaskDetail } from '../views/detail-webview.js';
-import { PlansTreeDataProvider } from '../trees/plans-tree.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import { UnauthenticatedError } from '../errors.ts';
+import { showPlanDetail, showTaskDetail } from '../views/detail-webview.ts';
+import { PlansTreeDataProvider } from '../trees/plans-tree.ts';
 
 /**
  * @description Register the Plans tree view and wire selection to detail webview. Call once from {@link registerViews}.

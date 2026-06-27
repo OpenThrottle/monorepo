@@ -8,7 +8,7 @@ import {
   POSTGRES_URL_MISSING_ERROR,
   sanitizePostgresUrlForLogs,
   UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
-} from '../postgres.js';
+} from '../postgres.ts';
 
 const mockState = {
   connectReject: undefined as Error | undefined,

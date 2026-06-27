@@ -7,11 +7,11 @@ import ignore from 'ignore';
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
-} from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
-import { hashFile } from '../utils/hash.js';
-import type { SnapshotDiff, WorkspaceFileHash } from './workspace.js';
-import { diffSnapshots, hashWorkspace } from './workspace.js';
+} from '../config/workspace-config.ts';
+import { resolveWorkspaceConfig } from '../config/workspace-config.ts';
+import { hashFile } from '../utils/hash.ts';
+import type { SnapshotDiff, WorkspaceFileHash } from './workspace.ts';
+import { diffSnapshots, hashWorkspace } from './workspace.ts';
 
 /** The kind of filesystem change observed for a watched file. */
 export type WatchEventType = 'add' | 'change' | 'unlink';

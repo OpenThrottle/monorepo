@@ -6,9 +6,9 @@ import {
   ResourceTemplate,
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getPostgresConfig } from '../config.js';
-import type { SemanticSearchChunk } from '../cortex-client.js';
-import { getChunkById } from '../cortex-client.js';
+import { getPostgresConfig } from '../config.ts';
+import type { SemanticSearchChunk } from '../cortex-client.ts';
+import { getChunkById } from '../cortex-client.ts';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;

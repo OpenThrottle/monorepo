@@ -1,12 +1,12 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { hashContent } from '../../utils/hash.js';
-import type { WorkspaceFileHash } from '../workspace.js';
-import { diffSnapshots, hashWorkspace, listFiles } from '../workspace.js';
+import { hashContent } from '../../utils/hash.ts';
+import type { WorkspaceFileHash } from '../workspace.ts';
+import { diffSnapshots, hashWorkspace, listFiles } from '../workspace.ts';
 
 describe('workspace enumeration', () => {
   let root: string;
@@ -44,6 +44,49 @@ describe('workspace enumeration', () => {
 
     expect(byPath.get('src/a.ts')).toBe(hashContent('export const a = 1;\n'));
     expect(byPath.size).toBe(3);
+  });
+});
+
+describe('symlink escape with followSymlinks', () => {
+  let outside: string;
+  let root: string;
+
+  beforeEach(async () => {
+    outside = await mkdtemp(join(tmpdir(), 'ot-ide-outside-'));
+    root = await mkdtemp(join(tmpdir(), 'ot-ide-ws-'));
+    await writeFile(join(outside, 'secret.txt'), 'top secret');
+    await writeFile(join(root, 'inside.ts'), 'export const ok = 1;\n');
+    // A symlink that stays inside the tree by name but whose target escapes.
+    await symlink(join(outside, 'secret.txt'), join(root, 'leak.txt'));
+  });
+
+  afterEach(async () => {
+    await rm(root, { force: true, recursive: true });
+    await rm(outside, { force: true, recursive: true });
+  });
+
+  it('drops symlinks whose real target escapes the root', async () => {
+    const files = await listFiles({ followSymlinks: true, root });
+
+    expect(files).toContain('inside.ts');
+    expect(files).not.toContain('leak.txt');
+  });
+
+  it('does not hash an escaping symlink target', async () => {
+    const hashes = await hashWorkspace({ followSymlinks: true, root });
+    const paths = hashes.map((entry) => entry.path);
+
+    expect(paths).toContain('inside.ts');
+    expect(paths).not.toContain('leak.txt');
+  });
+
+  it('keeps symlinks whose target stays inside the root', async () => {
+    await writeFile(join(root, 'real.ts'), 'export const real = 1;\n');
+    await symlink(join(root, 'real.ts'), join(root, 'alias.ts'));
+
+    const files = await listFiles({ followSymlinks: true, root });
+
+    expect(files).toContain('alias.ts');
   });
 });
 

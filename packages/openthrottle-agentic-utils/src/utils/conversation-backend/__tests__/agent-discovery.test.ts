@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { discoverAgentClis } from '../agent-discovery.js';
-import { CURSOR_AGENT_BIN_ENV } from '../cursor-agent/argv.js';
+import { discoverAgentClis } from '../agent-discovery.ts';
+import { CURSOR_AGENT_BIN_ENV } from '../cursor-agent/argv.ts';
 
 let dir: string;
 

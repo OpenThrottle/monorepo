@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getOrCreateDataSource, runQuery } from '../data-source.js';
+import { getOrCreateDataSource, runQuery } from '../data-source.ts';
 
 type HealthStructured = {
   cortex?: 'not_configured' | 'reachable' | 'unreachable';

@@ -5,7 +5,7 @@
 
 import * as path from 'node:path';
 
-import { getOpenThrottleRoot } from './workflow.js';
+import { getOpenThrottleRoot } from './workflow.ts';
 
 /**
  * @description True when `childDir` is `parentDir` itself or nested within it.

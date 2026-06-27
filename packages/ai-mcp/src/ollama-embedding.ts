@@ -4,7 +4,7 @@
  * @see https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings
  */
 
-import { EMBEDDING_MAX_INPUT_CHARS } from './constants.js';
+import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
 
 const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
 const DEFAULT_OLLAMA_EMBEDDING_MODEL = 'nomic-embed-text';

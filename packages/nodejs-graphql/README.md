@@ -109,13 +109,15 @@ import { executeGraphql_v2 } from '@openthrottle/nodejs-graphql';
 
 Import from `@openthrottle/nodejs-graphql` only; there is no supported deep import path for production consumers.
 
-## Build (monorepo)
+## Resolution (source-first)
 
-```bash
-pnpm nx run @openthrottle/nodejs-graphql:build
-```
-
-Watch mode: `pnpm nx run @openthrottle/nodejs-graphql:__dev`.
+This package is **source-first**: `main`, `module`, `types`, and the `exports` map
+all point at `./src/index.ts`. Every consumer is workspace TypeScript that
+transpiles the source directly (no consumer imports from `dist` or via a `./*`
+subpath), so there is no published build artifact to resolve. The `build` /
+`__dev` Nx targets still exist for an optional standalone `dist` emit, but the
+package is **not** consumed from `dist` — validate with `lint` / `typecheck` /
+`typecheck-tests` / `test`.
 
 ## Installation
 

@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
-import type { WorkflowOptions } from './contract/flow-context.js';
+import type { WorkflowOptions } from './contract/flow-context.ts';
 import {
   DEFAULT_RALPH_RUNNER,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
-} from './contract/flow-context.js';
+} from './contract/flow-context.ts';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
   resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning,
-} from './ralph-plan-run-context.js';
+} from './ralph-plan-run-context.ts';
 
 describe('RalphFlowContext from GraphQL / run options', () => {
   const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';

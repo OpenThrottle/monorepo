@@ -1,9 +1,8 @@
 /**
- * @description Registers search tools: semantic_search, get_document, list_sources.
+ * @description Search tool handlers + schemas: semantic_search, get_document, list_sources. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  * All backend communication via GraphQL only (search, getDocument, listSources queries).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -14,10 +13,10 @@ import {
   ListSourcesDocument,
   SearchDocument,
 } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 const SEARCH_DEFAULT_LIMIT = 20;
 const SEARCH_MAX_LIMIT = 50;
@@ -66,7 +65,7 @@ export async function getDocumentToolHandler(
 
       const chunk = result?.getDocument ?? null;
       if (!chunk) {
-        throw new Error(`No document found for id: ${parsed.data.id}`);
+        throw new SafeToolError(`No document found for id: ${parsed.data.id}`);
       }
 
       const text = `[${chunk.source}] ${chunk.planTitle ?? ''} ${chunk.taskTitle ?? ''}\n${chunk.content}`;
@@ -145,37 +144,5 @@ export async function semanticSearchToolHandler(
         text: textSummary || 'No matching chunks found.',
       };
     },
-  );
-}
-
-/**
- * @description Registers semantic_search, get_document, and list_sources tools. All use GraphQL only.
- */
-export function registerSearchTools(server: McpServer): void {
-  server.registerTool(
-    'get_document',
-    {
-      description: getDocumentToolDescription,
-      inputSchema: getDocumentToolParameters,
-    },
-    getDocumentToolHandler,
-  );
-
-  server.registerTool(
-    'list_sources',
-    {
-      description: listSourcesToolDescription,
-      inputSchema: listSourcesToolParameters,
-    },
-    listSourcesToolHandler,
-  );
-
-  server.registerTool(
-    'semantic_search',
-    {
-      description: semanticSearchToolDescription,
-      inputSchema: semanticSearchToolParameters,
-    },
-    semanticSearchToolHandler,
   );
 }

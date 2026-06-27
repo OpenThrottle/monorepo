@@ -5,7 +5,7 @@
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
-} from '../../../../../../packages/nestjs-repositories/src/modules/plans/plan-run-config/index.js';
+} from '../../../../../../packages/nestjs-repositories/src/modules/plans/plan-run-config/index.ts';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 

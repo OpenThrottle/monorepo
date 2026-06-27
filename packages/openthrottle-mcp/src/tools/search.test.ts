@@ -4,7 +4,7 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getDocumentToolHandler, semanticSearchToolHandler } from './search.js';
+import { getDocumentToolHandler, semanticSearchToolHandler } from './search.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

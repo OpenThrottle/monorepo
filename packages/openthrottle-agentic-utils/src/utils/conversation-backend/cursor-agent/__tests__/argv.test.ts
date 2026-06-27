@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCursorAgentArgv } from '../argv.js';
+import { buildCursorAgentArgv } from '../argv.ts';
 
 describe('buildCursorAgentArgv', () => {
   it('emits the verified headless+stream+resume flags with the prompt last', () => {

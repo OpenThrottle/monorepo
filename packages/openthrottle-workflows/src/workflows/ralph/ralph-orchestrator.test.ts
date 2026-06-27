@@ -19,13 +19,13 @@ import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
   DEFAULT_RALPH_RUNNER,
-} from './contract/flow-context.js';
-import type { WorkflowRalphContext } from './contract/flow-context.js';
+} from './contract/flow-context.ts';
+import type { WorkflowRalphContext } from './contract/flow-context.ts';
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
-} from './contract/ralph-orchestrator-deps.js';
+} from './contract/ralph-orchestrator-deps.ts';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';

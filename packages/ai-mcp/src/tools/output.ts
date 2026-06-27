@@ -4,16 +4,16 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.ts';
 import {
   createPlanOutputChunk as cortexCreatePlanOutputChunk,
   getPlanOutputByPlanId as cortexGetPlanOutputByPlanId,
-} from '../cortex-client.js';
+} from '../cortex-client.ts';
 import {
   appendPlanOutputInputSchema,
   getPlanOutputInputSchema,
-} from '../schemas.js';
-import { configMissingContent, invalidArgsContent } from './errors.js';
+} from '../schemas.ts';
+import { configMissingContent, invalidArgsContent } from './errors.ts';
 
 export function registerOutputTools(server: McpServer): void {
   server.registerTool(

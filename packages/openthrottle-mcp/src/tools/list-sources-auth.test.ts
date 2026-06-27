@@ -4,8 +4,8 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { withMcpDeveloperAuthToken } from '../auth/get-auth-token.js';
-import { listSourcesToolHandler } from './search.js';
+import { withMcpDeveloperAuthToken } from '../auth/get-auth-token.ts';
+import { listSourcesToolHandler } from './search.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

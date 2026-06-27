@@ -3,10 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import type { OpenThrottleApiClient } from '../api-client.js';
-import { DEFAULT_CATEGORY, getDefaultAuthor } from '../config.js';
-import { UnauthenticatedError } from '../errors.js';
-import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
+import type { OpenThrottleApiClient } from '../api-client.ts';
+import { DEFAULT_CATEGORY, getDefaultAuthor } from '../config.ts';
+import { UnauthenticatedError } from '../errors.ts';
+import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
 
 /**
  * @description Run the create-plan-from-text flow. Call from {@link registerCommands}.

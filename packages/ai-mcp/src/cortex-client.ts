@@ -16,8 +16,8 @@ import type {
   TaskEmbeddingSearchRow,
 } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
-import { getOrCreateDataSource, runQuery } from './data-source.js';
-import { embedQuery } from './embedding.js';
+import { getOrCreateDataSource, runQuery } from './data-source.ts';
+import { embedQuery } from './embedding.ts';
 
 /** Raw plan row (snake_case) as returned by plans table SELECT. Used to type ds.query results before mapping to {@link PlanData}. */
 interface PlanRawRow {

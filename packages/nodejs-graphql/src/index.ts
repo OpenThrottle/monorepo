@@ -6,7 +6,13 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
-import { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
+import {
+  buildTimeoutSignal,
+  getGraphQLUrl,
+  parseDateTimeInResponse,
+  parseGraphqlResponseBody,
+  rethrowAsTimeoutIfAborted,
+} from './utils.ts';
 
 export type {
   ExecuteGraphqlV2,
@@ -20,77 +26,21 @@ export type {
   GraphqlV2OkResult,
   GraphqlV2ResponsePayload,
   GraphqlV2Result,
-} from './graphql-v2.js';
-export { executeGraphql_v2 } from './graphql-v2.js';
-export { executeGraphqlV2 } from './index-v2.js';
-export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
-export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
-
-/**
- * @description Default per-request timeout (milliseconds) applied to the
- * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
- * Bounds an SSR loader/action so a stalled openthrottle-server connection
- * cannot hold the request open indefinitely.
- */
-export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
-
-/**
- * @description Marker prefix on the message of the `Error` thrown when a
- * request exceeds its timeout. Consumers (e.g. `@openthrottle/react-router-graphql`)
- * match on this to classify the failure as a distinct timeout kind rather than a
- * generic network error.
- */
-export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
-  'openthrottle-server GraphQL request timed out';
-
-/**
- * @description Build the `AbortSignal` enforcing the per-request timeout.
- * `0` or a negative value disables the timeout (no signal). Defaults to
- * {@link DEFAULT_GRAPHQL_TIMEOUT_MS} when `timeoutMs` is `undefined`.
- */
-function buildTimeoutSignal(
-  timeoutMs: number | undefined,
-): AbortSignal | undefined {
-  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
-
-  if (ms <= 0) {
-    return undefined;
-  }
-
-  return AbortSignal.timeout(ms);
-}
-
-/**
- * @description Wrap a thrown `fetch` rejection: when it is the abort raised by
- * our timeout signal (`TimeoutError`/`AbortError`), rethrow a recognizable
- * timeout `Error` (message prefixed with {@link GRAPHQL_TIMEOUT_ERROR_PREFIX});
- * otherwise rethrow the original error unchanged.
- */
-function rethrowAsTimeoutIfAborted(
-  error: unknown,
-  timeoutMs: number | undefined,
-): never {
-  const ms = timeoutMs ?? DEFAULT_GRAPHQL_TIMEOUT_MS;
-
-  if (
-    error instanceof Error &&
-    (error.name === 'TimeoutError' || error.name === 'AbortError')
-  ) {
-    // Preserve the original abort as the cause via Object.assign rather than
-    // the ES2022 two-arg `Error(message, { cause })` constructor: this package
-    // is consumed source-first by ES2020 targets (e.g. @tools/workflows), whose
-    // lib lacks the es2022.error overload.
-    throw Object.assign(
-      new Error(`${GRAPHQL_TIMEOUT_ERROR_PREFIX} after ${ms}ms`),
-      { cause: error },
-    );
-  }
-
-  throw error;
-}
+  GraphqlV2RetryOn,
+  GraphqlV2RetryOptions,
+} from './graphql-v2.ts';
+export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
+export { executeGraphqlV2 } from './index-v2.ts';
+export { getGraphQLUrl, parseDateTimeInResponse } from './utils.ts';
+export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.ts';
+export {
+  DEFAULT_GRAPHQL_TIMEOUT_MS,
+  GRAPHQL_TIMEOUT_ERROR_PREFIX,
+} from './utils.ts';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
+ * @publicApi
  */
 export interface GraphqlResponse<TData> {
   readonly data?: TData;
@@ -102,6 +52,7 @@ export interface GraphqlResponse<TData> {
 
 /**
  * @description Optional options for executeGraphql (e.g. auth headers).
+ * @publicApi
  */
 export interface ExecuteGraphqlOptions {
   readonly headers?: Record<string, string>;
@@ -124,6 +75,7 @@ export interface ExecuteGraphqlOptions {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphql<
   TData,
@@ -157,9 +109,7 @@ export async function executeGraphql<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  // FIXME: Tighten this up
-
-  const json = (await res.json()) as GraphqlResponse<TData>;
+  const json = await parseGraphqlResponseBody(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -177,13 +127,17 @@ export async function executeGraphql<
     throw new Error('GraphQL response missing data');
   }
 
-  // FIXME: Tighten this up
-
+  // `as TData` is sound here despite the repo's no-`as` convention: this is the
+  // post-validation success path (HTTP OK, no GraphQL errors, non-null `data`),
+  // and `parseDateTimeInResponse` returns `unknown` only because the recursive
+  // Date-walk erases the type. The codegen `TypedDocumentNode` guarantees the
+  // shape. Do not "tighten" this away — there is no runtime type to narrow to.
   return parseDateTimeInResponse(json.data) as TData;
 }
 
 /**
  * @description Options for executeGraphqlAtUrl (e.g. auth token for Bearer header).
+ * @publicApi
  */
 export interface ExecuteGraphqlAtUrlOptions {
   /**
@@ -214,6 +168,7 @@ export interface ExecuteGraphqlAtUrlOptions {
  * @param options - Optional token for Authorization: Bearer.
  *
  * @returns The `data` portion of the response; throws if errors or non-OK status.
+ * @publicApi
  */
 export async function executeGraphqlAtUrl<
   TData,
@@ -250,9 +205,8 @@ export async function executeGraphqlAtUrl<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  // FIXME: Tighten this up
+  const json = await parseGraphqlResponseBody(res);
 
-  const json = (await res.json()) as GraphqlResponse<TData>;
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
     throw new Error(
@@ -269,13 +223,15 @@ export async function executeGraphqlAtUrl<
     throw new Error('GraphQL response missing data');
   }
 
-  // FIXME: Tighten this up
-
+  // `as TData` is sound here: post-validation success path; the cast only
+  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
+  // `unknown` return erases. See the note on the cast in `executeGraphql`.
   return parseDateTimeInResponse(json.data) as TData;
 }
 
 /**
  * @description Options for {@link executeGraphqlWithAuth}.
+ * @publicApi
  */
 export interface ExecuteGraphqlWithAuthOptions {
   /**
@@ -288,6 +244,7 @@ export interface ExecuteGraphqlWithAuthOptions {
 
 /**
  * @description Runs executeGraphql with Authorization: Bearer <token> when the request has an auth cookie. Use in loaders/actions that have access to the request.
+ * @publicApi
  */
 export async function executeGraphqlWithAuth<
   TData,

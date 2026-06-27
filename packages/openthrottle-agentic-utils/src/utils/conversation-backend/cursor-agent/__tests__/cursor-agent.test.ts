@@ -4,13 +4,13 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { CURSOR_AGENT_BIN_ENV } from '../argv.js';
+import { CURSOR_AGENT_BIN_ENV } from '../argv.ts';
 import {
   createCursorAgentSession,
   cursorAgentConversationBackend,
-} from '../cursor-agent.js';
-import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../teardown.js';
-import type { ConversationStreamChunk } from '../../types.js';
+} from '../cursor-agent.ts';
+import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../teardown.ts';
+import type { ConversationStreamChunk } from '../../types.ts';
 
 let dir: string;
 

@@ -1,16 +1,15 @@
 /**
- * @description Registers commit link tool: link_commit. Exposes commit link via GraphQL only.
+ * @description Commit link tool handler + schema: link_commit. Exposes commit link via GraphQL only. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { LinkCommitMutation } from '../__generated__/graphql.js';
 import { LinkCommitDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type LinkCommitResult = GenericResult<{
   link: LinkCommitMutation['linkCommit'];
@@ -58,16 +57,5 @@ export async function linkCommitToolHandler(
 
       return { structuredContent: { link }, text };
     },
-  );
-}
-
-export function registerCommitTools(server: McpServer): void {
-  server.registerTool(
-    'link_commit',
-    {
-      description: linkCommitToolDescription,
-      inputSchema: linkCommitToolParameters,
-    },
-    linkCommitToolHandler,
   );
 }

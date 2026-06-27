@@ -17,15 +17,15 @@ import {
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationStreamChunk,
-} from '../types.js';
+} from '../types.ts';
 import {
   CURSOR_AGENT_BIN_ENV,
   CURSOR_AGENT_DEFAULT_BIN,
   buildCursorAgentArgv,
-} from './argv.js';
-import { mapCursorEvent } from './events.js';
-import { NdjsonBuffer } from './ndjson.js';
-import { resolveAgentTimeouts, terminateChild } from './teardown.js';
+} from './argv.ts';
+import { mapCursorEvent } from './events.ts';
+import { NdjsonBuffer } from './ndjson.ts';
+import { resolveAgentTimeouts, terminateChild } from './teardown.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [

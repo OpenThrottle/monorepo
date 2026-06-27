@@ -3,7 +3,6 @@
  * agent_conversation_list, agent_conversation_get, agent_conversation_get_messages.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -17,11 +16,11 @@ import {
 import {
   GetAgentConversationMessagesInputSchema,
   ListAgentConversationsInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 const LIST_DEFAULT_LIMIT = 20;
 const LIST_MAX_LIMIT = 100;
@@ -178,33 +177,4 @@ export async function getAgentConversationMessagesToolHandler(
 
     return { structuredContent: { messages, totalCount }, text };
   });
-}
-
-export function registerAgentConversationTools(server: McpServer): void {
-  server.registerTool(
-    'agent_conversation_get',
-    {
-      description: getAgentConversationToolDescription,
-      inputSchema: getAgentConversationToolParameters,
-    },
-    getAgentConversationToolHandler,
-  );
-
-  server.registerTool(
-    'agent_conversation_get_messages',
-    {
-      description: getAgentConversationMessagesToolDescription,
-      inputSchema: getAgentConversationMessagesToolParameters,
-    },
-    getAgentConversationMessagesToolHandler,
-  );
-
-  server.registerTool(
-    'agent_conversation_list',
-    {
-      description: listAgentConversationsToolDescription,
-      inputSchema: listAgentConversationsToolParameters,
-    },
-    listAgentConversationsToolHandler,
-  );
 }

@@ -6,13 +6,13 @@
  * consumer.
  */
 
-import { streamChatCompletion } from '../chat-completions/index.js';
-import { CONVERSATION_STREAM_CHUNK_KINDS } from './types.js';
+import { streamChatCompletion } from '../chat-completions/index.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from './types.ts';
 import type {
   ConversationBackend,
   ConversationBackendRun,
   ConversationStreamChunk,
-} from './types.js';
+} from './types.ts';
 
 async function* streamOpenAi(
   run: ConversationBackendRun,

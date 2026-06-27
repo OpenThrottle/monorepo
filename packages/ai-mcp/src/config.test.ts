@@ -3,7 +3,7 @@ import {
   getDefaultGitHubUser,
   getPostgresConfig,
   resolveActor,
-} from './config.js';
+} from './config.ts';
 
 /**
  * Characterization tests for the MCP-server config helpers that remain in this

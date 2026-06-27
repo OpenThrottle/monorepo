@@ -1,5 +1,5 @@
-import { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.js';
-import type { RuleFrontmatter } from './schemas/agent-asset-frontmatter.schemas.js';
+import { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
+import type { RuleFrontmatter } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface ParsedRuleFrontmatter {
   readonly alwaysApply: boolean | undefined;

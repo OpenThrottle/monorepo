@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-developer-codegen",
-  "description": "TODO: Add a description",
+  "description": "Workspace-only GraphQL codegen output for the openthrottle-developer app, emitting runtime enum objects (no enumsAsTypes) that the app's own codegen cannot provide; consumed via workspace:^ and regenerated with the codegen-graphql target.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -33,7 +33,16 @@
       "lint": {},
       "test": {},
       "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck-tests": {},
+      "verify-graphql-codegen": {
+        "cache": false,
+        "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the committed src/__generated__ output drifts.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "(cd packages/openthrottle-developer-codegen && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-developer-codegen/src/__generated__",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "private": true,

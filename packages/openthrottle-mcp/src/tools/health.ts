@@ -1,13 +1,12 @@
 /**
- * @description Registers health tool: health. Returns server health from GraphQL only (no direct Postgres).
+ * @description Health tool handler + schema (`health`). Returns server health from GraphQL only (no direct Postgres). Registered via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { GetServerHealthDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.js';
-import { runTool } from '../utils/tool-result.js';
+import type { GenericResult } from '../types/index.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type HealthStructured = {
   serverHealth: {
@@ -47,18 +46,4 @@ export async function healthToolHandler(
       text,
     };
   });
-}
-
-/**
- * @description Registers the health tool. Returns API, database, Redis, and WebSocket status from getServerHealth GraphQL query (no direct Postgres).
- */
-export function registerHealthTool(server: McpServer): void {
-  server.registerTool(
-    'health',
-    {
-      description: healthToolDescription,
-      inputSchema: healthToolParameters,
-    },
-    healthToolHandler,
-  );
 }

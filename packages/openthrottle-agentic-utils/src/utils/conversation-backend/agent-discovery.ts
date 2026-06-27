@@ -7,7 +7,7 @@
 
 import { spawn } from 'node:child_process';
 
-import { CURSOR_AGENT_BIN_ENV } from './cursor-agent/argv.js';
+import { CURSOR_AGENT_BIN_ENV } from './cursor-agent/argv.ts';
 
 /**
  * A supported agent CLI in the allowlist.

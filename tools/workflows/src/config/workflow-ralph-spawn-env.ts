@@ -15,7 +15,7 @@ import {
 import {
   WORKFLOW_RALPH_TRANSPORT_ENV,
   type WorkflowRalphTransport,
-} from '../utils/workflow-transport.js';
+} from '../utils/workflow-transport.ts';
 
 /**
  * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).

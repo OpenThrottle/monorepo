@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { NdjsonBuffer } from '../ndjson.js';
+import { NdjsonBuffer } from '../ndjson.ts';
 
 describe('NdjsonBuffer', () => {
   it('emits complete lines and holds a partial line until its newline arrives', () => {

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   embedWithOllama,
   isOllamaEmbeddingConfigured,
-} from './ollama-embedding.js';
+} from './ollama-embedding.ts';
 
 /**
  * Tests for ollama-embedding.ts: the env-driven configured check and the

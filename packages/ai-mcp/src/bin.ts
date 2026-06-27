@@ -2,7 +2,7 @@
  * @description CLI entry point for the MCP server. Run via `npx @openthrottle/ai-mcp` or `nx run mattscholta-ai-mcp:serve`.
  */
 
-import { runServer } from './index.js';
+import { runServer } from './index.ts';
 
 // No logging anywhere in here, just error handling.
 runServer().catch((error: unknown) => {

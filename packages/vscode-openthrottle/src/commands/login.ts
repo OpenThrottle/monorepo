@@ -4,9 +4,9 @@
 
 import { print } from 'graphql';
 import * as vscode from 'vscode';
-import { storeToken } from '../auth.js';
-import { getApiBaseUrl } from '../config.js';
-import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
+import { storeToken } from '../auth.ts';
+import { getApiBaseUrl } from '../config.ts';
+import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
 import { LoginDocument } from '../__generated__/graphql.js';
 
 interface GraphqlResponse<T> {
@@ -35,7 +35,7 @@ async function executeLogin(
   });
 
   // FIXME: Swap out eventually
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const json = (await res.json()) as GraphqlResponse<{
     login: { accessToken: string };
   }>;

@@ -1,4 +1,4 @@
-import type { DiscoveryEnv } from '../../types/model-discovery.js';
+import type { DiscoveryEnv } from '../../types/model-discovery.ts';
 import {
   DEFAULT_HOST,
   DEFAULT_PORTS,
@@ -6,7 +6,7 @@ import {
   LLM_HOSTS_ENV,
   LLM_PORTS_ENV,
   PROVIDER_URL_ENVS,
-} from './constants.js';
+} from './constants.ts';
 
 /**
  * A pluggable source of candidate hosts, derived from an env-like object.

@@ -1,4 +1,4 @@
-import { type TaskListItem } from '../tools/tasks.js';
+import { type TaskListItem } from '../tools/tasks.ts';
 
 export function filterTasksByCategory(
   tasks: readonly TaskListItem[],

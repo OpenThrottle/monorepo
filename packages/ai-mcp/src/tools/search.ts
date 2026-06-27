@@ -4,20 +4,20 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
-import type { SemanticSearchChunk } from '../cortex-client.js';
+import { getPostgresConfig } from '../config.ts';
+import type { SemanticSearchChunk } from '../cortex-client.ts';
 import {
   getChunkById,
   listSources,
   runSemanticSearch,
-} from '../cortex-client.js';
-import { DEFAULT_LIMIT, MAX_LIMIT } from '../constants.js';
-import { embedQuery } from '../embedding.js';
+} from '../cortex-client.ts';
+import { DEFAULT_LIMIT, MAX_LIMIT } from '../constants.ts';
+import { embedQuery } from '../embedding.ts';
 import {
   getDocumentInputSchema,
   semanticSearchInputSchema,
-} from '../schemas.js';
-import { configMissingSearchContent, invalidArgsContent } from './errors.js';
+} from '../schemas.ts';
+import { configMissingSearchContent, invalidArgsContent } from './errors.ts';
 
 /**
  * @description Human-readable label for a chunk, branched by source so documentation hits

@@ -5,8 +5,8 @@ import { describe, expect, test } from 'vitest';
 import {
   mapAgentAssetFileToIngestRecord,
   mapAgentAssetFilesToIngestRecords,
-} from '../map-agent-assets-for-ingest.js';
-import type { AgentAssetFileEntry } from '../walk-agent-assets-on-disk.js';
+} from '../map-agent-assets-for-ingest.ts';
+import type { AgentAssetFileEntry } from '../walk-agent-assets-on-disk.ts';
 
 const monorepoRoot = join(import.meta.dirname, '../../../..');
 

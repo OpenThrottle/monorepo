@@ -1,6 +1,6 @@
-import type { WorkspaceConfig } from '../config/workspace-config.js';
-import { resolveWorkspaceConfig } from '../config/workspace-config.js';
-import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.js';
+import type { WorkspaceConfig } from '../config/workspace-config.ts';
+import { resolveWorkspaceConfig } from '../config/workspace-config.ts';
+import { runRipgrep, workspaceRipgrepArgs } from '../utils/ripgrep.ts';
 
 /** A single matching line within a file. */
 export interface SearchMatch {

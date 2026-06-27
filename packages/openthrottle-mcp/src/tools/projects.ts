@@ -1,16 +1,15 @@
 /**
- * @description Registers project tools: delete_project.
+ * @description Project tool handler + schema: delete_project. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { DeleteProjectDocument } from '../__generated__/graphql.js';
-import { DeleteProjectInputSchema } from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+import { DeleteProjectInputSchema } from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type DeleteProjectResult = GenericResult<{
   deleted: boolean;
@@ -41,15 +40,4 @@ export async function deleteProjectToolHandler(
 
     return { structuredContent: { deleted }, text };
   });
-}
-
-export function registerProjectTools(server: McpServer): void {
-  server.registerTool(
-    'delete_project',
-    {
-      description: deleteProjectToolDescription,
-      inputSchema: deleteProjectToolParameters,
-    },
-    deleteProjectToolHandler,
-  );
 }

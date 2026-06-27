@@ -8,8 +8,8 @@ import type {
 import {
   DEFAULT_WORKFLOW_DEBUG,
   DEFAULT_WORKFLOW_ITERATIONS,
-} from '../config/index.js';
-import type { Writable } from '../types/index.js';
+} from '../config/index.ts';
+import type { Writable } from '../types/index.ts';
 
 const _workflowSchema = z.object({
   debug: z.enum(['debug', 'verbose', 'omit']).default('omit'),

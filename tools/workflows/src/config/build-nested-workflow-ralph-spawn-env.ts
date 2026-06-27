@@ -8,11 +8,11 @@ import {
   getWorkflowConfigCwd,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { loadWorkflowRalphConfig } from './load-workflow-ralph-config.js';
+import { loadWorkflowRalphConfig } from './load-workflow-ralph-config.ts';
 import {
   buildWorkflowRalphSpawnEnv,
   type BuildWorkflowRalphSpawnEnvOptions,
-} from './workflow-ralph-spawn-env.js';
+} from './workflow-ralph-spawn-env.ts';
 
 /**
  * @description Resolves Ralph config cwd for queue workers: job worktree, then `WORKSPACE_ROOT`, then process cwd.

@@ -5,8 +5,8 @@
 /* eslint-disable no-await-in-loop */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getDefaultGitHubUser, resolveActor } from '../config.js';
-import type { TaskRow } from '../cortex-client.js';
+import { getDefaultGitHubUser, resolveActor } from '../config.ts';
+import type { TaskRow } from '../cortex-client.ts';
 import {
   createTask as cortexCreateTask,
   deleteTask as cortexDeleteTask,
@@ -18,9 +18,9 @@ import {
   insertTaskEmbedding as cortexInsertTaskEmbedding,
   listTasksByCategory as cortexListTasksByCategory,
   updateTask as cortexUpdateTask,
-} from '../cortex-client.js';
-import { embedQuery } from '../embedding.js';
-import { buildTaskContentForEmbedding } from '../embedding-content.js';
+} from '../cortex-client.ts';
+import { embedQuery } from '../embedding.ts';
+import { buildTaskContentForEmbedding } from '../embedding-content.ts';
 import {
   createTaskInputSchema,
   createTasksInputSchema,
@@ -30,8 +30,8 @@ import {
   getTasksByPlanIdInputSchema,
   listTasksByCategoryInputSchema,
   updateTaskInputSchema,
-} from '../schemas.js';
-import { invalidArgsContent } from './errors.js';
+} from '../schemas.ts';
+import { invalidArgsContent } from './errors.ts';
 
 type CreateTasksResult =
   | { content: { text: string; type: 'text' }[]; isError: true }

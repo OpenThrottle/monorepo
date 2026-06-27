@@ -1,12 +1,12 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { SnapshotDiff } from '../workspace.js';
-import type { WatchEvent, WatchHandle, WorkspaceIndex } from '../watch.js';
-import { createWorkspaceIndex, watchWorkspace } from '../watch.js';
+import type { SnapshotDiff } from '../workspace.ts';
+import type { WatchEvent, WatchHandle, WorkspaceIndex } from '../watch.ts';
+import { createWorkspaceIndex, watchWorkspace } from '../watch.ts';
 
 /** Poll until `predicate` is true or the timeout elapses. */
 function waitFor(
@@ -164,5 +164,42 @@ describe('createWorkspaceIndex', () => {
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 300));
 
     expect(deltas).toEqual([]);
+  });
+});
+
+describe('createWorkspaceIndex symlink escape with followSymlinks', () => {
+  let outside: string;
+  let root: string;
+  let index: WorkspaceIndex | undefined;
+
+  beforeEach(async () => {
+    outside = await mkdtemp(join(tmpdir(), 'ot-ide-outside-'));
+    root = await mkdtemp(join(tmpdir(), 'ot-ide-index-symlink-'));
+    await writeFile(join(outside, 'secret.txt'), 'top secret');
+    await writeFile(join(root, 'inside.ts'), 'export const ok = 1;\n');
+    // A symlink that stays inside the tree by name but whose target escapes.
+    await symlink(join(outside, 'secret.txt'), join(root, 'leak.txt'));
+  });
+
+  afterEach(async () => {
+    await index?.close();
+    index = undefined;
+    await rm(root, { force: true, recursive: true });
+    await rm(outside, { force: true, recursive: true });
+  });
+
+  it('does not seed the snapshot with an escaping symlink target', async () => {
+    // The index seeds from hashWorkspace, which drops symlinks whose real
+    // target resolves outside the root — so the leaked file never enters the
+    // index even with followSymlinks enabled.
+    index = await createWorkspaceIndex(
+      { followSymlinks: true, root },
+      { debounceMs: 10 },
+    );
+
+    const paths = index.getSnapshot().map((entry) => entry.path);
+
+    expect(paths).toContain('inside.ts');
+    expect(paths).not.toContain('leak.txt');
   });
 });

@@ -2,7 +2,8 @@
  * @description Shared helpers for MCP tool handlers that return {@link GenericResult}.
  */
 
-import type { GenericResult } from '../types/index.js';
+import type { GenericResult } from '../types/index.ts';
+import { toSanitizedClientMessage } from './errors.ts';
 
 /**
  * @description Runs an async thunk and normalizes success/throw into a {@link GenericResult}.
@@ -31,8 +32,7 @@ export async function runTool<T extends Record<string, unknown>>(
       structuredContent: result.structuredContent,
     };
   } catch (error: unknown) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
+    const message = toSanitizedClientMessage(toolName, error);
     const text = `${toolName} failed: ${message}`;
 
     return {

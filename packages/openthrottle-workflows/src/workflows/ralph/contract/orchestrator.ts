@@ -1,5 +1,5 @@
 import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowRalphContext } from './flow-context.js';
+import type { WorkflowRalphContext } from './flow-context.ts';
 
 export type WorkflowFinishedReason =
   | 'workflow_complete'

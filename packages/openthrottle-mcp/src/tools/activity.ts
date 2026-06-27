@@ -1,9 +1,8 @@
 /**
- * @description Registers activity tools: get_activity_by_date, get_last_activity.
+ * @description Activity tool handlers + schemas: get_activity_by_date, get_last_activity. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  * Uses GraphQL only (activityByDate, activityByDateRange, lastActivity).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -15,11 +14,11 @@ import {
 import {
   ActivityByDateInputSchema,
   LastActivityInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type GetActivityByDateResult = GenericResult<{
   activity: GetActivityByDateQuery['activityByDate'];
@@ -135,25 +134,5 @@ export async function getLastActivityToolHandler(
 
       return { structuredContent: { result: last }, text };
     },
-  );
-}
-
-export function registerActivityTools(server: McpServer): void {
-  server.registerTool(
-    'get_activity_by_date',
-    {
-      description: getActivityByDateToolDescription,
-      inputSchema: getActivityByDateToolParameters,
-    },
-    getActivityByDateToolHandler,
-  );
-
-  server.registerTool(
-    'get_last_activity',
-    {
-      description: getLastActivityToolDescription,
-      inputSchema: getLastActivityToolParameters,
-    },
-    getLastActivityToolHandler,
   );
 }

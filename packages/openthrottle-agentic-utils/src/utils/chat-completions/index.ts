@@ -3,4 +3,4 @@
  * endpoint. Pairs with `model-discovery`: discover an endpoint, then stream a
  * completion from one of its models.
  */
-export * from './stream.js';
+export * from './stream.ts';

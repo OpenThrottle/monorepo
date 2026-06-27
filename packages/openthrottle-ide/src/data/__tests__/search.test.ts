@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { searchText } from '../search.js';
+import { searchText } from '../search.ts';
 
 describe('searchText', () => {
   let root: string;

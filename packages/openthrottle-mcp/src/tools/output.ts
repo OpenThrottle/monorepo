@@ -1,8 +1,7 @@
 /**
- * @description Registers plan output tools: append_plan_output, get_plan_output.
+ * @description Plan output tool handlers + schemas: append_plan_output, get_plan_output. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
@@ -14,11 +13,11 @@ import {
 import {
   AppendPlanOutputInputSchema,
   ListPlanOutputStreamChunksInputSchema,
-} from '../__generated__/schemas.js';
-import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/get-auth-token.js';
-import { invalidArgsContent } from '../utils/errors.js';
-import { runTool } from '../utils/tool-result.js';
+} from '../__generated__/schemas.ts';
+import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../auth/get-auth-token.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { runTool } from '../utils/tool-result.ts';
 
 type AppendPlanOutputResult = GenericResult<{
   chunk: AppendPlanOutputMutation['appendPlanOutput'];
@@ -100,24 +99,4 @@ export async function getPlanOutputToolHandler(
 
     return { structuredContent: { chunks }, text };
   });
-}
-
-export function registerOutputTools(server: McpServer): void {
-  server.registerTool(
-    'append_plan_output',
-    {
-      description: appendPlanOutputToolDescription,
-      inputSchema: appendPlanOutputToolParameters,
-    },
-    appendPlanOutputToolHandler,
-  );
-
-  server.registerTool(
-    'get_plan_output',
-    {
-      description: getPlanOutputToolDescription,
-      inputSchema: getPlanOutputToolParameters,
-    },
-    getPlanOutputToolHandler,
-  );
 }
