@@ -33,7 +33,6 @@ describe('validateNestjsSlackOptions', () => {
 
     it('throws when webhookUrl is empty string', () => {
       expect(() =>
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         validateNestjsSlackOptions({
           webhookUrl: '',
         } as NestjsSlackModuleOptions),
@@ -42,7 +41,6 @@ describe('validateNestjsSlackOptions', () => {
 
     it('throws when webhookUrl is whitespace only', () => {
       expect(() =>
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         validateNestjsSlackOptions({
           webhookUrl: '   ',
         } as NestjsSlackModuleOptions),
@@ -51,7 +49,6 @@ describe('validateNestjsSlackOptions', () => {
 
     it('throws when webhookUrl is not a string', () => {
       expect(() =>
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         validateNestjsSlackOptions({
           webhookUrl: 123,
         } as unknown as NestjsSlackModuleOptions),
@@ -70,6 +67,69 @@ describe('validateNestjsSlackOptions', () => {
       expect(() =>
         validateNestjsSlackOptions({ webhookUrl: 'ftp://example.com/foo' }),
       ).toThrow(/webhookUrl must use http or https/);
+    });
+  });
+
+  describe('when webhookUrl uses cleartext http against a non-loopback host', () => {
+    it('throws for http against a remote host', () => {
+      expect(() =>
+        validateNestjsSlackOptions({ webhookUrl: 'http://example.com/foo' }),
+      ).toThrow(/must use https for non-loopback hosts/);
+    });
+
+    it('does not throw for http against 127.0.0.1', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          webhookUrl: 'http://127.0.0.1:3000/webhook',
+        }),
+      ).not.toThrow();
+    });
+  });
+
+  describe('when allowedHosts is provided', () => {
+    it('throws when the host is not in the allowlist', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          allowedHosts: ['hooks.slack.com'],
+          webhookUrl: 'https://example.com/slack-webhook',
+        }),
+      ).toThrow(/webhookUrl host is not allowed/);
+    });
+
+    it('does not throw when the host matches an exact allowlist entry', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          allowedHosts: ['hooks.slack.com'],
+          webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxx',
+        }),
+      ).not.toThrow();
+    });
+
+    it('does not throw when the host matches a wildcard allowlist entry', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          allowedHosts: ['*.slack.com'],
+          webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxx',
+        }),
+      ).not.toThrow();
+    });
+
+    it('matches the allowlist case-insensitively', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          allowedHosts: ['Hooks.Slack.Com'],
+          webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxx',
+        }),
+      ).not.toThrow();
+    });
+
+    it('does not match the apex domain for a leading-wildcard pattern', () => {
+      expect(() =>
+        validateNestjsSlackOptions({
+          allowedHosts: ['*.slack.com'],
+          webhookUrl: 'https://slack.com/services/T00/B00/xxx',
+        }),
+      ).toThrow(/webhookUrl host is not allowed/);
     });
   });
 

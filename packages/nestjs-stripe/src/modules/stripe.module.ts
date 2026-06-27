@@ -12,6 +12,7 @@ import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.
 import {
   STRIPE_CHECKOUT_USER_PORT,
   STRIPE_MODULE_INIT,
+  STRIPE_PROCESSED_EVENTS_PORT,
   STRIPE_SUBSCRIPTIONS_PORT,
   type StripeModuleAsyncOptions,
   type StripeModuleInit,
@@ -45,6 +46,11 @@ export class StripeModule {
           inject: [STRIPE_MODULE_INIT],
           provide: STRIPE_CHECKOUT_USER_PORT,
           useFactory: (init: StripeModuleInit) => init.checkoutUser,
+        },
+        {
+          inject: [STRIPE_MODULE_INIT],
+          provide: STRIPE_PROCESSED_EVENTS_PORT,
+          useFactory: (init: StripeModuleInit) => init.processedEvents ?? null,
         },
         {
           inject: [STRIPE_MODULE_INIT],

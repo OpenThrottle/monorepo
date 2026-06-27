@@ -5,17 +5,19 @@ import { glob } from 'glob';
 import type { Extension } from '../loaders/markdown';
 
 /**
- * Get the root directory of our
+ * @description Resolve the directory to search from. Callers should pass an
+ * explicit root; we fall back to the current working directory rather than a
+ * brittle, monorepo-specific path traversal so this works when the package is
+ * published and consumed outside this repo.
  */
-function getRepositoryRoot(): string {
-  return path.resolve(__dirname, '../../../../../');
+function resolveRoot(rootDir?: string): string {
+  return rootDir ? path.resolve(rootDir) : process.cwd();
 }
 
 /**
- * Get the .gitignore patterns for the repository
+ * Get the .gitignore patterns for the given root directory
  */
-function getGitignorePatterns(): string[] {
-  const rootDir = getRepositoryRoot();
+function getGitignorePatterns(rootDir: string): string[] {
   const gitignorePath = path.join(rootDir, '.gitignore');
 
   if (!fs.existsSync(gitignorePath)) {
@@ -28,19 +30,19 @@ function getGitignorePatterns(): string[] {
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'));
 
-  // console.debug("ignorePatterns --> ", ignorePatterns);
-
   return ignorePatterns;
 }
 
 /**
- * @description Get all files by extension type, respecting .gitignore patterns
+ * @description Get all files by extension type under `rootDir`, respecting
+ * `.gitignore` patterns. Defaults to `process.cwd()` when no root is provided.
  */
 export async function getFilesByExtension(
   extension: Extension,
+  rootDir?: string,
 ): Promise<string[]> {
-  const rootDir = getRepositoryRoot();
-  const gitignorePatterns = getGitignorePatterns();
+  const root = resolveRoot(rootDir);
+  const gitignorePatterns = getGitignorePatterns(root);
 
   // Create ignore instance
   const ig = ignore();
@@ -50,18 +52,18 @@ export async function getFilesByExtension(
   const pattern = `**/*.${extension}`;
   const allFiles = await glob(pattern, {
     absolute: true,
-    cwd: rootDir,
+    cwd: root,
     ignore: ['.git/**', 'node_modules/**', '**/node_modules/**'], // Always ignore these
   });
 
   // Filter out files that match .gitignore patterns
   const relativeFiles = allFiles.map((file: string) =>
-    path.relative(rootDir, file),
+    path.relative(root, file),
   );
   const filteredFiles = relativeFiles.filter(
     (file: string) => !ig.ignores(file),
   );
 
   // Return absolute paths
-  return filteredFiles.map((file: string) => path.join(rootDir, file));
+  return filteredFiles.map((file: string) => path.join(root, file));
 }

@@ -13,8 +13,8 @@ describe('GitHubStatsService', () => {
       getPullCommitCount: vi.fn(),
       getPullDetail: vi.fn(),
       getPullReviews: vi.fn(),
+      listAllPulls: vi.fn(),
       listIssues: vi.fn(),
-      listPulls: vi.fn(),
     });
 
     const module = await Test.createTestingModule({
@@ -33,7 +33,7 @@ describe('GitHubStatsService', () => {
 
   describe('getOpenPrCountByAuthor', () => {
     test('returns aggregated open PR counts by author sorted by count descending', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -80,7 +80,7 @@ describe('GitHubStatsService', () => {
         'repo',
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         state: 'open',
       });
       expect(result).toEqual([
@@ -90,7 +90,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns empty array when repo has no open PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getOpenPrCountByAuthor('o', 'r');
 
@@ -98,7 +98,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('uses (unknown) for PRs with empty author', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: '',
           baseRef: null,
@@ -125,7 +125,7 @@ describe('GitHubStatsService', () => {
 
   describe('getPrTimeInStateSummary', () => {
     test('returns open, closed, and merged summaries with counts and avg days', async () => {
-      vi.mocked(githubService.listPulls)
+      vi.mocked(githubService.listAllPulls)
         .mockResolvedValueOnce([
           {
             author: 'alice',
@@ -175,10 +175,10 @@ describe('GitHubStatsService', () => {
         'repo',
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         state: 'open',
       });
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         state: 'closed',
       });
       expect(result).toHaveLength(3);
@@ -197,7 +197,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns null avgDaysInState when no PRs in a state', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getPrTimeInStateSummary('o', 'r');
 
@@ -212,11 +212,11 @@ describe('GitHubStatsService', () => {
   describe('getLinesAddedDeletedByPeriodOrAuthor', () => {
     beforeEach(() => {
       vi.mocked(githubService.getPullDetail).mockClear();
-      vi.mocked(githubService.listPulls).mockClear();
+      vi.mocked(githubService.listAllPulls).mockClear();
     });
 
     test('aggregates additions/deletions by period and author from merged PR details', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -269,7 +269,7 @@ describe('GitHubStatsService', () => {
           { period: 'month' },
         );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -296,7 +296,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('respects maxPrs and only fetches that many PR details', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -350,7 +350,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns empty array when no merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
       vi.mocked(githubService.getPullDetail).mockClear();
 
       const result =
@@ -366,11 +366,11 @@ describe('GitHubStatsService', () => {
 
   describe('getOpenToMergedCycleTime', () => {
     beforeEach(() => {
-      vi.mocked(githubService.listPulls).mockClear();
+      vi.mocked(githubService.listAllPulls).mockClear();
     });
 
     test('returns repo-wide median and P90 when period is omitted', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -417,7 +417,7 @@ describe('GitHubStatsService', () => {
         'repo',
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -431,7 +431,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns one row per period bucket when period is month', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -480,7 +480,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns null median and P90 when no merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getOpenToMergedCycleTime(
         'owner',
@@ -495,7 +495,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('ignores closed-but-not-merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -592,11 +592,11 @@ describe('GitHubStatsService', () => {
 
   describe('getPrsMergedPerPeriod', () => {
     beforeEach(() => {
-      vi.mocked(githubService.listPulls).mockClear();
+      vi.mocked(githubService.listAllPulls).mockClear();
     });
 
     test('returns PR counts per month sorted by period descending', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -644,7 +644,7 @@ describe('GitHubStatsService', () => {
         { period: 'month' },
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -658,7 +658,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns PR counts per week when period is week', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -693,7 +693,7 @@ describe('GitHubStatsService', () => {
         { period: 'week' },
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -701,8 +701,99 @@ describe('GitHubStatsService', () => {
       expect(result.map((r) => r.count).sort()).toEqual([1, 1]);
     });
 
+    test('labels weeks with ISO-8601 week numbers (Thursday-anchored, year-boundary aware)', async () => {
+      // 2021-01-01 is a Friday → ISO week 2020-W53 (not 2021-W01).
+      // 2026-01-01 is a Thursday → ISO week 2026-W01.
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
+        {
+          author: 'alice',
+          baseRef: null,
+          createdAt: '',
+          headRef: null,
+          headSha: null,
+          htmlUrl: '',
+          mergedAt: '2021-01-01T00:00:00Z',
+          number: 1,
+          state: 'closed',
+          title: '',
+          updatedAt: '',
+        },
+        {
+          author: 'bob',
+          baseRef: null,
+          createdAt: '',
+          headRef: null,
+          headSha: null,
+          htmlUrl: '',
+          mergedAt: '2026-01-01T00:00:00Z',
+          number: 2,
+          state: 'closed',
+          title: '',
+          updatedAt: '',
+        },
+      ]);
+
+      const result = await githubStatsService.getPrsMergedPerPeriod(
+        'owner',
+        'repo',
+        { period: 'week' },
+      );
+
+      const periods = result.map((r) => r.period);
+      expect(periods).toContain('2020-W53');
+      expect(periods).toContain('2026-W01');
+    });
+
+    test('maps known dates to their exact ISO-8601 week buckets', async () => {
+      // Each merged date is in its own week, so the result has one row per date
+      // and we can assert the precise YYYY-Www label produced by toPeriodBucket:
+      //  - 2026-01-01 (Thu) → 2026-W01 (week 1 contains the year's first Thursday).
+      //  - 2026-01-05 (Mon, start of W02) and 2026-01-11 (Sun, end of W02) both → 2026-W02.
+      //  - 2021-01-01 (Fri) → 2020-W53 (week-year differs from calendar year).
+      //  - 2027-01-01 (Fri) → 2026-W53 (forward year-boundary case).
+      const dates = [
+        '2026-01-01T12:00:00Z',
+        '2026-01-05T00:00:00Z',
+        '2026-01-11T23:59:59Z',
+        '2021-01-01T00:00:00Z',
+        '2027-01-01T00:00:00Z',
+      ];
+      vi.mocked(githubService.listAllPulls).mockResolvedValue(
+        dates.map((mergedAt, i) => ({
+          author: 'alice',
+          baseRef: null,
+          createdAt: '',
+          headRef: null,
+          headSha: null,
+          htmlUrl: '',
+          mergedAt,
+          number: i + 1,
+          state: 'closed' as const,
+          title: '',
+          updatedAt: '',
+        })),
+      );
+
+      const result = await githubStatsService.getPrsMergedPerPeriod(
+        'owner',
+        'repo',
+        { period: 'week' },
+      );
+
+      const byPeriod = new Map(result.map((r) => [r.period, r.count]));
+      expect(byPeriod.get('2026-W01')).toBe(1);
+      // The Monday-start and Sunday-end of W02 collapse into one bucket.
+      expect(byPeriod.get('2026-W02')).toBe(2);
+      expect(byPeriod.get('2020-W53')).toBe(1);
+      expect(byPeriod.get('2026-W53')).toBe(1);
+      // Every week label is zero-padded to two digits (YYYY-Www).
+      for (const period of byPeriod.keys()) {
+        expect(period).toMatch(/^\d{4}-W\d{2}$/);
+      }
+    });
+
     test('returns empty array when no merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getPrsMergedPerPeriod(
         'owner',
@@ -714,7 +805,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('ignores PRs with null mergedAt', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -743,11 +834,11 @@ describe('GitHubStatsService', () => {
   describe('getReviewCycleTime', () => {
     beforeEach(() => {
       vi.mocked(githubService.getPullReviews).mockClear();
-      vi.mocked(githubService.listPulls).mockClear();
+      vi.mocked(githubService.listAllPulls).mockClear();
     });
 
     test('returns repo-wide median and P90 from last CHANGES_REQUESTED to first APPROVED', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -790,7 +881,7 @@ describe('GitHubStatsService', () => {
         'repo',
       );
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -813,7 +904,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('uses merged_at as end when no APPROVED after last CHANGES_REQUESTED', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -846,7 +937,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('excludes PRs with no CHANGES_REQUESTED', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -877,7 +968,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns one row per period bucket when period is month', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -935,7 +1026,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns single row with prCount 0 and null median/P90 when no merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getReviewCycleTime(
         'owner',
@@ -951,7 +1042,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('respects maxPrs and only fetches reviews for that many PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -997,7 +1088,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('uses last CHANGES_REQUESTED when multiple rounds', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -1035,11 +1126,11 @@ describe('GitHubStatsService', () => {
   describe('getCommitsPerPr', () => {
     beforeEach(() => {
       vi.mocked(githubService.getPullCommitCount).mockClear();
-      vi.mocked(githubService.listPulls).mockClear();
+      vi.mocked(githubService.listAllPulls).mockClear();
     });
 
     test('returns one row per merged PR with commits, mergedAt, and optional period', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -1075,7 +1166,7 @@ describe('GitHubStatsService', () => {
         period: 'month',
       });
 
-      expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
+      expect(githubService.listAllPulls).toHaveBeenCalledWith('owner', 'repo', {
         merged: true,
         state: 'closed',
       });
@@ -1105,7 +1196,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns period null when period option is omitted', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -1134,7 +1225,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('respects maxPrs and only fetches commit count for that many PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([
         {
           author: 'alice',
           baseRef: null,
@@ -1175,7 +1266,7 @@ describe('GitHubStatsService', () => {
     });
 
     test('returns empty array when no merged PRs', async () => {
-      vi.mocked(githubService.listPulls).mockResolvedValue([]);
+      vi.mocked(githubService.listAllPulls).mockResolvedValue([]);
 
       const result = await githubStatsService.getCommitsPerPr('owner', 'repo');
 

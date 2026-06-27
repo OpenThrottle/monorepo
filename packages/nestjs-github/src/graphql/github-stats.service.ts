@@ -135,23 +135,53 @@ function daysBetween(fromIso: string, toIso?: string): number {
 }
 
 /**
- * @description Returns period bucket string in UTC: week "YYYY-Www" or month "YYYY-MM".
+ * @description Returns the ISO-8601 week-numbering year and week for a date, in
+ * UTC. ISO weeks start on Monday and week 1 is the week containing the year's
+ * first Thursday, so the week-year can differ from the calendar year near
+ * year boundaries (e.g. 2026-01-01 falls in ISO week 2026-W01, but 2027-01-01
+ * falls in 2026-W53). Returns `{ year, week }` so the caller can label the
+ * bucket with the correct week-numbering year.
+ */
+function isoWeek(d: Date): { week: number; year: number } {
+  // Work on a UTC copy anchored to midnight to avoid DST/time-of-day drift.
+  const target = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
+  // ISO weekday: Mon=1 .. Sun=7.
+  const isoDay = target.getUTCDay() === 0 ? 7 : target.getUTCDay();
+  // Shift to the Thursday of the current ISO week; its calendar year is the
+  // ISO week-numbering year.
+  target.setUTCDate(target.getUTCDate() + 4 - isoDay);
+  const year = target.getUTCFullYear();
+  const firstThursday = new Date(Date.UTC(year, 0, 1));
+  const firstThursdayIsoDay =
+    firstThursday.getUTCDay() === 0 ? 7 : firstThursday.getUTCDay();
+  // Move Jan 1 forward to the first Thursday of the week-year.
+  firstThursday.setUTCDate(
+    firstThursday.getUTCDate() + ((4 - firstThursdayIsoDay + 7) % 7),
+  );
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const week =
+    Math.round((target.getTime() - firstThursday.getTime()) / msPerWeek) + 1;
+  return { week, year };
+}
+
+/**
+ * @description Returns period bucket string in UTC: week "YYYY-Www" (ISO-8601
+ * week-numbering year + week, Thursday-anchored) or month "YYYY-MM".
  */
 function toPeriodBucket(
   mergedAtIso: string,
   period: LinesAddedDeletedPeriod,
 ): string {
   const d = new Date(mergedAtIso);
-  const y = d.getUTCFullYear();
-  const m = d.getUTCMonth() + 1;
   if (period === 'month') {
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
     return `${y}-${String(m).padStart(2, '0')}`;
   }
-  const startOfYear = new Date(Date.UTC(y, 0, 1));
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  const weekNum =
-    Math.floor((d.getTime() - startOfYear.getTime()) / msPerWeek) + 1;
-  return `${y}-W${String(weekNum).padStart(2, '0')}`;
+  const { week, year } = isoWeek(d);
+  return `${year}-W${String(week).padStart(2, '0')}`;
 }
 
 /**
@@ -183,7 +213,7 @@ export class GitHubStatsService {
     repo: string,
     state: ListPullsOptions['state'] = 'open',
   ): Promise<OpenPrCountByAuthor[]> {
-    const pulls = await this.githubService.listPulls(owner, repo, { state });
+    const pulls = await this.githubService.listAllPulls(owner, repo, { state });
 
     const byAuthor = new Map<string, number>();
     for (const p of pulls) {
@@ -204,8 +234,8 @@ export class GitHubStatsService {
     repo: string,
   ): Promise<PrTimeInStateSummary[]> {
     const [openPulls, closedPulls] = await Promise.all([
-      this.githubService.listPulls(owner, repo, { state: 'open' }),
-      this.githubService.listPulls(owner, repo, { state: 'closed' }),
+      this.githubService.listAllPulls(owner, repo, { state: 'open' }),
+      this.githubService.listAllPulls(owner, repo, { state: 'closed' }),
     ]);
 
     const nowIso = new Date().toISOString();
@@ -251,7 +281,7 @@ export class GitHubStatsService {
     const maxPrs = options.maxPrs ?? 100;
     const periodKind = options.period ?? 'month';
 
-    const mergedPulls = await this.githubService.listPulls(owner, repo, {
+    const mergedPulls = await this.githubService.listAllPulls(owner, repo, {
       merged: true,
       state: 'closed',
     });
@@ -306,7 +336,7 @@ export class GitHubStatsService {
     repo: string,
     options: OpenToMergedCycleTimeOptions = {},
   ): Promise<OpenToMergedCycleTimeRow[]> {
-    const mergedPulls = await this.githubService.listPulls(owner, repo, {
+    const mergedPulls = await this.githubService.listAllPulls(owner, repo, {
       merged: true,
       state: 'closed',
     });
@@ -389,7 +419,7 @@ export class GitHubStatsService {
     repo: string,
     options: { period: LinesAddedDeletedPeriod },
   ): Promise<PrsMergedPerPeriodRow[]> {
-    const mergedPulls = await this.githubService.listPulls(owner, repo, {
+    const mergedPulls = await this.githubService.listAllPulls(owner, repo, {
       merged: true,
       state: 'closed',
     });
@@ -420,7 +450,7 @@ export class GitHubStatsService {
     const maxPrs = options.maxPrs ?? 100;
     const periodKind = options.period;
 
-    const mergedPulls = await this.githubService.listPulls(owner, repo, {
+    const mergedPulls = await this.githubService.listAllPulls(owner, repo, {
       merged: true,
       state: 'closed',
     });
@@ -519,7 +549,7 @@ export class GitHubStatsService {
     const maxPrs = options.maxPrs ?? 100;
     const periodKind = options.period;
 
-    const mergedPulls = await this.githubService.listPulls(owner, repo, {
+    const mergedPulls = await this.githubService.listAllPulls(owner, repo, {
       merged: true,
       state: 'closed',
     });

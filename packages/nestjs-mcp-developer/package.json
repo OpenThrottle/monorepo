@@ -43,7 +43,6 @@
         ],
         "executor": "@nx/js:tsc"
       },
-      "build-package__DISABLED__": {},
       "dev": {
         "continuous": true,
         "executor": "@nx/js:tsc",

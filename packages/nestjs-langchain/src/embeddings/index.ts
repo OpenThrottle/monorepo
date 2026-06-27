@@ -1,8 +1,10 @@
+import type { EmbeddingsInterface } from '@langchain/core/embeddings';
+import { VertexAIEmbeddings } from '@langchain/google-vertexai';
+import { OllamaEmbeddings } from '@langchain/ollama';
 import {
-  GoogleVertexAIEmbeddingsInput,
-  VertexAIEmbeddings,
-} from '@langchain/google-vertexai';
-import { OllamaEmbeddings, OllamaEmbeddingsParams } from '@langchain/ollama';
+  type ResilienceConfig,
+  resolveResilienceConfig,
+} from '../config/resilience';
 
 /**
  * ------------------------------------------------------------
@@ -17,7 +19,7 @@ import { OllamaEmbeddings, OllamaEmbeddingsParams } from '@langchain/ollama';
 export const embeddingModelProviders = ['Ollama', 'VertexAI'] as const;
 export type EmbeddingModelProvider = (typeof embeddingModelProviders)[number];
 
-export interface EmbeddingModelConfig {
+export interface EmbeddingModelConfig extends ResilienceConfig {
   provider: EmbeddingModelProvider;
   temperature?: number;
   verbose?: boolean;
@@ -47,19 +49,17 @@ interface EmbeddingModelConfigVertexAI extends EmbeddingModelConfig {
  */
 export const getEmbeddingsModel = (
   config: EmbeddingModelConfigOllama | EmbeddingModelConfigVertexAI,
-) => {
-  const { provider, ...rest } = config;
+): EmbeddingsInterface => {
+  const { maxConcurrency, maxRetries, provider, ...rest } = config;
+  const resilience = resolveResilienceConfig({ maxConcurrency, maxRetries });
+  const optionsWithDefaults = { ...rest, ...resilience };
 
   if (provider === 'Ollama') {
-    const embeddingsModel = new OllamaEmbeddings(rest);
-
-    return embeddingsModel satisfies GoogleVertexAIEmbeddingsInput;
+    return new OllamaEmbeddings(optionsWithDefaults);
   }
 
   if (provider === 'VertexAI') {
-    const embeddingsModel = new VertexAIEmbeddings(rest);
-
-    return embeddingsModel satisfies OllamaEmbeddingsParams;
+    return new VertexAIEmbeddings(optionsWithDefaults);
   }
 
   throw new Error(`Invalid embedding model`);
@@ -79,7 +79,9 @@ export const getEmbeddingModelDimensions = (model: EmbeddingModel) => {
     case 'all-minilm':
       return 384;
     case 'gemini-embedding-001':
-      return 1536;
+      // Vertex AI default output dimensionality is 3072 (configurable to
+      // 1536 or 768 via outputDimensionality; default is used here).
+      return 3072;
     case 'mxbai-embed-large':
       return 1024;
     case 'nomic-embed-text':

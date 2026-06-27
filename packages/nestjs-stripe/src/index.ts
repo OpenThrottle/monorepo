@@ -18,12 +18,18 @@ export type {
   CreateCheckoutSessionParams,
   CreateCheckoutSessionResult,
 } from './services/checkout.service';
-export { type StripeConfig, getStripeConfig } from './config/stripe-config';
+export {
+  STRIPE_API_VERSION,
+  type StripeConfig,
+  createStripeClient,
+  getStripeConfig,
+} from './config/stripe-config';
 export { ProcessStripeWebhookInput } from './graphql/stripe-webhook-mutation.input';
 export { StripeWebhookProcessedPayload } from './graphql/stripe-webhook-mutation.object';
 export { StripeWebhookResolver } from './graphql/stripe-webhook.resolver';
 export type {
   StripeCheckoutUserPort,
+  StripeProcessedEventsPort,
   StripeSubscriptionUpdatePayload,
   StripeSubscriptionUpsertPayload,
   StripeSubscriptionsPort,
@@ -37,6 +43,7 @@ export type {
 } from './tokens/stripe-tokens';
 export {
   STRIPE_CHECKOUT_USER_PORT,
+  STRIPE_PROCESSED_EVENTS_PORT,
   STRIPE_SUBSCRIPTIONS_PORT,
 } from './tokens/stripe-tokens';
 export { WebhooksController } from './controllers/webhooks.controller';

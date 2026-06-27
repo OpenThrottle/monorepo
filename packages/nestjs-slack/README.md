@@ -20,11 +20,28 @@ npm install @openthrottle/nestjs-slack
 
 Register the module with **`forRoot(options)`**. All required keys must be provided; validation runs in the dynamic module factory, so missing or invalid config fails at app bootstrap.
 
-### Required config
+### Config
 
-| Key          | Description                                      |
-| ------------ | ------------------------------------------------ |
-| `webhookUrl` | Incoming webhook URL (must be `http` or `https`) |
+| Key            | Required | Description                                                                                                                         |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `webhookUrl`   | yes      | Incoming webhook URL. Must be `https`; cleartext `http` is only accepted for loopback hosts (`localhost`, `127.0.0.1`, `::1`).      |
+| `allowedHosts` | no       | Allowlist of hostnames the `webhookUrl` may target. Supports exact matches and a single leading `*.` wildcard (e.g. `*.slack.com`). |
+
+### Security: webhookUrl must be operator-trusted
+
+`webhookUrl` is an outbound request primitive. Sending it somewhere attacker-controlled turns this module into an SSRF / cleartext-exfiltration vector. Two guards apply:
+
+- **No cleartext to remote hosts.** `http:` is rejected unless the host is loopback (`localhost`, `127.0.0.1`, `::1`); every other host must be `https:`. This prevents message contents being sent in plaintext over a network.
+- **Optional host allowlist.** If `webhookUrl` can be influenced by semi-trusted config/env, set `allowedHosts` so the URL cannot be repointed at internal services:
+
+  ```ts
+  NestjsSlackModule.forRoot({
+    allowedHosts: ['hooks.slack.com'], // or ['*.slack.com']
+    webhookUrl: process.env.SLACK_WEBHOOK_URL ?? '',
+  });
+  ```
+
+**Documented decision:** when `allowedHosts` is omitted, any `https` host is permitted (so `https://example.com/slack-webhook` is valid). This is intentional — the module is designed to support custom/proxy webhook endpoints — and assumes `webhookUrl` is fully operator-trusted at bootstrap. Set `allowedHosts` whenever that assumption does not hold.
 
 ### Example
 
@@ -64,4 +81,4 @@ If you omit options, pass an empty `webhookUrl`, or an invalid URL, the app thro
 ### Environment / config
 
 - Set `SLACK_WEBHOOK_URL` (or your preferred env var) and pass it into `forRoot({ webhookUrl: process.env.SLACK_WEBHOOK_URL })`.
-- Ensure the value is a valid `https://` (or `http://`) URL before the app starts; otherwise validation will throw.
+- Ensure the value is a valid `https://` URL before the app starts (cleartext `http://` is only accepted for loopback hosts); otherwise validation will throw.
