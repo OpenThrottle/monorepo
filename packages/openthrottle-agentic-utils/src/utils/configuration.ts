@@ -1,5 +1,4 @@
 import { parseArgs } from 'node:util';
-import { z } from 'zod';
 import type {
   WorkflowConfigDebug,
   WorkflowConfigRunner,
@@ -8,87 +7,14 @@ import type {
 import {
   DEFAULT_WORKFLOW_DEBUG,
   DEFAULT_WORKFLOW_ITERATIONS,
+  DEFAULT_WORKFLOW_RUNNER,
 } from '../config/index.ts';
 import type { Writable } from '../types/index.ts';
 
-const _workflowSchema = z.object({
-  debug: z.enum(['debug', 'verbose', 'omit']).default('omit'),
-  iterations: z.number().min(1).max(100).default(10),
-  model: z.string().default('auto'),
-  name: z.string().default(''),
-  prompt: z.string().default(''),
-  runner: z.enum(['cursor', 'claude', 'opencode']).default('cursor'),
-  worktree: z.string().optional(),
-  worktreeBase: z.string().default('main'),
-  worktreeSkipSetup: z.boolean().default(false),
-});
-
-const _parseWorkflowConfig = () => {
-  const args = parseArgs({
-    allowPositionals: true,
-    options: {
-      debug: { short: 'd', type: 'string' },
-      iterations: { default: '10', short: 'i', type: 'string' },
-      model: { default: 'auto', short: 'm', type: 'string' },
-      name: { short: 'n', type: 'string' },
-      prompt: { default: '', short: 'p', type: 'string' },
-      runner: { default: 'cursor', short: 'r', type: 'string' },
-      worktree: { short: 'w', type: 'string' },
-      worktreeBase: { default: 'main', short: 'b', type: 'string' },
-      worktreeSkipSetup: { default: 'false', short: 's', type: 'string' },
-    },
-    strict: true,
-  });
-
-  const config: Writable<WorkflowConfig> = {
-    cwdOpenThrottle: process.cwd(),
-    cwdTarget: process.cwd(),
-    debug: safeParseDebug(args.values.debug),
-    iterationTimeout: 1000,
-    iterations: safeParseIterations(args.values.iterations),
-    model: safeParseString(args.values.model),
-    prompt: safeParseString(args.values.prompt),
-    runner: safeParseRunner(args.values.runner),
-    timeout: 1000,
-  };
-
-  if (args.values.worktree) {
-    config.worktree = safeParseString(args.values.worktree);
-    config.worktreeBase = safeParseString(args.values.worktreeBase);
-    config.worktreeSkipSetup = safeParseBoolean(args.values.worktreeSkipSetup);
-  }
-
-  return config;
-};
-
-// /**
-//  * @description Parses command line arguments into a WorkflowConfig object.
-//  */
-// export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
-//   try {
-//     return parseWorkflowConfig();
-//   } catch (error) {
-//     console.error(`🚨 ⚠️ 🚨 ⚠️ Failed to parse workflow config: ${error}`);
-//     // TODO: Show tool usage here
-//     process.exit(1);
-//   }
-// };
+/**
+ * @description Parses command line arguments into a WorkflowConfig object.
+ */
 export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
-  const config: Writable<WorkflowConfig> = {
-    cwdOpenThrottle: process.cwd(),
-    cwdTarget: process.cwd(),
-    debug: 'debug',
-    iterationTimeout: 1000,
-    iterations: 1,
-    model: 'auto',
-    prompt: '',
-    runner: 'cursor',
-    timeout: 1000,
-    // worktree: '',
-    // worktreeBase: '',
-    // worktreeSkipSetup: false,
-  };
-
   const { positionals: _positionals, values } = parseArgs({
     allowPositionals: true,
     options: {
@@ -106,6 +32,20 @@ export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
     strict: true,
   });
 
+  const config: Writable<WorkflowConfig> = {
+    cwdOpenThrottle: process.cwd(),
+    cwdTarget: values.cwdTarget
+      ? safeParseString(values.cwdTarget)
+      : process.cwd(),
+    debug: safeParseDebug(values.debug),
+    iterationTimeout: 1000,
+    iterations: safeParseIterations(values.iterations ?? '10'),
+    model: safeParseString(values.model ?? 'auto') || 'auto',
+    prompt: safeParseString(values.prompt ?? ''),
+    runner: safeParseRunner(values.runner ?? 'cursor'),
+    timeout: 1000,
+  };
+
   if (values.worktree) {
     config.worktree = safeParseString(values.worktree);
     config.worktreeBase = safeParseString(values.worktreeBase || 'main');
@@ -114,9 +54,7 @@ export const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
     );
   }
 
-  const configMerged = Object.assign({}, config, values);
-
-  return configMerged;
+  return config;
 };
 
 export const safeParseBoolean = (
@@ -171,7 +109,9 @@ export const safeParseIterations = (iterations: string): number => {
   return valueSafe;
 };
 
-export const safeParseRunner = (runner: string): WorkflowConfigRunner => {
+export const safeParseRunner = (
+  runner: string | undefined,
+): WorkflowConfigRunner => {
   switch (runner) {
     case 'claude':
       return 'claude';
@@ -179,9 +119,10 @@ export const safeParseRunner = (runner: string): WorkflowConfigRunner => {
       return 'cursor';
     case 'opencode':
       return 'opencode';
-  }
 
-  throw new Error(`Unknown runner: ${runner}`);
+    default:
+      return DEFAULT_WORKFLOW_RUNNER;
+  }
 };
 
 export const safeParseString = (value: string): string => {

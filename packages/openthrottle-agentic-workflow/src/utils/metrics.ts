@@ -56,28 +56,33 @@ export function determinePressureLevel(
   const { perCoreLoad1m } = loadAverage;
   const psiSome = psi.some10s;
 
+  // Guard against NaN/Infinity: the load thresholds below partition the finite
+  // number line, so 'unknown' is only reachable for a non-finite perCoreLoad1m.
+  if (!Number.isFinite(perCoreLoad1m)) {
+    return 'unknown';
+  }
+
   if (perCoreLoad1m > 1.5 || (psiSome !== null && psiSome > 20)) {
     return 'high';
   }
 
-  if (
-    perCoreLoad1m >= 0.7 ||
-    (psiSome !== null && psiSome >= 5 && psiSome <= 20)
-  ) {
+  // The high branch already returned for psiSome > 20, so no upper bound is
+  // needed here; perCoreLoad1m in [0.7, 1.5] or psiSome in [5, 20] is moderate.
+  if (perCoreLoad1m >= 0.7 || (psiSome !== null && psiSome >= 5)) {
     return 'moderate';
   }
 
-  if (perCoreLoad1m < 0.7 && (psiSome === null || psiSome < 5)) {
-    return 'low';
-  }
-
-  return 'unknown';
+  return 'low';
 }
 
 /**
  * @description Formats system CPU metrics as a one-line summary for logs.
  */
 export function formatSystemCpuMetrics(metrics: SystemCpuMetrics): string {
+  // Intentionally only reads `atEnd`: the stall delta is precomputed in
+  // `psiSomeDeltaUs`, so this formatter never needs the `atStart` snapshot.
+  // `atStart` is retained on SystemCpuMetrics for downstream consumers — do not
+  // remove it as "unused".
   const { atEnd, psiAvailable, psiSomeDeltaUs, pressureLevel, platform } =
     metrics;
   const { load1m, cpuCount, perCoreLoad1m } = atEnd.loadAverage;

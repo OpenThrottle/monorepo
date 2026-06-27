@@ -16,9 +16,10 @@ import {
 export const validateAgentAssetsOnDisk = (
   options: WalkAgentAssetsOptions,
 ): ValidateAgentAssetsResult => {
+  const { files, warnings: walkWarnings } = walkAgentAssetFiles(options);
   const results = [];
 
-  for (const file of walkAgentAssetFiles(options)) {
+  for (const file of files) {
     results.push(
       validateAgentAssetFrontmatter({
         content: file.content,
@@ -29,7 +30,12 @@ export const validateAgentAssetsOnDisk = (
     );
   }
 
-  return mergeValidationResults(results);
+  const merged = mergeValidationResults(results);
+
+  return {
+    errors: merged.errors,
+    warnings: [...walkWarnings, ...merged.warnings],
+  };
 };
 
 export type { AgentAssetValidationIssue, WalkAgentAssetsOptions };

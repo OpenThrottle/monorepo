@@ -1,4 +1,12 @@
-// FIXME: We can better handle these instances
+// `no-await-in-loop` is disabled deliberately, not as tech debt: the awaits in
+// this file are intentionally sequential and must NOT be batched with
+// `Promise.all`.
+//   - The main iteration loop runs exactly one agent invocation at a time;
+//     each iteration depends on the prior iteration's task-state mutations.
+//   - The per-completion `for…of` loop interleaves a status mutation, a task
+//     re-fetch, and an ordered `afterEach` lifecycle hook per task; running it
+//     concurrently would fire N concurrent re-fetches and dispatch lifecycle
+//     hooks in a non-deterministic order against a shared dispatcher.
 /* eslint-disable no-await-in-loop */
 
 import type {
@@ -24,7 +32,10 @@ import {
   resolveForeignWorkspaceContext,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowContext } from '../types.ts';
-import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.ts';
+import type {
+  WorkflowRalphIterationOnChunk,
+  WorkflowRalphOrchestratorDeps,
+} from '../contract/ralph-orchestrator-deps.ts';
 import {
   parseAgentOutput,
   parseAgentCompleteTaskSignals,
@@ -34,6 +45,21 @@ import {
   formatPlanAndTasksForPrompt,
   pickRalphTaskForIteration,
 } from '../utils/index.ts';
+import {
+  DEFAULT_ITERATIONS,
+  resolveRalphMaxTotalMsFromEnv,
+} from '../config/index.ts';
+
+/**
+ * @description Clamps the iteration ceiling defensively. `WorkflowContext` is built by paths that
+ * bypass `resolveWorkflowRunOptions` clamping (e.g. developer UI / `buildRalphFlowContextFromRunOptionsShape`),
+ * so a `0`/negative/`NaN` `iterations` could otherwise skip the loop body entirely and report a
+ * silent no-op run as success. Falls back to {@link DEFAULT_ITERATIONS}.
+ */
+const resolveMaxIterations = (iterations: number): number =>
+  Number.isInteger(iterations) && iterations >= 1
+    ? iterations
+    : DEFAULT_ITERATIONS;
 
 /**
  * @description Agent cwd and foreign-repo scoping for orchestrator prompts (parity with `ralph.ts`).
@@ -56,11 +82,20 @@ const buildOrchestratorBasePrompt = (params: {
     resolveForeignWorkspaceContext(agentCwd, process.env),
   );
 
+  // Layer ordering is security-relevant. `context.prompt` (a path fragment by
+  // default, free text via tuning) and the injected plan/task content
+  // (`description`/`title`/`requirements` from OpenThrottle) are
+  // **trusted-operator inputs today**, injected verbatim. Keeping
+  // `WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL` as the LAST instruction layer —
+  // after the operator prompt and after the injected content — means its
+  // command-execution safety rules are the final word the agent reads and are
+  // not overridden by anything ahead of them. If injected plan content ever
+  // becomes attacker-influenced, this ordering is the defense-in-depth seam.
   return (
     `${context.prompt}\n\n` +
     (foreignLayer !== undefined ? `${foreignLayer}\n\n` : '') +
-    `${WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL}\n\n` +
     `${injectedContext}\n\n` +
+    `${WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (taskIdTrim !== '' ? ` Task-Id: ${taskIdTrim}.` : '') +
     ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.'
@@ -103,6 +138,58 @@ const onFailure = (
 });
 
 /**
+ * @description Normalizes an unknown thrown value into a single-line, operator-readable description.
+ * Preserves `Error.name`/`message` (and a first stack frame when present) without leaking the full
+ * stack; falls back to JSON for non-`Error` throws.
+ */
+const describeError = (error: unknown): string => {
+  if (error instanceof Error) {
+    const firstFrame = error.stack
+      ?.split('\n')
+      .map((line) => line.trim())
+      .find((line) => line.startsWith('at '));
+
+    return firstFrame
+      ? `${error.name}: ${error.message} (${firstFrame})`
+      : `${error.name}: ${error.message}`;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
+/**
+ * @description Emits a structured diagnostic line on the iteration `onChunk` stderr stream so operators
+ * can distinguish a transient GraphQL/network fault, an agent crash, an auth failure, and a bug — all of
+ * which otherwise collapse to an opaque `workflow_unhandled`. Best-effort: a throwing/awaiting `onChunk`
+ * must never mask the original failure, so errors here are swallowed. No-op when no `onChunk` is wired.
+ */
+const emitDiagnostic = async (
+  onChunk: WorkflowRalphIterationOnChunk | undefined,
+  params: { readonly error: unknown; readonly phase: string },
+): Promise<void> => {
+  if (!onChunk) {
+    return;
+  }
+
+  try {
+    await onChunk({
+      data: `[ralph-orchestrator] ${params.phase}: ${describeError(params.error)}\n`,
+      stream: 'stderr',
+    });
+  } catch {
+    // Diagnostics are side effects; never let them mask the underlying failure.
+  }
+};
+
+/**
  * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
  * `openthrottle-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
  */
@@ -113,6 +200,36 @@ const promotePlanToInProgressIfNeeded = async (
   await executeGraphqlV2(UpdatePlanDocument, {
     input: { id: planId, status: 'IN_PROGRESS' },
   });
+};
+
+/**
+ * @description Re-queries the plan's tasks and marks the plan COMPLETED when no non-terminal task
+ * remains. The server performs no downward reconcile (see repo memory "no server-side downward
+ * reconcile"), so a task-scoped run that completes the plan's last task must reconcile the parent
+ * itself — otherwise the plan is stranded non-terminal with every task COMPLETED. Mirrors the
+ * plan-mode `remaining.length === 0 → COMPLETED` path. Returns `true` when it reconciled.
+ */
+const reconcilePlanIfTasksExhausted = async (
+  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
+  planId: string,
+): Promise<boolean> => {
+  const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
+    input: { planId },
+  });
+
+  const remaining = planTasks.tasksByPlanId.filter((t) =>
+    REMAINING_TASK_STATUS.has(t.status),
+  );
+
+  if (remaining.length > 0) {
+    return false;
+  }
+
+  await executeGraphqlV2(UpdatePlanDocument, {
+    input: { id: planId, status: 'COMPLETED' },
+  });
+
+  return true;
 };
 
 /**
@@ -144,11 +261,21 @@ export const createWorkflowRalphOrchestrator = (
         });
 
         if (!taskLookup.task) {
+          await emitDiagnostic(onChunk, {
+            error: new Error(`task ${taskIdTrim} not found`),
+            phase: 'target resolution failed',
+          });
+
           return onFailure('workflow_unhandled');
         }
 
         effectivePlanId = taskLookup.task.planId;
       } else if (planIdTrim === '' && taskIdTrim === '') {
+        await emitDiagnostic(onChunk, {
+          error: new Error('context supplied neither a planId nor a taskId'),
+          phase: 'target resolution failed',
+        });
+
         return onFailure('workflow_unhandled');
       }
 
@@ -164,6 +291,11 @@ export const createWorkflowRalphOrchestrator = (
       const tasksRows = tasksResult.tasksByPlanId;
 
       if (!planRow) {
+        await emitDiagnostic(onChunk, {
+          error: new Error(`plan ${effectivePlanId} not found`),
+          phase: 'plan state load failed',
+        });
+
         return onFailure('workflow_unhandled');
       }
 
@@ -193,18 +325,31 @@ export const createWorkflowRalphOrchestrator = (
         });
       }
 
-      const {
-        abortSignal,
-        iterations: maxIterations,
-        iterationTimeout,
-        timeout,
-      } = context;
+      const { abortSignal, iterationTimeout, timeout } = context;
+      const maxIterations = resolveMaxIterations(context.iterations);
 
       const iterationTimeoutSeconds = iterationTimeout ?? timeout ?? undefined;
       const timeoutMs =
         iterationTimeoutSeconds != null
           ? iterationTimeoutSeconds * 1000
           : undefined;
+
+      // budget.deadline
+      // `maxIterations` (count) and `timeoutMs` (per-iteration) alone allow
+      // `iterations × ~iterationTimeout` of unbounded-in-cost wall-clock on a
+      // stuck plan. Cap cumulative wall-clock: prefer the explicit
+      // `OPENTHROTTLE_RALPH_MAX_TOTAL_MS` env override, else derive a ceiling of
+      // `perIterationTimeoutMs × maxIterations`. Checked in the iteration guard.
+      const startedAtMs = Date.now();
+      const explicitTotalMs = resolveRalphMaxTotalMsFromEnv();
+      const derivedTotalMs =
+        timeoutMs != null ? timeoutMs * maxIterations : undefined;
+      const totalDeadlineMs =
+        explicitTotalMs != null
+          ? startedAtMs + explicitTotalMs
+          : derivedTotalMs != null
+            ? startedAtMs + derivedTotalMs
+            : undefined;
 
       if (abortSignal?.aborted) {
         return onFinished('workflow_cancelled');
@@ -223,6 +368,17 @@ export const createWorkflowRalphOrchestrator = (
         // iteration.guard
         if (abortSignal?.aborted) {
           return onFinished('workflow_cancelled');
+        }
+
+        if (totalDeadlineMs != null && Date.now() >= totalDeadlineMs) {
+          await emitDiagnostic(onChunk, {
+            error: new Error(
+              `cumulative wall-clock budget exhausted before iteration ${iteration}`,
+            ),
+            phase: 'budget guard',
+          });
+
+          return onFinished('workflow_budget_exhausted');
         }
 
         let agentPrompt = basePrompt;
@@ -320,7 +476,12 @@ export const createWorkflowRalphOrchestrator = (
             worktree: context.worktree,
             worktreeBase: context.worktreeBase,
           });
-        } catch {
+        } catch (error) {
+          await emitDiagnostic(onChunk, {
+            error,
+            phase: `iteration ${iteration} runner failed`,
+          });
+
           return onFailure('workflow_unhandled');
         }
 
@@ -328,21 +489,27 @@ export const createWorkflowRalphOrchestrator = (
           return onFinished('workflow_cancelled');
         }
 
+        // Completion ids are kept in their original casing so the
+        // `UpdateTaskDocument` mutation matches a case-sensitive server-side
+        // UUID lookup; comparisons below lowercase both sides explicitly.
         const completeTaskIds = [...parseAgentCompleteTaskSignals(agentOutput)];
+        const hasCompletionId = (candidate: string): boolean => {
+          const lowered = candidate.toLowerCase();
+
+          return completeTaskIds.some((id) => id.toLowerCase() === lowered);
+        };
 
         if (
           taskIdTrim &&
           agentOutputHasPromiseComplete(agentOutput) &&
-          !completeTaskIds.some((id) => id === taskIdTrim.toLowerCase())
+          !hasCompletionId(taskIdTrim)
         ) {
-          completeTaskIds.push(taskIdTrim.toLowerCase());
+          completeTaskIds.push(taskIdTrim);
         }
 
         const currentTaskAlreadyMarked =
           firstPendingForIteration !== undefined &&
-          completeTaskIds.some(
-            (id) => id === firstPendingForIteration.toLowerCase(),
-          );
+          hasCompletionId(firstPendingForIteration);
 
         if (
           !taskIdTrim &&
@@ -350,7 +517,7 @@ export const createWorkflowRalphOrchestrator = (
           agentOutputHasPromiseComplete(agentOutput) &&
           !currentTaskAlreadyMarked
         ) {
-          completeTaskIds.push(firstPendingForIteration.toLowerCase());
+          completeTaskIds.push(firstPendingForIteration);
         }
 
         // tasks.apply_completions
@@ -366,7 +533,7 @@ export const createWorkflowRalphOrchestrator = (
               });
 
               const completedTask = tasks.tasksByPlanId.find(
-                (t) => t.id.toLowerCase() === taskId,
+                (t) => t.id.toLowerCase() === taskId.toLowerCase(),
               );
 
               if (completedTask) {
@@ -380,8 +547,13 @@ export const createWorkflowRalphOrchestrator = (
                 });
               }
             }
-          } catch {
-            // Parity with ralph.ts: log side effects are CLI-only; continue.
+          } catch (error) {
+            // Parity with ralph.ts: a failed completion is non-fatal (the next
+            // iteration re-reads task state), but surface it instead of swallowing.
+            await emitDiagnostic(onChunk, {
+              error,
+              phase: `iteration ${iteration} task ${taskId} completion update failed`,
+            });
           }
         }
 
@@ -389,8 +561,32 @@ export const createWorkflowRalphOrchestrator = (
 
         lastIterationTaskId = currentTaskId;
         lastIterationTaskCompleted = currentTaskId
-          ? completeTaskIds.some((id) => id === currentTaskId.toLowerCase())
+          ? hasCompletionId(currentTaskId)
           : false;
+
+        // plan.reconcile (task-centric)
+        // Plan mode reconciles at the top of each iteration via the
+        // `remaining.length === 0` branch; task mode never enters that branch,
+        // so completing the plan's last task here would otherwise strand the
+        // parent non-terminal. Reconcile the parent ourselves when this
+        // iteration applied a completion.
+        if (isTaskCentric && completeTaskIds.length > 0) {
+          try {
+            const reconciled = await reconcilePlanIfTasksExhausted(
+              executeGraphqlV2,
+              effectivePlanId,
+            );
+
+            if (reconciled) {
+              return onFinished('workflow_tasks_exhausted');
+            }
+          } catch (error) {
+            await emitDiagnostic(onChunk, {
+              error,
+              phase: `iteration ${iteration} plan ${effectivePlanId} reconcile failed`,
+            });
+          }
+        }
 
         // agent.parse_control (order is specific)
         const control = parseAgentOutput(agentOutput);
@@ -417,14 +613,23 @@ export const createWorkflowRalphOrchestrator = (
           await executeGraphqlV2(UpdateTaskDocument, {
             input: { id: lastIterationTaskId, status: 'PENDING' },
           });
-        } catch {
+        } catch (error) {
           // Best-effort reset (ralph.ts warns on failure).
+          await emitDiagnostic(onChunk, {
+            error,
+            phase: `PENDING reset for task ${lastIterationTaskId} failed`,
+          });
         }
       }
 
       // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
       return onFinished('workflow_max_iterations');
-    } catch {
+    } catch (error) {
+      await emitDiagnostic(onChunk, {
+        error,
+        phase: 'orchestrator aborted with an unhandled error',
+      });
+
       return onFailure('workflow_unhandled');
     }
   },

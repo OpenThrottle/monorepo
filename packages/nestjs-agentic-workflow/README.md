@@ -33,6 +33,8 @@ pnpm add @openthrottle/nestjs-agentic-workflow
 
 Use **`register`** when URL, bearer token, and executor are known synchronously. Prefer **`registerAsync`** when loading from `ConfigService`, Vault, or other async Nest providers.
 
+> **`registerAsync` does not provide a workflow registry.** Only `register` and `registerWorkflow` bind `AGENTIC_WORKFLOW_REGISTRY`. An app that needs **both** async-resolved auth/executor **and** a workflow registry must use `registerWorkflow` and supply its `workflows` directly — each entry's `useFactory` may be `async` and `inject` Nest providers (including config-backed tokens), so async wiring composes there rather than via `registerAsync`.
+
 ### `registerAsync` (recommended for the server)
 
 The server’s `useFactory` must return **`workerGraphqlAuth`** (defaults merged into each `executeGraphqlV2` call) and **`executeGraphqlV2`** (typically `executeGraphqlV2` from `@openthrottle/nodejs-graphql`, optionally wrapped).

@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Injectable GraphQL executor: same contract as `executeGraphqlV2` from

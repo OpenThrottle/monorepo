@@ -117,7 +117,7 @@ UI (can consume `discoverLocalModels` later).
 
 ## Overlap resolved (task 5)
 
-- **`getOpenThrottleRoot`** in `src/utils/workflow.ts` is canonical: `WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` (with `pnpm-workspace.yaml`) → module walk-up → `process.cwd()`.
+- **`getOpenThrottleRoot`** in `src/utils/workflow.ts` is canonical: `WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` (with `.openthrottle.mjs`) → module walk-up → `process.cwd()`.
 - **`WORKFLOW_RALPH_OT_ROOT_ENV`** exported from this package; env var name unchanged for compatibility.
 - **`@tools/workflows`** re-exports `getOpenThrottleRoot` and `WORKFLOW_RALPH_OT_ROOT_ENV` from this package.
 

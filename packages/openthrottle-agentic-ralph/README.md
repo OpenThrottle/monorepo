@@ -58,3 +58,21 @@ pnpm add @openthrottle/openthrottle-agentic-ralph
 ## Configuration precedence
 
 Run tuning merged into the orchestrator follows **enqueue / GraphQL tuning → env → `.workflow-ralph.json` → built-ins**. **GraphQL URL and auth tokens are env-only** (never read from the defaults file). See `src/utils/context.ts`, `docs/workflows/ralph-config-migration.md`, and `tools/workflows/README.md`.
+
+### Cost / budget guard
+
+In addition to `iterations` (a count) and the per-iteration timeout, the orchestrator enforces a
+**cumulative wall-clock budget** to bound cost on a stuck plan. Set `OPENTHROTTLE_RALPH_MAX_TOTAL_MS`
+(milliseconds, env-only) for an explicit ceiling; otherwise it derives one from
+`perIterationTimeoutMs × iterations`. When the budget is exhausted the run finishes with reason
+`workflow_budget_exhausted` (checked in the per-iteration guard, before the next agent invocation).
+
+### Prompt injection layering (trusted inputs)
+
+The orchestrator prompt injects, in order: the operator `prompt`, any foreign-workspace layer, the
+plan/task content (`title` / `description` / `requirements`) fetched from OpenThrottle, and finally
+the shell-command guardrail (`WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL`) as the **last** instruction
+layer. These injected inputs are **trusted-operator inputs** today and are injected verbatim. Keeping
+the guardrail last is intentional defense-in-depth: its command-execution safety rules are the final
+instruction the agent reads and are not overridden by injected content. If plan content ever becomes
+attacker-influenced, that ordering — and additional sanitization — becomes load-bearing.

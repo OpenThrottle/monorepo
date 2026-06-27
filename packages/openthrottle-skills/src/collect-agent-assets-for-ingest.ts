@@ -22,7 +22,7 @@ export const collectAgentAssetsForIngest = (
   options: WalkAgentAssetsOptions,
 ): CollectAgentAssetsForIngestResult => {
   const validation = validateAgentAssetsOnDisk(options);
-  const files = walkAgentAssetFiles(options);
+  const { files } = walkAgentAssetFiles(options);
   const records = mapAgentAssetFilesToIngestRecords(files);
 
   return { records, validation };

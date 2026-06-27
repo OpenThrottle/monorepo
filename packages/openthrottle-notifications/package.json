@@ -25,8 +25,10 @@
       "type:package"
     ],
     "targets": {
-      "__build": {},
       "__build-package": {},
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
       "lint": {},
       "test": {},
       "typecheck": {},

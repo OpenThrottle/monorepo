@@ -9,6 +9,7 @@ import {
   parseSkillFrontmatter,
   validateAgentAssetFrontmatter,
   validateAgentAssetsOnDisk,
+  walkAgentAssetFiles,
 } from '../index.ts';
 
 const monorepoRoot = join(import.meta.dirname, '../../../..');
@@ -131,6 +132,46 @@ alwaysApply: true
     expect(result.warnings.some((w) => w.field === 'description')).toBe(true);
   });
 
+  test('warns when skill disable-model-invocation is a non-boolean value', () => {
+    const result = validateAgentAssetFrontmatter({
+      content: `---
+name: yes-skill
+description: Valid description with enough content.
+disable-model-invocation: yes
+---
+`,
+      expectedSlug: 'yes-skill',
+      kind: 'skill',
+      path: '.agents/skills/yes-skill/SKILL.md',
+    });
+
+    expect(
+      result.warnings.some((w) => w.field === 'disable-model-invocation'),
+    ).toBe(true);
+  });
+
+  test('hard-fails skill when name does not match directory slug', () => {
+    const result = validateAgentAssetFrontmatter({
+      content: `---
+name: wrong-slug
+description: Valid description with enough content.
+---
+`,
+      expectedSlug: 'expected-slug',
+      kind: 'skill',
+      path: '.agents/skills/expected-slug/SKILL.md',
+    });
+
+    expect(
+      result.errors.some(
+        (e) =>
+          e.field === 'name' &&
+          e.message.includes('must match directory slug "expected-slug"'),
+      ),
+    ).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
   test('hard-fails persona when name does not match filename id', () => {
     const result = validateAgentAssetFrontmatter({
       content: `---
@@ -152,5 +193,19 @@ describe('validateAgentAssetsOnDisk', () => {
     const { errors } = validateAgentAssetsOnDisk({ monorepoRoot });
 
     expect(errors).toEqual([]);
+  });
+});
+
+describe('walkAgentAssetFiles', () => {
+  test('returns no files and does not throw when roots are missing', () => {
+    const missingRoot = join(monorepoRoot, 'does-not-exist-on-disk-xyz');
+
+    const { files, warnings } = walkAgentAssetFiles({
+      monorepoRoot: missingRoot,
+    });
+
+    expect(files).toEqual([]);
+    // Missing dirs use throwIfNoEntry:false and yield no warnings (not an error).
+    expect(warnings).toEqual([]);
   });
 });

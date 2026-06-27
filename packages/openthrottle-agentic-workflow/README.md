@@ -32,7 +32,7 @@ Keep new hook/phase fields here so the contract stays portable.
 
 ## Configuration
 
-**`lifecycleHooksChildJobs`** (disable hook child jobs when `false`) is read from merged **`.workflow-ralph.json` + env** (`OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS`) via `@tools/workflows` — see `src/lifecycle.ts` and `docs/workflows/ralph-config-migration.md`.
+**`lifecycleHooksChildJobs`** (disable hook child jobs when `false`) is read from merged **`.workflow-ralph.json` + env** (`OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS`) via `@tools/workflows` — see `isLifecycleHooksChildJobsEnabled` in `src/utils/index.ts`, the `LifecycleHooksChildJobsOptions` type in `src/types/lifecycle.ts`, and `docs/workflows/ralph-config-migration.md`.
 
 ## Installation
 

@@ -4,7 +4,9 @@
  * Ralph plan-run helpers are re-exported from {@link ralph-plan-run-context.js}; codegen documents live
  * under `graphql/*.graphql`.
  *
- * FIXME: richer thrown errors (full `errors[]`, extensions, HTTP metadata) when `@openthrottle/nodejs-graphql` exposes them.
+ * Follow-up: surface structured failures (full `errors[]`, extensions, HTTP metadata) by migrating to
+ * the Result-based `executeGraphql_v2` from `@openthrottle/nodejs-graphql`. Tracked as OT task
+ * 206d2fc3-fcd7-4a4f-a612-fe86500b92af (caller-facing try/catch -> Result change, out of scope here).
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
@@ -85,7 +87,8 @@ export async function executeWorkflowGraphqlV2<
     resolveWorkflowGraphqlConfigFromEnv(),
   );
 
-  // FIXME: wrap with structured error mapping (status, errors[], extensions) when upstream exposes it; callers use try/catch today
+  // Follow-up: wrap with structured error mapping (status, errors[], extensions) via `executeGraphql_v2`;
+  // callers use try/catch today. Tracked as OT task 206d2fc3-fcd7-4a4f-a612-fe86500b92af.
   return executeGraphqlV2(document, variables, options);
 }
 

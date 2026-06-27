@@ -5,6 +5,11 @@
  */
 
 export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
+/**
+ * Any model id string. The `(string & {})` keeps editor autocomplete for the
+ * `'auto'` literal while still permitting arbitrary model ids — do not "fix"
+ * this to plain `string`, which would drop the suggestion.
+ */
 export type WorkflowConfigModel = 'auto' | (string & {});
 export type WorkflowConfigRunner = 'cursor' | 'claude' | 'opencode';
 
@@ -70,15 +75,3 @@ export interface WorkflowConfig {
   /** Skip worktree setup for the workflow. */
   readonly worktreeSkipSetup?: boolean;
 }
-
-const _temp: WorkflowConfig = {
-  cwdOpenThrottle: '/Users/jason/code/openthrottle',
-  cwdTarget: '/Users/jason/code/openthrottle/test',
-  debug: 'debug',
-  iterationTimeout: 1000,
-  iterations: 10,
-  model: 'auto',
-  prompt: 'test',
-  runner: 'cursor',
-  timeout: 1000,
-};

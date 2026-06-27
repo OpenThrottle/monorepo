@@ -25,6 +25,29 @@ const zodIssuesToValidationIssues = (
     severity,
   }));
 
+const validateSkillFrontmatterWarnings = (
+  path: string,
+  parsed: Record<string, unknown>,
+): AgentAssetValidationIssue[] => {
+  const warnings: AgentAssetValidationIssue[] = [];
+
+  const disableModelInvocation = parsed['disable-model-invocation'];
+  if (
+    disableModelInvocation !== undefined &&
+    typeof disableModelInvocation !== 'boolean'
+  ) {
+    warnings.push({
+      field: 'disable-model-invocation',
+      message:
+        'disable-model-invocation must be true or false; a non-boolean value is ignored and the intent is lost',
+      path,
+      severity: 'warning',
+    });
+  }
+
+  return warnings;
+};
+
 const validateRuleFrontmatterWarnings = (
   path: string,
   parsed: Record<string, unknown>,
@@ -100,11 +123,12 @@ export const validateAgentAssetFrontmatter = (
 
   if (kind === 'skill') {
     const parsed = parseSkillFrontmatterForValidation(content);
+    const warnings = validateSkillFrontmatterWarnings(path, parsed);
     const result = skillFrontmatterSchema.safeParse(parsed);
     if (!result.success) {
       return {
         errors: zodIssuesToValidationIssues(path, 'error', result.error),
-        warnings: [],
+        warnings,
       };
     }
 
@@ -118,7 +142,7 @@ export const validateAgentAssetFrontmatter = (
       });
     }
 
-    return { errors, warnings: [] };
+    return { errors, warnings };
   }
 
   if (kind === 'persona') {
