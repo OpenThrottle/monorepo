@@ -1,5 +1,6 @@
-import { PGVectorStore } from '@langchain/community/dist/vectorstores/pgvector';
-import { EmbeddingsInterface } from '@langchain/core/dist/embeddings';
+import { PGVectorStore } from '@langchain/community/vectorstores/pgvector';
+import type { EmbeddingsInterface } from '@langchain/core/embeddings';
+import type { ResilienceConfig } from '../config/resilience';
 import {
   getEmbeddingModelDimensions,
   getEmbeddingsModel,
@@ -13,10 +14,15 @@ import {
  * @description Vector store: stores embedded data and performs similarity search.
  * ------------------------------------------------------------
  */
+/**
+ * @description Selects the embedding backend used to populate the vector store.
+ * The store implementation itself is always PGVector; this value chooses which
+ * embedding model (Ollama vs VertexAI) generates the vectors stored in it.
+ */
 export const vectorStoreProviders = ['Ollama', 'VertexAI'] as const;
 export type VectorStoreProvider = (typeof vectorStoreProviders)[number];
 
-interface VectorStoreConfig {
+interface VectorStoreConfig extends ResilienceConfig {
   connectionString: string;
   provider: VectorStoreProvider;
   tableName: string;
@@ -27,29 +33,38 @@ interface VectorStoreConfig {
  * the provider.
  */
 export const getVectorStore = async (config: VectorStoreConfig) => {
-  const { provider, connectionString, tableName } = config;
+  const { connectionString, maxConcurrency, maxRetries, provider, tableName } =
+    config;
 
   let embeddings: EmbeddingsInterface | undefined;
+  let dimensions: number | undefined;
 
   if (provider === 'Ollama') {
+    const model = 'all-minilm';
     embeddings = getEmbeddingsModel({
-      model: 'all-minilm',
+      maxConcurrency,
+      maxRetries,
+      model,
       provider,
     });
+    dimensions = getEmbeddingModelDimensions(model);
   }
 
   if (provider === 'VertexAI') {
+    const model = 'text-embedding-005';
     embeddings = getEmbeddingsModel({
-      model: 'text-embedding-005',
+      maxConcurrency,
+      maxRetries,
+      model,
       provider,
     });
+    dimensions = getEmbeddingModelDimensions(model);
   }
 
-  if (!embeddings) {
+  if (!embeddings || dimensions === undefined) {
     throw new Error(`Invalid vector store provider`);
   }
 
-  const dimensions = getEmbeddingModelDimensions('gemini-embedding-001');
   const vectorStore = await PGVectorStore.initialize(embeddings, {
     dimensions,
     postgresConnectionOptions: { connectionString },

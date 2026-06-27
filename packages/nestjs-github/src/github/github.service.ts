@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  GatewayTimeoutException,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto';
 import type { PullDetailDto } from './dto/pull-detail.dto';
@@ -57,9 +61,195 @@ export interface ListIssuesOptions {
 
 const GITHUB_API_BASE = 'https://api.github.com';
 
+/**
+ * Hard cap on pages fetched by {@link GitHubService.listAllPulls}. At 100 PRs
+ * per page this bounds a single aggregation at 1000 PRs (10 requests) so a very
+ * large repo cannot trigger an unbounded request loop. Stats over repos with
+ * more than this many matching PRs are truncated to the most recent window.
+ */
+export const LIST_ALL_PULLS_MAX_PAGES = 10;
+
+/**
+ * Hard cap on pages fetched by the per-resource recursive paginators
+ * ({@link GitHubService.listIssues}, {@link GitHubService.getPullCommitCount},
+ * {@link GitHubService.getPullReviews}). At 100 items per page this bounds each
+ * aggregation at 1000 items (10 requests) so a repo (or PR) with thousands of
+ * issues/commits/reviews cannot trigger an unbounded loop of sequential
+ * blocking calls in a single resolver. Results beyond the cap are dropped.
+ */
+export const GITHUB_PAGINATION_MAX_PAGES = 10;
+
+/**
+ * Default per-request timeout (ms) applied to every GitHub fetch when
+ * `GITHUB_REQUEST_TIMEOUT_MS` is unset. A hung upstream TCP connection would
+ * otherwise block the NestJS handler indefinitely and, under the `Promise.all`
+ * fan-outs in github-stats.service.ts, tie up many in-flight requests at once.
+ */
+export const GITHUB_REQUEST_TIMEOUT_DEFAULT_MS = 10_000;
+
+/**
+ * Default number of *retries* (in addition to the initial attempt) applied to a
+ * GitHub request that returns a retryable status (429 / secondary-rate-limit
+ * 403 / 5xx) when `GITHUB_MAX_RETRIES` is unset. Bounded so a persistently
+ * failing upstream cannot turn one logical call into an unbounded retry storm.
+ */
+export const GITHUB_MAX_RETRIES_DEFAULT = 3;
+
+/**
+ * Default base backoff (ms) used for exponential backoff when GitHub does not
+ * send a `Retry-After` / `X-RateLimit-Reset` hint, applied when
+ * `GITHUB_RETRY_BASE_DELAY_MS` is unset. Attempt N waits roughly
+ * `base * 2^N` (plus jitter), capped by {@link GITHUB_RETRY_MAX_DELAY_MS}.
+ */
+export const GITHUB_RETRY_BASE_DELAY_DEFAULT_MS = 1_000;
+
+/**
+ * Hard ceiling (ms) on any single backoff wait, including one derived from a
+ * server-supplied `Retry-After` / `X-RateLimit-Reset`. Prevents a hostile or
+ * misconfigured header (e.g. `Retry-After: 86400`) from parking a request for
+ * an unreasonable amount of time.
+ */
+export const GITHUB_RETRY_MAX_DELAY_MS = 30_000;
+
+/** Rate-limit telemetry parsed from `X-RateLimit-*` response headers. */
+export interface GitHubRateLimitInfo {
+  /** Remaining requests in the current window, or null if not advertised. */
+  readonly remaining: number | null;
+  /** Unix epoch seconds when the window resets, or null if not advertised. */
+  readonly resetEpochSeconds: number | null;
+}
+
+/** HTTP statuses that are safe to retry with backoff. */
+const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([
+  429, 500, 502, 503, 504,
+]);
+
 @Injectable()
 export class GitHubService {
   constructor(private readonly config: ConfigService) {}
+
+  /**
+   * Builds the standard GitHub REST request headers, reading `GITHUB_TOKEN`
+   * from config and attaching it as a bearer token when present. Centralizing
+   * this removes the copy-pasted token-read + headers block that previously
+   * lived in every service method and keeps the auth/version headers in one
+   * place.
+   */
+  private buildHeaders(): Record<string, string> {
+    const token = this.config.get<string>('GITHUB_TOKEN');
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  /**
+   * Resolves the configured per-request timeout, falling back to
+   * {@link GITHUB_REQUEST_TIMEOUT_DEFAULT_MS} when unset or invalid.
+   */
+  private getRequestTimeoutMs(): number {
+    const configured = this.config.get<number>('GITHUB_REQUEST_TIMEOUT_MS');
+    if (
+      typeof configured === 'number' &&
+      Number.isFinite(configured) &&
+      configured > 0
+    ) {
+      return configured;
+    }
+    return GITHUB_REQUEST_TIMEOUT_DEFAULT_MS;
+  }
+
+  /**
+   * Resolves a positive-integer config value, falling back to `fallback` when
+   * unset, non-numeric, or out of range.
+   */
+  private getPositiveIntConfig(key: string, fallback: number): number {
+    const configured = this.config.get<number>(key);
+    if (
+      typeof configured === 'number' &&
+      Number.isFinite(configured) &&
+      configured >= 0
+    ) {
+      return configured;
+    }
+    return fallback;
+  }
+
+  /**
+   * Performs a single timed `fetch`. A timeout abort is translated into a
+   * {@link GatewayTimeoutException} (504) rather than surfacing as a raw
+   * `AbortError`.
+   */
+  private async fetchOnce(
+    url: string,
+    headers: Record<string, string>,
+  ): Promise<Response> {
+    const timeoutMs = this.getRequestTimeoutMs();
+    try {
+      return await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TimeoutError') {
+        throw new GatewayTimeoutException(
+          `GitHub request timed out after ${timeoutMs}ms: ${url}`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Centralized GitHub fetch with timeout (via {@link fetchOnce}) plus bounded,
+   * `Retry-After`-aware backoff retries on secondary-rate-limit (429), abuse
+   * (403 with a rate-limit signal), and transient 5xx responses. The number of
+   * retries and backoff timings are configurable (`GITHUB_MAX_RETRIES`,
+   * `GITHUB_RETRY_BASE_DELAY_MS`). On the final attempt the response is returned
+   * as-is so existing callers keep their `!res.ok` error handling.
+   */
+  private async fetchWithTimeout(
+    url: string,
+    headers: Record<string, string>,
+  ): Promise<Response> {
+    const maxRetries = this.getPositiveIntConfig(
+      'GITHUB_MAX_RETRIES',
+      GITHUB_MAX_RETRIES_DEFAULT,
+    );
+    const baseDelayMs = this.getPositiveIntConfig(
+      'GITHUB_RETRY_BASE_DELAY_MS',
+      GITHUB_RETRY_BASE_DELAY_DEFAULT_MS,
+    );
+
+    // attempt 0 is the initial try; up to `maxRetries` further attempts.
+    let res = await this.fetchOnce(url, headers);
+    for (
+      let attempt = 0;
+      attempt < maxRetries && isRetryableResponse(res);
+      attempt += 1
+    ) {
+      const delayMs = backoffDelayMs(res, attempt, baseDelayMs);
+      // eslint-disable-next-line no-await-in-loop -- retries are intentionally sequential
+      await sleep(delayMs);
+      // eslint-disable-next-line no-await-in-loop -- retries are intentionally sequential
+      res = await this.fetchOnce(url, headers);
+    }
+    return res;
+  }
+
+  /**
+   * Reads `X-RateLimit-Remaining` / `X-RateLimit-Reset` off a GitHub response so
+   * callers can degrade gracefully (e.g. stop fanning out) as the budget
+   * approaches zero. Returns nulls when the headers are absent (or the response
+   * is a test stub without a real `Headers` object).
+   */
+  readRateLimit(res: Response): GitHubRateLimitInfo {
+    return parseRateLimit(res);
+  }
 
   /**
    * @description List pull requests for a repo; optional state, base branch, and merged filter.
@@ -69,7 +259,6 @@ export class GitHubService {
     repo: string,
     options: ListPullsOptions,
   ): Promise<PullListItemDto[]> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
     const state = options.state;
     const base = options.base;
     const mergedFilter = options.merged;
@@ -83,21 +272,16 @@ export class GitHubService {
     }
     url.searchParams.set('per_page', '100');
 
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const res = await fetch(url.toString(), { headers });
+    const res = await this.fetchWithTimeout(
+      url.toString(),
+      this.buildHeaders(),
+    );
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as unknown as GitHubPullItem[];
+    const data = parsePullItemArray(await res.json());
     let list = data.map((p) => toPullListItemDto(p));
 
     if (mergedFilter === true) {
@@ -110,6 +294,62 @@ export class GitHubService {
   }
 
   /**
+   * @description Lists pull requests across all pages (paginates, mirroring listIssues/getPullReviews) so analytics see full history instead of an arbitrary first 100. Stops after LIST_ALL_PULLS_MAX_PAGES pages (1000 PRs) to bound API usage; results beyond the cap are dropped.
+   */
+  async listAllPulls(
+    owner: string,
+    repo: string,
+    options: ListPullsOptions,
+  ): Promise<PullListItemDto[]> {
+    const state = options.state;
+    const base = options.base;
+    const mergedFilter = options.merged;
+
+    const headers = this.buildHeaders();
+
+    const perPage = 100;
+
+    const fetchPage = async (page: number): Promise<PullListItemDto[]> => {
+      const url = new URL(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
+      );
+      url.searchParams.set('state', state);
+      if (base !== undefined && base !== '') {
+        url.searchParams.set('base', base);
+      }
+      url.searchParams.set('per_page', String(perPage));
+      url.searchParams.set('page', String(page));
+
+      const res = await this.fetchWithTimeout(url.toString(), headers);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(
+          `GitHub API error ${res.status}: ${text.slice(0, 200)}`,
+        );
+      }
+
+      const data = parsePullItemArray(await res.json());
+      const pageResults = data.map((p) => toPullListItemDto(p));
+
+      if (data.length < perPage || page >= LIST_ALL_PULLS_MAX_PAGES) {
+        return pageResults;
+      }
+
+      return [...pageResults, ...(await fetchPage(page + 1))];
+    };
+
+    const all = await fetchPage(1);
+
+    if (mergedFilter === true) {
+      return all.filter((p) => p.mergedAt !== null);
+    }
+    if (mergedFilter === false) {
+      return all.filter((p) => p.mergedAt === null);
+    }
+    return all;
+  }
+
+  /**
    * @description Fetches one PR by number; maps to the same shape as list pulls (conversation metadata).
    */
   async getPullListItem(
@@ -117,17 +357,9 @@ export class GitHubService {
     repo: string,
     pullNumber: number,
   ): Promise<PullListItemDto | null> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}`;
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
 
-    const res = await fetch(url, { headers });
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
     if (res.status === 404) {
       return null;
     }
@@ -136,7 +368,7 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as unknown as GitHubPullItem;
+    const data = parsePullItem(await res.json());
 
     return toPullListItemDto(data);
   }
@@ -149,23 +381,15 @@ export class GitHubService {
     repo: string,
     pullNumber: number,
   ): Promise<PullDetailDto> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}`;
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
 
-    const res = await fetch(url, { headers });
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as unknown as GitHubPullDetail;
+    const data = parsePullDetail(await res.json());
 
     return {
       additions: data.additions,
@@ -185,16 +409,9 @@ export class GitHubService {
     repo: string,
     options: ListIssuesOptions = { state: 'all' },
   ): Promise<IssueWithLabelsDto[]> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
     const state = options.state;
 
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    const headers = this.buildHeaders();
 
     const perPage = 100;
 
@@ -206,7 +423,7 @@ export class GitHubService {
       url.searchParams.set('per_page', String(perPage));
       url.searchParams.set('page', String(page));
 
-      const res = await fetch(url.toString(), { headers });
+      const res = await this.fetchWithTimeout(url.toString(), headers);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(
@@ -214,7 +431,7 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as unknown as GitHubIssueItem[];
+      const data = parseIssueItemArray(await res.json());
       const pageResults: IssueWithLabelsDto[] = [];
 
       for (const item of data) {
@@ -226,7 +443,9 @@ export class GitHubService {
         });
       }
 
-      if (data.length < perPage) return pageResults;
+      if (data.length < perPage || page >= GITHUB_PAGINATION_MAX_PAGES) {
+        return pageResults;
+      }
 
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
@@ -242,14 +461,7 @@ export class GitHubService {
     repo: string,
     pullNumber: number,
   ): Promise<number> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    const headers = this.buildHeaders();
 
     const perPage = 100;
 
@@ -260,7 +472,7 @@ export class GitHubService {
       url.searchParams.set('per_page', String(perPage));
       url.searchParams.set('page', String(page));
 
-      const res = await fetch(url.toString(), { headers });
+      const res = await this.fetchWithTimeout(url.toString(), headers);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(
@@ -268,9 +480,11 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as unknown as ReadonlyArray<unknown>;
+      const data = parseUnknownArray(await res.json());
 
-      if (data.length < perPage) return data.length;
+      if (data.length < perPage || page >= GITHUB_PAGINATION_MAX_PAGES) {
+        return data.length;
+      }
 
       return data.length + (await fetchPageCount(page + 1));
     };
@@ -286,14 +500,7 @@ export class GitHubService {
     repo: string,
     pullNumber: number,
   ): Promise<PullReviewDto[]> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    const headers = this.buildHeaders();
 
     const perPage = 100;
 
@@ -304,7 +511,7 @@ export class GitHubService {
       url.searchParams.set('per_page', String(perPage));
       url.searchParams.set('page', String(page));
 
-      const res = await fetch(url.toString(), { headers });
+      const res = await this.fetchWithTimeout(url.toString(), headers);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(
@@ -312,19 +519,214 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as unknown as GitHubReviewItem[];
+      const data = parseReviewItemArray(await res.json());
       const pageResults = data.map((r) => ({
         state: r.state,
         submittedAt: r.submitted_at,
       }));
 
-      if (data.length < perPage) return pageResults;
+      if (data.length < perPage || page >= GITHUB_PAGINATION_MAX_PAGES) {
+        return pageResults;
+      }
 
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
 
     return fetchPage(1);
   }
+}
+
+/** Reads a header defensively so test stubs without a `Headers` object work. */
+function readHeader(res: Response, name: string): string | null {
+  const headers: unknown = (res as { headers?: unknown }).headers;
+  if (
+    headers !== null &&
+    typeof headers === 'object' &&
+    'get' in headers &&
+    typeof (headers as Headers).get === 'function'
+  ) {
+    return (headers as Headers).get(name);
+  }
+  return null;
+}
+
+/** Parses `X-RateLimit-Remaining` / `X-RateLimit-Reset` into structured info. */
+function parseRateLimit(res: Response): GitHubRateLimitInfo {
+  const remainingRaw = readHeader(res, 'x-ratelimit-remaining');
+  const resetRaw = readHeader(res, 'x-ratelimit-reset');
+  const remaining =
+    remainingRaw !== null && remainingRaw.trim() !== ''
+      ? Number.parseInt(remainingRaw, 10)
+      : Number.NaN;
+  const reset =
+    resetRaw !== null && resetRaw.trim() !== ''
+      ? Number.parseInt(resetRaw, 10)
+      : Number.NaN;
+  return {
+    remaining: Number.isFinite(remaining) ? remaining : null,
+    resetEpochSeconds: Number.isFinite(reset) ? reset : null,
+  };
+}
+
+/**
+ * True when a response should be retried: a 5xx, a secondary-rate-limit 429,
+ * or a 403 that carries a rate-limit signal (GitHub's abuse/primary-limit
+ * responses use 403 with `Retry-After` or `X-RateLimit-Remaining: 0`).
+ */
+function isRetryableResponse(res: Response): boolean {
+  const status = res.status;
+  if (RETRYABLE_STATUSES.has(status)) {
+    return true;
+  }
+  if (status === 403) {
+    const retryAfter = readHeader(res, 'retry-after');
+    const remaining = readHeader(res, 'x-ratelimit-remaining');
+    return retryAfter !== null || remaining === '0';
+  }
+  return false;
+}
+
+/**
+ * Computes the backoff (ms) before the next attempt, preferring a server hint
+ * (`Retry-After` seconds, or `X-RateLimit-Reset` epoch seconds) and otherwise
+ * using exponential backoff with jitter. Always clamped to
+ * {@link GITHUB_RETRY_MAX_DELAY_MS}.
+ */
+function backoffDelayMs(
+  res: Response,
+  attempt: number,
+  baseDelayMs: number,
+): number {
+  const retryAfterRaw = readHeader(res, 'retry-after');
+  if (retryAfterRaw !== null && retryAfterRaw.trim() !== '') {
+    const seconds = Number.parseInt(retryAfterRaw, 10);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return clampDelay(seconds * 1_000);
+    }
+  }
+
+  const resetRaw = readHeader(res, 'x-ratelimit-reset');
+  if (resetRaw !== null && resetRaw.trim() !== '') {
+    const resetEpochSeconds = Number.parseInt(resetRaw, 10);
+    if (Number.isFinite(resetEpochSeconds)) {
+      const waitMs = resetEpochSeconds * 1_000 - Date.now();
+      if (waitMs > 0) {
+        return clampDelay(waitMs);
+      }
+    }
+  }
+
+  const exponential = baseDelayMs * 2 ** attempt;
+  const jitter = Math.floor(Math.random() * baseDelayMs);
+  return clampDelay(exponential + jitter);
+}
+
+/** Clamps a delay to [0, {@link GITHUB_RETRY_MAX_DELAY_MS}]. */
+function clampDelay(ms: number): number {
+  if (ms < 0) return 0;
+  return Math.min(ms, GITHUB_RETRY_MAX_DELAY_MS);
+}
+
+/** Promise-based delay. */
+async function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return;
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Raises a {@link BadGatewayException} (502) when a GitHub response does not
+ * match the minimal shape we read. This turns a GitHub error object or schema
+ * drift into a typed, attributable upstream error instead of an opaque runtime
+ * crash (e.g. `data.map is not a function` or reading a field off `undefined`)
+ * deeper in the mapping/aggregation code.
+ */
+function shapeError(context: string): never {
+  throw new BadGatewayException(
+    `Unexpected GitHub API response shape for ${context}`,
+  );
+}
+
+/** Type guard: a non-null object (records and arrays both qualify). */
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/** Validates that the value is an array, returning it as `unknown[]`. */
+function parseUnknownArray(value: unknown): unknown[] {
+  if (!Array.isArray(value)) {
+    shapeError('list response');
+  }
+  return value;
+}
+
+/** Validates the minimal fields of a single PR list/detail item we map. */
+function parsePullItem(value: unknown): GitHubPullItem {
+  if (
+    !isObject(value) ||
+    typeof value.created_at !== 'string' ||
+    typeof value.html_url !== 'string' ||
+    typeof value.number !== 'number' ||
+    typeof value.title !== 'string' ||
+    typeof value.updated_at !== 'string'
+  ) {
+    shapeError('pull request');
+  }
+  return value as unknown as GitHubPullItem;
+}
+
+/** Validates an array of PR list items. */
+function parsePullItemArray(value: unknown): GitHubPullItem[] {
+  return parseUnknownArray(value).map((item) => parsePullItem(item));
+}
+
+/** Validates the diff-stat fields read from the single-PR detail endpoint. */
+function parsePullDetail(value: unknown): GitHubPullDetail {
+  if (
+    !isObject(value) ||
+    typeof value.additions !== 'number' ||
+    typeof value.changed_files !== 'number' ||
+    typeof value.deletions !== 'number' ||
+    typeof value.number !== 'number'
+  ) {
+    shapeError('pull request detail');
+  }
+  return value as unknown as GitHubPullDetail;
+}
+
+/** Validates a single issue/PR item (labels array + number + state) we map. */
+function parseIssueItem(value: unknown): GitHubIssueItem {
+  if (
+    !isObject(value) ||
+    !Array.isArray(value.labels) ||
+    typeof value.number !== 'number'
+  ) {
+    shapeError('issue');
+  }
+  return value as unknown as GitHubIssueItem;
+}
+
+/** Validates an array of issue/PR items. */
+function parseIssueItemArray(value: unknown): GitHubIssueItem[] {
+  return parseUnknownArray(value).map((item) => parseIssueItem(item));
+}
+
+/** Validates a single review item (state + submitted_at) we map. */
+function parseReviewItem(value: unknown): GitHubReviewItem {
+  if (
+    !isObject(value) ||
+    typeof value.submitted_at !== 'string' ||
+    (value.state !== 'APPROVED' &&
+      value.state !== 'CHANGES_REQUESTED' &&
+      value.state !== 'COMMENT')
+  ) {
+    shapeError('review');
+  }
+  return value as unknown as GitHubReviewItem;
+}
+
+/** Validates an array of review items. */
+function parseReviewItemArray(value: unknown): GitHubReviewItem[] {
+  return parseUnknownArray(value).map((item) => parseReviewItem(item));
 }
 
 function toPullListItemDto(p: GitHubPullItem): PullListItemDto {

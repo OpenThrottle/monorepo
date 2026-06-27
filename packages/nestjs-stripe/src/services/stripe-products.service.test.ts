@@ -18,13 +18,6 @@ const { mockPricesList, mockProductsList, mockProductsRetrieve } = vi.hoisted(
   }),
 );
 
-vi.mock('../config/stripe-config', () => ({
-  getStripeConfig: () => ({
-    secretKey: 'sk_test_mock',
-    webhookSecret: 'whsec_mock',
-  }),
-}));
-
 vi.mock('stripe', async (importOriginal) => {
   const actual = await importOriginal<typeof import('stripe')>();
   const RealStripe = actual.default;
@@ -43,6 +36,22 @@ vi.mock('stripe', async (importOriginal) => {
   return {
     default: Object.assign(MockStripe, {
       errors: RealStripe.errors,
+    }),
+  };
+});
+
+vi.mock('../config/stripe-config', async () => {
+  const MockStripe = (await import('stripe')).default;
+
+  return {
+    createLazyStripeClient: () => {
+      const client = new MockStripe('sk_test_mock');
+      return () => client;
+    },
+    createStripeClient: () => new MockStripe('sk_test_mock'),
+    getStripeConfig: () => ({
+      secretKey: 'sk_test_mock',
+      webhookSecret: 'whsec_mock',
     }),
   };
 });

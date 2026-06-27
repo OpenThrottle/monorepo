@@ -90,7 +90,7 @@ export class GithubResolver {
   }
 
   @Query(() => [OpenPrCountByAuthorObject], {
-    description: `Open PR count per author for a repository (GitHub stats).`,
+    description: `Open PR count per author for a repository (GitHub stats). Paginates PRs up to 1000 (10 pages); repos with more matching PRs are truncated to the most recent window.`,
   })
   async openPrCountByAuthor(
     @Args('input', { type: () => GitHubRepoInput }) input: GitHubRepoInput,
@@ -106,7 +106,7 @@ export class GithubResolver {
   }
 
   @Query(() => [PrTimeInStateSummaryObject], {
-    description: `PR time-in-state summary (count and avg days per state: open, closed, merged).`,
+    description: `PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window.`,
   })
   async prTimeInStateSummary(
     @Args('input', { type: () => GitHubRepoInput }) input: GitHubRepoInput,
@@ -121,7 +121,7 @@ export class GithubResolver {
   }
 
   @Query(() => [LinesAddedDeletedRowObject], {
-    description: `Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests.`,
+    description: `Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests.`,
   })
   async linesAddedDeleted(
     @Args('input', { type: () => LinesAddedDeletedInput })
@@ -141,7 +141,7 @@ export class GithubResolver {
   }
 
   @Query(() => [OpenToMergedCycleTimeObject], {
-    description: `Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC).`,
+    description: `Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded.`,
   })
   async openToMergedCycleTime(
     @Args('input', { type: () => OpenToMergedCycleTimeInput })
@@ -175,7 +175,7 @@ export class GithubResolver {
   }
 
   @Query(() => [PrsMergedPerPeriodObject], {
-    description: `PRs merged per week or month (throughput trend). Buckets by merged_at in UTC.`,
+    description: `PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded.`,
   })
   async prsMergedPerPeriod(
     @Args('input', { type: () => PrsMergedPerPeriodInput })
@@ -194,7 +194,7 @@ export class GithubResolver {
   }
 
   @Query(() => [ReviewCycleTimeObject], {
-    description: `Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls.`,
+    description: `Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests.`,
   })
   async reviewCycleTime(
     @Args('input', { type: () => ReviewCycleTimeInput })
@@ -210,7 +210,7 @@ export class GithubResolver {
   }
 
   @Query(() => [CommitsPerPrRowObject], {
-    description: `Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC).`,
+    description: `Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC).`,
   })
   async commitsPerPr(
     @Args('input', { type: () => CommitsPerPrInput })

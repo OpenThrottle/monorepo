@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
 
-import { TextLoader } from '@langchain/classic/dist/document_loaders/fs/text';
-import { Document } from '@langchain/core/dist/documents';
+import path from 'path';
+import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
+import type { Document } from '@langchain/core/documents';
 import { getFilesByExtension } from '../utils/files';
 
 export type Extension =
@@ -17,75 +18,87 @@ export type Extension =
   | 'yml';
 
 /**
- * Load a single markdown file using LangChain's TextLoader
+ * @description Derive the file extension (without the leading dot) from a path,
+ * lower-cased. Falls back to `md` when the path has no extension.
  */
-export async function loadMarkdownFile(filePath: string): Promise<Document[]> {
-  try {
-    console.log(`Loading: ${filePath}`);
+function getExtensionFromPath(filePath: string): string {
+  const ext = path.extname(filePath).replace(/^\./, '').toLowerCase();
 
-    const loader = new TextLoader(filePath);
-    const documents = await loader.load();
-
-    // Add metadata about the file
-    const documentsWithMetadata = documents.map((doc: Document) => ({
-      ...doc,
-      metadata: {
-        ...doc.metadata,
-        extension: 'md',
-        source: filePath,
-        type: 'markdown',
-      },
-    }));
-
-    return documentsWithMetadata;
-  } catch (error) {
-    console.error(`Error loading markdown file ${filePath}:`, error);
-
-    return [];
-  }
+  return ext || 'md';
 }
 
 /**
- * Load all markdown files in the repository
+ * Load a single text-based file using LangChain's TextLoader. Metadata is
+ * derived from the actual file extension rather than assuming markdown.
  */
-export async function loadAllMarkdownFiles(): Promise<Document[]> {
-  const allDocuments: Document[] = [];
-  const markdownFiles = await getFilesByExtension('md');
+export async function loadMarkdownFile(filePath: string): Promise<Document[]> {
+  const loader = new TextLoader(filePath);
+  const documents = await loader.load();
 
-  console.log(`Found ${markdownFiles.length} markdown files`);
+  const extension = getExtensionFromPath(filePath);
+  const type = extension === 'md' ? 'markdown' : extension;
+
+  // Add metadata about the file
+  const documentsWithMetadata = documents.map((doc: Document) => ({
+    ...doc,
+    metadata: {
+      ...doc.metadata,
+      extension,
+      source: filePath,
+      type,
+    },
+  }));
+
+  return documentsWithMetadata;
+}
+
+/**
+ * Load all markdown files under `rootDir` (defaults to the current working
+ * directory).
+ */
+export async function loadAllMarkdownFiles(
+  rootDir?: string,
+): Promise<Document[]> {
+  const allDocuments: Document[] = [];
+  const markdownFiles = await getFilesByExtension('md', rootDir);
 
   for (const filePath of markdownFiles) {
-    // console.log(`Loading: ${filePath}`);
     const documents = await loadMarkdownFile(filePath);
     allDocuments.push(...documents);
   }
-
-  console.log(`Total documents loaded: ${allDocuments.length}`);
 
   return allDocuments;
 }
 
 /**
- * Load markdown files from specific directories
+ * Load files of the given extension from specific directories under `rootDir`.
+ * Directories are matched on path boundaries (segments), not substrings, so
+ * `directory: 'docs'` does not also match `my-docs-archive/`.
  */
 export async function loadFilesFromDirectories(
   directories: string[],
   extensions: Extension = 'md',
+  rootDir?: string,
 ): Promise<Document[]> {
   const allDocuments: Document[] = [];
 
-  for (const directory of directories) {
-    const markdownFiles = await getFilesByExtension(extensions);
-    const directoryFiles = markdownFiles.filter((file) =>
-      file.includes(directory),
-    );
+  // Glob once, then filter per directory rather than re-globbing the tree.
+  const allFiles = await getFilesByExtension(extensions, rootDir);
 
-    console.log(
-      `Found ${directoryFiles.length} markdown files in ${directory}`,
-    );
+  for (const directory of directories) {
+    const target = directory.split(/[\\/]/).filter(Boolean);
+
+    const directoryFiles = allFiles.filter((file) => {
+      const segments = file.split(path.sep);
+
+      // Match `target` as a contiguous run of path segments within `file`,
+      // so `docs` matches `.../docs/...` but not `.../my-docs-archive/...`.
+      return segments.some((_segment, index) =>
+        target.every((part, offset) => segments[index + offset] === part),
+      );
+    });
 
     for (const filePath of directoryFiles) {
-      console.log(`Loading: ${filePath}`);
       const documents = await loadMarkdownFile(filePath);
       allDocuments.push(...documents);
     }

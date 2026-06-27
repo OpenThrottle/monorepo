@@ -4,7 +4,7 @@
 
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
-import { getStripeConfig } from '../config/stripe-config';
+import { createLazyStripeClient } from '../config/stripe-config';
 
 /**
  * @description Active prices for a product split into the catalog default (when present in the list) and any other active prices.
@@ -40,16 +40,7 @@ export const partitionPricesByDefault = (
 
 @Injectable()
 export class StripeProductsService {
-  private stripe: Stripe | null = null;
-
-  private getStripe(): Stripe {
-    if (!this.stripe) {
-      const { secretKey } = getStripeConfig();
-      this.stripe = new Stripe(secretKey);
-    }
-
-    return this.stripe;
-  }
+  private readonly getStripe = createLazyStripeClient();
 
   /**
    * @description Active products (paginated list; first page only, up to `limit`).

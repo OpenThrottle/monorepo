@@ -1,6 +1,10 @@
-// import { BaseChatModel } from '@langchain/core/dist/language_models/chat_models';
+// import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatVertexAI } from '@langchain/google-vertexai';
 import { ChatOllama } from '@langchain/ollama';
+import {
+  type ResilienceConfig,
+  resolveResilienceConfig,
+} from '../config/resilience';
 
 /**
  * ------------------------------------------------------------
@@ -15,7 +19,7 @@ import { ChatOllama } from '@langchain/ollama';
 export const chatModelProviders = ['Ollama', 'VertexAI'] as const;
 export type ChatModelProvider = (typeof chatModelProviders)[number];
 
-interface ChatModelConfig {
+interface ChatModelConfig extends ResilienceConfig {
   projectId: string;
   provider: ChatModelProvider;
   temperature?: number;
@@ -44,12 +48,16 @@ interface ChatModelConfigVertexAI extends ChatModelConfig {
 export const getChatModel = (
   config: ChatModelConfigOllama | ChatModelConfigVertexAI,
 ) => {
-  // FIXME: Lets get rid of this casting
-
-  const { model, projectId, temperature = 0, verbose = false } = config;
-  const optionsWithDefaults = { model, temperature, verbose };
-
-  console.log('🚨 🚨 getChatModel 🚨 🚨');
+  const {
+    maxConcurrency,
+    maxRetries,
+    model,
+    projectId,
+    temperature = 0,
+    verbose = false,
+  } = config;
+  const resilience = resolveResilienceConfig({ maxConcurrency, maxRetries });
+  const optionsWithDefaults = { ...resilience, model, temperature, verbose };
 
   if (config.provider === 'Ollama') {
     const chatModel = new ChatOllama(optionsWithDefaults);
