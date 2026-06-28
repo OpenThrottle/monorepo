@@ -1872,21 +1872,23 @@ type Query {
   """Get one pull request by repository and PR number (GitHub API)"""
   pull(input: GetPullInput!): PullListItemObject
 
-  """Open PR count per author for a repository (GitHub stats)."""
+  """
+  Open PR count per author for a repository (GitHub stats). Paginates PRs up to 1000 (10 pages); repos with more matching PRs are truncated to the most recent window.
+  """
   openPrCountByAuthor(input: GitHubRepoInput!): [OpenPrCountByAuthorObject!]!
 
   """
-  PR time-in-state summary (count and avg days per state: open, closed, merged).
+  PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window.
   """
   prTimeInStateSummary(input: GitHubRepoInput!): [PrTimeInStateSummaryObject!]!
 
   """
-  Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests.
+  Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests.
   """
   linesAddedDeleted(input: LinesAddedDeletedInput!): [LinesAddedDeletedRowObject!]!
 
   """
-  Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC).
+  Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded.
   """
   openToMergedCycleTime(input: OpenToMergedCycleTimeInput!): [OpenToMergedCycleTimeObject!]!
 
@@ -1896,17 +1898,17 @@ type Query {
   prCountByLabel(input: PrCountByLabelInput!): [PrCountByLabelObject!]!
 
   """
-  PRs merged per week or month (throughput trend). Buckets by merged_at in UTC.
+  PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded.
   """
   prsMergedPerPeriod(input: PrsMergedPerPeriodInput!): [PrsMergedPerPeriodObject!]!
 
   """
-  Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls.
+  Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests.
   """
   reviewCycleTime(input: ReviewCycleTimeInput!): [ReviewCycleTimeObject!]!
 
   """
-  Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC).
+  Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC).
   """
   commitsPerPr(input: CommitsPerPrInput!): [CommitsPerPrRowObject!]!
 

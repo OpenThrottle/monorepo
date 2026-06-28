@@ -92,7 +92,3 @@ Stripe sends the **`Stripe-Signature`** header; the controller passes it and `re
 - **`stripeSignature`** — value of the `Stripe-Signature` HTTP header.
 
 The resolver decodes the payload to a `Buffer` and calls `StripeWebhookHandlerService.handleRawStripeWebhook` (same path as the REST controller). For Stripe Dashboard delivery, prefer the HTTP webhook route unless a gateway forwards raw bytes into this mutation. The host must configure Nest GraphQL so resolvers registered by `StripeModule` are part of the schema (see peer dependencies table).
-</think>
-
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-Read

