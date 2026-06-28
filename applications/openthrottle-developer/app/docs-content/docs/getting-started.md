@@ -1,5 +1,6 @@
 ---
 description: Run the developer app locally.
+group: 00. General
 order: 2
 title: Getting Started
 ---

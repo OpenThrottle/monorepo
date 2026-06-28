@@ -78,7 +78,6 @@ import {
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   REGEX_UUID,
-  buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
@@ -458,13 +457,14 @@ export default function App(): React.ReactElement {
    * When the palette query matches no static commands, offer POST-backed jumps
    * (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
    */
-  const commanderEmptyExtras = React.useCallback(
-    (query: string) =>
-      buildCommanderEmptyStateExtras(query, {
-        submitCommanderSearch,
-      }),
-    [submitCommanderSearch],
-  );
+  // const commanderEmptyExtras = React.useCallback(
+  //   (query: string) =>
+  //     buildCommanderEmptyStateExtras(query, {
+  //       submitCommanderSearch,
+  //     }),
+  //   [submitCommanderSearch],
+  // );
+  const commanderEmptyExtras = React.useCallback(() => [], []);
 
   // Markup
 

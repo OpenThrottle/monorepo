@@ -1,0 +1,25 @@
+---
+description: Docker Compose
+group: 01. Development
+order: 2
+title: 'Docker Compose'
+---
+
+## 🐳 Docker Compose
+
+OpenThrottle has been built to sit next to, on-top, or around your existing architecture. We hope to layer on tools and workflows that accelerate and sharpen the quality of each and release.
+
+**Development Workflow:**
+
+```bash
+docker compose up openthrottle-server --build
+docker compose up openthrottle-developer --build
+
+docker images | grep openthrottle
+```
+
+**Publishing Images (manually):**
+
+```bash
+OPENTHROTTLE_DRY_RUN=1 ./scripts/gcs-docker-upload.sh
+```

@@ -17,8 +17,13 @@ const docsBySlug = new Map(
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.loaderData?.title ?? 'Docs',
-  links: (_match) => [],
+  breadcrumb: (match) => match.loaderData?.title,
+  links: (_match) => [
+    {
+      children: 'Docs',
+      to: '/docs',
+    },
+  ],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {

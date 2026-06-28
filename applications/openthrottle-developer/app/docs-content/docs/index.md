@@ -1,5 +1,6 @@
 ---
 description: Guides and reference for the OpenThrottle developer app.
+group: 00. General
 order: 1
 title: Documentation
 ---

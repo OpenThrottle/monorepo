@@ -14,7 +14,7 @@ const docsNav = buildDocsNav(docsManifest, 'docs');
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Docs',
+  breadcrumb: (_match) => undefined,
   links: (_match) => [],
 };
 

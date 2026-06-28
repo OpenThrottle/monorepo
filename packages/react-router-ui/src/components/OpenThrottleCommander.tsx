@@ -201,7 +201,7 @@ export const OpenThrottleCommander = (
             heading={
               extraItems.length > 0
                 ? 'No match in palette — open a route or search'
-                : 'No matching commands — try search'
+                : 'Search'
             }
           >
             {extraItems.map((item) => (
