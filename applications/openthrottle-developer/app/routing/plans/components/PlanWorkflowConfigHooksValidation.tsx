@@ -7,7 +7,7 @@ export interface PlanWorkflowConfigHooksValidationProps {
 
 export const PlanWorkflowConfigHooksValidation = (
   props: PlanWorkflowConfigHooksValidationProps,
-): React.ReactElement => {
+): React.ReactElement | null => {
   const { validation } = props;
 
   // Hooks

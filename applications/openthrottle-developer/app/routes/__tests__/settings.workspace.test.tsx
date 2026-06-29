@@ -3,6 +3,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { action, loader } from '../settings.workspace';
 import type { Route } from '@/app/routes/+types/settings.workspace';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -50,12 +51,13 @@ describe('routes/settings.workspace.tsx', () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
 
       const request = new Request('http://localhost/settings/workspace');
-      const args = {
-        context: {},
+      const args: Route.LoaderArgs = {
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/settings/workspace',
         request,
-        unstable_pattern: '/settings/workspace',
-      } as Route.LoaderArgs;
+        url: new URL(request.url),
+      };
 
       const result = await loader(args);
 
@@ -67,13 +69,14 @@ describe('routes/settings.workspace.tsx', () => {
 
   describe('action', () => {
     const actionArgs = (formData: FormData): Route.ActionArgs => ({
-      context: {},
+      context: createTestRouterContext(),
       params: {},
+      pattern: '/settings/workspace',
       request: new Request('http://localhost/settings/workspace', {
         body: formData,
         method: 'POST',
       }),
-      unstable_pattern: '/settings/workspace',
+      url: new URL('http://localhost/settings/workspace'),
     });
 
     test('updateProfile calls updateWorkspaceProfile mutation', async () => {

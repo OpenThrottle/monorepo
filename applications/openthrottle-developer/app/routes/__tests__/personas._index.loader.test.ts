@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import type { Route } from '@/app/routes/+types/personas._index';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('~/routing/agents/data/discover-repo-personas.server', () => ({
   discoverRepoPersonas: vi.fn(),
@@ -28,11 +29,14 @@ const SAMPLE_ENTRIES: readonly RepoPersonaEntry[] = [
   },
 ];
 
-const loaderArgs = {
-  context: undefined,
+const loaderRequest = new Request('http://localhost/personas');
+const loaderArgs: Route.LoaderArgs = {
+  context: createTestRouterContext(),
   params: {},
-  request: new Request('http://localhost/personas'),
-} as Route.LoaderArgs;
+  pattern: '/personas',
+  request: loaderRequest,
+  url: new URL(loaderRequest.url),
+};
 
 describe('routes/personas._index loader', () => {
   beforeEach(() => {

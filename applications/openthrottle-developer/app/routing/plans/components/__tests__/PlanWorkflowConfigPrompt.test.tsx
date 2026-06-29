@@ -44,6 +44,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
     const user = userEvent.setup();
     const onPromptChange = vi.fn();
     props = {
+      heading: '04. Prompt',
       onPromptChange,
       onPromptFileChange: vi.fn(),
       onPromptLayerChange: vi.fn(),
@@ -90,6 +91,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
 
   test('should show --prompt-file input when promptLayer is file', () => {
     props = {
+      heading: '04. Prompt',
       onPromptChange: vi.fn(),
       onPromptFileChange: vi.fn(),
       onPromptLayerChange: vi.fn(),

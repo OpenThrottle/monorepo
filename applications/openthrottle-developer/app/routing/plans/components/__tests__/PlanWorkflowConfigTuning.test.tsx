@@ -79,6 +79,7 @@ describe('PlanWorkflowConfigTuning Component', () => {
         iterations: 0,
       };
       props = {
+        heading: '07. Run Tuning',
         input: invalidInput,
         iterationTimeoutText: '',
         setInput,

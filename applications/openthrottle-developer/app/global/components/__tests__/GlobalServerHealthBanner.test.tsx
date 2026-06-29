@@ -4,7 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { GlobalServerHealthBanner } from '../GlobalServerHealthBanner';
-import type { GlobalServerHealthBannerProps } from '../GlobalServerHealthBanner';
+
+type GlobalServerHealthBannerProps = React.ComponentProps<
+  typeof GlobalServerHealthBanner
+>;
 
 describe('GlobalServerHealthBanner', () => {
   let component: ReturnType<typeof render>;

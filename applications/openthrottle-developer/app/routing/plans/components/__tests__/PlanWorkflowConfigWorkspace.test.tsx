@@ -3,15 +3,16 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { PlanWorkflowConfigWorkspace } from '../PlanWorkflowConfigWorkspace';
 import type { PlanWorkflowConfigWorkspaceProps } from '../PlanWorkflowConfigWorkspace';
 import { RECENT_WORKSPACE_PATHS_STORAGE_KEY } from '~/routing/plans/config/defaults';
 
 describe('PlanWorkflowConfigWorkspace Component', () => {
-  let onChange: ReturnType<typeof vi.fn>;
+  let onChange: Mock<(path: string) => void>;
 
   beforeEach(() => {
-    onChange = vi.fn();
+    onChange = vi.fn<(path: string) => void>();
     localStorage.clear();
   });
 

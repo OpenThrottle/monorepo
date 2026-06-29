@@ -34,7 +34,7 @@ describe('DashboardDailyStatsCard Component', () => {
 
   beforeEach(() => {
     props = {
-      dailyStats: twoDayStats,
+      dailyStats: [...twoDayStats],
     };
 
     const Component = () => <DashboardDailyStatsCard {...props} />;
@@ -71,7 +71,7 @@ describe('DashboardDailyStatsCard Component', () => {
   test('should apply custom className to card wrapper', () => {
     const customProps: DashboardDailyStatsCardProps = {
       className: 'custom-class',
-      dailyStats: twoDayStats,
+      dailyStats: [...twoDayStats],
     };
     const CustomComponent = () => <DashboardDailyStatsCard {...customProps} />;
     const RoutesStub = createRoutesStub([

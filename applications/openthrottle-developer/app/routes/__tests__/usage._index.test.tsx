@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { loader } from '../usage._index';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -29,10 +30,11 @@ describe('routes/usage._index.tsx', () => {
 
       const request = new Request('http://localhost/usage');
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/usage',
         request,
-        unstable_pattern: '/usage',
+        url: new URL(request.url),
       });
 
       expect(result.dailyStats).toEqual(items);

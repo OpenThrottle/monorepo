@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 import { action } from '../plans.upload-decompose';
+import { createTestRouterContext } from '~/testing/router-context';
 
 describe('routes/plans.upload-decompose.tsx', () => {
   describe('action', () => {
@@ -14,10 +15,11 @@ describe('routes/plans.upload-decompose.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/upload-decompose',
         request,
-        unstable_pattern: '/plans/upload-decompose',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({
@@ -40,10 +42,11 @@ describe('routes/plans.upload-decompose.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/upload-decompose',
         request,
-        unstable_pattern: '/plans/upload-decompose',
+        url: new URL(request.url),
       });
 
       expect(result.error).toBeUndefined();
@@ -61,10 +64,11 @@ describe('routes/plans.upload-decompose.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/upload-decompose',
         request,
-        unstable_pattern: '/plans/upload-decompose',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({
@@ -83,10 +87,11 @@ describe('routes/plans.upload-decompose.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/upload-decompose',
         request,
-        unstable_pattern: '/plans/upload-decompose',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Unknown action.', proposal: undefined });

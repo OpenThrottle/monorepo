@@ -1,11 +1,15 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
-import { DEFAULT_PAGINATION_LIMIT } from '@openthrottle/react-router-utils';
+import {
+  DEFAULT_PAGINATION_LIMIT,
+  getPublicEnv,
+} from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import QueueDetailIndex, { loader } from '../queues.$queueId._index';
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
@@ -45,6 +49,46 @@ const mockLoaderData = {
   queue: mockQueue,
 } as const;
 
+type QueueMatches = Route.ComponentProps['matches'];
+type QueueLoaderData = Route.ComponentProps['loaderData'];
+
+/** Build a fully-typed `matches` tuple for the QueueDetailIndex component (which ignores it). */
+const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
+  const rootData = {
+    canonical: 'http://localhost/',
+    env: getPublicEnv(),
+    rootLoaderDiagnostics: {},
+    rootLoaderFailure: null,
+    serverHealth: {
+      api: 'unconfigured',
+      database: 'unconfigured',
+      redis: 'unconfigured',
+      websocket: 'unconfigured',
+    },
+    user: null,
+    userLoadOk: true,
+  };
+
+  return [
+    {
+      data: rootData,
+      handle: undefined,
+      id: 'root',
+      loaderData: rootData,
+      params: {},
+      pathname: '/',
+    },
+    {
+      data: loaderData,
+      handle: undefined,
+      id: 'routes/queues.$queueId._index',
+      loaderData,
+      params: {},
+      pathname: '/',
+    },
+  ];
+};
+
 describe('routes/queues.$queueId.tsx', () => {
   beforeEach(() => {
     mockExecute.mockReset();
@@ -54,10 +98,10 @@ describe('routes/queues.$queueId.tsx', () => {
     mockExecute.mockResolvedValueOnce({ queue: mockQueue });
 
     const args: Route.LoaderArgs = {
-      context: {},
+      context: createTestRouterContext(),
       params: { queueId: 'plans' },
+      pattern: '/queues/plans',
       request: new Request('http://localhost/queues/plans?page=2&limit=50'),
-      unstable_pattern: '/queues/plans',
       url: new URL('http://localhost/queues/plans?page=2&limit=50'),
     };
 
@@ -78,10 +122,10 @@ describe('routes/queues.$queueId.tsx', () => {
     mockExecute.mockResolvedValueOnce({ queue: mockQueue });
 
     const args: Route.LoaderArgs = {
-      context: {},
+      context: createTestRouterContext(),
       params: { queueId: 'plans' },
+      pattern: '/queues/plans',
       request: new Request('http://localhost/queues/plans'),
-      unstable_pattern: '/queues/plans',
       url: new URL('http://localhost/queues/plans'),
     };
 
@@ -102,7 +146,7 @@ describe('routes/queues.$queueId.tsx', () => {
       <QueueDetailIndex
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as Route.ComponentProps['matches']}
+        matches={buildQueueMatches(mockLoaderData)}
         params={{ queueId: 'plans' }}
       />
     );
@@ -124,7 +168,13 @@ describe('routes/queues.$queueId.tsx', () => {
             jobs: { hasNext: false, jobs: [mockJob] },
           },
         }}
-        matches={[] as Route.ComponentProps['matches']}
+        matches={buildQueueMatches({
+          ...mockLoaderData,
+          queue: {
+            ...mockQueue,
+            jobs: { hasNext: false, jobs: [mockJob] },
+          },
+        })}
         params={{ queueId: 'plans' }}
       />
     );

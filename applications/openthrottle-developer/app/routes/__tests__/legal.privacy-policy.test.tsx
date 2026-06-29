@@ -10,7 +10,7 @@ describe('routes/legal.privacy-policy.tsx', () => {
       <MemoryRouter>
         <PrivacyPolicy
           actionData={undefined}
-          loaderData={undefined}
+          loaderData={{}}
           matches={[] as never}
           params={{}}
         />

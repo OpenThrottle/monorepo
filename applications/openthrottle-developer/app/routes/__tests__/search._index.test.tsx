@@ -4,11 +4,27 @@ import { MemoryRouter } from 'react-router';
 import { render } from '@testing-library/react';
 import SearchIndex from '../search._index';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+import type { SearchIndexLoaderFixture } from '~/testing/search-route-fixtures';
 import {
   searchIndexLoaderFixture,
   searchIndexLoaderFixtureEmptyQuery,
   searchIndexLoaderFixturePaginated,
 } from '~/testing/search-route-fixtures';
+
+/**
+ * @description Converts the shared (readonly) search fixture into the mutable
+ * loader-data shape the route component expects, copying the chunk array.
+ */
+const toLoaderData = (fixture: SearchIndexLoaderFixture) => {
+  return {
+    expandRankingDetails: fixture.expandRankingDetails,
+    limit: fixture.limit,
+    page: fixture.page,
+    query: fixture.query,
+    results: { chunks: [...fixture.results.chunks] },
+    total: fixture.total,
+  };
+};
 
 describe('routes/search._index.tsx', () => {
   test('should render search shell, SearchForm, and SearchFilters', () => {
@@ -16,7 +32,7 @@ describe('routes/search._index.tsx', () => {
       <MemoryRouter initialEntries={['/search?q=test']}>
         <SearchIndex
           actionData={undefined}
-          loaderData={searchIndexLoaderFixture}
+          loaderData={toLoaderData(searchIndexLoaderFixture)}
           matches={[] as never}
           params={{}}
         />
@@ -33,7 +49,7 @@ describe('routes/search._index.tsx', () => {
     const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={searchIndexLoaderFixturePaginated}
+        loaderData={toLoaderData(searchIndexLoaderFixturePaginated)}
         matches={[] as never}
         params={{}}
       />,
@@ -52,7 +68,7 @@ describe('routes/search._index.tsx', () => {
       <SearchIndex
         actionData={undefined}
         loaderData={{
-          ...searchIndexLoaderFixturePaginated,
+          ...toLoaderData(searchIndexLoaderFixturePaginated),
           expandRankingDetails: true,
           page: 1,
         }}
@@ -71,8 +87,8 @@ describe('routes/search._index.tsx', () => {
     const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={searchIndexLoaderFixture}
-        matches={[] as any}
+        loaderData={toLoaderData(searchIndexLoaderFixture)}
+        matches={[] as never}
         params={{}}
       />,
     );
@@ -89,8 +105,8 @@ describe('routes/search._index.tsx', () => {
     const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={searchIndexLoaderFixtureEmptyQuery}
-        matches={[] as any}
+        loaderData={toLoaderData(searchIndexLoaderFixtureEmptyQuery)}
+        matches={[] as never}
         params={{}}
       />,
     );

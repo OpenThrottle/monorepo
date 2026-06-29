@@ -154,7 +154,7 @@ export default function Component(
     setMessages((previous) => [...previous, newMessage]);
 
     startFetcher.submit(
-      decoded.backend === 'openai'
+      decoded.baseUrl != null
         ? {
             backend: 'openai',
             baseUrl: decoded.baseUrl,
@@ -335,7 +335,14 @@ export const action = async (
       { input },
     );
 
-    return data.startConversationStream;
+    const result = data.startConversationStream;
+
+    return {
+      assistantMessageId: result.assistantMessageId ?? null,
+      conversationId: result.conversationId ?? null,
+      errorMessage: result.errorMessage ?? null,
+      userMessageId: result.userMessageId ?? null,
+    };
   } catch (error) {
     const isError = error instanceof Error;
 

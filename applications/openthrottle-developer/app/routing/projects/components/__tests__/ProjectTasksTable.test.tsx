@@ -5,7 +5,8 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ProjectTasksTable } from '../ProjectTasksTable';
 import type { ProjectTasksTableProps } from '../ProjectTasksTable';
-import type { ProjectTaskRow } from '../ProjectTasksTable';
+
+type ProjectTaskRow = ProjectTasksTableProps['tasks'][number];
 
 const mockTasks: ProjectTaskRow[] = [
   {

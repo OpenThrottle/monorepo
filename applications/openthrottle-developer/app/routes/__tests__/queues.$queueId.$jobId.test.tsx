@@ -2,6 +2,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { action, loader } from '../queues.$queueId.$jobId';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
@@ -29,13 +30,14 @@ const routeParams = {
 } as const;
 
 const actionArgs = (formData: FormData): Route.ActionArgs => ({
-  context: {},
+  context: createTestRouterContext(),
   params: routeParams,
+  pattern: '/queues/Plans/job-1',
   request: new Request('http://localhost/queues/Plans/job-1', {
     body: formData,
     method: 'POST',
   }),
-  unstable_pattern: '/queues/Plans/job-1',
+  url: new URL('http://localhost/queues/Plans/job-1'),
 });
 
 describe('routes/queues.$queueId.$jobId.tsx', () => {
@@ -48,13 +50,14 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       mockExecute.mockResolvedValueOnce({ job: mockJob });
 
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: {
           jobId: encodeURIComponent('ralph-orch:abc'),
           queueId: 'Plans',
         },
+        pattern: '/queues/Plans/ralph-orch%3Aabc',
         request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc'),
-        unstable_pattern: '/queues/Plans/ralph-orch%3Aabc',
+        url: new URL('http://localhost/queues/Plans/ralph-orch%3Aabc'),
       };
 
       const result = await loader(args);
@@ -73,10 +76,11 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
 
     test('throws 400 when queue name is missing', async () => {
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: { jobId: 'job-1', queueId: '' },
+        pattern: '/queues',
         request: new Request('http://localhost'),
-        unstable_pattern: '/queues',
+        url: new URL('http://localhost'),
       };
 
       await expect(loader(args)).rejects.toMatchObject({ status: 400 });
@@ -84,10 +88,11 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
 
     test('throws 400 when job id is missing', async () => {
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: { jobId: '', queueId: 'Plans' },
+        pattern: '/queues/Plans',
         request: new Request('http://localhost/queues/Plans'),
-        unstable_pattern: '/queues/Plans',
+        url: new URL('http://localhost/queues/Plans'),
       };
 
       await expect(loader(args)).rejects.toMatchObject({ status: 400 });
@@ -97,10 +102,11 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       mockExecute.mockResolvedValueOnce({ job: null });
 
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: { jobId: 'missing', queueId: 'Plans' },
+        pattern: '/queues/Plans/missing',
         request: new Request('http://localhost/queues/Plans/missing'),
-        unstable_pattern: '/queues/Plans/missing',
+        url: new URL('http://localhost/queues/Plans/missing'),
       };
 
       await expect(loader(args)).rejects.toMatchObject({ status: 404 });
@@ -113,13 +119,14 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       formData.set('intent', 'retryJob');
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { jobId: '', queueId: 'Plans' },
+        pattern: '/queues/Plans',
         request: new Request('http://localhost', {
           body: formData,
           method: 'POST',
         }),
-        unstable_pattern: '/queues/Plans',
+        url: new URL('http://localhost'),
       });
 
       expect(result).toEqual({ retryJobError: 'Missing queue or job id.' });
@@ -137,16 +144,17 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       formData.set('intent', 'retryJob');
 
       const args: Route.ActionArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: {
           jobId: encodeURIComponent('ralph-orch:abc'),
           queueId: 'Plans',
         },
+        pattern: '/queues/Plans/ralph-orch%3Aabc',
         request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc', {
           body: formData,
           method: 'POST',
         }),
-        unstable_pattern: '/queues/Plans/ralph-orch%3Aabc',
+        url: new URL('http://localhost/queues/Plans/ralph-orch%3Aabc'),
       };
 
       const result = await action(args);

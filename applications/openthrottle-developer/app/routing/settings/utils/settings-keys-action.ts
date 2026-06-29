@@ -18,7 +18,7 @@ export type SettingsKeysActionData =
     };
 
 type ServiceAccountPickerItem = {
-  readonly disabledAt: string | null;
+  readonly disabledAt?: string | null;
   readonly id: string;
 };
 

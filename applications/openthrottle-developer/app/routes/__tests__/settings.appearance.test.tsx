@@ -1,14 +1,18 @@
 import { describe, expect, test } from 'vitest';
 import { loader } from '../settings.appearance';
 import type { Route } from '@/app/routes/+types/settings.appearance';
+import { createTestRouterContext } from '~/testing/router-context';
 
 describe('routes/settings.appearance.tsx', () => {
   test('loader returns diagnostics env and support bundle', async () => {
-    const args = {
-      context: undefined,
+    const request = new Request('http://localhost/settings/appearance');
+    const args: Route.LoaderArgs = {
+      context: createTestRouterContext(),
       params: {},
-      request: new Request('http://localhost/settings/appearance'),
-    } as Route.LoaderArgs;
+      pattern: '/settings/appearance',
+      request,
+      url: new URL(request.url),
+    };
 
     const data = await loader(args);
 

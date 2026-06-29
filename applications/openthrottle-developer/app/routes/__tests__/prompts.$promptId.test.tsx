@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader, meta } from '../prompts.$promptId';
 import { CustomPromptType } from '~/__generated__/graphql';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -32,10 +33,11 @@ describe('routes/prompts.$promptId.tsx', () => {
 
       const request = new Request('http://localhost/prompts/test-id');
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { promptId: 'test-id' },
+        pattern: '/prompts/test-id',
         request,
-        unstable_pattern: '/prompts/test-id',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ prompt: mockPrompt });
@@ -47,11 +49,12 @@ describe('routes/prompts.$promptId.tsx', () => {
 
       try {
         await loader({
-          context: {},
+          context: createTestRouterContext(),
           // @ts-expect-error - for testing purposes
           params: { promptId: undefined },
+          pattern: '/prompts/test-id',
           request,
-          unstable_pattern: '/prompts/test-id',
+          url: new URL(request.url),
         });
         expect.fail('Expected loader to throw');
       } catch (error) {
@@ -67,10 +70,11 @@ describe('routes/prompts.$promptId.tsx', () => {
 
       try {
         await loader({
-          context: {},
+          context: createTestRouterContext(),
           params: { promptId: 'not-found' },
+          pattern: '/prompts/test-id',
           request,
-          unstable_pattern: '/prompts/test-id',
+          url: new URL(request.url),
         });
         expect.fail('Expected loader to throw');
       } catch (error) {
@@ -96,10 +100,11 @@ describe('routes/prompts.$promptId.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { promptId: 'test-id' },
+        pattern: '/prompts/test-id',
         request,
-        unstable_pattern: '/prompts/test-id',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ success: true });
@@ -116,11 +121,12 @@ describe('routes/prompts.$promptId.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         // @ts-expect-error - for testing purposes
         params: { promptId: undefined },
+        pattern: '/prompts/test-id',
         request,
-        unstable_pattern: '/prompts/test-id',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Missing prompt id.' });
@@ -140,10 +146,11 @@ describe('routes/prompts.$promptId.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { promptId: 'test-id' },
+        pattern: '/prompts/test-id',
         request,
-        unstable_pattern: '/prompts/test-id',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);
@@ -159,10 +166,10 @@ describe('routes/prompts.$promptId.tsx', () => {
         location: {
           hash: '',
           key: '',
+          mask: undefined,
           pathname: '',
           search: '',
           state: {},
-          unstable_mask: undefined,
         },
         matches: [] as unknown as any,
         params: { promptId: 'test-id' },

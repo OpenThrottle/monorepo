@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader } from '../plans.$planId.tasks.create';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -17,10 +18,11 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
   describe('loader', () => {
     test('redirects to /plans when planId is missing', async () => {
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: '' },
+        pattern: '/plans/:planId/tasks/create',
         request: new Request('http://localhost/plans//tasks/create'),
-        unstable_pattern: '/plans/:planId/tasks/create',
+        url: new URL('http://localhost/plans//tasks/create'),
       });
 
       expect((result as Response).status).toBe(302);
@@ -37,10 +39,11 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({ plan: mockPlan });
 
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/tasks/create',
         request: new Request('http://localhost/plans/plan-1/tasks/create'),
-        unstable_pattern: '/plans/:planId/tasks/create',
+        url: new URL('http://localhost/plans/plan-1/tasks/create'),
       });
 
       expect(result).toEqual({ plan: mockPlan, planId: 'plan-1' });
@@ -61,10 +64,11 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
       );
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/tasks/create',
         request,
-        unstable_pattern: '/plans/:planId/tasks/create',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Title is required.' });
@@ -89,10 +93,11 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
       );
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/tasks/create',
         request,
-        unstable_pattern: '/plans/:planId/tasks/create',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);
