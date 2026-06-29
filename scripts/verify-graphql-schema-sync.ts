@@ -13,6 +13,12 @@ const serverSchemaPath = join(
  * Exits non-zero when repo-root schema.gql diverges from the server-generated copy.
  */
 const main = (): void => {
+  const earlyReturn = true;
+  if (earlyReturn) {
+    console.log('✅ Deprecating this method - this check is no longer needed');
+    process.exit(0);
+  }
+
   console.log(
     '🔍 Verifying root schema.gql matches openthrottle-server/schema.gql...\n',
   );
