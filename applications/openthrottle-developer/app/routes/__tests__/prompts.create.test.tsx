@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, meta } from '../prompts.create';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -38,10 +39,11 @@ describe('routes/prompts.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/prompts/create',
         request,
-        unstable_pattern: '/prompts/create',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);
@@ -58,10 +60,11 @@ describe('routes/prompts.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/prompts/create',
         request,
-        unstable_pattern: '/prompts/create',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Title is required.' });
@@ -78,10 +81,11 @@ describe('routes/prompts.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/prompts/create',
         request,
-        unstable_pattern: '/prompts/create',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Content is required.' });
@@ -104,10 +108,11 @@ describe('routes/prompts.create.tsx', () => {
       });
 
       await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/prompts/create',
         request,
-        unstable_pattern: '/prompts/create',
+        url: new URL(request.url),
       });
 
       expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
@@ -131,10 +136,10 @@ describe('routes/prompts.create.tsx', () => {
         location: {
           hash: '',
           key: '',
+          mask: undefined,
           pathname: '',
           search: '',
           state: {},
-          unstable_mask: undefined,
         },
         matches: [] as unknown as any,
         params: {},

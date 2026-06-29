@@ -7,7 +7,13 @@
       "@/*": [".react-router/types/*"],
       "#/*": ["*"]
     },
-    "rootDirs": ["./", ".react-router/types"]
+    "rootDirs": ["./", ".react-router/types"],
+    // This app never emits (Vite transpiles; `noEmit: true` from
+    // tsconfig.react-router.json). `rewriteRelativeImportExtensions` only
+    // affects tsc emit and otherwise raises a spurious project-level TS2878
+    // for imports that resolve into referenced source-first packages, so it is
+    // disabled here to let `tsc --noEmit` (the `typecheck` target) run clean.
+    "rewriteRelativeImportExtensions": false
   },
   "exclude": ["build", "dist", "node_modules"],
   "files": [],

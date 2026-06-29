@@ -80,6 +80,28 @@
       },
       "lint": {},
       "test": {},
+      "typecheck": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "dependsOn": [
+          "codegen-graphql",
+          "codegen-react-router"
+        ],
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/tsconfig.react-router.json",
+          "{workspaceRoot}/tsconfig.base.json"
+        ],
+        "outputs": [],
+        "options": {
+          "command": "react-router typegen && tsc --noEmit -p tsconfig.json",
+          "cwd": "{projectRoot}"
+        },
+        "metadata": {
+          "description": "Static type-check (source + tests) with tsc --noEmit. Source-first RR app: no dist emit, so a single noEmit pass over the whole project replaces the lib/test split used by buildable packages."
+        }
+      },
       "test-e2e": {
         "configurations": {
           "full": {
@@ -103,8 +125,7 @@
           "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
           "cwd": "{projectRoot}/tests/e2e"
         }
-      },
-      "typecheck": {}
+      }
     }
   },
   "private": true,

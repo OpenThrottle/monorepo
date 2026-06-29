@@ -13,6 +13,7 @@ const baseEnv: OpenThrottleEnv = {
   API_URL_INTERNAL: 'http://api-int.test',
   APP_ENV: 'development',
   APP_NAME: 'openthrottle-developer',
+  APP_NAME_SHORT: 'developer',
   APP_URL: 'http://localhost:6020',
   APP_URL_ADMIN: 'http://localhost:6022',
   APP_URL_CMS: 'http://localhost:6023',

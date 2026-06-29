@@ -27,7 +27,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
   // Setup
   const anchor = `/plans/${task.planId}/tasks/${task.id}`;
 
-  const title = task.title ?? 'Untitled';
+  const title = task.title || 'Untitled';
   const category = task.category?.trim() ?? '';
   const description = task.description?.trim() ?? '';
   const summary = task.summary?.trim() ?? '';

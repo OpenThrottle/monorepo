@@ -1,10 +1,53 @@
+import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { type UIMatch } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
+
+type PlanDetailMatches = Route.ComponentProps['matches'];
+type PlanDetailLoaderData = Route.ComponentProps['loaderData'];
+
+/** Build a fully-typed `matches` tuple for the PlanDetail component (which ignores it). */
+const buildPlanDetailMatches = (
+  loaderData: PlanDetailLoaderData,
+): PlanDetailMatches => {
+  const rootData = {
+    canonical: 'http://localhost/',
+    env: getPublicEnv(),
+    rootLoaderDiagnostics: {},
+    rootLoaderFailure: null,
+    serverHealth: {
+      api: 'unconfigured',
+      database: 'unconfigured',
+      redis: 'unconfigured',
+      websocket: 'unconfigured',
+    },
+    user: null,
+    userLoadOk: true,
+  };
+
+  return [
+    {
+      data: rootData,
+      handle: undefined,
+      id: 'root',
+      loaderData: rootData,
+      params: {},
+      pathname: '/',
+    },
+    {
+      data: loaderData,
+      handle: undefined,
+      id: 'routes/plans.$planId._index',
+      loaderData,
+      params: {},
+      pathname: '/',
+    },
+  ];
+};
 
 const mockRevalidate = vi.fn();
 
@@ -76,7 +119,7 @@ function renderPlanDetail(planId: string): ReturnType<typeof render> {
       <PlanDetail
         actionData={undefined}
         loaderData={loaderData}
-        matches={[] as UIMatch[]}
+        matches={buildPlanDetailMatches(loaderData)}
         params={{ planId }}
       />
     </TooltipProvider>,

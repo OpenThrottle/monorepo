@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action } from '../plans.create';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -25,10 +26,11 @@ describe('routes/plans.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/create',
         request,
-        unstable_pattern: '/plans/create',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Category is required.' });
@@ -45,10 +47,11 @@ describe('routes/plans.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/create',
         request,
-        unstable_pattern: '/plans/create',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Title is required.' });
@@ -71,10 +74,11 @@ describe('routes/plans.create.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/plans/create',
         request,
-        unstable_pattern: '/plans/create',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);

@@ -4,7 +4,9 @@ import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { QueueJobsTable } from '../QueueJobsTable';
-import type { QueueJobsTableJob, QueueJobsTableProps } from '../QueueJobsTable';
+import type { QueueJobsTableProps } from '../QueueJobsTable';
+
+type QueueJobsTableJob = QueueJobsTableProps['jobs'][number];
 
 const planId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const taskId = '11111111-2222-3333-4444-555555555555';

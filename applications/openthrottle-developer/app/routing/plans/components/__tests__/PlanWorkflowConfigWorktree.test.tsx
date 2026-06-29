@@ -30,6 +30,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
     const user = userEvent.setup();
     const setInput = vi.fn();
     props = {
+      heading: '06. Worktree',
       input: {
         ...getDefaultWorkflowRalphRunOptionsInput(),
         worktreeCli: 'named',
@@ -72,6 +73,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
 
   test('hides cursor-only fields when backend is claude', () => {
     props = {
+      heading: '06. Worktree',
       input: {
         ...getDefaultWorkflowRalphRunOptionsInput(),
         executionBackend: 'claude',

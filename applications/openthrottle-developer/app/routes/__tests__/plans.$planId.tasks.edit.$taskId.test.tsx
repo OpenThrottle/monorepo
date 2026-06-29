@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader } from '../plans.$planId.tasks.$taskId.edit';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -17,10 +18,11 @@ describe('routes/plans.$planId.tasks.$taskId.edit.tsx', () => {
   describe('loader', () => {
     test('returns null task when taskId is missing', async () => {
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1', taskId: '' },
+        pattern: '/plans/:planId/tasks/:taskId/edit',
         request: new Request('http://localhost/plans/plan-1/tasks//edit'),
-        unstable_pattern: '/plans/:planId/tasks/:taskId/edit',
+        url: new URL('http://localhost/plans/plan-1/tasks//edit'),
       });
 
       expect(result).toEqual({ task: null });
@@ -38,10 +40,11 @@ describe('routes/plans.$planId.tasks.$taskId.edit.tsx', () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({ task: mockTask });
 
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1', taskId: 'task-1' },
+        pattern: '/plans/:planId/tasks/:taskId/edit',
         request: new Request('http://localhost/plans/plan-1/tasks/task-1/edit'),
-        unstable_pattern: '/plans/:planId/tasks/:taskId/edit',
+        url: new URL('http://localhost/plans/plan-1/tasks/task-1/edit'),
       });
 
       expect(result).toEqual({ task: mockTask });
@@ -63,10 +66,11 @@ describe('routes/plans.$planId.tasks.$taskId.edit.tsx', () => {
       );
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1', taskId: 'task-1' },
+        pattern: '/plans/:planId/tasks/:taskId/edit',
         request,
-        unstable_pattern: '/plans/:planId/tasks/:taskId/edit',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Task id does not match.' });
@@ -91,10 +95,11 @@ describe('routes/plans.$planId.tasks.$taskId.edit.tsx', () => {
       );
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1', taskId: 'task-1' },
+        pattern: '/plans/:planId/tasks/:taskId/edit',
         request,
-        unstable_pattern: '/plans/:planId/tasks/:taskId/edit',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);

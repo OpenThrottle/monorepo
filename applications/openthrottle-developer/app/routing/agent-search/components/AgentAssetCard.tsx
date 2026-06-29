@@ -73,14 +73,14 @@ export const AgentAssetCard = (
             {PROMPT_TYPE_LABEL[result.promptType]}
           </Badge>
           <Badge
-            color={result.source === 'db' ? 'green' : 'gray'}
+            color={result.source === 'db' ? 'green' : 'slate'}
             data-testid="AgentAssetCard-sourceBadge"
             size="xs"
           >
             {result.source === 'db' ? 'indexed' : 'on disk'}
           </Badge>
           {result.labels.map((label) => (
-            <Badge color="gray" key={label} size="xs">
+            <Badge color="slate" key={label} size="xs">
               {label}
             </Badge>
           ))}

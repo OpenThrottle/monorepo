@@ -31,7 +31,9 @@ describe('PlanTabOutput Component', () => {
           __typename: 'PlanOutputStreamChunkObject',
           content: 'Done.',
           createdAt: '2026-01-01T00:00:00.000Z',
+          id: 'chunk-1',
           iteration: 1,
+          planId: 'plan-1',
         },
       ],
     });

@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Index, { loader } from '../dashboard._index';
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
@@ -58,10 +59,10 @@ describe('routes/dashboard._index.tsx', () => {
         'http://localhost/dashboard?owner=openthrottle&repo=openthrottle',
       );
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/dashboard',
         request,
-        unstable_pattern: '/dashboard',
         url: new URL(request.url),
       };
 
@@ -85,10 +86,10 @@ describe('routes/dashboard._index.tsx', () => {
         'http://localhost/dashboard?owner=unknown&repo=bad',
       );
       const args: Route.LoaderArgs = {
-        context: {},
+        context: createTestRouterContext(),
         params: {},
+        pattern: '/dashboard',
         request,
-        unstable_pattern: '/dashboard',
         url: new URL(request.url),
       };
 

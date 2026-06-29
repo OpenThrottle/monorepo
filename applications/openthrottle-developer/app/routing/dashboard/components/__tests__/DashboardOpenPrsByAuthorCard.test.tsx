@@ -19,7 +19,7 @@ const mockGithubStats = {
     { author: 'visormatt', openCount: 5 },
     { author: 'other-user', openCount: 2 },
   ],
-} as const;
+};
 
 function renderCard(
   cardProps: DashboardOpenPrsByAuthorCardProps,

@@ -41,7 +41,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries } = props.loaderData;
+  const entries = [...props.loaderData.entries];
 
   return (
     <GlobalScreen>

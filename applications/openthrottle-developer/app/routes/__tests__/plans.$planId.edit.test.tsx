@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader } from '../plans.$planId.edit';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -17,10 +18,11 @@ describe('routes/plans.$planId.edit.tsx', () => {
   describe('loader', () => {
     test('returns null plan when planId is missing', async () => {
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: '' },
+        pattern: '/plans/:planId/edit',
         request: new Request('http://localhost/plans//edit'),
-        unstable_pattern: '/plans/:planId/edit',
+        url: new URL('http://localhost/plans//edit'),
       });
 
       expect(result).toEqual({ plan: null });
@@ -39,10 +41,11 @@ describe('routes/plans.$planId.edit.tsx', () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({ plan: mockPlan });
 
       const result = await loader({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/edit',
         request: new Request('http://localhost/plans/plan-1/edit'),
-        unstable_pattern: '/plans/:planId/edit',
+        url: new URL('http://localhost/plans/plan-1/edit'),
       });
 
       expect(result).toEqual({ plan: mockPlan });
@@ -63,10 +66,11 @@ describe('routes/plans.$planId.edit.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/edit',
         request,
-        unstable_pattern: '/plans/:planId/edit',
+        url: new URL(request.url),
       });
 
       expect(result).toEqual({ error: 'Plan id does not match.' });
@@ -90,10 +94,11 @@ describe('routes/plans.$planId.edit.tsx', () => {
       });
 
       const result = await action({
-        context: {},
+        context: createTestRouterContext(),
         params: { planId: 'plan-1' },
+        pattern: '/plans/:planId/edit',
         request,
-        unstable_pattern: '/plans/:planId/edit',
+        url: new URL(request.url),
       });
 
       expect((result as Response).status).toBe(302);

@@ -9,7 +9,7 @@ import type { DashboardPrTimeInStateCardProps } from '../DashboardPrTimeInStateC
 const mockPrTimeInStateSummary = [
   { avgDaysInState: 2.5, count: 3, state: 'open' },
   { avgDaysInState: 1.0, count: 5, state: 'merged' },
-] as const;
+];
 
 describe('DashboardPrTimeInStateCard Component', () => {
   let component: RenderResult;

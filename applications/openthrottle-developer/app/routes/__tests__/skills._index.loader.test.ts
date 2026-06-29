@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { Route } from '@/app/routes/+types/skills._index';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('~/routing/agents/data/discover-repo-skills.server', () => ({
   discoverRepoSkills: vi.fn(),
@@ -29,11 +30,14 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   },
 ];
 
-const loaderArgs = {
-  context: undefined,
+const loaderRequest = new Request('http://localhost/skills');
+const loaderArgs: Route.LoaderArgs = {
+  context: createTestRouterContext(),
   params: {},
-  request: new Request('http://localhost/skills'),
-} as Route.LoaderArgs;
+  pattern: '/skills',
+  request: loaderRequest,
+  url: new URL(loaderRequest.url),
+};
 
 describe('routes/skills._index loader', () => {
   beforeEach(() => {

@@ -65,7 +65,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 };
 
 PlansTable.buildTable = (
-  statusFilterUrls: PlansTableProps['statusFilterUrls'],
+  _statusFilterUrls: PlansTableProps['statusFilterUrls'],
   runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [

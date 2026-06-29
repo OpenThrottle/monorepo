@@ -10,7 +10,7 @@ describe('routes/legal.terms-of-use.tsx', () => {
       <MemoryRouter>
         <TermsOfUse
           actionData={undefined}
-          loaderData={undefined}
+          loaderData={{}}
           matches={[] as never}
           params={{}}
         />

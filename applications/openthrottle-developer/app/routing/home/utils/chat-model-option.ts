@@ -51,6 +51,8 @@ export type DecodedChatOption =
     }
   | {
       readonly backend: string;
+      readonly baseUrl?: undefined;
+      readonly model?: undefined;
     };
 
 /**
