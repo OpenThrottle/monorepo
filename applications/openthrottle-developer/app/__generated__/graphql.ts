@@ -1948,7 +1948,7 @@ export type Query = {
   commitLinksByPlanId: Array<CommitLinkObject>;
   /** List commit links for a task, ordered by createdAt descending */
   commitLinksByTaskId: Array<CommitLinkObject>;
-  /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
+  /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
@@ -1980,7 +1980,7 @@ export type Query = {
   job?: Maybe<JobObject>;
   /** Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?". */
   lastActivity?: Maybe<LastActivityResultObject>;
-  /** Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests. */
+  /** Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests. */
   linesAddedDeleted: Array<LinesAddedDeletedRowObject>;
   /** List agent conversations for the authenticated human user (default status=active, limit 20 max 100). */
   listAgentConversations: ListAgentConversationsResultObject;
@@ -2004,9 +2004,9 @@ export type Query = {
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
   notes: Array<NoteObject>;
-  /** Open PR count per author for a repository (GitHub stats). Paginates PRs up to 1000 (10 pages); repos with more matching PRs are truncated to the most recent window. */
+  /** Open PR count per author for a repository (GitHub stats). */
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
-  /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
+  /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
   /** List all permissions */
   permissions: Array<PermissionObject>;
@@ -2032,13 +2032,13 @@ export type Query = {
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
   prCountByLabel: Array<PrCountByLabelObject>;
-  /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
+  /** PR time-in-state summary (count and avg days per state: open, closed, merged). */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
   /** List all projects, ordered by createdAt descending */
   projects: Array<ProjectObject>;
-  /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
+  /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. */
   prsMergedPerPeriod: Array<PrsMergedPerPeriodObject>;
   /** Get one pull request by repository and PR number (GitHub API) */
   pull?: Maybe<PullListItemObject>;
@@ -2052,7 +2052,7 @@ export type Query = {
   remainingTasksByPlanId: Array<TaskObject>;
   /** List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject. */
   repeatableJobs: Array<RepeatableJobObject>;
-  /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests. */
+  /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
   /** Get a role by ID */
   role?: Maybe<RoleObject>;

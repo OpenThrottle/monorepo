@@ -64,11 +64,16 @@ vi.mock('react-router', async (importOriginal) => {
 
 // Capture each graphql-ws subscription so the test can drive payloads.
 type Sink = { next: (msg: unknown) => void };
-const subscriptions: Array<{ query: string; sink: Sink }> = [];
+const subscriptions: Array<{
+  dispose: ReturnType<typeof vi.fn>;
+  query: string;
+  sink: Sink;
+}> = [];
 const fakeClient = {
   subscribe: (payload: { query: string }, sink: Sink) => {
-    subscriptions.push({ query: payload.query, sink });
-    return () => undefined;
+    const dispose = vi.fn();
+    subscriptions.push({ dispose, query: payload.query, sink });
+    return dispose;
   },
 };
 
@@ -157,5 +162,19 @@ describe('routes/plans.$planId._index subscription revalidation', () => {
     emitPlanLifecycle({ event: 'task.status_changed', planId: 'plan-1' });
 
     expect(mockRevalidate).toHaveBeenCalledTimes(1);
+  });
+
+  test('tears down the lifecycle subscription on unmount', () => {
+    const { unmount } = renderPlanDetail('plan-1');
+
+    const lifecycle = subscriptions.find((s) =>
+      s.query.includes('planNotifications'),
+    );
+    expect(lifecycle).toBeDefined();
+    expect(lifecycle?.dispose).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(lifecycle?.dispose).toHaveBeenCalledTimes(1);
   });
 });
