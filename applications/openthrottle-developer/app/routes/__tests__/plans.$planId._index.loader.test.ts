@@ -1,7 +1,9 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import { loader } from '../plans.$planId._index';
 import { PlanDetailIndexLoaderDocument } from '~/__generated__/graphql';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -18,11 +20,12 @@ describe('routes/plans.$planId._index loader', () => {
 
   test('returns an empty data shape and skips GraphQL when planId is missing', async () => {
     const result = await loader({
-      context: {},
+      context: createTestRouterContext(),
       params: {},
+      pattern: '/plans/:planId',
       request: new Request('http://localhost/plans/'),
-      unstable_pattern: '/plans/:planId',
-    });
+      url: new URL('http://localhost/plans/'),
+    } as unknown as Route.LoaderArgs);
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     expect(result).toEqual({
@@ -53,11 +56,12 @@ describe('routes/plans.$planId._index loader', () => {
 
     const request = new Request(`http://localhost/plans/${planId}`);
     const result = await loader({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId },
+      pattern: '/plans/:planId',
       request,
-      unstable_pattern: '/plans/:planId',
-    });
+      url: new URL(request.url),
+    } satisfies Route.LoaderArgs);
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
       request,
@@ -82,12 +86,14 @@ describe('routes/plans.$planId._index loader', () => {
       tasksByPlanId: null,
     });
 
+    const request = new Request(`http://localhost/plans/${planId}`);
     const result = await loader({
-      context: {},
+      context: createTestRouterContext(),
       params: { planId },
-      request: new Request(`http://localhost/plans/${planId}`),
-      unstable_pattern: '/plans/:planId',
-    });
+      pattern: '/plans/:planId',
+      request,
+      url: new URL(request.url),
+    } satisfies Route.LoaderArgs);
 
     expect(result).toEqual({
       plan: null,

@@ -23,7 +23,11 @@ export const DEFAULT_RALPH_MODEL = 'auto';
  * @description Same ids as `tools/workflows/src/utils/ralph-execution-backend.ts`
  * (`RALPH_EXECUTION_BACKEND_IDS`). UI layer-2 must stay aligned with `workflow-ralph --backend`.
  */
-export const WORKFLOW_RALPH_KNOWN_BACKENDS = ['claude', 'cursor'] as const;
+export const WORKFLOW_RALPH_KNOWN_BACKENDS = [
+  'claude',
+  'cursor',
+  'opencode',
+] as const;
 
 /**
  * @description Short label for plan-run history and queue job detail (`cursor` | `claude` from the API).
