@@ -46,6 +46,13 @@ export {
 } from './services/keyed-jsonl-writer';
 export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
 export {
+  readKeyedJsonlRun,
+  type KeyedJsonlRunLine,
+  type ReadKeyedJsonlRunOptions,
+  type ReadKeyedJsonlRunParams,
+  type ReadKeyedJsonlRunResult,
+} from './services/keyed-jsonl-reader';
+export {
   type PruneKeyedRunOutputDirectoryParams,
   type PruneKeyedRunOutputDirectoryResult,
   pruneKeyedRunOutputDirectory,
