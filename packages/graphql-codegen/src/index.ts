@@ -60,7 +60,7 @@ export interface DefineCodegenOptions {
   withZodSchemas?: boolean;
 }
 
-const SCHEMA_RELATIVE_PATH = '../../schema.gql';
+const SCHEMA_RELATIVE_PATH = `../../applications/openthrottle-server/schema.gql`;
 
 /**
  * @description Builds a GraphQL Codegen config from the shared OpenThrottle

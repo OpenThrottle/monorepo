@@ -5,23 +5,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import {
-  executeGraphqlWithAuth,
-  useSubscription,
-} from '@openthrottle/react-router-graphql';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  Link,
-  redirect,
-  useFetcher,
-  useRevalidator,
-  useSearchParams,
-} from 'react-router';
+import { Link, redirect, useSearchParams } from 'react-router';
 import {
   BoltIcon,
   CogIcon,
@@ -36,39 +27,15 @@ import {
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import {
-  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
-  getDefaultWorkflowRalphRunOptionsInput,
-  parseWorkflowRunIterationTimeoutSeconds,
-  validateWorkflowRalphRunOptionsState,
-  type WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailIndexLoaderDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
-  PlanLifecycleNotificationsDocument,
 } from '~/__generated__/graphql';
-import {
-  jobRunHookEntriesToDraftRows,
-  normalizeJobRunHookDraftRows,
-  parseJobRunHooksJsonFromPlan,
-  serializeJobRunHooksConfig,
-  validateJobRunHooksDraftRows,
-  type JobRunHookDraftRow,
-} from '~/routing/plans/utils/job-run-hooks-ui';
-import {
-  hydratePlanRunConfigUiState,
-  serializePlanRunConfigUiState,
-} from '~/routing/plans/utils/plan-run-config-ui';
-import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
+import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import {
-  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
-  WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-} from '~/routing/plans/utils/workflow-run-options-search-param';
 import { cancelPlanRun } from '~/routing/plans/actions/planId';
 import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
 import {
@@ -95,7 +62,8 @@ import {
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
-import { getGraphqlWsClient } from '~/services/graphql-ws-client';
+import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
+import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -158,22 +126,32 @@ export default function Component(
   const { plan, tasks } = loaderData;
 
   // Hooks
-  const fetcherSaveJobRunHooks = useFetcher<typeof action>();
-  const fetcherSaveRunConfig = useFetcher<typeof action>();
-  const revalidator = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [workflowTimeout, setWorkflowTimeout] = React.useState('');
-  const [workingDirectory, setWorkingDirectory] = React.useState('');
-  const [workflowInput, setWorkflowInput] =
-    React.useState<WorkflowRalphRunOptionsInput>(() =>
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
-    );
-  const [jobRunHookRows, setJobRunHookRows] = React.useState<
-    JobRunHookDraftRow[]
-  >(() => jobRunHookEntriesToDraftRows([]));
+  const {
+    jobRunHookRows,
+    jobRunHooksJson,
+    jobRunHooksValidation,
+    onResetToDefaults,
+    onSaveJobRunHooks,
+    onSaveRunConfig,
+    onToggleExpanded,
+    ralphTuningJson,
+    runConfigSaveBlocked,
+    runConfigSaveBlockedReason,
+    saveJobRunHooksError,
+    saveJobRunHooksPending,
+    saveRunConfigError,
+    saveRunConfigPending,
+    setJobRunHookRows,
+    setWorkflowInput,
+    setWorkflowTimeout,
+    setWorkingDirectory,
+    workflowInput,
+    workflowTimeout,
+    workingDirectory,
+  } = usePlanRunConfigEditor(plan);
 
   // Setup
-  const notificationsClient = React.useMemo(() => getGraphqlWsClient(), []);
   const [fullscreen, setFullscreen] = React.useState(false);
 
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
@@ -194,135 +172,7 @@ export default function Component(
     (task) => task.status === 'COMPLETED',
   ).length;
 
-  const ralphTuningJson = React.useMemo((): string => {
-    const merged: WorkflowRalphRunOptionsInput = {
-      ...workflowInput,
-      iterationTimeoutSeconds:
-        parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
-    };
-
-    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
-
-    return tuning === undefined ? '' : JSON.stringify(tuning);
-  }, [workflowInput, workflowTimeout]);
-
-  const jobRunHooksJson = React.useMemo((): string => {
-    const validation = validateJobRunHooksDraftRows(jobRunHookRows);
-
-    if (!validation.ok) {
-      return '';
-    }
-
-    try {
-      const entries = normalizeJobRunHookDraftRows(jobRunHookRows);
-      return serializeJobRunHooksConfig(entries);
-    } catch {
-      return '';
-    }
-  }, [jobRunHookRows]);
-
-  const jobRunHooksValidation = validateJobRunHooksDraftRows(jobRunHookRows);
-
-  const workflowValidation = validateWorkflowRalphRunOptionsState(
-    workflowInput,
-    workflowTimeout,
-    { requireCliTargetIds: true },
-  );
-  const workspacePathError = validateWorkspacePathClient(workingDirectory);
-  const runConfigSaveBlocked =
-    !workflowValidation.ok || workspacePathError != null;
-  const runConfigSaveBlockedReason = !workflowValidation.ok
-    ? workflowValidation.issues[0]?.message
-    : workspacePathError;
-
-  const runConfigJson = React.useMemo((): string => {
-    if (runConfigSaveBlocked || plan?.id == null) {
-      return '';
-    }
-
-    try {
-      return serializePlanRunConfigUiState({
-        iterationTimeoutText: workflowTimeout,
-        workflowInput,
-        workingDirectory,
-      });
-    } catch {
-      return '';
-    }
-  }, [
-    plan?.id,
-    runConfigSaveBlocked,
-    workflowInput,
-    workflowTimeout,
-    workingDirectory,
-  ]);
-
-  const saveJobRunHooksData = fetcherSaveJobRunHooks.data;
-  const saveJobRunHooksError =
-    saveJobRunHooksData != null &&
-    typeof saveJobRunHooksData === 'object' &&
-    'saveJobRunHooksError' in saveJobRunHooksData &&
-    typeof saveJobRunHooksData.saveJobRunHooksError === 'string'
-      ? saveJobRunHooksData.saveJobRunHooksError
-      : undefined;
-
-  const saveRunConfigData = fetcherSaveRunConfig.data;
-  const saveRunConfigError =
-    saveRunConfigData != null &&
-    typeof saveRunConfigData === 'object' &&
-    'saveRunConfigError' in saveRunConfigData &&
-    typeof saveRunConfigData.saveRunConfigError === 'string'
-      ? saveRunConfigData.saveRunConfigError
-      : undefined;
-
   // Handlers
-  const onResetToDefaults = (): void => {
-    setWorkflowInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
-    );
-
-    setWorkingDirectory('');
-    setWorkflowTimeout('');
-  };
-
-  const onSaveJobRunHooks = (): void => {
-    if (!plan?.id || !jobRunHooksValidation.ok) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set('intent', 'saveJobRunHooks');
-    formData.set('jobRunHooksJson', jobRunHooksJson);
-    void fetcherSaveJobRunHooks.submit(formData, { method: 'post' });
-  };
-
-  const onSaveRunConfig = (): void => {
-    if (!plan?.id || runConfigSaveBlocked || runConfigJson === '') {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set('intent', 'saveRunConfig');
-    formData.set('runConfigJson', runConfigJson);
-    void fetcherSaveRunConfig.submit(formData, { method: 'post' });
-  };
-
-  const onToggleExpanded = (expanded: boolean): void => {
-    const next = new URLSearchParams(searchParams);
-    if (expanded) {
-      next.set(
-        WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-        WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
-      );
-    } else {
-      next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
-    }
-
-    setSearchParams(next, {
-      preventScrollReset: true,
-      replace: true,
-    });
-  };
 
   // Markup
 
@@ -360,66 +210,9 @@ export default function Component(
     }
   }, [searchParams]);
 
-  React.useEffect(() => {
-    if (!plan?.id) {
-      return;
-    }
-
-    const hydrated = hydratePlanRunConfigUiState(plan.id, plan.runConfigJson);
-
-    setWorkflowInput(hydrated.workflowInput);
-    setWorkingDirectory(hydrated.workingDirectory);
-    setWorkflowTimeout(hydrated.iterationTimeoutText);
-
-    try {
-      const entries = parseJobRunHooksJsonFromPlan(plan.jobRunHooksJson);
-      setJobRunHookRows(jobRunHookEntriesToDraftRows(entries));
-    } catch {
-      setJobRunHookRows(jobRunHookEntriesToDraftRows([]));
-    }
-  }, [plan?.id, plan?.jobRunHooksJson, plan?.runConfigJson]);
-
-  // Subscribe to plan/task status-change events so we revalidate when status
-  // is updated via openthrottle-mcp or API, keeping plan and tasks in sync.
-  // Manual QA: see `PlanTasksBoard.test.tsx` file comment (socket + board/table).
-  React.useEffect(() => {
-    if (fetcherSaveJobRunHooks.state !== 'idle') return;
-
-    const data = fetcherSaveJobRunHooks.data;
-    if (
-      data != null &&
-      typeof data === 'object' &&
-      'saveJobRunHooks' in data &&
-      data.saveJobRunHooks != null
-    ) {
-      revalidator.revalidate();
-    }
-  }, [fetcherSaveJobRunHooks.state, fetcherSaveJobRunHooks.data, revalidator]);
-
-  React.useEffect(() => {
-    if (fetcherSaveRunConfig.state !== 'idle') return;
-
-    const data = fetcherSaveRunConfig.data;
-    if (
-      data != null &&
-      typeof data === 'object' &&
-      'saveRunConfig' in data &&
-      data.saveRunConfig != null
-    ) {
-      revalidator.revalidate();
-    }
-  }, [fetcherSaveRunConfig.state, fetcherSaveRunConfig.data, revalidator]);
-
   // Revalidate plan detail when a plan/task lifecycle notification arrives over
-  // the GraphQL subscription (server-side topic routing by planId — no client
-  // filtering). Replaces the retired Socket.IO revalidation.
-  useSubscription(
-    notificationsClient,
-    PlanLifecycleNotificationsDocument,
-    { planId },
-    { onData: () => revalidator.revalidate() },
-    Boolean(planId),
-  );
+  // the GraphQL subscription (server-side topic routing by planId).
+  usePlanLifecycleRevalidation(planId);
 
   // 🔌 Short Circuit
   if (!plan) {
@@ -568,9 +361,9 @@ export default function Component(
               onWorkingDirectoryChange={setWorkingDirectory}
               planId={plan.id}
               saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
-              saveJobRunHooksPending={fetcherSaveJobRunHooks.state !== 'idle'}
+              saveJobRunHooksPending={saveJobRunHooksPending}
               saveRunConfigDisabled={runConfigSaveBlocked}
-              saveRunConfigPending={fetcherSaveRunConfig.state !== 'idle'}
+              saveRunConfigPending={saveRunConfigPending}
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
