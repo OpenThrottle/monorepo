@@ -52,7 +52,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
-  const title = args.data?.persona?.slug ?? 'Persona';
+  const title = args.loaderData?.persona?.slug ?? 'Persona';
   return [{ title: `${title} | Personas | ${SITE_TITLE}` }];
 });
 

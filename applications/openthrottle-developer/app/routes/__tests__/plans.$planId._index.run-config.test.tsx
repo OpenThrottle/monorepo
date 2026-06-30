@@ -32,7 +32,6 @@ const buildPlanDetailMatches = (
 
   return [
     {
-      data: rootData,
       handle: undefined,
       id: 'root',
       loaderData: rootData,
@@ -40,7 +39,6 @@ const buildPlanDetailMatches = (
       pathname: '/',
     },
     {
-      data: loaderData,
       handle: undefined,
       id: 'routes/plans.$planId._index',
       loaderData,

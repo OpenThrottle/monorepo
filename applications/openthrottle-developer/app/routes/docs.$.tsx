@@ -41,7 +41,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (args: Route.MetaArgs) => {
-  return [{ title: `${args.data?.title ?? 'Docs'} | ${SITE_TITLE}` }];
+  return [{ title: `${args.loaderData?.title ?? 'Docs'} | ${SITE_TITLE}` }];
 };
 
 export default function Component(

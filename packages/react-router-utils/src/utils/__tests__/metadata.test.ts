@@ -11,7 +11,6 @@ const location: Location = {
 };
 
 const buildMatch = (meta: MetaDescriptor[]): MetaArgs['matches'][number] => ({
-  data: undefined,
   id: 'root',
   loaderData: undefined,
   meta,
@@ -20,7 +19,6 @@ const buildMatch = (meta: MetaDescriptor[]): MetaArgs['matches'][number] => ({
 });
 
 const buildArgs = (matches: MetaArgs['matches']): MetaArgs => ({
-  data: undefined,
   loaderData: undefined,
   location,
   matches,

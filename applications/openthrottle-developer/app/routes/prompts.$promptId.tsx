@@ -51,7 +51,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
-  const title = args.data?.prompt?.title ?? 'Edit prompt';
+  const title = args.loaderData?.prompt?.title ?? 'Edit prompt';
   return [{ title: `${title} | ${SITE_TITLE}` }];
 });
 
