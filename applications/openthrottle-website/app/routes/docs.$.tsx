@@ -24,9 +24,9 @@ export const loader = async (args: Route.LoaderArgs) => {
 
 export const meta = (args: Route.MetaArgs) => {
   return [
-    { title: `${args.data?.title ?? 'Docs'} | ${SITE_TITLE}` },
-    ...(args.data?.description
-      ? [{ content: args.data.description, name: 'description' }]
+    { title: `${args.loaderData?.title ?? 'Docs'} | ${SITE_TITLE}` },
+    ...(args.loaderData?.description
+      ? [{ content: args.loaderData.description, name: 'description' }]
       : []),
 
     // Per-route canonical URL so duplicate-content signals stay correct.
