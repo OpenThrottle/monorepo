@@ -475,6 +475,7 @@
     "start:openthrottle": "nx run-many -t start -p openthrottle-developer openthrottle-server",
     "sync": "pnpm run \"/^sync:openthrottle:.*/\"",
     "sync:openthrottle": "git subtree push --prefix=applications/openthrottle openthrottle main",
+    "sync:openthrottle:force": "git push openthrottle `git subtree split --prefix=applications/openthrottle main`:main --force",
     "sync:openthrottle:developer": "git subtree push --prefix=applications/openthrottle-developer openthrottle-developer main",
     "sync:openthrottle:profile": "git subtree push --prefix=applications/openthrottle openthrottle-profile main",
     "sync:openthrottle:server": "git subtree push --prefix=applications/openthrottle-server openthrottle-server main",
