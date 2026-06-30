@@ -63,6 +63,8 @@ import {
   PressureLevel,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
+  QueueJobLogLevel,
+  QueueJobLogsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RegisterInput,
@@ -116,6 +118,8 @@ export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+
+export const QueueJobLogLevelSchema = z.nativeEnum(QueueJobLogLevel);
 
 export const RalphNestedDebugCliSchema = z.nativeEnum(RalphNestedDebugCli);
 
@@ -733,6 +737,19 @@ export function QueueDetailsInputSchema(): z.ZodObject<
     name: z.string(),
     offset: z.number().nullish(),
     states: z.array(z.string()).nullish(),
+  });
+}
+
+export function QueueJobLogsInputSchema(): z.ZodObject<
+  Properties<QueueJobLogsInput>
+> {
+  return z.object({
+    after: z.string().nullish(),
+    jobId: z.string(),
+    levelIn: z.array(QueueJobLogLevelSchema).nullish(),
+    limit: z.number().nullish(),
+    queueName: z.string(),
+    since: definedNonNullAnySchema.nullish(),
   });
 }
 

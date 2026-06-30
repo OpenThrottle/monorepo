@@ -1948,7 +1948,7 @@ export type Query = {
   commitLinksByPlanId: Array<CommitLinkObject>;
   /** List commit links for a task, ordered by createdAt descending */
   commitLinksByTaskId: Array<CommitLinkObject>;
-  /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
+  /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
@@ -1980,7 +1980,7 @@ export type Query = {
   job?: Maybe<JobObject>;
   /** Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?". */
   lastActivity?: Maybe<LastActivityResultObject>;
-  /** Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests. */
+  /** Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests. */
   linesAddedDeleted: Array<LinesAddedDeletedRowObject>;
   /** List agent conversations for the authenticated human user (default status=active, limit 20 max 100). */
   listAgentConversations: ListAgentConversationsResultObject;
@@ -2004,9 +2004,9 @@ export type Query = {
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
   notes: Array<NoteObject>;
-  /** Open PR count per author for a repository (GitHub stats). */
+  /** Open PR count per author for a repository (GitHub stats). Paginates PRs up to 1000 (10 pages); repos with more matching PRs are truncated to the most recent window. */
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
-  /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
+  /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
   /** List all permissions */
   permissions: Array<PermissionObject>;
@@ -2032,13 +2032,13 @@ export type Query = {
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
   prCountByLabel: Array<PrCountByLabelObject>;
-  /** PR time-in-state summary (count and avg days per state: open, closed, merged). */
+  /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
   /** List all projects, ordered by createdAt descending */
   projects: Array<ProjectObject>;
-  /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. */
+  /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
   prsMergedPerPeriod: Array<PrsMergedPerPeriodObject>;
   /** Get one pull request by repository and PR number (GitHub API) */
   pull?: Maybe<PullListItemObject>;
@@ -2046,13 +2046,15 @@ export type Query = {
   pulls: Array<PullListItemObject>;
   /** Single queue by name with optional paginated jobs (limit/offset/states/asc). */
   queue?: Maybe<QueueDetailsObject>;
+  /** Historical / catch-up read of a job's keyed BullMQ run transcript, paged by opaque cursor. */
+  queueJobLogs: QueueJobLogPageObject;
   /** List registered BullMQ queues with job counts (waiting, active, completed, failed, delayed). */
   queues: Array<QueueStatsObject>;
   /** List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending */
   remainingTasksByPlanId: Array<TaskObject>;
   /** List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject. */
   repeatableJobs: Array<RepeatableJobObject>;
-  /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
+  /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
   /** Get a role by ID */
   role?: Maybe<RoleObject>;
@@ -2268,6 +2270,10 @@ export type QueryQueueArgs = {
   input: QueueDetailsInput;
 };
 
+export type QueryQueueJobLogsArgs = {
+  input: QueueJobLogsInput;
+};
+
 export type QueryRemainingTasksByPlanIdArgs = {
   input: RemainingTasksByPlanIdInput;
 };
@@ -2389,6 +2395,48 @@ export type QueueJobCompletedNotification = NotificationEvent & {
   taskId?: Maybe<Scalars['ID']['output']>;
   /** ISO 8601 timestamp when the event occurred. */
   timestamp: Scalars['String']['output'];
+};
+
+export type QueueJobLogEventObject = {
+  __typename?: 'QueueJobLogEventObject';
+  /** Opaque cursor positioned AFTER this event; pass as `after` to resume. */
+  cursor: Scalars['String']['output'];
+  jobId: Scalars['String']['output'];
+  level: QueueJobLogLevel;
+  message: Scalars['String']['output'];
+  queueName: Scalars['String']['output'];
+  /** Origin layer, e.g. plans-queue | workflow-queue | ralph-shim. */
+  source: Scalars['String']['output'];
+  timestamp: Scalars['DateTime']['output'];
+};
+
+/** Severity bucket for a keyed run-output log event (derived; see field semantics). */
+export enum QueueJobLogLevel {
+  Debug = 'debug',
+  Error = 'error',
+  Info = 'info',
+  Warn = 'warn',
+}
+
+export type QueueJobLogPageObject = {
+  __typename?: 'QueueJobLogPageObject';
+  events: Array<QueueJobLogEventObject>;
+  hasMore: Scalars['Boolean']['output'];
+  /** Opaque cursor for the next page; null when caught up to end-of-file. */
+  nextCursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type QueueJobLogsInput = {
+  /** Opaque cursor from a prior page. Mutually exclusive with `since`. */
+  after?: InputMaybe<Scalars['String']['input']>;
+  jobId: Scalars['String']['input'];
+  /** Optional severity filter; empty/omitted = all levels. */
+  levelIn?: InputMaybe<Array<QueueJobLogLevel>>;
+  /** Max events; server-capped (default 200, hard max 1000). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  queueName: Scalars['String']['input'];
+  /** ISO-8601 lower bound (inclusive). Mutually exclusive with `after`. */
+  since?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type QueueStatsObject = {

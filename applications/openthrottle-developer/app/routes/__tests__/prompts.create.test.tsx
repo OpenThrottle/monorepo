@@ -130,7 +130,6 @@ describe('routes/prompts.create.tsx', () => {
   describe('meta', () => {
     test('should return correct title', () => {
       const result = meta({
-        data: undefined,
         error: undefined,
         loaderData: undefined,
         location: {

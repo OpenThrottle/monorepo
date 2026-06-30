@@ -71,7 +71,6 @@ const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
 
   return [
     {
-      data: rootData,
       handle: undefined,
       id: 'root',
       loaderData: rootData,
@@ -79,7 +78,6 @@ const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
       pathname: '/',
     },
     {
-      data: loaderData,
       handle: undefined,
       id: 'routes/queues.$queueId._index',
       loaderData,

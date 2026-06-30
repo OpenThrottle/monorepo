@@ -258,7 +258,7 @@ e2e-developer:
   runs-on: ubuntu-latest
   timeout-minutes: 20
   steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
     - uses: ./.github/actions/node-setup
     - name: Install Maestro CLI
       run: |

@@ -65,9 +65,13 @@ runs:
       run: |
         set -euo pipefail
         NX_VERSION="${{ inputs.nx-version }}"
+        # No `2>/dev/null || echo '[]'`: a failed affected calc must fail the
+        # step, not masquerade as "nothing affected" (which silently skips
+        # downstream deploy/build jobs). set -e propagates the non-zero exit.
         if [[ -n "$NX_VERSION" ]]; then
-          AFFECTED_JSON=$(pnpm dlx "nx@${NX_VERSION}" show projects --affected --json 2>/dev/null || echo '[]')
+          AFFECTED_JSON=$(pnpm dlx "nx@${NX_VERSION}" show projects --affected --json)
         else
-          AFFECTED_JSON=$(pnpm exec nx show projects --affected --json 2>/dev/null || echo '[]')
+          AFFECTED_JSON=$(pnpm exec nx show projects --affected --json)
         fi
+        echo "Affected projects: ${AFFECTED_JSON}"
         echo "$AFFECTED_JSON" | node "${{ github.action_path }}/compute-outputs.mjs"

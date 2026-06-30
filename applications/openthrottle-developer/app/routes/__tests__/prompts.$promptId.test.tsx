@@ -160,9 +160,8 @@ describe('routes/prompts.$promptId.tsx', () => {
   describe('meta', () => {
     test('should return title with prompt name', () => {
       const result = meta({
-        data: { prompt: mockPrompt },
         error: undefined,
-        loaderData: undefined,
+        loaderData: { prompt: mockPrompt },
         location: {
           hash: '',
           key: '',

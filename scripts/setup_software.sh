@@ -44,6 +44,7 @@ installSoftware () {
   # 🌏 Install the following tools via pnpm
   pnpm add --global nest
   pnpm add --global schematics
+  pnpm add --global vercel
 
   # 🎒 Install the following tools via brew
   installBrewPackage "1password-cli" "op"

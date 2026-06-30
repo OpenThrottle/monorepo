@@ -1527,6 +1527,37 @@ type PlanOutputStreamChunkObject {
   planId: String!
 }
 
+type QueueJobLogEventObject {
+  """Opaque cursor positioned AFTER this event; pass as `after` to resume."""
+  cursor: String!
+  jobId: String!
+  level: QueueJobLogLevel!
+  message: String!
+  queueName: String!
+
+  """Origin layer, e.g. plans-queue | workflow-queue | ralph-shim."""
+  source: String!
+  timestamp: DateTime!
+}
+
+"""
+Severity bucket for a keyed run-output log event (derived; see field semantics).
+"""
+enum QueueJobLogLevel {
+  debug
+  info
+  warn
+  error
+}
+
+type QueueJobLogPageObject {
+  events: [QueueJobLogEventObject!]!
+  hasMore: Boolean!
+
+  """Opaque cursor for the next page; null when caught up to end-of-file."""
+  nextCursor: String
+}
+
 type ServiceAccountCredentialObject {
   createdAt: DateTime!
   expiresAt: DateTime
@@ -2003,6 +2034,11 @@ type Query {
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
 
+  """
+  Historical / catch-up read of a job's keyed BullMQ run transcript, paged by opaque cursor.
+  """
+  queueJobLogs(input: QueueJobLogsInput!): QueueJobLogPageObject!
+
   """List all roles with their permissions"""
   roles: [RoleObject!]!
 
@@ -2438,6 +2474,22 @@ input SearchPlansInput {
 
   """Semantic search query (embedded for vector similarity)"""
   query: String!
+}
+
+input QueueJobLogsInput {
+  """Opaque cursor from a prior page. Mutually exclusive with `since`."""
+  after: String
+  jobId: String!
+
+  """Optional severity filter; empty/omitted = all levels."""
+  levelIn: [QueueJobLogLevel!]
+
+  """Max events; server-capped (default 200, hard max 1000)."""
+  limit: Int
+  queueName: String!
+
+  """ISO-8601 lower bound (inclusive). Mutually exclusive with `after`."""
+  since: DateTime
 }
 
 input SearchInput {

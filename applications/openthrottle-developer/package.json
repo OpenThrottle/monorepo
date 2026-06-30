@@ -43,7 +43,8 @@
     "react-dom": "catalog:",
     "react-router": "catalog:",
     "recharts": "catalog:",
-    "sonner": "catalog:"
+    "sonner": "catalog:",
+    "vite-node": "catalog:"
   },
   "engines": {
     "node": ">=22"

@@ -1,0 +1,204 @@
+################################################################################
+#
+#   Vercel deploy via GitHub Actions (OT plan fc12183a).
+#
+#   Owns Vercel build+deploy in-repo instead of Vercel's dashboard Git
+#   integration: `vercel pull` -> Nx build with VERCEL=1 (so vercelPreset()
+#   emits .vercel/output, reusing the Nx remote cache + affected) ->
+#   `vercel deploy --prebuilt`. Preview on PRs, production on push to main.
+#   See docs/deploy/vercel-github-actions-design.md.
+#
+#   Build uses `vercel build` (not the Nx build): @vercel/react-router's
+#   preset only emits a manifest from `react-router build`, so `vercel build`
+#   is what produces the `.vercel/output` that `vercel deploy --prebuilt`
+#   consumes. It honors the project's Root Directory pulled by `vercel pull`.
+#   `nrwl/nx-set-shas` runs before the affected step so `nx show projects
+#   --affected` resolves NX_BASE/NX_HEAD on PRs (matching the docker + CI
+#   workflows); without it the affected set comes back empty and deploy skips.
+#
+#   Required GitHub config:
+#     secrets: VERCEL_TOKEN, VERCEL_ORG_ID,
+#              VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER,
+#              VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE
+#              (+ GOOGLE_CREDENTIALS_STAGING for the Nx GCS cache)
+#     vars:    NX_KEY, NX_VERSION, GOOGLE_PROJECT_ID_STAGING
+#
+################################################################################
+name: '🔼 Vercel Deploy'
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+
+concurrency:
+  cancel-in-progress: true
+  group: vercel-deploy-${{ github.ref }}
+
+permissions:
+  contents: read
+  pull-requests: write # post/update the preview-URL comment
+
+# Only what BOTH jobs need lives here. Deploy-only secrets (Vercel, Google
+# creds, Nx cache key) are scoped to the deploy job instead: when they were
+# workflow-wide, the compute-affected job registered them for masking and
+# GitHub silently skipped the `matrix-json` output as "may contain secret"
+# (a secret value collided with the matrix JSON), blanking it so deploy
+# always skipped. Keeping that job secret-free fixes it.
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NX_SWC: 'true'
+  NX_VERSION: ${{ vars.NX_VERSION }}
+
+jobs:
+  # Which Vercel apps are affected by this change? Emits a job matrix; empty
+  # include => the deploy job is skipped (nothing to deploy).
+  compute-affected:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    outputs:
+      matrix-json: ${{ steps.affected.outputs.matrix-json }}
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # full history so `nx affected` can diff against the base
+
+      - name: '🤖 Node setup'
+        uses: ./.github/actions/node-setup
+
+      - name: "🕵️ NX Set SHA's"
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: '📋 Compute affected Vercel apps'
+        id: affected
+        uses: ./.github/actions/nx-affected-docker-apps
+        with:
+          apps: 'openthrottle-developer,openthrottle-website'
+          nx-version: ${{ env.NX_VERSION }}
+
+  deploy:
+    needs: compute-affected
+    # Skip cleanly when nothing is affected (empty matrix include).
+    if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.compute-affected.outputs.matrix-json) }}
+    env:
+      # Deploy-only secrets/config, scoped here (not workflow-wide) so the
+      # compute-affected job stays secret-free — see the workflow `env` note.
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS_STAGING }}
+      GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID_STAGING }}
+      NX_GCS_BUCKET: 'openthrottle-staging-nx-cache'
+      NX_KEY: ${{ vars.NX_KEY }}
+      NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
+      OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # All per-app project ids are exposed; the resolve step picks the matching
+      # one (the `secrets` context can't be indexed dynamically in expressions).
+      VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER: ${{ secrets.VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER }}
+      VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE: ${{ secrets.VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE }}
+      # production on main, preview elsewhere
+      IS_PRODUCTION: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # full history so `nx affected` can diff against the base
+
+      - name: '🤖 Node setup'
+        uses: ./.github/actions/node-setup
+
+      - name: "🕵️ NX Set SHA's"
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: '🌥️ Google Cloud (Nx remote cache)'
+        uses: ./.github/actions/google-cloud
+        with:
+          branch: ${{ github.head_ref || github.ref_name || 'main' }}
+          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
+          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
+
+      - name: '🪣 Point Nx at the cache bucket (two-bucket CREEP-safe model)'
+        run: |
+          sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+
+      - name: '🔑 Resolve VERCEL_PROJECT_ID for this app'
+        run: |
+          set -euo pipefail
+          case "${{ matrix.app }}" in
+            openthrottle-developer) id="$VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER" ;;
+            openthrottle-website) id="$VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE" ;;
+            *) echo "::error::No VERCEL_PROJECT_ID mapping for ${{ matrix.app }}"; exit 1 ;;
+          esac
+          if [[ -z "$id" ]]; then
+            echo "::error::VERCEL_PROJECT_ID for ${{ matrix.app }} is empty (secret missing)"; exit 1
+          fi
+          echo "VERCEL_PROJECT_ID=$id" >> "$GITHUB_ENV"
+
+      - name: '⬇️ Vercel pull'
+        run: |
+          pnpm dlx vercel@latest pull --yes \
+            --environment=${{ env.IS_PRODUCTION == 'true' && 'production' || 'preview' }} \
+            --token="${{ env.VERCEL_TOKEN }}"
+
+      - name: '🧩 Codegen Tasks'
+        run: |
+          # pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          git diff --exit-code
+
+      # `react-router build` + @vercel/react-router only emits a manifest
+      # (.vercel/react-router-build-result.json), NOT the Build Output API
+      # directory. `vercel build` runs the framework build and converts that
+      # manifest into `.vercel/output`, which `vercel deploy --prebuilt` needs.
+      - name: '🏗️ vercel build (emits .vercel/output for --prebuilt)'
+        run: |
+          set -euo pipefail
+          if [[ "${{ env.IS_PRODUCTION }}" == "true" ]]; then
+            pnpm dlx vercel@latest build --prod --yes --token="${{ env.VERCEL_TOKEN }}"
+          else
+            pnpm dlx vercel@latest build --yes --token="${{ env.VERCEL_TOKEN }}"
+          fi
+
+      - name: '🚀 Vercel deploy --prebuilt'
+        id: deploy
+        run: |
+          set -euo pipefail
+          if [[ "${{ env.IS_PRODUCTION }}" == "true" ]]; then
+            url=$(pnpm dlx vercel@latest deploy --prebuilt --prod --token="${{ env.VERCEL_TOKEN }}")
+          else
+            url=$(pnpm dlx vercel@latest deploy --prebuilt --token="${{ env.VERCEL_TOKEN }}")
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed ${{ matrix.app }} -> $url"
+
+      - name: '💬 Comment preview URL on PR'
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const app = '${{ matrix.app }}';
+            const url = '${{ steps.deploy.outputs.url }}';
+            const marker = `<!-- vercel-deploy:${app} -->`;
+            const body = `${marker}\n🔼 **${app}** preview: ${url}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
