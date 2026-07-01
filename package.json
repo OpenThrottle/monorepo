@@ -475,7 +475,6 @@
     "start:openthrottle": "nx run-many -t start -p openthrottle-developer openthrottle-server",
     "sync": "pnpm run \"/^sync:openthrottle:.*/\"",
     "sync:openthrottle": "scripts/sync-subtree.sh applications/openthrottle openthrottle main",
-    "sync:openthrottle:force": "scripts/sync-subtree.sh applications/openthrottle openthrottle main --force",
     "sync:openthrottle:developer": "scripts/sync-subtree.sh applications/openthrottle-developer openthrottle-developer main",
     "sync:openthrottle:profile": "scripts/sync-subtree.sh applications/openthrottle openthrottle-profile main",
     "sync:openthrottle:server": "scripts/sync-subtree.sh applications/openthrottle-server openthrottle-server main",
