@@ -57,7 +57,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <ScheduleIntroduction />
 
       <div className="flex flex-col gap-4">

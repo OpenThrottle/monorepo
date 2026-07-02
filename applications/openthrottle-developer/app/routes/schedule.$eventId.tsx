@@ -69,7 +69,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (!event) {
     return (
-      <GlobalScreen>
+      <GlobalScreen beta={true}>
         <Empty className="my-8">
           <EmptyMedia variant="icon">
             <CalendarSearchIcon className="size-6" />
@@ -87,7 +87,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <ScheduleEventDetails event={event} />
     </GlobalScreen>
   );
