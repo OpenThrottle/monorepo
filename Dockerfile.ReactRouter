@@ -164,7 +164,7 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-CMD ["node", "node_modules/@react-router/serve/bin.js", "build/server/index.js"]
+CMD ["node", "node_modules/@react-router/serve/bin.cjs", "build/server/index.js"]
 
 ################################################################################
 #
@@ -180,4 +180,4 @@ ENV NODE_ENV="production"
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
 
 # ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
-CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]
+CMD ["node_modules/@react-router/serve/bin.cjs", "build/server/index.js"]

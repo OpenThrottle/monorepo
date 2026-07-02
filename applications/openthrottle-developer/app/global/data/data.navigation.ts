@@ -2,7 +2,6 @@ import {
   GlobalSidebarContentLinkProps,
   GlobalSidebarLinkProps,
 } from '@openthrottle/react-router-ui-global';
-import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
 import {
   BellIcon,
   BinaryIcon,
@@ -13,13 +12,14 @@ import {
   CalendarDaysIcon,
   ChartAreaIcon,
   CircleHelpIcon,
-  // CodeIcon,
+  CodeIcon,
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
   KeyRoundIcon,
   ListOrderedIcon,
   LogInIcon,
+  MessageCircleCode,
   MonitorCogIcon,
   NotebookTabsIcon,
   NotebookTextIcon,
@@ -35,17 +35,24 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
   {
     Workspace: [
       {
+        children: 'Chats',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: MessageCircleCode,
+        to: '/',
+      },
+      {
         children: 'Dashboard',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: GaugeIcon,
         to: '/dashboard',
       },
-      // {
-      //   children: 'IDE',
-      //   disabled: true, // 🔴
-      //   icon: CodeIcon,
-      //   to: '/ide',
-      // },
+      {
+        beta: true,
+        children: 'IDE',
+        disabled: false, // 🔴
+        icon: CodeIcon,
+        to: '/ide',
+      },
       {
         children: 'Plans',
         disabled: false, // 🔴 🟠 🟡 🟢
@@ -59,48 +66,50 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/projects',
       },
       {
+        beta: true,
         children: 'Pull Requests',
         disabled: false, // 🔴 🟠
         icon: GitPullRequest,
         to: '/pull-requests',
       },
       {
-        disabled: false, // 🔴 🟠 🟡
         children: 'Queues',
+        disabled: false, // 🔴 🟠 🟡
         icon: ListOrderedIcon,
         to: '/queues',
       },
-      ...(IS_DEVELOPMENT
-        ? [
-            {
-              children: 'Schedule',
-              disabled: false, // 🔴
-              icon: CalendarDaysIcon,
-              to: '/schedule',
-            },
-            {
-              children: 'Search',
-              disabled: false, // 🔴
-              icon: Search,
-              to: '/search',
-            },
-          ]
-        : []),
+      {
+        beta: true,
+        children: 'Schedule',
+        disabled: false, // 🔴
+        icon: CalendarDaysIcon,
+        to: '/schedule',
+      },
+      {
+        beta: true,
+        children: 'Search',
+        disabled: false, // 🔴
+        icon: Search,
+        to: '/search',
+      },
     ],
     Agents: [
       {
+        beta: true,
         children: 'Personas',
         disabled: false, // 🔴
         icon: BrainCircuitIcon,
         to: '/personas',
       },
       {
+        beta: true,
         children: 'Prompts',
         disabled: false, // 🔴
         icon: BrainIcon,
         to: '/prompts',
       },
       {
+        beta: true,
         children: 'Skills',
         disabled: false, // 🔴
         icon: BrainCircuitIcon,
@@ -163,31 +172,27 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/workspace',
       },
     ],
-    ...(IS_DEVELOPMENT
-      ? {
-          User: [
-            {
-              children: 'Notes',
-              disabled: false, // 🔴 🟠
-              icon: StickyNoteIcon,
-              to: '/notes',
-            },
-            {
-              children: 'Notifications',
-              disabled: false, // 🔴 🟠 🟡 🟢
-              icon: BellIcon,
-              to: '/notifications',
-            },
-            {
-              children: 'Profile',
-              disabled: false, // 🔴 🟠 🟡 🟢
-              icon: UserCircleIcon,
-              to: '/profile',
-            },
-          ],
-        }
-      : {}),
-
+    User: [
+      {
+        children: 'Notes',
+        disabled: false, // 🔴 🟠
+        icon: StickyNoteIcon,
+        to: '/notes',
+      },
+      {
+        beta: true,
+        children: 'Notifications',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: BellIcon,
+        to: '/notifications',
+      },
+      {
+        children: 'Profile',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: UserCircleIcon,
+        to: '/profile',
+      },
+    ],
     Legal: [
       {
         children: 'License',

@@ -2,7 +2,6 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
-import { NotificationStatusBadge } from '@openthrottle/react-router-notifications';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import { healthValueColorClass } from '../utils/utils.global';
 
@@ -59,10 +58,6 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
         <div>{renderStatus('database')} &nbsp;Postgres</div>
         <div className="opacity-50">&bull;</div>
         <div>{renderStatus('redis')} &nbsp;Redis</div>
-        <div className="opacity-50">&bull;</div>
-        <div className="flex items-center gap-1">
-          <NotificationStatusBadge /> &nbsp;Sockets
-        </div>
       </Link>
     </footer>
   );

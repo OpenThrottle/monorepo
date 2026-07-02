@@ -28,6 +28,8 @@
     "@openthrottle/react-router-ui-global": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",
+    "@react-router/express": "catalog:",
+    "@react-router/fs-routes": "catalog:",
     "@react-router/node": "catalog:",
     "@react-router/serve": "catalog:",
     "@tanstack/react-table": "catalog:",
@@ -42,6 +44,7 @@
     "react-dnd": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:",
+    "react-router-dom": "catalog:",
     "recharts": "catalog:",
     "sonner": "catalog:",
     "vite-node": "catalog:"

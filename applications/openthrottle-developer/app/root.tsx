@@ -27,10 +27,14 @@ import {
   useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
-import type { ShouldRevalidateFunction } from 'react-router';
+import type {
+  MiddlewareFunction,
+  ShouldRevalidateFunction,
+} from 'react-router';
 import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
 import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
+  authMiddleware,
   buildAuthCookie,
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
@@ -108,6 +112,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
+
+export const middleware: MiddlewareFunction[] = [authMiddleware];
 
 /**
  * @link https://reactrouter.com/start/framework/route-module#loader

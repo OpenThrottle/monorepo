@@ -9,6 +9,18 @@
   },
   "dependencies": {},
   "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {

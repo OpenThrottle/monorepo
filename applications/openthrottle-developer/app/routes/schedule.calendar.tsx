@@ -53,7 +53,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex-1 p-4 md:p-8">
+    <GlobalScreen beta={true} className="flex-1 p-4 md:p-8">
       {IS_BROWSER ? <ScheduleCalendar events={events} /> : null}
     </GlobalScreen>
   );
