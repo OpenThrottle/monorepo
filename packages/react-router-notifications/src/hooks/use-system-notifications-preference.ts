@@ -7,16 +7,16 @@
  * - **Authoritative storage:** {@link NOTIFICATIONS_STORAGE_KEY} in `config` — JSON
  *   `{ enabled?, onlyWhenBackground? }`. This is **not** the same key as the persisted
  *   notification **list** ({@link DEFAULT_NOTIFICATIONS_STORAGE_KEY} in the store module).
- * - **WebSocket / desktop path:** {@link showSystemNotification} calls
+ * - **Realtime / desktop path:** {@link showSystemNotification} calls
  *   {@link getSystemNotificationsPreference} on **every** incoming event, so prefs are
- *   applied at the socket edge without React state. No duplicate “pref state” belongs in
- *   {@link NotificationsSocketProvider} (socket-only).
+ *   applied at the transport edge (the realtime bridge) without React state — no
+ *   duplicate “pref state” belongs in the bridge.
  * - **This hook’s React state:** Drives NotificationBell toggles. Cross-tab updates use
  *   {@link subscribeToNotificationsPreferenceStorageEvents} (single window listener).
  *   Same-tab updates go through {@link setSystemNotificationsPreference} + `setPreference`.
- * - **Do not** mount this hook inside {@link NotificationsSocketBridge} as a second
- *   instance — that would duplicate React state. One consumer (Bell), or later a small
- *   provider wrapping the tree if multiple UIs need the same prefs.
+ * - **Do not** mount this hook inside the realtime bridge as a second instance — that
+ *   would duplicate React state. One consumer (Bell), or later a small provider wrapping
+ *   the tree if multiple UIs need the same prefs.
  */
 
 import * as React from 'react';

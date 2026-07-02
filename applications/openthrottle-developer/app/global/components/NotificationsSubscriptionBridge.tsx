@@ -1,8 +1,7 @@
 /**
- * @description GraphQL replacement for the Socket.IO NotificationsSocketBridge.
- * Subscribes to the `notifications` firehose over graphql-ws and feeds the same
- * notifications store / toast / system-notification pipeline. Real-time
- * notifications now flow over the single GraphQL subscription transport.
+ * @description Realtime notifications bridge. Subscribes to the `notifications`
+ * firehose over graphql-ws and feeds the notifications store / toast /
+ * system-notification pipeline — the single subscription transport for the app.
  */
 
 import * as React from 'react';

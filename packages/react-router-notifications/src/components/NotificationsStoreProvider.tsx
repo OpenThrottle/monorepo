@@ -22,7 +22,8 @@ export interface NotificationsStoreProviderProps {
 
 /**
  * @description Provider that holds notifications state (in-memory, optional localStorage).
- * Does not connect to WebSocket; use with NotificationsSocketProvider and onNotification.
+ * Transport-agnostic: pair it with a realtime bridge (e.g. a graphql-ws subscription
+ * bridge) that calls `addNotification` as events arrive.
  *
  * @publicApi
  */

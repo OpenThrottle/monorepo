@@ -7,10 +7,7 @@ export { NotificationPermissionAvailable } from './components/NotificationPermis
 export { NotificationPermissionDenied } from './components/NotificationPermissionDenied';
 export { NotificationPermissionUnsupported } from './components/NotificationPermissionUnsupported';
 export { NotificationsAnnouncer } from './components/NotificationsAnnouncer';
-export { NotificationsSocketBridge } from './components/NotificationsSocketBridge';
-export { NotificationsSocketProvider } from './components/NotificationsSocketProvider';
 export { NotificationsStoreProvider } from './components/NotificationsStoreProvider';
-export { NotificationStatusBadge } from './components/NotificationStatusBadge';
 
 export * from './config';
 export * from './data';

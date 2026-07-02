@@ -22,16 +22,16 @@ export interface UseWebsocketDebuggerSocketSubscriptionOptions {
   /** @description Standalone / Storybook: attach listeners on this socket when `subscribeToEvents` is omitted. */
   readonly socket?: WebsocketDebuggerSocket | null | undefined;
   /**
-   * @description Provider fan-out from {@link NotificationsSocketProvider} (preferred in-app).
+   * @description Transport-agnostic event fan-out (e.g. a graphql-ws subscription bridge).
    * When set, `socket` is not used for event listening.
    */
   readonly subscribeToEvents?: WebsocketDebuggerEventSubscriber;
 }
 
 /**
- * @description Appends Socket.IO notification events to the debugger log. Prefer
- * `subscribeToEvents` from `useNotificationsSocket()` when inside the developer app
- * so the provider keeps a single `socket.on` set.
+ * @description Appends notification events to the debugger log. Prefer the
+ * transport-agnostic `subscribeToEvents` fan-out; the raw `socket` path exists for
+ * standalone/Storybook usage.
  */
 export const useWebsocketDebuggerSocketSubscription = (
   options: UseWebsocketDebuggerSocketSubscriptionOptions,
