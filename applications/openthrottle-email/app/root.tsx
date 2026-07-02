@@ -14,6 +14,7 @@ import {
   artwork,
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_META_DESCRIPTION,
+  useNonce,
 } from '@openthrottle/react-router-utils';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
@@ -70,6 +71,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
+  const nonce = useNonce();
 
   // Setup
   const env = data?.env ?? {};
@@ -107,23 +109,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={manifest} rel="manifest" />
         <Links />
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} />
+        {/*
+          CSP is shipped per-request as a (report-only) response header with a
+          nonce — see app/entry.server.tsx and the shared buildCsp in
+          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
+          — not a <meta> tag. The nonce below authorizes the inline bootstrap
+          scripts.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
       </head>
       <body className="relative flex min-h-screen flex-col">
         {/* <GlobalHeader /> */}
         <main className="flex flex-1 flex-col">{children}</main>
         {/* <GlobalFooter /> */}
 
-        <ScrollRestoration />
+        <ScrollRestoration nonce={nonce} />
 
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} />
+        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
 
         {/* Now we add our scripts as they may use the env */}
-        <Scripts />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

@@ -13,16 +13,14 @@ import { isbot } from 'isbot';
 import { renderToPipeableStream } from 'react-dom/server';
 import {
   DEFAULT_STREAM_TIMEOUT,
+  NonceContext,
+  buildCsp,
+  generateCspNonce,
   getOfflineModeTemplate,
   logger,
 } from '@openthrottle/react-router-utils';
+import { getCspOptions } from '~/global/config/csp';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  CSP_HEADER_NAME,
-  NonceContext,
-  buildCspValue,
-  generateCspNonce,
-} from '~/global/utils/csp';
 
 export default function handleRequest(
   request: Request,
@@ -49,7 +47,11 @@ export default function handleRequest(
    * inline bootstrap scripts in `root.tsx` carry a matching `nonce` attribute.
    */
   const nonce = generateCspNonce();
-  responseHeaders.set(CSP_HEADER_NAME, buildCspValue(nonce));
+  const csp = buildCsp(nonce, getCspOptions());
+  responseHeaders.set(csp.headerName, csp.value);
+  if (csp.reportingEndpoints) {
+    responseHeaders.set('Reporting-Endpoints', csp.reportingEndpoints);
+  }
 
   return isbot(request.headers.get('user-agent') || '')
     ? handleBotRequest(
