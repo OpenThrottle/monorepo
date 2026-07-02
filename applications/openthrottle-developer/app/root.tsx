@@ -479,8 +479,6 @@ export default function App(): React.ReactElement {
 
   // Life Cycle
 
-  console.log('🤖 🤖 🤖 data', { data });
-
   // 🔌 Short Circuit
 
   return (

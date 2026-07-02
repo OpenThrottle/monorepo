@@ -15,7 +15,7 @@ then
   echo "\n\n 🚫 Cannot push to the protected branch \"$BRANCH\", please create a PR. \n\n"
 
   # Exit with a non-zero status code to stop the push
-  # exit 1;
+  exit 1;
 fi
 
 # We're good to go here
