@@ -185,3 +185,23 @@ export const ChatComposerMode = {
 /** Union of {@link ChatComposerMode} values. */
 export type ChatComposerMode =
   (typeof ChatComposerMode)[keyof typeof ChatComposerMode];
+
+/**
+ * Voice-input state surfaced by the composer toolbar's mic control. `idle` =
+ * not capturing; `recording` = mic live (pulsing affordance); `finalizing` =
+ * the last transcript snapshot is settling after stop; `disabled` = voice
+ * input unavailable. As-const object (no enum). Presentational — capture and
+ * transcription logic live in the consumer.
+ *
+ * @publicApi
+ */
+export const ChatComposerMicState = {
+  disabled: 'disabled',
+  finalizing: 'finalizing',
+  idle: 'idle',
+  recording: 'recording',
+} as const;
+
+/** Union of {@link ChatComposerMicState} values. @publicApi */
+export type ChatComposerMicState =
+  (typeof ChatComposerMicState)[keyof typeof ChatComposerMicState];

@@ -6,7 +6,7 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { ChatComposerToolbar } from '../ChatComposerToolbar';
 import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
-import { ChatComposerMode } from '../../types';
+import { ChatComposerMicState, ChatComposerMode } from '../../types';
 import type { ChatModelOption, ChatPersonaOption } from '../../types';
 
 const MODELS: readonly ChatModelOption[] = [
@@ -156,6 +156,65 @@ describe('ChatComposerToolbar Component', () => {
       expect(
         component.queryByTestId('ChatComposerToolbar-attach'),
       ).not.toBeInTheDocument();
+    });
+  });
+  describe('mic control', () => {
+    test('is hidden when no onMicToggle callback is supplied', () => {
+      const component = renderToolbar({});
+
+      expect(
+        component.queryByTestId('ChatComposerToolbar-mic'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('renders idle and calls onMicToggle on click', async () => {
+      const onMicToggle = vi.fn();
+      const component = renderToolbar({ onMicToggle });
+
+      const mic = component.getByTestId('ChatComposerToolbar-mic');
+      expect(mic).toHaveAttribute('aria-label', 'Start voice input');
+      expect(mic).toHaveAttribute('aria-pressed', 'false');
+
+      const user = userEvent.setup();
+      await user.click(mic);
+
+      expect(onMicToggle).toHaveBeenCalledTimes(1);
+    });
+
+    test('reflects the recording state with a pressed, pulsing control', () => {
+      const component = renderToolbar({
+        micState: ChatComposerMicState.recording,
+        onMicToggle: vi.fn(),
+      });
+
+      const mic = component.getByTestId('ChatComposerToolbar-mic');
+      expect(mic).toHaveAttribute('aria-label', 'Stop voice input');
+      expect(mic).toHaveAttribute('aria-pressed', 'true');
+      expect(mic).toHaveAttribute('data-mic-state', 'recording');
+      expect(mic.querySelector('.animate-pulse')).not.toBeNull();
+    });
+
+    test('disables the control while finalizing with a transcribing affordance', () => {
+      const component = renderToolbar({
+        micState: ChatComposerMicState.finalizing,
+        onMicToggle: vi.fn(),
+      });
+
+      const mic = component.getByTestId('ChatComposerToolbar-mic');
+      expect(mic).toBeDisabled();
+      expect(mic).toHaveAttribute('aria-label', 'Transcribing…');
+      expect(mic.querySelector('.animate-spin')).not.toBeNull();
+    });
+
+    test('disables the control when voice input is unavailable', () => {
+      const component = renderToolbar({
+        micState: ChatComposerMicState.disabled,
+        onMicToggle: vi.fn(),
+      });
+
+      const mic = component.getByTestId('ChatComposerToolbar-mic');
+      expect(mic).toBeDisabled();
+      expect(mic).toHaveAttribute('aria-label', 'Voice input unavailable');
     });
   });
 });

@@ -1696,6 +1696,37 @@ type TaskEmbeddingObject {
   taskId: String!
 }
 
+type TranscriptionStreamChunkObject {
+  """
+  True exactly once, on the terminal chunk (stop, idle reap, or hard cap).
+  """
+  done: Boolean!
+
+  """Error message when the session failed or was reaped; null otherwise."""
+  error: String
+  sessionId: String!
+
+  """
+  Monotonic index within the stream; clients replace state with the highest-sortOrder snapshot.
+  """
+  sortOrder: Int!
+
+  """
+  Full transcript so far (snapshot-replace: completed segments plus the current revising tail — never a delta).
+  """
+  transcript: String!
+}
+
+type StartTranscriptionStreamResult {
+  """Validation or availability error (no throw). Null on success."""
+  errorMessage: String
+
+  """
+  Minted transcription session id to send audio chunks to and subscribe on. Null when the request failed.
+  """
+  sessionId: String
+}
+
 type UserObject {
   createdAt: DateTime!
 
@@ -2773,6 +2804,29 @@ type Mutation {
   """Delete a task by ID"""
   deleteTask(input: DeleteTaskInput!): Boolean!
 
+  """
+  Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable).
+  """
+  startTranscriptionStream: StartTranscriptionStreamResult!
+
+  """
+  Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions.
+  """
+  sendTranscriptionAudioChunk(
+    audioBase64: String!
+    sessionId: ID!
+
+    """
+    Client-side monotonic chunk index (diagnostics; graphql-ws preserves per-socket order).
+    """
+    sortOrder: Int!
+  ): Boolean!
+
+  """
+  Flush and finalize an owned transcription session: sends END_OF_AUDIO upstream, waits a short flush window for the last revising segments, then emits the terminal done:true snapshot. Returns false (no throw) for unauthenticated, unknown, or foreign sessions.
+  """
+  stopTranscriptionStream(sessionId: ID!): Boolean!
+
   """Create a user"""
   createUser(input: CreateUserInput!): UserObject!
 
@@ -3506,4 +3560,9 @@ type Subscription {
   Live stream of output chunks appended to a plan (topic plan:<planId>:output).
   """
   planOutputChunkAdded(planId: ID!): PlanOutputStreamChunkObject!
+
+  """
+  Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session.
+  """
+  transcriptionStreamChunkAdded(sessionId: ID!): TranscriptionStreamChunkObject!
 }

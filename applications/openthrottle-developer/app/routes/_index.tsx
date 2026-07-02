@@ -29,6 +29,7 @@ import {
   loadRepositories,
 } from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
+import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 import { decodeChatOption } from '~/routing/home/utils/chat-model-option';
 import type { Route } from '@/app/routes/+types/_index';
 
@@ -83,6 +84,7 @@ export default function Component(
 
   // Hooks
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [mode, setMode] = useState<ChatComposerMode>(ChatComposerMode.plan);
@@ -90,6 +92,7 @@ export default function Component(
   const [personaId, setPersonaId] = useState<string | undefined>(personas[0]?.id); // prettier-ignore
   const [repositoryId, setRepositoryId] = useState<string | undefined>(repositories[0]?.id); // prettier-ignore
   const cancelFetcher = useFetcher();
+  const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const localIdRef = useRef(0);
   const startFetcher = useFetcher<StartActionResult>();
 
@@ -97,6 +100,19 @@ export default function Component(
   const stream = useConversationStream({
     conversationId,
     seedMessages: EMPTY_SEED,
+  });
+
+  const voice = useVoiceInput({
+    draft,
+    onDraftChange: setDraft,
+    onFinalized: () => {
+      // Finalized transcript is editable: focus with the cursor at the end.
+      const textArea = composerTextAreaRef.current;
+      if (textArea) {
+        textArea.focus();
+        textArea.setSelectionRange(textArea.value.length, textArea.value.length); // prettier-ignore
+      }
+    },
   });
 
   // Streamed assistant turns overlay the ordered placeholders by message id,
@@ -191,10 +207,12 @@ export default function Component(
     <div className="flex flex-col gap-2">
       <ChatComposerToolbar
         contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
+        micState={voice.micState}
         mode={mode}
         modelId={modelId}
         models={models}
         onAddContext={() => {}}
+        onMicToggle={() => void voice.toggle()}
         onModeChange={setMode}
         onModelChange={setModelId}
         onPersonaChange={setPersonaId}
@@ -272,6 +290,11 @@ export default function Component(
         {error ? (
           <p className="text-destructive mb-2 text-center text-sm">{error}</p>
         ) : null}
+        {voice.error ? (
+          <p className="text-destructive mb-2 text-center text-sm">
+            {voice.error}
+          </p>
+        ) : null}
         {!hasModels ? (
           <p className="text-muted-foreground mb-2 text-center text-sm">
             No local models discovered. Start a local OpenAI-compatible server
@@ -281,9 +304,13 @@ export default function Component(
         <ChatComposer
           className="border-t-0"
           disabled={!hasModels}
+          draft={draft}
           isStreaming={isStreaming}
+          onDraftChange={setDraft}
           onStop={onStop}
           onSubmit={onSubmit}
+          readOnly={voice.isDraftFrozen}
+          textAreaRef={composerTextAreaRef}
           toolbar={toolbar}
         />
       </div>

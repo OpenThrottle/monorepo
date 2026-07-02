@@ -7,6 +7,7 @@ import {
   planLifecycleTopic,
   planOutputTopic,
   systemAlertTopic,
+  transcriptionStreamTopic,
   userNotificationsTopic,
 } from './topics';
 
@@ -35,6 +36,10 @@ describe('named topic builders lock the wire-format convention', () => {
 
   it('conversationStreamTopic → conversation:<conversationId>:stream', () => {
     expect(conversationStreamTopic('c1')).toBe('conversation:c1:stream');
+  });
+
+  it('transcriptionStreamTopic → transcription:<sessionId>:stream', () => {
+    expect(transcriptionStreamTopic('s1')).toBe('transcription:s1:stream');
   });
 
   it('userNotificationsTopic → user:<userId>:notifications', () => {

@@ -58,6 +58,16 @@ export function conversationStreamTopic(conversationId: string): string {
 }
 
 /**
+ * Live transcript snapshots for a single transcription session:
+ * `transcription:<sessionId>:stream`.
+ *
+ * @publicApi
+ */
+export function transcriptionStreamTopic(sessionId: string): string {
+  return instanceTopic('transcription', sessionId, 'stream');
+}
+
+/**
  * A user's personal notification feed: `user:<userId>:notifications`.
  *
  * @publicApi

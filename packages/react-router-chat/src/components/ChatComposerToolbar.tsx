@@ -16,9 +16,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Paperclip } from 'lucide-react';
+import { Loader2, Mic, Paperclip } from 'lucide-react';
 import classnames from 'classnames';
-import { ChatComposerMode } from '../types';
+import { ChatComposerMicState, ChatComposerMode } from '../types';
 import type {
   ChatContextSource,
   ChatModelOption,
@@ -29,6 +29,8 @@ export interface ChatComposerToolbarProps {
   readonly className?: string;
   /** Context sources for the attach control; omit to hide the control. */
   readonly contextSources?: readonly ChatContextSource[];
+  /** Voice-input state reflected by the mic control; pair with {@link onMicToggle}. */
+  readonly micState?: ChatComposerMicState;
   /** Selected agent mode; omit to hide the mode toggle. */
   readonly mode?: ChatComposerMode;
   /** Selected model id; pair with {@link models}. */
@@ -36,6 +38,8 @@ export interface ChatComposerToolbarProps {
   /** Selectable models; omit to hide the model control. */
   readonly models?: readonly ChatModelOption[];
   readonly onAddContext?: (sourceId: string) => void;
+  /** Toggle voice input (click starts / click stops); omit to hide the mic control. */
+  readonly onMicToggle?: () => void;
   readonly onModeChange?: (mode: ChatComposerMode) => void;
   readonly onModelChange?: (modelId: string) => void;
   readonly onPersonaChange?: (personaId: string) => void;
@@ -47,9 +51,10 @@ export interface ChatComposerToolbarProps {
 
 /**
  * @description Controlled, presentational toolbar for the chat composer:
- * model / persona selectors, a Plan↔Build mode toggle, and an attach control.
- * Each control is independently optional — supply its props to render it. The
- * package hardcodes no model/persona data; consumers own state and content.
+ * model / persona selectors, a Plan↔Build mode toggle, an attach control, and
+ * a toggle-only voice-input mic. Each control is independently optional —
+ * supply its props to render it. The package hardcodes no model/persona data;
+ * consumers own state and content (including all capture/transcription logic).
  *
  * @publicApi
  */
@@ -59,10 +64,12 @@ export const ChatComposerToolbar = (
   const {
     className,
     contextSources,
+    micState = ChatComposerMicState.idle,
     mode,
     modelId,
     models,
     onAddContext,
+    onMicToggle,
     onModeChange,
     onModelChange,
     onPersonaChange,
@@ -77,6 +84,16 @@ export const ChatComposerToolbar = (
   const hasPersonas = personas != null && personas.length > 0;
   const hasContextSources = contextSources != null && contextSources.length > 0;
   const showAttach = onAddContext != null;
+  const showMic = onMicToggle != null;
+  const isMicFinalizing = micState === ChatComposerMicState.finalizing;
+  const isMicRecording = micState === ChatComposerMicState.recording;
+  const micLabel = isMicRecording
+    ? 'Stop voice input'
+    : isMicFinalizing
+      ? 'Transcribing…'
+      : micState === ChatComposerMicState.disabled
+        ? 'Voice input unavailable'
+        : 'Start voice input';
 
   // Handlers
   const onModeValueChange = (value: string): void => {
@@ -219,6 +236,40 @@ export const ChatComposerToolbar = (
     </Tooltip>
   );
 
+  const micControl = !showMic ? null : (
+    <Tooltip delayDuration={500}>
+      <TooltipTrigger asChild={true}>
+        <Button
+          aria-label={micLabel}
+          aria-pressed={isMicRecording}
+          className={classnames({
+            'text-destructive hover:text-destructive': isMicRecording,
+          })}
+          data-mic-state={micState}
+          data-testid="ChatComposerToolbar-mic"
+          disabled={
+            micState === ChatComposerMicState.disabled || isMicFinalizing
+          }
+          onClick={onMicToggle}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          {isMicFinalizing ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Mic
+              className={classnames('size-4', {
+                'animate-pulse': isMicRecording,
+              })}
+            />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{micLabel}</TooltipContent>
+    </Tooltip>
+  );
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -232,6 +283,7 @@ export const ChatComposerToolbar = (
       {personaControl}
       {modeControl}
       {attachControl}
+      {micControl}
     </div>
   );
 };

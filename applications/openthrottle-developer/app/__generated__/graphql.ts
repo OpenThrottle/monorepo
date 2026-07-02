@@ -1273,6 +1273,8 @@ export type Mutation = {
   retryJob: RetryJobResultObject;
   /** Revoke a service account credential (admin, human only). */
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
+  /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
+  sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
   /** Assign, change, or clear the Cortex project link for a local repository. */
@@ -1281,6 +1283,10 @@ export type Mutation = {
   signout: SignoutResultObject;
   /** Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures. */
   startConversationStream: StartConversationStreamResult;
+  /** Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable). */
+  startTranscriptionStream: StartTranscriptionStreamResult;
+  /** Flush and finalize an owned transcription session: sends END_OF_AUDIO upstream, waits a short flush window for the last revising segments, then emits the terminal done:true snapshot. Returns false (no throw) for unauthenticated, unknown, or foreign sessions. */
+  stopTranscriptionStream: Scalars['Boolean']['output'];
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
@@ -1520,6 +1526,12 @@ export type MutationRevokeServiceAccountCredentialArgs = {
   credentialId: Scalars['ID']['input'];
 };
 
+export type MutationSendTranscriptionAudioChunkArgs = {
+  audioBase64: Scalars['String']['input'];
+  sessionId: Scalars['ID']['input'];
+  sortOrder: Scalars['Int']['input'];
+};
+
 export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
 };
@@ -1530,6 +1542,10 @@ export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
 
 export type MutationStartConversationStreamArgs = {
   input: StartConversationStreamInput;
+};
+
+export type MutationStopTranscriptionStreamArgs = {
+  sessionId: Scalars['ID']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
@@ -2782,6 +2798,14 @@ export type StartConversationStreamResult = {
   userMessageId?: Maybe<Scalars['String']['output']>;
 };
 
+export type StartTranscriptionStreamResult = {
+  __typename?: 'StartTranscriptionStreamResult';
+  /** Validation or availability error (no throw). Null on success. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Minted transcription session id to send audio chunks to and subscribe on. Null when the request failed. */
+  sessionId?: Maybe<Scalars['String']['output']>;
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
   /** Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation. */
@@ -2792,6 +2816,8 @@ export type Subscription = {
   planNotifications: NotificationEvent;
   /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
   planOutputChunkAdded: PlanOutputStreamChunkObject;
+  /** Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session. */
+  transcriptionStreamChunkAdded: TranscriptionStreamChunkObject;
 };
 
 export type SubscriptionConversationStreamChunkAddedArgs = {
@@ -2804,6 +2830,10 @@ export type SubscriptionPlanNotificationsArgs = {
 
 export type SubscriptionPlanOutputChunkAddedArgs = {
   planId: Scalars['ID']['input'];
+};
+
+export type SubscriptionTranscriptionStreamChunkAddedArgs = {
+  sessionId: Scalars['ID']['input'];
 };
 
 export type SystemAlertNotification = NotificationEvent & {
@@ -2956,6 +2986,19 @@ export type TasksByProjectIdResultObject = {
   __typename?: 'TasksByProjectIdResultObject';
   tasks: Array<TaskObject>;
   totalCount: Scalars['Int']['output'];
+};
+
+export type TranscriptionStreamChunkObject = {
+  __typename?: 'TranscriptionStreamChunkObject';
+  /** True exactly once, on the terminal chunk (stop, idle reap, or hard cap). */
+  done: Scalars['Boolean']['output'];
+  /** Error message when the session failed or was reaped; null otherwise. */
+  error?: Maybe<Scalars['String']['output']>;
+  sessionId: Scalars['String']['output'];
+  /** Monotonic index within the stream; clients replace state with the highest-sortOrder snapshot. */
+  sortOrder: Scalars['Int']['output'];
+  /** Full transcript so far (snapshot-replace: completed segments plus the current revising tail — never a delta). */
+  transcript: Scalars['String']['output'];
 };
 
 export type UpdateAgentConversationTitleInput = {
@@ -3612,6 +3655,55 @@ export type ConversationStreamChunkAddedSubscription = {
     messageId: string;
     metadataJson?: string | null;
     sortOrder: number;
+  };
+};
+
+export type StartTranscriptionStreamMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type StartTranscriptionStreamMutation = {
+  __typename?: 'Mutation';
+  startTranscriptionStream: {
+    __typename?: 'StartTranscriptionStreamResult';
+    errorMessage?: string | null;
+    sessionId?: string | null;
+  };
+};
+
+export type SendTranscriptionAudioChunkMutationVariables = Exact<{
+  audioBase64: Scalars['String']['input'];
+  sessionId: Scalars['ID']['input'];
+  sortOrder: Scalars['Int']['input'];
+}>;
+
+export type SendTranscriptionAudioChunkMutation = {
+  __typename?: 'Mutation';
+  sendTranscriptionAudioChunk: boolean;
+};
+
+export type StopTranscriptionStreamMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+}>;
+
+export type StopTranscriptionStreamMutation = {
+  __typename?: 'Mutation';
+  stopTranscriptionStream: boolean;
+};
+
+export type TranscriptionStreamChunkAddedSubscriptionVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+}>;
+
+export type TranscriptionStreamChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  transcriptionStreamChunkAdded: {
+    __typename?: 'TranscriptionStreamChunkObject';
+    done: boolean;
+    error?: string | null;
+    sessionId: string;
+    sortOrder: number;
+    transcript: string;
   };
 };
 
@@ -7286,6 +7378,224 @@ export const ConversationStreamChunkAddedDocument = {
 } as unknown as DocumentNode<
   ConversationStreamChunkAddedSubscription,
   ConversationStreamChunkAddedSubscriptionVariables
+>;
+export const StartTranscriptionStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StartTranscriptionStream' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'startTranscriptionStream' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  StartTranscriptionStreamMutation,
+  StartTranscriptionStreamMutationVariables
+>;
+export const SendTranscriptionAudioChunkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SendTranscriptionAudioChunk' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'audioBase64' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sessionId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sortOrder' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'sendTranscriptionAudioChunk' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'audioBase64' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'audioBase64' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sessionId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sessionId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sortOrder' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sortOrder' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SendTranscriptionAudioChunkMutation,
+  SendTranscriptionAudioChunkMutationVariables
+>;
+export const StopTranscriptionStreamDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StopTranscriptionStream' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sessionId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stopTranscriptionStream' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sessionId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sessionId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  StopTranscriptionStreamMutation,
+  StopTranscriptionStreamMutationVariables
+>;
+export const TranscriptionStreamChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'TranscriptionStreamChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sessionId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'transcriptionStreamChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sessionId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sessionId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'transcript' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TranscriptionStreamChunkAddedSubscription,
+  TranscriptionStreamChunkAddedSubscriptionVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',

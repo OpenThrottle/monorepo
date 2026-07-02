@@ -72,6 +72,7 @@ import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
+import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
@@ -179,6 +180,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     SearchGraphqlModule,
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,
+    TranscriptionStreamGraphqlModule,
     UsersGraphqlModule,
     WorkspaceSettingsGraphqlModule,
   ],
