@@ -22,8 +22,6 @@ export const GlobalServerHealthBanner = (
   // Hooks
   const [dismissed, setDismissed] = React.useState(false);
 
-  console.log('🍌 🍌 🍌 health', { health });
-
   // Setup
   const databaseStatus = health?.database;
   const isUnreachable = databaseStatus === 'unreachable';

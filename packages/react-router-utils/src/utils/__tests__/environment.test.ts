@@ -15,6 +15,7 @@ const VALID_ENV: Record<string, number | string> = {
   APP_URL_SERVER: 'https://server.example.com',
   APP_URL_WEBSITE: 'https://www.example.com',
   APP_VERSION: 42,
+  FEATURE_BETA_PREVIEW: 'false',
   NODE_ENV: 'development',
   ROLLBAR_TOKEN: 1234567890,
 };
@@ -88,6 +89,7 @@ describe('getEnvironment', () => {
       APP_URL_SERVER: 'https://server.example.com',
       APP_URL_WEBSITE: 'https://www.example.com',
       APP_VERSION: '42',
+      FEATURE_BETA_PREVIEW: 'false',
       NODE_ENV: 'development',
       ROLLBAR_TOKEN: '1234567890',
     });
