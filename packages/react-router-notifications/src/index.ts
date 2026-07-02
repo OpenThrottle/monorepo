@@ -7,6 +7,11 @@ export { NotificationPermissionAvailable } from './components/NotificationPermis
 export { NotificationPermissionDenied } from './components/NotificationPermissionDenied';
 export { NotificationPermissionUnsupported } from './components/NotificationPermissionUnsupported';
 export { NotificationsAnnouncer } from './components/NotificationsAnnouncer';
+export {
+  NotificationsSubscriptionBridge,
+  type NotificationsSubscriptionBridgeProps,
+  type NotificationsSubscriptionData,
+} from './components/NotificationsSubscriptionBridge';
 export { NotificationsStoreProvider } from './components/NotificationsStoreProvider';
 
 export * from './config';

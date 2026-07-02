@@ -8,6 +8,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
@@ -63,6 +65,7 @@
   "type": "module",
   "types": "./src/index.ts",
   "devDependencies": {
-    "@testing-library/jest-dom": "catalog:"
+    "@testing-library/jest-dom": "catalog:",
+    "graphql": "catalog:"
   }
 }

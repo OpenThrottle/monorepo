@@ -3103,9 +3103,15 @@ importers:
 
   packages/react-router-notifications:
     dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: 'catalog:'
+        version: 3.2.0(graphql@16.14.0)
       '@openthrottle/openthrottle-notifications':
         specifier: workspace:^
         version: link:../openthrottle-notifications
+      '@openthrottle/react-router-graphql':
+        specifier: workspace:^
+        version: link:../react-router-graphql
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
@@ -3125,6 +3131,9 @@ importers:
       '@testing-library/jest-dom':
         specifier: 'catalog:'
         version: 6.9.1
+      graphql:
+        specifier: 'catalog:'
+        version: 16.14.0
 
   packages/react-router-profiling:
     dependencies:
