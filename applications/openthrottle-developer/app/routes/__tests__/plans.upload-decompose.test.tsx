@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 import { action } from '../plans.upload-decompose';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 describe('routes/plans.upload-decompose.tsx', () => {
   describe('action', () => {

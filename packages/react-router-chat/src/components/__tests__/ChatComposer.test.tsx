@@ -137,4 +137,55 @@ describe('ChatComposer Component', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
   });
+  describe('controlled draft + readOnly (voice input)', () => {
+    test('renders the controlled draft and reports edits via onDraftChange', async () => {
+      const onDraftChange = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ draft: 'frozen prefix', onDraftChange });
+
+      const textarea = component!.getByLabelText(
+        'Message',
+      ) as HTMLTextAreaElement;
+      expect(textarea.value).toBe('frozen prefix');
+
+      await user.type(textarea, '!');
+      expect(onDraftChange).toHaveBeenCalledWith('frozen prefix!');
+    });
+
+    test('clears via onDraftChange after a controlled submit', async () => {
+      const onDraftChange = vi.fn();
+      const user = userEvent.setup();
+      mountComposer({ draft: 'say hello', onDraftChange });
+
+      await user.click(component!.getByRole('button', { name: 'Send' }));
+
+      expect(onSubmit).toHaveBeenCalledWith('say hello');
+      expect(onDraftChange).toHaveBeenLastCalledWith('');
+    });
+
+    test('readOnly freezes the textarea and blocks Enter-submit', async () => {
+      const user = userEvent.setup();
+      mountComposer({
+        draft: 'listening…',
+        onDraftChange: vi.fn(),
+        readOnly: true,
+      });
+
+      const textarea = component!.getByLabelText(
+        'Message',
+      ) as HTMLTextAreaElement;
+      expect(textarea).toHaveAttribute('readonly');
+
+      textarea.focus();
+      await user.keyboard('{Enter}');
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    test('exposes the textarea through textAreaRef', () => {
+      const ref = React.createRef<HTMLTextAreaElement>();
+      mountComposer({ textAreaRef: ref });
+
+      expect(ref.current).toBeInstanceOf(HTMLTextAreaElement);
+    });
+  });
 });

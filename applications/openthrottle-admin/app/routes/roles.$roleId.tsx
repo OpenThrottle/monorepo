@@ -155,8 +155,8 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
-export const meta = ({ data }: Route.MetaArgs) => {
-  const role = data?.role;
+export const meta = ({ loaderData }: Route.MetaArgs) => {
+  const role = loaderData?.role;
   const title = role?.name
     ? `${role.name} | Roles | ${SITE_TITLE}`
     : `Role | ${SITE_TITLE}`;

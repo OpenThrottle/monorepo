@@ -6,7 +6,7 @@ import {
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
 } from '~/routing/settings/utils/settings-keys-action';
 import type { Route } from '@/app/routes/+types/settings.keys';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
 

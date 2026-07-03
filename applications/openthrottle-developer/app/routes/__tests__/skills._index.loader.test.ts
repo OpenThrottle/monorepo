@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { Route } from '@/app/routes/+types/skills._index';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('~/routing/agents/data/discover-repo-skills.server', () => ({
   discoverRepoSkills: vi.fn(),

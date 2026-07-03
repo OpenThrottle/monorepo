@@ -23,7 +23,7 @@ import type { Route } from '@/app/routes/+types/_index';
 //   return {};
 // };
 
-export const meta = mergeRouteModuleMeta<Route.MetaArgs>((args) => {
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [
     { title: SITE_TITLE },
     { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },

@@ -33,7 +33,7 @@ describe('routes/_layout.mail.search.tsx', () => {
       <Route
         actionData={undefined}
         loaderData={{ messages: [], query: 'test query' }}
-        matches={[] as never[]}
+        matches={[] as never}
         params={{}}
       />
     );

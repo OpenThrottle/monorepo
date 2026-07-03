@@ -40,7 +40,9 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react-router": "catalog:"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted"

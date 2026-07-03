@@ -9,9 +9,6 @@
   },
   "description": "FIXME: Add a description...",
   "devDependencies": {},
-  "engines": {
-    "node": ">=22"
-  },
   "name": "<%= name %>",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",

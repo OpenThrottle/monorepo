@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { loader } from '../settings.appearance';
 import type { Route } from '@/app/routes/+types/settings.appearance';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 describe('routes/settings.appearance.tsx', () => {
   test('loader returns diagnostics env and support bundle', async () => {

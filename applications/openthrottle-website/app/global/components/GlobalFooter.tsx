@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 
-interface GlobalFooterProps {}
+export interface GlobalFooterProps {}
 
 export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // const { className } = props;

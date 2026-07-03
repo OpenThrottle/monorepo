@@ -98,9 +98,6 @@
     "graphql": "catalog:"
   },
   "description": "VS Code and Cursor extension for OpenThrottle plans and tasks, backed by openthrottle-server GraphQL.",
-  "engines": {
-    "vscode": "catalog:"
-  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
