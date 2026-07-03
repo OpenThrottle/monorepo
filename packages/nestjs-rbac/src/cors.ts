@@ -11,7 +11,10 @@ export interface CorsOptions {
     | boolean
     | string
     | string[]
-    | ((origin: string) => boolean | string);
+    // `origin` is undefined for requests without an Origin header (same-origin
+    // navigations, curl). Keeping the param wide also makes this shape
+    // assignable to both @nestjs/common's and express cors's CustomOrigin.
+    | ((origin: string | undefined) => boolean | string);
 }
 
 const DEFAULT_ALLOWED_METHODS = [

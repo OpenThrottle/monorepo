@@ -13,9 +13,13 @@ import { isbot } from 'isbot';
 import { renderToPipeableStream } from 'react-dom/server';
 import {
   DEFAULT_STREAM_TIMEOUT,
+  NonceContext,
+  buildCsp,
+  generateCspNonce,
   getOfflineModeTemplate,
   logger,
 } from '@openthrottle/react-router-utils';
+import { getCspOptions } from '~/global/config/csp';
 import { SITE_TITLE } from '~/global/config/settings';
 
 export default function handleRequest(
@@ -37,18 +41,32 @@ export default function handleRequest(
     });
   }
 
+  /**
+   * Mint a per-request CSP nonce and emit the (report-only) policy via a
+   * response header. The same nonce is threaded into the React tree so the
+   * inline bootstrap scripts in `root.tsx` carry a matching `nonce` attribute.
+   */
+  const nonce = generateCspNonce();
+  const csp = buildCsp(nonce, getCspOptions());
+  responseHeaders.set(csp.headerName, csp.value);
+  if (csp.reportingEndpoints) {
+    responseHeaders.set('Reporting-Endpoints', csp.reportingEndpoints);
+  }
+
   return isbot(request.headers.get('user-agent') || '')
     ? handleBotRequest(
         request,
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        nonce,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        nonce,
       );
 }
 
@@ -57,11 +75,18 @@ function handleBotRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter
+          context={reactRouterContext}
+          nonce={nonce}
+          url={request.url}
+        />
+      </NonceContext.Provider>,
       {
         onAllReady() {
           shellRendered = true;
@@ -103,11 +128,18 @@ function handleBrowserRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter
+          context={reactRouterContext}
+          nonce={nonce}
+          url={request.url}
+        />
+      </NonceContext.Provider>,
       {
         onError(error: unknown) {
           responseStatusCode = 500;

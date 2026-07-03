@@ -16,6 +16,7 @@ import {
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_GITHUB_URL,
   OPENTHROTTLE_META_DESCRIPTION,
+  useNonce,
 } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 // import { GlobalHeader } from '~/global/components/GlobalHeader';
@@ -99,6 +100,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
+  const nonce = useNonce();
 
   // Setup
   const env = data?.env ?? {};
@@ -148,8 +150,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
         {/*
-          Content-Security-Policy is delivered as an HTTP response header via
-          `vercel.json` (preferred over a <meta> tag on Vercel). Keep it there.
+          CSP is shipped per-request as a (report-only) response header with a
+          nonce — see app/entry.server.tsx and the shared buildCsp in
+          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
+          — not a <meta> tag and no longer via vercel.json. The nonce below
+          authorizes the inline bootstrap scripts.
         */}
         <Meta />
 
@@ -158,10 +163,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
           modules) so it can vary per page. Don't hard-code a single canonical
           here — that would conflict with the route-level one.
         */}
-        <link href="https://fonts.googleapis.com" rel="preconnect" />
-        <link href="https://fonts.gstatic.com" rel="preconnect" />
-        <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
-        <link href="https://www.googletagmanager.com" rel="preconnect" />
+        {/*
+          Dead preconnects, kept for reference (plan bd397d4e, task a8524796):
+          no font stylesheet, S3 image reference, or GTM script exists in this
+          app, and the CSP is self-only + nonces. Re-enable one only when the
+          matching origin actually ships (and add it to the CSP config).
+        */}
+        {/* <link href="https://fonts.googleapis.com" rel="preconnect" /> */}
+        {/* <link href="https://fonts.gstatic.com" rel="preconnect" /> */}
+        {/* <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" /> */}
+        {/* <link href="https://www.googletagmanager.com" rel="preconnect" /> */}
         <link href={faviconPng} rel="apple-touch-icon" sizes="48x48" />
         <link href={faviconIco} rel="icon" type="image/x-icon" />
         <link href={faviconPng} rel="icon" type="image/png" />
@@ -170,24 +181,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script
           dangerouslySetInnerHTML={{ __html: jsonLd }}
+          nonce={nonce}
           type="application/ld+json"
         />
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} />
+        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
       </head>
       <body className="flex min-h-screen flex-col">
         {/* <GlobalHeader /> */}
         {children}
-        <ScrollRestoration />
+        <ScrollRestoration nonce={nonce} />
 
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} />
+        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
 
         {/* Now we add our scripts as they may use the env */}
-        <Scripts />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@ import './load-env';
 
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import {
   createProfileExecutionFileWriter,
   setProfileExecutionReporter,
@@ -15,9 +16,29 @@ import { AppModule } from './app.module';
  * the OpenThrottle platform.
  */
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true, // required for Stripe webhook signature verification (req.rawBody)
     snapshot: true,
+  });
+
+  /**
+   * Browsers deliver CSP violation reports with non-JSON content types the
+   * default body parser skips: `application/csp-report` (legacy report-uri)
+   * and `application/reports+json` (Reports API). Parse both as JSON so the
+   * public /csp-reports endpoint receives a body.
+   *
+   * `application/json` must stay in this list: registering any custom json
+   * parser makes Nest skip its default one (both are named `jsonParser`, and
+   * registerParserMiddleware dedupes by middleware function name), so this
+   * parser becomes the ONLY json parser — omitting `application/json` leaves
+   * /graphql POST bodies unparsed and Apollo rejects them with 400.
+   */
+  app.useBodyParser('json', {
+    type: [
+      'application/csp-report',
+      'application/json',
+      'application/reports+json',
+    ],
   });
 
   const config = app.get(ConfigService);
