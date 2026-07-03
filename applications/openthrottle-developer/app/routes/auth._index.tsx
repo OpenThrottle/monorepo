@@ -171,6 +171,7 @@ export default function Component(
         {isFormEnabled ? (
           <div className="shimmer-border w-full max-w-md">
             <OpenThrottleAuthForm
+              action="/"
               className="w-full"
               error={fetcher.data?.error}
               isLoading={isSubmitting || isExiting}

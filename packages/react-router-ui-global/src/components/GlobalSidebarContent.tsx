@@ -13,11 +13,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, StarIcon } from 'lucide-react';
 import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
+import { IS_BROWSER } from '@openthrottle/react-router-utils';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
+  beta?: boolean;
   disabled?: boolean;
   icon: React.ComponentType<{ className?: string }>;
 }
@@ -48,16 +50,19 @@ export const GlobalSidebarContent = (
 
   // Setup
   const sections = Object.keys(data ?? {});
+  const isBetaEnabled = !IS_BROWSER
+    ? process.env.FEATURE_BETA_PREVIEW === 'true'
+    : window.env.FEATURE_BETA_PREVIEW === 'true';
 
+  // Handlers
   const isLinkActive = (item: GlobalSidebarContentLinkProps): boolean => {
     const toPath = getPathFromTo(item.to);
     const isExact = item.end === true;
+
     return isExact
       ? location.pathname === toPath
       : location.pathname.startsWith(toPath);
   };
-
-  // Handlers
 
   // Markup
   const renderLink = (item: GlobalSidebarContentLinkProps, index: number) => {
@@ -66,6 +71,10 @@ export const GlobalSidebarContent = (
     const toPath = getPathFromTo(to);
     const key = `${toPath}-${index}`;
     const isActive = location.pathname === toPath;
+
+    if (item.beta && !isBetaEnabled) {
+      return null;
+    }
 
     return (
       <SidebarMenuItem
@@ -95,6 +104,17 @@ export const GlobalSidebarContent = (
             <span className={classnames('', { 'text-accent': isActive })}>
               {item.children?.toString()}
             </span>
+            {item.beta && (
+              <span className="text-muted-foreground flex w-full flex-1 items-center justify-end text-right">
+                <StarIcon
+                  className={classnames('size-3', {
+                    'text-accent': isActive,
+                    'text-muted-foreground': !isActive,
+                  })}
+                  fill={isActive ? 'currentColor' : 'none'}
+                />
+              </span>
+            )}
           </NavLink>
         </SidebarMenuButton>
       </SidebarMenuItem>

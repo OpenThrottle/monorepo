@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Link } from 'react-router';
+import { Link, MiddlewareFunction } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Button, Card } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { authMiddleware } from '@openthrottle/react-router-auth';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -36,6 +37,8 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => `#${match.params.prId}`,
   links: (_match) => [{ children: 'Pull Requests', to: '/pull-requests' }],
 };
+
+export const middleware: MiddlewareFunction[] = [authMiddleware];
 
 export const loader = async (args: Route.LoaderArgs) => {
   const defaults = getDefaultGithubRepo();

@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/react-router-notifications",
-  "description": "React Router providers, hooks, and UI for OpenThrottle in-app notifications: Socket.IO client wiring, store context, bell and list components, and browser permission flows.",
+  "description": "React Router providers, hooks, and UI for OpenThrottle in-app notifications: store context, bell and list components, and browser permission flows fed by the graphql-ws subscription transport.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -8,13 +8,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "classnames": "catalog:",
     "lucide-react": "catalog:",
-    "react-router": "catalog:",
-    "socket.io-client": "catalog:"
+    "react-router": "catalog:"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
@@ -64,6 +65,7 @@
   "type": "module",
   "types": "./src/index.ts",
   "devDependencies": {
-    "@testing-library/jest-dom": "catalog:"
+    "@testing-library/jest-dom": "catalog:",
+    "graphql": "catalog:"
   }
 }

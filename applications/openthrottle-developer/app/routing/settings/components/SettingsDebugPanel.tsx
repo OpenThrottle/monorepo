@@ -11,7 +11,6 @@ import {
 import type { GlobalMetricsChartLineKey } from '@openthrottle/react-router-ui-global';
 import { BugIcon, DatabaseIcon, BadgeInfoIcon } from 'lucide-react';
 import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
-import { SettingsWebsocketDebugger } from '~/routing/settings/components/SettingsWebsocketDebugger';
 import { SettingsFeatureFlags } from '~/routing/settings/components/SettingsFeatureFlags';
 import { SettingsEnvironment } from '~/routing/settings/components/SettingsEnvironment';
 import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildTools';
@@ -104,8 +103,6 @@ export const SettingsDebugPanel = (
       <SettingsStorage />
 
       <SettingsPortsTroubleshootingCard />
-
-      <SettingsWebsocketDebugger />
 
       <OpenThrottleFieldset
         icon={BadgeInfoIcon}

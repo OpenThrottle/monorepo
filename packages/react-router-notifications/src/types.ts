@@ -24,25 +24,3 @@ export type NotificationPermissionState =
   | 'denied'
   | 'granted'
   | 'unsupported';
-
-/**
- * Connection status for the notifications socket.
- *
- * @publicApi
- */
-export type NotificationSocketStatus =
-  | 'connected'
-  | 'connecting'
-  | 'disconnected'
-  | 'error'
-  | 'reconnecting';
-
-/**
- * @description Listener invoked for each Socket.IO notification event (shared socket fan-out).
- *
- * @publicApi
- */
-export type NotificationSocketEventListener = (
-  event: NotificationEventName,
-  payload: NotificationPayload,
-) => void;

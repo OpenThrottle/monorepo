@@ -49,6 +49,7 @@ export type OpenThrottlePublicEnv = {
   // Environment
   /** Feature flag (string-encoded boolean; see config/features.ts). */
   FEATURE_BETA_PREVIEW?: string;
+
   /**
    * Authoritative runtime environment tier. The `IS_DEVELOPMENT` /
    * `IS_STAGING` / `IS_PRODUCTION` flags in `config/environment.ts` derive from

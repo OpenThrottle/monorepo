@@ -5,6 +5,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { authMiddleware } from '@openthrottle/react-router-auth';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { GetPullRequestsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -20,6 +21,7 @@ import { PullRequestStats } from '~/routing/pull-requests/components/PullRequest
 import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { ListPullsInput } from '~/__generated__/graphql';
+import type { MiddlewareFunction } from 'react-router';
 import type { Route } from '@/app/routes/+types/pull-requests._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -28,6 +30,8 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Pull Requests',
   links: (_match) => [],
 };
+
+export const middleware: MiddlewareFunction[] = [authMiddleware];
 
 export const loader = async (args: Route.LoaderArgs) => {
   const defaults = getDefaultGithubRepo();

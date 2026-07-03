@@ -24,6 +24,9 @@
       "path": "../react-router-shadcn/tsconfig.lib.json"
     },
     {
+      "path": "../react-router-graphql/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

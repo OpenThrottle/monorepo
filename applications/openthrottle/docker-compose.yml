@@ -148,7 +148,7 @@ services:
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - ot_docker_postgres_data:/var/lib/postgresql
 
   redis:
     build:
@@ -193,4 +193,4 @@ services:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
 volumes:
-  postgres_data:
+  ot_docker_postgres_data:

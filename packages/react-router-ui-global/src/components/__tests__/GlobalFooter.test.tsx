@@ -48,7 +48,7 @@ describe('GlobalFooter Component', () => {
     expect(screen.getByText(/API/i)).toBeInTheDocument();
     expect(screen.getByText(/Postgres/i)).toBeInTheDocument();
     expect(screen.getByText(/Redis/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sockets/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Sockets/i)).not.toBeInTheDocument();
   });
 
   describe('per-component status dot color mapping', () => {
