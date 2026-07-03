@@ -89,7 +89,8 @@ jobs:
         id: affected
         uses: ./.github/actions/nx-affected-docker-apps
         with:
-          apps: 'openthrottle-developer,openthrottle-website'
+          apps: 'openthrottle-website'
+          # apps: 'openthrottle-developer,openthrottle-website'
           nx-version: ${{ env.NX_VERSION }}
 
   deploy:
