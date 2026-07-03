@@ -73,6 +73,9 @@ describe('routes/permissions._index.tsx', () => {
     const response = await RouteModule.loader(createArgs());
 
     expect(response).toBeInstanceOf(Response);
+    if (!(response instanceof Response)) {
+      throw new Error('Expected a redirect Response');
+    }
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe('/');
   });
@@ -85,6 +88,9 @@ describe('routes/permissions._index.tsx', () => {
     const response = await RouteModule.loader(createArgs());
 
     expect(response).toBeInstanceOf(Response);
+    if (!(response instanceof Response)) {
+      throw new Error('Expected a redirect Response');
+    }
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe('/');
   });

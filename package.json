@@ -358,9 +358,6 @@
     "vitest": "catalog:",
     "webpack-cli": "catalog:"
   },
-  "engines": {
-    "node": ">=22"
-  },
   "nx": {
     "implicitDependencies": [],
     "projectType": "application",
@@ -480,7 +477,8 @@
     "sync:openthrottle:server": "scripts/sync-subtree.sh applications/openthrottle-server openthrottle-server main",
     "sync:openthrottle:website": "scripts/sync-subtree.sh applications/openthrottle-website openthrottle-website main",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
-    "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts"
+    "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts",
+    "voice:start": "docker compose --profile voice up whisper"
   },
   "sideEffects": false,
   "type": "module"

@@ -405,6 +405,57 @@ services:
       # host SSH agent; HTTPS remotes already work via the GITHUB_TOKEN env.
       # - '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock'
 
+  #############################################################################
+  #
+  #     🎙️ whisper | WhisperLive STT (opt-in; profile: voice)
+  #
+  #     Streaming speech-to-text for the developer-app voice-input spike
+  #     (Collabora WhisperLive, faster-whisper backend). Opt-in profile so the
+  #     default `docker compose up` and `pnpm run database:start` never pull
+  #     this image. Start it with `pnpm run voice:start`.
+  #
+  #     Streaming contract (details: docs/openthrottle/voice-whisperlive-spike.md):
+  #     websocket connect → JSON config handshake (uid, model, language, task)
+  #     → raw 16kHz mono Float32 PCM binary frames upstream → JSON segment
+  #     lists downstream, where the tail segment REVISES until marked
+  #     completed. That revising behavior is why the GraphQL transcription
+  #     layer uses snapshot-replace semantics instead of delta-append.
+  #
+  #     WHISPER_MODEL is consumed by openthrottle-server's per-connection
+  #     handshake (WhisperLive selects the model per client, not per server);
+  #     it is exported here only so the intended default is visible on the
+  #     container. First boot downloads the model into whisper_model_cache.
+  #
+  whisper:
+    # Built from source for the native arch: the upstream whisperlive-cpu image
+    # is linux/amd64-only and emulated int8 inference on Apple silicon measured
+    # >200x slower than realtime. See applications/openthrottle/Dockerfile.Whisper.
+    build:
+      context: ./
+      dockerfile: applications/openthrottle/Dockerfile.Whisper
+    container_name: ${OT_CONTAINER_PREFIX:-}whisper
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-base.en}
+    healthcheck:
+      interval: 10s
+      retries: 3
+      start_period: 60s
+      test:
+        [
+          'CMD',
+          'python3',
+          '-c',
+          "import socket; socket.create_connection(('127.0.0.1', 9090), 5).close()",
+        ]
+      timeout: 5s
+    image: openthrottle/whisper:latest
+    ports:
+      - '${WHISPER_PORT:-6030}:9090'
+    profiles: [voice]
+    restart: 'no'
+    volumes:
+      - whisper_model_cache:/root/.cache
+
 #############################################################################
 #
 #     🔐 Secrets | Build secrets for Docker builds
@@ -421,3 +472,4 @@ secrets:
 volumes:
   postgres_data: # Persistent storage for our Postgres database
   pnpm_store: # pnpm content-addressable store for in-container installs
+  whisper_model_cache: # faster-whisper model downloads (first `voice` boot populates it)

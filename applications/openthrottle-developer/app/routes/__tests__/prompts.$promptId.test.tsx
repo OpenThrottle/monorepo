@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader, meta } from '../prompts.$promptId';
 import { CustomPromptType } from '~/__generated__/graphql';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
 

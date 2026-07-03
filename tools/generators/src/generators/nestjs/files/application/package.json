@@ -9,9 +9,6 @@
   },
   "dependencies": {},
   "devDependencies": {},
-  "engines": {
-    "node": ">=22"
-  },
   "main": "./src/main.ts",
   "module": "./src/main.ts",
   "nx": {

@@ -75,9 +75,22 @@ describe('GqlThrottlerGuard.shouldSkip', () => {
     ).resolves.toBe(true);
   });
 
+  it('skips mutations executed over graphql-ws (request present, no HTTP response)', async () => {
+    // @nestjs/apollo surfaces the ws upgrade request as `req` for operations
+    // executed over the socket — but there is no Express `res` to header().
+    mockGqlContext(
+      { req: { headers: {} } },
+      { operation: { operation: 'mutation' } },
+    );
+
+    await expect(
+      callShouldSkip(createGuard(), createGraphqlContext()),
+    ).resolves.toBe(true);
+  });
+
   it('does not skip queries/mutations (defers to the base guard)', async () => {
     mockGqlContext(
-      { req: { ip: '203.0.113.1' } },
+      { req: { ip: '203.0.113.1', res: { header: vi.fn() } } },
       { operation: { operation: 'query' } },
     );
 

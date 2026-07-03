@@ -1,0 +1,24 @@
+# WhisperLive (Collabora) built from source for the host's native arch.
+#
+# Why not ghcr.io/collabora/whisperlive-cpu? That image is linux/amd64-only, and
+# under Rosetta/QEMU emulation on Apple silicon the ctranslate2 int8 kernels run
+# >200x slower than realtime (a 1s audio window did not finish inference in 4
+# minutes) — useless for streaming STT. A native arm64 build runs at usable
+# speed. Pinned to the v0.9.0 release tag (commit 582d5426).
+ARG PYTHON_VERSION=3.10
+ARG WHISPERLIVE_REF=v0.9.0
+FROM python:${PYTHON_VERSION}-bookworm
+ARG WHISPERLIVE_REF
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --branch ${WHISPERLIVE_REF} --depth 1 https://github.com/collabora/WhisperLive.git /app
+WORKDIR /app
+
+RUN pip install --no-cache-dir -r requirements/server.txt
+
+EXPOSE 9090
+
+CMD ["python3", "run_server.py", "--port", "9090", "--backend", "faster_whisper"]

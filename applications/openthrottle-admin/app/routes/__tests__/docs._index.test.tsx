@@ -10,7 +10,7 @@ describe('routes/docs._index.tsx', () => {
       <MemoryRouter>
         <Component
           actionData={undefined}
-          loaderData={{}}
+          loaderData={undefined}
           matches={[] as never}
           params={{}}
         />

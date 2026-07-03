@@ -32,9 +32,6 @@
     "@faker-js/faker": "catalog:",
     "@openthrottle/react-router-testing": "workspace:^"
   },
-  "engines": {
-    "node": ">=22"
-  },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],

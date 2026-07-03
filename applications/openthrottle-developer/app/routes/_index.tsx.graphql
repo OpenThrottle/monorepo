@@ -63,3 +63,36 @@ subscription ConversationStreamChunkAdded($conversationId: ID!) {
     sortOrder
   }
 }
+
+mutation StartTranscriptionStream {
+  startTranscriptionStream {
+    errorMessage
+    sessionId
+  }
+}
+
+mutation SendTranscriptionAudioChunk(
+  $audioBase64: String!
+  $sessionId: ID!
+  $sortOrder: Int!
+) {
+  sendTranscriptionAudioChunk(
+    audioBase64: $audioBase64
+    sessionId: $sessionId
+    sortOrder: $sortOrder
+  )
+}
+
+mutation StopTranscriptionStream($sessionId: ID!) {
+  stopTranscriptionStream(sessionId: $sessionId)
+}
+
+subscription TranscriptionStreamChunkAdded($sessionId: ID!) {
+  transcriptionStreamChunkAdded(sessionId: $sessionId) {
+    done
+    error
+    sessionId
+    sortOrder
+    transcript
+  }
+}

@@ -72,13 +72,22 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
   ): Promise<boolean> {
     if (isGraphqlContext(context)) {
       const gqlContext = GqlExecutionContext.create(context);
-      const { req } = gqlContext.getContext<GraphqlThrottlerContext>();
+      const { req, res } = gqlContext.getContext<GraphqlThrottlerContext>();
 
       // Subscriptions ride graphql-ws: there is no client IP to track and no
       // HTTP response to attach rate-limit headers to (the stock guard calls
       // `res.header(...)`). Skip them rather than crash. The absent-`req` guard
       // covers connection-time contexts that haven't been resolved yet.
       if (req == null || isSubscriptionOperation(gqlContext)) {
+        return true;
+      }
+
+      // Mutations/queries executed OVER the graphql-ws socket land here too:
+      // @nestjs/apollo surfaces the ws upgrade request as `req`, so the check
+      // above passes — but there is still no Express response to set
+      // rate-limit headers on. Skip whenever no usable `res.header` exists.
+      const httpResponse = (res ?? req.res) as { header?: unknown } | undefined;
+      if (typeof httpResponse?.header !== 'function') {
         return true;
       }
     }
