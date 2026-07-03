@@ -20,6 +20,7 @@ import { Loader2, Mic, Paperclip } from 'lucide-react';
 import classnames from 'classnames';
 import { ChatComposerMicState, ChatComposerMode } from '../types';
 import type {
+  ChatComposerMicStateValue,
   ChatContextSource,
   ChatModelOption,
   ChatPersonaOption,
@@ -30,7 +31,7 @@ export interface ChatComposerToolbarProps {
   /** Context sources for the attach control; omit to hide the control. */
   readonly contextSources?: readonly ChatContextSource[];
   /** Voice-input state reflected by the mic control; pair with {@link onMicToggle}. */
-  readonly micState?: ChatComposerMicState;
+  readonly micState?: ChatComposerMicStateValue;
   /** Selected agent mode; omit to hide the mode toggle. */
   readonly mode?: ChatComposerMode;
   /** Selected model id; pair with {@link models}. */

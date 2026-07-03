@@ -12,6 +12,7 @@
  */
 import * as React from 'react';
 import { ChatComposerMicState } from '@openthrottle/react-router-chat';
+import type { ChatComposerMicStateValue } from '@openthrottle/react-router-chat';
 import { useAudioCapture } from '@openthrottle/react-router-ui';
 import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/audio-encoding';
 import { useTranscriptionStream } from '~/routing/home/hooks/useTranscriptionStream';
@@ -41,7 +42,7 @@ export interface UseVoiceInputResult {
   /** True while the draft should be frozen (recording or finalizing). */
   readonly isDraftFrozen: boolean;
   /** State for the toolbar mic control. */
-  readonly micState: ChatComposerMicState;
+  readonly micState: ChatComposerMicStateValue;
   /** Click handler for the mic: starts when idle, stops when recording. */
   readonly toggle: () => Promise<void>;
 }
@@ -103,7 +104,7 @@ export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
   captureRef.current = capture;
 
   // Setup
-  const micState: ChatComposerMicState = !capture.isSupported
+  const micState: ChatComposerMicStateValue = !capture.isSupported
     ? ChatComposerMicState.disabled
     : phase === VOICE_PHASE.finalizing
       ? ChatComposerMicState.finalizing
