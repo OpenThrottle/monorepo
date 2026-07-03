@@ -85,7 +85,7 @@ import {
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
-import { useNonce } from '~/global/utils/csp';
+import { useNonce } from '@openthrottle/react-router-utils';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import {
   callLoginMutation,
@@ -331,8 +331,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta content={viewport} name="viewport" />
         {/*
           CSP is shipped per-request as a (report-only) response header with a
-          nonce — see app/entry.server.tsx and app/global/utils/csp.ts — not a
-          <meta> tag. The nonce below authorizes the inline bootstrap scripts.
+          nonce — see app/entry.server.tsx and the shared buildCsp in
+          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
+          — not a <meta> tag. The nonce below authorizes the inline bootstrap
+          scripts.
         */}
         <Meta />
 

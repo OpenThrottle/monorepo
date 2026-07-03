@@ -38,6 +38,7 @@ import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.modul
 import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module';
+import { CspReportsModule } from './modules/csp-reports/csp-reports.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
@@ -142,6 +143,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     // 🧩 Application Modules
     AgenticTestQueueModule,
     CodeIndexQueueModule,
+    CspReportsModule,
     DailyStatsQueueModule,
     DatabaseBackupQueueModule,
     DevelopmentModule,
