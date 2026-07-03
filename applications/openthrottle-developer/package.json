@@ -49,8 +49,8 @@
     "sonner": "catalog:",
     "vite-node": "catalog:"
   },
-  "engines": {
-    "node": ">=22"
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^"
   },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
@@ -84,30 +84,7 @@
       },
       "lint": {},
       "test": {},
-      "test-e2e": {
-        "configurations": {
-          "full": {
-            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags full"
-          },
-          "record": {
-            "command": "maestro record --local"
-          },
-          "smoke": {
-            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags smoke"
-          },
-          "studio": {
-            "command": "maestro studio"
-          },
-          "watch": {
-            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
-          }
-        },
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
-          "cwd": "{projectRoot}/tests/e2e"
-        }
-      }
+      "test-e2e": {}
     }
   },
   "private": true,
@@ -116,8 +93,5 @@
   "scripts": {
     "start:docker": "react-router-serve ./build/server/index.js"
   },
-  "type": "module",
-  "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
-  }
+  "type": "module"
 }

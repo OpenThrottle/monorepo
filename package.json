@@ -358,9 +358,6 @@
     "vitest": "catalog:",
     "webpack-cli": "catalog:"
   },
-  "engines": {
-    "node": ">=22"
-  },
   "nx": {
     "implicitDependencies": [],
     "projectType": "application",

@@ -414,6 +414,30 @@
     },
     "test-e2e": {
       "configurations": {
+        "full": {
+          "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags full"
+        },
+        "record": {
+          "command": "maestro record --local"
+        },
+        "smoke": {
+          "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml --include-tags smoke"
+        },
+        "studio": {
+          "command": "maestro studio"
+        },
+        "watch": {
+          "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
+        "cwd": "{projectRoot}/tests/e2e"
+      }
+    },
+    "___test-e2e": {
+      "configurations": {
         "record": {
           "command": "maestro record --local"
         },
