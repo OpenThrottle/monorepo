@@ -2,7 +2,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { action, loader } from '../queues.$queueId.$jobId';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

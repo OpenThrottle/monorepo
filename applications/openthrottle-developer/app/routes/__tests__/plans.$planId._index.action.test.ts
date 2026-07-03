@@ -7,7 +7,7 @@ import {
   PlanDetailUpdatePlanRunConfigDocument,
   type PlanDetailCancelPlanRunMutation,
 } from '~/__generated__/graphql';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
 

@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import type { Route } from '@/app/routes/+types/personas._index';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('~/routing/agents/data/discover-repo-personas.server', () => ({
   discoverRepoPersonas: vi.fn(),

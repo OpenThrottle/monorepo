@@ -3,7 +3,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { action, loader } from '../settings.workspace';
 import type { Route } from '@/app/routes/+types/settings.workspace';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
 

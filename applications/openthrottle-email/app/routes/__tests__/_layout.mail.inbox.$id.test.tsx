@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { createRoutesStub } from 'react-router';
 import { default as Route, loader } from '../_layout.mail.inbox.$id';
-import { createTestRouterContext } from '~/testing/router-context';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 describe('routes/_layout.mail.inbox.$id.tsx', () => {
   test('should render MessageDetail', () => {
