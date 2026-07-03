@@ -49,7 +49,7 @@ interface MessageDetailActionCallbacks {
   readonly onReplyAll?: (message: MailMessageDetail) => void;
 }
 
-interface MessageDetailProps extends MessageDetailActionCallbacks {
+export interface MessageDetailProps extends MessageDetailActionCallbacks {
   readonly className?: string;
   /** When true, show skeleton for header and body; used when loader defers or fetches async. */
   readonly loading?: boolean;

@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { createRoutesStub } from 'react-router';
 import { default as Route, loader } from '../_layout.mail.inbox.$id';
+import { createTestRouterContext } from '~/testing/router-context';
 
 describe('routes/_layout.mail.inbox.$id.tsx', () => {
   test('should render MessageDetail', () => {
@@ -17,9 +18,11 @@ describe('routes/_layout.mail.inbox.$id.tsx', () => {
   describe('loader', () => {
     test('throws a 404 Response for an unknown message id', async () => {
       const args: Parameters<typeof loader>[0] = {
-        context: {},
+        context: createTestRouterContext(),
         params: { id: 'does-not-exist' },
+        pattern: '/mail/inbox/:id',
         request: new Request('http://localhost/mail/inbox/does-not-exist'),
+        url: new URL('http://localhost/mail/inbox/does-not-exist'),
       };
 
       const thrown = await loader(args).then(

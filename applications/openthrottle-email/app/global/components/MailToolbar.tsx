@@ -35,7 +35,7 @@ import { MAIL_PATHS } from '~/global/data/data.navigation';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-interface MailToolbarProps {
+export interface MailToolbarProps {
   readonly className?: string;
 }
 

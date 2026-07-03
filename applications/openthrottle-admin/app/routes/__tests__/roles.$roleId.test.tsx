@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action } from '../roles.$roleId';
+import { createTestRouterContext } from '~/testing/router-context';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -32,10 +33,11 @@ describe('routes/roles.$roleId.tsx', () => {
       let thrown: unknown;
       try {
         await action({
-          context: {},
+          context: createTestRouterContext(),
           params: { roleId: 'role-1' },
+          pattern: '/roles/:roleId',
           request,
-          unstable_pattern: '/roles/:roleId',
+          url: new URL(request.url),
         });
       } catch (error) {
         thrown = error;
