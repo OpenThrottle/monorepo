@@ -18,7 +18,7 @@ Three commitments define it:
 
 1. **Best-of-breed, assembled.** We don't reinvent; we curate. The best agent loop (Ralph), the best planning substrate (plans/tasks/notes with semantic memory), the best interfaces (MCP, GraphQL, WebSockets, a real web UI, an editor extension) — integrated into one coherent system instead of a pile of point tools.
 2. **Self-hostable and sovereign.** OSS-first. Your plans, your code context, your model choices, your box. A single Docker stack gets you running; nothing leaves your perimeter unless you choose it to. Local models (Ollama) are a first-class path, not a fallback.
-3. **Traceable end to end.** Every plan links to tasks, every task links to agent output and to the commit that shipped it. The harness remembers what was done, why, and where it landed — and lets you ask in natural language.
+3. **Traceable end to end — both directions.** Forward: a plan becomes tasks, tasks become agent runs and output, and output lands in the commit that shipped it. Backward: the harness continuously tracks the codebase and its git history and maps every commit back to the task, plan, and output that produced it. So you can ask "what shipped this plan?" and "why does this code exist?" with equal ease — the intent and the implementation stay linked as the repo moves, all queryable in natural language.
 
 ---
 
@@ -37,17 +37,18 @@ A harness is the structure that lets many moving parts pull in the same directio
 
 OpenThrottle is real and running, but uneven — strong in the substrate and the loop, thinner in the surfaces and the self-host story. A clear-eyed inventory:
 
-| Capability                       | State                 | Notes                                                                                                                                                                 |
-| -------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plans / tasks / notes / projects | **Solid**             | Postgres-backed, full lifecycle, MCP + GraphQL CRUD. The substrate works.                                                                                             |
-| Agentic execution (Ralph)        | **Working**           | Idea/PRD → plan → tasks → one-at-a-time execution, BullMQ queue, worktrees, commit traceability via `Plan-Id`/`Task-Id`. Rough edges in orchestration & resumability. |
-| Semantic search & docs ingest    | **Working**           | pgvector over plans/tasks/docs via one MCP. Cross-source ranking and a unified timeline are still gaps.                                                               |
-| MCP surface                      | **Solid**             | The OT MCP is the most mature interface; it's how agents touch the harness today.                                                                                     |
-| Web UI (developer)               | **In progress**       | React Router app: dashboards, activity, local-model chat composer. Many flows still to build.                                                                         |
-| Real-time (WS / notifications)   | **Emerging**          | graphql-ws plumbing + notifications designed; streaming output landing; user-scoped delivery not yet complete.                                                        |
-| Admin / email / website apps     | **Early**             | Scaffolded; not the focus yet.                                                                                                                                        |
-| Self-host / deploy               | **Designed, partial** | Single-box Docker + Caddy on a GCP E2 designed; licensing & first-time onboarding sketched. Not yet a one-command, anyone-can-run experience.                         |
-| Model flexibility                | **Partial**           | Ollama discovery + hosted embeddings exist; agent-backend and model selection not yet unified.                                                                        |
+| Capability                       | State                 | Notes                                                                                                                                                                                                                         |
+| -------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plans / tasks / notes / projects | **Solid**             | Postgres-backed, full lifecycle, MCP + GraphQL CRUD. The substrate works.                                                                                                                                                     |
+| Agentic execution (Ralph)        | **Working**           | Idea/PRD → plan → tasks → one-at-a-time execution, BullMQ queue, worktrees, commit traceability via `Plan-Id`/`Task-Id`. Rough edges in orchestration & resumability.                                                         |
+| Commit ↔ task reconciliation     | **Partial**           | `commit_links` maps SHAs → plan/task (forward + sha-level reverse queries, manual `linkCommit`). Continuous ingestion, file-level mapping, output linkage, and rebase/squash drift handling are the gap (OT plan `03dbeb22`). |
+| Semantic search & docs ingest    | **Working**           | pgvector over plans/tasks/docs via one MCP. Cross-source ranking and a unified timeline are still gaps.                                                                                                                       |
+| MCP surface                      | **Solid**             | The OT MCP is the most mature interface; it's how agents touch the harness today.                                                                                                                                             |
+| Web UI (developer)               | **In progress**       | React Router app: dashboards, activity, local-model chat composer. Many flows still to build.                                                                                                                                 |
+| Real-time (WS / notifications)   | **Emerging**          | graphql-ws plumbing + notifications designed; streaming output landing; user-scoped delivery not yet complete.                                                                                                                |
+| Admin / email / website apps     | **Early**             | Scaffolded; not the focus yet.                                                                                                                                                                                                |
+| Self-host / deploy               | **Designed, partial** | Single-box Docker + Caddy on a GCP E2 designed; licensing & first-time onboarding sketched. Not yet a one-command, anyone-can-run experience.                                                                                 |
+| Model flexibility                | **Partial**           | Ollama discovery + hosted embeddings exist; agent-backend and model selection not yet unified.                                                                                                                                |
 
 **The gap, stated plainly:** the engine and the memory are good; the _product_ — the deployable, onboardable, multi-surface experience an external team could pick up and self-host — is the work ahead.
 
@@ -63,7 +64,7 @@ The heartbeat: idea/PRD → plan + tasks → execute → traceable, merged commi
 
 ### 2. Institutional Memory
 
-Semantic search and the story-over-time. Unify cross-source ranking (plans + tasks + docs + commits), build the activity/timeline surface, and make "ask OT what happened" trustworthy. _Why: a harness that forgets is just tooling; memory is what compounds._
+Semantic search and the story-over-time. Unify cross-source ranking (plans + tasks + docs + commits), build the activity/timeline surface, and — the mirror image of the execution loop — continuously reconcile the codebase and git history back onto the plans, tasks, and outputs that produced them, so intent and implementation stay linked as the repo moves. Make "ask OT what happened" trustworthy. _Why: a harness that forgets is just tooling; memory is what compounds._
 
 ### 3. Open Interfaces
 
@@ -104,4 +105,4 @@ The next step from here is to break each theme into one or more concrete plans a
 
 ---
 
-_Last updated: 2026-06-19_
+_Last updated: 2026-07-02_
