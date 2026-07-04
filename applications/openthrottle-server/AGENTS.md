@@ -49,6 +49,9 @@ plus codegen.
   `databases/migrations/` plus the matching entity edit — this app has no TypeORM migrations.
 - `rawBody: true` in `main.ts` is required for Stripe webhook signature verification
   (`req.rawBody`); don't drop it when touching bootstrap.
+- The custom `useBodyParser('json', { type: [...] })` in `main.ts` (CSP report parsing) is
+  the ONLY json parser once registered — `application/json` must stay in its `type` list or
+  `/graphql` POST bodies 400. The comment above the call explains the Nest dedupe mechanics.
 - Subscriptions returning the `NotificationEvent` interface leave concrete types orphaned —
   they must stay registered via `buildSchemaOptions.orphanedTypes` in `app.module.ts`.
 - graphql-ws requests have no `req`: the GraphQL context puts the validated user on `userId`

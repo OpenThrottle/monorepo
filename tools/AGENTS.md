@@ -11,6 +11,7 @@ Four Nx projects plus one plain config directory:
 - [`dotfiles/`](./dotfiles/) — `@tools/dotfiles`: shared ESLint/Prettier/Vite/Vitest config. Source-first: `main` → `./src/index.ts`, no `build` target (only `lint`, `test`, `typecheck`, `typecheck-tests`).
 - [`ollama-proxy/`](./ollama-proxy/) — `@tools/ollama-proxy`: local-dev HTTP proxy that accepts OpenAI-style requests (e.g. from Cursor) and rewrites model names for Ollama; `ollama-proxy` bin, `serve` and `e2e` targets, own `.env.default`.
 - [`caddy/`](./caddy/) — **not an Nx project** (no `package.json`): Caddyfiles for the local reverse proxy in front of server/developer/Ollama (`Caddyfile` for local domains, `Caddyfile.path-based` variant). Service/hostname map: [docs/monorepo/local-services-and-ports.md](../docs/monorepo/local-services-and-ports.md).
+- [`nx-plugins/`](./nx-plugins/) — **not an Nx project**: single-file local Nx plugins registered in root `nx.json` `plugins`. `react-router-typecheck.ts` infers the real `typecheck` target for the React Router apps (the `@nx/react/router-plugin` one is renamed to `__NOT_USED__typecheck`).
 
 ## Gotchas
 
