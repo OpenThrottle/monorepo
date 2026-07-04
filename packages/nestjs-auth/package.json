@@ -10,6 +10,7 @@
   "dependencies": {
     "@nestjs/config": "catalog:",
     "@nestjs/passport": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "passport": "catalog:",
     "passport-jwt": "catalog:"
   },

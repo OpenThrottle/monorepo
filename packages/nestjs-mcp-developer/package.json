@@ -83,5 +83,8 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@openthrottle/nestjs-modules": "workspace:^"
+  }
 }

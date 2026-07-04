@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^"

@@ -2410,6 +2410,9 @@ importers:
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
@@ -2426,9 +2429,6 @@ importers:
       '@nestjs/testing':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/platform-express@11.1.19)
-      '@openthrottle/nestjs-modules':
-        specifier: workspace:^
-        version: link:../nestjs-modules
 
   packages/nestjs-auth:
     dependencies:
@@ -2441,6 +2441,9 @@ importers:
       '@nestjs/passport':
         specifier: 'catalog:'
         version: 11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       passport:
         specifier: 'catalog:'
         version: 0.7.0
@@ -2484,6 +2487,9 @@ importers:
       '@bull-board/nestjs':
         specifier: 'catalog:'
         version: 7.0.0(@bull-board/api@7.0.0(@bull-board/ui@7.0.0))(@nestjs/bull-shared@11.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19))(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       express-basic-auth:
         specifier: 'catalog:'
         version: 1.2.1
@@ -2535,6 +2541,15 @@ importers:
       '@nestjs/graphql':
         specifier: 'catalog:'
         version: 13.4.0(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(graphql@16.14.0)(reflect-metadata@0.2.2)(ts-morph@28.0.0)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
+      '@openthrottle/nestjs-redis':
+        specifier: workspace:^
+        version: link:../nestjs-redis
+      '@openthrottle/nestjs-utils':
+        specifier: workspace:^
+        version: link:../nestjs-utils
       graphql:
         specifier: 'catalog:'
         version: 16.14.0
@@ -2630,6 +2645,10 @@ importers:
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:^
         version: link:../openthrottle-mcp
+    devDependencies:
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
 
   packages/nestjs-model-discovery:
     dependencies:
@@ -2667,9 +2686,17 @@ importers:
         specifier: 'catalog:'
         version: 4.9.0
 
-  packages/nestjs-postgres: {}
+  packages/nestjs-postgres:
+    dependencies:
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
 
-  packages/nestjs-profiling: {}
+  packages/nestjs-profiling:
+    dependencies:
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
 
   packages/nestjs-rbac: {}
 
@@ -2684,6 +2711,9 @@ importers:
       '@keyv/redis':
         specifier: 'catalog:'
         version: 4.6.0(keyv@5.6.0)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       joi:
         specifier: 'catalog:'
         version: 18.2.1
@@ -2696,6 +2726,15 @@ importers:
       '@nestjs/typeorm':
         specifier: 'catalog:'
         version: 11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@6.0.3)))
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-workflow
       bcrypt:
         specifier: 'catalog:'
         version: 6.0.0
@@ -2722,7 +2761,11 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0
 
-  packages/nestjs-slack: {}
+  packages/nestjs-slack:
+    dependencies:
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
 
   packages/nestjs-stripe:
     dependencies:
@@ -2835,6 +2878,9 @@ importers:
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-workflow
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:^
         version: link:../openthrottle-mcp
@@ -2868,6 +2914,9 @@ importers:
 
   packages/openthrottle-agentic-utils:
     dependencies:
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-workflow
       openai:
         specifier: 'catalog:'
         version: 6.36.0(ws@8.20.0)(zod@4.4.3)
@@ -3010,6 +3059,9 @@ importers:
       '@monaco-editor/react':
         specifier: 'catalog:'
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:^
+        version: link:../react-router-shadcn
       '@openthrottle/react-router-utils':
         specifier: workspace:^
         version: link:../react-router-utils
@@ -3056,6 +3108,12 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: 'catalog:'
         version: 3.2.0(graphql@16.14.0)
+      '@openthrottle/nodejs-graphql':
+        specifier: workspace:^
+        version: link:../nodejs-graphql
+      '@openthrottle/react-router-auth':
+        specifier: workspace:^
+        version: link:../react-router-auth
       '@openthrottle/react-router-utils':
         specifier: workspace:^
         version: link:../react-router-utils
@@ -3158,6 +3216,9 @@ importers:
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
+      '@openthrottle/react-router-utils':
+        specifier: workspace:^
+        version: link:../react-router-utils
       '@preact/signals':
         specifier: 'catalog:'
         version: 2.9.1(preact@10.29.1)
@@ -3301,6 +3362,9 @@ importers:
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
+      '@openthrottle/react-router-utils':
+        specifier: workspace:^
+        version: link:../react-router-utils
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -3310,12 +3374,24 @@ importers:
 
   packages/react-router-ui-global:
     dependencies:
+      '@openthrottle/openthrottle-developer-codegen':
+        specifier: workspace:^
+        version: link:../openthrottle-developer-codegen
       '@openthrottle/react-router-chat':
         specifier: workspace:^
         version: link:../react-router-chat
+      '@openthrottle/react-router-notifications':
+        specifier: workspace:^
+        version: link:../react-router-notifications
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
+      '@openthrottle/react-router-ui':
+        specifier: workspace:^
+        version: link:../react-router-ui
+      '@openthrottle/react-router-utils':
+        specifier: workspace:^
+        version: link:../react-router-utils
       '@paper-design/shaders-react':
         specifier: 'catalog:'
         version: 0.0.76(@types/react@19.2.7)(react@19.2.4)
@@ -3426,6 +3502,9 @@ importers:
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../../packages/openthrottle-agentic-utils
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../../packages/openthrottle-agentic-workflow
       '@tools/generators':
         specifier: workspace:^
         version: link:../generators

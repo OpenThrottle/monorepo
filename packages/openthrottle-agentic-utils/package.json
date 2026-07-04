@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "openai": "catalog:"
   },
   "devDependencies": {
