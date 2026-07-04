@@ -112,7 +112,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 ### 3.1 Dockerfiles in the monorepo
 
 - **Root (canonical, one per app)**
-  - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless `nodejs22-debian12:nonroot`), pnpm, Nx; build args `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, `PNPM_VERSION`; `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`; in-image `/health` probe; `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
+  - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless `nodejs24-debian12:nonroot`), pnpm, Nx; build args `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, `PNPM_VERSION`; `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`; in-image `/health` probe; `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
   - **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production + optional `production-debian` target; `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
   - The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and the `.v2` variants have been **deleted** (v3 is the single source of truth).
   - **`Dockerfile.Cortex`**, **`Dockerfile.PostgreSQL`**, **`Dockerfile.Postgres`** — Other uses (Cortex/Postgres); `Dockerfile.Postgres` builds the compose `openthrottle-postgres` service.

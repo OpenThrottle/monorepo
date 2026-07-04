@@ -82,7 +82,8 @@
         ],
         "executor": "nx:run-commands",
         "options": {
-          "command": "nest build --path {projectRoot}/tsconfig.app.json"
+          "command": "nest build --path tsconfig.app.json",
+          "cwd": "{projectRoot}"
         }
       },
       "docker-build": {
@@ -105,7 +106,23 @@
         ],
         "executor": "nx:run-commands",
         "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json --watch"
+          "command": "nest start --path tsconfig.app.json --watch",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "dev-api": {
+        "continuous": true,
+        "dependsOn": [
+          "^dev"
+        ],
+        "description": "dev (watch) restricted to PROCESS_ROLE=api: HTTP/GraphQL + queue producers, no BullMQ processors. Pair with the `worker` target so API edits never restart in-flight jobs or detach the worker debugger.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path tsconfig.app.json --watch",
+          "cwd": "{projectRoot}",
+          "env": {
+            "PROCESS_ROLE": "api"
+          }
         }
       },
       "dev-debug": {
@@ -116,7 +133,8 @@
         "description": "dev with the Node inspector bound to 0.0.0.0:9229 (used by the compose dev profile so a host debugger can attach; --debug flags only the Nest app process, unlike NODE_OPTIONS).",
         "executor": "nx:run-commands",
         "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json --debug 0.0.0.0:9229 --watch"
+          "command": "nest start --path tsconfig.app.json --debug 0.0.0.0:9229 --watch",
+          "cwd": "{projectRoot}"
         }
       },
       "lint": {
@@ -133,11 +151,27 @@
         "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build.",
         "executor": "nx:run-commands",
         "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json"
+          "command": "nest start --path tsconfig.app.json",
+          "cwd": "{projectRoot}"
         }
       },
       "test": {},
       "typecheck": {},
+      "worker": {
+        "continuous": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch — deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path tsconfig.app.json",
+          "cwd": "{projectRoot}",
+          "env": {
+            "PROCESS_ROLE": "worker"
+          }
+        }
+      },
       "verify-graphql-schema-sync": {
         "cache": false,
         "description": "Verify the committed root schema.gql matches the server code-first schema; fails on drift.",

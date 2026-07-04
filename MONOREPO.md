@@ -10,6 +10,7 @@ This document provides comprehensive guidance on the monorepo structure, organiz
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
+- [Development Loop: Three Planes](#development-loop-three-planes)
 - [Directory Structure](#directory-structure)
 - [Applications vs Packages](#applications-vs-packages)
 - [Package Organization](#package-organization)
@@ -35,6 +36,41 @@ This monorepo leverages [NX](https://nx.dev/) for both **task running** and **pa
 2. **Packages** are reusable libraries shared across applications or published externally
 3. **Domain Organization**: Packages can be organized by domain/application when they're application-specific
 4. **Shared Packages**: Cross-cutting concerns live in top-level package directories
+
+## Development Loop: Three Planes
+
+Local development decouples three planes so restarting one never disturbs the
+others:
+
+- **DATA plane** — Postgres (`:6010`) + Redis (`:6011`) via
+  `pnpm run database:start`. Always-on docker containers, **shared across every
+  checkout and worktree**. Worktrees do not run their own databases (see
+  [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md)).
+- **APP PROCESS plane** — the code you're iterating on. Two intentional,
+  first-class modes:
+  - **Native mode** (fast OT-dev inner loop): `pnpm run dev:native` runs
+    `openthrottle-server` on the host with the SWC builder (~150 ms rebuilds)
+    against the shared data plane. Use
+    `pnpm run dev:native:split` to run it as **two processes** — API in watch
+    mode (`PROCESS_ROLE=api`) and a BullMQ worker (`PROCESS_ROLE=worker`, no
+    watch) — so editing API code never restarts an in-flight job or detaches
+    the worker's debugger. `PROCESS_ROLE=all` (the default everywhere else)
+    keeps today's single-process behavior.
+  - **Docker fidelity mode** (what self-hosters actually run):
+    `docker compose --profile dev up` (plus the worktree override files when in
+    a worktree). Use it to validate workspace mounting, the host-exec bridge,
+    and prod parity — not for day-to-day iteration.
+- **TOOLING plane** — the OpenThrottle MCP (plans/tasks CRUD for agents) pins
+  to the **stable** (main-checkout) server, not your worktree's
+  server-under-test, so restarting the SUT never interrupts tooling. CRUD is
+  checkout-agnostic because Postgres is shared; opt into your worktree's
+  server with `OT_MCP_TARGET=worktree`.
+
+Because every checkout shares one Redis, BullMQ queues are **namespaced per
+checkout** (`OT_QUEUE_PREFIX`, derived from the worktree's
+`OT_CONTAINER_PREFIX`, default `bull` on the main checkout) — a worktree's
+worker can only consume its own checkout's jobs, never another's. Execution
+isolation lives in that prefix, not in server or MCP targeting.
 
 ## Directory Structure
 

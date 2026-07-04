@@ -12,6 +12,8 @@ export const configValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'staging', 'production', 'test')
     .default('production'),
+  OT_CONTAINER_PREFIX: Joi.string().allow(''),
+  OT_QUEUE_PREFIX: Joi.string().allow(''),
   REDIS_DB: Joi.number().min(0),
   REDIS_FAMILY: Joi.number().valid(0, 4, 6),
   REDIS_HOST: Joi.string().hostname().required(),
@@ -27,6 +29,47 @@ export const configValidationSchema = Joi.object({
 const isEnvTrue = (value: string | undefined): boolean =>
   value !== undefined &&
   ['1', 'on', 'true', 'yes'].includes(value.toLowerCase());
+
+/** BullMQ's default key prefix; the main checkout keeps it so existing Redis state stays reachable. */
+const DEFAULT_QUEUE_PREFIX = 'bull';
+
+/**
+ * @description Resolves the environment-scoped BullMQ key prefix for this checkout.
+ *
+ * Worktrees share the host Redis, and BullMQ queue names are static global
+ * strings — without a per-checkout prefix, every worker-role process races on
+ * the same queues and a plan run can execute against the WRONG checkout. The
+ * prefix is the isolation mechanism.
+ *
+ * Resolution order:
+ * 1. `OT_QUEUE_PREFIX` — explicit override.
+ * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.sh`, e.g.
+ *    `wt-<slug>-`) → `bull:wt-<slug>` so worktrees are isolated out of the box.
+ * 3. `'bull'` — BullMQ's default; the main checkout and self-hosted deploys
+ *    keep their existing Redis keys (repeatable jobs, cron state) untouched.
+ *
+ * Every producer and consumer in one checkout resolves the same value because
+ * both read the same env (root `.env` via Nx env loading, or the container
+ * environment in docker).
+ *
+ * @publicApi
+ */
+export const resolveQueuePrefix = (): string => {
+  const explicit = process.env.OT_QUEUE_PREFIX?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  const containerPrefix = process.env.OT_CONTAINER_PREFIX?.trim().replace(
+    /-+$/,
+    '',
+  );
+  if (containerPrefix) {
+    return `${DEFAULT_QUEUE_PREFIX}:${containerPrefix}`;
+  }
+
+  return DEFAULT_QUEUE_PREFIX;
+};
 
 /**
  * @description ioredis connection options derived from REDIS_* env vars.
@@ -59,6 +102,7 @@ export const redisConfig = registerAs('redis', () => {
     maxRetriesPerRequest: null,
     password: process.env.REDIS_PASSWORD || undefined,
     port,
+    queuePrefix: resolveQueuePrefix(),
     tls: isEnvTrue(process.env.REDIS_TLS) ? {} : undefined,
     username: process.env.REDIS_USERNAME || undefined,
   };

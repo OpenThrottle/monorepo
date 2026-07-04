@@ -202,8 +202,6 @@ export const ChatComposerMicState = {
   recording: 'recording',
 } as const;
 
-/** Union of {@link ChatComposerMicState} keys. @publicApi */
-export type ChatComposerMicStateKey = keyof typeof ChatComposerMicState;
-
 /** Union of {@link ChatComposerMicState} values. @publicApi */
-export type ChatComposerMicStateValue = (typeof ChatComposerMicState)[ChatComposerMicStateKey]; // prettier-ignore
+export type ChatComposerMicState =
+  (typeof ChatComposerMicState)[keyof typeof ChatComposerMicState];

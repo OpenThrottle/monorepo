@@ -3,11 +3,6 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./build",
-    "paths": {
-      "@tools/workflows/doc-ingestion": [
-        "../../tools/workflows/src/doc-ingestion/index.ts"
-      ]
-    },
     "rootDir": "./"
   },
   "include": ["src/**/*.json", "src/**/*.ts"],

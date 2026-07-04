@@ -1,7 +1,10 @@
 import 'reflect-metadata';
 import type { DynamicModule, Provider } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { redisConfig } from '../config/nestjs-bullmq.config';
+import {
+  redisConfig,
+  resolveQueuePrefix,
+} from '../config/nestjs-bullmq.config';
 import { NestjsBullmqModule } from './nestjs-bullmq.module';
 
 /**
@@ -13,6 +16,7 @@ import { NestjsBullmqModule } from './nestjs-bullmq.module';
 const getRootUseFactory = (): ((config: {
   host: string;
   port: number;
+  queuePrefix: string;
 }) => unknown) => {
   const imports: ReadonlyArray<DynamicModule> =
     Reflect.getMetadata('imports', NestjsBullmqModule) ?? [];
@@ -95,14 +99,76 @@ describe('redisConfig', () => {
   });
 });
 
+describe('resolveQueuePrefix', () => {
+  const originalQueuePrefix = process.env.OT_QUEUE_PREFIX;
+  const originalContainerPrefix = process.env.OT_CONTAINER_PREFIX;
+
+  beforeEach(() => {
+    delete process.env.OT_QUEUE_PREFIX;
+    delete process.env.OT_CONTAINER_PREFIX;
+  });
+
+  afterEach(() => {
+    if (originalQueuePrefix === undefined) {
+      delete process.env.OT_QUEUE_PREFIX;
+    } else {
+      process.env.OT_QUEUE_PREFIX = originalQueuePrefix;
+    }
+    if (originalContainerPrefix === undefined) {
+      delete process.env.OT_CONTAINER_PREFIX;
+    } else {
+      process.env.OT_CONTAINER_PREFIX = originalContainerPrefix;
+    }
+  });
+
+  it("defaults to BullMQ's own prefix so existing Redis state stays reachable", () => {
+    expect(resolveQueuePrefix()).toBe('bull');
+  });
+
+  it('derives a per-checkout prefix from OT_CONTAINER_PREFIX, stripping trailing dashes', () => {
+    process.env.OT_CONTAINER_PREFIX = 'wt-wizardly-darwin-edf63d-';
+
+    expect(resolveQueuePrefix()).toBe('bull:wt-wizardly-darwin-edf63d');
+  });
+
+  it('prefers an explicit OT_QUEUE_PREFIX over the derived container prefix', () => {
+    process.env.OT_CONTAINER_PREFIX = 'wt-slug-';
+    process.env.OT_QUEUE_PREFIX = 'bull:custom';
+
+    expect(resolveQueuePrefix()).toBe('bull:custom');
+  });
+
+  it('ignores blank values and falls through the resolution chain', () => {
+    process.env.OT_QUEUE_PREFIX = '  ';
+    process.env.OT_CONTAINER_PREFIX = '';
+
+    expect(resolveQueuePrefix()).toBe('bull');
+  });
+
+  it('is included in redisConfig as queuePrefix so producers and consumers agree', () => {
+    process.env.REDIS_HOST = 'redis.internal';
+    process.env.OT_CONTAINER_PREFIX = 'wt-slug-';
+
+    const config = redisConfig();
+
+    expect(config.queuePrefix).toBe('bull:wt-slug');
+
+    delete process.env.REDIS_HOST;
+  });
+});
+
 describe('NestjsBullmqModule BullMQ root factory mapping', () => {
   // Invoke the real forRootAsync useFactory with a stub redis config and assert
-  // it produces { connection: { host, port }, defaultJobOptions } as wired in
-  // the @Module decorator.
+  // it produces { connection: { host, port }, defaultJobOptions, prefix } as
+  // wired in the @Module decorator.
   it('maps the redis config into BullMQ connection options', () => {
     const useFactory = getRootUseFactory();
 
-    const result = useFactory({ host: 'redis.internal', port: 6380 });
+    const result = useFactory({
+      host: 'redis.internal',
+      port: 6380,
+      queuePrefix: 'bull:wt-slug',
+    });
 
     expect(result).toMatchObject({
       connection: {
@@ -116,6 +182,7 @@ describe('NestjsBullmqModule BullMQ root factory mapping', () => {
         removeOnComplete: { age: 86400, count: 1000 },
         removeOnFail: { age: 604800 },
       },
+      prefix: 'bull:wt-slug',
     });
   });
 });

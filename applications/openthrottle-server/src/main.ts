@@ -9,14 +9,38 @@ import {
 } from '@openthrottle/nestjs-profiling';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
-import { AppModule } from './app.module';
+import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+import { buildAppModule } from './app.module';
+import { PROCESS_ROLES, resolveProcessRole } from './config/process-role';
+
+/**
+ * @description Worker-only bootstrap: an application context with BullMQ
+ * WorkerHost processors and no HTTP listener, so editing API code (which
+ * restarts the api process) never kills an in-flight job or detaches a
+ * debugger attached here.
+ */
+async function bootstrapWorker(): Promise<void> {
+  const app = await NestFactory.createApplicationContext(
+    buildAppModule({ role: PROCESS_ROLES.worker }),
+  );
+
+  const logger = new LoggerService();
+
+  /** @external https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown */
+  app.enableShutdownHooks(['SIGTERM', 'SIGINT']);
+  app.useLogger(logger);
+
+  logger.info(
+    `\n\n\n  ⚙️ Worker is running (PROCESS_ROLE=worker, queue prefix "${resolveQueuePrefix()}") \n\n`,
+  );
+}
 
 /**
  * @description Bootstrap our NestJS + GraphQL backend for
  * the OpenThrottle platform.
  */
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+async function bootstrap(role: 'all' | 'api'): Promise<void> {
+  const app = await NestFactory.create(buildAppModule({ role }), {
     rawBody: true, // required for Stripe webhook signature verification (req.rawBody)
     snapshot: true,
   });
@@ -33,7 +57,7 @@ async function bootstrap(): Promise<void> {
    * parser becomes the ONLY json parser — omitting `application/json` leaves
    * /graphql POST bodies unparsed and Apollo rejects them with 400.
    */
-  app.useBodyParser('json', {
+  (app as NestExpressApplication).useBodyParser('json', {
     type: [
       'application/csp-report',
       'application/json',
@@ -88,7 +112,9 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(port);
 
-  logger.info(`\n\n\n  🚀 Application is running on: ${url} \n\n`);
+  logger.info(
+    `\n\n\n  🚀 Application is running on: ${url} (PROCESS_ROLE=${role}) \n\n`,
+  );
 }
 
 // /**
@@ -122,4 +148,10 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-bootstrap();
+const role = resolveProcessRole();
+
+if (role === PROCESS_ROLES.worker) {
+  bootstrapWorker();
+} else {
+  bootstrap(role);
+}
