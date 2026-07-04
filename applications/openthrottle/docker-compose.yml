@@ -51,7 +51,7 @@ x-developer: &developer
   APP_VERSION: ${APP_VERSION}
   # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
   OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
   PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
   ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
 
@@ -72,7 +72,7 @@ x-server: &server
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
   # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset).
   OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+  OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
   # Service-to-service over the compose network (container ports).
   POSTGRES_HOST: postgres
   POSTGRES_PORT: 5432
@@ -116,7 +116,7 @@ services:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
     volumes:
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
 
   postgres:
     build:
@@ -190,7 +190,7 @@ services:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
     volumes:
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
 
 volumes:
   ot_docker_postgres_data:

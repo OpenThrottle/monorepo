@@ -1,19 +1,22 @@
-import { BullModule } from '@nestjs/bullmq';
-import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
 import { DatabaseBackupProcessor } from './database-backup.processor';
+import { DatabaseBackupQueueProducerModule } from './database-backup-queue-producer.module';
 import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NotificationsModule } from '../../notifications/notifications.module';
 
+/**
+ * @description Processor half of the database-backup queue (WorkerHost +
+ * repeatable scheduler). Loaded only under PROCESS_ROLE worker/all;
+ * enqueue-only consumers import {@link DatabaseBackupQueueProducerModule}
+ * instead. The repeatable registration lives with the processor so an api-only
+ * process doesn't create schedules no worker in this prefix would consume.
+ */
 @Module({
-  exports: [BullModule],
+  exports: [DatabaseBackupQueueProducerModule],
   imports: [
+    DatabaseBackupQueueProducerModule,
     LoggerModule,
-    NestjsBullmqModule.registerQueue(DATABASE_BACKUP_QUEUE_NAME),
-    NestjsBullmqBoardModule.forFeature(DATABASE_BACKUP_QUEUE_NAME),
     NotificationsModule,
   ],
   providers: [DatabaseBackupProcessor, DatabaseBackupRepeatableService],

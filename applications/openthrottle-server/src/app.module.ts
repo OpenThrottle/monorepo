@@ -22,11 +22,13 @@ import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
-import type { Provider } from '@nestjs/common';
+import type { DynamicModule, Provider } from '@nestjs/common';
 import {
   getOpenthrottleServerDevJsonlLogDirectory,
   isOpenthrottleServerDevJsonlLoggingEnabled,
 } from './config/openthrottle-server-dev-jsonl-logging';
+import { PROCESS_ROLES } from './config/process-role';
+import type { ProcessRole } from './config/process-role';
 import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test-queue.module';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module';
@@ -62,6 +64,7 @@ import { NotificationsGraphqlModule } from './graphql/notifications/notification
 import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
+import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
@@ -81,10 +84,50 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 // import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
 // import { PaymentsModule } from './modules/payments/payments.module';
 
-@Module({
-  controllers: [],
-  exports: [],
-  imports: [
+type AppModuleImports = NonNullable<DynamicModule['imports']>;
+
+const appProviders: Provider[] = [
+  GlobalClsAuthHook,
+  GlobalAuthGuard,
+  GqlJwtAuthGuard,
+  ServiceAccountAuthService,
+  {
+    provide: APP_GUARD,
+    useClass: GlobalAuthGuard,
+  },
+  {
+    multi: true,
+    provide: APP_INTERCEPTOR,
+    useClass: EmitNotificationInterceptor,
+  } as Provider,
+];
+
+/**
+ * @description Builds the role-sliced imports list.
+ *
+ * ORDER MATTERS twice over:
+ * - The code-first GraphQL schema (schema.gql) lists Query/Mutation fields in
+ *   resolver registration order, which follows this import order — including
+ *   transitive imports (e.g. HealthModule → HealthGraphqlModule registers the
+ *   health resolvers long before the explicit GraphQL list). Reorder and CI's
+ *   schema-drift check fails.
+ * - Registration order is only stable for STATIC `@Module` classes (their
+ *   imports are scanned depth-first from reflect metadata). A dynamic-module
+ *   root scans level-order and reorders the schema — that's why
+ *   {@link buildAppModule} returns one of three static classes instead of a
+ *   DynamicModule.
+ *
+ * Role slices: `api` drops the BullMQ WorkerHost processor modules (so editing
+ * API code never restarts a process that is mid-job or detaches its debugger),
+ * `worker` drops the HTTP/GraphQL surface; producer halves (registerQueue)
+ * load wherever they're needed via the importing modules. Worker-only modules
+ * host no resolvers, so `api` and `all` generate byte-identical schemas.
+ */
+const buildImports = (role: ProcessRole): AppModuleImports => {
+  const isApiLike = role !== PROCESS_ROLES.worker;
+  const isWorkerLike = role !== PROCESS_ROLES.api;
+
+  return [
     ConfigModule.forRoot({
       envFilePath: ['.env'],
       isGlobal: true,
@@ -103,23 +146,30 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     NestjsBullmqBoardModule.forRoot({
       enabled: isBullBoardEnabled(),
     }),
-    NestjsGraphqlModule.forRoot({
-      // Subscriptions return the NotificationEvent interface, so its concrete
-      // implementing types are orphaned — register them explicitly so they make
-      // it into the schema.
-      buildSchemaOptions: { orphanedTypes: [...NOTIFICATION_EVENT_TYPES] },
-      cachePlugins: {
-        cacheControl: true,
-        responseCache: true,
-      },
-      // HTTP requests carry identity on `req` (set by the global auth guard).
-      // graphql-ws subscriptions carry it on the connection: onConnect validated
-      // the token and stashed the user id on `extra`, so surface it as `userId`.
-      context: (ctx: { req?: unknown }) =>
-        isGraphqlWsContext(ctx)
-          ? { req: undefined, userId: resolveGraphqlWsUserId(ctx) }
-          : { req: ctx.req },
-    }),
+    ...(isApiLike
+      ? [
+          NestjsGraphqlModule.forRoot({
+            // Subscriptions return the NotificationEvent interface, so its
+            // concrete implementing types are orphaned — register them
+            // explicitly so they make it into the schema.
+            buildSchemaOptions: {
+              orphanedTypes: [...NOTIFICATION_EVENT_TYPES],
+            },
+            cachePlugins: {
+              cacheControl: true,
+              responseCache: true,
+            },
+            // HTTP requests carry identity on `req` (set by the global auth
+            // guard). graphql-ws subscriptions carry it on the connection:
+            // onConnect validated the token and stashed the user id on
+            // `extra`, so surface it as `userId`.
+            context: (ctx: { req?: unknown }) =>
+              isGraphqlWsContext(ctx)
+                ? { req: undefined, userId: resolveGraphqlWsUserId(ctx) }
+                : { req: ctx.req },
+          }),
+        ]
+      : []),
     NestjsProfilingModule,
     NestjsRbacModule,
     NestjsRepositoriesModule,
@@ -140,66 +190,106 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
         ]
       : []),
 
-    // 🧩 Application Modules
-    AgenticTestQueueModule,
-    CodeIndexQueueModule,
-    CspReportsModule,
-    DailyStatsQueueModule,
-    DatabaseBackupQueueModule,
-    DevelopmentModule,
-    DocIngestionQueueModule,
-    GeneratorsModule,
-    McpDeveloperModule,
-    PlansQueueModule,
+    // 🧩 Application Modules (queue processors are worker/all; HTTP-facing
+    // modules are api/all — interleaved to preserve the pre-split order)
+    ...(isWorkerLike
+      ? [
+          AgenticTestQueueModule,
+          CodeIndexQueueModule,
+          CspReportsModule,
+          DailyStatsQueueModule,
+          DatabaseBackupQueueModule,
+        ]
+      : []),
+    ...(isApiLike ? [DevelopmentModule] : []),
+    ...(isWorkerLike ? [DocIngestionQueueModule] : []),
+    ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
+    ...(isWorkerLike ? [PlanLifecycleHooksQueueModule, PlansQueueModule] : []),
 
     // 🧩 GraphQL Modules
-    ActivityGraphqlModule,
-    AgenticWorkflowGraphqlModule,
-    AgentConversationsGraphqlModule,
-    AgentDiscoveryGraphqlModule,
-    AgentsGraphqlModule,
-    AuthGraphqlModule,
-    CodeSearchGraphqlModule,
-    CommitLinksGraphqlModule,
-    ConversationStreamGraphqlModule,
-    CustomPromptsGraphqlModule,
-    DailyStatsGraphqlModule,
-    GeneratorsGraphqlModule,
-    GithubGraphqlModule,
-    HealthGraphqlModule,
-    MetricsGraphqlModule,
-    ModelDiscoveryGraphqlModule,
-    NotesGraphqlModule,
-    NotificationsGraphqlModule,
-    PlanEmbeddingsGraphqlModule,
-    PlanOutputStreamGraphqlModule,
-    PlansGraphqlModule,
-    ProjectsGraphqlModule,
-    QueueJobLogsGraphqlModule,
-    QueuesGraphqlModule,
-    RolesGraphqlModule,
-    ServiceAccountsGraphqlModule,
-    SearchGraphqlModule,
-    TaskEmbeddingsGraphqlModule,
-    TasksGraphqlModule,
-    TranscriptionStreamGraphqlModule,
-    UsersGraphqlModule,
-    WorkspaceSettingsGraphqlModule,
-  ],
-  providers: [
-    GlobalClsAuthHook,
-    GlobalAuthGuard,
-    GqlJwtAuthGuard,
-    ServiceAccountAuthService,
-    {
-      provide: APP_GUARD,
-      useClass: GlobalAuthGuard,
-    },
-    {
-      multi: true,
-      provide: APP_INTERCEPTOR,
-      useClass: EmitNotificationInterceptor,
-    } as Provider,
-  ],
+    ...(isApiLike
+      ? [
+          ActivityGraphqlModule,
+          AgenticWorkflowGraphqlModule,
+          AgentConversationsGraphqlModule,
+          AgentDiscoveryGraphqlModule,
+          AgentsGraphqlModule,
+          AuthGraphqlModule,
+          CodeSearchGraphqlModule,
+          CommitLinksGraphqlModule,
+          ConversationStreamGraphqlModule,
+          CustomPromptsGraphqlModule,
+          DailyStatsGraphqlModule,
+          GeneratorsGraphqlModule,
+          GithubGraphqlModule,
+          HealthGraphqlModule,
+          MetricsGraphqlModule,
+          ModelDiscoveryGraphqlModule,
+          NotesGraphqlModule,
+          NotificationsGraphqlModule,
+          PlanEmbeddingsGraphqlModule,
+          PlanOutputStreamGraphqlModule,
+          PlansGraphqlModule,
+          ProjectsGraphqlModule,
+          QueueJobLogsGraphqlModule,
+          QueuesGraphqlModule,
+          RolesGraphqlModule,
+          ServiceAccountsGraphqlModule,
+          SearchGraphqlModule,
+          TaskEmbeddingsGraphqlModule,
+          TasksGraphqlModule,
+          TranscriptionStreamGraphqlModule,
+          UsersGraphqlModule,
+          WorkspaceSettingsGraphqlModule,
+        ]
+      : []),
+  ];
+};
+
+/**
+ * @description The historical single-process composition (PROCESS_ROLE=all).
+ */
+@Module({
+  imports: buildImports(PROCESS_ROLES.all),
+  providers: appProviders,
 })
 export class AppModule {}
+
+/**
+ * @description HTTP/GraphQL + queue producers, no BullMQ processors
+ * (PROCESS_ROLE=api).
+ */
+@Module({
+  imports: buildImports(PROCESS_ROLES.api),
+  providers: appProviders,
+})
+export class ApiAppModule {}
+
+/**
+ * @description BullMQ processors only, no HTTP/GraphQL surface
+ * (PROCESS_ROLE=worker).
+ */
+@Module({
+  imports: buildImports(PROCESS_ROLES.worker),
+  providers: appProviders,
+})
+export class WorkerAppModule {}
+
+/**
+ * @description Role-gated composition root consumed by the single `main.ts`
+ * bootstrap (no duplicate worker entrypoint). Returns a STATIC module class —
+ * see {@link buildImports} for why a DynamicModule would reorder the schema.
+ */
+export const buildAppModule = ({
+  role,
+}: {
+  role: ProcessRole;
+}): typeof AppModule | typeof ApiAppModule | typeof WorkerAppModule => {
+  if (role === PROCESS_ROLES.api) {
+    return ApiAppModule;
+  }
+  if (role === PROCESS_ROLES.worker) {
+    return WorkerAppModule;
+  }
+  return AppModule;
+};

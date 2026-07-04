@@ -69,6 +69,9 @@ export class WorkflowLifecycleDispatcherFactory
   async onModuleInit(): Promise<void> {
     this.queueEvents = new QueueEvents(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME, {
       connection: this.lifecycleHooksQueue.opts.connection,
+      // Reuse the injected queue's environment-scoped prefix so these events
+      // observe the same keyspace the producer writes to.
+      prefix: this.lifecycleHooksQueue.opts.prefix,
     });
 
     await this.queueEvents.waitUntilReady();

@@ -109,6 +109,27 @@ the **source checkout** (the repo the worktree was created from — exported as
 into the worktree's root `.env` and `applications/openthrottle-server/.env`.
 Empty/placeholder source values are skipped, and the secret is never echoed.
 
+## openthrottle-mcp server targeting (stable-first)
+
+MCP plan/task CRUD is **checkout-agnostic**: every checkout shares the host
+Postgres, so reads and writes land in the same data no matter which server
+answers. Which server the MCP talks to is therefore purely a
+liveness/resilience choice — and `scripts/run-openthrottle-mcp.sh` resolves
+**stable-first**: the main checkout's server (root `.env`
+`OPENTHROTTLE_SERVER_APP_URL`), then a running docker `server` container, then
+this worktree's server, then the canonical `http://localhost:6021`. Restarting
+a worktree's server-under-test never interrupts MCP tooling because the MCP
+isn't pointed at it in the first place.
+
+Set `OT_MCP_TARGET=worktree` to prefer this worktree's server instead (e.g.
+when exercising server changes through the MCP itself); the stable server
+remains the fallback.
+
+Execution isolation is deliberately **not** handled here: which worker executes
+a plan run is decided by the per-checkout BullMQ queue prefix
+(`OT_QUEUE_PREFIX` / derived from `OT_CONTAINER_PREFIX` — see
+`@openthrottle/nestjs-bullmq`), not by MCP server targeting.
+
 ## Files
 
 - `scripts/worktree_ports.sh` — allocation helper (sourced, not executed).

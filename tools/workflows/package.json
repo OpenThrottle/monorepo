@@ -85,5 +85,12 @@
     "postbuild": "chmod +x ./dist/src/bin/*.js"
   },
   "types": "./src/index.ts",
+  "typesVersions": {
+    "*": {
+      "doc-ingestion": [
+        "./dist/src/doc-ingestion/index.d.ts"
+      ]
+    }
+  },
   "version": "1.0.0"
 }

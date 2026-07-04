@@ -8,6 +8,7 @@ import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
@@ -294,6 +295,9 @@ export class QueuesService implements OnModuleDestroy {
     try {
       const queue = new BullQueue<DynamicJobData, void>(trimmed, {
         connection: { host, port },
+        // Same environment-scoped prefix as the DI-registered queues so
+        // dynamic queues stay inside this checkout's keyspace.
+        prefix: resolveQueuePrefix(),
       });
 
       this.dynamicQueues.set(trimmed, queue);

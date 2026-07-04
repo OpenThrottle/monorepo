@@ -20,7 +20,8 @@ export function spawnDatabaseBackup(
   const { cwd, onStderr, onStdout, script } = options;
 
   return new Promise((resolve, reject) => {
-    const child = spawn('pnpm', ['run', script], {
+    // Allow it to run the -w (workspace) command in the root package.json
+    const child = spawn('pnpm', ['-w', 'run', script], {
       cwd,
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],

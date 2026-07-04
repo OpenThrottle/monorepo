@@ -1,20 +1,23 @@
-import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NotificationsModule } from '../../notifications/notifications.module';
-import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
+import { DailyStatsQueueProducerModule } from './daily-stats-queue-producer.module';
 import { DailyStatsProcessor } from './daily-stats.processor';
 import { DailyStatsRepeatableService } from './daily-stats-repeatable.service';
 
+/**
+ * @description Processor half of the daily-stats queue (WorkerHost + repeatable
+ * scheduler). Loaded only under PROCESS_ROLE worker/all; enqueue-only consumers
+ * import {@link DailyStatsQueueProducerModule} instead. The repeatable
+ * registration lives with the processor so an api-only process doesn't create
+ * schedules no worker in this prefix would consume.
+ */
 @Module({
-  exports: [BullModule],
+  exports: [DailyStatsQueueProducerModule],
   imports: [
+    DailyStatsQueueProducerModule,
     LoggerModule,
-    NestjsBullmqModule.registerQueue(DAILY_STATS_QUEUE_NAME),
-    NestjsBullmqBoardModule.forFeature(DAILY_STATS_QUEUE_NAME),
     NestjsRepositoriesModule,
     NotificationsModule,
   ],
