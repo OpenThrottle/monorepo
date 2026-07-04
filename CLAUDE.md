@@ -17,7 +17,7 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ```bash
 ./scripts/setup.sh                                  # full environment setup/reset
 pnpm run database:start                             # Postgres + Redis via docker compose
-pnpm run database:migrate                           # backup + run migrations
+pnpm run database:migrate                           # run migrations (does NOT back up; run database:backup first)
 pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
 
@@ -52,8 +52,8 @@ The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.m
 
 Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **root `schema.gql`**. CI fails on drift. After changing GraphQL types/resolvers/documents:
 
-1. Run `pnpm nx run openthrottle-server:dev` until bootstrap (writes `applications/openthrottle-server/schema.gql`), then stop.
-2. `cp applications/openthrottle-server/schema.gql schema.gql`
+1. Run `pnpm nx run openthrottle-server:dev` until bootstrap, then stop. `autoSchemaFile` is cwd-relative and Nx runs from the workspace root, so boot writes the **root** `schema.gql` (not the app copy).
+2. `cp schema.gql applications/openthrottle-server/schema.gql` (sync the app copy from the freshly written root)
 3. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
 4. Commit both schema files and all `__generated__` output.
 
