@@ -44,7 +44,6 @@
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-workflows": "workspace:^",
     "@tools/workflows": "workspace:^",
-    "@vscode/ripgrep": "catalog:",
     "bullmq": "catalog:",
     "chokidar": "catalog:",
     "dataloader": "catalog:",
@@ -55,7 +54,6 @@
     "pg": "catalog:",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
-    "ts-morph": "catalog:",
     "typeorm": "catalog:",
     "zod": "catalog:"
   },
