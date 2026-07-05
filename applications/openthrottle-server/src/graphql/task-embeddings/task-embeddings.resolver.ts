@@ -13,6 +13,10 @@ import {
 import { TaskEmbeddingObject } from './task-embedding.object';
 import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
+/** Default and hard ceiling for the unbounded list query (bounds API memory). */
+const DEFAULT_LIST_LIMIT = 1000;
+const MAX_LIST_LIMIT = 1000;
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => TaskEmbeddingObject)
 export class TaskEmbeddingsResolver {
@@ -53,9 +57,18 @@ export class TaskEmbeddingsResolver {
     @Args('input', { type: () => TaskEmbeddingsByTaskInput })
     input: TaskEmbeddingsByTaskInput,
   ): Promise<TaskEmbedding[]> {
-    const entities = await this.taskEmbeddingsService
-      .getRepository()
-      .find({ order: { createdAt: 'ASC' }, where: { taskId: input.taskId } });
+    const take = Math.min(
+      Math.max(1, input.limit ?? DEFAULT_LIST_LIMIT),
+      MAX_LIST_LIMIT,
+    );
+    const skip = Math.max(0, input.offset ?? 0);
+
+    const entities = await this.taskEmbeddingsService.getRepository().find({
+      order: { createdAt: 'ASC' },
+      skip,
+      take,
+      where: { taskId: input.taskId },
+    });
 
     return entities;
   }

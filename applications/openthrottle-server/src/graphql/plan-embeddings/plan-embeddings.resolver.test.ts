@@ -138,6 +138,57 @@ describe('PlanEmbeddingsResolver', () => {
 
       expect(result).toEqual([]);
     });
+
+    test('applies the default cap (take 1000, skip 0) when no limit/offset', async () => {
+      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.planEmbeddings({ planId: mockPlanEmbedding.planId });
+
+      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 1000 }),
+      );
+    });
+
+    test('passes through an explicit limit/offset', async () => {
+      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.planEmbeddings({
+        limit: 50,
+        offset: 10,
+        planId: mockPlanEmbedding.planId,
+      });
+
+      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 50 }),
+      );
+    });
+
+    test('clamps a limit above the max down to 1000', async () => {
+      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.planEmbeddings({
+        limit: 5000,
+        planId: mockPlanEmbedding.planId,
+      });
+
+      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 1000 }),
+      );
+    });
+
+    test('clamps a non-positive limit up to 1 and a negative offset to 0', async () => {
+      vi.mocked(planEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.planEmbeddings({
+        limit: 0,
+        offset: -5,
+        planId: mockPlanEmbedding.planId,
+      });
+
+      expect(planEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 1 }),
+      );
+    });
   });
 
   describe('plan (ResolveField)', () => {
