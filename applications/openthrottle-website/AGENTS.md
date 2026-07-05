@@ -1,6 +1,6 @@
 # openthrottle-website — agent notes
 
-Marketing and landing site (React Router v7, flat routes): home page, markdown docs, FAQ,
+Marketing and landing site (React Router v8, flat routes): home page, markdown docs, FAQ,
 component demos, and a `sitemap.xml` resource route. Public and unauthenticated; the smallest
 app in the family (two workspace deps: `@openthrottle/graphql-codegen`,
 `@openthrottle/react-router-docs`).

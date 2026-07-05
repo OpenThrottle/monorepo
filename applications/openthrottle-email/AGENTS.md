@@ -1,6 +1,6 @@
 # openthrottle-email — agent notes
 
-Web email client UI (inbox, compose, drafts, sent, trash, search) built as a React Router v7
+Web email client UI (inbox, compose, drafts, sent, trash, search) built as a React Router v8
 app with flat file-based routes. UI-first: all mail data is mock until the real API exists;
 only health/metrics/auth documents actually hit the GraphQL server.
 

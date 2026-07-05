@@ -1,6 +1,6 @@
 # openthrottle-developer — agent notes
 
-The flagship developer portal (React Router v7 + Vite): plans, tasks, projects, notes,
+The flagship developer portal (React Router v8 + Vite): plans, tasks, projects, notes,
 generators, prompts, pull requests, the in-app IDE, and repo-skills discovery. Talks only to
 `openthrottle-server` over GraphQL. See [README.md](./README.md) for the feature tour and
 [docs/monorepo/openthrottle-developer-vite-devtools.md](../../docs/monorepo/openthrottle-developer-vite-devtools.md)

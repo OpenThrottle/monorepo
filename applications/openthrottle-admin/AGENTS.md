@@ -1,6 +1,6 @@
 # openthrottle-admin — agent notes
 
-The admin UI (React Router v7 + Vite): users, roles, and permissions (RBAC) backed by
+The admin UI (React Router v8 + Vite): users, roles, and permissions (RBAC) backed by
 `openthrottle-server` over GraphQL. See [README.md](./README.md).
 
 **Consumed by:** nothing — deployable app (dev port 6022; env in [.env.default](./.env.default)).
