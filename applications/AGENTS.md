@@ -25,4 +25,4 @@ Apps with `tests/e2e/` run Maestro flows via `pnpm nx run <app>:test-e2e` (confi
 
 ## Server/schema gotcha that affects everyone
 
-`autoSchemaFile` is the cwd-relative string `'schema.gql'` (set in `packages/nestjs-graphql`), so booting `pnpm nx run openthrottle-server:dev` from the workspace root rewrites the **root** `schema.gql`. Keep `openthrottle-server/schema.gql` and the root copy in sync — CI fails on drift.
+`autoSchemaFile` is the cwd-relative string `'schema.gql'` (set in `packages/nestjs-graphql`), and the `openthrottle-server` `dev`/`start` targets run with `cwd` at the project root, so booting `pnpm nx run openthrottle-server:dev` writes `applications/openthrottle-server/schema.gql`. That is the single committed schema; every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. Boot, then run consumer codegen and commit both.

@@ -4,8 +4,8 @@ The NestJS code-first GraphQL API and the schema owner for the whole platform. S
 [README.md](./README.md) for env vars, the CLS request-user model, and Stripe webhook wiring.
 
 **Consumed by:** no workspace package lists it as a dependency; every client (the React Router
-apps, `packages/openthrottle-mcp`) consumes its schema through the committed root `schema.gql`
-plus codegen.
+apps, `packages/openthrottle-mcp`) consumes its schema through the committed
+`applications/openthrottle-server/schema.gql` plus codegen.
 
 ## Commands
 
@@ -36,13 +36,13 @@ plus codegen.
 
 ## Invariants & gotchas
 
-- **Schema regeneration direction:** `autoSchemaFile: 'schema.gql'` (default in
-  `@openthrottle/nestjs-graphql`) is cwd-relative, and the Nx `dev`/`start` targets run from the
-  workspace root — so booting the server rewrites the **repo-root** `schema.gql`, not
-  `applications/openthrottle-server/schema.gql`. Root CLAUDE.md's `cp` step is inverted for
-  Nx-run boots: after boot, copy root → app copy to keep them in sync, then run consumer
-  codegen. The `verify-graphql-schema-sync` target is currently an intentional no-op (early
-  return in `scripts/verify-graphql-schema-sync.ts`), so it will not catch drift for you.
+- **Schema regeneration:** `autoSchemaFile: 'schema.gql'` (default in
+  `@openthrottle/nestjs-graphql`) is cwd-relative, and the Nx `dev`/`start` targets run with
+  `cwd` at the project root — so booting the server writes the app copy
+  `applications/openthrottle-server/schema.gql`. That is the single committed schema file;
+  every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. Boot, then run
+  consumer codegen (`nx affected --target=codegen-graphql,codegen-react-router`) and commit
+  both. (There is no repo-root `schema.gql` and no sync gate — both were retired.)
 - Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
 - TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
   the `databases/migrations/` files it matches. A schema change means a new SQL migration in
@@ -61,7 +61,7 @@ plus codegen.
 
 ## Don't
 
-- Don't hand-edit either `schema.gql` — both are generated; boot the server to regenerate.
+- Don't hand-edit `schema.gql` — it's generated; boot the server to regenerate.
 - Don't add a global prefix or a validation pipe casually; webhook routing and GraphQL both
   depend on the current bootstrap shape (see comments in `src/main.ts`).
 

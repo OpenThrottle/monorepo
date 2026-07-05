@@ -169,15 +169,6 @@
             "PROCESS_ROLE": "worker"
           }
         }
-      },
-      "verify-graphql-schema-sync": {
-        "cache": false,
-        "description": "Verify the committed root schema.gql matches the server code-first schema; fails on drift.",
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "pnpm exec tsx ./scripts/verify-graphql-schema-sync.ts",
-          "cwd": "{workspaceRoot}"
-        }
       }
     }
   },

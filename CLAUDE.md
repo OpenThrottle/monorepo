@@ -50,12 +50,11 @@ The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.m
 
 ### GraphQL schema + codegen flow
 
-Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **root `schema.gql`**. CI fails on drift. After changing GraphQL types/resolvers/documents:
+Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`** (via `@openthrottle/graphql-codegen`'s `defineCodegen`). CI fails on codegen drift. After changing GraphQL types/resolvers/documents:
 
-1. Run `pnpm nx run openthrottle-server:dev` until bootstrap, then stop. `autoSchemaFile` is cwd-relative and Nx runs from the workspace root, so boot writes the **root** `schema.gql` (not the app copy).
-2. `cp schema.gql applications/openthrottle-server/schema.gql` (sync the app copy from the freshly written root)
-3. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
-4. Commit both schema files and all `__generated__` output.
+1. Run `pnpm nx run openthrottle-server:dev` until bootstrap, then stop. The `dev`/`start` targets run with `cwd` at the project root, so `autoSchemaFile: 'schema.gql'` writes `applications/openthrottle-server/schema.gql` — the single committed schema file.
+2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
+3. Commit the app `schema.gql` and all `__generated__` output.
 
 Never remove/change types on existing fields without a migration plan — use `@deprecated(reason: "...")`.
 

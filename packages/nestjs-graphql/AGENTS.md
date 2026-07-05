@@ -24,8 +24,9 @@ and the subscription topic-name helpers.
 ## Invariants & gotchas
 
 - **This package owns the `autoSchemaFile: 'schema.gql'` default.** The path is cwd-relative and
-  Nx runs `openthrottle-server` from the workspace root, so server boot rewrites the **repo-root**
-  `schema.gql` (consumer side documented in
+  the `openthrottle-server` `dev`/`start` targets run with `cwd` at the project root, so server
+  boot writes `applications/openthrottle-server/schema.gql` — the single committed schema file
+  (consumer side documented in
   [applications/openthrottle-server/AGENTS.md](../../applications/openthrottle-server/AGENTS.md)).
   Changing this default moves where every consumer's schema lands and breaks the committed-schema
   codegen flow. It appears twice in the module file (`DEFAULT_DRIVER_CONFIG` and a literal inside

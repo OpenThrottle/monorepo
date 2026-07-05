@@ -17,9 +17,9 @@ GitHub REST access (`GitHubService`: pulls, issues, reviews) plus a GraphQL feat
 ## Invariants & gotchas
 
 - **The GraphQL objects/inputs here land in the server's schema.** Changing anything in
-  `src/graphql/` changes the committed root `schema.gql` — the full schema/codegen flow from the
-  root docs applies (boot server, sync schema copies, run consumer codegen), and schema-evolution
-  rules (deprecate, never break) apply too.
+  `src/graphql/` changes the committed `applications/openthrottle-server/schema.gql` — the full
+  schema/codegen flow from the root docs applies (boot server, run consumer codegen), and
+  schema-evolution rules (deprecate, never break) apply too.
 - `GitHubService` reads `GITHUB_TOKEN` via `ConfigService` at request time; the consuming app
   must have `ConfigModule` available (the server's is global). There is no module-level token
   option.
