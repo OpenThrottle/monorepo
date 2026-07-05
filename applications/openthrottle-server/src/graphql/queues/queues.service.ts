@@ -331,10 +331,6 @@ export class QueuesService implements OnModuleDestroy {
       return this.docIngestionQueue as unknown as Queue<AnyJobData, void>;
     }
 
-    if (name === DOC_INGESTION_QUEUE_NAME) {
-      return this.docIngestionQueue as unknown as Queue<AnyJobData, void>;
-    }
-
     if (name === PLANS_QUEUE_NAME) {
       return this.plansQueue as Queue<AnyJobData, void>;
     }
