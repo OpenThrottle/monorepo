@@ -1,18 +1,16 @@
-import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { AGENTIC_TEST_QUEUE_NAME } from './agentic-test.constants';
+import { AgenticTestQueueProducerModule } from './agentic-test-queue-producer.module';
 import { AgenticTestProcessor } from './agentic-test.processor';
 
+/**
+ * @description Processor half of the agentic-test queue (WorkerHost). Loaded
+ * only under PROCESS_ROLE worker/all; enqueue-only consumers import
+ * {@link AgenticTestQueueProducerModule} instead.
+ */
 @Module({
-  exports: [BullModule],
-  imports: [
-    LoggerModule,
-    NestjsBullmqModule.registerQueue(AGENTIC_TEST_QUEUE_NAME),
-    NestjsBullmqBoardModule.forFeature(AGENTIC_TEST_QUEUE_NAME),
-  ],
+  exports: [AgenticTestQueueProducerModule],
+  imports: [AgenticTestQueueProducerModule, LoggerModule],
   providers: [AgenticTestProcessor],
 })
 export class AgenticTestQueueModule {}

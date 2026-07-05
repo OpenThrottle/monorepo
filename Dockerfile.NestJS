@@ -118,8 +118,11 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 # No GCS credentials in this stage: force the remote cache off. NODE_ENV=production
 # for this command only — the codegen-graphql configs read the committed schema.gql
 # but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
+# --parallel=1: several build targets nest `nx run <proj>:build:tsc`, and with the
+# daemon off each nested invocation recomputes the project graph; run in parallel
+# they race on tmp/**/tsconfig.generated.*.json (ENOENT) and readCachedProjectGraph.
 RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
-  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool --parallel=1
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 

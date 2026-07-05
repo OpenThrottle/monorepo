@@ -4,11 +4,18 @@
 # contains only JSON-RPC for the MCP client.
 # Sets WORKTREE_ID from git worktree root basename so each worktree advertises a distinct MCP server name.
 #
-# Resolves API_URL to the first REACHABLE OpenThrottle server rather than trusting a
-# per-worktree .env port that may point at a server that was never started. Worktrees
-# share the main checkout's server/Postgres/Redis and do NOT start their own server, so
-# the .env's rewritten OPENTHROTTLE_SERVER_APP_URL (e.g. http://localhost:7011) is a dead
-# port — see plan "debug(worktree): openthrottle-mcp pins to dead allocated server port".
+# Resolves API_URL to the first REACHABLE OpenThrottle server, preferring the STABLE
+# (main/root checkout) server over this worktree's. MCP CRUD is checkout-agnostic —
+# every checkout shares the host Postgres, so plans/tasks reads and writes land in the
+# same data no matter which server answers. Server choice is therefore purely a
+# liveness/resilience concern: pin to the stable server so restarting a worktree's
+# server-under-test never interrupts tooling mid-session. Execution isolation (which
+# worker runs a plan) is NOT decided here — that's the per-checkout BullMQ queue prefix
+# (OT_QUEUE_PREFIX / OT_CONTAINER_PREFIX in @openthrottle/nestjs-bullmq).
+#
+# Set OT_MCP_TARGET=worktree to prefer this worktree's server instead (e.g. when
+# testing server changes through the MCP itself); the stable server remains the
+# fallback when the worktree's is unreachable, and vice versa.
 set -e
 
 log() { echo "$@" > /dev/stderr; }
@@ -33,33 +40,46 @@ read_env_var() {
     | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//"
 }
 
-# Build candidate server URLs in priority order.
+# Build candidate server URLs in priority order (STABLE-FIRST by default; see header).
 candidates=()
 
-# 1. This worktree's own .env, IF present and set (preserves a genuine per-worktree server).
-if wt_url=$(read_env_var "./.env" OPENTHROTTLE_SERVER_APP_URL) && [ -n "$wt_url" ]; then
-  candidates+=("$wt_url")
-fi
+# This worktree's own .env URL (may be a dead allocated port if no server was started).
+wt_url=$(read_env_var "./.env" OPENTHROTTLE_SERVER_APP_URL) || wt_url=""
 
-# 2. The main/root checkout's .env (the shared canonical server). The git common dir is
-#    <main>/.git even from inside a linked worktree, so its parent is the main checkout.
+# The main/root checkout's .env (the shared STABLE server). The git common dir is
+# <main>/.git even from inside a linked worktree, so its parent is the main checkout.
+root_url=""
 common_dir=$(git rev-parse --git-common-dir 2>/dev/null || true)
 if [ -n "$common_dir" ]; then
   root_repo=$(cd "$(dirname "$common_dir")" 2>/dev/null && pwd || true)
-  if [ -n "$root_repo" ] && root_url=$(read_env_var "$root_repo/.env" OPENTHROTTLE_SERVER_APP_URL) && [ -n "$root_url" ]; then
-    candidates+=("$root_url")
+  if [ -n "$root_repo" ]; then
+    root_url=$(read_env_var "$root_repo/.env" OPENTHROTTLE_SERVER_APP_URL) || root_url=""
   fi
 fi
 
-# 3. A running docker "server" container's published host port (covers the reported case
-#    where neither .env matched the only live server).
+if [ "${OT_MCP_TARGET:-}" = "worktree" ]; then
+  # Explicit opt-in: prefer this worktree's server (testing server changes via MCP).
+  [ -n "$wt_url" ] && candidates+=("$wt_url")
+  [ -n "$root_url" ] && candidates+=("$root_url")
+else
+  # Default: stable-first, so restarting the worktree SUT never interrupts tooling.
+  [ -n "$root_url" ] && candidates+=("$root_url")
+fi
+
+# A running docker "server" container's published host port (covers the case where
+# neither .env matched the only live server).
 if command -v docker >/dev/null 2>&1; then
   dport=$(docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
     | grep -i 'server' | head -n1 | grep -oE ':[0-9]+->' | head -n1 | tr -d ':->')
   [ -n "$dport" ] && candidates+=("http://localhost:$dport")
 fi
 
-# 4. Canonical fallback.
+# Worktree server as liveness fallback when the stable server is down.
+if [ "${OT_MCP_TARGET:-}" != "worktree" ] && [ -n "$wt_url" ]; then
+  candidates+=("$wt_url")
+fi
+
+# Canonical fallback.
 candidates+=("http://localhost:6021")
 
 probe() { curl -fsS -m 2 -o /dev/null "$1/health" 2>/dev/null; }

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "compilerOptions": {
+    "builder": {
+      "type": "swc",
+      "options": {
+        "ignore": ["**/*.test.ts"]
+      }
+    },
+    "deleteOutDir": true,
+    "tsConfigPath": "tsconfig.app.json",
+    "typeCheck": false,
+    "webpack": false
+  },
+  "generateOptions": {
+    "caseNaming": "camel",
+    "flat": false,
+    "spec": true,
+    "specFileSuffix": "test"
+  },
+  "language": "ts",
+  "sourceRoot": "src"
+}

@@ -255,3 +255,33 @@ Verified during implementation (this branch):
 - **Dev profile:** server-dev `/health` 200 in-container with watchers live; full dev stack confirmed running by the maintainer. Cold-start fixes (remote-cache off, package `dist` prebuild, `procps`/`git`, healthcheck-gated startup + heap cap) baked into the dev image stages.
 - **Consumer migrate/seed:** the migrations image, built from `Dockerfile.Migrations` and run against the live compose Postgres, applied all 52 `databases/migrations/*.sql` idempotently to "Migrations completed."; consumer compose `config` resolves clean.
 - **Production parity:** prod and dev compose `config` both resolve clean; the prod-service changes are additive (a `prod` profile label, the identity-by-default bridge env, and the workspace mount). A fresh `up --build` prod smoke is the one item left for a clean environment (it collides with a developer's already-running stack on the shared published ports) — run `scripts/docker-smoke-test.sh prod` on a free machine to confirm.
+
+## 10. Workspace mounting: Model A (validated) and Model C (future)
+
+**Model A — host-mounted workspaces, in-container execution — is the shipped
+end-user model.** DX contract:
+
+- The user keeps their projects in (or symlinked under) one parent directory
+  and sets `OPENTHROTTLE_WORKSPACES_DIR` to it in `.env`. Compose bind-mounts
+  it read-write at `/workspaces`.
+- Projects are registered through the UI/GraphQL **by their host path**; the
+  DB stays host-truthful and the `toHostPath`/`toContainerPath` prefix mapping
+  (§6.2) translates at the filesystem boundary. The user edits on the host
+  with their own editor while OT reads, searches, executes — and any worktrees
+  OT creates under the mount persist on the host.
+
+Validated end-to-end on the dev profile (plan `c4830d82`, docker-fidelity
+task): fresh `server-dev` image boot (worktree override → host Postgres/Redis;
+per-checkout BullMQ prefix live in-container); a sample host project mounted
+and **registered by host path from inside the container** (mapping validation
+passed); `enqueuePlanRun` with a host `workingDirectory` accepted; the
+**in-container** plans worker consumed the job, ran the full
+status/metrics/plan_runs bookkeeping, and reached agent iteration 1. The run
+stops there when no agent CLI is present in the image — agent CLI binaries +
+credentials inside the container are governed by `tools/workflows` design docs
+and are explicitly out of this bridge's scope (§6.5); provide them (or run a
+host-side worker for the same prefix) to complete agent execution in-container.
+
+**Model C — running the user's IDE inside the container — is the north-star
+direction and explicitly out of scope here.** Nothing in Model A blocks it:
+the mount and path mapping are the same substrate.

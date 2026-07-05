@@ -19,5 +19,5 @@ export const getCspOptions = (): BuildCspOptions => ({
   additionalImgSrc: [],
   additionalScriptSrc: [],
   apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
-  reportOnly: true,
+  reportOnly: false,
 });

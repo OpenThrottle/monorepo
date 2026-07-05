@@ -60,6 +60,10 @@ const defaultJobOptions = {
           username: redis.username,
         },
         defaultJobOptions,
+        // Environment-scoped key prefix: registerQueue queues, @Processor
+        // workers, and QueueEvents all inherit it from this root config, so
+        // checkouts sharing one Redis cannot consume each other's jobs.
+        prefix: redis.queuePrefix,
       }),
     }),
   ],

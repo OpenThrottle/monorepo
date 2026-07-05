@@ -129,6 +129,7 @@ catalog:
   '@schedule-x/resize': '^3.7.3'
   '@schedule-x/theme-shadcn': '^4.6.0'
   '@swc-node/register': '1.11.1'
+  '@swc/cli': '^0.7.8'
   '@swc/core': '^1.15.24'
   '@tailwindcss/vite': '^4.1.18'
   '@tanstack/query-sync-storage-persister': '^5.90.21'

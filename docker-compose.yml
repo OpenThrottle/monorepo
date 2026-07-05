@@ -81,8 +81,12 @@ x-server: &server
   APP_URL_INTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
   APP_URL_EXTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
   APP_VERSION: ${APP_VERSION}
-  BULLMQ_BOARD_ADMIN_PASSWORD: 'admin'
-  BULLMQ_BOARD_ADMIN_USERNAME: 'admin'
+  # The Bull Board dashboard is enabled whenever NODE_ENV != production and
+  # hard-requires admin credentials at boot. Their canonical home is the
+  # app's .env, which is (correctly) never baked into images — so pass them
+  # through here with dev-only defaults for this dev-profile service.
+  BULLMQ_BOARD_ADMIN_PASSWORD: ${BULLMQ_BOARD_ADMIN_PASSWORD:-openthrottle-dev}
+  BULLMQ_BOARD_ADMIN_USERNAME: ${BULLMQ_BOARD_ADMIN_USERNAME:-admin}
   CORS_CREDENTIALS: ${OPENTHROTTLE_SERVER_CORS_CREDENTIALS}
   CORS_ORIGINS: ${OPENTHROTTLE_SERVER_CORS_ORIGINS}
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
@@ -121,14 +125,14 @@ services:
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # the IDE engine runs in this SSR process and reads registered checkouts.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
     image: openthrottle/developer:latest
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     profiles: [prod]
     restart: always
     volumes:
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
     # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
 
@@ -188,7 +192,7 @@ services:
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # the IDE engine runs in this SSR process and reads registered checkouts.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
       npm_config_store_dir: /pnpm/store
     image: openthrottle/developer:dev
     ports:
@@ -197,7 +201,7 @@ services:
     restart: 'no'
     volumes:
       - pnpm_store:/pnpm/store
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
 
   #############################################################################
   #
@@ -288,7 +292,7 @@ services:
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # registered checkout paths are validated/searched/executed in this process.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -307,7 +311,7 @@ services:
     profiles: [prod]
     restart: always
     volumes:
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
     # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
 
@@ -375,7 +379,7 @@ services:
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # registered checkout paths are validated/searched/executed in this process.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
-      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}
       npm_config_store_dir: /pnpm/store
     # The development image has no in-image HEALTHCHECK (that lives in the
     # distroless production stage); probe /health with the image's own node.
@@ -400,7 +404,7 @@ services:
     restart: 'no'
     volumes:
       - pnpm_store:/pnpm/store
-      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
       # SSH-based git remotes (optional, Docker Desktop): uncomment to forward the
       # host SSH agent; HTTPS remotes already work via the GITHUB_TOKEN env.
       # - '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock'
