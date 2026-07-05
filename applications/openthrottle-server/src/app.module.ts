@@ -27,6 +27,7 @@ import {
   getOpenthrottleServerDevJsonlLogDirectory,
   isOpenthrottleServerDevJsonlLoggingEnabled,
 } from './config/openthrottle-server-dev-jsonl-logging';
+import { isDevelopmentModuleEnabled } from './config/development-module';
 import { PROCESS_ROLES } from './config/process-role';
 import type { ProcessRole } from './config/process-role';
 import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test-queue.module';
@@ -198,7 +199,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           DatabaseBackupQueueModule,
         ]
       : []),
-    ...(isApiLike ? [DevelopmentModule] : []),
+    ...(isApiLike && isDevelopmentModuleEnabled() ? [DevelopmentModule] : []),
     ...(isWorkerLike ? [DocIngestionQueueModule] : []),
     ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
     ...(isWorkerLike ? [PlanLifecycleHooksQueueModule, PlansQueueModule] : []),
