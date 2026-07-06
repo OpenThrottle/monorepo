@@ -4,15 +4,15 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "bin": {
-    "ai-mcp": "./dist/src/bin.js"
-  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "catalog:",
-    "@openthrottle/node-client": "workspace:^",
-    "zod": "catalog:"
+    "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "openai": "catalog:",
+    "pg": "catalog:",
+    "typeorm": "catalog:"
   },
-  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/openthrottle-mcp for new use.",
+  "description": "Node-only Cortex data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
+  "devDependencies": {},
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -26,54 +26,48 @@
     }
   },
   "main": "./src/index.ts",
+  "name": "@openthrottle/node-client",
   "module": "./src/index.ts",
-  "name": "@openthrottle/ai-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:@openthrottle/ai-mcp",
+      "name:@openthrottle/node-client",
       "production:true",
       "publish:false",
       "technology:nodejs",
-      "technology:typescript",
       "type:package"
     ],
     "targets": {
-      "__dev": {
-        "continuous": true,
-        "executor": "@nx/js:tsc",
-        "options": {
-          "clean": false,
-          "watch": true
-        }
-      },
-      "build": {
-        "executor": "@nx/js:tsc"
-      },
+      "__build": {},
+      "__build-package": {},
       "lint": {},
-      "serve": {
-        "cache": false,
-        "dependsOn": [
-          "build"
-        ],
-        "description": "Run the built ai-mcp server entrypoint (dist/src/bin.js) after build.",
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "node ./dist/src/bin.js",
-          "cwd": "{projectRoot}"
-        }
-      },
       "test": {},
       "typecheck": {},
       "typecheck-tests": {}
     }
   },
+  "peerDependencies": {},
   "private": true,
   "publishConfig": {
-    "access": "restricted"
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},

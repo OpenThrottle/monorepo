@@ -43,23 +43,28 @@ const cortex = vi.hoisted(() => ({
 
 const embedQuery = vi.hoisted(() => vi.fn());
 
-vi.mock('../cortex-client.js', () => ({
-  createTask: cortex.createTask,
-  deleteTask: vi.fn(),
-  deleteTaskEmbeddings: vi.fn(),
-  getChunkById: vi.fn(),
-  getCommitLinksByTaskId: vi.fn(),
-  getRemainingTasksByPlanId: vi.fn(),
-  getTaskById: vi.fn(),
-  getTasksByPlanId: vi.fn(),
-  insertTaskEmbedding: cortex.insertTaskEmbedding,
-  listSources: vi.fn(),
-  listTasksByCategory: vi.fn(),
-  runSemanticSearch: cortex.runSemanticSearch,
-  updateTask: cortex.updateTask,
-}));
+vi.mock('@openthrottle/node-client', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/node-client')>();
 
-vi.mock('../embedding.js', () => ({ embedQuery }));
+  return {
+    ...actual,
+    createTask: cortex.createTask,
+    deleteTask: vi.fn(),
+    deleteTaskEmbeddings: vi.fn(),
+    embedQuery,
+    getChunkById: vi.fn(),
+    getCommitLinksByTaskId: vi.fn(),
+    getRemainingTasksByPlanId: vi.fn(),
+    getTaskById: vi.fn(),
+    getTasksByPlanId: vi.fn(),
+    insertTaskEmbedding: cortex.insertTaskEmbedding,
+    listSources: vi.fn(),
+    listTasksByCategory: vi.fn(),
+    runSemanticSearch: cortex.runSemanticSearch,
+    updateTask: cortex.updateTask,
+  };
+});
 
 const { registerSearchTools } = await import('./search.js');
 const { registerTaskTools } = await import('./tasks.js');

@@ -14,9 +14,9 @@ import {
   insertPlanEmbedding as cortexInsertPlanEmbedding,
   listPlansByStatus,
   updatePlan as cortexUpdatePlan,
-} from '../cortex-client.ts';
-import { embedQuery } from '../embedding.ts';
-import { buildPlanContentForEmbedding } from '../embedding-content.ts';
+} from '@openthrottle/node-client';
+import { embedQuery } from '@openthrottle/node-client';
+import { buildPlanContentForEmbedding } from '@openthrottle/node-client';
 import {
   createPlanInputSchema,
   deletePlanInputSchema,

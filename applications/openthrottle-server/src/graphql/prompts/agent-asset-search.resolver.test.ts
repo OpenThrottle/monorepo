@@ -1,13 +1,10 @@
-import {
-  embedQuery,
-  searchAgentAssets,
-} from '@openthrottle/ai-mcp/src/cortex-server';
+import { embedQuery, searchAgentAssets } from '@openthrottle/node-client';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { AgentAssetSearchResolver } from './agent-asset-search.resolver';
 import { CustomPromptTypeEnum } from './custom-prompt.object';
 
-vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
+vi.mock('@openthrottle/node-client', () => ({
   embedQuery: vi.fn(),
   searchAgentAssets: vi.fn(),
 }));

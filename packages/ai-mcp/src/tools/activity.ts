@@ -5,11 +5,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPostgresConfig } from '../config.ts';
-import type { LastActivityResult as CortexLastActivityResult } from '../cortex-client.ts';
+import type { LastActivityResult as CortexLastActivityResult } from '@openthrottle/node-client';
 import {
   getActivityByDateRange as cortexGetActivityByDateRange,
   getLastActivityForPlanOrTask as cortexGetLastActivityForPlanOrTask,
-} from '../cortex-client.ts';
+} from '@openthrottle/node-client';
 import {
   getActivityByDateInputSchema,
   getLastActivityInputSchema,

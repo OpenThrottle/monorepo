@@ -6,7 +6,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDefaultGitHubUser, resolveActor } from '../config.ts';
-import type { TaskRow } from '../cortex-client.ts';
+import type { TaskRow } from '@openthrottle/node-client';
 import {
   createTask as cortexCreateTask,
   deleteTask as cortexDeleteTask,
@@ -18,9 +18,9 @@ import {
   insertTaskEmbedding as cortexInsertTaskEmbedding,
   listTasksByCategory as cortexListTasksByCategory,
   updateTask as cortexUpdateTask,
-} from '../cortex-client.ts';
-import { embedQuery } from '../embedding.ts';
-import { buildTaskContentForEmbedding } from '../embedding-content.ts';
+} from '@openthrottle/node-client';
+import { embedQuery } from '@openthrottle/node-client';
+import { buildTaskContentForEmbedding } from '@openthrottle/node-client';
 import {
   createTaskInputSchema,
   createTasksInputSchema,

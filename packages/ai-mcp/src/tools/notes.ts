@@ -4,14 +4,14 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { NoteRow } from '../cortex-client.ts';
+import type { NoteRow } from '@openthrottle/node-client';
 import {
   createNote as cortexCreateNote,
   deleteNote as cortexDeleteNote,
   getNoteById as cortexGetNoteById,
   listNotes as cortexListNotes,
   updateNote as cortexUpdateNote,
-} from '../cortex-client.ts';
+} from '@openthrottle/node-client';
 import {
   createNoteInputSchema,
   deleteNoteInputSchema,

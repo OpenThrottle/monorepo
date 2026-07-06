@@ -9,15 +9,13 @@ import {
   PlansService,
 } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories';
-import { embedQuery } from '@openthrottle/ai-mcp/src/cortex-server';
+import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 import { PlanCreationService } from './plan-creation.service';
 
-vi.mock('@openthrottle/ai-mcp/src/cortex-server', async (importOriginal) => {
+vi.mock('@openthrottle/node-client', async (importOriginal) => {
   const mod =
-    await importOriginal<
-      typeof import('@openthrottle/ai-mcp/src/cortex-server')
-    >();
+    await importOriginal<typeof import('@openthrottle/node-client')>();
   return {
     ...mod,
     embedQuery: vi.fn(),
