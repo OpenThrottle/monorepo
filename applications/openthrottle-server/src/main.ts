@@ -89,47 +89,12 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
   /** @external https://docs.nestjs.com/techniques/logger#dependency-injection */
   app.useLogger(logger);
 
-  // Global middleware to set response headers
-  // app.use(setHeadersMiddleware);
-
-  /** @external https://github.com/meabed/graphql-upload-ts */
-  // app.use(
-  //   graphqlUploadExpress({
-  //     maxFileSize: 10_000_000,
-  //     maxFiles: 10,
-  //   }),
-  // );
-
-  // 🚧 We only want this when we're using a REST API, not for GraphQL
-  // /** @external https://docs.nestjs.com/pipes#global-scoped-pipes */
-  // app.useGlobalPipes(
-  //   // Used to validate incoming requests
-  //   new ValidationPipe({
-  //     // Strip any properties that don't decorators (aren't correctly set)
-  //     whitelist: true,
-  //   }),
-  // );
-
   await app.listen(port);
 
   logger.info(
     `\n\n\n  🚀 Application is running on: ${url} (PROCESS_ROLE=${role}) \n\n`,
   );
 }
-
-// /**
-//  * @description Middleware to set response headers
-//  */
-// const setHeadersMiddleware = (
-//   _req: Request,
-//   res: Response,
-//   next: NextFunction,
-// ) => {
-//   res.headers.set('X-App-Name', process.env.APP_NAME!);
-//   res.headers.set('X-App-Version', process.env.APP_VERSION!);
-//
-//   next();
-// };
 
 /**
  * Use a basic "console.error" below to ensure its not swallowed by NestJS

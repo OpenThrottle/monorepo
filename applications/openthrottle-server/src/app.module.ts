@@ -81,9 +81,6 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 
-// import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
-// import { PaymentsModule } from './modules/payments/payments.module';
-
 type AppModuleImports = NonNullable<DynamicModule['imports']>;
 
 const appProviders: Provider[] = [

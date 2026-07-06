@@ -218,7 +218,7 @@ export class WorkspaceSettingsResolver {
     return this.workspaceLocalRepositoriesService.setProject(
       userId,
       input.id,
-      input.projectId,
+      input.projectId ?? null,
     );
   }
 

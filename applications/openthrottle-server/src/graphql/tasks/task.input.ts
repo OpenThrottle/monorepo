@@ -105,49 +105,49 @@ export class CreateTasksInput {
 @InputType()
 export class UpdateTaskInput {
   @Field(() => String, { nullable: true })
-  assignee!: string | null;
+  assignee?: string | null;
 
   @Field(() => String, { nullable: true })
-  category!: string | null;
+  category?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => ID, { description: `Task id to update` })
   id!: string;
 
   @Field(() => ID, { nullable: true })
-  planId!: string | null;
+  planId?: string | null;
 
   @Field(() => String, { nullable: true })
-  project!: string | null;
+  project?: string | null;
 
   @Field(() => ID, {
     description: `Optional. Project UUID. Pass null to clear; omit to leave unchanged.`,
     nullable: true,
   })
-  projectId!: string | null;
+  projectId?: string | null;
 
   @Field(() => String, {
     description: `JSON string of requirements array`,
     nullable: true,
   })
-  requirements!: string | null;
+  requirements?: string | null;
 
   @Field(() => Int, {
     description: `Optional. Execution order within plan (gap-based insert, e.g. 1500 between 1000 and 2000).`,
     nullable: true,
   })
-  sortOrder!: number | null;
+  sortOrder?: number | null;
 
   @Field(() => String, { nullable: true })
-  status!: string | null;
+  status?: string | null;
 
   @Field(() => String, { nullable: true })
-  summary!: string | null;
+  summary?: string | null;
 
   @Field(() => String, { nullable: true })
-  title!: string | null;
+  title?: string | null;
 }
 
 @InputType()

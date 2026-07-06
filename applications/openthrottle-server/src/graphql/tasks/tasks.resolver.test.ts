@@ -10,6 +10,7 @@ import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
+import type { TaskObject } from './task.object';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
 
@@ -97,7 +98,7 @@ describe('TasksResolver', () => {
     taskEmbeddings: [],
     title: 'Add graphql/tasks/',
     updatedAt: new Date('2026-02-01T21:33:51.891Z'),
-  } as Task;
+  } as unknown as Task;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -327,7 +328,7 @@ describe('TasksResolver', () => {
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await resolver.plan(parent);
+      const result = await resolver.plan(parent as unknown as TaskObject);
 
       expect(result).toBeNull();
     });
@@ -394,7 +395,7 @@ describe('TasksResolver', () => {
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await r.plan(parent);
+      const result = await r.plan(parent as unknown as TaskObject);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockTask.planId);
@@ -449,7 +450,7 @@ describe('TasksResolver', () => {
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await r.plan(parent);
+      const result = await r.plan(parent as unknown as TaskObject);
 
       expect(result).toBeNull();
     });

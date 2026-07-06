@@ -2,6 +2,7 @@
  * @description Tests for job-run lifecycle hook GraphQL parsing and enqueue resolution.
  */
 
+import type { JobRunHookPromptProfileNamed } from '@tools/workflows';
 import { describe, expect, it } from 'vitest';
 import {
   jobRunHooksForJobPayload,
@@ -98,7 +99,8 @@ describe('resolveJobRunHooksForEnqueue', () => {
     expect(resolved?.hooks[0]?.phase).toBe('beforeAll');
     expect(
       resolved?.hooks[0]?.kind === 'prompt_profile' &&
-        resolved.hooks[0].prompt === '/agents/seo',
+        (resolved.hooks[0] as JobRunHookPromptProfileNamed).prompt ===
+          '/agents/seo',
     ).toBe(true);
   });
 

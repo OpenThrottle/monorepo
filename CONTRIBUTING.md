@@ -346,24 +346,18 @@ pnpm run check:target-descriptions   # also runs as part of pnpm run check:local
 When you add a target, give it a description in one of two places:
 
 - **A whole family of targets** (e.g. `lint`, `test`, `build`) — set the `description` once on the matching `nx.json` `targetDefaults` entry (by target name, or by executor key like `@nx/js:tsc`). It cascades into every project's resolved target of that name/executor.
-- **A single project-specific target** (e.g. `docker-build`, `verify-graphql-schema-sync`) — set `description` on the target in that project's `package.json` under `nx.targets`.
+- **A single project-specific target** (e.g. `docker-build`) — set `description` on the target in that project's `package.json` under `nx.targets`.
 
 Style: imperative, one sentence, what it does plus any key flag/gotcha (mirror `openthrottle-server`'s `docker-build` / `dev-debug`). The guard skips plugin-**inferred** targets (not editable here — they carry the plugin's own description) and intentionally-**disabled** marker targets (`__`-prefixed, `__DISABLED__`, padded underscores).
 
 ## GraphQL schema and codegen
 
-The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`schema.gql` at the repo root**. CI fails when schema or generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.
+The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`applications/openthrottle-server/schema.gql`** (via the shared `defineCodegen` helper in `@openthrottle/graphql-codegen`). CI fails when generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.
 
 ### When you change the server schema
 
-1. **Regenerate the server copy** — Start the server so NestJS writes `applications/openthrottle-server/schema.gql` (for example `pnpm nx run openthrottle-server:dev`, wait for bootstrap, then stop).
-2. **Sync the repo-root schema** — Root `schema.gql` must match the server file byte-for-byte:
-
-   ```bash
-   cp applications/openthrottle-server/schema.gql schema.gql
-   ```
-
-3. **Regenerate consumer outputs** — Run GraphQL and React Router codegen for affected projects:
+1. **Regenerate the schema** — Start the server so NestJS writes `applications/openthrottle-server/schema.gql` (for example `pnpm nx run openthrottle-server:dev`, wait for bootstrap, then stop). The `dev`/`start` targets run with `cwd` at the project root, so `autoSchemaFile: 'schema.gql'` resolves to this app copy — the single committed schema file.
+2. **Regenerate consumer outputs** — Run GraphQL and React Router codegen for affected projects:
 
    ```bash
    pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel
@@ -375,13 +369,13 @@ The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFil
    pnpm run build:graphql
    ```
 
-4. **Commit schema and generated files** — Include `schema.gql`, `applications/openthrottle-server/schema.gql`, and any updated `__generated__` trees under apps or packages you touched.
+3. **Commit schema and generated files** — Include `applications/openthrottle-server/schema.gql` and any updated `__generated__` trees under apps or packages you touched.
 
 **Schema compatibility:** Do not remove or change types on existing GraphQL fields without a migration plan. Mark unused fields **`@deprecated(reason: "...")`** instead. See [personal-general.mdc](.cursor/rules/personal-general.mdc) (API applications) and `applications/openthrottle-server/docs/SCHEMA_AUDIT.md`.
 
 ### Projects with committed GraphQL codegen
 
-These targets read root `schema.gql` via each project’s `codegen.ts`:
+These targets read the committed `applications/openthrottle-server/schema.gql` via each project’s `codegen.ts`:
 
 | Area                    | Nx project(s)                                                                                                        | Generated output (typical)                           |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -399,9 +393,6 @@ Per-project watch mode during development: `pnpm nx run <project>:codegen-graphq
 From the repo root after `pnpm install`:
 
 ```bash
-# Schema sync (root vs server)
-pnpm nx run openthrottle-server:verify-graphql-schema-sync
-
 # Package-specific generated GraphQL clients
 pnpm nx run-many --target=verify-graphql-codegen \
   --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp

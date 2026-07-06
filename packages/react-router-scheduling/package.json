@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
     "@preact/signals": "catalog:",
     "@schedule-x/calendar": "catalog:",
     "@schedule-x/calendar-controls": "catalog:",

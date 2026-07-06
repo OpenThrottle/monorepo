@@ -30,7 +30,7 @@ import { QueuesService } from './queues.service';
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
   return createMock<Job<RunPlanJobData, void>>({
     data: { planId: 'plan-1' },
-    failedReason: null,
+    failedReason: undefined,
     finishedOn: undefined,
     getState: vi.fn().mockResolvedValue('completed'),
     id: 'job-1',

@@ -6,6 +6,7 @@ import {
   PlansService,
   PlanRunsService,
   Task,
+  type Plan,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,12 +16,13 @@ import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { QueuesService } from '../queues/queues.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
+import type { RalphPlanRunTuningInput } from './plan.input';
 
 const mockPlan = {
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
   jobRunHooks: null,
   status: 'PENDING',
-} as never;
+} as unknown as Plan;
 
 describe('PlanEnqueueService', () => {
   const mockAdd = vi.fn().mockResolvedValue({ id: 'job-1', name: 'run-plan' });
@@ -319,7 +321,7 @@ describe('PlanEnqueueService', () => {
           project: 'applications/openthrottle-server',
           prompt: null,
           promptFile: null,
-          ralphDebugCli: 'verbose',
+          ralphDebugCli: 'verbose' as RalphPlanRunTuningInput['ralphDebugCli'],
           skipWorktreeSetup: null,
           worktree: 'target-one',
           worktreeBase: null,

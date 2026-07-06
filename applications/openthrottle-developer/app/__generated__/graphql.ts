@@ -1042,6 +1042,10 @@ export type ListCustomPromptsInput = {
 };
 
 export type ListPlanOutputStreamChunksInput = {
+  /** Max rows to return (default and hard cap: 1000). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip (pagination offset). */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to list chunks for */
   planId: Scalars['ID']['input'];
 };
@@ -1673,6 +1677,10 @@ export type PlanEmbeddingObject = {
 };
 
 export type PlanEmbeddingsByPlanInput = {
+  /** Max rows to return (default and hard cap: 1000). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip (pagination offset). */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to list embeddings for */
   planId: Scalars['ID']['input'];
 };
@@ -2908,6 +2916,10 @@ export type TaskEmbeddingObject = {
 };
 
 export type TaskEmbeddingsByTaskInput = {
+  /** Max rows to return (default and hard cap: 1000). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip (pagination offset). */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Task id to list embeddings for */
   taskId: Scalars['ID']['input'];
 };

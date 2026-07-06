@@ -14,6 +14,18 @@ export class GetPlanOutputStreamChunkInput {
 export class ListPlanOutputStreamChunksInput {
   @Field(() => ID, { description: `Plan id to list chunks for` })
   planId!: string;
+
+  @Field(() => Int, {
+    description: `Max rows to return (default and hard cap: 1000).`,
+    nullable: true,
+  })
+  limit?: number | null;
+
+  @Field(() => Int, {
+    description: `Rows to skip (pagination offset).`,
+    nullable: true,
+  })
+  offset?: number | null;
 }
 
 @InputType()

@@ -191,7 +191,7 @@ export class ConversationStreamResolver {
 
     const conversationId = await this.resolveConversationId(
       userId,
-      input.conversationId,
+      input.conversationId ?? null,
       message,
     );
 
@@ -338,7 +338,9 @@ export class ConversationStreamResolver {
       });
     }
 
-    const systemPrompt = await this.resolvePersonaSystemPrompt(input.personaId);
+    const systemPrompt = await this.resolvePersonaSystemPrompt(
+      input.personaId ?? null,
+    );
 
     return {
       baseUrl: null,

@@ -4,6 +4,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import type { UpdateUserInput } from './user.input';
 import { UsersResolver } from './users.resolver';
 
 describe('UsersResolver', () => {
@@ -124,7 +125,7 @@ describe('UsersResolver', () => {
         email: null,
         githubUsername: 'new-username',
         id: mockUser.id,
-      });
+      } as unknown as UpdateUserInput);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockUser.id);
@@ -137,7 +138,7 @@ describe('UsersResolver', () => {
         email: null,
         githubUsername: 'new-username',
         id: 'non-existent-id',
-      });
+      } as unknown as UpdateUserInput);
 
       expect(result).toBeNull();
     });

@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@nestjs/typeorm": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "bcrypt": "catalog:",
     "dataloader": "catalog:",
     "fishery": "catalog:",

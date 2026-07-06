@@ -7,7 +7,7 @@ import { Field, ID, InputType } from '@nestjs/graphql';
 @InputType()
 export class CreateUserInput {
   @Field(() => String, { nullable: true })
-  email!: string | null;
+  email?: string | null;
 
   @Field(() => String, {
     description: `GitHub user or Organization name (e.g. OpenThrottle)`,
@@ -24,13 +24,13 @@ export class UpdateUserInput {
   disabledAt!: Date | null | undefined;
 
   @Field(() => String, { nullable: true })
-  email!: string | null;
+  email?: string | null;
 
   @Field(() => String, {
     description: `GitHub username. Pass null to leave unchanged.`,
     nullable: true,
   })
-  githubUsername!: string | null;
+  githubUsername?: string | null;
 
   @Field(() => ID, { description: `User id to update` })
   id!: string;

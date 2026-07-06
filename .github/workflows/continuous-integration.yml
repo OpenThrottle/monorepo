@@ -127,9 +127,6 @@ jobs:
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
-      # - name: '🔒 GraphQL schema sync (root vs server)'
-      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
-
       - name: '🧩 Codegen Tasks'
         run: |
           # pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}

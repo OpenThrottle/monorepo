@@ -87,7 +87,7 @@ describe('TaskEmbeddingsResolver', () => {
       updatedAt: new Date('2026-02-01T22:00:00.000Z'),
     },
     taskId: 'b366d480-6a4f-498b-8755-23ade25d2b24',
-  } as TaskEmbedding;
+  } as unknown as TaskEmbedding;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -207,6 +207,57 @@ describe('TaskEmbeddingsResolver', () => {
       });
 
       expect(result).toEqual([]);
+    });
+
+    test('applies the default cap (take 1000, skip 0) when no limit/offset', async () => {
+      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.taskEmbeddings({ taskId: mockTaskEmbedding.taskId });
+
+      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 1000 }),
+      );
+    });
+
+    test('passes through an explicit limit/offset', async () => {
+      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.taskEmbeddings({
+        limit: 50,
+        offset: 10,
+        taskId: mockTaskEmbedding.taskId,
+      });
+
+      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 50 }),
+      );
+    });
+
+    test('clamps a limit above the max down to 1000', async () => {
+      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.taskEmbeddings({
+        limit: 5000,
+        taskId: mockTaskEmbedding.taskId,
+      });
+
+      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 1000 }),
+      );
+    });
+
+    test('clamps a non-positive limit up to 1 and a negative offset to 0', async () => {
+      vi.mocked(taskEmbeddingsRepo.find).mockResolvedValue([]);
+
+      await resolver.taskEmbeddings({
+        limit: 0,
+        offset: -5,
+        taskId: mockTaskEmbedding.taskId,
+      });
+
+      expect(taskEmbeddingsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 1 }),
+      );
     });
   });
 });

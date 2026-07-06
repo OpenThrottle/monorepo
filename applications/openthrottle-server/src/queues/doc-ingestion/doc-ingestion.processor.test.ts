@@ -36,7 +36,7 @@ describe('DocIngestionProcessor', () => {
     const job = {
       data: { directories: [], files: [] },
       id: 'job-1',
-    } as DocIngestionJob;
+    } as unknown as DocIngestionJob;
 
     await expect(processor.process(job)).rejects.toThrow(
       'Doc-ingestion job requires at least one of directories or files in the payload.',
