@@ -204,6 +204,7 @@ describe('ProjectsResolver', () => {
           projectId: mockProject.id,
           projectRelation: null,
           requirements: [],
+          sortOrder: 1000,
           status: 'pending',
           summary: null,
           taskEmbeddings: [],

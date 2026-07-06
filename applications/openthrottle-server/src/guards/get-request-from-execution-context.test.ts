@@ -11,10 +11,7 @@ const createHttpContext = (httpReq: object): ExecutionContext =>
     }),
   }) as unknown as ExecutionContext;
 
-const createGraphqlContext = (
-  gqlReq: object,
-  httpReq: object = {},
-): ExecutionContext =>
+const createGraphqlContext = (httpReq: object = {}): ExecutionContext =>
   ({
     getType: vi.fn().mockReturnValue('graphql'),
     switchToHttp: vi.fn().mockReturnValue({
@@ -36,7 +33,7 @@ describe('getRequestFromExecutionContext (openthrottle-server)', () => {
 
   it('uses GqlExecutionContext context.req for graphql, not switchToHttp', () => {
     const gqlReq = { user: { sub: 'gql-sub' } };
-    const ctx = createGraphqlContext(gqlReq, {});
+    const ctx = createGraphqlContext({});
 
     vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
       getContext: () => ({ req: gqlReq }),
@@ -61,7 +58,7 @@ describe('getRequestFromExecutionContext (openthrottle-server)', () => {
   });
 
   it('throws when GraphQL context is missing req', () => {
-    const ctx = createGraphqlContext({});
+    const ctx = createGraphqlContext();
 
     vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
       getContext: () => ({}),

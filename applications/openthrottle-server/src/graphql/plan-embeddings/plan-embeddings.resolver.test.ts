@@ -69,7 +69,7 @@ describe('PlanEmbeddingsResolver', () => {
       updatedAt: new Date('2026-02-01T22:00:00.000Z'),
     },
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
-  } as PlanEmbedding;
+  } as unknown as PlanEmbedding;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({

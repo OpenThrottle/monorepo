@@ -33,7 +33,7 @@ describe('RolesResolver', () => {
     name: 'admin',
     permissions: [],
     updatedAt: new Date(),
-  } as Role;
+  } as unknown as Role;
 
   const mockPermission: Permission = {
     createdAt: new Date(),

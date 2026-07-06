@@ -311,7 +311,7 @@ describe('PlansProcessor', () => {
         runKind: 'orchestrator',
       },
       id: 'job-1',
-    } as RunPlanJob;
+    } as unknown as RunPlanJob;
 
     await processor.process(mockJob);
 

@@ -87,7 +87,7 @@ describe('TaskEmbeddingsResolver', () => {
       updatedAt: new Date('2026-02-01T22:00:00.000Z'),
     },
     taskId: 'b366d480-6a4f-498b-8755-23ade25d2b24',
-  } as TaskEmbedding;
+  } as unknown as TaskEmbedding;
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
