@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "catalog:",
+    "@openthrottle/react-router-shadcn": "workspace:^",
     "@phosphor-icons/react": "catalog:",
     "classnames": "catalog:",
     "jotai": "catalog:",

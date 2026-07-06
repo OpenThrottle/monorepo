@@ -11,6 +11,7 @@
     "@apollo/utils.keyvadapter": "catalog:",
     "@apollo/utils.keyvaluecache": "catalog:",
     "@keyv/redis": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "joi": "catalog:",
     "keyv": "catalog:"
   },

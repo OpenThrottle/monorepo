@@ -2451,6 +2451,12 @@ input GetPlanEmbeddingInput {
 input PlanEmbeddingsByPlanInput {
   """Plan id to list embeddings for"""
   planId: ID!
+
+  """Max rows to return (default and hard cap: 1000)."""
+  limit: Int
+
+  """Rows to skip (pagination offset)."""
+  offset: Int
 }
 
 input GetPlanOutputStreamChunkInput {
@@ -2461,6 +2467,12 @@ input GetPlanOutputStreamChunkInput {
 input ListPlanOutputStreamChunksInput {
   """Plan id to list chunks for"""
   planId: ID!
+
+  """Max rows to return (default and hard cap: 1000)."""
+  limit: Int
+
+  """Rows to skip (pagination offset)."""
+  offset: Int
 }
 
 input PlanRunsByPlanIdInput {
@@ -2539,6 +2551,12 @@ input GetTaskEmbeddingInput {
 input TaskEmbeddingsByTaskInput {
   """Task id to list embeddings for"""
   taskId: ID!
+
+  """Max rows to return (default and hard cap: 1000)."""
+  limit: Int
+
+  """Rows to skip (pagination offset)."""
+  offset: Int
 }
 
 input TasksByPlanIdInput {

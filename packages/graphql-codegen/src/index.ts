@@ -22,8 +22,8 @@ type ClientPresetConfig = NonNullable<
 export interface DefineCodegenOptions {
   /**
    * Absolute path to the `__dirname` of the consuming `codegen.ts`. Used to
-   * resolve the repo-root `schema.gql` so codegen/typecheck work without a
-   * running server.
+   * resolve the committed `applications/openthrottle-server/schema.gql` so
+   * codegen/typecheck work without a running server.
    */
   dirname: string;
   /**
@@ -64,7 +64,7 @@ const SCHEMA_RELATIVE_PATH = `../../applications/openthrottle-server/schema.gql`
 
 /**
  * @description Builds a GraphQL Codegen config from the shared OpenThrottle
- * boilerplate: dotenv loading, the repo-root `schema.gql` source, the
+ * boilerplate: dotenv loading, the committed `openthrottle-server/schema.gql` source, the
  * `API_URL_INTERNAL` development guard, the `client` preset, the optional
  * `typescript-validation-schema` (Zod, `zod/v3`) block, and the
  * `prettier --write` write hook. Consumers express only their per-project

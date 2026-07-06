@@ -17,7 +17,7 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ```bash
 ./scripts/setup.sh                                  # full environment setup/reset
 pnpm run database:start                             # Postgres + Redis via docker compose
-pnpm run database:migrate                           # backup + run migrations
+pnpm run database:migrate                           # run migrations (does NOT back up; run database:backup first)
 pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
 
@@ -38,7 +38,7 @@ pnpm nx run monorepo:knip                           # dead-code report ONLY — 
 
 ## Architecture
 
-- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website` are React Router (v7) + Vite apps.
+- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website` are React Router (v8) + Vite apps.
 - **`packages/`** — `@openthrottle/nestjs-*` (server modules: auth, bullmq, typeorm, redis, graphql, …), `@openthrottle/react-router-*` (shared UI/client libs), `openthrottle-agentic-*` / `openthrottle-workflows` (Ralph agentic tooling), `openthrottle-mcp` (the OT MCP server).
 - **`tools/`** — Nx plugins, `@tools/generators` (scaffolding templates), `@tools/workflows` (Ralph CLI).
 - **`databases/`** — OpenThrottle Postgres schema, migrations, local DB scripts.
@@ -50,12 +50,11 @@ The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.m
 
 ### GraphQL schema + codegen flow
 
-Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **root `schema.gql`**. CI fails on drift. After changing GraphQL types/resolvers/documents:
+Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`** (via `@openthrottle/graphql-codegen`'s `defineCodegen`). CI fails on codegen drift. After changing GraphQL types/resolvers/documents:
 
-1. Run `pnpm nx run openthrottle-server:dev` until bootstrap (writes `applications/openthrottle-server/schema.gql`), then stop.
-2. `cp applications/openthrottle-server/schema.gql schema.gql`
-3. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
-4. Commit both schema files and all `__generated__` output.
+1. Run `pnpm nx run openthrottle-server:dev` until bootstrap, then stop. The `dev`/`start` targets run with `cwd` at the project root, so `autoSchemaFile: 'schema.gql'` writes `applications/openthrottle-server/schema.gql` — the single committed schema file.
+2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
+3. Commit the app `schema.gql` and all `__generated__` output.
 
 Never remove/change types on existing fields without a migration plan — use `@deprecated(reason: "...")`.
 

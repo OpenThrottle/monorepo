@@ -5,8 +5,12 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
+    "@openthrottle/react-router-notifications": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-ui": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
     "@paper-design/shaders-react": "catalog:",
     "rollbar": "catalog:"
   },

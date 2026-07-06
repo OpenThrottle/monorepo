@@ -97,7 +97,7 @@ describe('PlanLifecycleHooksProcessor.process', () => {
 
     const data = buildJobData({
       phase: 'afterEach',
-      task: { taskId: 'task-1' } as PlanLifecycleHookJobData['task'],
+      task: { taskId: 'task-1' } as unknown as PlanLifecycleHookJobData['task'],
       taskOutcome: 'succeeded' as PlanLifecycleHookJobData['taskOutcome'],
     });
     await processor.process({ data } as unknown as PlanLifecycleHookJob);

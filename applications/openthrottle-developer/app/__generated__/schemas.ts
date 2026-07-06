@@ -642,6 +642,8 @@ export function ListPlanOutputStreamChunksInputSchema(): z.ZodObject<
   Properties<ListPlanOutputStreamChunksInput>
 > {
   return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
     planId: z.string(),
   });
 }
@@ -695,6 +697,8 @@ export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
   Properties<PlanEmbeddingsByPlanInput>
 > {
   return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
     planId: z.string(),
   });
 }
@@ -913,6 +917,8 @@ export function TaskEmbeddingsByTaskInputSchema(): z.ZodObject<
   Properties<TaskEmbeddingsByTaskInput>
 > {
   return z.object({
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
     taskId: z.string(),
   });
 }

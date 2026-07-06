@@ -67,8 +67,10 @@ describe('CodeIndexProcessor', () => {
   it('resolves the path and indexes it, echoing repositoryId', async () => {
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
       createMock<
-        Awaited<
-          ReturnType<WorkspaceLocalRepositoriesService['findByIdForUser']>
+        NonNullable<
+          Awaited<
+            ReturnType<WorkspaceLocalRepositoriesService['findByIdForUser']>
+          >
         >
       >({ filesystemPath: '/Users/dev/repo' }),
     );

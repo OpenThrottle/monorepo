@@ -10,6 +10,7 @@
   "dependencies": {
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
     "class-variance-authority": "catalog:",
     "framer-motion": "catalog:"
   },

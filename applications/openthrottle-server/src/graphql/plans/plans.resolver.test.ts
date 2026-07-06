@@ -57,7 +57,7 @@ describe('PlansResolver', () => {
     summary: null,
     title: 'Test plan',
     updatedAt: new Date('2026-02-01T19:59:19.440Z'),
-  } as Plan;
+  } as unknown as Plan;
 
   function createQueryBuilderMock(
     getManyAndCountResult: [Plan[], number] = [[], 0],

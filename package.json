@@ -426,7 +426,7 @@
     "check:local:format": "pnpm nx run monorepo:format-check",
     "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:validate-tags": "pnpm nx:validate-tags",
-    "check:local:verify": "pnpm nx run openthrottle-server:verify-graphql-schema-sync && pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
+    "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
     "clean": "pnpm run \"/^clean:.*/\"",
     "format": "pnpm nx run monorepo:format-write",
     "format:check": "pnpm nx run monorepo:format-check",

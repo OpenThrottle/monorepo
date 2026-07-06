@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./build",
+    "rootDir": "./",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "lib": ["ES2022"],
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src/**/*.json", "src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
+  "exclude": ["build", "src/graphql/resolver-authorization-stance.test.ts"],
+  "references": [
+    {
+      "path": "../../tools/generators/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/workflows/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nodejs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-worktrees/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-websockets/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-vector-search/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-throttler/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-stripe/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-rbac/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-profiling/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-model-discovery/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-logging/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-github/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-bullmq-board/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-bullmq/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

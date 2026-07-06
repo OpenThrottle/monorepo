@@ -13,7 +13,7 @@ export class AgentsRunChatTurnInput {
     description: `Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.`,
     nullable: true,
   })
-  conversationId!: string | null;
+  conversationId?: string | null;
 
   @Field(() => String, {
     description: `User message text for this turn.`,
@@ -25,5 +25,5 @@ export class AgentsRunChatTurnInput {
     description: `When true, persist the turn for an authenticated human JWT user. Omitted or false keeps stateless echo behavior.`,
     nullable: true,
   })
-  persist!: boolean | null;
+  persist?: boolean | null;
 }

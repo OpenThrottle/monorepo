@@ -99,7 +99,7 @@ describe('CodeSearchResolver', () => {
     it('is indexing when a job is pending', async () => {
       vi.mocked(codeSearch.indexedChunkCount).mockResolvedValue(0);
       vi.mocked(queue.getJob).mockResolvedValue(
-        createMock<Awaited<ReturnType<Queue['getJob']>>>({
+        createMock<NonNullable<Awaited<ReturnType<Queue['getJob']>>>>({
           getState: vi.fn().mockResolvedValue('active'),
         }),
       );

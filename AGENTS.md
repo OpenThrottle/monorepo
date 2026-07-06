@@ -23,6 +23,16 @@
 
 <!-- nx configuration end-->
 
+## Per-project AGENTS.md
+
+Agent context is layered in three tiers, and **each file states only what its parent tier does not** (the delta rule):
+
+1. **This file + [CLAUDE.md](./CLAUDE.md)** — monorepo-wide conventions (Nx, pnpm-only, generators-first, OT plans, GraphQL codegen flow, code style, agent-asset SSOT).
+2. **Area files** — [`applications/AGENTS.md`](./applications/AGENTS.md), [`packages/AGENTS.md`](./packages/AGENTS.md), [`tools/AGENTS.md`](./tools/AGENTS.md), [`databases/AGENTS.md`](./databases/AGENTS.md) — facts shared across one family (e.g. the source-first/no-build pattern, React Router app conventions, migration rules).
+3. **Per-project `AGENTS.md`** — one per Nx project, carrying only that project's deltas: non-obvious commands, key paths, invariants/gotchas that break PRs, and boundaries.
+
+When working inside a project, read its own `AGENTS.md` first, then its area file, then this file. When adding context, put it at the **most general tier that fully owns it** and link rather than duplicate downward; never restate a parent tier or the project's own `README.md`. There is no per-project `CLAUDE.md` — Claude Code and Cursor both read nested `AGENTS.md` natively.
+
 ## Agent and editor folders
 
 For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `.agents/`, `skills/`, duplication strategy, where to edit for common tasks), see [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md). **This file** covers cross-editor handbook topics (Nx, OT, workflow CLI); **that doc** covers physical layout and canonical ownership.

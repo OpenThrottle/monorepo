@@ -3,6 +3,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { afterEach, describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
+
+type RalphDebugCliInput = RalphPlanRunTuningInput['ralphDebugCli'];
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
@@ -92,7 +94,7 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'debug',
+        ralphDebugCli: 'debug' as RalphDebugCliInput,
       }),
     ).toEqual({ debug: 'debug' });
   });
@@ -101,13 +103,13 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'DEBUG' as 'debug',
+        ralphDebugCli: 'DEBUG' as unknown as RalphDebugCliInput,
       }),
     ).toEqual({ debug: 'debug' });
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'VERBOSE' as 'verbose',
+        ralphDebugCli: 'VERBOSE' as unknown as RalphDebugCliInput,
       }),
     ).toEqual({ debug: 'verbose' });
   });
@@ -116,13 +118,13 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'omit',
+        ralphDebugCli: 'omit' as RalphDebugCliInput,
       }),
     ).toBeUndefined();
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'DEBUGG' as 'debug',
+        ralphDebugCli: 'DEBUGG' as unknown as RalphDebugCliInput,
       }),
     ).toBeUndefined();
   });

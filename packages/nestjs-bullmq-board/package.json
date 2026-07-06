@@ -11,6 +11,7 @@
     "@bull-board/api": "catalog:",
     "@bull-board/express": "catalog:",
     "@bull-board/nestjs": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "express-basic-auth": "catalog:"
   },
   "exports": {

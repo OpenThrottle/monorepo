@@ -177,7 +177,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         ['plans:read'],
       );
 
-      const req = {
+      const req: { headers?: { authorization?: string }; user?: unknown } = {
         headers: {
           authorization: `Bearer ${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${secret}`,
         },
