@@ -8,13 +8,13 @@ import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 @InputType()
 export class UpdateWorkspaceProfileInput {
   @Field(() => String, { nullable: true })
-  contactDisplayName!: string | null;
+  contactDisplayName?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => [WorkspaceEditorIdEnum], { nullable: true })
-  enabledEditors!: WorkspaceEditorIdEnum[] | null;
+  enabledEditors?: WorkspaceEditorIdEnum[] | null;
 }
 
 @InputType()
@@ -28,13 +28,13 @@ export class CreateWorkspaceLocalRepositoryInput {
   displayName!: string;
 
   @Field(() => String, { nullable: true })
-  gitRemoteUrl!: string | null;
+  gitRemoteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  gitDefaultBranch!: string | null;
+  gitDefaultBranch?: string | null;
 
   @Field(() => ID, { nullable: true })
-  projectId!: string | null;
+  projectId?: string | null;
 }
 
 @InputType()
@@ -43,16 +43,16 @@ export class UpdateWorkspaceLocalRepositoryInput {
   id!: string;
 
   @Field(() => String, { nullable: true })
-  displayName!: string | null;
+  displayName?: string | null;
 
   @Field(() => String, { nullable: true })
-  gitRemoteUrl!: string | null;
+  gitRemoteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  gitDefaultBranch!: string | null;
+  gitDefaultBranch?: string | null;
 
   @Field(() => ID, { nullable: true })
-  projectId!: string | null;
+  projectId?: string | null;
 }
 
 @InputType()
@@ -64,5 +64,5 @@ export class SetWorkspaceLocalRepositoryProjectInput {
     description: `Cortex project id, or null to clear the link.`,
     nullable: true,
   })
-  projectId!: string | null;
+  projectId?: string | null;
 }
