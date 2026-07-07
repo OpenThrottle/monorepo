@@ -20,6 +20,7 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { Link, useFetcher } from 'react-router';
+import { useActionToast } from '~/global/hooks/useActionToast';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import {
@@ -164,6 +165,19 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     // 🪝 ...
   }, [fetcherRunPlan.state, fetcherRunPlan.data]);
 
+  useActionToast(fetcherSetPlanStatus.data, {
+    active: fetcherSetPlanStatus.state !== 'idle',
+    error: () => setPlanStatusError,
+    id: 'set-plan-status',
+    success: 'Plan marked complete.',
+  });
+
+  useActionToast(fetcherRunPlan.data, {
+    active: fetcherRunPlan.state !== 'idle',
+    error: () => runPlanError,
+    id: 'run-plan',
+  });
+
   // 🔌 Short Circuit
 
   return (
@@ -250,18 +264,6 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           size="sm"
         />
       </div>
-
-      {setPlanStatusError != null && (
-        <span className="text-destructive text-xs" role="alert">
-          {setPlanStatusError}
-        </span>
-      )}
-
-      {runPlanError != null && (
-        <span className="text-destructive text-xs" role="alert">
-          {runPlanError}
-        </span>
-      )}
 
       <div className="flex-1" />
 

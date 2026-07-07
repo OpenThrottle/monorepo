@@ -12,11 +12,13 @@ import { NoteCardFragment } from '~/__generated__/graphql';
 export interface NoteFormProps {
   action: 'create' | 'update';
   className?: string;
+  /** Action-level error to surface inline (validation / not-found). */
+  error?: string;
   note?: NoteCardFragment;
 }
 
 export const NoteForm = (props: NoteFormProps): React.ReactElement => {
-  const { action, className, note } = props;
+  const { action, className, error, note } = props;
 
   // Hooks
 
@@ -60,11 +62,11 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
           </div>
         </div>
 
-        {/* {error ? (
-          <p className="mt-2 text-sm text-destructive" role="alert">
+        {error ? (
+          <p className="text-destructive mt-2 text-sm" role="alert">
             {error}
           </p>
-        ) : null} */}
+        ) : null}
 
         <div className="mt-6 flex gap-3">
           <Button type="submit">

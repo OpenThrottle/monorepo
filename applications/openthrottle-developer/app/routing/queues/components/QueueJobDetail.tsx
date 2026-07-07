@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import { Badge, Button, toast } from '@openthrottle/react-router-shadcn';
 import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { QueueCorrelationAndSupport } from '~/routing/queues/components/QueueCorrelationAndSupport';
@@ -7,7 +7,6 @@ import { QueueJobMetrics } from '~/routing/queues/components/QueueJobMetrics';
 import { QueueJobPayload } from '~/routing/queues/components/QueueJobPayload';
 import { QueueJobResults } from '~/routing/queues/components/QueueJobResults';
 import { QueueJobTimestamps } from '~/routing/queues/components/QueueJobTimestamps';
-import { toast } from 'sonner';
 import { useFetcher, useRevalidator } from 'react-router';
 import type {
   GetQueueJobDetailsQuery,
