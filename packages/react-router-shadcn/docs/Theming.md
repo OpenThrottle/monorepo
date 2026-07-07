@@ -154,6 +154,59 @@ Dark mode is automatically supported through the `.dark` class. To enable dark m
 }
 ```
 
+## Multi-theme registry (`src/themes`)
+
+On top of the single default palette in `theme.css`, the package ships a typed
+registry of named themes (each a light + dark pair) that apply by swapping one
+attribute on `<html>`.
+
+### Token contract
+
+A theme must define every semantic token in `THEME_TOKEN_NAMES`
+(`src/themes/theme-contract.ts`) — the color tokens from `theme.css`
+(`background`, `foreground`, `card`, `primary`, `accent`, `border`, `ring`,
+`chart-1..5`, the `sidebar-*` set, `brand`, `overlay-background`, …). Structural
+tokens defined once in `theme.css` (`--radius`, `--tw-ring-color`, the
+`--sidebar` alias) are **not** part of the contract.
+
+```ts
+interface Theme {
+  id: string; // written to <html data-theme>
+  label: string; // switcher display name
+  light: ThemeTokens; // full token map
+  dark: ThemeTokens; // full token map
+}
+```
+
+### Application mechanism (SSR-safe)
+
+`buildThemeStylesheet(THEMES)` emits, per theme, an `html[data-theme="id"]`
+block (light) and an `html[data-theme="id"].dark` block (dark). Their selector
+specificity beats the base `:root` / `prefers-color-scheme` rules, so they win
+deterministically. A theme is activated by setting `data-theme` on `<html>` and
+toggling the `.dark` class.
+
+The consuming app must:
+
+1. Render the stylesheet once in the document `<head>` (SSR) so palettes are
+   present on first paint:
+   `<style dangerouslySetInnerHTML={{ __html: buildThemeStylesheet(THEMES) }} />`.
+2. Run a small **pre-hydration** inline script (before body paint) that reads
+   the persisted choice and sets `data-theme` + the `.dark` class on `<html>`.
+   This is what prevents a flash-of-wrong-theme. (In openthrottle-developer this
+   lives in `app/root.tsx`, reading the appearance config in `localStorage`.)
+
+Because the SSR render and the pre-hydration script both come from the server
+HTML, there is no flash and no hydration mismatch (the `<html>` element uses
+`suppressHydrationWarning`).
+
+### Adding a theme
+
+Add a `Theme` entry to `src/themes/cursor-themes.ts` (or a new module the
+registry aggregates), following the `OPENTHROTTLE_THEME` template in
+`registry.ts`: alphabetized token keys, `hsl(H S% L%)` values, readable
+contrast (foreground vs background/card, `*-foreground` vs its surface).
+
 ## Resources
 
 - [Shadcn UI Theming Documentation](https://ui.shadcn.com/docs/theming)

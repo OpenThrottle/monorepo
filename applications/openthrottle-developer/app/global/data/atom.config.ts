@@ -1,4 +1,5 @@
 import { APP_NAME } from '@openthrottle/react-router-utils';
+import { isThemeId } from '@openthrottle/react-router-shadcn';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
@@ -182,11 +183,14 @@ export type ThemeMode = 'light' | 'dark';
 export interface ConfigObject {
   brand: string | undefined;
   theme: ThemeMode;
+  /** Selected palette id (`<html data-theme>`); undefined = base theme.css palette. */
+  themeId: string | undefined;
 }
 
 export const DEFAULT_APPEARANCE_CONFIG: ConfigObject = {
   brand: undefined,
   theme: 'light',
+  themeId: undefined,
 };
 
 const isThemeMode = (value: unknown): value is ThemeMode =>
@@ -215,7 +219,9 @@ export const normalizeAppearanceConfig = (value: unknown): ConfigObject => {
     brand = undefined;
   }
 
-  return { brand, theme };
+  const themeId = isThemeId(record.themeId) ? record.themeId : undefined;
+
+  return { brand, theme, themeId };
 };
 
 const createAppearanceConfigStorage = (): SyncStorage<ConfigObject> => {

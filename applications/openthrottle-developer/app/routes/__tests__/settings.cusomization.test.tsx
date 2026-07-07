@@ -19,11 +19,9 @@ import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/setti
  * @description Legacy `settings.cusomization` route was consolidated into `settings.appearance`.
  */
 describe('routes/settings.appearance.tsx (customization)', () => {
-  const renderAppearance = (
-    initialConfig: ConfigObject = DEFAULT_APPEARANCE_CONFIG,
-  ) => {
+  const renderAppearance = (initialConfig: Partial<ConfigObject> = {}) => {
     const store = createStore();
-    store.set(configAtom, initialConfig);
+    store.set(configAtom, { ...DEFAULT_APPEARANCE_CONFIG, ...initialConfig });
 
     const view = render(
       <Provider store={store}>
