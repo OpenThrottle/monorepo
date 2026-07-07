@@ -56,5 +56,8 @@ export * from './components/TextArea';
 export * from './components/ToggleGroup/index';
 export * from './components/Tooltip/index';
 
+// Themes
+export * from './themes/index';
+
 // Utilities
 export * from './utils/cn';

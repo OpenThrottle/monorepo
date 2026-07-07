@@ -32,7 +32,11 @@ import type {
   ShouldRevalidateFunction,
 } from 'react-router';
 import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
-import { Toaster } from '@openthrottle/react-router-shadcn';
+import {
+  buildThemeStylesheet,
+  THEMES,
+  Toaster,
+} from '@openthrottle/react-router-shadcn';
 import {
   authMiddleware,
   buildAuthCookie,
@@ -77,6 +81,7 @@ import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import {
   buildAppearanceRootCssBlock,
+  CONFIG_STORAGE_KEY,
   configAtom,
 } from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
@@ -280,6 +285,22 @@ export const meta = (_args: Route.MetaArgs) => {
  * body wrapper for providers that must wrap the full document, {@link Toaster}, and {@link ScrollRestoration}.
  * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-xxxx / openthrottle-admin).
  */
+/**
+ * Theme-registry CSS (all palettes as `html[data-theme=…]` blocks) rendered
+ * once in the document head so a selected palette applies on first paint.
+ * Static — computed at module load.
+ */
+const THEME_STYLESHEET = buildThemeStylesheet(THEMES);
+
+/**
+ * Pre-hydration script: reads the persisted appearance config and applies the
+ * palette (`data-theme`) and the light/dark class on `<html>` before first
+ * paint, so there is no flash-of-wrong-theme.
+ */
+const THEME_PREHYDRATION_SCRIPT = `(function(){try{var raw=window.localStorage.getItem(${JSON.stringify(
+  CONFIG_STORAGE_KEY,
+)});if(!raw)return;var c=JSON.parse(raw);var d=document.documentElement;if(c&&typeof c.themeId==='string'){d.setAttribute('data-theme',c.themeId);}if(c&&c.theme==='dark'){d.classList.add('dark');}else if(c&&c.theme==='light'){d.classList.remove('dark');}}catch(e){}})();`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
@@ -323,12 +344,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html
       className={isDarkTheme ? 'dark' : undefined}
+      data-theme={config.themeId ?? undefined}
       lang="en"
       suppressHydrationWarning={true}
     >
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
+
+        {/* Theme palettes (all registered themes) + pre-hydration application. */}
+        <style
+          dangerouslySetInnerHTML={{ __html: THEME_STYLESHEET }}
+          id="ot-theme-registry"
+          nonce={nonce}
+        />
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_PREHYDRATION_SCRIPT }}
+          nonce={nonce}
+        />
         {/*
           CSP is shipped per-request as a (report-only) response header with a
           nonce — see app/entry.server.tsx and the shared buildCsp in

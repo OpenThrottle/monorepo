@@ -253,7 +253,11 @@ describe('configAtom localStorage', () => {
     const { configAtom } = await import('../atom.config');
     const { createStore } = await import('jotai/vanilla');
     const store = createStore();
-    const next = { brand: '#112233', theme: 'dark' as const };
+    const next = {
+      brand: '#112233',
+      theme: 'dark' as const,
+      themeId: undefined,
+    };
 
     store.set(configAtom, next);
 
