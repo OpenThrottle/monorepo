@@ -6,7 +6,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { JobsOptions, Queue } from 'bullmq';
+import type { Queue } from 'bullmq';
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
 import { resolveDatabaseBackupSchedule } from './database-backup.env';
@@ -32,23 +32,36 @@ export class DatabaseBackupRepeatableService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const schedule = resolveDatabaseBackupSchedule();
     if (!schedule.enabled) {
-      this.logger.debug(schedule.reason, DatabaseBackupRepeatableService.name);
+      // A rejected cron is a misconfiguration, not a normal opt-out — surface it
+      // loudly so a bad DATABASE_BACKUP_CRON can't silently disable backups.
+      if (schedule.invalid === true) {
+        this.logger.warn(schedule.reason, DatabaseBackupRepeatableService.name);
+      } else {
+        this.logger.debug(
+          schedule.reason,
+          DatabaseBackupRepeatableService.name,
+        );
+      }
 
       return;
     }
 
-    const repeat: JobsOptions['repeat'] = {
+    const repeatOptions = {
       pattern: schedule.cronPattern,
       ...(schedule.tz !== undefined ? { tz: schedule.tz } : {}),
     };
 
-    const job = await this.queue.add(
-      schedule.jobName,
-      {},
+    // Keyed by the stable scheduler id, so changing the pattern REPLACES the
+    // prior schedule instead of leaving a stale one behind. The legacy
+    // queue.add({ repeat }) was keyed by pattern-hash, which let a bad
+    // per-minute schedule coexist with the daily one (the 2026-07-05 flood).
+    const job = await this.queue.upsertJobScheduler(
+      schedule.repeatJobId,
+      repeatOptions,
       {
-        ...REPEATABLE_JOB_OPTIONS,
-        jobId: schedule.repeatJobId,
-        repeat,
+        data: {},
+        name: schedule.jobName,
+        opts: REPEATABLE_JOB_OPTIONS,
       },
     );
 
