@@ -40,7 +40,7 @@ function filterNotesBySearch(
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Notes',
-  links: (_match) => [],
+  links: (_match) => [{ children: 'User', to: '/profile' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {

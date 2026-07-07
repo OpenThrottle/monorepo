@@ -201,13 +201,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/legal/license',
       },
       {
-        children: 'Privacy Policy',
+        children: 'Privacy policy',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: BookOpenIcon,
         to: '/legal/privacy-policy',
       },
       {
-        children: 'Terms of Use',
+        children: 'Terms of use',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: BookOpenIcon,
         to: '/legal/terms-of-use',
@@ -236,12 +236,12 @@ export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/legal/license',
     },
     {
-      children: 'Privacy Policy',
+      children: 'Privacy policy',
       icon: NotebookTabsIcon,
       to: '/legal/privacy-policy',
     },
     {
-      children: 'Terms of Use',
+      children: 'Terms of use',
       icon: NotebookTabsIcon,
       to: '/legal/terms-of-use',
     },
