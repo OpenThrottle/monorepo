@@ -27,18 +27,18 @@ vi.mock('./database-backup.env', () => ({
 describe('DatabaseBackupRepeatableService', () => {
   let service: DatabaseBackupRepeatableService;
   const scheduleMock = vi.mocked(resolveDatabaseBackupSchedule);
-  const queueAdd = vi.fn();
+  const upsertJobScheduler = vi.fn();
   const logger = createMock<LoggerService>();
 
   const mockQueue = createMock<
     Queue<DatabaseBackupJobPayload, DatabaseBackupJobResult>
   >({
-    add: queueAdd,
+    upsertJobScheduler,
   });
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    queueAdd.mockResolvedValue(
+    upsertJobScheduler.mockResolvedValue(
       createMock<Job<DatabaseBackupJobPayload, DatabaseBackupJobResult>>({
         repeatJobKey: 'repeat-key-1',
       }),
@@ -62,7 +62,7 @@ describe('DatabaseBackupRepeatableService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('when schedule is disabled', () => {
+  describe('when schedule is disabled (normal opt-out)', () => {
     beforeEach(() => {
       scheduleMock.mockReturnValue({
         enabled: false,
@@ -71,10 +71,10 @@ describe('DatabaseBackupRepeatableService', () => {
       });
     });
 
-    it('should not register a repeatable job', async () => {
+    it('should not register a scheduler', async () => {
       await service.onModuleInit();
 
-      expect(queueAdd).not.toHaveBeenCalled();
+      expect(upsertJobScheduler).not.toHaveBeenCalled();
     });
 
     it('should log the skip reason at debug', async () => {
@@ -84,6 +84,32 @@ describe('DatabaseBackupRepeatableService', () => {
         'DATABASE_BACKUP_CRON not set; skipping repeatable database-backup registration.',
         DatabaseBackupRepeatableService.name,
       );
+    });
+  });
+
+  describe('when schedule is rejected as invalid', () => {
+    beforeEach(() => {
+      scheduleMock.mockReturnValue({
+        enabled: false,
+        invalid: true,
+        reason: 'DATABASE_BACKUP_CRON="0" rejected: too frequent.',
+      });
+    });
+
+    it('should not register a scheduler', async () => {
+      await service.onModuleInit();
+
+      expect(upsertJobScheduler).not.toHaveBeenCalled();
+    });
+
+    it('should log loudly at warn (not debug)', async () => {
+      await service.onModuleInit();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'DATABASE_BACKUP_CRON="0" rejected: too frequent.',
+        DatabaseBackupRepeatableService.name,
+      );
+      expect(logger.debug).not.toHaveBeenCalled();
     });
   });
 
@@ -101,16 +127,17 @@ describe('DatabaseBackupRepeatableService', () => {
       });
     });
 
-    it('should register queue.add with cron pattern and stable jobId', async () => {
+    it('should upsert one scheduler keyed by the stable id (idempotent)', async () => {
       await service.onModuleInit();
 
-      expect(queueAdd).toHaveBeenCalledWith(
-        DATABASE_BACKUP_JOB_NAME,
-        {},
+      expect(upsertJobScheduler).toHaveBeenCalledTimes(1);
+      expect(upsertJobScheduler).toHaveBeenCalledWith(
+        DATABASE_BACKUP_REPEATABLE_JOB_ID,
+        { pattern: '0 0 0 * * *' },
         expect.objectContaining({
-          attempts: 3,
-          jobId: DATABASE_BACKUP_REPEATABLE_JOB_ID,
-          repeat: { pattern: '0 0 0 * * *' },
+          data: {},
+          name: DATABASE_BACKUP_JOB_NAME,
+          opts: expect.objectContaining({ attempts: 3 }),
         }),
       );
     });
@@ -122,13 +149,9 @@ describe('DatabaseBackupRepeatableService', () => {
         expect.stringContaining('Database-backup repeatable job registered'),
         DatabaseBackupRepeatableService.name,
       );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('pattern=0 0 0 * * *'),
-        DatabaseBackupRepeatableService.name,
-      );
     });
 
-    it('should include tz in repeat options when configured', async () => {
+    it('should include tz in the repeat options when configured', async () => {
       scheduleMock.mockReturnValue({
         cronPattern: '0 0 0 * * *',
         enabled: true,
@@ -142,14 +165,10 @@ describe('DatabaseBackupRepeatableService', () => {
 
       await service.onModuleInit();
 
-      expect(queueAdd).toHaveBeenCalledWith(
-        DATABASE_BACKUP_JOB_NAME,
-        {},
-        expect.objectContaining({
-          attempts: 3,
-          jobId: DATABASE_BACKUP_REPEATABLE_JOB_ID,
-          repeat: { pattern: '0 0 0 * * *', tz: 'America/Los_Angeles' },
-        }),
+      expect(upsertJobScheduler).toHaveBeenCalledWith(
+        DATABASE_BACKUP_REPEATABLE_JOB_ID,
+        { pattern: '0 0 0 * * *', tz: 'America/Los_Angeles' },
+        expect.objectContaining({ name: DATABASE_BACKUP_JOB_NAME }),
       );
     });
   });

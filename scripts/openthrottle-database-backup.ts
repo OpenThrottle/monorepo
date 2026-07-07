@@ -3,8 +3,9 @@
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { join } from 'node:path';
 import { closeSync, openSync } from 'node:fs';
-import { mkdir, unlink } from 'node:fs/promises';
+import { mkdir, readdir, unlink } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 /**
  * @description Backs up the Cortex Postgres database to a timestamped zip file.
@@ -20,6 +21,72 @@ import { spawnSync } from 'node:child_process';
 
 const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');
 const POSTGRES_CONTAINER = 'postgres';
+
+/** Default number of scheduled backups to retain when the env var is unset. */
+const DEFAULT_BACKUP_RETENTION_COUNT = 14;
+
+/** Matches only generated backup archives — never seed*.sql or other files. */
+const BACKUP_ARCHIVE_PATTERN = /^openthrottle-\d{8}-\d{6}\.zip$/;
+
+/**
+ * @description Resolves the retention count from `DATABASE_BACKUP_RETENTION_COUNT`
+ * (positive integer), falling back to {@link DEFAULT_BACKUP_RETENTION_COUNT}.
+ */
+export function resolveBackupRetentionCount(
+  raw: string | undefined = process.env.DATABASE_BACKUP_RETENTION_COUNT,
+): number {
+  if (raw === undefined || raw.trim() === '') {
+    return DEFAULT_BACKUP_RETENTION_COUNT;
+  }
+  const parsed = Number.parseInt(raw.trim(), 10);
+
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_BACKUP_RETENTION_COUNT;
+}
+
+/**
+ * @description Pure selection: given a directory listing, returns the backup
+ * archives to delete so only the `keep` most recent remain. Only
+ * `openthrottle-YYYYMMDD-HHMMSS.zip` files are considered — seed*.sql and any
+ * other file are always excluded. The timestamped name sorts chronologically,
+ * so a descending sort keeps the newest.
+ */
+export function selectBackupsToPrune(
+  filenames: readonly string[],
+  keep: number,
+): string[] {
+  const archives = filenames
+    .filter((name) => BACKUP_ARCHIVE_PATTERN.test(name))
+    .sort()
+    .reverse();
+
+  return keep <= 0 ? archives : archives.slice(keep);
+}
+
+/**
+ * @description Deletes backup archives beyond the retention window. Never touches
+ * non-archive files (seed*.sql, etc.). Best-effort: logs and continues on error.
+ */
+async function pruneOldBackups(dir: string, keep: number): Promise<void> {
+  let entries: string[];
+  try {
+    entries = await readdir(dir);
+  } catch {
+    return;
+  }
+
+  const toDelete = selectBackupsToPrune(entries, keep);
+  await Promise.all(
+    toDelete.map((name) => unlink(join(dir, name)).catch(() => {})),
+  );
+
+  if (toDelete.length > 0) {
+    console.log(
+      `Pruned ${toDelete.length} old backup(s), keeping the ${keep} most recent.`,
+    );
+  }
+}
 
 function timestamp(): string {
   const d = new Date();
@@ -110,9 +177,19 @@ async function main(): Promise<void> {
   await unlink(sqlPath);
 
   console.log('Backup written to:', zipPath);
+
+  await pruneOldBackups(BACKUPS_DIR, resolveBackupRetentionCount());
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only auto-run when executed directly (so tests can import the pure helpers
+// without triggering a backup).
+const invokedPath = process.argv[1];
+if (
+  invokedPath !== undefined &&
+  import.meta.url === pathToFileURL(invokedPath).href
+) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
