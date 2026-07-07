@@ -5,8 +5,8 @@
 import {
   getPostgresConfig,
   searchPlansBySemanticQuery,
-} from '@openthrottle/ai-mcp/src/cortex-server';
-import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
+} from '@openthrottle/node-client';
+import type { PlanStatusCount } from '@openthrottle/node-client';
 import { BadRequestException } from '@nestjs/common';
 import {
   Args,

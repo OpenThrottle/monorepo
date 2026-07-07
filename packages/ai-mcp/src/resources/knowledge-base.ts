@@ -7,8 +7,8 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getPostgresConfig } from '../config.ts';
-import type { SemanticSearchChunk } from '../cortex-client.ts';
-import { getChunkById } from '../cortex-client.ts';
+import type { SemanticSearchChunk } from '@openthrottle/node-client';
+import { getChunkById } from '@openthrottle/node-client';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;

@@ -3,12 +3,12 @@ import {
   getChunkById,
   listSources,
   runSemanticSearch,
-} from '@openthrottle/ai-mcp/src/cortex-server';
+} from '@openthrottle/node-client';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchResolver } from './search.resolver';
 
-vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
+vi.mock('@openthrottle/node-client', () => ({
   embedQuery: vi.fn(),
   getChunkById: vi.fn(),
   listSources: vi.fn(),

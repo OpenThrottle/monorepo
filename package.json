@@ -79,6 +79,7 @@
     "@openthrottle/nestjs-vector-search": "workspace:^",
     "@openthrottle/nestjs-websockets": "workspace:^",
     "@openthrottle/nestjs-worktrees": "workspace:^",
+    "@openthrottle/node-client": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",

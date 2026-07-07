@@ -12,8 +12,10 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
-import { embedQuery } from '../packages/ai-mcp/src/embedding.ts';
-import { isOllamaEmbeddingConfigured } from '../packages/ai-mcp/src/ollama-embedding.ts';
+import {
+  embedQuery,
+  isOllamaEmbeddingConfigured,
+} from '@openthrottle/node-client';
 
 const EMBEDDING_DIM = 1536;
 

@@ -5,7 +5,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { getServerName, SERVER_VERSION } from './constants.ts';
-import { destroyDataSources } from './data-source.ts';
+import { destroyDataSources } from '@openthrottle/node-client';
 import { registerKnowledgeBaseResource } from './resources/knowledge-base.ts';
 import {
   registerActivityTools,

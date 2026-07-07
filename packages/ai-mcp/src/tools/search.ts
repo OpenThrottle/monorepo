@@ -5,14 +5,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPostgresConfig } from '../config.ts';
-import type { SemanticSearchChunk } from '../cortex-client.ts';
+import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import {
   getChunkById,
   listSources,
   runSemanticSearch,
-} from '../cortex-client.ts';
+} from '@openthrottle/node-client';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../constants.ts';
-import { embedQuery } from '../embedding.ts';
+import { embedQuery } from '@openthrottle/node-client';
 import {
   getDocumentInputSchema,
   semanticSearchInputSchema,
