@@ -2,7 +2,7 @@ import * as React from 'react';
 import { FaqView } from '@openthrottle/react-router-docs';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { canonicalMeta } from '~/global/utils/canonical';
+import { canonicalMeta } from '@openthrottle/react-router-utils';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/faq._index';
 

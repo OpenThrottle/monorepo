@@ -8,7 +8,7 @@ import {
   type GlobalLayoutBreadcrumbsHandle,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { canonicalMeta } from '~/global/utils/canonical';
+import { canonicalMeta } from '@openthrottle/react-router-utils';
 import type { Route } from '@/app/routes/+types/demos.layout._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
