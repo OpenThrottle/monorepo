@@ -201,6 +201,9 @@
     },
     {
       "path": "./packages/react-router-docs"
+    },
+    {
+      "path": "./packages/node-client"
     }
   ]
 }

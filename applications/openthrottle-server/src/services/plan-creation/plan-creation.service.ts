@@ -8,10 +8,10 @@ import {
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
-import { embedQuery } from '@openthrottle/ai-mcp/src/cortex-server';
+import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 
-/** @description Same GitHub-login rule as assignee normalization in @openthrottle/ai-mcp cortex-client. */
+/** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client cortex-client. */
 const GITHUB_USERNAME_REGEX =
   /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
 
@@ -25,7 +25,7 @@ function normalizeAssignee(value: string | null | undefined): string | null {
 }
 
 /**
- * @description Builds searchable text for a plan row (aligned with {@link buildPlanContentForEmbedding} in @openthrottle/ai-mcp).
+ * @description Builds searchable text for a plan row (aligned with {@link buildPlanContentForEmbedding} in @openthrottle/node-client).
  */
 function buildPlanEmbeddingContent(
   plan: Pick<Plan, 'author' | 'category' | 'description' | 'summary' | 'title'>,

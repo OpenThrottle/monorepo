@@ -1,24 +1,11 @@
 /**
- * @description Postgres connection config + default GitHub user from env, for the MCP server tools.
+ * @description Default GitHub user + actor resolution from env, for the MCP server tools.
+ * Postgres connection config now lives in @openthrottle/node-client and is re-exported here for
+ * the MCP tools that still import it from this module.
  */
 
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-
-export interface CortexPostgresConfig {
-  readonly connectionString: string;
-}
-
-/**
- * @description Returns Cortex Postgres connection string from POSTGRES_URL or POSTGRES_* env vars.
- * @returns Connection config or undefined if not configured.
- */
-export function getPostgresConfig(): CortexPostgresConfig | undefined {
-  try {
-    return { connectionString: getPostgresUrl() };
-  } catch {
-    return undefined;
-  }
-}
+export { getPostgresConfig } from '@openthrottle/node-client';
+export type { CortexPostgresConfig } from '@openthrottle/node-client';
 
 /**
  * @description Returns the canonical GitHub username for author/assignee when set.

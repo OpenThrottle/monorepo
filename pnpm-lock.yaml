@@ -1164,6 +1164,9 @@ importers:
       '@openthrottle/nestjs-worktrees':
         specifier: workspace:^
         version: link:packages/nestjs-worktrees
+      '@openthrottle/node-client':
+        specifier: workspace:^
+        version: link:packages/node-client
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:packages/nodejs-graphql
@@ -2227,9 +2230,6 @@ importers:
       '@nestjs/platform-express':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)
-      '@openthrottle/ai-mcp':
-        specifier: workspace:^
-        version: link:../../packages/ai-mcp
       '@openthrottle/nestjs-agentic-workflow':
         specifier: workspace:^
         version: link:../../packages/nestjs-agentic-workflow
@@ -2287,6 +2287,9 @@ importers:
       '@openthrottle/nestjs-worktrees':
         specifier: workspace:^
         version: link:../../packages/nestjs-worktrees
+      '@openthrottle/node-client':
+        specifier: workspace:^
+        version: link:../../packages/node-client
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../../packages/nodejs-graphql
@@ -2365,21 +2368,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@openthrottle/nestjs-repositories':
+      '@openthrottle/node-client':
         specifier: workspace:^
-        version: link:../nestjs-repositories
-      '@openthrottle/openthrottle-agentic-utils':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-utils
-      openai:
-        specifier: 'catalog:'
-        version: 6.36.0(ws@8.20.0)(zod@4.4.3)
-      pg:
-        specifier: 'catalog:'
-        version: 8.21.0
-      typeorm:
-        specifier: 'catalog:'
-        version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@6.0.3))
+        version: link:../node-client
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -2884,6 +2875,24 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.21.0
+
+  packages/node-client:
+    dependencies:
+      '@openthrottle/nestjs-repositories':
+        specifier: workspace:^
+        version: link:../nestjs-repositories
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
+      openai:
+        specifier: 'catalog:'
+        version: 6.36.0(ws@8.20.0)(zod@4.4.3)
+      pg:
+        specifier: 'catalog:'
+        version: 8.21.0
+      typeorm:
+        specifier: 'catalog:'
+        version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@6.0.3))
 
   packages/nodejs-graphql:
     dependencies:

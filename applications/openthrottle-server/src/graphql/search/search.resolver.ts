@@ -9,8 +9,8 @@ import {
   getChunkById,
   listSources,
   runSemanticSearch,
-} from '@openthrottle/ai-mcp/src/cortex-server';
-import type { SemanticSearchChunk } from '@openthrottle/ai-mcp/src/cortex-server';
+} from '@openthrottle/node-client';
+import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { SearchInput } from './search.input';
 import {

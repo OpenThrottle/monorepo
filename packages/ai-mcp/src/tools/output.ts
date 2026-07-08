@@ -8,7 +8,7 @@ import { getPostgresConfig } from '../config.ts';
 import {
   createPlanOutputChunk as cortexCreatePlanOutputChunk,
   getPlanOutputByPlanId as cortexGetPlanOutputByPlanId,
-} from '../cortex-client.ts';
+} from '@openthrottle/node-client';
 import {
   appendPlanOutputInputSchema,
   getPlanOutputInputSchema,

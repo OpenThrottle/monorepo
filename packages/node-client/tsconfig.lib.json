@@ -2,25 +2,24 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "outDir": "./dist",
-    "rootDir": "./",
-    "types": ["node"]
+    "rootDirs": ["./src"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
     "dist",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts"
+    "tests/**"
   ],
   "references": [
     {
-      "path": "../node-client/tsconfig.lib.json"
+      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-repositories/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

@@ -90,7 +90,7 @@
       "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+      "path": "../../packages/node-client/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

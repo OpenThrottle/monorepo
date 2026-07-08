@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getOrCreateDataSource, runQuery } from '../data-source.ts';
+import { getOrCreateDataSource, runQuery } from '@openthrottle/node-client';
 
 type HealthStructured = {
   cortex?: 'not_configured' | 'reachable' | 'unreachable';

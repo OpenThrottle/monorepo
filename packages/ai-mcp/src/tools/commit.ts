@@ -5,7 +5,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPostgresConfig } from '../config.ts';
-import { createCommitLink as cortexCreateCommitLink } from '../cortex-client.ts';
+import { createCommitLink as cortexCreateCommitLink } from '@openthrottle/node-client';
 import { linkCommitInputSchema } from '../schemas.ts';
 import { configMissingContent, invalidArgsContent } from './errors.ts';
 
