@@ -170,7 +170,7 @@ describe('routes/prompts.$promptId.tsx', () => {
           search: '',
           state: {},
         },
-        matches: [] as unknown as any,
+        matches: [] as never,
         params: { promptId: 'test-id' },
       });
 

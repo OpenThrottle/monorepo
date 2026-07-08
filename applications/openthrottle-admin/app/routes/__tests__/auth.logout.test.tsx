@@ -8,16 +8,16 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 }));
 
 import * as RouteModule from '../auth.logout';
+import type { Route } from '@/app/routes/+types/auth.logout';
 
-const createArgs = () => {
+// createArgs only needs request for the loader/action under test.
+const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() => {
   const request = new Request('http://localhost/auth/logout', {
     headers: { cookie: 'ot_auth=token' },
     method: 'POST',
   });
 
-  // createArgs only needs request for the loader/action under test
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal loader/action args stub
-  return { request } as any;
+  return { request } as unknown as T;
 };
 
 describe('routes/auth.logout.tsx', () => {
@@ -27,7 +27,7 @@ describe('routes/auth.logout.tsx', () => {
   });
 
   test('loader signs out, clears the auth cookie, and redirects to index', async () => {
-    const response = await RouteModule.loader(createArgs());
+    const response = await RouteModule.loader(createArgs<Route.LoaderArgs>());
 
     expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(302);
@@ -36,7 +36,7 @@ describe('routes/auth.logout.tsx', () => {
   });
 
   test('action signs out, clears the auth cookie, and redirects to index', async () => {
-    const response = await RouteModule.action(createArgs());
+    const response = await RouteModule.action(createArgs<Route.ActionArgs>());
 
     expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(302);
@@ -47,7 +47,7 @@ describe('routes/auth.logout.tsx', () => {
   test('still clears the cookie and redirects when server signout fails', async () => {
     executeGraphqlWithAuth.mockRejectedValueOnce(new Error('token invalid'));
 
-    const response = await RouteModule.loader(createArgs());
+    const response = await RouteModule.loader(createArgs<Route.LoaderArgs>());
 
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe('/');

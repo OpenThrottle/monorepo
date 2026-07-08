@@ -109,7 +109,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as any}
+        matches={[]}
         params={{}}
       />
     );
@@ -137,7 +137,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as any}
+        matches={[]}
         params={{}}
       />
     );
@@ -168,7 +168,7 @@ describe('routes/dashboard._index.tsx', () => {
             openPrCountByAuthor: [],
           },
         }}
-        matches={[] as any}
+        matches={[]}
         params={{}}
       />
     );
@@ -188,7 +188,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as any}
+        matches={[]}
         params={{}}
       />
     );

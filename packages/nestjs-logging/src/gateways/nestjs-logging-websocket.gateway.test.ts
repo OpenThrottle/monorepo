@@ -101,14 +101,42 @@ interface MockLogSocket {
  * @description {@link buildNestjsLoggingWebsocketGatewayClass} is typed as `Type<object>`;
  * tests need the public handler surface for typechecking. Payload/result shapes are asserted in tests.
  */
+type ReplayLines = ReadonlyArray<Readonly<Record<string, unknown>>>;
+
 interface CompiledNestjsLoggingWebsocketGateway {
   handleConnection(client: Socket): Promise<void> | void;
   handleDisconnect(client: Socket): void;
-  onLogsHistory(payload: unknown): Promise<any>;
-  onLogsReplay(payload: unknown): Promise<any>;
-  onLogsSubscribe(client: Socket, payload: unknown): any;
-  onLogsTail(client: Socket, payload: unknown): Promise<any>;
-  onLogsUnsubscribe(client: Socket, payload: unknown): any;
+  onLogsHistory(
+    payload: unknown,
+  ): Promise<
+    | { error: string; lines?: undefined; ok: false }
+    | { lines: ReplayLines; ok: true }
+  >;
+  onLogsReplay(
+    payload: unknown,
+  ): Promise<
+    | { error: string; ok: false }
+    | { lines: ReplayLines; nextByteOffset: number; ok: true }
+  >;
+  onLogsSubscribe(
+    client: Socket,
+    payload: unknown,
+  ): { error: string; ok: false } | { ok: true; subscriptionId: string };
+  onLogsTail(
+    client: Socket,
+    payload: unknown,
+  ): Promise<
+    | { error: string; ok: false }
+    | {
+        cursor: { byteOffset: number; path: string };
+        lines: ReplayLines;
+        ok: true;
+      }
+  >;
+  onLogsUnsubscribe(
+    client: Socket,
+    payload: unknown,
+  ): { error: string; ok: false } | { ok: true };
   onModuleDestroy(): void;
   server: Server;
 }

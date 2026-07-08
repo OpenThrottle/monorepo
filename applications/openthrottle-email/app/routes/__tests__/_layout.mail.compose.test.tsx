@@ -7,10 +7,7 @@ import { default as ComposeRoute } from '../_layout.mail.compose';
 describe('routes/_layout.mail.compose.tsx', () => {
   test('should render ComposeForm', async () => {
     const RoutesStub = createRoutesStub([
-      {
-        Component: (props: any) => <ComposeRoute {...props} />,
-        path: '/',
-      },
+      { Component: ComposeRoute, path: '/' },
     ]);
     const component = render(<RoutesStub />);
 

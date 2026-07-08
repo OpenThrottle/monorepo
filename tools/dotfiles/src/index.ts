@@ -144,9 +144,9 @@ export const eslintConfig = tslint.config([
     },
 
     rules: {
-      // Temporarily relaxed to 'warn': raising these to 'error' (see the
+      // Temporarily relaxed to 'warn': raising this to 'error' (see the
       // dotfiles audit-remediation work) turned ~32 consuming projects CI-red
-      // for pre-existing `any`/`as` usage that was never cleaned up. Tracked for
+      // for pre-existing `as` usage that was never cleaned up. Tracked for
       // proper remediation + re-escalation to 'error' as an OT bug.
       '@typescript-eslint/consistent-type-assertions': [
         'warn',
@@ -157,7 +157,7 @@ export const eslintConfig = tslint.config([
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

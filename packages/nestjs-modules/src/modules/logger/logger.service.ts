@@ -18,34 +18,34 @@ export class LoggerService implements DefaultLoggerService {
    * distinction for downstream log processors (the reserved Winston
    * `level` field stays `error` so transports and level filters behave).
    */
-  fatal(message: any, ...optionalParams: any[]) {
+  fatal(message: unknown, ...optionalParams: unknown[]) {
     logger.error(message, ...optionalParams, { severity: 'fatal' });
   }
 
-  error(message: any, ...optionalParams: any[]) {
+  error(message: unknown, ...optionalParams: unknown[]) {
     logger.error(message, ...optionalParams);
   }
 
-  warn(message: any, ...optionalParams: any[]) {
+  warn(message: unknown, ...optionalParams: unknown[]) {
     logger.warn(message, ...optionalParams);
   }
 
-  debug(message: any, ...optionalParams: any[]) {
+  debug(message: unknown, ...optionalParams: unknown[]) {
     logger.debug(message, ...optionalParams);
   }
 
-  info(message: any, ...optionalParams: any[]) {
+  info(message: unknown, ...optionalParams: unknown[]) {
     logger.info(message, ...optionalParams);
   }
 
-  verbose(message: any, ...optionalParams: any[]) {
+  verbose(message: unknown, ...optionalParams: unknown[]) {
     logger.verbose(message, ...optionalParams);
   }
 
   /**
    * @deprecated Use `info` instead.
    */
-  log(message: any, ...optionalParams: any[]) {
+  log(message: unknown, ...optionalParams: unknown[]) {
     logger.info(message, ...optionalParams);
   }
 }

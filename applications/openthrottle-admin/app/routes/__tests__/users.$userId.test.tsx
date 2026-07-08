@@ -23,17 +23,18 @@ vi.mock('@openthrottle/react-router-graphql', () => {
 
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import * as RouteModule from '../users.$userId';
+import type { Route } from '@/app/routes/+types/users.$userId';
 
+// The loader reads request and params from its args.
 const createLoaderArgs = (params: Record<string, string>) => {
   const request = new Request('http://localhost/users/user-1', {
     headers: { cookie: 'ot_auth=token' },
   });
 
-  // The loader reads request and params from its args.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal loader args stub
-  return { params, request } as any;
+  return { params, request } as unknown as Route.LoaderArgs;
 };
 
+// The action reads request and params from its args.
 const createActionArgs = (
   params: Record<string, string>,
   body: Record<string, string>,
@@ -47,9 +48,7 @@ const createActionArgs = (
     method: 'POST',
   });
 
-  // The action reads request and params from its args.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal action args stub
-  return { params, request } as any;
+  return { params, request } as unknown as Route.ActionArgs;
 };
 
 describe('routes/users.$userId.tsx', () => {

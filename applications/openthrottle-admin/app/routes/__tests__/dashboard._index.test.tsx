@@ -14,9 +14,7 @@ describe('routes/dashboard._index.tsx', () => {
   describe('dashboard cards and links', () => {
     test('renders cards with expected data-testid and links use ADMIN_PATHS', () => {
       const RoutesStub = createRoutesStub([
-        // createRoutesStub route component typing differs from generated route module types
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any -- stub route component
-        { Component: RouteModule.default as any, path: '/' },
+        { Component: RouteModule.default, path: '/' },
       ]);
       const component = render(<RoutesStub />);
 
