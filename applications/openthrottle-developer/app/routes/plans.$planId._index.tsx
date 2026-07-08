@@ -12,7 +12,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, redirect, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   BoltIcon,
   CogIcon,
@@ -138,9 +138,7 @@ export default function Component(
     ralphTuningJson,
     runConfigSaveBlocked,
     runConfigSaveBlockedReason,
-    saveJobRunHooksError,
     saveJobRunHooksPending,
-    saveRunConfigError,
     saveRunConfigPending,
     setJobRunHookRows,
     setWorkflowInput,
@@ -368,17 +366,8 @@ export default function Component(
               workingDirectory={workingDirectory}
             />
 
-            {saveJobRunHooksError != null ? (
-              <p className="text-destructive px-4 text-xs" role="alert">
-                {saveJobRunHooksError}
-              </p>
-            ) : null}
-
-            {saveRunConfigError != null ? (
-              <p className="text-destructive px-4 text-xs" role="alert">
-                {saveRunConfigError}
-              </p>
-            ) : null}
+            {/* saveJobRunHooks / saveRunConfig outcomes surface as toasts
+                (useActionToast in usePlanRunConfigEditor). */}
 
             {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
               <p className="text-muted-foreground px-4 text-xs" role="note">
@@ -442,7 +431,10 @@ export const action = async (args: Route.ActionArgs) => {
         return { setPlanStatusError: 'Failed to update plan status.' };
       }
 
-      return redirect(`/plans/${planId}`);
+      // Fetcher submissions auto-revalidate the page loaders, so returning a
+      // success marker (instead of redirecting to the same URL) refreshes the
+      // status and lets the toolbar surface a success toast.
+      return { setPlanStatus: result.setPlanStatus };
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);

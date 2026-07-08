@@ -13,6 +13,7 @@
  */
 import * as React from 'react';
 import { useFetcher, useRevalidator, useSearchParams } from 'react-router';
+import { useActionToast } from '~/global/hooks/useActionToast';
 import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   getDefaultWorkflowRalphRunOptionsInput,
@@ -247,33 +248,21 @@ export function usePlanRunConfigEditor(
     }
   }, [plan?.id, plan?.jobRunHooksJson, plan?.runConfigJson]);
 
-  React.useEffect(() => {
-    if (fetcherSaveJobRunHooks.state !== 'idle') return;
+  useActionToast(saveJobRunHooksData, {
+    active: fetcherSaveJobRunHooks.state !== 'idle',
+    error: () => saveJobRunHooksError,
+    id: 'save-job-run-hooks',
+    onSuccess: () => revalidator.revalidate(),
+    success: 'Job run hooks saved.',
+  });
 
-    const data = fetcherSaveJobRunHooks.data;
-    if (
-      data != null &&
-      typeof data === 'object' &&
-      'saveJobRunHooks' in data &&
-      data.saveJobRunHooks != null
-    ) {
-      revalidator.revalidate();
-    }
-  }, [fetcherSaveJobRunHooks.state, fetcherSaveJobRunHooks.data, revalidator]);
-
-  React.useEffect(() => {
-    if (fetcherSaveRunConfig.state !== 'idle') return;
-
-    const data = fetcherSaveRunConfig.data;
-    if (
-      data != null &&
-      typeof data === 'object' &&
-      'saveRunConfig' in data &&
-      data.saveRunConfig != null
-    ) {
-      revalidator.revalidate();
-    }
-  }, [fetcherSaveRunConfig.state, fetcherSaveRunConfig.data, revalidator]);
+  useActionToast(saveRunConfigData, {
+    active: fetcherSaveRunConfig.state !== 'idle',
+    error: () => saveRunConfigError,
+    id: 'save-run-config',
+    onSuccess: () => revalidator.revalidate(),
+    success: 'Run configuration saved.',
+  });
 
   // 🔌 Short Circuit
   return {

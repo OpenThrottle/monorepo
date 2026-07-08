@@ -34,11 +34,13 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
 
   // Setup
+  const actionError =
+    actionData != null && 'error' in actionData ? actionData.error : undefined;
 
   // Handlers
 
@@ -50,7 +52,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <NoteForm action="create" />
+      <NoteForm action="create" error={actionError} />
     </GlobalScreen>
   );
 }

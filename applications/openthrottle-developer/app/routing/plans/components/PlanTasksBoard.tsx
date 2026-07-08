@@ -3,6 +3,7 @@ import classnames from 'classnames';
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDrag, useDrop } from 'react-dnd';
+import { toast } from '@openthrottle/react-router-shadcn';
 import { useFetcher, useRevalidator } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTaskCard } from '~/routing/plans/components/PlanTaskCard';
@@ -196,6 +197,9 @@ export const PlanTasksBoard = (
       setAnnouncement(
         `Failed to move task: ${fetcher.data.updateTaskError}. Reverted.`,
       );
+      toast.error(`Failed to move task: ${fetcher.data.updateTaskError}`, {
+        id: 'update-task-status',
+      });
       return;
     }
     if ('ok' in fetcher.data && fetcher.data.ok) {
