@@ -3,10 +3,10 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   APP_URL,
+  canonicalMeta,
   mergeRouteModuleMeta,
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
-import { canonicalMeta } from '~/global/utils/canonical';
 import {
   FEATURES,
   OpenThrottleLogo,
