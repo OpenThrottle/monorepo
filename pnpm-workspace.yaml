@@ -112,7 +112,7 @@ catalog:
   '@preact/signals': '^2.0.2'
   '@radix-ui/react-slot': '^1.2.4'
   '@react-router/dev': '8.0.1'
-  '@react-router/express': '8.0.1'
+  '@react-router/express': '8.1.0'
   '@react-router/fs-routes': '8.0.1'
   '@react-router/node': '8.0.1'
   '@react-router/serve': '8.0.1'
