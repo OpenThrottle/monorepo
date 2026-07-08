@@ -6,10 +6,13 @@
 import { registerEnumType } from '@nestjs/graphql';
 import { WORKSPACE_EDITOR_IDS } from '@openthrottle/nestjs-repositories';
 
-export enum WorkspaceEditorIdEnum {
-  CURSOR = 'cursor',
-  VSCODE = 'vscode',
-}
+export const WorkspaceEditorIdEnum = {
+  CURSOR: 'cursor',
+  VSCODE: 'vscode',
+} as const;
+
+export type WorkspaceEditorIdEnum =
+  (typeof WorkspaceEditorIdEnum)[keyof typeof WorkspaceEditorIdEnum];
 
 registerEnumType(WorkspaceEditorIdEnum, {
   description: `Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: ${WORKSPACE_EDITOR_IDS.join(', ')}.`,
