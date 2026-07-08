@@ -6,6 +6,12 @@ import {
   CollapsibleTrigger,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  THEMES,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
@@ -34,6 +40,9 @@ import {
   getBrandColorInputValue,
   type ThemeMode,
 } from '~/global/data/atom.config';
+
+/** Sentinel Select value for "no palette" (base theme.css + brand override). */
+const THEME_DEFAULT_OPTION = 'default';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -81,6 +90,13 @@ export default function Component(
     }
 
     setConfig({ ...config, theme: value as ThemeMode });
+  };
+
+  const handleThemeIdChange = (value: string) => {
+    setConfig({
+      ...config,
+      themeId: value === THEME_DEFAULT_OPTION ? undefined : value,
+    });
   };
 
   // Markup
@@ -141,6 +157,33 @@ export default function Component(
             </ToggleGroup>
             <p className="text-muted-foreground text-sm">
               Default: {DEFAULT_APPEARANCE_CONFIG.theme}
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <Label htmlFor="theme-palette">Theme palette</Label>
+            <Select
+              onValueChange={handleThemeIdChange}
+              value={config.themeId ?? THEME_DEFAULT_OPTION}
+            >
+              <SelectTrigger className="w-64" id="theme-palette">
+                <SelectValue placeholder="Select a palette" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={THEME_DEFAULT_OPTION}>
+                  System default
+                </SelectItem>
+                {THEMES.map((theme) => (
+                  <SelectItem key={theme.id} value={theme.id}>
+                    {theme.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-muted-foreground text-sm">
+              Palettes remap the shared design tokens and apply in both light
+              and dark mode. “System default” keeps the base theme and your
+              brand color.
             </p>
           </section>
 
