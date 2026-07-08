@@ -1,8 +1,41 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { createTestEnv } from '@openthrottle/react-router-testing';
 import { createRoutesStub } from 'react-router';
 import { default as Route } from '../_layout.mail.search';
+import type { Route as RouteTypes } from '@/app/routes/+types/_layout.mail.search';
+
+// The real ancestor chain for this route: root -> _layout.mail (pathless
+// layout) -> _layout.mail.search. matches is unused by the component under
+// test, but its type is a fixed tuple keyed to that chain, so it's built
+// out fully rather than stubbed.
+const matches: RouteTypes.ComponentProps['matches'] = [
+  {
+    handle: undefined,
+    id: 'root',
+    loaderData: {
+      canonical: 'http://localhost/',
+      env: createTestEnv({ APP_NAME: 'openthrottle-email' }),
+    },
+    params: {},
+    pathname: '/',
+  },
+  {
+    handle: undefined,
+    id: 'routes/_layout.mail',
+    loaderData: { defaultSidebarOpen: true },
+    params: {},
+    pathname: '/mail',
+  },
+  {
+    handle: undefined,
+    id: 'routes/_layout.mail.search',
+    loaderData: { messages: [], query: 'test query' },
+    params: {},
+    pathname: '/mail/search',
+  },
+];
 
 describe('routes/_layout.mail.search.tsx', () => {
   test('should render search route with empty state when no query', () => {
@@ -28,7 +61,7 @@ describe('routes/_layout.mail.search.tsx', () => {
       <Route
         actionData={undefined}
         loaderData={{ messages: [], query: 'test query' }}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
