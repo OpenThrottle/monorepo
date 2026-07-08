@@ -2,10 +2,11 @@ import * as React from 'react';
 import {
   DataTable,
   TabsContent,
-  // ToggleGroup,
-  // ToggleGroupItem,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-// import { List, Table2 } from 'lucide-react';
+import { List, Table2 } from 'lucide-react';
+import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
@@ -27,14 +28,19 @@ const PLAN_TASKS_VIEW = {
 
 type PlanTasksView = (typeof PLAN_TASKS_VIEW)[keyof typeof PLAN_TASKS_VIEW];
 
+const isPlanTasksView = (value: unknown): value is PlanTasksView =>
+  value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table;
+
 export interface PlanTabTasksProps {
   tasks: PlanTaskRowFragment[];
 }
 
 export const PlanTabTasks = (): React.ReactElement => {
   // Hooks
-  const [view /*, setView */] = React.useState<PlanTasksView>(
+  const [view, setView] = usePersistentSetting<PlanTasksView>(
+    'plans.tasksView',
     PLAN_TASKS_VIEW.list,
+    isPlanTasksView,
   );
   const { tasks } = usePlanDetailRouteData();
   const sortedTasks = React.useMemo(
@@ -57,12 +63,15 @@ export const PlanTabTasks = (): React.ReactElement => {
   );
 
   // Handlers
-  // const handleViewChange = React.useCallback((value: string) => {
-  //   // Radix emits '' when the active item is re-clicked; keep one view selected.
-  //   if (value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table) {
-  //     setView(value);
-  //   }
-  // }, []);
+  const handleViewChange = React.useCallback(
+    (value: string) => {
+      // Radix emits '' when the active item is re-clicked; keep one view selected.
+      if (value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table) {
+        setView(value);
+      }
+    },
+    [setView],
+  );
 
   // Markup
 
@@ -72,7 +81,7 @@ export const PlanTabTasks = (): React.ReactElement => {
 
   return (
     <TabsContent value="tasks">
-      {/* <div className="flex justify-end pb-2">
+      <div className="flex justify-end pb-2">
         <ToggleGroup
           aria-label="Task view"
           data-testid="PlanTabTasks-view-toggle"
@@ -92,7 +101,7 @@ export const PlanTabTasks = (): React.ReactElement => {
             <Table2 className="size-3.5" />
           </ToggleGroupItem>
         </ToggleGroup>
-      </div> */}
+      </div>
 
       {view === PLAN_TASKS_VIEW.list ? (
         <PlanTaskItems tasks={sortedTasks} />
