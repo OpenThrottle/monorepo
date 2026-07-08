@@ -15,7 +15,8 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.$noteId';
-import { useSearchParams } from 'react-router';
+import { useActionToast } from '~/global/hooks/useActionToast';
+import { useNavigation, useSearchParams } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { EyeIcon, PencilIcon } from 'lucide-react';
 import {
@@ -62,14 +63,17 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigation = useNavigation();
 
   // Setup
   const { note } = loaderData;
   const isEditing = searchParams.get(NOTE_MODE_PARAM) === NOTE_EDIT_MODE;
+  const actionError =
+    actionData != null && 'error' in actionData ? actionData.error : undefined;
 
   // Handlers
   const onSetMode = (edit: boolean): void => {
@@ -90,6 +94,12 @@ export default function Component(
   // Markup
 
   // Life Cycle
+  useActionToast(actionData, {
+    active: navigation.state !== 'idle',
+    id: 'note-update',
+    onSuccess: () => onSetMode(false),
+    success: 'Note updated.',
+  });
 
   // 🔌 Short Circuit
   if (!note) {
@@ -135,7 +145,7 @@ export default function Component(
       </div>
 
       {isEditing ? (
-        <NoteForm action="update" note={note} />
+        <NoteForm action="update" error={actionError} note={note} />
       ) : (
         <MarkdownRenderer source={note.content} />
       )}
@@ -170,15 +180,10 @@ export const action = async (args: Route.ActionArgs) => {
       return { error: 'Note not found.' };
     }
 
-    return {
-      redirect: `/notes/${noteId}`,
-    };
+    return { ok: true as const };
   } catch {
-    return { error: 'Note not found.' };
+    return { error: 'Could not update the note. Please try again.' };
   }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

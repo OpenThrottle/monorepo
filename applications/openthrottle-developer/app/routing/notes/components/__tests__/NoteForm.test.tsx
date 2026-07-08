@@ -72,4 +72,25 @@ describe('NoteForm Component', () => {
       expect(component.getByLabelText(/author \(optional\)/i)).toHaveValue('');
     });
   });
+
+  describe('error feedback', () => {
+    test('surfaces an action-level error inline as an alert', () => {
+      const props: NoteFormProps = {
+        action: 'update',
+        error: 'Could not update the note. Please try again.',
+      };
+      const component = renderRoutesStub(<NoteForm {...props} />);
+
+      expect(component.getByRole('alert')).toHaveTextContent(
+        'Could not update the note. Please try again.',
+      );
+    });
+
+    test('renders no alert when there is no error', () => {
+      const props: NoteFormProps = { action: 'create' };
+      const component = renderRoutesStub(<NoteForm {...props} />);
+
+      expect(component.queryByRole('alert')).toBeNull();
+    });
+  });
 });
