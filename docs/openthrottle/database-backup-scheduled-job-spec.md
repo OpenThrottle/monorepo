@@ -94,6 +94,59 @@ DATABASE_BACKUP_CRON="0 0 0 * * *"
 # Ensure image includes: pnpm, pg_dump, zip; Postgres host reachable from container network
 ```
 
+## Hardening & runbook (post-2026-07-05)
+
+On 2026-07-05 a bare `DATABASE_BACKUP_CRON=0` produced a backup every 60s. The
+following guardrails make that class of failure impossible; this section also
+documents how to inspect and clean up a runaway scheduler.
+
+### ENABLED vs CRON (two distinct switches)
+
+- **To disable backups**: set `DATABASE_BACKUP_ENABLED=false`. This is the ONLY
+  disable switch.
+- `DATABASE_BACKUP_CRON` is a schedule, never a disable switch. A bad value is
+  **rejected** (registration skipped, logged at `warn`) — it can never mean
+  "disable" or silently fall back to every-minute.
+
+### Cron validation (`validateBackupCronPattern`)
+
+A pattern must be 5 or 6 fields with a **fixed seconds (6-field) and minutes**
+field, so it fires **at most hourly**. Rejected: `0` (wrong field count),
+`* * * * *`, `*/5 * * * *`, `*/10 0 0 * * *`, anything with illegal characters.
+Accepted: `0 0 0 * * *` (daily), `0 * * * *` (hourly), `0 30 3 * * *`.
+
+### Idempotent registration
+
+The scheduler is registered with `queue.upsertJobScheduler(<stable id>, …)`
+keyed by `DATABASE_BACKUP_REPEATABLE_JOB_ID`, so a pattern change **replaces**
+the prior schedule. (The legacy `queue.add({ repeat })` was keyed by
+pattern-hash, which let a bad per-minute schedule coexist with the daily one.)
+
+### Single-owner across checkouts
+
+Many server instances share one Redis. Only the canonical checkout schedules
+backups: `resolveBackupOwnership` treats any checkout under an
+`openthrottle-worktrees/` path as a non-owner. Override with
+`OT_BACKUP_OWNER=true` (or force off with `OT_BACKUP_OWNER=false`).
+
+### Retention
+
+The backup script keeps the most recent `DATABASE_BACKUP_RETENTION_COUNT`
+archives (default 14) matching `openthrottle-YYYYMMDD-HHMMSS.zip` and deletes
+older ones. `seed*.sql` and any non-archive file are never touched.
+
+### Inspect / remove a runaway scheduler in Redis
+
+```bash
+# List repeatable schedulers for the queue (job-scheduler + legacy repeat keys):
+redis-cli ZRANGE "bull:Database Backup:repeat" 0 -1 WITHSCORES
+redis-cli KEYS "bull:Database Backup:repeat:*"
+
+# Remove a specific stale schedule safely (from a Node/REPL with the Queue):
+#   await queue.removeJobScheduler('openthrottle-database-backup-repeatable')
+#   // legacy key: await queue.removeRepeatableByKey('<repeatJobKey>')
+```
+
 ## Related
 
 - Manual backup: `pnpm run database:backup` (root `package.json`)
