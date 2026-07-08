@@ -6,7 +6,7 @@ import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 // route's own responsibility: assembling static + non-draft manifest paths and
 // delegating to the shared helper.
 const buildSitemapResponse = vi.fn(
-  () =>
+  (_paths: readonly string[]) =>
     new Response('<urlset />', {
       headers: { 'Content-Type': 'application/xml' },
     }),
@@ -31,7 +31,7 @@ describe('routes/sitemap[.]xml.tsx', () => {
     expect(response.headers.get('Content-Type')).toBe('application/xml');
     expect(buildSitemapResponse).toHaveBeenCalledTimes(1);
 
-    const paths = buildSitemapResponse.mock.calls[0]?.[0] as string[];
+    const paths = buildSitemapResponse.mock.calls[0]?.[0];
 
     // Static page routes.
     expect(paths).toContain('/');
