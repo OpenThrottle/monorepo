@@ -73,7 +73,10 @@ describe('useActionToast', () => {
     );
 
     rerender({ active: true, result: undefined });
-    rerender({ active: false, result: { error: 'Boom.' } });
+    rerender({
+      active: false,
+      result: { error: 'Boom.' } as unknown as undefined,
+    });
 
     expect(errorMock).toHaveBeenCalledWith('Boom.', { id: 'test-toast' });
     expect(successMock).not.toHaveBeenCalled();
