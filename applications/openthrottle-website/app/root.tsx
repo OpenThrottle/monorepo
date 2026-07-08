@@ -12,10 +12,14 @@ import {
 import type { ShouldRevalidateFunction } from 'react-router';
 import {
   artwork,
+  buildOrganizationJsonLd,
+  buildSeoMeta,
+  buildWebsiteJsonLd,
   OPENTHROTTLE_AUTHOR,
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_GITHUB_URL,
   OPENTHROTTLE_META_DESCRIPTION,
+  serializeJsonLd,
   useNonce,
 } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -72,26 +76,13 @@ export const loader = async (args: Route.LoaderArgs) => {
  * @link https://reactrouter.com/start/framework/route-module#meta
  */
 export const meta = (_args: Route.MetaArgs) => {
-  const title = `Welcome | ${SITE_TITLE}`;
-
-  return [
-    { title },
-    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
-
-    // Open Graph (Facebook, LinkedIn, Slack, etc.)
-    { content: OPENTHROTTLE_META_DESCRIPTION, property: 'og:description' },
-    { content: SITE_OG_IMAGE, property: 'og:image' },
-    { content: SITE_TITLE, property: 'og:site_name' },
-    { content: title, property: 'og:title' },
-    { content: 'website', property: 'og:type' },
-    { content: APP_URL, property: 'og:url' },
-
-    // Twitter / X
-    { content: 'summary_large_image', name: 'twitter:card' },
-    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'twitter:description' },
-    { content: SITE_OG_IMAGE, name: 'twitter:image' },
-    { content: title, name: 'twitter:title' },
-  ];
+  return buildSeoMeta({
+    description: OPENTHROTTLE_META_DESCRIPTION,
+    image: SITE_OG_IMAGE,
+    siteName: SITE_TITLE,
+    title: `Welcome | ${SITE_TITLE}`,
+    url: APP_URL,
+  });
 };
 
 /**
@@ -117,23 +108,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Structured data so search engines and social platforms can render rich
   // results for the organization and the site as a whole.
-  const jsonLd = JSON.stringify([
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      founder: { '@type': 'Person', name: OPENTHROTTLE_AUTHOR },
+  const jsonLd = serializeJsonLd([
+    buildOrganizationJsonLd({
+      founderName: OPENTHROTTLE_AUTHOR,
       logo: SITE_OG_IMAGE,
       name: SITE_TITLE,
       sameAs: [OPENTHROTTLE_GITHUB_URL],
       url: APP_URL,
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
+    }),
+    buildWebsiteJsonLd({
       description: OPENTHROTTLE_META_DESCRIPTION,
       name: SITE_TITLE,
       url: APP_URL,
-    },
+    }),
   ]);
 
   // Handlers
