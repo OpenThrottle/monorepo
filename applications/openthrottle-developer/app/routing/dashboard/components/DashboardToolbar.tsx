@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useSearchParams } from 'react-router';
 import {
   Select,
@@ -58,7 +58,7 @@ export const DashboardToolbar = (
 
   return (
     <div
-      className={classnames('flex gap-4 p-4', className)}
+      className={clsx('flex gap-4 p-4', className)}
       data-testid="DashboardToolbar"
     >
       <Select onValueChange={onChangeOrg} value={owner}>

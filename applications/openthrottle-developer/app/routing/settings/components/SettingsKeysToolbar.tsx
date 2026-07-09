@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { PlusIcon } from 'lucide-react';
 import {
   Button,
@@ -65,7 +65,7 @@ export const SettingsKeysToolbar = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'flex flex-wrap items-end justify-between gap-4',
         className,
       )}

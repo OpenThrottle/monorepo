@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Form, Link } from 'react-router';
 import {
   Button,
@@ -36,7 +36,7 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
   return (
     <div>
       <Form
-        className={classnames('w-full', className)}
+        className={clsx('w-full', className)}
         data-testid="NoteForm"
         method="post"
       >

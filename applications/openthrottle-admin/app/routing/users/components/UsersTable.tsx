@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { Link } from 'react-router';
@@ -29,7 +29,7 @@ export const UsersTable = (props: UsersTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('bg-card ui-border rounded-lg border', className)}
+      className={clsx('bg-card ui-border rounded-lg border', className)}
       data-testid="UsersTable"
     >
       <DataTable<UserRowFragment, string | number | null | undefined>

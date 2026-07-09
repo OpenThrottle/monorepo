@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import type { DocEntry } from '../utils/buildDocsManifest';
 
@@ -31,10 +31,7 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <article
-      className={classnames('max-w-3xl', className)}
-      data-testid="DocPageView"
-    >
+    <article className={clsx('max-w-3xl', className)} data-testid="DocPageView">
       <MarkdownRenderer source={entry.content} />
     </article>
   );

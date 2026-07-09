@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useAtom } from 'jotai';
 import { editorAtom } from '../data/atom.editor';
 import { useEditor } from '../hooks/useEditor';
@@ -60,7 +60,7 @@ export const EditorTabs = (
 
   return (
     <div
-      className={classnames('mt-1 flex max-w-full overflow-y-auto', className)}
+      className={clsx('mt-1 flex max-w-full overflow-y-auto', className)}
       data-testid="EditorTabs"
     >
       {tabs.map((file) => (

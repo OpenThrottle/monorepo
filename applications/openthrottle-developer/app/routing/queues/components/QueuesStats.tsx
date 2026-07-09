@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
@@ -59,7 +59,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
     return (
       <section
         aria-labelledby="queues-stats-heading"
-        className={classnames(className)}
+        className={clsx(className)}
         data-testid="QueuesStats"
       >
         <h2 className="text-md" id="queues-stats-heading">
@@ -76,7 +76,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
   return (
     <section
       aria-labelledby="queues-stats-heading"
-      className={classnames(className)}
+      className={clsx(className)}
       data-testid="QueuesStats"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

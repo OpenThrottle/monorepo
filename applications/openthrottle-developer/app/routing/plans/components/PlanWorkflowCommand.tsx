@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
@@ -48,7 +48,7 @@ export const PlanWorkflowCommand = (
 
   return (
     <div
-      className={classnames('space-y-2', className)}
+      className={clsx('space-y-2', className)}
       data-testid="PlanWorkflowCommand"
     >
       <h2>Canonical CLI (preview)</h2>

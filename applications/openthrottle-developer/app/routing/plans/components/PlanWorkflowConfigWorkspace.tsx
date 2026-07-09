@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Input,
@@ -138,7 +138,7 @@ export const PlanWorkflowConfigWorkspace = (
                   {recentPaths.map((path) => (
                     <li
                       aria-selected={path === value.trim()}
-                      className={classnames(
+                      className={clsx(
                         'hover:bg-accent flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs',
                         path === value.trim() && 'bg-accent/50',
                       )}

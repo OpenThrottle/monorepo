@@ -18,7 +18,7 @@ import {
   TableRow,
   toast,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import { ConfirmModal } from '~/global/components/ConfirmModal';
 import { MoveToFolderDropdown } from '~/global/components/MoveToFolderDropdown';
@@ -129,7 +129,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
   // 🔌 Short Circuit — loading: show skeleton table
   if (loading) {
     return (
-      <div className={classnames('p-4', className)} data-testid="MessageList">
+      <div className={clsx('p-4', className)} data-testid="MessageList">
         <Table>
           <TableHeader>
             <TableRow>
@@ -171,7 +171,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
   // 🔌 Short Circuit — empty: show Empty component with folder-specific copy
   if (messages.length === 0) {
     return (
-      <div className={classnames('p-4', className)} data-testid="MessageList">
+      <div className={clsx('p-4', className)} data-testid="MessageList">
         <Empty className="min-h-[280px]">
           <EmptyHeader>
             <EmptyTitle>{emptyCopy.title}</EmptyTitle>
@@ -184,7 +184,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('flex flex-col gap-2 p-4', className)}
+      className={clsx('flex flex-col gap-2 p-4', className)}
       data-testid="MessageList"
     >
       {/* Bulk actions bar when 1+ rows selected. Wire Mark read / Delete to API when backend exists. */}
@@ -276,7 +276,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
             const isSelected = selectedSet.has(msg.id);
             return (
               <TableRow
-                className={classnames(
+                className={clsx(
                   msg.read ? 'font-normal' : 'font-medium',
                   isSelected && 'bg-muted',
                 )}

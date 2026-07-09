@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { PlusIcon } from 'lucide-react';
@@ -52,11 +52,9 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('w-full', className)} data-testid="NotesToolbar">
+    <div className={clsx('w-full', className)} data-testid="NotesToolbar">
       <form onSubmit={handleSearchSubmit} role="search">
-        <div
-          className={classnames('flex w-full flex-wrap items-center', 'gap-2')}
-        >
+        <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
           <Input
             aria-label="Search notes"
             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-[170px] min-w-[100px] border px-2.5 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import {
   Button,
@@ -83,7 +83,7 @@ export const EditorToolbar = (
   return (
     <div onKeyDown={handleKeyDown}>
       <div
-        className={classnames(
+        className={clsx(
           'flex items-center justify-between border-b border-gray-700 bg-gray-900 p-4',
           className,
         )}

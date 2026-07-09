@@ -12,6 +12,7 @@
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "@paper-design/shaders-react": "catalog:",
+    "clsx": "catalog:",
     "rollbar": "catalog:"
   },
   "description": "TODO: Add a description",

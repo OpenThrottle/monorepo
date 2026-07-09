@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { MonitorCogIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
@@ -25,7 +25,7 @@ export const SettingsWorkspaceIntro = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames(className)}>
+    <div className={clsx(className)}>
       <GlobalHeading
         className="mb-4"
         heading="h1"

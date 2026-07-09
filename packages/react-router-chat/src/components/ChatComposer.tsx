@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, TextArea } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface ChatComposerProps {
   readonly className?: string;
@@ -106,16 +106,13 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
 
   return (
     <form
-      className={classnames(
-        'flex shrink-0 flex-col gap-4 border-t pt-4',
-        className,
-      )}
+      className={clsx('flex shrink-0 flex-col gap-4 border-t pt-4', className)}
       data-testid="ChatComposer"
       onSubmit={onFormSubmit}
     >
       <TextArea
         aria-label="Message"
-        className={classnames({ 'text-muted-foreground': readOnly })}
+        className={clsx({ 'text-muted-foreground': readOnly })}
         disabled={disabled}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={onTextAreaKeyDown}
@@ -126,10 +123,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         value={draft}
       />
       <div
-        className={classnames(
-          'flex',
-          toolbar ? 'justify-between' : 'justify-end',
-        )}
+        className={clsx('flex', toolbar ? 'justify-between' : 'justify-end')}
       >
         {toolbar}
         {isStreaming ? (

@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { BotIcon, MessageSquarePlus } from 'lucide-react';
 import { useChatOptional } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
@@ -132,7 +132,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <Sheet defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
         <SheetTrigger asChild={true}>{triggerNode}</SheetTrigger>
         <SheetContent
-          className={classnames(
+          className={clsx(
             'flex w-full flex-col sm:max-w-md md:max-w-4xl',
             className,
           )}
@@ -155,7 +155,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     <Dialog defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
       <DialogTrigger asChild={true}>{triggerNode}</DialogTrigger>
       <DialogContent
-        className={classnames(
+        className={clsx(
           'flex max-h-[min(85vh,720px)] w-full max-w-3xl flex-col',
           className,
         )}

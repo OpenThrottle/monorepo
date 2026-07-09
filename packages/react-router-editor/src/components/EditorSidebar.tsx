@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useEditor } from '../hooks/useEditor';
 import { EditorSidebarFile } from './EditorSidebarFile';
 
@@ -31,7 +31,7 @@ export const EditorSidebar = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'w-[220px] text-xs overflow-ellipsis',
         'flex flex-col gap-0.5 p-4',
         'border-l border-gray-700',

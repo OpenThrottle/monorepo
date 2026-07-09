@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface PersonasToolbarProps {
   className?: string;
@@ -12,7 +12,7 @@ export const PersonasToolbar = (
 
   return (
     <div
-      className={classnames('text-muted-foreground text-sm', className)}
+      className={clsx('text-muted-foreground text-sm', className)}
       data-testid="PersonasToolbar"
     >
       Personas are read from <code>.agents/personas/</code> on disk. Edit files

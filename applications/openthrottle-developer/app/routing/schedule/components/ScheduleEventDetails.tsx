@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { CalendarClockIcon, MapPinIcon } from 'lucide-react';
 import {
   Badge,
@@ -38,7 +38,7 @@ export const ScheduleEventDetails = (
 
   return (
     <Card
-      className={classnames('w-full', className)}
+      className={clsx('w-full', className)}
       data-testid="ScheduleEventDetails"
     >
       <CardHeader>

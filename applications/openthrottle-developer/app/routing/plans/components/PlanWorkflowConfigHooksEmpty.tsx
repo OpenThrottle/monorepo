@@ -21,7 +21,7 @@ export const PlanWorkflowConfigHooksEmpty = (
 
   return (
     <div
-      // className={classnames('p-4', className)}
+      // className={clsx('p-4', className)}
       data-testid="PlanWorkflowConfigHooksEmpty"
     >
       <p className="text-muted-foreground text-sm">

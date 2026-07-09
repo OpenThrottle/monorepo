@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface <%= name %>Props {
   className?: string;
@@ -27,7 +27,7 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
 
   return (
     <table
-      className={classnames('w-full', className)}
+      className={clsx('w-full', className)}
       data-testid="<%= name %>"
     >
       <thead className="font-semibold text-left sticky top-0 ui-background [&_th]:p-2">

@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
   toast,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ArrowBendUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendUpLeft';
 import { ArrowBendDoubleUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendDoubleUpLeft';
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
@@ -113,7 +113,7 @@ export const MessageDetail = (
   if (message == null && !loading) {
     return (
       <div
-        className={classnames('text-muted-foreground p-4', className)}
+        className={clsx('text-muted-foreground p-4', className)}
         data-testid="MessageDetail"
       >
         Select a message
@@ -124,7 +124,7 @@ export const MessageDetail = (
   // Loading skeleton for header + body (e.g. when loader uses defer or async fetch)
   if (loading || message == null) {
     return (
-      <div className={classnames('p-4', className)} data-testid="MessageDetail">
+      <div className={clsx('p-4', className)} data-testid="MessageDetail">
         <Card>
           <CardHeader className="space-y-2">
             <Skeleton
@@ -163,7 +163,7 @@ export const MessageDetail = (
   const hasAttachments = attachments.length > 0;
 
   return (
-    <div className={classnames('p-4', className)} data-testid="MessageDetail">
+    <div className={clsx('p-4', className)} data-testid="MessageDetail">
       <Card>
         <CardHeader className="space-y-2">
           <CardTitle>{msg.subject}</CardTitle>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, Empty } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
@@ -26,7 +26,7 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={classnames('my-8', className)}>
+    <Empty className={clsx('my-8', className)}>
       <GlobalHeading
         heading="h3"
         title={search ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title}

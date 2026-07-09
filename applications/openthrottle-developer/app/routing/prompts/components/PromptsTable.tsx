@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import {
   Badge,
@@ -42,7 +42,7 @@ export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="PromptsTable"
     >
       <DataTable<PromptCardFragment, string | number | null | undefined>

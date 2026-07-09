@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { useSearchParams } from 'react-router';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
@@ -104,10 +104,7 @@ export const ProjectsToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('w-full', className)}
-      data-testid="ProjectsToolbar"
-    >
+    <div className={clsx('w-full', className)} data-testid="ProjectsToolbar">
       <form
         action="/projects"
         className="flex w-full flex-wrap items-center gap-2"

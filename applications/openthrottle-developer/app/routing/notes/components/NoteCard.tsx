@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Card,
@@ -32,7 +32,7 @@ export const NoteCard = (props: NoteCardProps): React.ReactElement => {
 
   return (
     <Card
-      className={classnames('flex flex-col', className)}
+      className={clsx('flex flex-col', className)}
       data-testid="NoteCard"
       key={note.id}
     >

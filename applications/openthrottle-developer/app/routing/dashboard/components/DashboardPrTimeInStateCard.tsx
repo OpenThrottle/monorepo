@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
@@ -62,7 +62,7 @@ export const DashboardPrTimeInStateCard = (
   if (isEmpty) {
     return (
       <div
-        className={classnames('text-muted-foreground text-sm', className)}
+        className={clsx('text-muted-foreground text-sm', className)}
         data-testid="DashboardPrTimeInStateCard"
       >
         No PR time in state summary.
@@ -72,7 +72,7 @@ export const DashboardPrTimeInStateCard = (
 
   return (
     <div
-      className={classnames('-ml-1 overflow-auto text-sm', className)}
+      className={clsx('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardPrTimeInStateCard"
     >
       <ChartContainer

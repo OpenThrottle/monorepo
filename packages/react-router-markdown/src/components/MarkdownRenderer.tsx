@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { MDXProvider } from '@mdx-js/react';
 import { compileMarkdownSync } from '../utils/compileMarkdown';
 import type { CompiledMarkdown } from '../utils/compileMarkdown';
@@ -78,7 +78,7 @@ export const MarkdownRenderer = (
 
   return (
     <div
-      className={classnames('markdown max-w-full overflow-auto', className)}
+      className={clsx('markdown max-w-full overflow-auto', className)}
       data-testid="MarkdownRenderer"
     >
       <MDXProvider components={components}>

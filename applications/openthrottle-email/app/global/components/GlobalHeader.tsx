@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import type { LinkProps } from 'react-router';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
@@ -59,7 +59,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
 
   return (
     <nav
-      className={classnames(
+      className={clsx(
         'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
         'sticky top-0 z-50 w-full px-4',
@@ -74,7 +74,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
         />
 
         <div
-          className={classnames(
+          className={clsx(
             'hidden items-center gap-2 md:flex',
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}

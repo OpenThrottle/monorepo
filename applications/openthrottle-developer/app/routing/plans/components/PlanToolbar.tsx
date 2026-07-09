@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   DropdownMenu,
@@ -182,10 +182,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames(
-        'flex flex-1 flex-wrap items-center gap-2',
-        className,
-      )}
+      className={clsx('flex flex-1 flex-wrap items-center gap-2', className)}
       data-testid="PlanToolbar"
     >
       {/* Status / run group */}

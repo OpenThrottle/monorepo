@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useEditor } from '../hooks/useEditor';
 import { isHiddenFile } from '../utils';
 
@@ -39,7 +39,7 @@ export const EditorSidebarFile = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'cursor-pointer rounded-sm px-2 py-1 transition-colors',
         'hover:bg-white/10',
         {

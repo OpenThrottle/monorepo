@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { formatChatTimestamp } from '../utils/index';
@@ -42,20 +42,17 @@ const ChatThreadMessageComponent = (
 
   return (
     <article
-      className={classnames('flex flex-col gap-1 text-sm', {
+      className={clsx('flex flex-col gap-1 text-sm', {
         'items-end': message.role === 'user',
         'items-start': message.role !== 'user',
       })}
       data-testid={`ChatThread-message-${message.id}`}
     >
       <div
-        className={classnames(
-          'flex flex-wrap items-baseline gap-x-2 gap-y-0.5',
-          {
-            'justify-end': message.role === 'user',
-            'justify-start': message.role !== 'user',
-          },
-        )}
+        className={clsx('flex flex-wrap items-baseline gap-x-2 gap-y-0.5', {
+          'justify-end': message.role === 'user',
+          'justify-start': message.role !== 'user',
+        })}
       >
         <span className="text-muted-foreground text-xs font-medium">
           {roleLabel[message.role]}
@@ -70,7 +67,7 @@ const ChatThreadMessageComponent = (
         ) : null}
       </div>
       <div
-        className={classnames('max-w-[85%] rounded-lg', {
+        className={clsx('max-w-[85%] rounded-lg', {
           'bg-primary text-primary-foreground px-3 py-2':
             message.role === 'user',
           // 'px-3 py-2': message.role === 'assistant',

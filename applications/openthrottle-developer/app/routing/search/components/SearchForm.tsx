@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
 export interface SearchFormProps {
@@ -36,7 +36,7 @@ export const SearchForm = (props: SearchFormProps): React.ReactElement => {
   return (
     <form
       action="/search"
-      className={classnames('p-4', className)}
+      className={clsx('p-4', className)}
       data-testid="SearchForm"
       method="get"
       role="search"

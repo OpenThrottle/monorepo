@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Collapsible,
   CollapsibleContent,
@@ -61,7 +61,7 @@ export const ChatThinkingBlock = (
         data-testid="ChatThinkingBlock-content"
       >
         <Markdown
-          className={classnames(
+          className={clsx(
             'text-muted-foreground text-xs break-words italic',
             '[&_pre]:whitespace-pre-wrap',
           )}
