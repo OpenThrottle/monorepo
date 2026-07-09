@@ -12,15 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
   THEMES,
-  ToggleGroup,
-  ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import {
-  ChevronDownIcon,
-  MoonIcon,
-  SunIcon,
-  SwatchBookIcon,
-} from 'lucide-react';
+import { OpenThrottleThemeToggle } from '@openthrottle/react-router-ui';
+import { ChevronDownIcon, SwatchBookIcon } from 'lucide-react';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
@@ -34,11 +28,13 @@ import type { Route } from '@/app/routes/+types/settings.appearance';
 import {
   APPEARANCE_BRAND_OVERRIDE_KEYS,
   APPEARANCE_THEME_COLOR_TOKEN_KEYS,
-  configAtom,
-  DEFAULT_APPEARANCE_CONFIG,
   DEFAULT_BRAND_HSL,
   getBrandColorInputValue,
   type ThemeMode,
+} from '@openthrottle/react-router-utils';
+import {
+  configAtom,
+  DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
 
 /** Sentinel Select value for "no palette" (base theme.css + brand override). */
@@ -84,12 +80,8 @@ export default function Component(
     setConfig({ ...config, brand: undefined });
   };
 
-  const handleThemeChange = (value: string) => {
-    if (value !== 'light' && value !== 'dark') {
-      return;
-    }
-
-    setConfig({ ...config, theme: value as ThemeMode });
+  const handleThemeChange = (theme: ThemeMode) => {
+    setConfig({ ...config, theme });
   };
 
   const handleThemeIdChange = (value: string) => {
@@ -130,33 +122,13 @@ export default function Component(
         <div className="space-y-8">
           <section className="space-y-3">
             <Label>Theme</Label>
-            <ToggleGroup
-              aria-label="Color mode"
+            <OpenThrottleThemeToggle
               onValueChange={handleThemeChange}
-              size="sm"
-              type="single"
               value={config.theme}
-              variant="outline"
-            >
-              <ToggleGroupItem
-                aria-label="Light mode"
-                className="gap-1.5 px-2.5"
-                value="light"
-              >
-                <SunIcon aria-hidden={true} className="size-4" />
-                Light
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                aria-label="Dark mode"
-                className="gap-1.5 px-2.5"
-                value="dark"
-              >
-                <MoonIcon aria-hidden={true} className="size-4" />
-                Dark
-              </ToggleGroupItem>
-            </ToggleGroup>
+            />
             <p className="text-muted-foreground text-sm">
-              Default: {DEFAULT_APPEARANCE_CONFIG.theme}
+              Default: {DEFAULT_APPEARANCE_CONFIG.theme} — follows your OS color
+              scheme until you pick Light or Dark.
             </p>
           </section>
 
@@ -181,9 +153,10 @@ export default function Component(
               </SelectContent>
             </Select>
             <p className="text-muted-foreground text-sm">
-              Palettes remap the shared design tokens and apply in both light
-              and dark mode. “System default” keeps the base theme and your
-              brand color.
+              Palettes remap the shared design tokens and apply in light, dark,
+              and System mode — a palette follows your OS color scheme when the
+              theme above is set to System. “System default” (no palette) keeps
+              the base theme and your brand color.
             </p>
           </section>
 
