@@ -22,7 +22,7 @@ export interface QueueJobLogSourceRecord {
 
 const isQueueJobLogLevel = (value: unknown): value is QueueJobLogLevel =>
   typeof value === 'string' &&
-  (QUEUE_JOB_LOG_LEVELS as readonly string[]).includes(value);
+  QUEUE_JOB_LOG_LEVELS.some((level) => level === value);
 
 /**
  * @description Derive a severity bucket. Keyed run lines carry no native level, so:

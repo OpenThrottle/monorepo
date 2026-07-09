@@ -6,16 +6,11 @@ import { z } from 'zod';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 import { AGENTS_MCP_ROUTED_TOOL_NAMES } from './agents-mcp-router';
 
-const ROUTING_TOOL_ENUM = AGENTS_MCP_ROUTED_TOOL_NAMES as unknown as [
-  string,
-  ...string[],
-];
-
 const LlmRoutingSchema = z.object({
   args: z.record(z.string(), z.unknown()).optional(),
   confidence: z.number().min(0).max(1),
   reason: z.string().min(1).max(512),
-  tool: z.enum(ROUTING_TOOL_ENUM),
+  tool: z.enum(AGENTS_MCP_ROUTED_TOOL_NAMES),
 });
 
 /**
@@ -51,10 +46,10 @@ export const messageContentToString = (content: unknown): string => {
           part != null &&
           typeof part === 'object' &&
           'type' in part &&
-          (part as { readonly type?: string }).type === 'text' &&
+          part.type === 'text' &&
           'text' in part
         ) {
-          return String((part as { readonly text: string }).text);
+          return String(part.text);
         }
 
         return '';
@@ -103,7 +98,7 @@ export const parseAgentsMcpLlmRoutingJson = (
   let parsed: unknown;
 
   try {
-    parsed = JSON.parse(text) as unknown;
+    parsed = JSON.parse(text);
   } catch {
     return null;
   }
@@ -120,6 +115,6 @@ export const parseAgentsMcpLlmRoutingJson = (
     args: d.args ?? {},
     confidence: d.confidence,
     reason: d.reason,
-    tool: d.tool as AgentsMcpRouteDecision['tool'],
+    tool: d.tool,
   };
 };

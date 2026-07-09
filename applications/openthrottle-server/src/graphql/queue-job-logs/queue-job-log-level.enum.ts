@@ -16,9 +16,12 @@ import {
  * @description Runtime enum object (`{ debug: 'debug', ... }`) for code-first
  * registration. Built from {@link QUEUE_JOB_LOG_LEVELS} so values stay in lockstep.
  */
-export const QueueJobLogLevelEnum = Object.fromEntries(
-  QUEUE_JOB_LOG_LEVELS.map((level) => [level, level]),
-) as Readonly<Record<QueueJobLogLevel, QueueJobLogLevel>>;
+export const QueueJobLogLevelEnum: Readonly<Record<string, QueueJobLogLevel>> =
+  Object.fromEntries(
+    QUEUE_JOB_LOG_LEVELS.map(
+      (level): readonly [QueueJobLogLevel, QueueJobLogLevel] => [level, level],
+    ),
+  );
 
 registerEnumType(QueueJobLogLevelEnum, {
   description:
