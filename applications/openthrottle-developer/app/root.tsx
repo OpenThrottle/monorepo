@@ -50,7 +50,7 @@ import {
   FEATURE_BETA_PREVIEW,
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_META_DESCRIPTION,
-  resolveThemeMode,
+  useResolvedThemeMode,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
@@ -308,14 +308,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [_user, setUser] = useAtom(userAtom);
   const [config] = useAtom(configAtom);
   const nonce = useNonce();
-  // Lazily read the OS preference on the client so the very first client render
-  // resolves `system` correctly (SSR has no OS knowledge → false).
-  const [prefersDark, setPrefersDark] = React.useState<boolean>(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) {
-      return false;
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  // Resolve light/dark/system → a concrete mode, applying the `.dark` class and
+  // subscribing to OS changes while in system mode (shared across RR apps).
+  const isDarkTheme = useResolvedThemeMode(config.theme) === 'dark';
 
   // Setup
   const env = data?.env ?? {};
@@ -341,33 +336,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [data?.user, data?.userLoadOk, setUser]);
 
-  const isDarkTheme = resolveThemeMode(config.theme, prefersDark) === 'dark';
   const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
-
-  // Keep `prefersDark` in sync with the OS. The change listener is attached
-  // only while in system mode — the one mode where the OS preference changes
-  // the resolved theme — and removed when leaving system mode or on unmount.
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) {
-      return;
-    }
-    const query = window.matchMedia('(prefers-color-scheme: dark)');
-    setPrefersDark(query.matches);
-    if (config.theme !== 'system') {
-      return;
-    }
-    const handlePrefersDarkChange = (event: MediaQueryListEvent): void => {
-      setPrefersDark(event.matches);
-    };
-    query.addEventListener('change', handlePrefersDarkChange);
-    return () => {
-      query.removeEventListener('change', handlePrefersDarkChange);
-    };
-  }, [config.theme]);
-
-  React.useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkTheme);
-  }, [isDarkTheme]);
 
   // 🔌 Short Circuit
 
