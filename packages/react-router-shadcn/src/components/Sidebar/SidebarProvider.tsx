@@ -73,6 +73,11 @@ export function SidebarProvider(props: SidebarProviderProps) {
   );
 
   // Markup
+  const wrapperStyle: React.CSSProperties & Record<`--${string}`, string> = {
+    '--sidebar-width': SIDEBAR_WIDTH,
+    '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+    ...style,
+  };
 
   // Life Cycle
   React.useEffect(() => {
@@ -104,13 +109,7 @@ export function SidebarProvider(props: SidebarProviderProps) {
             className,
           )}
           data-slot="sidebar-wrapper"
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
+          style={wrapperStyle}
           {...rest}
         >
           {children}

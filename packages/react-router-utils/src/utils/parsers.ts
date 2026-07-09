@@ -1,4 +1,4 @@
-export const parseShortUUID = (uuid?: string): string => {
+export const parseShortUUID = (uuid?: string | null): string => {
   if (uuid == null) {
     return '';
   }

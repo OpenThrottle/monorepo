@@ -25,7 +25,8 @@ describe('DatePicker', () => {
     const { container } = render(<DatePicker placeholder="Pick a date" />);
     const trigger = container.querySelector('button');
     expect(trigger).toBeInTheDocument();
-    await user.click(trigger as HTMLButtonElement);
+    if (!trigger) throw new Error('Expected trigger button to be present');
+    await user.click(trigger);
     const calendar = container.ownerDocument.querySelector(
       '[data-slot="calendar"]',
     );
@@ -39,12 +40,13 @@ describe('DatePicker', () => {
       <DatePicker onSelect={onSelect} placeholder="Pick a date" />,
     );
     const trigger = container.querySelector('button');
-    await user.click(trigger as HTMLButtonElement);
+    if (!trigger) throw new Error('Expected trigger button to be present');
+    await user.click(trigger);
     const dayButtons =
       container.ownerDocument.querySelectorAll('button[data-day]');
     const firstDay = dayButtons[0];
     if (firstDay) {
-      await user.click(firstDay as HTMLButtonElement);
+      await user.click(firstDay);
       expect(onSelect).toHaveBeenCalledWith(expect.any(Date));
     }
   });

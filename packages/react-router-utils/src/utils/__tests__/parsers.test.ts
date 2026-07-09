@@ -7,7 +7,7 @@ describe('parseShortUUID', () => {
   });
 
   test('returns an empty string for null', () => {
-    expect(parseShortUUID(null as unknown as string)).toBe('');
+    expect(parseShortUUID(null)).toBe('');
   });
 
   test('returns an empty string for an empty string', () => {

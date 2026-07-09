@@ -1,12 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import type { DataKey } from 'recharts';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
 import { ChartTooltipContent } from './Chart/ChartTooltipContent';
 import type { ChartConfig } from './chart-config';
+import { toDataKey } from './chart-data-key';
 
 const DEFAULT_COLOR = 'var(--chart-1)';
 
@@ -56,9 +56,6 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
   // Setup
   const isVertical = layout === 'vertical';
 
-  // Recharts `TypedDataKey<T>` does not accept `keyof T & string`; values are valid axis keys at runtime.
-  const categoryAxisKey = categoryKey as DataKey<T>;
-
   // Handlers
   const config: ChartConfig = React.useMemo(
     () => ({
@@ -93,7 +90,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
             <XAxis axisLine={false} tickLine={false} type="number" />
             <YAxis
               axisLine={false}
-              dataKey={categoryAxisKey}
+              dataKey={toDataKey<T>(categoryKey)}
               tickLine={false}
               type="category"
               width={80}
@@ -103,7 +100,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
           <>
             <XAxis
               axisLine={false}
-              dataKey={categoryAxisKey}
+              dataKey={toDataKey<T>(categoryKey)}
               tickLine={false}
               tickMargin={8}
             />
@@ -117,7 +114,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
         )}
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
-          dataKey={valueKey as DataKey<T>}
+          dataKey={toDataKey<T>(valueKey)}
           fill={`var(--color-${valueKey})`}
           radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]}
         />

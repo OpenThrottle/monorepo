@@ -9,8 +9,24 @@ import {
 import { useTheme } from 'next-themes';
 import { Toaster as Sonner, toast, type ToasterProps } from 'sonner';
 
+type ToasterTheme = NonNullable<ToasterProps['theme']>;
+
+const isToasterTheme = (value: string): value is ToasterTheme =>
+  value === 'dark' || value === 'light' || value === 'system';
+
 const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
   const { theme = 'system' } = useTheme();
+
+  const resolvedTheme: ToasterProps['theme'] = isToasterTheme(theme)
+    ? theme
+    : 'system';
+
+  const toasterStyle: React.CSSProperties & Record<`--${string}`, string> = {
+    '--border-radius': 'var(--radius)',
+    '--normal-bg': 'var(--popover)',
+    '--normal-border': 'var(--border)',
+    '--normal-text': 'var(--popover-foreground)',
+  };
 
   return (
     <Sonner
@@ -22,15 +38,8 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
         success: <CircleCheckIcon className="size-4" />,
         warning: <TriangleAlertIcon className="size-4" />,
       }}
-      style={
-        {
-          '--border-radius': 'var(--radius)',
-          '--normal-bg': 'var(--popover)',
-          '--normal-border': 'var(--border)',
-          '--normal-text': 'var(--popover-foreground)',
-        } as React.CSSProperties
-      }
-      theme={theme as ToasterProps['theme']}
+      style={toasterStyle}
+      theme={resolvedTheme}
       {...props}
     />
   );

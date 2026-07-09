@@ -2,17 +2,30 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql';
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type Mock, afterEach, describe, expect, it, vi } from 'vitest';
 import type { GraphqlWsClient } from '../createGraphqlWsClient';
 import { useSubscription } from '../useSubscription';
 
-// A minimal typed subscription document (the `query` string is what graphql-ws sees).
-const DOCUMENT = parse(
-  'subscription P($planId: ID!){ planOutputChunkAdded(planId: $planId){ id } }',
-) as unknown as TypedDocumentNode<
+/**
+ * Present a structural test double as its real type. The public overload hands
+ * the caller `T`; the implementation stays `unknown`-typed, so the mock
+ * boundary needs no `as` cast. (graphql-ws' `Client` is a wide third-party
+ * interface we only partially implement here.)
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
+// A minimal typed subscription document (the `query` string is what graphql-ws
+// sees). `parse` returns a `DocumentNode`, which is assignable to the branded
+// `TypedDocumentNode` (its phantom `__apiType` marker is optional).
+const DOCUMENT: TypedDocumentNode<
   { planOutputChunkAdded: { id: string } },
   { planId: string }
->;
+> = parse(
+  'subscription P($planId: ID!){ planOutputChunkAdded(planId: $planId){ id } }',
+);
 
 interface SubscribeArgs {
   complete: () => void;
@@ -20,14 +33,23 @@ interface SubscribeArgs {
   next: (msg: { data?: { planOutputChunkAdded: { id: string } } }) => void;
 }
 
+type SubscribePayload = {
+  query: string;
+  variables: { planId: string };
+};
+
 function makeClient(): {
   client: GraphqlWsClient;
   dispose: ReturnType<typeof vi.fn>;
-  subscribe: ReturnType<typeof vi.fn>;
+  subscribe: Mock<
+    (payload: SubscribePayload, sink: SubscribeArgs) => () => void
+  >;
 } {
   const dispose = vi.fn();
-  const subscribe = vi.fn(() => dispose);
-  const client = { subscribe } as unknown as GraphqlWsClient;
+  const subscribe = vi.fn<
+    (payload: SubscribePayload, sink: SubscribeArgs) => () => void
+  >(() => dispose);
+  const client = asMock<GraphqlWsClient>({ subscribe });
   return { client, dispose, subscribe };
 }
 
@@ -69,14 +91,12 @@ describe('useSubscription', () => {
     render(React.createElement(Harness, { client, onData }));
 
     expect(subscribe).toHaveBeenCalledTimes(1);
-    const payload = subscribe.mock.calls[0]?.[0] as {
-      query: string;
-      variables: { planId: string };
-    };
+    const call = subscribe.mock.calls[0];
+    if (!call) throw new Error('expected subscribe to have been called');
+    const [payload, sink] = call;
     expect(payload.variables).toEqual({ planId: 'p1' });
     expect(payload.query).toContain('planOutputChunkAdded');
 
-    const sink = subscribe.mock.calls[0]?.[1] as SubscribeArgs;
     sink.next({ data: { planOutputChunkAdded: { id: 'c1' } } });
     expect(onData).toHaveBeenCalledWith({ planOutputChunkAdded: { id: 'c1' } });
   });

@@ -42,6 +42,25 @@ export interface NotificationsSubscriptionBridgeProps<
 }
 
 /**
+ * @description Re-types the transport payload to the store's domain types at
+ * this single boundary. The GraphQL `notifications` node is structurally the
+ * store's payload (message, severity, link, planId, …) with `event` as the
+ * discriminator, but the generated document types are looser (GraphQL
+ * nullability) than the strict {@link NotificationPayload} union, so this is the
+ * one place the boundary is bridged. Types only — no runtime coercion (the
+ * returned `payload` is the same `node` object).
+ */
+function toStorePayload(node: NotificationsSubscriptionData['notifications']): {
+  event: NotificationEventName;
+  payload: NotificationPayload;
+};
+function toStorePayload(
+  node: NotificationsSubscriptionData['notifications'],
+): unknown {
+  return { event: node.event, payload: node };
+}
+
+/**
  * @description Realtime notifications bridge. Subscribes to the `notifications`
  * firehose over graphql-ws and feeds the notifications store / toast /
  * system-notification pipeline. Mount once inside {@link NotificationsStoreProvider};
@@ -63,13 +82,7 @@ export function NotificationsSubscriptionBridge<
   // Handlers
   const onData = React.useCallback(
     (data: TData) => {
-      const node = data.notifications;
-
-      // The GraphQL NotificationEvent is structurally the store's payload (message,
-      // severity, link, planId, …); `event` is the discriminator. Cast at this
-      // transition boundary until the store is typed against the schema types.
-      const event = node.event as NotificationEventName;
-      const payload = node as unknown as NotificationPayload;
+      const { event, payload } = toStorePayload(data.notifications);
 
       addNotification(event, payload);
       toastForNotification(payload, navigate);

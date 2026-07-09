@@ -117,9 +117,7 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioResult {
       setMediaElement(node);
 
       if (externalAudioRef !== undefined) {
-        (
-          externalAudioRef as React.MutableRefObject<HTMLAudioElement | null>
-        ).current = node;
+        externalAudioRef.current = node;
       }
 
       if (node !== null && src !== undefined) {

@@ -21,13 +21,24 @@ vi.mock('formik', () => ({
 
 import { useForm } from '../useForm';
 
+/**
+ * Present a structural test double as its real type. The public overload hands
+ * the caller `T`; the implementation stays `unknown`-typed, so the mock
+ * boundary needs no `as` cast. `onSubmit` only reads `event.preventDefault`, so
+ * a partial React synthetic event is sufficient here.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const createSubmitEvent = (): {
   event: FormEvent<HTMLFormElement>;
   preventDefault: ReturnType<typeof vi.fn>;
 } => {
   const preventDefault = vi.fn();
 
-  const event = { preventDefault } as unknown as FormEvent<HTMLFormElement>;
+  const event = asMock<FormEvent<HTMLFormElement>>({ preventDefault });
 
   return { event, preventDefault };
 };

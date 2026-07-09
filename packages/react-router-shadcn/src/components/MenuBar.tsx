@@ -32,7 +32,9 @@ const Menubar = React.forwardRef<
 });
 Menubar.displayName = MenubarPrimitive.Root.displayName;
 
-const MenubarMenu = MenubarPrimitive.Menu as typeof MenubarPrimitive.Menu;
+// Annotate (rather than infer) so the emitted declaration names the type via
+// the imported `MenubarPrimitive` instead of an un-nameable internal `Scope`.
+const MenubarMenu: typeof MenubarPrimitive.Menu = MenubarPrimitive.Menu;
 const MenubarTrigger = MenubarPrimitive.Trigger;
 const MenubarPortal = MenubarPrimitive.Portal;
 const MenubarGroup = MenubarPrimitive.Group;

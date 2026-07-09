@@ -29,7 +29,8 @@ describe('Combobox', () => {
     );
     const trigger = container.querySelector('button[role="combobox"]');
     expect(trigger).toBeInTheDocument();
-    await user.click(trigger as HTMLButtonElement);
+    if (!trigger) throw new Error('Expected combobox trigger to be present');
+    await user.click(trigger);
     await waitFor(() => {
       expect(
         container.ownerDocument.querySelector('[role="listbox"]'),

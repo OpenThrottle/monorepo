@@ -77,7 +77,17 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
 
     const firstHandler = handlers.values().next().value;
 
-    firstHandler?.({ planId: 'p2' } as NotificationPayload);
+    const payload: NotificationPayload = {
+      data: {},
+      jobType: 'test',
+      message: 'example message',
+      planId: 'p2',
+      queuePosition: 1,
+      severity: 'info',
+      timestamp: new Date().toISOString(),
+    };
+
+    firstHandler?.(payload);
 
     expect(append).toHaveBeenCalled();
   });

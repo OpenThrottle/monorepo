@@ -63,19 +63,22 @@ const toFormData = (body: FormData | Record<string, string>): FormData => {
  *
  * @publicApi
  */
-export const createLoaderArgs = <TArgs = LoaderFunctionArgs>({
+export function createLoaderArgs<TArgs = LoaderFunctionArgs>(
+  options?: CreateRouteArgsOptions,
+): TArgs;
+export function createLoaderArgs({
   headers,
   params = {},
   url = DEFAULT_URL,
-}: CreateRouteArgsOptions = {}): TArgs => {
+}: CreateRouteArgsOptions = {}): unknown {
   const request = new Request(url, { headers });
 
   return {
     context: createTestRouterContext(),
     params,
     request,
-  } as unknown as TArgs;
-};
+  };
+}
 
 /**
  * @description Build action args for a React Router route module under test.
@@ -94,13 +97,16 @@ export const createLoaderArgs = <TArgs = LoaderFunctionArgs>({
  *
  * @publicApi
  */
-export const createActionArgs = <TArgs = ActionFunctionArgs>({
+export function createActionArgs<TArgs = ActionFunctionArgs>(
+  options?: CreateActionArgsOptions,
+): TArgs;
+export function createActionArgs({
   body = {},
   headers,
   method = 'POST',
   params = {},
   url = DEFAULT_URL,
-}: CreateActionArgsOptions = {}): TArgs => {
+}: CreateActionArgsOptions = {}): unknown {
   const request = new Request(url, {
     body: toFormData(body),
     headers,
@@ -111,5 +117,5 @@ export const createActionArgs = <TArgs = ActionFunctionArgs>({
     context: createTestRouterContext(),
     params,
     request,
-  } as unknown as TArgs;
-};
+  };
+}
