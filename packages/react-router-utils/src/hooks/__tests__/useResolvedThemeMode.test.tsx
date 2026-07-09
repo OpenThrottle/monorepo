@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useResolvedThemeMode } from '../useResolvedThemeMode';
+import type { ThemeMode } from '../../utils/theme';
 
 interface FakeMediaQueryList {
   addEventListener: ReturnType<typeof vi.fn>;
@@ -47,13 +48,13 @@ describe('useResolvedThemeMode', () => {
     installMatchMedia(false);
 
     const { rerender, result } = renderHook(
-      ({ theme }) => useResolvedThemeMode(theme),
-      { initialProps: { theme: 'dark' as const } },
+      ({ theme }: { theme: ThemeMode }) => useResolvedThemeMode(theme),
+      { initialProps: { theme: 'dark' } },
     );
     expect(result.current).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
 
-    rerender({ theme: 'light' as const });
+    rerender({ theme: 'light' });
     expect(result.current).toBe('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
