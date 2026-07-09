@@ -18,10 +18,16 @@ import {
   formatJobRunHookEntryLabel,
   resolveJobRunHookOnFailure,
 } from '../types/job-run-lifecycle-hooks';
+import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
 import { jobRunHookEntryToPromptSeed } from './job-run-lifecycle-hooks-validation';
 import { resolveRalphPromptFromSeed } from './ralph-prompt-resolution';
 import { shouldRunJobRunHook } from './job-run-lifecycle-hooks-validation';
 import { resolveJobRunHookTimeoutSeconds } from './job-run-lifecycle-hooks-validation';
+import {
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  type RalphRuntimeSeed,
+} from './ralph-runtime-config';
 
 export interface JobRunHookIterationParams {
   readonly agentPrompt: string;
@@ -118,8 +124,23 @@ export const resolveJobRunHookLayer1Prompt = (
     return readJobRunHookSkillMarkdown(cwd, entry.skillPath);
   }
 
-  // FIXME: __OT_UPDATE__ Lets fix this one
-  const seed: any = jobRunHookEntryToPromptSeed(entry);
+  const promptSeed = jobRunHookEntryToPromptSeed(entry);
+  // Layer-1 hook prompts only ever resolve `prompt`/`promptFile`; the rest of
+  // `RalphRuntimeSeed` is irrelevant here, so we fill it with neutral
+  // defaults rather than reading the main run's `.workflow-ralph.json`/env.
+  const seed: RalphRuntimeSeed = {
+    backend: DEFAULT_RALPH_RUNNER,
+    iterationTimeoutMs: undefined,
+    iterations: DEFAULT_RALPH_ITERATIONS,
+    model: DEFAULT_RALPH_MODEL,
+    project: undefined,
+    prompt: promptSeed.prompt,
+    promptFile: promptSeed.promptFile,
+    skipWorktreeSetup: undefined,
+    taskIterations: undefined,
+    worktree: undefined,
+    worktreeBase: undefined,
+  };
   const resolved = resolveRalphPromptFromSeed(cwd, seed);
 
   return resolved.prompt;

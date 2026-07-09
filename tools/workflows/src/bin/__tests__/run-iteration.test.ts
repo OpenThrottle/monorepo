@@ -204,7 +204,8 @@ describe('runIterationAsync backend dispatch', () => {
       child.stdout = new PassThrough();
       child.stderr = new PassThrough();
       child.kill = vi.fn(() => true);
-      (child as any).killed = false;
+      // `killed` is readonly on ChildProcess; Object.assign bypasses that for this test double.
+      Object.assign(child, { killed: false });
       queueMicrotask(() => {
         child.emit('close', 0);
       });

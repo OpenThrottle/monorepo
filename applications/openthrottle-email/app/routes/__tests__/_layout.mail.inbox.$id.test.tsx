@@ -7,9 +7,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 describe('routes/_layout.mail.inbox.$id.tsx', () => {
   test('should render MessageDetail', () => {
-    const RoutesStub = createRoutesStub([
-      { Component: (props: any) => <Route {...props} />, path: '/' },
-    ]);
+    const RoutesStub = createRoutesStub([{ Component: Route, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(component.getByTestId('MessageDetail')).toBeInTheDocument();

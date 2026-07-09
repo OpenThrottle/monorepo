@@ -21,33 +21,27 @@ vi.mock('@openthrottle/react-router-graphql', () => {
   };
 });
 
+import {
+  createActionArgs as buildActionArgs,
+  createLoaderArgs as buildLoaderArgs,
+} from '@openthrottle/react-router-testing';
+
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import * as RouteModule from '../roles._index';
+import type { Route } from '@/app/routes/+types/roles._index';
 
-const createLoaderArgs = () => {
-  const request = new Request('http://localhost/roles', {
+const createLoaderArgs = () =>
+  buildLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
+    url: 'http://localhost/roles',
   });
 
-  // The loader only reads request from its args.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal loader args stub
-  return { request } as any;
-};
-
-const createActionArgs = (body: Record<string, string>) => {
-  const formData = new FormData();
-  Object.entries(body).forEach(([key, value]) => formData.append(key, value));
-
-  const request = new Request('http://localhost/roles', {
-    body: formData,
+const createActionArgs = (body: Record<string, string>) =>
+  buildActionArgs<Route.ActionArgs>({
+    body,
     headers: { cookie: 'ot_auth=token' },
-    method: 'POST',
+    url: 'http://localhost/roles',
   });
-
-  // The action only reads request from its args.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal action args stub
-  return { request } as any;
-};
 
 describe('routes/roles._index.tsx', () => {
   beforeEach(() => {

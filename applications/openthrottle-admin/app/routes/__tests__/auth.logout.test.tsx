@@ -7,18 +7,17 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
     executeGraphqlWithAuth(...args),
 }));
 
+import { createActionArgs } from '@openthrottle/react-router-testing';
+
 import * as RouteModule from '../auth.logout';
+import type { Route } from '@/app/routes/+types/auth.logout';
 
-const createArgs = () => {
-  const request = new Request('http://localhost/auth/logout', {
+// The loader and action under test only need a request (both use POST here).
+const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() =>
+  createActionArgs<T>({
     headers: { cookie: 'ot_auth=token' },
-    method: 'POST',
+    url: 'http://localhost/auth/logout',
   });
-
-  // createArgs only needs request for the loader/action under test
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal loader/action args stub
-  return { request } as any;
-};
 
 describe('routes/auth.logout.tsx', () => {
   beforeEach(() => {
@@ -27,7 +26,7 @@ describe('routes/auth.logout.tsx', () => {
   });
 
   test('loader signs out, clears the auth cookie, and redirects to index', async () => {
-    const response = await RouteModule.loader(createArgs());
+    const response = await RouteModule.loader(createArgs<Route.LoaderArgs>());
 
     expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(302);
@@ -36,7 +35,7 @@ describe('routes/auth.logout.tsx', () => {
   });
 
   test('action signs out, clears the auth cookie, and redirects to index', async () => {
-    const response = await RouteModule.action(createArgs());
+    const response = await RouteModule.action(createArgs<Route.ActionArgs>());
 
     expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(302);
@@ -47,7 +46,7 @@ describe('routes/auth.logout.tsx', () => {
   test('still clears the cookie and redirects when server signout fails', async () => {
     executeGraphqlWithAuth.mockRejectedValueOnce(new Error('token invalid'));
 
-    const response = await RouteModule.loader(createArgs());
+    const response = await RouteModule.loader(createArgs<Route.LoaderArgs>());
 
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe('/');

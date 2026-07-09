@@ -6,12 +6,7 @@ import { default as Route } from '../_layout.mail.search';
 
 describe('routes/_layout.mail.search.tsx', () => {
   test('should render search route with empty state when no query', () => {
-    const RoutesStub = createRoutesStub([
-      {
-        Component: (props: any) => <Route {...props} />,
-        path: '/',
-      },
-    ]);
+    const RoutesStub = createRoutesStub([{ Component: Route, path: '/' }]);
 
     const component = render(<RoutesStub />);
     // const component = render(

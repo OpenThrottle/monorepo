@@ -12,9 +12,7 @@ describe('routes/settings._index.tsx', () => {
   });
 
   test('renders coming soon copy', () => {
-    const RoutesStub = createRoutesStub([
-      { Component: (props: any) => <Route {...props} />, path: '/' },
-    ]);
+    const RoutesStub = createRoutesStub([{ Component: Route, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(component.getByText('Coming soon...')).toBeInTheDocument();

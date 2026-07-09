@@ -6,9 +6,7 @@ import { default as Route } from '../_layout.mail.drafts';
 
 describe('routes/_layout.mail.drafts.tsx', () => {
   test('should render', () => {
-    const RoutesStub = createRoutesStub([
-      { Component: (props: any) => <Route {...props} />, path: '/' },
-    ]);
+    const RoutesStub = createRoutesStub([{ Component: Route, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(component.getByTestId('MessageList')).toBeInTheDocument();

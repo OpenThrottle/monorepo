@@ -35,9 +35,7 @@ const Harness = () => {
       <RoleDetailComponent
         actionData={actionData}
         loaderData={{ permissions: [], role }}
-        // route component prop typing differs from this minimal stub
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal matches/params stub
-        matches={[] as any}
+        matches={[] as never}
         params={{ roleId: 'role-1' }}
       />
     </div>

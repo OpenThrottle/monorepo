@@ -21,15 +21,7 @@ const testWindowEnv = {
   ROLLBAR_TOKEN: '',
 } as const;
 
-// FIXME: Lets look into this
-// (
-//   window as unknown as typeof window & {
-//     readonly env: typeof testWindowEnv;
-//   } as any
-// ).env = testWindowEnv;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).env = testWindowEnv;
+window.env = testWindowEnv;
 
 /**
  * @description jsdom does not implement `ResizeObserver`; cmdk and other deps expect it.

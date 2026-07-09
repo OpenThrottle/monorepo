@@ -18,34 +18,47 @@ export class LoggerService implements DefaultLoggerService {
    * distinction for downstream log processors (the reserved Winston
    * `level` field stays `error` so transports and level filters behave).
    */
-  fatal(message: any, ...optionalParams: any[]) {
-    logger.error(message, ...optionalParams, { severity: 'fatal' });
+  /**
+   * NestJS's LoggerService types `message` as `any`; we keep our public methods
+   * honest with `unknown` and adapt to winston at the boundary here. Winston's
+   * variadic overloads want a `string` first arg but tolerate any value at
+   * runtime, so this single localized assertion preserves the prior passthrough
+   * behavior without reintroducing `any`.
+   */
+  private toMessage(message: unknown): string {
+    return message as string;
   }
 
-  error(message: any, ...optionalParams: any[]) {
-    logger.error(message, ...optionalParams);
+  fatal(message: unknown, ...optionalParams: unknown[]) {
+    logger.error(this.toMessage(message), ...optionalParams, {
+      severity: 'fatal',
+    });
   }
 
-  warn(message: any, ...optionalParams: any[]) {
-    logger.warn(message, ...optionalParams);
+  error(message: unknown, ...optionalParams: unknown[]) {
+    logger.error(this.toMessage(message), ...optionalParams);
   }
 
-  debug(message: any, ...optionalParams: any[]) {
-    logger.debug(message, ...optionalParams);
+  warn(message: unknown, ...optionalParams: unknown[]) {
+    logger.warn(this.toMessage(message), ...optionalParams);
   }
 
-  info(message: any, ...optionalParams: any[]) {
-    logger.info(message, ...optionalParams);
+  debug(message: unknown, ...optionalParams: unknown[]) {
+    logger.debug(this.toMessage(message), ...optionalParams);
   }
 
-  verbose(message: any, ...optionalParams: any[]) {
-    logger.verbose(message, ...optionalParams);
+  info(message: unknown, ...optionalParams: unknown[]) {
+    logger.info(this.toMessage(message), ...optionalParams);
+  }
+
+  verbose(message: unknown, ...optionalParams: unknown[]) {
+    logger.verbose(this.toMessage(message), ...optionalParams);
   }
 
   /**
    * @deprecated Use `info` instead.
    */
-  log(message: any, ...optionalParams: any[]) {
-    logger.info(message, ...optionalParams);
+  log(message: unknown, ...optionalParams: unknown[]) {
+    logger.info(this.toMessage(message), ...optionalParams);
   }
 }

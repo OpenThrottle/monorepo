@@ -140,7 +140,7 @@ describe('routes/prompts.create.tsx', () => {
           search: '',
           state: {},
         },
-        matches: [] as unknown as any,
+        matches: [] as never,
         params: {},
       });
 
