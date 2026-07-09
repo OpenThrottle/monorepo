@@ -35,7 +35,7 @@ const Harness = () => {
       <RoleDetailComponent
         actionData={actionData}
         loaderData={{ permissions: [], role }}
-        matches={[]}
+        matches={[] as never}
         params={{ roleId: 'role-1' }}
       />
     </div>
