@@ -9,18 +9,28 @@ import { z } from 'zod';
 
 /**
  * @description Bridges the codegen tool-parameter schemas to `@rekog/mcp-nest`'s
- * `@Tool({ parameters })` typing. The cast is unavoidable, not papering over a bug:
- * the generated `*ToolParameters` schemas import from `zod/v3` (see
- * `src/__generated__/schemas.ts`), while `@rekog/mcp-nest` types `parameters` as the
- * `z.ZodType` from zod v4 (`zod@4`). The v3 and v4 `ZodType` are distinct nominal
- * types and not mutually assignable, so no structural typing can connect them — only
- * an explicit assertion. At runtime both are valid Zod schemas with a working
- * `safeParse`, which is all `@rekog/mcp-nest` calls on the value before dispatch.
- * Input takes `unknown` (not `z.ZodType` from either version) so callers cannot
- * accidentally satisfy it with a non-schema value.
+ * `@Tool({ parameters })` typing. This is not papering over a bug: the generated
+ * `*ToolParameters` schemas import from `zod/v3` (see `src/__generated__/schemas.ts`),
+ * while `@rekog/mcp-nest` types `parameters` as the `z.ZodType` from zod v4 (`zod@4`).
+ * The v3 and v4 `ZodType` are distinct nominal types and not mutually assignable, so
+ * no structural typing can connect them. Rather than an `as` assertion, we narrow via
+ * a runtime type predicate that checks for the one member `@rekog/mcp-nest` actually
+ * calls — `safeParse` — which both v3 and v4 schemas provide. Input takes `unknown` so
+ * callers cannot accidentally satisfy it with a non-schema value.
  */
 
-const asMcpParameters = (schema: unknown): z.ZodType => schema as z.ZodType;
+const isZodSchema = (schema: unknown): schema is z.ZodType =>
+  typeof schema === 'object' &&
+  schema !== null &&
+  'safeParse' in schema &&
+  typeof schema.safeParse === 'function';
+
+const asMcpParameters = (schema: unknown): z.ZodType => {
+  if (!isZodSchema(schema)) {
+    throw new TypeError('MCP tool parameters must be a Zod schema');
+  }
+  return schema;
+};
 
 /**
  * @description Injectable MCP surface: one `@Tool` per Cursor-exposed tool name and the knowledge-base chunk `@ResourceTemplate`.

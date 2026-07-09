@@ -230,9 +230,7 @@ describe('getAgentConversationMessagesToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await getAgentConversationMessagesToolHandler(
-        {} as Parameters<typeof getAgentConversationMessagesToolHandler>[0],
-      );
+      const result = await getAgentConversationMessagesToolHandler({});
 
       expect(result).toMatchObject({
         content: [{ text: expect.stringMatching(/Invalid arguments/i) }],

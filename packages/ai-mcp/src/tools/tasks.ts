@@ -80,11 +80,7 @@ async function createTasksHandler(
         const embedding = await embedQuery(content);
 
         if (embedding) {
-          await cortexInsertTaskEmbedding(
-            task.id,
-            content,
-            embedding as number[],
-          );
+          await cortexInsertTaskEmbedding(task.id, content, embedding);
         }
       }
     }
@@ -95,7 +91,7 @@ async function createTasksHandler(
       structuredContent: { created: results },
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? (err as Error).message : String(err);
+    const message = err instanceof Error ? err.message : String(err);
     const text = `create_tasks failed: ${message}`;
 
     return {
@@ -127,7 +123,7 @@ async function handleGetRemainingTasksForPlan(args: {
       structuredContent: { tasks },
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? (err as Error).message : String(err);
+    const message = err instanceof Error ? err.message : String(err);
     const text = `get_remaining_tasks_for_plan failed: ${message}`;
 
     return {

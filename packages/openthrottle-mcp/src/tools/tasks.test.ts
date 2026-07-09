@@ -33,7 +33,7 @@ describe('createTaskToolHandler', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
       const result = await createTaskToolHandler({
         planId,
-      } as Parameters<typeof createTaskToolHandler>[0]);
+      });
 
       expect(result).toMatchObject({
         content: [
@@ -380,7 +380,7 @@ describe('reorderPlanTasksToolHandler', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
       const result = await reorderPlanTasksToolHandler({
         planId,
-      } as Parameters<typeof reorderPlanTasksToolHandler>[0]);
+      });
 
       expect(result).toMatchObject({
         content: [

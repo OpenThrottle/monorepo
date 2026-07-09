@@ -99,6 +99,14 @@ interface OpenAiEmbeddingsResponse {
   data: { embedding: number[]; index: number }[];
 }
 
+const isOpenAiEmbeddingsResponse = (
+  value: unknown,
+): value is OpenAiEmbeddingsResponse =>
+  typeof value === 'object' &&
+  value !== null &&
+  'data' in value &&
+  Array.isArray(value.data);
+
 function createOpenAiProvider(
   config: Extract<EmbeddingsConfig, { kind: 'openai' }>,
   doFetch: FetchLike,
@@ -136,7 +144,10 @@ function createOpenAiProvider(
         );
       }
 
-      const payload = (await response.json()) as OpenAiEmbeddingsResponse;
+      const payload: unknown = await response.json();
+      if (!isOpenAiEmbeddingsResponse(payload)) {
+        throw new Error('OpenAI embeddings response had an unexpected shape.');
+      }
       // The API returns results indexed; sort defensively to guarantee order.
       return [...payload.data]
         .sort((a, b) => a.index - b.index)
@@ -148,6 +159,14 @@ function createOpenAiProvider(
 interface OllamaEmbeddingsResponse {
   embedding: number[];
 }
+
+const isOllamaEmbeddingsResponse = (
+  value: unknown,
+): value is OllamaEmbeddingsResponse =>
+  typeof value === 'object' &&
+  value !== null &&
+  'embedding' in value &&
+  Array.isArray(value.embedding);
 
 function createOllamaProvider(
   config: Extract<EmbeddingsConfig, { kind: 'ollama' }>,
@@ -176,7 +195,12 @@ function createOllamaProvider(
             );
           }
 
-          const payload = (await response.json()) as OllamaEmbeddingsResponse;
+          const payload: unknown = await response.json();
+          if (!isOllamaEmbeddingsResponse(payload)) {
+            throw new Error(
+              'Ollama embeddings response had an unexpected shape.',
+            );
+          }
           return payload.embedding;
         }),
       ),

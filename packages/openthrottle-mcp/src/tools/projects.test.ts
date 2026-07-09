@@ -25,9 +25,7 @@ describe('deleteProjectToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await deleteProjectToolHandler(
-        {} as Parameters<typeof deleteProjectToolHandler>[0],
-      );
+      const result = await deleteProjectToolHandler({});
 
       expect(result).toMatchObject({
         content: [

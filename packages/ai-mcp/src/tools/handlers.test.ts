@@ -88,9 +88,10 @@ function captureHandlers(
 
   // The real registerTool is heavily overloaded with MCP SDK generics; replace
   // it with our minimal, capture-only stand-in to record the callbacks the
-  // register functions wire up. consistent-type-assertions is off in this
-  // package's eslint config (see eslint.config.ts).
-  server.registerTool = registerTool as McpServer['registerTool'];
+  // register functions wire up. The stand-in is intentionally narrower than the
+  // overloaded SDK signature, so the assignment is a deliberate type mismatch.
+  // @ts-expect-error — minimal capture-only stand-in for the overloaded SDK registerTool
+  server.registerTool = registerTool;
 
   register(server);
   return handlers;

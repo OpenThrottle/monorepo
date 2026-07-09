@@ -28,9 +28,7 @@ describe('appendPlanOutputToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await appendPlanOutputToolHandler(
-        {} as Parameters<typeof appendPlanOutputToolHandler>[0],
-      );
+      const result = await appendPlanOutputToolHandler({});
 
       expect(result).toMatchObject({ isError: true });
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
@@ -125,9 +123,7 @@ describe('getPlanOutputToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await getPlanOutputToolHandler(
-        {} as Parameters<typeof getPlanOutputToolHandler>[0],
-      );
+      const result = await getPlanOutputToolHandler({});
 
       expect(result).toMatchObject({ isError: true });
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();

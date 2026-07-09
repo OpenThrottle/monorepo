@@ -31,7 +31,7 @@ describe('createPlanToolHandler', () => {
       const result = await createPlanToolHandler({
         category: 'maintenance',
         title: 'Improve test coverage',
-      } as Parameters<typeof createPlanToolHandler>[0]);
+      });
 
       expect(result).toMatchObject({
         content: [
@@ -152,9 +152,7 @@ describe('createPlansToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createPlansToolHandler(
-        {} as Parameters<typeof createPlansToolHandler>[0],
-      );
+      const result = await createPlansToolHandler({});
 
       expect(result).toMatchObject({
         content: [
