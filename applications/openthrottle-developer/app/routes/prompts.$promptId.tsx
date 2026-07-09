@@ -69,7 +69,7 @@ export default function Component(
   // Setup
   const isSubmitting = fetcher.state === 'submitting';
   const extension = prompt.filePath?.split('.').pop() ?? 'md';
-  const language = getLanguageFromExt(extension as unknown as any);
+  const language = getLanguageFromExt(extension);
 
   // Handlers
   const handleEditorChange = (value: string | undefined): void => {

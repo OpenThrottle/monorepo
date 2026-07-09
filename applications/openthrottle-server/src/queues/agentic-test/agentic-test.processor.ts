@@ -95,7 +95,7 @@ export class AgenticTestProcessor
   }
 
   @OnWorkerEvent('completed')
-  onCompleted(job: AgenticTestJob, result: any) {
+  onCompleted(job: AgenticTestJob, result: AgenticTestJobResult) {
     const message = `${this.prefix} Job ${job.id} completed successfully. Result: ${JSON.stringify(result)}`;
 
     job.log(message);

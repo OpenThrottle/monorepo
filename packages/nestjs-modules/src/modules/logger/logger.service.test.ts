@@ -11,7 +11,7 @@ import { logger } from './logger.config';
 class MemoryTransport extends Transport {
   readonly records: Array<Record<string, unknown>> = [];
 
-  override log(info: any, callback: () => void) {
+  override log(info: Record<string, unknown>, callback: () => void) {
     this.records.push(info);
     callback();
   }

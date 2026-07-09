@@ -51,7 +51,7 @@ describe('routes/projects._index.tsx', () => {
         <Index
           actionData={undefined}
           loaderData={mockLoaderDataWithProjects}
-          matches={[] as any}
+          matches={[] as never}
           params={{}}
         />
       </MemoryRouter>,
@@ -69,7 +69,7 @@ describe('routes/projects._index.tsx', () => {
         <Index
           actionData={undefined}
           loaderData={mockLoaderDataEmpty}
-          matches={[] as any}
+          matches={[] as never}
           params={{}}
         />
       </MemoryRouter>,
