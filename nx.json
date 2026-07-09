@@ -430,7 +430,6 @@
           "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
         }
       },
-      "description": "Run the project end-to-end suite with Maestro (configurations: full, record, smoke, studio, watch).",
       "executor": "nx:run-commands",
       "options": {
         "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
