@@ -78,10 +78,10 @@ export async function readKnowledgeBaseChunk(
     result = {
       contents: [{ text, type: 'text' as const, uri: uriStr }],
     };
-  } catch (err: unknown) {
+  } catch (error: unknown) {
     const message = toSanitizedClientMessage(
       knowledgeBaseChunkResourceName,
-      err,
+      error,
     );
 
     result = {

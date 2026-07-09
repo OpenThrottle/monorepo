@@ -174,10 +174,11 @@ export function ProfileExecution(
               }
               return value;
             })
-            .catch((err: unknown) => {
-              const e = err instanceof Error ? err : new Error(String(err));
+            .catch((error: unknown) => {
+              const e =
+                error instanceof Error ? error : new Error(String(error));
               error = { message: e.message, name: e.name };
-              throw err;
+              throw error;
             })
             .finally(report) as Promise<unknown>;
         }
@@ -188,13 +189,13 @@ export function ProfileExecution(
         report();
 
         return result;
-      } catch (err: unknown) {
-        const e = err instanceof Error ? err : new Error(String(err));
-        error = { message: e.message, name: e.name };
+      } catch (error: unknown) {
+        const e = error instanceof Error ? error : new Error(String(error));
+        const errorObj = { message: e.message, name: e.name };
 
         report();
 
-        throw err;
+        throw errorObj;
       }
     };
 

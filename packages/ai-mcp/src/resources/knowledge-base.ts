@@ -73,8 +73,8 @@ async function readKnowledgeBaseChunk(
       contents: [{ text, type: 'text' as const, uri: uriStr }],
     };
     return result;
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     result = {
       contents: [
         {

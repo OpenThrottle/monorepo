@@ -101,8 +101,8 @@ const main = async (): Promise<void> => {
       `Linked commit ${repo}@${sha} to plan ${planId}${taskId ? ` and task ${taskId}` : ''}.`,
     );
     console.log(JSON.stringify(link, null, 2));
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
     console.error('link_merge failed:', msg);
     process.exit(1);
   }

@@ -90,8 +90,8 @@ async function createTasksHandler(
       content: [{ text, type: 'text' as const }],
       structuredContent: { created: results },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     const text = `create_tasks failed: ${message}`;
 
     return {
@@ -122,8 +122,8 @@ async function handleGetRemainingTasksForPlan(args: {
       content: [{ text, type: 'text' as const }],
       structuredContent: { tasks },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     const text = `get_remaining_tasks_for_plan failed: ${message}`;
 
     return {
@@ -178,8 +178,8 @@ export function registerTaskTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { task },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         const text = `create_task failed: ${message}`;
 
         return {
@@ -237,8 +237,8 @@ export function registerTaskTools(server: McpServer): void {
           ],
           structuredContent: payload,
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         const text = `get_task failed: ${message}`;
 
         return {
@@ -272,8 +272,8 @@ export function registerTaskTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { tasks },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         const text = `get_tasks_by_plan_id failed: ${message}`;
 
         return {
@@ -321,8 +321,8 @@ export function registerTaskTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { tasks },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         const text = `list_tasks_by_category failed: ${message}`;
 
         return {
@@ -392,8 +392,8 @@ export function registerTaskTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { task },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
 
         return {
           content: [
@@ -427,8 +427,8 @@ export function registerTaskTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { deleted },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
 
         return {
           content: [
