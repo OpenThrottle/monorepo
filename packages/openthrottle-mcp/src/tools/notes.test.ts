@@ -31,9 +31,7 @@ describe('createNoteToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createNoteToolHandler(
-        {} as Parameters<typeof createNoteToolHandler>[0],
-      );
+      const result = await createNoteToolHandler({});
 
       expect(result).toMatchObject({
         content: [

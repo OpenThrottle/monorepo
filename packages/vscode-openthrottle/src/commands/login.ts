@@ -6,13 +6,9 @@ import { print } from 'graphql';
 import * as vscode from 'vscode';
 import { storeToken } from '../auth.ts';
 import { getApiBaseUrl } from '../config.ts';
+import { isGraphqlEnvelope } from '../graphql/utils.ts';
 import type { PlansTreeDataProvider } from '../trees/plans-tree.ts';
 import { LoginDocument } from '../__generated__/graphql.js';
-
-interface GraphqlResponse<T> {
-  readonly data?: T;
-  readonly errors?: ReadonlyArray<{ readonly message: string }>;
-}
 
 /**
  * @description Execute login mutation at baseUrl/graphql (no auth header). Returns accessToken or throws.
@@ -36,9 +32,10 @@ async function executeLogin(
 
   // FIXME: Swap out eventually
 
-  const json = (await res.json()) as GraphqlResponse<{
-    login: { accessToken: string };
-  }>;
+  const json: unknown = await res.json();
+  if (!isGraphqlEnvelope<{ login: { accessToken: string } }>(json)) {
+    throw new Error('Login failed: unexpected response from server');
+  }
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;

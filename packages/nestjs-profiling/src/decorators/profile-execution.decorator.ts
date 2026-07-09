@@ -125,7 +125,7 @@ export function ProfileExecution(
       const startTime = performance.now();
 
       let output: unknown;
-      let error: { message: string; name: string } | undefined;
+      let capturedError: { message: string; name: string } | undefined;
 
       const report = (): void => {
         // Zero-config fast path: with no reporter registered there is nothing to
@@ -149,7 +149,7 @@ export function ProfileExecution(
           inputs,
           safeOutput,
           captureOutput,
-          error,
+          capturedError,
         );
 
         notifyProfileExecutionReporter(execution);
@@ -174,10 +174,11 @@ export function ProfileExecution(
               }
               return value;
             })
-            .catch((err: unknown) => {
-              const e = err instanceof Error ? err : new Error(String(err));
-              error = { message: e.message, name: e.name };
-              throw err;
+            .catch((error: unknown) => {
+              const e =
+                error instanceof Error ? error : new Error(String(error));
+              capturedError = { message: e.message, name: e.name };
+              throw error;
             })
             .finally(report) as Promise<unknown>;
         }
@@ -188,13 +189,13 @@ export function ProfileExecution(
         report();
 
         return result;
-      } catch (err: unknown) {
-        const e = err instanceof Error ? err : new Error(String(err));
-        error = { message: e.message, name: e.name };
+      } catch (error: unknown) {
+        const e = error instanceof Error ? error : new Error(String(error));
+        capturedError = { message: e.message, name: e.name };
 
         report();
 
-        throw err;
+        throw error;
       }
     };
 

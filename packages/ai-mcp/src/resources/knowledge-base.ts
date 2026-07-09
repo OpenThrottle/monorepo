@@ -7,7 +7,6 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getPostgresConfig } from '../config.ts';
-import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import { getChunkById } from '@openthrottle/node-client';
 
 type ChunkResult = {
@@ -42,7 +41,7 @@ async function readKnowledgeBaseChunk(
     typeof idRaw === 'string'
       ? idRaw
       : Array.isArray(idRaw)
-        ? (idRaw[0] as string | undefined)
+        ? idRaw[0]
         : undefined;
 
   if (!id) {
@@ -55,7 +54,7 @@ async function readKnowledgeBaseChunk(
   }
 
   try {
-    const chunk = await getChunkById(id as string);
+    const chunk = await getChunkById(id);
     if (!chunk) {
       result = {
         contents: [
@@ -69,14 +68,13 @@ async function readKnowledgeBaseChunk(
       return result;
     }
 
-    const text = `[${(chunk as SemanticSearchChunk).source}] ${(chunk as SemanticSearchChunk).planTitle ?? ''} ${(chunk as SemanticSearchChunk).taskTitle ?? ''}\n${(chunk as SemanticSearchChunk).content}`;
+    const text = `[${chunk.source}] ${chunk.planTitle ?? ''} ${chunk.taskTitle ?? ''}\n${chunk.content}`;
     result = {
       contents: [{ text, type: 'text' as const, uri: uriStr }],
     };
     return result;
-  } catch (err: unknown) {
-    const isError = err instanceof Error;
-    const message = isError ? (err as Error).message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     result = {
       contents: [
         {

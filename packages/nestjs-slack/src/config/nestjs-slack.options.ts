@@ -169,18 +169,18 @@ export function validateNestjsSlackOptions(
         throw new NestjsSlackError(message);
       }
     }
-  } catch (err) {
-    if (err instanceof TypeError && err.message?.includes('Invalid URL')) {
+  } catch (error) {
+    if (error instanceof TypeError && error.message?.includes('Invalid URL')) {
       const value = String(webhookUrl).slice(0, 80);
       const message = `webhookUrl is not a valid URL. Got: ${value}`;
 
       throw new NestjsSlackError(message);
     }
 
-    if (err instanceof Error) {
-      throw err;
+    if (error instanceof Error) {
+      throw error;
     }
 
-    throw new NestjsSlackError(`invalid webhookUrl. ${String(err)}`);
+    throw new NestjsSlackError(`invalid webhookUrl. ${String(error)}`);
   }
 }

@@ -65,7 +65,6 @@ export async function profileExecution<T>(
       : undefined;
 
   let output: T;
-  let error: { message: string; name: string } | undefined;
 
   try {
     const result = fn();
@@ -87,15 +86,15 @@ export async function profileExecution<T>(
     notifyProfileExecutionReporter(execution);
 
     return { execution, result: output };
-  } catch (err: unknown) {
-    const e = err instanceof Error ? err : new Error(String(err));
-    error = { message: e.message, name: e.name };
+  } catch (error: unknown) {
+    const e = error instanceof Error ? error : new Error(String(error));
+    const errorObj = { message: e.message, name: e.name };
 
     const endTime = performance.now();
     const execution: ProfileExecutionResult = {
       durationMs: endTime - startTime,
       endTime,
-      error,
+      error: errorObj,
       label,
       startTime,
       ...(inputs !== undefined && { inputs }),
@@ -104,6 +103,6 @@ export async function profileExecution<T>(
 
     notifyProfileExecutionReporter(execution);
 
-    throw err;
+    throw error;
   }
 }
