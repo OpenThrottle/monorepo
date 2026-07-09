@@ -66,9 +66,7 @@ export class EmitNotificationInterceptor implements NestInterceptor {
       tap((result: unknown): void => {
         for (const { event, payload: payloadMapper } of entries) {
           const hasMapper = typeof payloadMapper === 'function';
-          const payload = hasMapper
-            ? payloadMapper(result)
-            : (result as unknown);
+          const payload = hasMapper ? payloadMapper(result) : result;
 
           if (payload != null) {
             // A publish failure must not break the originating mutation: a

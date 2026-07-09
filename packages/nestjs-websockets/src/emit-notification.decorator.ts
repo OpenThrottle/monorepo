@@ -23,6 +23,15 @@ export type EmitNotificationMetadataValue =
   | EmitNotificationMetadata
   | readonly EmitNotificationMetadata[];
 
+function isMetadataEntryArray(
+  value:
+    | string
+    | EmitNotificationMetadata
+    | readonly (string | EmitNotificationMetadata)[],
+): value is readonly (string | EmitNotificationMetadata)[] {
+  return Array.isArray(value);
+}
+
 function normalizeOne(
   eventOrOptions: string | EmitNotificationMetadata,
   payload?: (ret: unknown) => unknown | null,
@@ -83,9 +92,11 @@ export function EmitNotification(
     | EmitNotificationMetadata
     | readonly (string | EmitNotificationMetadata)[] = eventOrOptions;
 
-  const metadata: EmitNotificationMetadataValue = Array.isArray(singleOrArray)
+  const metadata: EmitNotificationMetadataValue = isMetadataEntryArray(
+    singleOrArray,
+  )
     ? singleOrArray.map((e) => normalizeOne(e))
-    : normalizeOne(singleOrArray as string | EmitNotificationMetadata, payload);
+    : normalizeOne(singleOrArray, payload);
 
   return SetMetadata(EMIT_NOTIFICATION_KEY, metadata);
 }

@@ -2862,6 +2862,10 @@ importers:
       rxjs:
         specifier: 'catalog:'
         version: 7.8.2
+    devDependencies:
+      '@openthrottle/nestjs-testing':
+        specifier: workspace:^
+        version: link:../nestjs-testing
 
   packages/nestjs-worktrees:
     dependencies:
