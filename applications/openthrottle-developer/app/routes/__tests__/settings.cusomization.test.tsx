@@ -16,6 +16,19 @@ import {
   type ConfigObject,
 } from '~/global/data/atom.config';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import type { Route } from '@/app/routes/+types/settings.appearance';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/settings.appearance',
+    loaderData: getSettingsDiagnosticsLoaderData(),
+    params: {},
+    pathname: '/',
+  },
+];
 
 /**
  * @description Legacy `settings.cusomization` route was consolidated into `settings.appearance`.
@@ -31,7 +44,7 @@ describe('routes/settings.appearance.tsx (customization)', () => {
           <SettingsAppearance
             actionData={undefined}
             loaderData={getSettingsDiagnosticsLoaderData()}
-            matches={[] as never}
+            matches={matches}
             params={{}}
           />
         </MemoryRouter>

@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Index, { loader } from '../dashboard._index';
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
@@ -43,6 +44,17 @@ const mockDashboardQuery = {
   dailyStatsRange: mockLoaderData.dailyStatsRange,
   queues: mockLoaderData.queues,
 };
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/dashboard._index',
+    loaderData: mockLoaderData,
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/dashboard._index.tsx', () => {
   beforeEach(() => {
@@ -109,7 +121,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -137,7 +149,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -168,7 +180,7 @@ describe('routes/dashboard._index.tsx', () => {
             openPrCountByAuthor: [],
           },
         }}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -188,7 +200,7 @@ describe('routes/dashboard._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );

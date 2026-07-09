@@ -8,6 +8,7 @@ import {
 import * as React from 'react';
 import {
   PLANS_SORT_BY_OPTIONS,
+  PLANS_SORT_ORDER,
   PlansSortBy,
   PlansSortOrder,
 } from '~/routing/plans/config/types';
@@ -17,6 +18,18 @@ export interface SortDropdownProps {
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
 }
+
+const PLANS_SORT_BY_VALUES: readonly PlansSortBy[] = [
+  'createdAt',
+  'name',
+  'updatedAt',
+];
+
+const isPlansSortBy = (value: string): value is PlansSortBy =>
+  PLANS_SORT_BY_VALUES.some((candidate) => candidate === value);
+
+const isPlansSortOrder = (value: string): value is PlansSortOrder =>
+  PLANS_SORT_ORDER.some((candidate) => candidate === value);
 
 /**
  * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches OpenThrottle API SortDropdown: value (sortBy + sortOrder), onChange(sortBy, sortOrder).
@@ -35,9 +48,16 @@ export const SortDropdown = (props: SortDropdownProps): React.ReactElement => {
   // Handlers
   const handleChange = React.useCallback(
     (value: string) => {
-      const [by, order] = value.split('-') as [PlansSortBy, PlansSortOrder];
+      const [by, order] = value.split('-');
 
-      onChange(by, order);
+      if (
+        by !== undefined &&
+        order !== undefined &&
+        isPlansSortBy(by) &&
+        isPlansSortOrder(order)
+      ) {
+        onChange(by, order);
+      }
     },
 
     [onChange],

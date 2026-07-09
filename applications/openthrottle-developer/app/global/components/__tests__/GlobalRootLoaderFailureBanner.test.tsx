@@ -25,9 +25,10 @@ describe('GlobalRootLoaderFailureBanner', () => {
       screen.getByText(/Failed while loading: Current user session/i),
     ).toBeInTheDocument();
 
-    const details = screen
-      .getByText('Full error message')
-      .closest('details') as HTMLDetailsElement;
+    const details = screen.getByText('Full error message').closest('details');
+    if (details === null) {
+      throw new Error('Expected a <details> ancestor');
+    }
     expect(details.open).toBe(false);
 
     await user.click(screen.getByText('Full error message'));

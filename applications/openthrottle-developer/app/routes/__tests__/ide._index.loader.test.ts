@@ -5,6 +5,7 @@ import type {
   IdeWorkspaceListing,
 } from '@openthrottle/react-router-ide';
 import type { Route } from '@/app/routes/+types/ide._index';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
@@ -51,13 +52,13 @@ const workspaceSettings = {
   },
 };
 
-const loaderArgs = (url: string): Route.LoaderArgs =>
-  ({
-    context: undefined,
-    params: {},
-    request: new Request(url),
-    url: new URL(url),
-  }) as unknown as Route.LoaderArgs;
+const loaderArgs = (url: string): Route.LoaderArgs => ({
+  context: createTestRouterContext(),
+  params: {},
+  pattern: '/ide',
+  request: new Request(url),
+  url: new URL(url),
+});
 
 describe('routes/ide._index loader', () => {
   beforeEach(() => {

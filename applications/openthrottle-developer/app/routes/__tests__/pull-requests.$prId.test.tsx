@@ -3,6 +3,24 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import PullRequestDetail from '../pull-requests.$prId';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import type { Route } from '@/app/routes/+types/pull-requests.$prId';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/pull-requests.$prId',
+    loaderData: {
+      listQuery: 'owner=OpenThrottle&repo=monorepo',
+      owner: 'OpenThrottle',
+      pull: null,
+      repo: 'monorepo',
+    },
+    params: { prId: '999' },
+    pathname: '/',
+  },
+];
 
 describe('routes/pull-requests.$prId.tsx', () => {
   test('renders not found state when pull is missing', () => {
@@ -16,7 +34,7 @@ describe('routes/pull-requests.$prId.tsx', () => {
             pull: null,
             repo: 'monorepo',
           }}
-          matches={[] as never}
+          matches={matches}
           params={{ prId: '999' }}
         />
       </MemoryRouter>,
@@ -48,7 +66,7 @@ describe('routes/pull-requests.$prId.tsx', () => {
             },
             repo: 'monorepo',
           }}
-          matches={[] as never}
+          matches={matches}
           params={{ prId: '42' }}
         />
       </MemoryRouter>,

@@ -13,6 +13,17 @@ import type {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
+/** Runner backends offered in the execution selector, in display order. */
+const EXECUTION_BACKENDS = [
+  'cursor',
+  'claude',
+] as const satisfies readonly WorkflowRalphExecutionBackendUi[];
+
+const isExecutionBackend = (
+  value: string,
+): value is WorkflowRalphExecutionBackendUi =>
+  EXECUTION_BACKENDS.some((backend) => backend === value);
+
 export interface PlanWorkflowConfigExecutionProps {
   className?: string;
   heading: string;
@@ -53,12 +64,15 @@ export const PlanWorkflowConfigExecution = (
       <div className="space-y-2">
         <Label htmlFor="plan-workflow-config-backend">Runner</Label>
         <Select
-          onValueChange={(next) =>
+          onValueChange={(next) => {
+            if (!isExecutionBackend(next)) {
+              return;
+            }
             setInput((prev) => ({
               ...prev,
-              executionBackend: next as WorkflowRalphExecutionBackendUi,
-            }))
-          }
+              executionBackend: next,
+            }));
+          }}
           value={input.executionBackend}
         >
           <SelectTrigger
@@ -69,12 +83,7 @@ export const PlanWorkflowConfigExecution = (
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {(
-              [
-                'cursor',
-                'claude',
-              ] as const satisfies readonly WorkflowRalphExecutionBackendUi[]
-            ).map((id) => (
+            {EXECUTION_BACKENDS.map((id) => (
               <SelectItem key={id} value={id}>
                 {id === 'cursor' ? 'Cursor (cursor-agent)' : 'Claude Code CLI'}
               </SelectItem>

@@ -8,13 +8,13 @@ import {
 } from '~/routing/projects/config';
 
 export function isSortBy(v: string): v is SortBy {
-  return SORT_BY_VALUES.includes(v as SortBy);
+  return SORT_BY_VALUES.some((value) => value === v);
 }
 
 export function isSortOrder(v: string): v is SortOrder {
-  return SORT_ORDER_VALUES.includes(v as SortOrder);
+  return SORT_ORDER_VALUES.some((value) => value === v);
 }
 
 export function isView(v: string): v is View {
-  return VIEW_VALUES.includes(v as View);
+  return VIEW_VALUES.some((value) => value === v);
 }

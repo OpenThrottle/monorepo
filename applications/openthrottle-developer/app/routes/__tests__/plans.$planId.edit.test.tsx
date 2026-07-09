@@ -101,7 +101,11 @@ describe('routes/plans.$planId.edit.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect((result as Response).status).toBe(302);
+      if (!(result instanceof Response)) {
+        throw new Error('expected the action to return a redirect Response');
+      }
+
+      expect(result.status).toBe(302);
     });
   });
 });

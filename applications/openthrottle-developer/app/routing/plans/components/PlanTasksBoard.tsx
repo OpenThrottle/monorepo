@@ -65,8 +65,11 @@ const DraggablePlanTaskCard = (
   });
 
   // Setup
-  // react-dnd ConnectDragSource is not assignable to React.Ref (upstream typing gap).
-  const dragRef = drag as unknown as React.Ref<HTMLDivElement>;
+  // react-dnd's ConnectDragSource is itself a ref-callback style connector, so
+  // wrap it in a real RefCallback rather than casting past the typing gap.
+  const dragRef: React.RefCallback<HTMLDivElement> = (node) => {
+    drag(node);
+  };
 
   // Handlers
 
@@ -139,9 +142,11 @@ const PlanTasksColumnDrop = (
   const highlight =
     acceptsDrop && canDrop && isOver ? 'ring-2 ring-primary ring-offset-2' : '';
 
-  let dropRef: React.Ref<HTMLElement> | undefined;
+  let dropRef: React.RefCallback<HTMLElement> | undefined;
   if (acceptsDrop) {
-    dropRef = drop as unknown as React.Ref<HTMLElement>;
+    dropRef = (node) => {
+      drop(node);
+    };
   }
 
   // Handlers

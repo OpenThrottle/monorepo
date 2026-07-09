@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CustomPromptType } from '~/__generated__/graphql';
 import type { AgentAssetResult } from '~/routing/agent-search/types';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import type { Route } from '@/app/routes/+types/agent-search._index';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
@@ -28,13 +29,16 @@ const mockExecute = vi.mocked(executeGraphqlWithAuth);
 const mockDiskFallback = vi.mocked(diskFallbackSearch);
 const mockGetMonorepoRoot = vi.mocked(getMonorepoRoot);
 
-const buildArgs = (path: string): Route.LoaderArgs =>
-  ({
-    context: undefined,
+const buildArgs = (path: string): Route.LoaderArgs => {
+  const request = new Request(`http://localhost${path}`);
+  return {
+    context: createTestRouterContext(),
     params: {},
-    request: new Request(`http://localhost${path}`),
-    url: new URL(`http://localhost${path}`),
-  }) as unknown as Route.LoaderArgs;
+    pattern: '/agent-search',
+    request,
+    url: new URL(request.url),
+  };
+};
 
 const dbChunk = (
   overrides: Partial<{

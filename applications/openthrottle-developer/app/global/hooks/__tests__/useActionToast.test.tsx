@@ -62,6 +62,7 @@ describe('useActionToast', () => {
   });
 
   test('surfaces a string `error` field as an error toast, suppressing success', () => {
+    const initialProps: HarnessProps = { active: false, result: undefined };
     const { rerender } = renderHook(
       (props: HarnessProps) =>
         useActionToast(props.result, {
@@ -69,13 +70,13 @@ describe('useActionToast', () => {
           id: 'test-toast',
           success: 'Saved.',
         }),
-      { initialProps: { active: false, result: undefined } },
+      { initialProps },
     );
 
     rerender({ active: true, result: undefined });
     rerender({
       active: false,
-      result: { error: 'Boom.' } as unknown as undefined,
+      result: { error: 'Boom.' },
     });
 
     expect(errorMock).toHaveBeenCalledWith('Boom.', { id: 'test-toast' });

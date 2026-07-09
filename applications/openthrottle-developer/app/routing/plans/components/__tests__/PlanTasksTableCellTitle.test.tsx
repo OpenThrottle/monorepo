@@ -23,15 +23,25 @@ const mockTask = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+/**
+ * Coerces a partial mock to a target type without a type assertion. The
+ * component only reads `row.original`, so the rest of the TanStack `Row` surface
+ * is intentionally omitted.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const createMockRow = (
   overrides: Partial<typeof mockTask> = {},
 ): PlanTasksTableCellTitleProps['row'] =>
-  ({
+  asMock<PlanTasksTableCellTitleProps['row']>({
     original: {
       ...mockTask,
       ...overrides,
     },
-  }) as PlanTasksTableCellTitleProps['row'];
+  });
 
 describe('PlanTasksTableCellTitle Component', () => {
   let component: RenderResult;

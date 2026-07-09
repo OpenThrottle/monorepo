@@ -6,9 +6,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import type {
-  ProjectsSortBy,
-  ProjectsSortOrder,
+import {
+  PROJECTS_SORT_BY,
+  PROJECTS_SORT_ORDER,
+  type ProjectsSortBy,
+  type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
 
@@ -37,7 +39,11 @@ export const ProjectsSortDropdown = (
   // Handlers
   const handleValueChange = React.useCallback(
     (val: string) => {
-      const [by, order] = val.split('-') as [ProjectsSortBy, ProjectsSortOrder];
+      const [byRaw, orderRaw] = val.split('-');
+      const by: ProjectsSortBy =
+        PROJECTS_SORT_BY.find((v) => v === byRaw) ?? 'createdAt';
+      const order: ProjectsSortOrder =
+        PROJECTS_SORT_ORDER.find((v) => v === orderRaw) ?? 'desc';
       onChange(by, order);
     },
     [onChange],

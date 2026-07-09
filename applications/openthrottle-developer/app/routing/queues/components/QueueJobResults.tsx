@@ -24,7 +24,7 @@ export const QueueJobResults = (
     if (job.returnvalue == null || job.returnvalue === '') return null;
 
     try {
-      const o = JSON.parse(job.returnvalue) as unknown;
+      const o: unknown = JSON.parse(job.returnvalue);
 
       return JSON.stringify(o, null, 2);
     } catch {

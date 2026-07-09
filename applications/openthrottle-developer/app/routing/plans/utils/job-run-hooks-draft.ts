@@ -7,14 +7,17 @@
 
 import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 
+const mergePatch = <T extends object>(base: T, patch: Partial<T>): T => ({
+  ...base,
+  ...patch,
+});
+
 export const updateRow = (
   rows: readonly JobRunHookDraftRow[],
   draftId: string,
   patch: Partial<JobRunHookDraftRow>,
 ): JobRunHookDraftRow[] =>
-  rows.map((row) =>
-    row.draftId === draftId ? { ...row, ...patch } : row,
-  ) as JobRunHookDraftRow[];
+  rows.map((row) => (row.draftId === draftId ? mergePatch(row, patch) : row));
 
 export const moveRowWithinPhase = (
   rows: readonly JobRunHookDraftRow[],

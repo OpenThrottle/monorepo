@@ -75,10 +75,14 @@ export const getSettingsKeysCredentialStatus = (
 };
 
 const formatCredentialTimestamp = (value: unknown): string => {
-  if (value == null) {
+  if (
+    typeof value !== 'string' &&
+    typeof value !== 'number' &&
+    !(value instanceof Date)
+  ) {
     return '—';
   }
-  const date = new Date(value as string | number | Date);
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return '—';
   }

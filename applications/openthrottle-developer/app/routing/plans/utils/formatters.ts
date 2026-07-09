@@ -1,6 +1,25 @@
 import { format, formatDistanceToNow } from 'date-fns';
 
 /**
+ * @description Coerces an unknown value the `Date` constructor accepts
+ * (string / number / Date) into a valid Date, or null when the value is not a
+ * date-like input or parses to an invalid date.
+ */
+function toValidDate(value: unknown): Date | null {
+  if (
+    typeof value !== 'string' &&
+    typeof value !== 'number' &&
+    !(value instanceof Date)
+  ) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
  * @description Parses requirementsJson and returns the number of requirements.
  * Returns 0 if invalid or empty.
  */
@@ -12,7 +31,7 @@ export function getRequirementsCount(
   }
 
   try {
-    const parsed = JSON.parse(requirementsJson) as unknown;
+    const parsed: unknown = JSON.parse(requirementsJson);
 
     return Array.isArray(parsed) ? parsed.length : 0;
   } catch {
@@ -32,7 +51,7 @@ export function parseRequirementsList(
   }
 
   try {
-    const parsed = JSON.parse(requirementsJson) as unknown;
+    const parsed: unknown = JSON.parse(requirementsJson);
     if (!Array.isArray(parsed)) return [];
 
     return parsed.filter((item): item is string => typeof item === 'string');
@@ -46,10 +65,8 @@ export function parseRequirementsList(
  * Returns null if invalid.
  */
 export function formatUpdatedAt(updatedAt: unknown): string | null {
-  if (updatedAt == null) return null;
-
-  const date = new Date(updatedAt as string);
-  if (Number.isNaN(date.getTime())) return null;
+  const date = toValidDate(updatedAt);
+  if (date === null) return null;
 
   return formatDistanceToNow(date, { addSuffix: true });
 }
@@ -59,10 +76,8 @@ export function formatUpdatedAt(updatedAt: unknown): string | null {
  * Returns null if invalid.
  */
 export function formatDateShort(value: unknown): string | null {
-  if (value == null) return null;
-
-  const date = new Date(value as string);
-  if (Number.isNaN(date.getTime())) return null;
+  const date = toValidDate(value);
+  if (date === null) return null;
 
   return format(date, 'MMM d, yyyy h:mm a');
 }

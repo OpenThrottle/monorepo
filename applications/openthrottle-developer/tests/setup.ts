@@ -13,27 +13,44 @@ setupReactRouterTest({ env: { APP_NAME: 'openthrottle-developer' } });
 // neither can be typed without `as` casts, so these stay local to developer
 // rather than living in @openthrottle/react-router-testing.
 
+// Local overload helper: hands back the value typed as `T` at a boundary the DOM
+// lib types cannot express (a WebGL stub, the heavily-overloaded `getContext`)
+// without an `as` cast. The implementation is an identity function, so runtime
+// behavior is unchanged.
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 // jsdom returns null for getContext('webgl2'), which makes the shader throw an
 // async, unhandled rejection during mount. Hand back a no-op context: every
 // method returns undefined, so the library's shader-compile guard bails.
 if (typeof HTMLCanvasElement !== 'undefined') {
-  const realGetContext = HTMLCanvasElement.prototype.getContext;
+  const realGetContext = asMock<
+    (
+      this: HTMLCanvasElement,
+      contextId: string,
+      ...args: unknown[]
+    ) => RenderingContext | null
+  >(HTMLCanvasElement.prototype.getContext);
   const noopGlContext = new Proxy(
     {},
     {
       get: () => () => undefined,
     },
   );
-  HTMLCanvasElement.prototype.getContext = function getContext(
+  const patchedGetContext = function getContext(
     this: HTMLCanvasElement,
     contextId: string,
     ...args: unknown[]
-  ) {
+  ): RenderingContext | null {
     if (contextId === 'webgl' || contextId === 'webgl2') {
-      return noopGlContext as unknown as RenderingContext;
+      return asMock<RenderingContext>(noopGlContext);
     }
-    return realGetContext.call(this, contextId, ...(args as []));
-  } as typeof HTMLCanvasElement.prototype.getContext;
+    return realGetContext.call(this, contextId, ...args);
+  };
+  HTMLCanvasElement.prototype.getContext =
+    asMock<typeof HTMLCanvasElement.prototype.getContext>(patchedGetContext);
 }
 
 // @paper-design/shaders also reads the global `visualViewport`; jsdom does not

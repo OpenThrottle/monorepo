@@ -65,8 +65,8 @@ export const getPersistentSettingSnapshot = <T>(
   }
 
   const cached = snapshotCache.get(key);
-  if (cached != null && cached.raw === raw) {
-    return cached.value as T;
+  if (cached != null && cached.raw === raw && isValid(cached.value)) {
+    return cached.value;
   }
 
   let value: T = fallback;

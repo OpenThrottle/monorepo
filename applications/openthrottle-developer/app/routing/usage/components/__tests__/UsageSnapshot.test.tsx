@@ -52,7 +52,9 @@ describe('UsageSnapshot Component', () => {
 
   test('copies support snapshot JSON and shows success toast', async () => {
     const user = userEvent.setup();
-    const writeText = vi.fn().mockResolvedValue(undefined);
+    const writeText = vi
+      .fn<(text: string) => Promise<void>>()
+      .mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
 
     renderRoutesStub(
@@ -69,8 +71,11 @@ describe('UsageSnapshot Component', () => {
     );
 
     expect(writeText).toHaveBeenCalledTimes(1);
-    const copied = writeText.mock.calls[0]?.[0] as string;
-    const parsed = JSON.parse(copied) as { readonly rangeDays: number };
+    const copied = writeText.mock.calls[0]?.[0];
+    if (copied === undefined) {
+      throw new Error('clipboard writeText was not called');
+    }
+    const parsed: { readonly rangeDays: number } = JSON.parse(copied);
     expect(parsed.rangeDays).toBe(30);
     expect(toastSuccess).toHaveBeenCalledWith(
       'Usage snapshot copied to clipboard',

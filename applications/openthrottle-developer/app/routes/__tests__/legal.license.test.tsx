@@ -2,7 +2,20 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import License from '../legal.license';
+import type { Route } from '@/app/routes/+types/legal.license';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/legal.license',
+    loaderData: {},
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/legal.license.tsx', () => {
   test('should render license heading', () => {
@@ -11,7 +24,7 @@ describe('routes/legal.license.tsx', () => {
         <License
           actionData={undefined}
           loaderData={{}}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,

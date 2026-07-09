@@ -26,6 +26,15 @@ const toLoaderData = (fixture: SearchIndexLoaderFixture) => {
   };
 };
 
+/**
+ * @description Empty `matches` stub for the route component (which ignores it),
+ * typed to the component's `matches` prop without a cast.
+ */
+function stubMatches(): React.ComponentProps<typeof SearchIndex>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/search._index.tsx', () => {
   test('should render search shell, SearchForm, and SearchFilters', () => {
     const view = render(
@@ -33,7 +42,7 @@ describe('routes/search._index.tsx', () => {
         <SearchIndex
           actionData={undefined}
           loaderData={toLoaderData(searchIndexLoaderFixture)}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{}}
         />
       </MemoryRouter>,
@@ -50,7 +59,7 @@ describe('routes/search._index.tsx', () => {
       <SearchIndex
         actionData={undefined}
         loaderData={toLoaderData(searchIndexLoaderFixturePaginated)}
-        matches={[] as never}
+        matches={stubMatches()}
         params={{}}
       />,
     );
@@ -72,7 +81,7 @@ describe('routes/search._index.tsx', () => {
           expandRankingDetails: true,
           page: 1,
         }}
-        matches={[] as never}
+        matches={stubMatches()}
         params={{}}
       />,
     );
@@ -88,7 +97,7 @@ describe('routes/search._index.tsx', () => {
       <SearchIndex
         actionData={undefined}
         loaderData={toLoaderData(searchIndexLoaderFixture)}
-        matches={[] as never}
+        matches={stubMatches()}
         params={{}}
       />,
     );
@@ -106,7 +115,7 @@ describe('routes/search._index.tsx', () => {
       <SearchIndex
         actionData={undefined}
         loaderData={toLoaderData(searchIndexLoaderFixtureEmptyQuery)}
-        matches={[] as never}
+        matches={stubMatches()}
         params={{}}
       />,
     );

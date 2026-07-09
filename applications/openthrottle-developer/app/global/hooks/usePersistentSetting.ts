@@ -8,6 +8,10 @@ import {
 /** Accepts any parsed value as `T` — the permissive default validator. */
 const acceptAny = <T>(_value: unknown): _value is T => true;
 
+/** Narrows a setter argument to the functional-updater form. */
+const isUpdaterFn = <T>(value: T | ((prev: T) => T)): value is (prev: T) => T =>
+  typeof value === 'function';
+
 export type PersistentSettingSetter<T> = (next: T | ((prev: T) => T)) => void;
 
 /**
@@ -50,12 +54,9 @@ export const usePersistentSetting = <T>(
 
   const setValue = React.useCallback<PersistentSettingSetter<T>>(
     (next) => {
-      const resolved =
-        typeof next === 'function'
-          ? (next as (prev: T) => T)(
-              getPersistentSettingSnapshot(name, isValid, defaultValue),
-            )
-          : next;
+      const resolved = isUpdaterFn(next)
+        ? next(getPersistentSettingSnapshot(name, isValid, defaultValue))
+        : next;
       writePersistentSetting(name, resolved);
     },
     [name, isValid, defaultValue],

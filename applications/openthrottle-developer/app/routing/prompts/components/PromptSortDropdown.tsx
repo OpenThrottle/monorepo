@@ -8,6 +8,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { PROMPTS_SORT_OPTIONS } from '~/routing/prompts/config';
 import {
+  PROMPTS_SORT_BY,
+  PROMPTS_SORT_ORDER,
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
@@ -17,6 +19,12 @@ export interface PromptSortDropdownProps {
   sortBy: PromptsSortBy;
   sortOrder: PromptsSortOrder;
 }
+
+const isPromptsSortBy = (value: string): value is PromptsSortBy =>
+  PROMPTS_SORT_BY.some((candidate) => candidate === value);
+
+const isPromptsSortOrder = (value: string): value is PromptsSortOrder =>
+  PROMPTS_SORT_ORDER.some((candidate) => candidate === value);
 
 /**
  * @description Single dropdown to sort prompts (combines sortBy and sortOrder).
@@ -37,12 +45,16 @@ export const PromptSortDropdown = (
   // Handlers
   const handleChange = React.useCallback(
     (nextValue: string) => {
-      const [by, order] = nextValue.split('-') as [
-        PromptsSortBy,
-        PromptsSortOrder,
-      ];
+      const [by, order] = nextValue.split('-');
 
-      onChange(by, order);
+      if (
+        by !== undefined &&
+        order !== undefined &&
+        isPromptsSortBy(by) &&
+        isPromptsSortOrder(order)
+      ) {
+        onChange(by, order);
+      }
     },
 
     [onChange],

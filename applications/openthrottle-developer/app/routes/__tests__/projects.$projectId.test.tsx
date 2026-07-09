@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import ProjectDetail from '../projects.$projectId';
 import type { Route } from '@/app/routes/+types/projects.$projectId';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 
 const mockProject = {
@@ -15,16 +16,6 @@ const mockProject = {
   name: 'Test Project',
   nxProjectName: null,
   updatedAt: '2025-01-02T00:00:00Z',
-};
-
-const defaultMatches: Route.ComponentProps['matches'] = [] as never;
-
-const defaultLoaderData = {
-  limit: 20,
-  page: 1,
-  project: mockProject,
-  projectTasks: [] as (typeof mockProjectTask)[],
-  totalTaskCount: 0,
 };
 
 const mockProjectTask = {
@@ -40,6 +31,27 @@ const mockProjectTask = {
   title: 'A project task',
   updatedAt: '2025-01-03T00:00:00Z',
 };
+
+const emptyProjectTasks: (typeof mockProjectTask)[] = [];
+
+const defaultLoaderData = {
+  limit: 20,
+  page: 1,
+  project: mockProject,
+  projectTasks: emptyProjectTasks,
+  totalTaskCount: 0,
+};
+
+const defaultMatches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/projects.$projectId',
+    loaderData: defaultLoaderData,
+    params: { projectId: mockProject.id },
+    pathname: '/',
+  },
+];
 
 describe('routes/projects.$projectId.tsx', () => {
   test('should render project detail when project exists', () => {

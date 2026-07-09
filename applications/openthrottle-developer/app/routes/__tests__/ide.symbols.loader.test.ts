@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { IdeExportsResult } from '@openthrottle/react-router-ide';
+import { createLoaderArgs } from '@openthrottle/react-router-testing';
 import type { Route } from '@/app/routes/+types/ide.symbols';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
@@ -32,13 +33,11 @@ const workspaceSettings = {
   },
 };
 
-const loaderArgs = (url: string): Route.LoaderArgs =>
-  ({
-    context: undefined,
-    params: {},
-    request: new Request(url),
-    url: new URL(url),
-  }) as unknown as Route.LoaderArgs;
+const loaderArgs = (url: string): Route.LoaderArgs => ({
+  ...createLoaderArgs<Route.LoaderArgs>({ url }),
+  // The loader reads `url` (supplied by app middleware in production).
+  url: new URL(url),
+});
 
 describe('routes/ide.symbols loader', () => {
   beforeEach(() => {

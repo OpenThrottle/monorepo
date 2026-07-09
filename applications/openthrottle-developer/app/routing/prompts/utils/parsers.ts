@@ -6,6 +6,12 @@ import {
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
+const isPromptsSortBy = (value: string): value is PromptsSortBy =>
+  PROMPTS_SORT_BY.some((candidate) => candidate === value);
+
+const isPromptsSortOrder = (value: string): value is PromptsSortOrder =>
+  PROMPTS_SORT_ORDER.some((candidate) => candidate === value);
+
 /**
  * @description Parses sortBy and sortOrder from URL search params; defaults to updatedAt-desc.
  */
@@ -15,16 +21,12 @@ export function parsePromptsSortFromSearchParams(
   sortBy: PromptsSortBy;
   sortOrder: PromptsSortOrder;
 } {
-  const by = searchParams.get('sortBy');
-  const order = searchParams.get('sortOrder');
+  const by = searchParams.get('sortBy') ?? '';
+  const order = searchParams.get('sortOrder') ?? '';
 
   return {
-    sortBy: (PROMPTS_SORT_BY as readonly string[]).includes(by ?? '')
-      ? (by as PromptsSortBy)
-      : 'updatedAt',
-    sortOrder: (PROMPTS_SORT_ORDER as readonly string[]).includes(order ?? '')
-      ? (order as PromptsSortOrder)
-      : 'desc',
+    sortBy: isPromptsSortBy(by) ? by : 'updatedAt',
+    sortOrder: isPromptsSortOrder(order) ? order : 'desc',
   };
 }
 
@@ -39,7 +41,7 @@ export const PROMPTS_TYPE_FILTER_OPTIONS: readonly {
   { label: 'Skills', value: CustomPromptType.Skills },
 ];
 
-export const PROMPTS_VALID_TYPES = new Set(
+export const PROMPTS_VALID_TYPES = new Set<string>(
   PROMPTS_TYPE_FILTER_OPTIONS.map((opt) => opt.value),
 );
 
@@ -63,5 +65,5 @@ export function parsePromptsTypesFromSearchParams(
     .map((s) => s.trim().toUpperCase())
     .filter(Boolean);
 
-  return raw.filter((s) => PROMPTS_VALID_TYPES.has(s as PromptTypeFilterValue));
+  return raw.filter((s) => PROMPTS_VALID_TYPES.has(s));
 }

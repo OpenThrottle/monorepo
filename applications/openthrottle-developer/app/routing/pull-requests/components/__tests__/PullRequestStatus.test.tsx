@@ -90,7 +90,7 @@ describe('PullRequestStatus Component', () => {
 
   describe('when state is unknown', () => {
     beforeEach(() => {
-      props = { state: 'unknown' as PullRequestStatusProps['state'] };
+      props = { state: 'unknown' };
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);

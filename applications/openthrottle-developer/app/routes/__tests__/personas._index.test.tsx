@@ -2,7 +2,20 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import PersonasIndex from '../personas._index';
+import type { Route } from '@/app/routes/+types/personas._index';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/personas._index',
+    loaderData: { entries: [] },
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/personas._index.tsx', () => {
   test('renders personas page sections', () => {
@@ -19,7 +32,7 @@ describe('routes/personas._index.tsx', () => {
               },
             ],
           }}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,

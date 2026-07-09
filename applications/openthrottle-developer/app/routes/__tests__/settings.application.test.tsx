@@ -5,6 +5,13 @@ import { describe, expect, test } from 'vitest';
 import SettingsApplication from '../settings.application';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 
+function stubMatches(): React.ComponentProps<
+  typeof SettingsApplication
+>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/settings.application.tsx', () => {
   test('should render', () => {
     render(
@@ -12,7 +19,7 @@ describe('routes/settings.application.tsx', () => {
         <SettingsApplication
           actionData={undefined}
           loaderData={getSettingsDiagnosticsLoaderData()}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{}}
         />
       </MemoryRouter>,

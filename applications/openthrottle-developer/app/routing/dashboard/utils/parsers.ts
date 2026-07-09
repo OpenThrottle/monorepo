@@ -15,7 +15,7 @@ interface ParsedDashboardGithubParams {
 }
 
 function isGithubOrg(value: string): value is GithubOrg {
-  return (GITHUB_ORGS as readonly string[]).includes(value);
+  return GITHUB_ORGS.some((org) => org === value);
 }
 
 function isRepoForOrg(org: GithubOrg, repo: string): repo is GithubRepo {
