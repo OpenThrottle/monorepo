@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { GitHubController } from './github.controller';
 import { GitHubService } from './github.service';
@@ -78,7 +79,7 @@ describe('GitHubController', () => {
 
   test('rejects an invalid state with a 400 and never calls the service', async () => {
     await expect(
-      controller.listPulls('owner', 'repo', 'bogus' as 'all'),
+      controller.listPulls('owner', 'repo', asMock<'all'>('bogus')),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(listPulls).not.toHaveBeenCalled();
   });

@@ -16,6 +16,7 @@
   "devDependencies": {
     "@apollo/server": "catalog:",
     "@nestjs/apollo": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
     "graphql": "catalog:"
   },
   "exports": {
@@ -62,7 +63,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted"

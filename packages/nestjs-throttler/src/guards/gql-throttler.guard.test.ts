@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GqlThrottlerGuard } from './gql-throttler.guard';
 
@@ -22,21 +23,27 @@ interface TestGraphqlInfo {
 const createGuard = (): GqlThrottlerGuard =>
   // Constructor deps are unused by `shouldSkip` for the GraphQL branches under
   // test; the http fall-through path is covered by the integration suites.
-  new GqlThrottlerGuard({ throttlers: [] }, {} as never, {} as never);
+  new GqlThrottlerGuard(
+    { throttlers: [] },
+    asMock<never>({}),
+    asMock<never>({}),
+  );
 
 const createGraphqlContext = (): ExecutionContext =>
-  ({
+  asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('graphql'),
-  }) as unknown as ExecutionContext;
+  });
 
 const mockGqlContext = (
   context: TestGraphqlContext,
   info: TestGraphqlInfo | undefined,
 ): void => {
-  vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-    getContext: () => context,
-    getInfo: () => info,
-  } as unknown as GqlExecutionContext);
+  vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+    asMock<GqlExecutionContext>({
+      getContext: () => context,
+      getInfo: () => info,
+    }),
+  );
 };
 
 // `shouldSkip` is protected; the suite drives it through a thin typed accessor.
@@ -44,9 +51,9 @@ const callShouldSkip = (
   guard: GqlThrottlerGuard,
   context: ExecutionContext,
 ): Promise<boolean> => {
-  const withProtected = guard as unknown as {
+  const withProtected = asMock<{
     shouldSkip(ctx: ExecutionContext): Promise<boolean>;
-  };
+  }>(guard);
 
   return withProtected.shouldSkip(context);
 };
@@ -94,9 +101,9 @@ describe('GqlThrottlerGuard.shouldSkip', () => {
       { operation: { operation: 'query' } },
     );
 
-    const baseProto = ThrottlerGuard.prototype as unknown as {
+    const baseProto = asMock<{
       shouldSkip(ctx: ExecutionContext): Promise<boolean>;
-    };
+    }>(ThrottlerGuard.prototype);
     const superSkip = vi
       .spyOn(baseProto, 'shouldSkip')
       .mockResolvedValue(false);

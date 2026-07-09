@@ -1,5 +1,6 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PERMISSIONS, ROLES } from '../roles';
@@ -14,13 +15,13 @@ function createMockContext(
 
   // FIXME: Swap out eventually
 
-  return {
+  return asMock<ExecutionContext>({
     getClass: vi.fn(() => klass),
     getHandler: vi.fn(() => handler),
     switchToHttp: vi.fn(() => ({
       getRequest: () => request,
     })),
-  } as unknown as ExecutionContext;
+  });
 }
 
 describe('PermissionsGuard', () => {

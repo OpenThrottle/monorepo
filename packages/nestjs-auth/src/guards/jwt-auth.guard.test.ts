@@ -1,14 +1,15 @@
 import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 const createContext = (): ExecutionContext =>
-  ({
+  asMock<ExecutionContext>({
     getClass: vi.fn().mockReturnValue(class TestController {}),
     getHandler: vi.fn().mockReturnValue(() => undefined),
-  }) as unknown as ExecutionContext;
+  });
 
 describe('JwtAuthGuard', () => {
   afterEach(() => {
@@ -81,7 +82,7 @@ describe('JwtAuthGuard', () => {
 
     it('throws UnauthorizedException when user is otherwise falsy (null)', () => {
       expect(() =>
-        guard.handleRequest(null, null as unknown as false, undefined, context),
+        guard.handleRequest(null, asMock<false>(null), undefined, context),
       ).toThrow(UnauthorizedException);
     });
 

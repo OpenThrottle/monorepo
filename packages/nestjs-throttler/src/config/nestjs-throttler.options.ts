@@ -83,21 +83,24 @@ export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
 
 const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
 
+/** Type guard: a non-null object (matches the prior `typeof === 'object'` check). */
+const isObjectValue = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 /**
  * Validates module options at bootstrap.
  * @throws NestjsThrottlerError when fields or numeric bounds are invalid.
  */
-export const validateNestjsThrottlerModuleOptions = (
+export function validateNestjsThrottlerModuleOptions(
   options: unknown,
-): void => {
+): asserts options is NestjsThrottlerModuleOptions {
   if (options === null || options === undefined) {
     throw new NestjsThrottlerError(
       'NestjsThrottlerModuleOptions are required. Pass them to forRoot() or return them from forRootAsync().useFactory().',
     );
   }
 
-  const opts = options as Record<string, unknown>;
-  const throttlers = opts.throttlers;
+  const throttlers = isObjectValue(options) ? options.throttlers : undefined;
 
   if (throttlers === undefined) {
     return;
@@ -110,36 +113,34 @@ export const validateNestjsThrottlerModuleOptions = (
   }
 
   for (const tier of throttlers) {
-    if (typeof tier !== 'object' || tier === null) {
+    if (!isObjectValue(tier)) {
       throw new NestjsThrottlerError(
         'Each throttler tier must be an object with positive-integer limit and ttl.',
       );
     }
 
-    const entry = tier as Record<string, unknown>;
-
-    if (typeof entry.limit !== 'number' || !isPositiveInt(entry.limit)) {
+    if (typeof tier.limit !== 'number' || !isPositiveInt(tier.limit)) {
       throw new NestjsThrottlerError(
         'throttler tier "limit" must be a positive integer.',
       );
     }
 
-    if (typeof entry.ttl !== 'number' || !isPositiveInt(entry.ttl)) {
+    if (typeof tier.ttl !== 'number' || !isPositiveInt(tier.ttl)) {
       throw new NestjsThrottlerError(
         'throttler tier "ttl" must be a positive integer (milliseconds).',
       );
     }
 
     if (
-      entry.name !== undefined &&
-      (typeof entry.name !== 'string' || entry.name.trim() === '')
+      tier.name !== undefined &&
+      (typeof tier.name !== 'string' || tier.name.trim() === '')
     ) {
       throw new NestjsThrottlerError(
         'throttler tier "name", when provided, must be a non-empty string.',
       );
     }
   }
-};
+}
 
 /**
  * Validates then returns the same object reference as {@link NestjsThrottlerModuleOptions}.
@@ -149,5 +150,5 @@ export const parseNestjsThrottlerModuleOptions = (
 ): NestjsThrottlerModuleOptions => {
   validateNestjsThrottlerModuleOptions(input);
 
-  return input as NestjsThrottlerModuleOptions;
+  return input;
 };

@@ -1,13 +1,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { GraphQLResolveInfo } from 'graphql';
 import type { PullListItemDto } from '../github/dto/pull-list-item.dto';
 import { GitHubService } from '../github/github.service';
 import { GithubResolver } from './github.resolver';
 import { GitHubStatsService } from './github-stats.service';
 
-const gqlInfo = {} as unknown as GraphQLResolveInfo;
+const gqlInfo = asMock<GraphQLResolveInfo>({});
 
 describe('GithubResolver', () => {
   let resolver: GithubResolver;
