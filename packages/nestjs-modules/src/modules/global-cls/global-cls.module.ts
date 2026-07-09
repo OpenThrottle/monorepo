@@ -55,16 +55,15 @@ export const setupGlobalCls = (
     {
       inject: [ClsService],
       provide: GlobalClsService,
-      useFactory: (cls: ClsService<GlobalClsStore>) => {
-        const augmented = Object.assign(cls, {
+      useFactory: (cls: ClsService<GlobalClsStore>): GlobalClsService => {
+        // nestjs-cls exposes one ClsService singleton; attach setUser without replacing the instance.
+        const augmented: GlobalClsService = Object.assign(cls, {
           setUser(user: GlobalClsUser) {
             applyGlobalClsUser(cls, user);
           },
         });
 
-        // nestjs-cls exposes one ClsService singleton; attach setUser without replacing the instance.
-
-        return augmented as GlobalClsService;
+        return augmented;
       },
     },
   ],

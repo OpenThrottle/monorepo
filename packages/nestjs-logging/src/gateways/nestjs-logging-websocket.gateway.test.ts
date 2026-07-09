@@ -16,6 +16,16 @@ import {
   recordMatchesLogSubscriptionFilter,
 } from './nestjs-logging-websocket.gateway';
 
+/**
+ * @description Cast-free partial-mock helper: returns the given value typed as `T` for tests
+ * that stand up minimal stubs. The public overload narrows to `T`; the implementation stays
+ * `unknown`, so no `as` assertion is needed.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const baseRecord = (): StructuredLogRecord => ({
   context: 'AppService',
   correlationId: undefined,
@@ -150,7 +160,7 @@ const createMockSocket = (): MockLogSocket => {
   const stub = { disconnect, emit };
 
   return {
-    client: stub as unknown as Socket,
+    client: asMock<Socket>(stub),
     disconnect,
     emit,
   };
@@ -184,9 +194,9 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
       ],
     }).compile();
 
-    return moduleRef.get(
-      GatewayClass,
-    ) as unknown as CompiledNestjsLoggingWebsocketGateway;
+    return asMock<CompiledNestjsLoggingWebsocketGateway>(
+      moduleRef.get(GatewayClass),
+    );
   };
 
   it('disconnects the socket when websocket is disabled on connection', async () => {
@@ -384,7 +394,7 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     const gateway = await compileGateway(hub, resolved);
     const disconnectSockets = vi.fn();
 
-    gateway.server = { disconnectSockets } as unknown as typeof gateway.server;
+    gateway.server = asMock<typeof gateway.server>({ disconnectSockets });
     gateway.onModuleDestroy();
 
     expect(disconnectSockets).toHaveBeenCalledWith(true);
@@ -991,9 +1001,9 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     gateway.handleConnection(client);
     gateway.onLogsSubscribe(client, {});
 
-    const call0 = hubSubscribe.mock.calls[0] as unknown as
-      | [(record: StructuredLogRecord) => void]
-      | undefined;
+    const call0 = asMock<[(record: StructuredLogRecord) => void] | undefined>(
+      hubSubscribe.mock.calls[0],
+    );
 
     const listener = call0?.[0];
     if (listener === undefined) {

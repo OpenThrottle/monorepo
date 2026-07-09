@@ -42,6 +42,9 @@ interface ConnectedLogClientState {
 
 const connectedClients = new WeakMap<Socket, ConnectedLogClientState>();
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 /**
  * @description Whether a structured record matches a single subscription filter (empty sets mean all).
  */
@@ -321,11 +324,11 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Socket is not initialized.', ok: false };
       }
 
-      if (typeof body !== 'object' || body === null) {
+      if (!isObjectRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      const payload = body as Record<string, unknown>;
+      const payload = body;
       const levelsResult = parseStringArrayField(payload.levels, 'levels');
 
       if (!levelsResult.ok) {
@@ -364,11 +367,11 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Socket is not initialized.', ok: false };
       }
 
-      if (typeof body !== 'object' || body === null) {
+      if (!isObjectRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      const subscriptionId = (body as Record<string, unknown>).subscriptionId;
+      const subscriptionId = body.subscriptionId;
 
       if (typeof subscriptionId !== 'string' || subscriptionId.trim() === '') {
         return { error: 'subscriptionId is required.', ok: false };
@@ -395,11 +398,11 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       | { error: string; lines?: undefined; ok: false }
       | { lines: ReadonlyArray<Readonly<Record<string, unknown>>>; ok: true }
     > {
-      if (typeof body !== 'object' || body === null) {
+      if (!isObjectRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      const payload = body as Record<string, unknown>;
+      const payload = body;
       const maxLinesResult = parsePositiveInt(
         payload.maxLines,
         'maxLines',
@@ -430,11 +433,11 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
           ok: true;
         }
     > {
-      if (typeof body !== 'object' || body === null) {
+      if (!isObjectRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      const payload = body as Record<string, unknown>;
+      const payload = body;
       const fromRaw = payload.fromByteOffset;
       const fromByteOffset =
         fromRaw === undefined
@@ -487,11 +490,11 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
           ok: true;
         }
     > {
-      if (typeof body !== 'object' || body === null) {
+      if (!isObjectRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
-      const payload = body as Record<string, unknown>;
+      const payload = body;
 
       if (typeof payload.follow !== 'boolean') {
         return { error: 'follow must be a boolean.', ok: false };
@@ -557,5 +560,5 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
 
   // Nest `Type<object>` is the dynamic provider token; the generated class satisfies it at runtime.
 
-  return NestjsLoggingWebsocketGatewayImpl as Type<object>;
+  return NestjsLoggingWebsocketGatewayImpl;
 };

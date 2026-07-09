@@ -69,6 +69,9 @@ const ALLOWED_LEVELS = new Set<string>(ALL_NESTJS_LOGGING_LEVELS);
 const isNestjsLoggingLevel = (value: unknown): value is NestjsLoggingLevel =>
   typeof value === 'string' && ALLOWED_LEVELS.has(value);
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
   value === null ||
   typeof value === 'boolean' ||
@@ -228,7 +231,12 @@ export const parseJsonlLineToStructuredRecord = (
   }
 
   try {
-    const raw = JSON.parse(trimmed) as Record<string, unknown>;
+    const raw: unknown = JSON.parse(trimmed);
+
+    if (!isObjectRecord(raw)) {
+      return undefined;
+    }
+
     let context: string;
     if (raw.context === undefined) {
       context = '';

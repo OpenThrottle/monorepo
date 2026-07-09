@@ -13,6 +13,9 @@
  */
 import jwt from 'jsonwebtoken';
 
+const isMutableRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 /**
  * connectionParams key the browser client puts the ws token under.
  *
@@ -138,8 +141,8 @@ export function createGraphqlWsOnConnect(
     // graphql-ws owns `extra` (a mutable object set on the socket before
     // onConnect runs); narrow it and stash identity for the shared `context`
     // callback to read back via resolveGraphqlWsUserId.
-    if (typeof ctx.extra === 'object' && ctx.extra !== null) {
-      (ctx.extra as Record<string, unknown>)['userId'] = userId;
+    if (isMutableRecord(ctx.extra)) {
+      ctx.extra['userId'] = userId;
     }
 
     return true;

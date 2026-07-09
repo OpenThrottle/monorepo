@@ -20,16 +20,20 @@ interface ReflectWithKeys {
   ) => (string | symbol)[];
 }
 
-function getReflectWithKeys(): ReflectWithKeys | undefined {
-  if (
-    typeof Reflect === 'undefined' ||
-    typeof (Reflect as { getMetadataKeys?: unknown }).getMetadataKeys !==
-      'function'
-  ) {
-    return undefined;
-  }
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
-  return Reflect as unknown as ReflectWithKeys;
+const isReflectWithKeys = (value: unknown): value is ReflectWithKeys =>
+  isRecord(value) &&
+  typeof value['defineMetadata'] === 'function' &&
+  typeof value['getMetadata'] === 'function' &&
+  typeof value['getMetadataKeys'] === 'function';
+
+function getReflectWithKeys(): ReflectWithKeys | undefined {
+  const candidate: unknown =
+    typeof Reflect === 'undefined' ? undefined : Reflect;
+
+  return isReflectWithKeys(candidate) ? candidate : undefined;
 }
 
 /**
@@ -78,14 +82,12 @@ export function ProfileResponseTime(label?: string): MethodDecorator {
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor,
   ): PropertyDescriptor => {
-    const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
+    const originalMethod: (...args: unknown[]) => unknown = descriptor.value;
     const tag = label ?? String(propertyKey);
 
     const wrapper = function (this: unknown, ...args: unknown[]): unknown {
       const start = performance.now();
-      const result = originalMethod.apply(this, args) as
-        | Promise<unknown>
-        | unknown;
+      const result = originalMethod.apply(this, args);
 
       const logElapsed = (): void => {
         try {
@@ -97,7 +99,7 @@ export function ProfileResponseTime(label?: string): MethodDecorator {
       };
 
       if (result instanceof Promise) {
-        return result.finally(logElapsed) as Promise<unknown>;
+        return result.finally(logElapsed);
       }
 
       logElapsed();

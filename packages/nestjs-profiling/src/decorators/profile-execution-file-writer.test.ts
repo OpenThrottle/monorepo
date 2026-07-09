@@ -8,6 +8,8 @@ import { setProfileExecutionReporter } from './profile-execution.reporter';
 import type { ProfileExecutionResult } from './profile-execution.types';
 import { profileExecution } from './profile-execution.util';
 
+const parseRecord = (text: string): Record<string, unknown> => JSON.parse(text);
+
 describe('createProfileExecutionFileWriter', () => {
   let outputPath: string;
 
@@ -36,12 +38,12 @@ describe('createProfileExecutionFileWriter', () => {
     const lines = content.trim().split('\n').filter(Boolean);
     expect(lines).toHaveLength(2);
 
-    const first = JSON.parse(lines[0]!) as Record<string, unknown>;
+    const first = parseRecord(lines[0]!);
     expect(first.label).toBe('test-label');
     expect(first.output).toBe(42);
     expect(first.durationMs).toBeGreaterThanOrEqual(0);
 
-    const second = JSON.parse(lines[1]!) as Record<string, unknown>;
+    const second = parseRecord(lines[1]!);
     expect(second.label).toBe('second');
     expect(second.output).toBe('ok');
   });
@@ -71,7 +73,7 @@ describe('createProfileExecutionFileWriter', () => {
     await writer.drain();
 
     const content = await fs.readFile(outputPath, 'utf8');
-    const parsed = JSON.parse(content.trim()) as Record<string, unknown>;
+    const parsed = parseRecord(content.trim());
     expect(parsed.truncated).toBe('[TRUNCATED:line-size]');
     expect(parsed.label).toBe('big');
     expect(parsed.output).toBeUndefined();
@@ -113,7 +115,7 @@ describe('createProfileExecutionFileWriter', () => {
     await writer.drain();
 
     const content = await fs.readFile(outputPath, 'utf8');
-    const parsed = JSON.parse(content.trim()) as Record<string, unknown>;
+    const parsed = parseRecord(content.trim());
     expect(parsed.error).toBe('serialize_failed');
     expect(parsed.label).toBe('circular-output');
     expect(typeof parsed.reason).toBe('string');
@@ -136,7 +138,7 @@ describe('createProfileExecutionFileWriter', () => {
     await writer.drain();
 
     const content = await fs.readFile(outputPath, 'utf8');
-    const parsed = JSON.parse(content.trim()) as Record<string, unknown>;
+    const parsed = parseRecord(content.trim());
     expect(parsed.error).toBe('serialize_failed');
     expect(parsed.label).toBe('bigint-output');
     expect(typeof parsed.reason).toBe('string');
@@ -253,7 +255,7 @@ describe('createProfileExecutionFileWriter', () => {
       .trim()
       .split('\n')
       .filter(Boolean)
-      .map((line) => (JSON.parse(line) as Record<string, unknown>).label);
+      .map((line) => parseRecord(line).label);
     expect(labels).toEqual(['keep-a', 'keep-b']);
 
     randomSpy.mockRestore();

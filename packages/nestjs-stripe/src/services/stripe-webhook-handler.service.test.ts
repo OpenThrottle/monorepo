@@ -12,7 +12,14 @@ import {
 } from '../tokens/stripe-tokens';
 import { StripeWebhookHandlerService } from './stripe-webhook-handler.service';
 
-const constructEventMock = vi.fn();
+/** @description Presents a structural test double as the target type without a cast. */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
+const constructEventMock =
+  vi.fn<(body: Buffer, sig: string, secret: string) => unknown>();
 const subscriptionsRetrieveMock = vi.fn();
 
 vi.mock('stripe', () => {
@@ -24,7 +31,7 @@ vi.mock('stripe', () => {
           sig: string,
           secret: string,
         ): Stripe.Event =>
-          constructEventMock(body, sig, secret) as Stripe.Event,
+          asMock<Stripe.Event>(constructEventMock(body, sig, secret)),
       };
 
       subscriptions = {

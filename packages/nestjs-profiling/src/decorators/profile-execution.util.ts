@@ -68,7 +68,7 @@ export async function profileExecution<T>(
 
   try {
     const result = fn();
-    output = result instanceof Promise ? await result : (result as T);
+    output = result instanceof Promise ? await result : result;
     const endTime = performance.now();
     const safeOutput = captureOutput ? redactor(output) : undefined;
     const execution: ProfileExecutionResult = {

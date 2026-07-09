@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NestjsSlackError } from './nestjs-slack.error';
-import {
-  validateNestjsSlackOptions,
-  type NestjsSlackModuleOptions,
-} from './nestjs-slack.options';
+import { validateNestjsSlackOptions } from './nestjs-slack.options';
 
 describe('validateNestjsSlackOptions', () => {
   describe('when options are null or undefined', () => {
@@ -35,7 +32,7 @@ describe('validateNestjsSlackOptions', () => {
       expect(() =>
         validateNestjsSlackOptions({
           webhookUrl: '',
-        } as NestjsSlackModuleOptions),
+        }),
       ).toThrow(/webhookUrl is required and must be a non-empty string/);
     });
 
@@ -43,7 +40,7 @@ describe('validateNestjsSlackOptions', () => {
       expect(() =>
         validateNestjsSlackOptions({
           webhookUrl: '   ',
-        } as NestjsSlackModuleOptions),
+        }),
       ).toThrow(/webhookUrl is required and must be a non-empty string/);
     });
 
@@ -51,7 +48,7 @@ describe('validateNestjsSlackOptions', () => {
       expect(() =>
         validateNestjsSlackOptions({
           webhookUrl: 123,
-        } as unknown as NestjsSlackModuleOptions),
+        }),
       ).toThrow(/webhookUrl is required and must be a non-empty string/);
     });
   });

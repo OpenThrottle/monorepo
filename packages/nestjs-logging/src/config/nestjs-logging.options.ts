@@ -256,18 +256,23 @@ export type ResolvedNestjsLoggingModuleOptions = ReturnType<
 
 const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 /**
  * @description Validates module options at bootstrap.
  * @throws NestjsLoggingError when required fields or numeric bounds are invalid.
  */
-export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
+export const validateNestjsLoggingModuleOptions: (
+  options: unknown,
+) => asserts options is NestjsLoggingModuleOptions = (options) => {
   if (options === null || options === undefined) {
     throw new NestjsLoggingError(
       'NestjsLoggingModuleOptions are required. Pass { logDirectory } to forRoot() or return them from forRootAsync().useFactory().',
     );
   }
 
-  const opts = options as Record<string, unknown>;
+  const opts: Record<string, unknown> = isObjectRecord(options) ? options : {};
   const logDirectory = opts.logDirectory;
 
   if (typeof logDirectory !== 'string' || logDirectory.trim() === '') {
@@ -369,11 +374,11 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
   const rotation = opts.rotation;
 
   if (rotation !== undefined) {
-    if (typeof rotation !== 'object' || rotation === null) {
+    if (!isObjectRecord(rotation)) {
       throw new NestjsLoggingError('rotation must be an object when provided.');
     }
 
-    const rot = rotation as Record<string, unknown>;
+    const rot = rotation;
     const type = rot.type;
 
     if (type === 'none') {
@@ -411,13 +416,13 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
   const redaction = opts.redaction;
 
   if (redaction !== undefined && redaction !== false) {
-    if (typeof redaction !== 'object' || redaction === null) {
+    if (!isObjectRecord(redaction)) {
       throw new NestjsLoggingError(
         'redaction must be an object or false when provided.',
       );
     }
 
-    const red = redaction as Record<string, unknown>;
+    const red = redaction;
 
     const keys = red.keys;
 
@@ -462,13 +467,13 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
   const websocket = opts.websocket;
 
   if (websocket !== undefined) {
-    if (typeof websocket !== 'object' || websocket === null) {
+    if (!isObjectRecord(websocket)) {
       throw new NestjsLoggingError(
         'websocket must be an object when provided.',
       );
     }
 
-    const ws = websocket as Record<string, unknown>;
+    const ws = websocket;
     const enabled = ws.enabled;
 
     if (enabled !== undefined && typeof enabled !== 'boolean') {
@@ -587,5 +592,5 @@ export const parseNestjsLoggingModuleOptions = (
 ): NestjsLoggingModuleOptions => {
   validateNestjsLoggingModuleOptions(input);
 
-  return input as NestjsLoggingModuleOptions;
+  return input;
 };
