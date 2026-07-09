@@ -8,6 +8,7 @@ import type {
   RpcArgumentsHost,
   WsArgumentsHost,
 } from '@nestjs/common/interfaces/features/arguments-host.interface.ts';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   EmitNotificationInterceptor,
   type EmitNotificationEmitter,
@@ -15,30 +16,30 @@ import {
 import type { EmitNotificationMetadata } from './emit-notification.decorator';
 
 function createMockContext(handler: () => void): ExecutionContext {
-  return {
+  return asMock<ExecutionContext>({
     getArgByIndex: () => ({}),
     getArgs: () => [],
-    getClass: () => ({}) as unknown as Constructor,
+    getClass: () => asMock<Constructor>({}),
     getHandler: () => handler,
     getType: () => 'http',
-    switchToHttp: () => ({}) as unknown as HttpArgumentsHost,
-    switchToRpc: () => ({}) as unknown as RpcArgumentsHost,
-    switchToWs: () => ({}) as unknown as WsArgumentsHost,
-  } as ExecutionContext;
+    switchToHttp: () => asMock<HttpArgumentsHost>({}),
+    switchToRpc: () => asMock<RpcArgumentsHost>({}),
+    switchToWs: () => asMock<WsArgumentsHost>({}),
+  });
 }
 
 type Constructor = new (...args: unknown[]) => unknown;
 
 describe('EmitNotificationInterceptor', () => {
   it('returns next.handle() when no metadata is present', () => {
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(undefined),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of({ result: 1 })),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const out = interceptor.intercept(context, next);
@@ -50,15 +51,15 @@ describe('EmitNotificationInterceptor', () => {
 
   it('emits with result as payload when metadata has no payload mapper and result is non-null', async () => {
     const metadata: EmitNotificationMetadata = { event: 'plan.updated' };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
     const result = { plan: { id: 'p1' } };
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(result)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -70,21 +71,21 @@ describe('EmitNotificationInterceptor', () => {
   it('emits with payload mapper result when metadata has payload mapper returning non-null', async () => {
     const payloadMapper = (ret: unknown): unknown =>
       ret != null && typeof ret === 'object' && 'plan' in ret
-        ? (ret as { plan: unknown }).plan
+        ? asMock<{ plan: unknown }>(ret).plan
         : null;
     const metadata: EmitNotificationMetadata = {
       event: 'plan.updated',
       payload: payloadMapper,
     };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
     const result = { plan: { id: 'p1' } };
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(result)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -99,14 +100,14 @@ describe('EmitNotificationInterceptor', () => {
       event: 'plan.updated',
       payload: payloadMapper,
     };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(undefined)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -116,14 +117,14 @@ describe('EmitNotificationInterceptor', () => {
 
   it('does not emit when no payload mapper and result is null', async () => {
     const metadata: EmitNotificationMetadata = { event: 'plan.updated' };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(null)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -133,15 +134,15 @@ describe('EmitNotificationInterceptor', () => {
 
   it('passes through the same observable value', async () => {
     const metadata: EmitNotificationMetadata = { event: 'task.completed' };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
     const result = { planId: 'p1', taskId: 't1' };
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(result)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -155,7 +156,7 @@ describe('EmitNotificationInterceptor', () => {
         event: 'plan.updated',
         payload: (ret: unknown) =>
           ret != null
-            ? { message: 'Updated', planId: (ret as { id: string }).id }
+            ? { message: 'Updated', planId: asMock<{ id: string }>(ret).id }
             : null,
       },
       {
@@ -166,20 +167,20 @@ describe('EmitNotificationInterceptor', () => {
           'id' in ret &&
           'status' in ret
             ? {
-                planId: (ret as { id: string }).id,
-                status: (ret as { status: string }).status,
+                planId: asMock<{ id: string }>(ret).id,
+                status: asMock<{ status: string }>(ret).status,
               }
             : null,
       },
     ];
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = { emit: vi.fn() } as unknown as EmitNotificationEmitter;
+    });
+    const emitter = asMock<EmitNotificationEmitter>({ emit: vi.fn() });
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(plan)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     await firstValueFrom(interceptor.intercept(context, next));
@@ -196,22 +197,22 @@ describe('EmitNotificationInterceptor', () => {
 
   it('does not fail the response stream when the emitter throws synchronously, and logs the failure', async () => {
     const metadata: EmitNotificationMetadata = { event: 'plan.updated' };
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = {
+    });
+    const emitter = asMock<EmitNotificationEmitter>({
       emit: vi.fn().mockImplementation(() => {
         throw new Error('boom');
       }),
-    } as unknown as EmitNotificationEmitter;
+    });
     const loggerError = vi
       .spyOn(Logger.prototype, 'error')
       .mockImplementation(() => undefined);
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
     const result = { plan: { id: 'p1' } };
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(result)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
@@ -228,22 +229,22 @@ describe('EmitNotificationInterceptor', () => {
       { event: 'plan.updated' },
       { event: 'plan.status_changed' },
     ];
-    const reflector = {
+    const reflector = asMock<Reflector>({
       get: vi.fn().mockReturnValue(metadata),
-    } as unknown as Reflector;
-    const emitter = {
+    });
+    const emitter = asMock<EmitNotificationEmitter>({
       emit: vi.fn().mockImplementationOnce(() => {
         throw new Error('boom');
       }),
-    } as unknown as EmitNotificationEmitter;
+    });
     const loggerError = vi
       .spyOn(Logger.prototype, 'error')
       .mockImplementation(() => undefined);
     const interceptor = new EmitNotificationInterceptor(reflector, emitter);
     const result = { id: 'p1' };
-    const next = {
+    const next = asMock<CallHandler>({
       handle: vi.fn().mockReturnValue(of(result)),
-    } as unknown as CallHandler;
+    });
     const context = createMockContext(() => undefined);
 
     const value = await firstValueFrom(interceptor.intercept(context, next));
