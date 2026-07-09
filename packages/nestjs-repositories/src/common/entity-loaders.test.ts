@@ -1,3 +1,4 @@
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, test, vi } from 'vitest';
 import {
   createCollectionByColumnLoader,
@@ -12,7 +13,7 @@ interface Row {
 }
 
 const accessorFor = <T>(repo: unknown): RepositoryAccessor<T & object> =>
-  ({ getRepository: () => repo }) as RepositoryAccessor<T & object>;
+  asMock<RepositoryAccessor<T & object>>({ getRepository: () => repo });
 
 describe('createEntityByIdLoader', () => {
   test('batches many load() calls into one find and maps to key order', async () => {

@@ -1,3 +1,4 @@
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
@@ -17,7 +18,10 @@ import {
   workflowUiStateFromPlanRunConfig,
 } from './plan-run-config-storage.round-trip';
 import { planHasCustomRunConfig } from './plan-run-config-storage.compare';
-import type { PlanWorkflowUiState } from './plan-run-config-storage.types';
+import type {
+  PlanRunConfigStorage,
+  PlanWorkflowUiState,
+} from './plan-run-config-storage.types';
 import {
   parsePlanRunConfigJson,
   parsePlanRunConfigStorage,
@@ -132,9 +136,10 @@ describe('serializePlanRunConfigForGraphql', () => {
   });
 
   it('normalizes legacy version-only shell', () => {
-    const json = serializePlanRunConfigForGraphql({ version: 1 } as never, {
-      planId,
-    });
+    const json = serializePlanRunConfigForGraphql(
+      asMock<PlanRunConfigStorage>({ version: 1 }),
+      { planId },
+    );
     expect(JSON.parse(json)).toEqual(
       getDefaultPlanRunConfigStorage({ planId }),
     );

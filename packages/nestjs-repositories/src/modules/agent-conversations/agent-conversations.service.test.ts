@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentConversationMessage } from './agent-conversation-message.entity';
 import {
@@ -112,9 +113,11 @@ describe('AgentConversationsService', () => {
 
     it('throws NotFoundException when planId does not exist', async () => {
       const planId = '33333333-3333-4333-8333-333333333333';
-      vi.mocked(mockPlansService.getRepository).mockReturnValue({
-        findOne: vi.fn().mockResolvedValue(null),
-      } as never);
+      vi.mocked(mockPlansService.getRepository).mockReturnValue(
+        asMock<ReturnType<PlansService['getRepository']>>({
+          findOne: vi.fn().mockResolvedValue(null),
+        }),
+      );
 
       await expect(
         service.createConversation(userId, { planId }),
@@ -152,10 +155,10 @@ describe('AgentConversationsService', () => {
 
   describe('listMessagesForConversation', () => {
     it('loads messages ordered by sort_order after ownership check', async () => {
-      const messages = [
+      const messages = asMock<AgentConversationMessage[]>([
         { id: 'a', sortOrder: 1 },
         { id: 'b', sortOrder: 2 },
-      ] as AgentConversationMessage[];
+      ]);
 
       vi.mocked(mockConversationRepository.findOne).mockResolvedValue(
         mockConversation,
@@ -245,13 +248,10 @@ describe('AgentConversationsService', () => {
           where: vi.fn().mockReturnThis(),
         })),
         save: vi.fn(async (entities: AgentConversationMessage[]) => {
-          const saved = entities.map(
-            (entity, offset) =>
-              ({
-                ...entity,
-                id: entity.id ?? fakerId(savedMessages.length + offset),
-              }) as AgentConversationMessage,
-          );
+          const saved = entities.map((entity, offset) => ({
+            ...entity,
+            id: entity.id ?? fakerId(savedMessages.length + offset),
+          }));
           savedMessages.push(...saved);
           return saved;
         }),
@@ -273,7 +273,7 @@ describe('AgentConversationsService', () => {
             }
             throw new Error(`Unexpected entity: ${String(entity)}`);
           },
-        } as never),
+        }),
       );
 
       const result = await service.appendMessages(userId, conversationId, [
@@ -305,7 +305,7 @@ describe('AgentConversationsService', () => {
             }
             return { createQueryBuilder: vi.fn() };
           },
-        } as never),
+        }),
       );
 
       await expect(
@@ -334,7 +334,7 @@ describe('AgentConversationsService', () => {
           const saved = {
             ...entity,
             id: fakerId(savedMessages.length),
-          } as AgentConversationMessage;
+          };
           savedMessages.push(saved);
           return saved;
         }),
@@ -357,7 +357,7 @@ describe('AgentConversationsService', () => {
             }
             throw new Error(`Unexpected entity: ${String(entity)}`);
           },
-        } as never),
+        }),
       );
 
       const result = await service.appendTurn(userId, conversationId, {
@@ -399,7 +399,7 @@ describe('AgentConversationsService', () => {
             }
             throw new Error(`Unexpected entity: ${String(entity)}`);
           },
-        } as never),
+        }),
       );
 
       await expect(
@@ -453,13 +453,10 @@ describe('AgentConversationsService', () => {
             input: AgentConversationMessage | AgentConversationMessage[],
           ) => {
             const entities = Array.isArray(input) ? input : [input];
-            const saved = entities.map(
-              (entity, offset) =>
-                ({
-                  ...entity,
-                  id: entity.id ?? fakerId(store.length + offset),
-                }) as AgentConversationMessage,
-            );
+            const saved = entities.map((entity, offset) => ({
+              ...entity,
+              id: entity.id ?? fakerId(store.length + offset),
+            }));
             store.push(...saved);
             return Array.isArray(input) ? saved : saved[0];
           },
@@ -481,7 +478,7 @@ describe('AgentConversationsService', () => {
             }
             throw new Error(`Unexpected entity: ${String(entity)}`);
           },
-        } as never);
+        });
     };
 
     it('row-locks the conversation with pessimistic_write before reading MAX(sort_order)', async () => {

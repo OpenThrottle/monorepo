@@ -4,6 +4,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock, isRecord } from '@openthrottle/nestjs-testing';
 import { DailyStat } from './daily-stat.entity';
 import { dailyStatsFactory } from './daily-stats.factory';
 import { DailyStatsService } from './daily-stats.service';
@@ -50,32 +51,33 @@ describe('DailyStatsService', () => {
               ...d,
             }),
             findOne: async ({ where }) => {
-              const wanted = new Date(
-                (where as unknown as { date: Date }).date,
-              ).getTime();
+              const wanted =
+                isRecord(where) && where.date instanceof Date
+                  ? where.date.getTime()
+                  : Number.NaN;
               return (
                 saved.find((r) => new Date(r.date).getTime() === wanted) ?? null
               );
             },
             upsert: async (e: DeepPartial<DailyStat>) => {
-              const row = e as unknown as DailyStat;
+              const row = asMock<DailyStat>(e);
               const idx = saved.findIndex(
                 (r) =>
                   new Date(r.date).getTime() === new Date(row.date).getTime(),
               );
               if (idx >= 0) {
-                saved[idx] = { ...saved[idx], ...row } as DailyStat;
+                saved[idx] = { ...saved[idx], ...row };
               } else {
                 saved.push(row);
               }
 
-              // FIXME: Tighten this up — minimal InsertResult shape for the mock
+              // Minimal InsertResult shape for the mock
 
-              return {
+              return asMock<Awaited<ReturnType<GetRepository['upsert']>>>({
                 generatedMaps: [],
                 identifiers: [],
                 raw: [],
-              } as unknown as Awaited<ReturnType<GetRepository['upsert']>>;
+              });
             },
           }),
         },
@@ -153,12 +155,12 @@ describe('DailyStatsService', () => {
     it('merges two concurrent upserts for the same date without a 23505', async () => {
       const store: DailyStat[] = [];
       const upsertSpy = vi.fn().mockImplementation(async (e) => {
-        const row = e as DailyStat;
+        const row = asMock<DailyStat>(e);
         const idx = store.findIndex(
           (r) => new Date(r.date).getTime() === new Date(row.date).getTime(),
         );
         if (idx >= 0) {
-          store[idx] = { ...store[idx], ...row } as DailyStat;
+          store[idx] = { ...store[idx], ...row };
         } else {
           store.push(row);
         }
@@ -170,9 +172,10 @@ describe('DailyStatsService', () => {
           ...d,
         }),
         findOne: async ({ where }) => {
-          const wanted = new Date(
-            (where as unknown as { date: Date }).date,
-          ).getTime();
+          const wanted =
+            isRecord(where) && where.date instanceof Date
+              ? where.date.getTime()
+              : Number.NaN;
           return (
             store.find((r) => new Date(r.date).getTime() === wanted) ?? null
           );

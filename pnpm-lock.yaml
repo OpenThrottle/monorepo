@@ -2745,6 +2745,9 @@ importers:
       '@faker-js/faker':
         specifier: 'catalog:'
         version: 10.4.0
+      '@openthrottle/nestjs-testing':
+        specifier: workspace:^
+        version: link:../nestjs-testing
       '@types/bcrypt':
         specifier: 'catalog:'
         version: 6.0.0

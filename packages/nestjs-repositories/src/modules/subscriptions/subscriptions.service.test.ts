@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { DeepPartial } from 'typeorm';
 import { Subscription } from './subscription.entity';
 import { SubscriptionsService } from './subscriptions.service';
@@ -20,11 +21,12 @@ describe('SubscriptionsService', () => {
 
   beforeEach(async () => {
     repository = {
-      create: vi.fn((data: DeepPartial<Subscription>) => data as Subscription),
+      create: vi.fn((data: DeepPartial<Subscription>) =>
+        asMock<Subscription>(data),
+      ),
       findOne: vi.fn(),
-      merge: vi.fn(
-        (target: Subscription, data: DeepPartial<Subscription>) =>
-          Object.assign(target, data) as Subscription,
+      merge: vi.fn((target: Subscription, data: DeepPartial<Subscription>) =>
+        Object.assign(target, data),
       ),
       save: vi.fn(async (entity: Subscription) => entity),
     };
@@ -44,11 +46,11 @@ describe('SubscriptionsService', () => {
 
   describe('upsertByStripeSubscriptionId', () => {
     it('merges and saves the existing row when one matches the Stripe id', async () => {
-      const existing = {
+      const existing = asMock<Subscription>({
         id: 'existing-id',
         status: 'trialing',
         stripeSubscriptionId,
-      } as Subscription;
+      });
       vi.mocked(repository.findOne).mockResolvedValue(existing);
 
       const result = await service.upsertByStripeSubscriptionId(
@@ -87,11 +89,11 @@ describe('SubscriptionsService', () => {
     });
 
     it('is idempotent for webhook replays — a second call merges the same existing row', async () => {
-      const existing = {
+      const existing = asMock<Subscription>({
         id: 'existing-id',
         status: 'active',
         stripeSubscriptionId,
-      } as Subscription;
+      });
       vi.mocked(repository.findOne).mockResolvedValue(existing);
 
       await service.upsertByStripeSubscriptionId(stripeSubscriptionId, {

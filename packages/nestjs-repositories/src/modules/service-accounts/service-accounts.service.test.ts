@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { ServiceAccountCredential } from './service-account-credential.entity';
 import { ServiceAccount } from './service-account.entity';
 import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-account-token.util';
@@ -76,10 +77,12 @@ describe('ServiceAccountsService', () => {
     });
 
     it('returns null when service account is disabled', async () => {
-      serviceAccountRepository.findOne.mockResolvedValue({
-        disabledAt: new Date(),
-        id: serviceAccountId,
-      } as ServiceAccount);
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          disabledAt: new Date(),
+          id: serviceAccountId,
+        }),
+      );
 
       const result = await service.createCredential({
         serviceAccountId,
@@ -89,10 +92,12 @@ describe('ServiceAccountsService', () => {
     });
 
     it('returns ot_sa token and saves bcrypt hash', async () => {
-      serviceAccountRepository.findOne.mockResolvedValue({
-        disabledAt: null,
-        id: serviceAccountId,
-      } as ServiceAccount);
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
       credentialRepository.findOne.mockResolvedValue(null);
 
       const result = await service.createCredential({
@@ -140,14 +145,16 @@ describe('ServiceAccountsService', () => {
 
     it('returns null when secret does not match hash', async () => {
       const hash = await service.hashSecret('correct-secret');
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        revokedAt: null,
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      } as ServiceAccountCredential);
+      credentialRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccountCredential>({
+          expiresAt: null,
+          id: credentialId,
+          revokedAt: null,
+          secretHash: hash,
+          serviceAccount: { disabledAt: null },
+          serviceAccountId,
+        }),
+      );
 
       const result = await service.verifyBearerToken(
         `${SERVICE_ACCOUNT_BEARER_PREFIX}known_wrongsecret`,
@@ -159,15 +166,17 @@ describe('ServiceAccountsService', () => {
     it('returns null when credential is revoked', async () => {
       const secret = 'validSecret12';
       const hash = await service.hashSecret(secret);
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        prefix: 'known',
-        revokedAt: new Date(),
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      } as ServiceAccountCredential);
+      credentialRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccountCredential>({
+          expiresAt: null,
+          id: credentialId,
+          prefix: 'known',
+          revokedAt: new Date(),
+          secretHash: hash,
+          serviceAccount: { disabledAt: null },
+          serviceAccountId,
+        }),
+      );
 
       const result = await service.verifyBearerToken(
         `${SERVICE_ACCOUNT_BEARER_PREFIX}known_${secret}`,
@@ -180,15 +189,17 @@ describe('ServiceAccountsService', () => {
       const secret = 'validSecret12';
       const prefix = 'knownprefix1';
       const hash = await service.hashSecret(secret);
-      credentialRepository.findOne.mockResolvedValue({
-        expiresAt: null,
-        id: credentialId,
-        prefix,
-        revokedAt: null,
-        secretHash: hash,
-        serviceAccount: { disabledAt: null },
-        serviceAccountId,
-      } as ServiceAccountCredential);
+      credentialRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccountCredential>({
+          expiresAt: null,
+          id: credentialId,
+          prefix,
+          revokedAt: null,
+          secretHash: hash,
+          serviceAccount: { disabledAt: null },
+          serviceAccountId,
+        }),
+      );
 
       const result = await service.verifyBearerToken(
         `Bearer ${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${secret}`,
@@ -213,10 +224,10 @@ describe('ServiceAccountsService', () => {
     });
 
     it('sets revoked_at when credential is active', async () => {
-      const credential = {
+      const credential = asMock<ServiceAccountCredential>({
         id: credentialId,
         revokedAt: null,
-      } as ServiceAccountCredential;
+      });
       credentialRepository.findOne.mockResolvedValue(credential);
 
       const revoked = await service.revokeCredential(credentialId);

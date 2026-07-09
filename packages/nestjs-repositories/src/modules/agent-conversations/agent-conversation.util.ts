@@ -7,6 +7,9 @@ import {
   AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
 } from './agent-conversation.constants';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const truncateUtf8 = (
   value: string,
   maxBytes: number,
@@ -73,17 +76,21 @@ export const capAgentConversationToolMetadata = (
   }
 
   try {
-    const parsed = JSON.parse(value) as Record<string, unknown>;
-    return {
-      toolMetadata: { ...parsed, truncated: true },
-      toolMetadataTruncated: true,
-    };
+    const parsed: unknown = JSON.parse(value);
+    if (isRecord(parsed)) {
+      return {
+        toolMetadata: { ...parsed, truncated: true },
+        toolMetadataTruncated: true,
+      };
+    }
   } catch {
-    return {
-      toolMetadata: { truncated: true },
-      toolMetadataTruncated: true,
-    };
+    // Fall through to the truncated-marker envelope below.
   }
+
+  return {
+    toolMetadata: { truncated: true },
+    toolMetadataTruncated: true,
+  };
 };
 
 /**

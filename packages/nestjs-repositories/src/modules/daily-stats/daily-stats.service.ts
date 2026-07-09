@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
-import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { DailyStat } from './daily-stat.entity';
 
 @Injectable()
@@ -54,7 +53,7 @@ export class DailyStatsService {
       tasksUpdated: data.tasksUpdated,
     };
 
-    await repo.upsert(rowInput as QueryDeepPartialEntity<DailyStat>, ['date']);
+    await repo.upsert(rowInput, ['date']);
 
     const row = repo.create(rowInput);
 
