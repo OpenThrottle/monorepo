@@ -9,30 +9,9 @@ After years of development, I've refined my tech stack to focus on a core set of
 
 Specific Reads:
 
-- [local-quickstart.md](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify
+- [Quickstart](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify
 - [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
 - [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
-
-## 🤖 Ralph Loops
-
-```bash
-# From this repository root (adjust POSTGRES_URL if your local DB differs).
-export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle"
-
-pnpm exec workflow-ralph \
-  --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
-  --prompt-file .cursor/skills/agents-ralph/SKILL.md
-```
-
-Or invoke the `agents-ralph` skill from your agent of choice:
-
-```bash
-cursor-agent -p /agents-ralph
-
-claude /agents-ralph
-
-opencode --prompt "skill({ name: "agents-ralph" })"
-```
 
 ## 🏠 Architecture
 
