@@ -11,6 +11,16 @@ export type {
 } from '../tabs/open-throttle-tabs.api';
 
 /**
+ * Boundary helper: without a `parse` validator the raw URL string is trusted as
+ * a `TTab`. The generic overload gives callers the narrow type while the
+ * implementation just returns the string it was handed.
+ */
+function coerceTab<TTab extends string>(raw: string): TTab;
+function coerceTab(raw: string): string {
+  return raw;
+}
+
+/**
  * @description Syncs a Radix/shadcn tab `value` with a URL search param on the same route.
  * Deletes the param when the active tab equals `defaultValue` (canonical URL for the default tab).
  */
@@ -28,14 +38,14 @@ export function useUrlSyncedTabValue<TTab extends string = string>(
     if (raw === null || raw === '') {
       return defaultValue;
     }
-    return raw as TTab;
+    return coerceTab<TTab>(raw);
   }, [defaultValue, param, parse, searchParams]);
 
   const onValueChange = React.useCallback(
     (next: string): void => {
       const resolved: TTab = parse
         ? (parse(next) ?? defaultValue)
-        : ((next || defaultValue) as TTab);
+        : coerceTab<TTab>(next || defaultValue);
 
       const nextParams = new URLSearchParams(searchParams);
       if (resolved === defaultValue) {

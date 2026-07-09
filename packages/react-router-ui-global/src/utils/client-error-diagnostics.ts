@@ -241,16 +241,19 @@ export const incidentClassificationSummary = (params: {
 /**
  * @description Best-effort stack string when the thrown value is not an {@link Error} but carries `stack` (e.g. some libraries).
  */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 export const getLooseErrorStack = (error: unknown): string | undefined => {
   if (error instanceof Error && typeof error.stack === 'string') {
     return error.stack;
   }
 
-  if (typeof error !== 'object' || error === null) {
+  if (!isRecord(error)) {
     return undefined;
   }
 
-  const stack = (error as unknown as { readonly stack?: unknown }).stack;
+  const stack = error.stack;
 
   return typeof stack === 'string' ? stack : undefined;
 };

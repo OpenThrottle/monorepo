@@ -4,11 +4,22 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { GradientMesh } from '../GradientMesh';
 
 /**
+ * Present a structural test double as its real type. The public overload hands
+ * the caller `T`; the implementation stays `unknown`-typed, so the mock
+ * boundary needs no `as` cast. `MediaQueryList` is a wide DOM interface we only
+ * partially implement here.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
+/**
  * Mock the WebGL shader so the wrapper can be asserted in jsdom (no GL context).
  * The mock records the props it receives so we can verify pass-through.
  */
-const meshProps = vi.hoisted(() => ({
-  current: {} as Record<string, unknown>,
+const meshProps = vi.hoisted((): { current: Record<string, unknown> } => ({
+  current: {},
 }));
 
 vi.mock('@paper-design/shaders-react', () => ({
@@ -41,18 +52,17 @@ describe('GradientMesh Component', () => {
   });
 
   test('zeroes animation speed when the user prefers reduced motion', () => {
-    vi.spyOn(globalThis, 'matchMedia').mockImplementation(
-      (query: string): MediaQueryList =>
-        ({
-          addEventListener: () => {},
-          addListener: () => {},
-          dispatchEvent: () => false,
-          matches: true,
-          media: query,
-          onchange: null,
-          removeEventListener: () => {},
-          removeListener: () => {},
-        }) as MediaQueryList,
+    vi.spyOn(globalThis, 'matchMedia').mockImplementation((query: string) =>
+      asMock<MediaQueryList>({
+        addEventListener: () => {},
+        addListener: () => {},
+        dispatchEvent: () => false,
+        matches: true,
+        media: query,
+        onchange: null,
+        removeEventListener: () => {},
+        removeListener: () => {},
+      }),
     );
 
     render(<GradientMesh speed={2} />);

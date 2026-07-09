@@ -4,7 +4,15 @@
  * user preference (enabled, onlyWhenBackground), and document visibility.
  */
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  type Mock,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { NavigateFunction } from 'react-router';
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
@@ -138,7 +146,7 @@ describe('showSystemNotification', () => {
   let mockNotificationCtor: ReturnType<typeof vi.fn>;
   let notificationApi: { permission: string };
   let mockNotificationInstance: {
-    close: ReturnType<typeof vi.fn>;
+    close: Mock<() => void>;
     onclick: (() => void) | null;
   };
   let documentVisibilityState: string;
@@ -164,7 +172,7 @@ describe('showSystemNotification', () => {
     mockNavigate = vi.fn();
     documentVisibilityState = 'visible';
     mockNotificationInstance = {
-      close: vi.fn(),
+      close: vi.fn<() => void>(),
       onclick: null,
     };
     class MockNotification {
@@ -180,8 +188,7 @@ describe('showSystemNotification', () => {
       }
 
       close(): void {
-        // FIXME:
-        (mockNotificationInstance.close as () => void)();
+        mockNotificationInstance.close();
       }
     }
 

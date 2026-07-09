@@ -7,6 +7,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ChatComposer } from '../ChatComposer';
 import type { ChatComposerProps } from '../ChatComposer';
 
+function assertTextArea(
+  element: HTMLElement,
+): asserts element is HTMLTextAreaElement {
+  if (!(element instanceof HTMLTextAreaElement)) {
+    throw new Error('Expected an HTMLTextAreaElement');
+  }
+}
+
 describe('ChatComposer Component', () => {
   let component: RenderResult | undefined;
   let props: ChatComposerProps;
@@ -143,9 +151,8 @@ describe('ChatComposer Component', () => {
       const user = userEvent.setup();
       mountComposer({ draft: 'frozen prefix', onDraftChange });
 
-      const textarea = component!.getByLabelText(
-        'Message',
-      ) as HTMLTextAreaElement;
+      const textarea = component!.getByLabelText('Message');
+      assertTextArea(textarea);
       expect(textarea.value).toBe('frozen prefix');
 
       await user.type(textarea, '!');
@@ -171,9 +178,8 @@ describe('ChatComposer Component', () => {
         readOnly: true,
       });
 
-      const textarea = component!.getByLabelText(
-        'Message',
-      ) as HTMLTextAreaElement;
+      const textarea = component!.getByLabelText('Message');
+      assertTextArea(textarea);
       expect(textarea).toHaveAttribute('readonly');
 
       textarea.focus();

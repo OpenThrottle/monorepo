@@ -15,8 +15,10 @@ function renderPagination(props: OpenThrottlePaginationProps): RenderResult {
 
 function pageNumberLinks(view: RenderResult): HTMLAnchorElement[] {
   return [...view.container.querySelectorAll('a[href*="page="]')].filter(
-    (link) => /^\d+$/.test(link.textContent?.trim() ?? ''),
-  ) as HTMLAnchorElement[];
+    (link): link is HTMLAnchorElement =>
+      link instanceof HTMLAnchorElement &&
+      /^\d+$/.test(link.textContent?.trim() ?? ''),
+  );
 }
 
 describe('OpenThrottlePagination Component', () => {

@@ -105,7 +105,13 @@ const CommandSeparator = React.forwardRef<
 CommandSeparator.displayName = 'CommandSeparator';
 
 /** CommandDialog: Command palette inside a modal. Uses cmdk's Dialog (Radix Dialog). */
-const CommandDialog = React.forwardRef<
+// Annotate with the explicit forwardRef type so the emitted declaration is
+// nameable (via `CmdkCommandDialog` + React) instead of referencing radix's
+// internal, un-nameable `DialogProps`.
+const CommandDialog: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CmdkCommandDialog> &
+    React.RefAttributes<React.ComponentRef<typeof CmdkCommandDialog>>
+> = React.forwardRef<
   React.ComponentRef<typeof CmdkCommandDialog>,
   React.ComponentPropsWithoutRef<typeof CmdkCommandDialog>
 >(({ contentClassName, overlayClassName, ...props }, ref) => (
@@ -127,7 +133,7 @@ const CommandDialog = React.forwardRef<
     ref={ref}
     {...props}
   />
-)) as typeof CmdkCommandDialog;
+));
 CommandDialog.displayName = 'CommandDialog';
 
 /**

@@ -4,6 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useAudio } from '../useAudio';
 
+function getAudioElement(): HTMLAudioElement {
+  const element = screen.getByTestId('audio');
+  if (!(element instanceof HTMLAudioElement)) {
+    throw new Error('Expected an HTMLAudioElement');
+  }
+  return element;
+}
+
 function AudioHarness(props: { readonly src?: string }) {
   const audio = useAudio({ src: props.src });
 
@@ -56,7 +64,7 @@ describe('useAudio', () => {
       const user = userEvent.setup();
       render(<AudioHarness />);
 
-      const audio = screen.getByTestId('audio') as HTMLAudioElement;
+      const audio = getAudioElement();
       Object.defineProperty(audio, 'paused', {
         configurable: true,
         get: () => false,
@@ -78,7 +86,7 @@ describe('useAudio', () => {
       const user = userEvent.setup();
       render(<AudioHarness />);
 
-      const audio = screen.getByTestId('audio') as HTMLAudioElement;
+      const audio = getAudioElement();
 
       await user.click(screen.getByTestId('pause'));
 
@@ -95,7 +103,7 @@ describe('useAudio', () => {
       const user = userEvent.setup();
       render(<AudioHarness />);
 
-      const audio = screen.getByTestId('audio') as HTMLAudioElement;
+      const audio = getAudioElement();
 
       await user.click(screen.getByTestId('seek'));
 
@@ -124,7 +132,7 @@ describe('useAudio', () => {
     test('assigns src on the bound audio element', () => {
       render(<AudioHarness src="https://example.com/sound.mp3" />);
 
-      const audio = screen.getByTestId('audio') as HTMLAudioElement;
+      const audio = getAudioElement();
       expect(audio.src).toContain('sound.mp3');
     });
   });

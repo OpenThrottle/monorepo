@@ -56,6 +56,14 @@ const MULTI_SELECT_OPTIONS = WEBSOCKET_DEBUGGER_EVENT_OPTIONS.map((option) => ({
   value: option.value,
 }));
 
+const KNOWN_EVENT_NAMES = new Set<string>(
+  WEBSOCKET_DEBUGGER_EVENT_OPTIONS.map((option) => option.value),
+);
+
+const isNotificationEventName = (
+  value: string,
+): value is NotificationEventName => KNOWN_EVENT_NAMES.has(value);
+
 export const OpenThrottleWebsocketDebugger = (
   props: OpenThrottleWebsocketDebuggerProps,
 ): React.ReactElement => {
@@ -124,7 +132,7 @@ export const OpenThrottleWebsocketDebugger = (
 
   // Handlers
   const handleFilterChange = (values: string[]): void => {
-    setSelectedEventNames(values as NotificationEventName[]);
+    setSelectedEventNames(values.filter(isNotificationEventName));
   };
 
   const handleClear = (): void => {

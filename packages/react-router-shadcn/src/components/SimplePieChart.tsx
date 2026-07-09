@@ -1,12 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import type { DataKey } from 'recharts';
 import { Cell, Pie, PieChart } from 'recharts';
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
 import { ChartTooltipContent } from './Chart/ChartTooltipContent';
 import type { ChartConfig } from './chart-config';
+import { toDataKey } from './chart-data-key';
 
 const CHART_COLOR_VARS = [
   'var(--chart-1)',
@@ -55,7 +55,6 @@ export function SimplePieChart<T extends Record<string, string | number>>(
   // Hooks
 
   // Setup
-  const valueDataKey = valueKey as DataKey<T>;
   const isDonut = variant === 'donut';
 
   // Handlers
@@ -98,7 +97,7 @@ export function SimplePieChart<T extends Record<string, string | number>>(
           cx="50%"
           cy="50%"
           data={data}
-          dataKey={valueDataKey}
+          dataKey={toDataKey<T>(valueKey)}
           innerRadius={isDonut ? `${innerRadiusRatio * 100}%` : 0}
           nameKey={nameKey}
           outerRadius="80%"

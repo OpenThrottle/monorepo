@@ -18,6 +18,10 @@ export function SidebarMenuSkeleton({
     return `${Math.floor(Math.random() * 40) + 50}%`;
   }, []);
 
+  const skeletonStyle: React.CSSProperties & Record<`--${string}`, string> = {
+    '--skeleton-width': width,
+  };
+
   return (
     <div
       className={cn('flex h-8 items-center gap-2 rounded-md px-2', className)}
@@ -34,11 +38,7 @@ export function SidebarMenuSkeleton({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={
-          {
-            '--skeleton-width': width,
-          } as React.CSSProperties
-        }
+        style={skeletonStyle}
       />
     </div>
   );
