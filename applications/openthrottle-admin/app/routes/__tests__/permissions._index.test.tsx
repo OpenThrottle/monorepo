@@ -21,18 +21,17 @@ vi.mock('@openthrottle/react-router-graphql', () => {
   };
 });
 
+import { createLoaderArgs } from '@openthrottle/react-router-testing';
+
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import * as RouteModule from '../permissions._index';
 import type { Route } from '@/app/routes/+types/permissions._index';
 
-// The loader under test only reads request from its args.
-const createArgs = () => {
-  const request = new Request('http://localhost/permissions', {
+const createArgs = () =>
+  createLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
+    url: 'http://localhost/permissions',
   });
-
-  return { request } as unknown as Route.LoaderArgs;
-};
 
 describe('routes/permissions._index.tsx', () => {
   beforeEach(() => {

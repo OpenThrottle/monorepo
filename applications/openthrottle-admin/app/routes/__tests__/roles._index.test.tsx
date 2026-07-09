@@ -21,32 +21,27 @@ vi.mock('@openthrottle/react-router-graphql', () => {
   };
 });
 
+import {
+  createActionArgs as buildActionArgs,
+  createLoaderArgs as buildLoaderArgs,
+} from '@openthrottle/react-router-testing';
+
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import * as RouteModule from '../roles._index';
 import type { Route } from '@/app/routes/+types/roles._index';
 
-// The loader only reads request from its args.
-const createLoaderArgs = () => {
-  const request = new Request('http://localhost/roles', {
+const createLoaderArgs = () =>
+  buildLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
+    url: 'http://localhost/roles',
   });
 
-  return { request } as unknown as Route.LoaderArgs;
-};
-
-// The action only reads request from its args.
-const createActionArgs = (body: Record<string, string>) => {
-  const formData = new FormData();
-  Object.entries(body).forEach(([key, value]) => formData.append(key, value));
-
-  const request = new Request('http://localhost/roles', {
-    body: formData,
+const createActionArgs = (body: Record<string, string>) =>
+  buildActionArgs<Route.ActionArgs>({
+    body,
     headers: { cookie: 'ot_auth=token' },
-    method: 'POST',
+    url: 'http://localhost/roles',
   });
-
-  return { request } as unknown as Route.ActionArgs;
-};
 
 describe('routes/roles._index.tsx', () => {
   beforeEach(() => {

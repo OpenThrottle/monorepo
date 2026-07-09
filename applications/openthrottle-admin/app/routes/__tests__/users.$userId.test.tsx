@@ -21,35 +21,32 @@ vi.mock('@openthrottle/react-router-graphql', () => {
   };
 });
 
+import {
+  createActionArgs as buildActionArgs,
+  createLoaderArgs as buildLoaderArgs,
+} from '@openthrottle/react-router-testing';
+
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import * as RouteModule from '../users.$userId';
 import type { Route } from '@/app/routes/+types/users.$userId';
 
-// The loader reads request and params from its args.
-const createLoaderArgs = (params: Record<string, string>) => {
-  const request = new Request('http://localhost/users/user-1', {
+const createLoaderArgs = (params: Record<string, string>) =>
+  buildLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
+    params,
+    url: 'http://localhost/users/user-1',
   });
 
-  return { params, request } as unknown as Route.LoaderArgs;
-};
-
-// The action reads request and params from its args.
 const createActionArgs = (
   params: Record<string, string>,
   body: Record<string, string>,
-) => {
-  const formData = new FormData();
-  Object.entries(body).forEach(([key, value]) => formData.append(key, value));
-
-  const request = new Request('http://localhost/users/user-1', {
-    body: formData,
+) =>
+  buildActionArgs<Route.ActionArgs>({
+    body,
     headers: { cookie: 'ot_auth=token' },
-    method: 'POST',
+    params,
+    url: 'http://localhost/users/user-1',
   });
-
-  return { params, request } as unknown as Route.ActionArgs;
-};
 
 describe('routes/users.$userId.tsx', () => {
   beforeEach(() => {

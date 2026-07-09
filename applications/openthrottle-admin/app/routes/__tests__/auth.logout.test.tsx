@@ -7,18 +7,17 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
     executeGraphqlWithAuth(...args),
 }));
 
+import { createActionArgs } from '@openthrottle/react-router-testing';
+
 import * as RouteModule from '../auth.logout';
 import type { Route } from '@/app/routes/+types/auth.logout';
 
-// createArgs only needs request for the loader/action under test.
-const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() => {
-  const request = new Request('http://localhost/auth/logout', {
+// The loader and action under test only need a request (both use POST here).
+const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() =>
+  createActionArgs<T>({
     headers: { cookie: 'ot_auth=token' },
-    method: 'POST',
+    url: 'http://localhost/auth/logout',
   });
-
-  return { request } as unknown as T;
-};
 
 describe('routes/auth.logout.tsx', () => {
   beforeEach(() => {
