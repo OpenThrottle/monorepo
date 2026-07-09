@@ -7,11 +7,14 @@ import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
 /**
  * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
  */
-enum RalphNestedDebugCliGraphQL {
-  debug = 'debug',
-  omit = 'omit',
-  verbose = 'verbose',
-}
+const RalphNestedDebugCliGraphQL = {
+  debug: 'debug',
+  omit: 'omit',
+  verbose: 'verbose',
+} as const;
+
+type RalphNestedDebugCliGraphQL =
+  (typeof RalphNestedDebugCliGraphQL)[keyof typeof RalphNestedDebugCliGraphQL];
 
 registerEnumType(RalphNestedDebugCliGraphQL, {
   description: `Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.`,
@@ -21,10 +24,13 @@ registerEnumType(RalphNestedDebugCliGraphQL, {
 /**
  * @description Plan vs task-centric scope for in-process Ralph orchestrator runs (matches `WorkflowRalphContext` / CLI `--plan` vs `--task`).
  */
-export enum PlanRalphWorkflowModeGraphQL {
-  plan = 'plan',
-  task = 'task',
-}
+export const PlanRalphWorkflowModeGraphQL = {
+  plan: 'plan',
+  task: 'task',
+} as const;
+
+export type PlanRalphWorkflowModeGraphQL =
+  (typeof PlanRalphWorkflowModeGraphQL)[keyof typeof PlanRalphWorkflowModeGraphQL];
 
 registerEnumType(PlanRalphWorkflowModeGraphQL, {
   description: `Plan-scoped run (default) or task-centric run ("task" requires taskId).`,

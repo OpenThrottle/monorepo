@@ -169,13 +169,10 @@ export const eslintConfig = tslint.config([
       'import/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
-      // Discourage the "no new TypeScript enums — use `as const` objects" rule
-      // from CLAUDE.md at the config layer. Temporarily 'warn' (not 'error'):
-      // the selector matches all enums, not just new ones, so pre-existing enums
-      // across consuming projects would fail CI. Tracked for cleanup +
-      // re-escalation to 'error' as an OT bug.
+      // Enforce the "no new TypeScript enums — use `as const` objects" rule
+      // from CLAUDE.md at the config layer.
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',

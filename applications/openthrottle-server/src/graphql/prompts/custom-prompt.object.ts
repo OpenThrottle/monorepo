@@ -4,14 +4,17 @@
 
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-export enum CustomPromptTypeEnum {
-  AGENTS = 'agents',
-  COMMANDS = 'commands',
-  PERSONAS = 'personas',
-  PROMPTS = 'prompts',
-  RULES = 'rules',
-  SKILLS = 'skills',
-}
+export const CustomPromptTypeEnum = {
+  AGENTS: 'agents',
+  COMMANDS: 'commands',
+  PERSONAS: 'personas',
+  PROMPTS: 'prompts',
+  RULES: 'rules',
+  SKILLS: 'skills',
+} as const;
+
+export type CustomPromptTypeEnum =
+  (typeof CustomPromptTypeEnum)[keyof typeof CustomPromptTypeEnum];
 
 registerEnumType(CustomPromptTypeEnum, {
   description: 'Type of custom prompt document',
