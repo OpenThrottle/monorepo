@@ -601,10 +601,7 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     }
 
     expect(ok.lines).toHaveLength(2);
-    expect(ok.lines.map((l: { message: string }) => l.message)).toEqual([
-      'one',
-      'two',
-    ]);
+    expect(ok.lines.map((l) => l.message)).toEqual(['one', 'two']);
     expect(ok.nextByteOffset).toBe(999);
   });
 
