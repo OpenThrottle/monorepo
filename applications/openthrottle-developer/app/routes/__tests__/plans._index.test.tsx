@@ -83,7 +83,7 @@ describe('routes/plans._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataWithStats}
-        matches={[]}
+        matches={[] as never}
         params={{}}
       />
     );
@@ -107,7 +107,7 @@ describe('routes/plans._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataEmpty}
-        matches={[]}
+        matches={[] as never}
         params={{}}
       />
     );

@@ -17,7 +17,7 @@ const mockProject = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const defaultMatches: Route.ComponentProps['matches'] = [];
+const defaultMatches: Route.ComponentProps['matches'] = [] as never;
 
 const defaultLoaderData = {
   limit: 20,
