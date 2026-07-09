@@ -5,6 +5,15 @@ import {
   parseDateTimeInResponse,
 } from './utils.ts';
 
+function assertDate(value: unknown): asserts value is Date {
+  if (!(value instanceof Date)) {
+    throw new Error(`Expected a Date, received ${String(value)}`);
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 describe('getGraphQLUrl', () => {
   const original = process.env.API_URL_INTERNAL;
 
@@ -73,24 +82,29 @@ describe('parseDateTimeInResponse', () => {
 
   it('parses an ISO string with a Z (UTC) suffix into a Date', () => {
     const iso = '2024-01-15T12:30:00.000Z';
-    const result = parseDateTimeInResponse(iso);
+    const result = parseDateTimeInResponse<unknown>(iso);
 
     expect(result).toBeInstanceOf(Date);
-    expect((result as Date).toISOString()).toBe(iso);
+    assertDate(result);
+    expect(result.toISOString()).toBe(iso);
   });
 
   it('parses an ISO string with a +HH:MM offset into a Date', () => {
-    const result = parseDateTimeInResponse('2024-01-15T12:30:00+02:00');
+    const result = parseDateTimeInResponse<unknown>(
+      '2024-01-15T12:30:00+02:00',
+    );
 
     expect(result).toBeInstanceOf(Date);
-    expect((result as Date).toISOString()).toBe('2024-01-15T10:30:00.000Z');
+    assertDate(result);
+    expect(result.toISOString()).toBe('2024-01-15T10:30:00.000Z');
   });
 
   it('parses an ISO string with a +HHMM offset (no colon) into a Date', () => {
-    const result = parseDateTimeInResponse('2024-01-15T12:30:00+0200');
+    const result = parseDateTimeInResponse<unknown>('2024-01-15T12:30:00+0200');
 
     expect(result).toBeInstanceOf(Date);
-    expect((result as Date).toISOString()).toBe('2024-01-15T10:30:00.000Z');
+    assertDate(result);
+    expect(result.toISOString()).toBe('2024-01-15T10:30:00.000Z');
   });
 
   it('parses an ISO string with no zone suffix into a Date', () => {
@@ -115,30 +129,30 @@ describe('parseDateTimeInResponse', () => {
 
   it('parses ISO strings inside arrays', () => {
     const iso = '2024-01-15T12:30:00.000Z';
-    const result = parseDateTimeInResponse([iso, 'plain', 7]);
+    const result = parseDateTimeInResponse<unknown>([iso, 'plain', 7]);
 
     expect(Array.isArray(result)).toBe(true);
-    const arr = result as ReadonlyArray<unknown>;
-    expect(arr[0]).toBeInstanceOf(Date);
-    expect((arr[0] as Date).toISOString()).toBe(iso);
-    expect(arr[1]).toBe('plain');
-    expect(arr[2]).toBe(7);
+    if (!Array.isArray(result)) {
+      throw new Error('Expected an array');
+    }
+    assertDate(result[0]);
+    expect(result[0].toISOString()).toBe(iso);
+    expect(result[1]).toBe('plain');
+    expect(result[2]).toBe(7);
   });
 
   it('recurses into nested objects, leaving non-dates untouched', () => {
     const iso = '2024-01-15T12:30:00.000Z';
-    const result = parseDateTimeInResponse({
+    const result = parseDateTimeInResponse<unknown>({
       meta: { count: 1, label: 'plain' },
       nested: { createdAt: iso },
     });
 
-    const out = result as {
-      readonly meta: { readonly count: number; readonly label: string };
-      readonly nested: { readonly createdAt: Date };
-    };
-    expect(out.nested.createdAt).toBeInstanceOf(Date);
-    expect(out.nested.createdAt.toISOString()).toBe(iso);
-    expect(out.meta.count).toBe(1);
-    expect(out.meta.label).toBe('plain');
+    expect(result).toMatchObject({ meta: { count: 1, label: 'plain' } });
+    if (!isRecord(result) || !isRecord(result.nested)) {
+      throw new Error('Expected a nested object');
+    }
+    assertDate(result.nested.createdAt);
+    expect(result.nested.createdAt.toISOString()).toBe(iso);
   });
 });

@@ -37,15 +37,25 @@ interface PlanRawRow {
 /**
  * @description Normalizes TypeORM query result (array or pg-style { rows, rowCount }) to { rows, rowCount }.
  */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const toRecord = (value: unknown): Record<string, unknown> =>
+  isRecord(value) ? value : {};
+
 function normalizeQueryResult<T>(raw: unknown): {
   rowCount: number;
   rows: T[];
 } {
   if (Array.isArray(raw)) {
-    return { rowCount: raw.length, rows: raw as T[] };
+    return { rowCount: raw.length, rows: raw };
   }
-  const r = raw as { rowCount?: number; rows?: T[] };
-  return { rowCount: r.rowCount ?? 0, rows: r.rows ?? [] };
+  if (isRecord(raw)) {
+    const rows = Array.isArray(raw.rows) ? raw.rows : [];
+    const rowCount = typeof raw.rowCount === 'number' ? raw.rowCount : 0;
+    return { rowCount, rows };
+  }
+  return { rowCount: 0, rows: [] };
 }
 
 export interface SemanticSearchChunk {
@@ -148,7 +158,7 @@ export async function runSemanticSearch(
   const planChunks: SemanticSearchChunk[] = planRowsList.map((r) => ({
     content: r.content,
     id: r.id,
-    metadata: (r.metadata as Record<string, unknown>) ?? {},
+    metadata: toRecord(r.metadata),
     planId: r.plan_id,
     planTitle: r.plan_title,
     similarity: Number(r.similarity),
@@ -160,7 +170,7 @@ export async function runSemanticSearch(
   const taskChunks: SemanticSearchChunk[] = taskRowsList.map((r) => ({
     content: r.content,
     id: r.id,
-    metadata: (r.metadata as Record<string, unknown>) ?? {},
+    metadata: toRecord(r.metadata),
     planId: r.plan_id,
     planTitle: r.plan_title,
     similarity: Number(r.similarity),
@@ -174,7 +184,7 @@ export async function runSemanticSearch(
     content: r.content,
     documentationId: r.documentation_id,
     id: r.id,
-    metadata: (r.metadata as Record<string, unknown>) ?? {},
+    metadata: toRecord(r.metadata),
     path: r.path,
     prNumber: r.pr_number,
     repo: r.repo,
@@ -326,7 +336,7 @@ export async function getChunkById(
     return {
       content: r.content,
       id: r.id,
-      metadata: (r.metadata as Record<string, unknown>) ?? {},
+      metadata: toRecord(r.metadata),
       planId: r.plan_id,
       planTitle: r.plan_title,
       similarity: 1,
@@ -362,7 +372,7 @@ export async function getChunkById(
     return {
       content: r.content,
       id: r.id,
-      metadata: (r.metadata as Record<string, unknown>) ?? {},
+      metadata: toRecord(r.metadata),
       planId: r.plan_id,
       planTitle: r.plan_title,
       similarity: 1,
@@ -400,7 +410,7 @@ export async function getChunkById(
       content: r.content,
       documentationId: r.documentation_id,
       id: r.id,
-      metadata: (r.metadata as Record<string, unknown>) ?? {},
+      metadata: toRecord(r.metadata),
       path: r.path,
       prNumber: r.pr_number,
       repo: r.repo,
@@ -763,7 +773,7 @@ function _mapTaskRow(r: {
   title: string;
   updated_at: string;
 }): TaskRow {
-  const requirements = r.requirements as readonly unknown[];
+  const requirements = r.requirements;
   return {
     assignee: r.assignee,
     category: r.category,
@@ -789,11 +799,11 @@ function mapPlanEntityToRow(plan: Plan): PlanRow {
   const createdAt =
     plan.createdAt instanceof Date
       ? plan.createdAt
-      : new Date(plan.createdAt as string);
+      : new Date(String(plan.createdAt));
   const updatedAt =
     plan.updatedAt instanceof Date
       ? plan.updatedAt
-      : new Date(plan.updatedAt as string);
+      : new Date(String(plan.updatedAt));
   return {
     assignee: plan.assignee,
     author: plan.author,
@@ -817,11 +827,11 @@ function mapTaskEntityToRow(task: Task): TaskRow {
   const createdAt =
     task.createdAt instanceof Date
       ? task.createdAt
-      : new Date(task.createdAt as string);
+      : new Date(String(task.createdAt));
   const updatedAt =
     task.updatedAt instanceof Date
       ? task.updatedAt
-      : new Date(task.updatedAt as string);
+      : new Date(String(task.updatedAt));
   return {
     assignee: task.assignee,
     category: task.category,

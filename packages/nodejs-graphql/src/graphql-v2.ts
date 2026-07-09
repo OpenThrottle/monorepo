@@ -297,6 +297,25 @@ const delay = (ms: number): Promise<void> =>
     : Promise.resolve();
 
 /**
+ * @description Resolve the returned failure to `TFailure`: apply the caller's
+ * `mapFailure` when provided, otherwise return the base failure. The generic
+ * overload carries `TFailure` (the caller's contract is that a custom
+ * `TFailure` supplies a `mapFailure`), so no type assertion is needed.
+ */
+function resolveFailure<TFailure extends GraphqlV2Failure>(
+  base: GraphqlV2Failure,
+  context: GraphqlV2FailureContext,
+  map: GraphqlV2MapFailure<TFailure> | undefined,
+): TFailure;
+function resolveFailure(
+  base: GraphqlV2Failure,
+  context: GraphqlV2FailureContext,
+  map: ((context: GraphqlV2FailureContext) => GraphqlV2Failure) | undefined,
+): GraphqlV2Failure {
+  return map ? map(context) : base;
+}
+
+/**
  * @description Run a single GraphQL attempt with explicit URL and non-throwing result.
  */
 const executeGraphqlV2Once = async <
@@ -321,9 +340,11 @@ const executeGraphqlV2Once = async <
       response: res,
     };
 
-    const error: TFailure = options.mapFailure
-      ? options.mapFailure(context)
-      : (failure as TFailure);
+    const error: TFailure = resolveFailure<TFailure>(
+      failure,
+      context,
+      options.mapFailure,
+    );
 
     return { rawFailure: failure, result: { error, ok: false } };
   };
@@ -404,7 +425,7 @@ const executeGraphqlV2Once = async <
     );
   }
 
-  const parsed = asGraphqlPayload(parsedJson);
+  const parsed = asGraphqlPayload<TData>(parsedJson);
 
   if (!response.ok) {
     const firstGql = parsed?.errors?.[0];
@@ -484,12 +505,9 @@ const executeGraphqlV2Once = async <
   return {
     rawFailure: null,
     result: {
-      // `as TData` is sound here: post-validation success path (HTTP OK, no
-      // GraphQL errors, non-null `data`). The cast only re-attaches the
-      // codegen-guaranteed shape that `parseDateTimeInResponse`'s `unknown`
-      // return erases (and `parsed.data` is already `unknown`). Do not
-      // "tighten" away — there is no runtime type to narrow to.
-      data: data as TData,
+      // Trusted success path: `parsed.data` is `TData` via the typed
+      // `asGraphqlPayload<TData>`, and `parseDateTimeInResponse` preserves it.
+      data,
       ok: true,
     },
   };

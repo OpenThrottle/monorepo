@@ -1,5 +1,5 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { parse } from 'graphql';
+import { type DocumentNode, parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
@@ -9,10 +9,20 @@ import {
   executeGraphqlWithAuth,
 } from './index.ts';
 
-const doc = parse('{ __typename }') as TypedDocumentNode<
-  { readonly __typename: string },
-  Record<string, never>
->;
+// See graphql-v2.test.ts: the generic overload brands the parsed document with
+// the caller's result/variables types without a type assertion.
+function typedDocument<
+  TData,
+  TVariables extends Record<string, unknown> = Record<string, never>,
+>(source: string): TypedDocumentNode<TData, TVariables>;
+function typedDocument(source: string): DocumentNode {
+  return parse(source);
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const doc = typedDocument<{ readonly __typename: string }>('{ __typename }');
 
 const url = 'https://api.example/graphql';
 
@@ -205,7 +215,10 @@ describe('executeGraphqlAtUrl error branches', () => {
     await executeGraphqlAtUrl(url, doc, undefined, { token: 'tok-123' });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer tok-123');
   });
 
@@ -220,7 +233,10 @@ describe('executeGraphqlAtUrl error branches', () => {
     });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer new');
     expect(headers['X-Trace']).toBe('1');
   });
@@ -233,7 +249,10 @@ describe('executeGraphqlAtUrl error branches', () => {
     await executeGraphqlAtUrl(url, doc, undefined, { token: '' });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBeUndefined();
   });
 });
@@ -306,7 +325,10 @@ describe('executeGraphql (V1 base, env-driven URL)', () => {
     });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer abc');
   });
 });
@@ -332,7 +354,10 @@ describe('executeGraphqlWithAuth', () => {
     await executeGraphqlWithAuth('tok-xyz', doc, undefined);
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer tok-xyz');
   });
 
@@ -345,7 +370,10 @@ describe('executeGraphqlWithAuth', () => {
     await executeGraphqlWithAuth('', doc, undefined);
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBeUndefined();
   });
 });

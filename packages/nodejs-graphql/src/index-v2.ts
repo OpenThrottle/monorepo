@@ -102,7 +102,7 @@ export async function executeGraphqlV2<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  const json = await parseGraphqlResponseBody(res);
+  const json = await parseGraphqlResponseBody<TData>(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -120,8 +120,7 @@ export async function executeGraphqlV2<
     throw new Error('GraphQL response missing data');
   }
 
-  // `as TData` is sound here: post-validation success path; the cast only
-  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
-  // `unknown` return erases. See the note on the cast in `executeGraphql`.
-  return parseDateTimeInResponse(json.data) as TData;
+  // Trusted success path: `json.data` is `TData` via the typed
+  // `parseGraphqlResponseBody<TData>`; `parseDateTimeInResponse` preserves it.
+  return parseDateTimeInResponse(json.data);
 }

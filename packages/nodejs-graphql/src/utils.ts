@@ -103,12 +103,14 @@ export function getGraphQLToken(): string | undefined {
 /**
  * @description Recursively walks JSON and parses string values that look like ISO date-time into Date so loaders receive Date (codegen keeps DateTime → Date).
  *
- * Returns `unknown` (not a generic) because the recursive Date-walk rebuilds the
- * value structurally and erases the input type. Callers that know the codegen
- * `TData` shape narrow the result with a single `as TData` cast on the trusted
- * success path; see the executors in `index.ts` / `index-v2.ts` / `graphql-v2.ts`.
+ * The generic overload preserves the caller's type: the recursive Date-walk
+ * rebuilds the value structurally but returns the same shape it was given (ISO
+ * strings become `Date`), so callers on the trusted success path get their
+ * `TData` back without an assertion. See the executors in `index.ts` /
+ * `index-v2.ts` / `graphql-v2.ts`.
  * @publicApi
  */
+export function parseDateTimeInResponse<T>(value: T): T;
 export function parseDateTimeInResponse(value: unknown): unknown {
   if (value === null || value === undefined) {
     return value;
@@ -170,9 +172,12 @@ const isGraphqlPathSegment = (p: unknown): p is string | number =>
  * value is not an object (e.g. a string error page, an array, or a bare scalar)
  * so callers can reject it instead of silently trusting an `as` cast.
  */
-export const asGraphqlPayload = (
+export function asGraphqlPayload<TData = unknown>(
   parsed: unknown,
-): GraphqlPayload<unknown> | null => {
+): GraphqlPayload<TData> | null;
+export function asGraphqlPayload(
+  parsed: unknown,
+): GraphqlPayload<unknown> | null {
   if (!isRecord(parsed)) {
     return null;
   }
@@ -207,7 +212,7 @@ export const asGraphqlPayload = (
   }
 
   return { data, errors };
-};
+}
 
 /**
  * @description Read a `fetch` {@link Response} body as text, `JSON.parse` it in
@@ -217,9 +222,9 @@ export const asGraphqlPayload = (
  * a gateway timeout. The `response`/`statusText` context is woven into the
  * thrown message so callers can surface it.
  */
-export async function parseGraphqlResponseBody(
+export async function parseGraphqlResponseBody<TData = unknown>(
   response: Response,
-): Promise<GraphqlPayload<unknown>> {
+): Promise<GraphqlPayload<TData>> {
   const rawBody = await response.text();
 
   let parsedJson: unknown;
@@ -233,7 +238,7 @@ export async function parseGraphqlResponseBody(
     );
   }
 
-  const payload = asGraphqlPayload(parsedJson);
+  const payload = asGraphqlPayload<TData>(parsedJson);
 
   if (payload == null) {
     throw new Error(
