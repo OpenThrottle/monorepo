@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 /**
  * @deprecated Stub toolbar; commented out in `QueuesIntroduction` until queues list UX is wired.
@@ -26,7 +26,7 @@ export const QueuesToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="QueuesToolbar">
+    <div className={clsx('p-4', className)} data-testid="QueuesToolbar">
       <h2>QueuesToolbar</h2>
     </div>
   );

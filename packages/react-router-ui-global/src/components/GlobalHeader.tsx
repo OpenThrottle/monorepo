@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { Form } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
@@ -32,7 +32,7 @@ export const GlobalHeader = (
 
   return (
     <nav
-      className={classnames(
+      className={clsx(
         'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
         'px-4 py-2',

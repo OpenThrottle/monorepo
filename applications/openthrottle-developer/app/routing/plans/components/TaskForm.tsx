@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Form, Link } from 'react-router';
 import {
   Button,
@@ -37,7 +37,7 @@ export const TaskForm = (props: TaskFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('w-full', className)} data-testid="TaskForm">
+    <Card className={clsx('w-full', className)} data-testid="TaskForm">
       <CardContent className="pt-8">
         <Form className="w-full space-y-4" method="post">
           <Input name="planId" type="hidden" value={planId} />

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { formatDate } from 'date-fns';
 import { KeyRoundIcon } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
@@ -248,7 +248,7 @@ export const SettingsKeysTable = (
   if (credentials.length === 0 && !!actionError) {
     return (
       <div
-        className={classnames('space-y-4', className)}
+        className={clsx('space-y-4', className)}
         data-testid="SettingsKeysTable"
       >
         <p
@@ -265,7 +265,7 @@ export const SettingsKeysTable = (
 
   return (
     <div
-      className={classnames('space-y-4', className)}
+      className={clsx('space-y-4', className)}
       data-testid="SettingsKeysTable"
     >
       {actionError ? (

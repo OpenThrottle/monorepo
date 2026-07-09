@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { NavLink } from 'react-router';
 import type { DocsNavGroup } from '../utils/buildDocsNav';
 
@@ -33,7 +33,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
   return (
     <nav
       aria-label="Documentation"
-      className={classnames('flex flex-col gap-4', className)}
+      className={clsx('flex flex-col gap-4', className)}
       data-testid="DocsNav"
     >
       {groups.map((group) => (
@@ -47,7 +47,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
               <li key={item.path}>
                 <NavLink
                   className={({ isActive }) =>
-                    classnames(
+                    clsx(
                       'block rounded-md px-2 py-1 text-sm',
                       isActive
                         ? 'bg-accent text-accent-foreground font-medium'

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Empty,
@@ -31,7 +31,7 @@ export const NotesEmpty = (props: NotesEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={classnames('my-8', className)}>
+    <Empty className={clsx('my-8', className)}>
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

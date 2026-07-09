@@ -10,6 +10,7 @@
   "dependencies": {
     "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
+    "clsx": "catalog:",
     "react-router": "catalog:",
     "yaml": "catalog:"
   },

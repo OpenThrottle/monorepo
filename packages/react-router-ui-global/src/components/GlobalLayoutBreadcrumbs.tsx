@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { LinkProps, UIMatch, useMatches } from 'react-router';
 
@@ -58,7 +58,7 @@ export const GlobalLayoutBreadcrumbs = (
   return (
     <OpenThrottleBreadcrumbs
       children={breadcrumb}
-      className={classnames('ml-4', className)}
+      className={clsx('ml-4', className)}
       links={links.pop() ?? []}
     />
   );

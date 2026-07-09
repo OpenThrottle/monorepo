@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
@@ -49,7 +49,7 @@ export const SettingsWorkspaceProfileForm = (
       legend="Contact & editors"
     >
       <div
-        className={classnames('space-y-4 md:space-y-8', className)}
+        className={clsx('space-y-4 md:space-y-8', className)}
         data-testid="SettingsWorkspaceProfileForm"
       >
         <p className="text-muted-foreground text-sm">

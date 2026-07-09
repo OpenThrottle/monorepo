@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { animate, useReducedMotion } from 'framer-motion';
 import {
   OpenThrottleAuthForm,
@@ -144,7 +144,7 @@ export default function Component(
       onClick={onIncrementCount}
     >
       <GradientMesh
-        className={classnames('opacity-0 transition-opacity duration-1000', {
+        className={clsx('opacity-0 transition-opacity duration-1000', {
           'opacity-100': isMounted,
         })}
         distortion={0.9}
@@ -162,7 +162,7 @@ export default function Component(
         speed={0.8}
       /> */}
       <div
-        className={classnames(
+        className={clsx(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',
           { 'opacity-0': isExiting },
         )}

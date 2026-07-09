@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { XIcon } from '@phosphor-icons/react/dist/ssr/X';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useEditor } from '../hooks/useEditor';
 
@@ -72,7 +72,7 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
 
   return (
     <Link
-      className={classnames(
+      className={clsx(
         'group cursor-pointer p-2 pl-4 text-xs',
         'flex items-center justify-between gap-1',
         'hover:bg-gray-100/15',
@@ -94,7 +94,7 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
     >
       {filename}
       <button
-        className={classnames(
+        className={clsx(
           'cursor-pointer rounded-md p-1 hover:bg-white/10',
           'border border-transparent',
           'group-hover:ui-border-dark',

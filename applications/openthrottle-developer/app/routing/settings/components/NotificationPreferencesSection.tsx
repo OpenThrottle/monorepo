@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Label,
   Separator,
@@ -51,7 +51,7 @@ export const NotificationPreferencesSection = (
   return (
     <>
       <div
-        className={classnames(
+        className={clsx(
           'bg-card border-card-border space-y-0 rounded-lg border p-4',
           className,
         )}

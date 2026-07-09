@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface GlobalThemeProps {
   readonly className?: string;
@@ -21,7 +21,7 @@ export const GlobalTheme = (props: GlobalThemeProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="GlobalTheme">
+    <div className={clsx('p-4', className)} data-testid="GlobalTheme">
       <h2>GlobalTheme</h2>
 
       {/* Add a button to override system vs. light/dark */}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { NavLink, useLocation } from 'react-router';
 import {
   Collapsible,
@@ -89,25 +89,25 @@ export const GlobalSidebarContent = (
           tooltip={String(children)}
         >
           <NavLink
-            className={classnames('text-xs!', {
+            className={clsx('text-xs!', {
               'text-muted-foreground pointer-events-none': item.disabled,
             })}
             to={item.to}
             viewTransition={true}
           >
             <IconComponent
-              className={classnames('size-4 shrink-0', {
+              className={clsx('size-4 shrink-0', {
                 'text-accent': isActive,
                 'text-muted-foreground': !isActive,
               })}
             />
-            <span className={classnames('', { 'text-accent': isActive })}>
+            <span className={clsx('', { 'text-accent': isActive })}>
               {item.children?.toString()}
             </span>
             {item.beta && (
               <span className="text-muted-foreground flex w-full flex-1 items-center justify-end text-right">
                 <StarIcon
-                  className={classnames('size-3', {
+                  className={clsx('size-3', {
                     'text-accent': isActive,
                     'text-muted-foreground': !isActive,
                   })}

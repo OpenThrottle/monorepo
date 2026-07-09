@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_LIMIT_OPTIONS,
@@ -48,7 +48,7 @@ export const SearchFilters = (
 
   return (
     <div
-      className={classnames('flex flex-wrap items-center gap-4 p-4', className)}
+      className={clsx('flex flex-wrap items-center gap-4 p-4', className)}
       data-testid="SearchFilters"
     >
       <label className="text-muted-foreground flex items-center gap-2 text-sm">

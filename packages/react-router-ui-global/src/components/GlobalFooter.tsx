@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
@@ -24,10 +24,7 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
 
     return (
       <div
-        className={classnames(
-          'inline-block h-2 w-2 shrink-0 rounded-full',
-          color,
-        )}
+        className={clsx('inline-block h-2 w-2 shrink-0 rounded-full', color)}
       />
     );
   };

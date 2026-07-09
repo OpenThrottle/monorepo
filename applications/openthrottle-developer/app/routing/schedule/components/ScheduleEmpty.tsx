@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Empty,
@@ -34,10 +34,7 @@ export const ScheduleEmpty = (
   // 🔌 Short Circuit
 
   return (
-    <Empty
-      className={classnames('my-8', className)}
-      data-testid="ScheduleEmpty"
-    >
+    <Empty className={clsx('my-8', className)} data-testid="ScheduleEmpty">
       <EmptyMedia variant="icon">
         <CalendarSearchIcon className="size-6" />
       </EmptyMedia>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { SidebarHeader } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 
@@ -28,7 +28,7 @@ export const GlobalSidebarHeader = (
 
   return (
     <SidebarHeader
-      className={classnames(className)}
+      className={clsx(className)}
       data-testid="GlobalSidebarHeader"
     >
       <OpenThrottleLogo name={name} to={to} />

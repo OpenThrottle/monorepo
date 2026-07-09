@@ -17,7 +17,7 @@
     "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",
     "@react-router/node": "catalog:",
-    "classnames": "catalog:",
+    "clsx": "catalog:",
     "focus-formik-error": "catalog:",
     "formik": "catalog:",
     "isbot": "catalog:",

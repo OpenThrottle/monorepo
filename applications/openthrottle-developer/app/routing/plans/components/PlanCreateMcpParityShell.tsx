@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 /**
  * @description Layout wrapper for the developer-app plan create flow aligned with the MCP `create_plan` contract (server-side defaults and embeddings).
@@ -28,7 +28,7 @@ export const PlanCreateMcpParityShell = (
 
   return (
     <div
-      className={classnames('p-4', className)}
+      className={clsx('p-4', className)}
       data-testid="PlanCreateMcpParityShell"
     >
       {children ?? null}

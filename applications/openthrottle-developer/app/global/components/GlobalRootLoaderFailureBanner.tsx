@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 import type {
@@ -89,7 +89,7 @@ export const GlobalRootLoaderFailureBanner = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'border-destructive/40 bg-destructive/15 text-destructive-foreground flex w-full flex-wrap items-center justify-center gap-2 border-b px-4 py-2 text-sm',
       )}
       data-testid="GlobalRootLoaderFailureBanner"
@@ -144,7 +144,7 @@ export const GlobalRootLoaderFailureBanner = (
         variant="secondary"
       >
         <RefreshCw
-          className={classnames('size-4', {
+          className={clsx('size-4', {
             'animate-spin': isRevalidating === true,
           })}
         />

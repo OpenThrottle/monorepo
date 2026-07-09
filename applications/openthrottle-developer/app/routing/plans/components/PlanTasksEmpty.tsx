@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Empty,
@@ -33,7 +33,7 @@ export const PlanTasksEmpty = (
   // 🔌 Short Circuit
 
   return (
-    <Empty className={classnames('', className)}>
+    <Empty className={clsx('', className)}>
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

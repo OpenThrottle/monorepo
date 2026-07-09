@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Card,
   CardContent,
@@ -25,7 +25,7 @@ export const DocumentDecomposePreview = (
   if (!proposal) {
     return (
       <div
-        className={classnames(
+        className={clsx(
           'border-border text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm',
           className,
         )}
@@ -38,7 +38,7 @@ export const DocumentDecomposePreview = (
 
   return (
     <div
-      className={classnames('space-y-4', className)}
+      className={clsx('space-y-4', className)}
       data-testid="DocumentDecomposePreview"
     >
       <Card>

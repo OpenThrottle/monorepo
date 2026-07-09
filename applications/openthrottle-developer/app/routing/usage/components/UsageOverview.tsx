@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { Link } from 'react-router';
@@ -27,7 +27,7 @@ export const UsageOverview = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames(className)}>
+    <div className={clsx(className)}>
       <GlobalHeading className="mb-4" title="Agents &amp; OpenThrottle usage" />
       <div className="text-muted-foreground space-y-4 text-sm md:space-y-8">
         <p>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
@@ -109,7 +109,7 @@ export const PlanTabDetails = (
         />
 
         <div
-          className={classnames('bg-card', {
+          className={clsx('bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
             'border-transparent hover:border-transparent': fullscreen,
             relative: !fullscreen,

@@ -459,9 +459,6 @@ catalogs:
     class-variance-authority:
       specifier: ^0.7.1
       version: 0.7.1
-    classnames:
-      specifier: ^2.5.1
-      version: 2.5.1
     clsx:
       specifier: ^2.1.1
       version: 2.1.1
@@ -1341,9 +1338,6 @@ importers:
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
-      classnames:
-        specifier: 'catalog:'
-        version: 2.5.1
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -1993,6 +1987,9 @@ importers:
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
@@ -2078,9 +2075,9 @@ importers:
       '@vercel/analytics':
         specifier: 'catalog:'
         version: 2.0.1(@remix-run/react@2.17.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(react@19.2.4)
-      classnames:
+      clsx:
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.1.1
       date-fns:
         specifier: 'catalog:'
         version: 4.1.0
@@ -2154,9 +2151,9 @@ importers:
       '@react-router/node':
         specifier: 'catalog:'
         version: 8.0.1(react-router@8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@6.0.3)
-      classnames:
+      clsx:
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.1.1
       focus-formik-error:
         specifier: 'catalog:'
         version: 1.1.0(formik@2.4.9(@types/react@19.2.7)(react@19.2.4))(react@19.2.4)
@@ -2356,6 +2353,9 @@ importers:
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
@@ -3026,9 +3026,9 @@ importers:
       '@openthrottle/react-router-ui':
         specifier: workspace:^
         version: link:../react-router-ui
-      classnames:
+      clsx:
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.1.1
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -3047,6 +3047,9 @@ importers:
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../react-router-shadcn
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -3071,9 +3074,9 @@ importers:
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      classnames:
+      clsx:
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.1.1
       jotai:
         specifier: 'catalog:'
         version: 2.20.0(@babel/core@7.29.7)(@babel/template@7.28.6)(@types/react@19.2.7)(react@19.2.4)
@@ -3164,6 +3167,9 @@ importers:
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 3.1.1(@types/react@19.2.7)(react@19.2.4)
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -3188,9 +3194,9 @@ importers:
       '@openthrottle/react-router-utils':
         specifier: workspace:^
         version: link:../react-router-utils
-      classnames:
+      clsx:
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.1.1
       lucide-react:
         specifier: 'catalog:'
         version: 1.14.0(react@19.2.4)
@@ -3255,6 +3261,9 @@ importers:
       '@schedule-x/theme-shadcn':
         specifier: 'catalog:'
         version: 4.6.0
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
       preact:
         specifier: 'catalog:'
         version: 10.29.1
@@ -3376,6 +3385,9 @@ importers:
       '@paper-design/shaders-react':
         specifier: 'catalog:'
         version: 0.0.76(@types/react@19.2.7)(react@19.2.4)
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
       rollbar:
         specifier: 'catalog:'
         version: 3.1.0

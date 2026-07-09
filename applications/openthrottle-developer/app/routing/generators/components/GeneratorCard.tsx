@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Card,
@@ -33,7 +33,7 @@ export const GeneratorCard = (
 
   return (
     <Card
-      className={classnames('', className)}
+      className={clsx('', className)}
       data-testid="GeneratorCard"
       key={generator.name}
     >

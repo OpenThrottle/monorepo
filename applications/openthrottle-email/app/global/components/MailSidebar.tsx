@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import type { LinkProps } from 'react-router';
 import { NavLink, useLocation } from 'react-router';
 import { TrayIcon } from '@phosphor-icons/react/dist/ssr/Tray';
@@ -94,7 +94,7 @@ export const MailSidebar = (props: MailSidebarProps): React.ReactElement => {
 
   return (
     <Sidebar
-      className={classnames(className)}
+      className={clsx(className)}
       collapsible="icon"
       data-testid="MailSidebar"
     >

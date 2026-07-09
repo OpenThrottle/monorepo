@@ -10,6 +10,7 @@
   "dependencies": {
     "@mdx-js/mdx": "catalog:",
     "@mdx-js/react": "catalog:",
+    "clsx": "catalog:",
     "remark-gfm": "catalog:"
   },
   "main": "./src/index.ts",

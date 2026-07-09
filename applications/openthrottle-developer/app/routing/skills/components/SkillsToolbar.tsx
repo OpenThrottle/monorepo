@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Input,
@@ -31,10 +31,7 @@ export const SkillsToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('flex gap-2', className)}
-      data-testid="SkillsToolbar"
-    >
+    <div className={clsx('flex gap-2', className)} data-testid="SkillsToolbar">
       <div className="flex gap-2">
         <Input placeholder="Filter by slug, path, or summary" />
         <Button type="submit" variant="outline">

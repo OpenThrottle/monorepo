@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
@@ -61,7 +61,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   return (
     <>
       <Sidebar
-        className={classnames('border-sidebar-border', className)}
+        className={clsx('border-sidebar-border', className)}
         collapsible="icon"
         variant="sidebar"
       >

@@ -10,7 +10,7 @@ import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-
 import { Link } from 'react-router';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
-// import classnames from 'classnames';
+// import clsx from 'clsx';
 
 export interface QueueCorrelationAndSupportProps {
   job: QueueJobDetailJob;

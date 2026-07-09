@@ -7,7 +7,7 @@
   "dependencies": {
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
-    "classnames": "catalog:"
+    "clsx": "catalog:"
   },
   "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
   "main": "./src/index.ts",

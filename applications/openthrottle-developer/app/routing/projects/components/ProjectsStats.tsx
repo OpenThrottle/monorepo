@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
 export interface ProjectsStatsProps {
@@ -27,7 +27,7 @@ export const ProjectsStats = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'grid gap-4 md:grid-cols-3 md:gap-8 lg:gap-12',
         className,
       )}

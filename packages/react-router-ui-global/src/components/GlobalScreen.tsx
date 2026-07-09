@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-// import classnames from 'classnames';
+// import clsx from 'clsx';
 
 export interface GlobalScreenProps extends React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement>

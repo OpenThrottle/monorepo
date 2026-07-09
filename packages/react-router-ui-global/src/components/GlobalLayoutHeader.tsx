@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Avatar,
   AvatarFallback,
@@ -131,7 +131,7 @@ export const GlobalLayoutHeader = (
 
   return (
     <nav
-      className={classnames(
+      className={clsx(
         'bg-card/50 backdrop-blur-sm',
         'border-border border-b',
         'flex items-center justify-between',

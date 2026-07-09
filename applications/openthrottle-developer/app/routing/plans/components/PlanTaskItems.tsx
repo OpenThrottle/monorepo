@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { PlanTaskItem } from '~/routing/plans/components/PlanTaskItem';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
@@ -44,7 +44,7 @@ export const PlanTaskItems = (
 
   return (
     <div
-      className={classnames('flex flex-col gap-4', className)}
+      className={clsx('flex flex-col gap-4', className)}
       data-testid="PlanTaskItems"
     >
       {sortedTasks.map((task, index) => (

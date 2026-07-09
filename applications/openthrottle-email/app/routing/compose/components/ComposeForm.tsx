@@ -5,7 +5,7 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { FocusError } from 'focus-formik-error';
 import { Form, type FormProps } from 'react-router';
 import { useForm } from '@openthrottle/react-router-utils';
@@ -55,7 +55,7 @@ export const ComposeForm = (props: ComposeFormProps): React.ReactElement => {
 
   return (
     <Form
-      className={classnames(className, 'flex flex-col gap-4')}
+      className={clsx(className, 'flex flex-col gap-4')}
       data-testid="ComposeForm"
       id={ComposeForm.id}
       method="POST"

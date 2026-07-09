@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
 
@@ -47,7 +47,7 @@ export const PlanStatusChip = (
   return (
     <span
       aria-label={`Status: ${label}`}
-      className={classnames(
+      className={clsx(
         'inline-block size-2 shrink-0 rounded-full',
         color,
         className,

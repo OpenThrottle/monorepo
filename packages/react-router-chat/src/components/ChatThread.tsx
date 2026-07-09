@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ChatThreadMessage } from './ChatThreadMessage';
 import type { ChatMessage } from '../types';
 
@@ -73,7 +73,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     <div
       aria-label="Chat messages"
       aria-live="polite"
-      className={classnames(
+      className={clsx(
         'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1',
         className,
       )}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { LucideIcon } from 'lucide-react';
 
 export interface GlobalHeadingProps extends React.PropsWithChildren {
@@ -32,7 +32,7 @@ export const GlobalHeading = (
   return (
     <div className="flex gap-2">
       <Heading
-        className={classnames(
+        className={clsx(
           // 'text-5xl text-center my-20 sm:text-xl lg:text-3xl font-bold',
           'flex flex-1 items-center gap-4',
           className,
