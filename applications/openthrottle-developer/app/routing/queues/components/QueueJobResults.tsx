@@ -5,7 +5,7 @@ import {
   OpenThrottleFieldset,
 } from '@openthrottle/react-router-ui';
 import { QueueJobDetailJob } from '~/routing/queues/components/QueueJobDetail';
-// import classnames from 'classnames';
+// import clsx from 'clsx';
 
 export interface QueueJobResultsProps {
   job: QueueJobDetailJob;

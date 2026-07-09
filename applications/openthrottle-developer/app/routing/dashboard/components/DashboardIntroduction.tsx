@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { GaugeIcon } from 'lucide-react';
 
@@ -25,10 +25,7 @@ export const DashboardIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('', className)}
-      data-testid="DashboardIntroduction"
-    >
+    <div className={clsx('', className)} data-testid="DashboardIntroduction">
       <GlobalHeading
         className="mb-4"
         heading="h1"

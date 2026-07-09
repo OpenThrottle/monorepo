@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
@@ -27,7 +27,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
 
   return (
     <nav
-      className={classnames(
+      className={clsx(
         'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
         'sticky top-0 z-50 w-full px-4',
@@ -38,7 +38,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
         <OpenThrottleLogo className="text-lg" name={SITE_SUBDOMAIN} to="/" />
 
         <div
-          className={classnames(
+          className={clsx(
             'hidden items-center gap-2 md:flex',
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}

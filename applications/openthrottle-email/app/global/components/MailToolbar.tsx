@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
 import { ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { ArchiveIcon } from '@phosphor-icons/react/dist/ssr/Archive';
@@ -129,7 +129,7 @@ export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
 
   return (
     <header
-      className={classnames(
+      className={clsx(
         'flex min-w-0 flex-wrap items-center gap-3 px-4 py-3',
         'border-border bg-background/95 border-b',
         'sticky top-0 z-50',

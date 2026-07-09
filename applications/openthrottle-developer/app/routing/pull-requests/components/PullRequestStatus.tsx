@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { CircleIcon } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export const PullRequestStatus = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('rounded-full', getColor())}>
+    <div className={clsx('rounded-full', getColor())}>
       <span className="sr-only">{state}</span>
       <CircleIcon className="size-3" />
     </div>

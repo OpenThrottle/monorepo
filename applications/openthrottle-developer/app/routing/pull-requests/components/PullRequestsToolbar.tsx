@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Form, Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
@@ -29,7 +29,7 @@ export const PullRequestsToolbar = (
 
   return (
     <Form
-      className={classnames(
+      className={clsx(
         // 'mb-8 flex flex-col gap-4 rounded-lg border border-border p-4',
         'flex w-full flex-col gap-4',
         className,

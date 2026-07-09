@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import {
   Button,
@@ -123,10 +123,7 @@ export const PromptToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('w-full', className)}
-      data-testid="PromptToolbar"
-    >
+    <div className={clsx('w-full', className)} data-testid="PromptToolbar">
       <form
         className="flex w-full flex-wrap items-center gap-2"
         onSubmit={handleSearchSubmit}

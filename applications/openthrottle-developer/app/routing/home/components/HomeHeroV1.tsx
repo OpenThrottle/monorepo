@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { CodeIcon } from 'lucide-react';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
@@ -26,7 +26,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <section className={classnames(className)} data-testid="HomeHeroV1">
+    <section className={clsx(className)} data-testid="HomeHeroV1">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-sans text-5xl leading-tight font-normal sm:text-6xl lg:text-7xl">

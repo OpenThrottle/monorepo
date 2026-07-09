@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { readGeneratorLastRun } from '~/routing/generators/utils/generator-last-run-storage';
 import {
   Card,
@@ -55,7 +55,7 @@ export const GeneratorNxBridge = (
 
   return (
     <div
-      className={classnames('space-y-8', className)}
+      className={clsx('space-y-8', className)}
       data-testid="GeneratorNxBridge"
     >
       {formattedSchema != null ? (

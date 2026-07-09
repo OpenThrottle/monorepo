@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
@@ -43,7 +43,7 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('space-y-2 overflow-hidden', className)}
+      className={clsx('space-y-2 overflow-hidden', className)}
       data-testid="PlanTaskItem"
       id={`task-${task.id}`}
     >

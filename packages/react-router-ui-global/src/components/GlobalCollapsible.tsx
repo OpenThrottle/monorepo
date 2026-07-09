@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Button,
   Collapsible,
@@ -36,7 +36,7 @@ export const GlobalCollapsible = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames(className)} data-testid="GlobalCollapsible">
+    <div className={clsx(className)} data-testid="GlobalCollapsible">
       <Collapsible onOpenChange={setIsOpen} open={isOpen}>
         <GlobalHeading
           className="p-4 text-xl font-semibold"

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import {
@@ -23,7 +23,7 @@ export const PersonasTable = (
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="PersonasTable"
     >
       <DataTable<RepoPersonaEntry, PersonasTableColumnValue>

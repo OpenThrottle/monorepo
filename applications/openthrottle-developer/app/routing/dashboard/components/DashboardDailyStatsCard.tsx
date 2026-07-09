@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
@@ -98,7 +98,7 @@ export const DashboardDailyStatsCard = (
   if (chartData.length === 0) {
     return (
       <div
-        className={classnames('text-muted-foreground text-sm', className)}
+        className={clsx('text-muted-foreground text-sm', className)}
         data-testid="DashboardDailyStatsCard"
       >
         No daily stats in range.
@@ -108,11 +108,11 @@ export const DashboardDailyStatsCard = (
 
   return (
     <div
-      className={classnames('-ml-1 overflow-auto text-sm', className)}
+      className={clsx('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardDailyStatsCard"
     >
       <ChartContainer
-        className={classnames('mt-4 min-h-[240px] w-full', {
+        className={clsx('mt-4 min-h-[240px] w-full', {
           'cursor-pointer': onSelectDate !== undefined,
         })}
         config={CHART_CONFIG}

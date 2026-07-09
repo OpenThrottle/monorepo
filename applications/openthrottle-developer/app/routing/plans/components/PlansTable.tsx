@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { ArrowRightIcon, SlidersHorizontal } from 'lucide-react';
 import {
@@ -52,7 +52,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="PlansTable"
     >
       <DataTable<PlanCardFragment, string | number | null | undefined>

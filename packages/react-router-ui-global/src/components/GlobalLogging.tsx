@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface GlobalLoggingProps {
   readonly className?: string;
@@ -23,7 +23,7 @@ export const GlobalLogging = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="GlobalLogging">
+    <div className={clsx('p-4', className)} data-testid="GlobalLogging">
       <h2>GlobalLogging</h2>
     </div>
   );

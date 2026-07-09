@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Card,
   CardContent,
@@ -47,7 +47,7 @@ export const PlanTasksColumn = (
   return (
     <section
       aria-labelledby={headingId}
-      className={classnames(
+      className={clsx(
         'flex w-[min(100vw-2rem,320px)] shrink-0 flex-col',
         className,
       )}

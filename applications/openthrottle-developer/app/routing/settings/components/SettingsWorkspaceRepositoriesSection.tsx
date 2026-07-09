@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Form, useNavigation } from 'react-router';
 import {
   Button,
@@ -187,7 +187,7 @@ export const SettingsWorkspaceRepositoriesSection = (
       legend="Local Repositories"
     >
       <section
-        className={classnames('space-y-4 md:space-y-8', className)}
+        className={clsx('space-y-4 md:space-y-8', className)}
         data-testid="SettingsWorkspaceRepositoriesSection"
       >
         <p className="text-muted-foreground text-sm">

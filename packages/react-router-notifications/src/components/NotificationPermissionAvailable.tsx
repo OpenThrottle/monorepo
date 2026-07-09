@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface NotificationPermissionAvailableProps {
   readonly className?: string;
@@ -25,7 +25,7 @@ export const NotificationPermissionAvailable = (
 
   return (
     <div
-      className={classnames('p-4', className)}
+      className={clsx('p-4', className)}
       data-testid="NotificationPermissionAvailable"
     >
       <h2>NotificationPermissionAvailable</h2>

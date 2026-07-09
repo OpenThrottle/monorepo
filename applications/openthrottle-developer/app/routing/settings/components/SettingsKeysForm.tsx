@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { CopyIcon } from 'lucide-react';
 import { Form, useNavigation, useRevalidator } from 'react-router';
 import {
@@ -123,7 +123,7 @@ export const SettingsKeysForm = (
   return (
     <Dialog onOpenChange={handleOpenChange} open={createDialogOpen}>
       <DialogContent
-        className={classnames('sm:max-w-lg', className)}
+        className={clsx('sm:max-w-lg', className)}
         data-testid="SettingsKeysForm"
       >
         {showSuccess ? (

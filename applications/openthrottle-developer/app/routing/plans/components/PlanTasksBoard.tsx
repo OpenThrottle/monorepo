@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDrag, useDrop } from 'react-dnd';
@@ -78,7 +78,7 @@ const DraggablePlanTaskCard = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'touch-manipulation rounded-md',
         isDragging && 'opacity-50',
       )}
@@ -272,7 +272,7 @@ export const PlanTasksBoard = (
       <div
         aria-busy={fetcher.state !== 'idle'}
         aria-label="Plan tasks board"
-        className={classnames(
+        className={clsx(
           'flex min-h-[min(70vh,560px)] w-full min-w-0 gap-3 overflow-x-auto pb-2',
           className,
         )}

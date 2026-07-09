@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
@@ -35,7 +35,7 @@ export const ScheduleTable = (
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="ScheduleTable"
     >
       <DataTable<ScheduleEvent, string | number | null | undefined>

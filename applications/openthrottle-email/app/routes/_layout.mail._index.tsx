@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OPENTHROTTLE_META_DESCRIPTION } from '@openthrottle/react-router-utils';
 import { getMockMessages } from '~/global/data/mock.mail';
@@ -55,7 +55,7 @@ export default function Component(
         data-testid="inbox-filter"
       >
         <Button
-          className={classnames(filter === 'all' && 'bg-muted')}
+          className={clsx(filter === 'all' && 'bg-muted')}
           onClick={() => setFilter('all')}
           size="sm"
           variant={filter === 'all' ? 'secondary' : 'ghost'}
@@ -63,7 +63,7 @@ export default function Component(
           All
         </Button>
         <Button
-          className={classnames(filter === 'unread' && 'bg-muted')}
+          className={clsx(filter === 'unread' && 'bg-muted')}
           onClick={() => setFilter('unread')}
           size="sm"
           variant={filter === 'unread' ? 'secondary' : 'ghost'}

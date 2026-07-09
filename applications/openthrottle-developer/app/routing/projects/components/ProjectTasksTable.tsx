@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -36,7 +36,7 @@ export const ProjectTasksTable = (
 
   return (
     <div
-      className={classnames('bg-card ui-border rounded-lg border', className)}
+      className={clsx('bg-card ui-border rounded-lg border', className)}
       data-testid="ProjectTasksTable"
     >
       <DataTable<ProjectTaskRow, string | number | null | undefined>

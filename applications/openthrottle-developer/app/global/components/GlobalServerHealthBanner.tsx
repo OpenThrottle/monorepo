@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { X } from 'lucide-react';
 import type { ServerHealthObject } from '~/__generated__/graphql';
@@ -43,7 +43,7 @@ export const GlobalServerHealthBanner = (
 
   return (
     <div
-      className={classnames(
+      className={clsx(
         'flex w-full items-center justify-center gap-2 px-4 py-2 text-center text-sm',
         isUnreachable
           ? 'bg-destructive/90 text-destructive-foreground'
@@ -59,7 +59,7 @@ export const GlobalServerHealthBanner = (
       </span>
       <Button
         aria-label="Dismiss banner"
-        className={classnames(
+        className={clsx(
           'size-8 shrink-0 p-0',
           isUnreachable
             ? 'text-destructive-foreground hover:bg-destructive-foreground/20'

@@ -1,4 +1,4 @@
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { FocusError } from 'focus-formik-error';
 import { Form, FormProps } from 'react-router';
 import { Button, Error, Input, Markdown } from '@openthrottle/react-router-shadcn';
@@ -36,7 +36,7 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
 
   return (
     <Form
-      className={classnames(className, 'flex flex-col gap-4')}
+      className={clsx(className, 'flex flex-col gap-4')}
       data-testid="<%= name %>"
       id={<%= name %>.id}
       method="POST"

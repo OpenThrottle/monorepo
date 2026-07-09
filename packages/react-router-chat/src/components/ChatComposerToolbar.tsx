@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Loader2, Mic, Paperclip } from 'lucide-react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ChatComposerMicState, ChatComposerMode } from '../types';
 import type {
   ChatContextSource,
@@ -242,7 +242,7 @@ export const ChatComposerToolbar = (
         <Button
           aria-label={micLabel}
           aria-pressed={isMicRecording}
-          className={classnames({
+          className={clsx({
             'text-destructive hover:text-destructive': isMicRecording,
           })}
           data-mic-state={micState}
@@ -259,7 +259,7 @@ export const ChatComposerToolbar = (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <Mic
-              className={classnames('size-4', {
+              className={clsx('size-4', {
                 'animate-pulse': isMicRecording,
               })}
             />
@@ -276,7 +276,7 @@ export const ChatComposerToolbar = (
 
   return (
     <div
-      className={classnames('flex flex-wrap items-center gap-2', className)}
+      className={clsx('flex flex-wrap items-center gap-2', className)}
       data-testid="ChatComposerToolbar"
     >
       {modelControl}

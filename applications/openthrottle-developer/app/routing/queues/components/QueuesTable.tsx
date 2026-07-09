@@ -8,7 +8,7 @@ import {
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 
@@ -40,7 +40,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   // 🔌 Short Circuit
   if (queues.length === 0) {
     return (
-      <Card className={classnames(className)} data-testid="QueuesTable">
+      <Card className={clsx(className)} data-testid="QueuesTable">
         <div className="flex flex-col items-center justify-center gap-2 p-8 text-center sm:p-10">
           <OpenThrottleEmptyState
             description="When workers register Bull queues with the API, they appear here with live backlog, in-flight, and outcome counts."
@@ -53,7 +53,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="QueuesTable"
     >
       <DataTable<QueueCardFragment, string | number | undefined>

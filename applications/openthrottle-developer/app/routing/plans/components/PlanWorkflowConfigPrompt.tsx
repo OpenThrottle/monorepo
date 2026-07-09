@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Input,
   Label,
@@ -71,7 +71,7 @@ export const PlanWorkflowConfigPrompt = (
     <OpenThrottleFieldset id="workflow-run-layer1-legend" legend={heading}>
       <fieldset
         aria-labelledby="workflow-run-layer1-legend"
-        className={classnames('space-y-4', className)}
+        className={clsx('space-y-4', className)}
         data-testid="PlanWorkflowConfigPrompt"
       >
         <p className="text-muted-foreground text-xs">

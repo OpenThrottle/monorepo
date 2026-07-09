@@ -10,7 +10,7 @@ import {
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import type { GetQueueQuery } from '~/__generated__/graphql';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
@@ -65,7 +65,7 @@ export const QueueJobsTable = (
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="QueueJobsTable"
     >
       <DataTable<QueueJobsTableJob, string | number | null | undefined>

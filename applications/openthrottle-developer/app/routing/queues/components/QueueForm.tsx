@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Form } from 'react-router';
 import { Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
@@ -26,7 +26,7 @@ export const QueueForm = (props: QueueFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="QueueForm">
+    <div className={clsx('p-4', className)} data-testid="QueueForm">
       <Form className="w-full space-y-4" method="post">
         <div>
           <Label htmlFor="queue-name">Queue name</Label>

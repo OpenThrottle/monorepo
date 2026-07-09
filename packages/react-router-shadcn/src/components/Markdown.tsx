@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 
 export interface MarkdownProps {
   className?: string;
@@ -26,7 +26,7 @@ export const Markdown = (props: MarkdownProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('markdown max-w-full overflow-auto', className)}
+      className={clsx('markdown max-w-full overflow-auto', className)}
       contentEditable={contentEditable}
     >
       <code>

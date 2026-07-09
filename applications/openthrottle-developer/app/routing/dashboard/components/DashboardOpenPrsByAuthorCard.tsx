@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
@@ -55,7 +55,7 @@ export const DashboardOpenPrsByAuthorCard = (
   if (isEmpty) {
     return (
       <div
-        className={classnames('text-muted-foreground text-sm', className)}
+        className={clsx('text-muted-foreground text-sm', className)}
         data-testid="DashboardOpenPrsByAuthorCard"
       >
         No PRs by author.
@@ -65,7 +65,7 @@ export const DashboardOpenPrsByAuthorCard = (
 
   return (
     <div
-      className={classnames('-ml-1 overflow-auto text-sm', className)}
+      className={clsx('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardOpenPrsByAuthorCard"
     >
       <ChartContainer

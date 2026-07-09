@@ -13,7 +13,7 @@
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
-    "classnames": "catalog:",
+    "clsx": "catalog:",
     "lucide-react": "catalog:",
     "react-router": "catalog:"
   },

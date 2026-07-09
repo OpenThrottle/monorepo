@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
@@ -33,7 +33,7 @@ export const ProjectsTable = (
 
   return (
     <div
-      className={classnames('bg-card ui-border rounded-lg border', className)}
+      className={clsx('bg-card ui-border rounded-lg border', className)}
       data-testid="ProjectsTable"
     >
       <DataTable<ProjectCardFragment, string | null | undefined>

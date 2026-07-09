@@ -5,7 +5,7 @@ import {
   Toaster,
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { MailSidebar } from '~/global/components/MailSidebar';
 import { MailToolbar } from '~/global/components/MailToolbar';
 
@@ -38,7 +38,7 @@ export const MailLayout = (props: MailLayoutProps): React.ReactElement => {
   return (
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
       <SidebarProvider
-        className={classnames(className)}
+        className={clsx(className)}
         defaultOpen={defaultSidebarOpen}
       >
         <MailSidebar />

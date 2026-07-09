@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import {
   Table,
@@ -174,10 +174,7 @@ export const DashboardRecentActivity = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames(className)}
-      data-testid="DashboardRecentActivity"
-    >
+    <div className={clsx(className)} data-testid="DashboardRecentActivity">
       <h2 className="mb-4">Recent Activity</h2>
 
       {activityRows.length === 0 ? (

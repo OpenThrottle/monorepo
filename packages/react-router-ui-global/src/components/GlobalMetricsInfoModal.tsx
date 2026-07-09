@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   DialogDescription,
   DialogHeader,
@@ -137,7 +137,7 @@ export const GlobalMetricsInfoTrigger = (
   return (
     <button
       aria-label="Metrics interpretation help"
-      className={classnames(
+      className={clsx(
         'text-muted-foreground hover:text-foreground transition-colors',
         className,
       )}

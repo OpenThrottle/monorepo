@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
@@ -64,7 +64,7 @@ export const NotesTable = (props: NotesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="NotesTable"
     >
       <DataTable<NoteCardFragment, string | number | null | undefined>

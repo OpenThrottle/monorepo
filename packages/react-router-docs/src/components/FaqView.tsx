@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import clsx from 'clsx';
 import {
   Accordion,
   AccordionContent,
@@ -59,7 +59,7 @@ export const FaqView = (props: FaqViewProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('flex flex-col gap-8', className)}
+      className={clsx('flex flex-col gap-8', className)}
       data-testid="FaqView"
     >
       {groups.map((group) => (
