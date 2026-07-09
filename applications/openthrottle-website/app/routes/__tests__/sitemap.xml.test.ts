@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 
 // The URL/dedup/absolute-canonical behavior now lives in (and is tested with)
@@ -24,9 +25,17 @@ vi.mock('~/routing/docs/data/docsManifest', () => ({
 
 const { loader } = await import('../sitemap[.]xml');
 
+const loaderArgs: Route.LoaderArgs = {
+  context: createTestRouterContext(),
+  params: {},
+  pattern: '/sitemap.xml',
+  request: new Request('http://localhost/sitemap.xml'),
+  url: new URL('http://localhost/sitemap.xml'),
+};
+
 describe('routes/sitemap[.]xml.tsx', () => {
   test('delegates static + non-draft manifest paths to the shared helper', () => {
-    const response = loader({} as Route.LoaderArgs);
+    const response = loader(loaderArgs);
 
     expect(response.headers.get('Content-Type')).toBe('application/xml');
     expect(buildSitemapResponse).toHaveBeenCalledTimes(1);
