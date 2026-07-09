@@ -7,16 +7,123 @@ import { ChildProcessMetricsObject } from '../metrics/child-process-metrics.obje
 import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object';
 import {
   LoadAverageMetricsObject,
-  PressureLevelType,
+  PressureLevel,
+  type PressureLevelType,
   PsiCpuMetricsObject,
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
 } from '../metrics/system-cpu-metrics.object';
 import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
 import {
-  WallClockInterpretationType,
+  WallClockInterpretation,
+  type WallClockInterpretationType,
   WallClockMetricsObject,
 } from '../metrics/wall-clock-metrics.object';
+
+/**
+ * @description Narrows an unknown value to a plain (non-array) record before
+ * property access. Arrays and non-objects are rejected; this matches the prior
+ * behavior since every downstream field/typed check already excluded them.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * @description Reads a required numeric field. The default is unreachable when
+ * the caller's type guard has already validated the field is a number.
+ */
+function readNumber(record: Record<string, unknown>, key: string): number {
+  const value = record[key];
+  return typeof value === 'number' ? value : 0;
+}
+
+/**
+ * @description Reads a nullable numeric field, preserving explicit nulls. When
+ * the value is neither a number nor null (rejected by the caller's guard) it
+ * falls back to null.
+ */
+function readNullableNumber(
+  record: Record<string, unknown>,
+  key: string,
+): number | null {
+  const value = record[key];
+  return typeof value === 'number' ? value : null;
+}
+
+/**
+ * @description Reads a required string field. The default is unreachable when
+ * the caller's type guard has already validated the field is a string.
+ */
+function readString(record: Record<string, unknown>, key: string): string {
+  const value = record[key];
+  return typeof value === 'string' ? value : '';
+}
+
+/**
+ * @description Reads a required boolean field. The default is unreachable when
+ * the caller's type guard has already validated the field is a boolean.
+ */
+function readBoolean(record: Record<string, unknown>, key: string): boolean {
+  const value = record[key];
+  return typeof value === 'boolean' ? value : false;
+}
+
+/**
+ * @description Reads a nested record field. The default is unreachable when the
+ * caller's type guard has already validated the field is a record.
+ */
+function readRecord(
+  record: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  const value = record[key];
+  return isRecord(value) ? value : {};
+}
+
+/**
+ * @description Reads the wall-clock interpretation enum. The upstream guard only
+ * verifies the field is a string, so an unrecognized string is coerced to
+ * `mixed` here (previously it was stored verbatim via an `as` cast, which would
+ * have produced an invalid GraphQL enum value at serialization time).
+ */
+function readWallClockInterpretation(
+  record: Record<string, unknown>,
+  key: string,
+): WallClockInterpretationType {
+  const value = record[key];
+  switch (value) {
+    case WallClockInterpretation.cpu_bound:
+    case WallClockInterpretation.idle:
+    case WallClockInterpretation.io_bound:
+    case WallClockInterpretation.mixed:
+      return value;
+    default:
+      return WallClockInterpretation.mixed;
+  }
+}
+
+/**
+ * @description Reads the pressure-level enum. The upstream guard only verifies
+ * the field is a string, so an unrecognized string is coerced to `unknown` here
+ * (previously it was stored verbatim via an `as` cast, which would have produced
+ * an invalid GraphQL enum value at serialization time).
+ */
+function readPressureLevel(
+  record: Record<string, unknown>,
+  key: string,
+): PressureLevelType {
+  const value = record[key];
+  switch (value) {
+    case PressureLevel.high:
+    case PressureLevel.low:
+    case PressureLevel.moderate:
+    case PressureLevel.unknown:
+      return value;
+    default:
+      return PressureLevel.unknown;
+  }
+}
 
 const SNAPSHOT_KEYS = [
   'rssMb',
@@ -51,10 +158,10 @@ const WALL_CLOCK_KEYS = [
 function isProcessSnapshot(
   value: unknown,
 ): value is Record<(typeof SNAPSHOT_KEYS)[number], number> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   for (const key of SNAPSHOT_KEYS) {
     if (typeof obj[key] !== 'number') {
       return false;
@@ -66,10 +173,10 @@ function isProcessSnapshot(
 function isChildProcessMetrics(
   value: unknown,
 ): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   for (const key of CHILD_PROCESS_KEYS) {
     if (typeof obj[key] !== 'number') {
       return false;
@@ -79,10 +186,10 @@ function isChildProcessMetrics(
 }
 
 function isWallClockMetrics(value: unknown): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   for (const key of WALL_CLOCK_KEYS) {
     if (key === 'interpretation') {
       if (typeof obj[key] !== 'string') {
@@ -98,10 +205,10 @@ function isWallClockMetrics(value: unknown): value is Record<string, unknown> {
 function isLoadAverageMetrics(
   value: unknown,
 ): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   const keys = ['load1m', 'load5m', 'load15m', 'cpuCount', 'perCoreLoad1m'];
   for (const key of keys) {
     if (typeof obj[key] !== 'number') {
@@ -112,10 +219,10 @@ function isLoadAverageMetrics(
 }
 
 function isPsiCpuMetrics(value: unknown): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   const keys = [
     'some10s',
     'some60s',
@@ -136,10 +243,10 @@ function isPsiCpuMetrics(value: unknown): value is Record<string, unknown> {
 }
 
 function isSystemCpuSnapshot(value: unknown): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   if (typeof obj['timestamp'] !== 'number') {
     return false;
   }
@@ -153,10 +260,10 @@ function isSystemCpuSnapshot(value: unknown): value is Record<string, unknown> {
 }
 
 function isSystemCpuMetrics(value: unknown): value is Record<string, unknown> {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const obj = value as Record<string, unknown>;
+  const obj = value;
   if (typeof obj['platform'] !== 'string') {
     return false;
   }
@@ -200,13 +307,13 @@ function toChildProcessMetricsObject(
   raw: Record<string, unknown>,
 ): ChildProcessMetricsObject {
   const out = new ChildProcessMetricsObject();
-  out.avgCpuPercent = raw['avgCpuPercent'] as number;
-  out.avgRssMb = raw['avgRssMb'] as number;
-  out.peakCpuPercent = raw['peakCpuPercent'] as number;
-  out.peakRssMb = raw['peakRssMb'] as number;
-  out.pid = raw['pid'] as number;
-  out.pollIntervalMs = raw['pollIntervalMs'] as number;
-  out.sampleCount = raw['sampleCount'] as number;
+  out.avgCpuPercent = readNumber(raw, 'avgCpuPercent');
+  out.avgRssMb = readNumber(raw, 'avgRssMb');
+  out.peakCpuPercent = readNumber(raw, 'peakCpuPercent');
+  out.peakRssMb = readNumber(raw, 'peakRssMb');
+  out.pid = readNumber(raw, 'pid');
+  out.pollIntervalMs = readNumber(raw, 'pollIntervalMs');
+  out.sampleCount = readNumber(raw, 'sampleCount');
   return out;
 }
 
@@ -214,14 +321,14 @@ function toWallClockMetricsObject(
   raw: Record<string, unknown>,
 ): WallClockMetricsObject {
   const out = new WallClockMetricsObject();
-  out.cpuSystemMs = raw['cpuSystemMs'] as number;
-  out.cpuTimeMs = raw['cpuTimeMs'] as number;
-  out.cpuUserMs = raw['cpuUserMs'] as number;
-  out.endTimestamp = raw['endTimestamp'] as number;
-  out.interpretation = raw['interpretation'] as WallClockInterpretationType;
-  out.startTimestamp = raw['startTimestamp'] as number;
-  out.wallClockMs = raw['wallClockMs'] as number;
-  out.wallClockToCpuRatio = raw['wallClockToCpuRatio'] as number;
+  out.cpuSystemMs = readNumber(raw, 'cpuSystemMs');
+  out.cpuTimeMs = readNumber(raw, 'cpuTimeMs');
+  out.cpuUserMs = readNumber(raw, 'cpuUserMs');
+  out.endTimestamp = readNumber(raw, 'endTimestamp');
+  out.interpretation = readWallClockInterpretation(raw, 'interpretation');
+  out.startTimestamp = readNumber(raw, 'startTimestamp');
+  out.wallClockMs = readNumber(raw, 'wallClockMs');
+  out.wallClockToCpuRatio = readNumber(raw, 'wallClockToCpuRatio');
   return out;
 }
 
@@ -229,11 +336,11 @@ function toLoadAverageMetricsObject(
   raw: Record<string, unknown>,
 ): LoadAverageMetricsObject {
   const out = new LoadAverageMetricsObject();
-  out.cpuCount = raw['cpuCount'] as number;
-  out.load15m = raw['load15m'] as number;
-  out.load1m = raw['load1m'] as number;
-  out.load5m = raw['load5m'] as number;
-  out.perCoreLoad1m = raw['perCoreLoad1m'] as number;
+  out.cpuCount = readNumber(raw, 'cpuCount');
+  out.load15m = readNumber(raw, 'load15m');
+  out.load1m = readNumber(raw, 'load1m');
+  out.load5m = readNumber(raw, 'load5m');
+  out.perCoreLoad1m = readNumber(raw, 'perCoreLoad1m');
   return out;
 }
 
@@ -241,14 +348,14 @@ function toPsiCpuMetricsObject(
   raw: Record<string, unknown>,
 ): PsiCpuMetricsObject {
   const out = new PsiCpuMetricsObject();
-  out.full10s = raw['full10s'] as number | null;
-  out.full300s = raw['full300s'] as number | null;
-  out.full60s = raw['full60s'] as number | null;
-  out.fullTotalUs = raw['fullTotalUs'] as number | null;
-  out.some10s = raw['some10s'] as number | null;
-  out.some300s = raw['some300s'] as number | null;
-  out.some60s = raw['some60s'] as number | null;
-  out.someTotalUs = raw['someTotalUs'] as number | null;
+  out.full10s = readNullableNumber(raw, 'full10s');
+  out.full300s = readNullableNumber(raw, 'full300s');
+  out.full60s = readNullableNumber(raw, 'full60s');
+  out.fullTotalUs = readNullableNumber(raw, 'fullTotalUs');
+  out.some10s = readNullableNumber(raw, 'some10s');
+  out.some300s = readNullableNumber(raw, 'some300s');
+  out.some60s = readNullableNumber(raw, 'some60s');
+  out.someTotalUs = readNullableNumber(raw, 'someTotalUs');
   return out;
 }
 
@@ -256,11 +363,9 @@ function toSystemCpuSnapshotObject(
   raw: Record<string, unknown>,
 ): SystemCpuSnapshotObject {
   const out = new SystemCpuSnapshotObject();
-  out.loadAverage = toLoadAverageMetricsObject(
-    raw['loadAverage'] as Record<string, unknown>,
-  );
-  out.psi = toPsiCpuMetricsObject(raw['psi'] as Record<string, unknown>);
-  out.timestamp = raw['timestamp'] as number;
+  out.loadAverage = toLoadAverageMetricsObject(readRecord(raw, 'loadAverage'));
+  out.psi = toPsiCpuMetricsObject(readRecord(raw, 'psi'));
+  out.timestamp = readNumber(raw, 'timestamp');
   return out;
 }
 
@@ -268,17 +373,13 @@ function toSystemCpuMetricsObject(
   raw: Record<string, unknown>,
 ): SystemCpuMetricsObject {
   const out = new SystemCpuMetricsObject();
-  out.atEnd = toSystemCpuSnapshotObject(
-    raw['atEnd'] as Record<string, unknown>,
-  );
-  out.atStart = toSystemCpuSnapshotObject(
-    raw['atStart'] as Record<string, unknown>,
-  );
-  out.platform = raw['platform'] as string;
-  out.pressureLevel = raw['pressureLevel'] as PressureLevelType;
-  out.psiAvailable = raw['psiAvailable'] as boolean;
-  out.psiFullDeltaUs = raw['psiFullDeltaUs'] as number | null;
-  out.psiSomeDeltaUs = raw['psiSomeDeltaUs'] as number | null;
+  out.atEnd = toSystemCpuSnapshotObject(readRecord(raw, 'atEnd'));
+  out.atStart = toSystemCpuSnapshotObject(readRecord(raw, 'atStart'));
+  out.platform = readString(raw, 'platform');
+  out.pressureLevel = readPressureLevel(raw, 'pressureLevel');
+  out.psiAvailable = readBoolean(raw, 'psiAvailable');
+  out.psiFullDeltaUs = readNullableNumber(raw, 'psiFullDeltaUs');
+  out.psiSomeDeltaUs = readNullableNumber(raw, 'psiSomeDeltaUs');
   return out;
 }
 
@@ -293,19 +394,19 @@ export function parseTaskRunMetricsFromReturnvalue(
   }
   let parsed: unknown;
   try {
-    parsed = JSON.parse(returnvalue) as unknown;
+    parsed = JSON.parse(returnvalue);
   } catch {
     return null;
   }
-  if (parsed == null || typeof parsed !== 'object') {
+  if (!isRecord(parsed)) {
     return null;
   }
-  const obj = parsed as Record<string, unknown>;
+  const obj = parsed;
   const taskRunMetrics = obj['taskRunMetrics'];
-  if (taskRunMetrics == null || typeof taskRunMetrics !== 'object') {
+  if (!isRecord(taskRunMetrics)) {
     return null;
   }
-  const metrics = taskRunMetrics as Record<string, unknown>;
+  const metrics = taskRunMetrics;
   const atStart = metrics['atStart'];
   const atEnd = metrics['atEnd'];
   if (!isProcessSnapshot(atStart) || !isProcessSnapshot(atEnd)) {

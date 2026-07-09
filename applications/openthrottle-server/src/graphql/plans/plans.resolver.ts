@@ -35,7 +35,11 @@ import {
   serializePlanRunConfigSnapshotForGraphql,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanJobRunHooksStorage,
+  PlanRun,
+  PlanRunConfigStorage,
+} from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project } from '@openthrottle/nestjs-repositories';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
@@ -103,6 +107,41 @@ function resolveActorUserId(
   return kind === AUTH_PRINCIPAL_KIND_USER ? (sub ?? null) : null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/**
+ * @description Narrows an interceptor return value (typed `unknown`) to a
+ * resolved {@link PlanObject}. The `@EmitNotification` payload mappers receive
+ * the method's return value as `unknown`; these guards replace the previous
+ * `as` assertions with runtime shape checks.
+ */
+function isPlanObject(value: unknown): value is PlanObject {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.status === 'string' &&
+    typeof value.title === 'string'
+  );
+}
+
+function isEnqueuePlanRunResult(
+  value: unknown,
+): value is EnqueuePlanRunResultObject {
+  return isRecord(value) && typeof value.planId === 'string';
+}
+
+function isCancelPlanRunResult(
+  value: unknown,
+): value is CancelPlanRunResultObject {
+  return (
+    isRecord(value) &&
+    typeof value.planId === 'string' &&
+    Array.isArray(value.removedJobIds)
+  );
+}
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => PlanObject)
 export class PlansResolver {
@@ -142,13 +181,13 @@ export class PlansResolver {
   @ResolveField(() => String, {
     description: `Job-run lifecycle hooks stored on the plan ({ hooks: [...] }).`,
   })
-  jobRunHooksJson(@Parent() parent: PlanObject): string {
-    const stored = (parent as PlanObject & { jobRunHooks?: unknown })
-      .jobRunHooks;
+  jobRunHooksJson(
+    @Parent()
+    parent: PlanObject & { jobRunHooks?: PlanJobRunHooksStorage | null },
+  ): string {
+    const stored = parent.jobRunHooks;
     if (stored !== undefined && stored !== null) {
-      return serializeJobRunHooksForGraphql(
-        stored as Parameters<typeof serializeJobRunHooksForGraphql>[0],
-      );
+      return serializeJobRunHooksForGraphql(stored);
     }
     return serializeJobRunHooksForGraphql({ hooks: [] });
   }
@@ -156,19 +195,22 @@ export class PlansResolver {
   @ResolveField(() => String, {
     description: `Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).`,
   })
-  runConfigJson(@Parent() parent: PlanObject): string {
-    const stored = (parent as PlanObject & { runConfig?: unknown }).runConfig;
-    return serializePlanRunConfigForGraphql(
-      stored as Parameters<typeof serializePlanRunConfigForGraphql>[0],
-      { planId: parent.id },
-    );
+  runConfigJson(
+    @Parent()
+    parent: PlanObject & { runConfig?: PlanRunConfigStorage | null },
+  ): string {
+    const stored = parent.runConfig;
+    return serializePlanRunConfigForGraphql(stored, { planId: parent.id });
   }
 
   @ResolveField(() => Boolean, {
     description: `True when saved workflow run configuration differs from canonical defaults.`,
   })
-  hasCustomRunConfig(@Parent() parent: PlanObject): boolean {
-    const stored = (parent as PlanObject & { runConfig?: unknown }).runConfig;
+  hasCustomRunConfig(
+    @Parent()
+    parent: PlanObject & { runConfig?: PlanRunConfigStorage | null },
+  ): boolean {
+    const stored = parent.runConfig;
     return planHasCustomRunConfig(stored, { planId: parent.id });
   }
 
@@ -404,9 +446,9 @@ export class PlansResolver {
 
   private async fetchPlanCountsByStatus(): Promise<PlanStatusCount[]> {
     const repo = this.plansService.getRepository();
-    const rows = (await repo.query(
+    const rows = await repo.query<{ count: number; status: string }[]>(
       `SELECT status, COUNT(*)::int AS count FROM plans GROUP BY status ORDER BY status LIMIT ${MAX_FILTER_FACET_ROWS}`,
-    )) as { count: number; status: string }[];
+    );
 
     return rows.map((r) => {
       const obj = new PlanStatusCountObject();
@@ -424,9 +466,9 @@ export class PlansResolver {
   })
   async listDistinctCategories(): Promise<string[]> {
     const repo = this.plansService.getRepository();
-    const rows = (await repo.query(
+    const rows = await repo.query<{ category: string }[]>(
       `SELECT DISTINCT category FROM plans ORDER BY category LIMIT ${MAX_FILTER_FACET_ROWS}`,
-    )) as { category: string }[];
+    );
 
     return rows.map((r) => r.category);
   }
@@ -437,7 +479,7 @@ export class PlansResolver {
   })
   async listDistinctAuthorsAndAssignees(): Promise<string[]> {
     const repo = this.plansService.getRepository();
-    const rows = (await repo.query(
+    const rows = await repo.query<{ person: string }[]>(
       `(SELECT author AS person FROM plans)
        UNION
        (SELECT assignee AS person FROM plans WHERE assignee IS NOT NULL)
@@ -445,7 +487,7 @@ export class PlansResolver {
        (SELECT assignee AS person FROM tasks WHERE assignee IS NOT NULL)
        ORDER BY person
        LIMIT ${MAX_FILTER_FACET_ROWS}`,
-    )) as { person: string }[];
+    );
 
     return rows.map((r) => r.person);
   }
@@ -455,10 +497,10 @@ export class PlansResolver {
     description: `Create a plan`,
   })
   @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) =>
-    ret != null
+    isPlanObject(ret)
       ? {
-          message: `Plan created: ${(ret as PlanObject).title}`,
-          planId: (ret as PlanObject).id,
+          message: `Plan created: ${ret.title}`,
+          planId: ret.id,
           severity: 'success' as const,
         }
       : null,
@@ -491,10 +533,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       payload: (ret) =>
-        ret != null
+        isPlanObject(ret)
           ? {
-              message: `Plan updated: ${(ret as PlanObject).title}`,
-              planId: (ret as PlanObject).id,
+              message: `Plan updated: ${ret.title}`,
+              planId: ret.id,
               severity: 'info' as const,
             }
           : null,
@@ -502,10 +544,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null
+        isPlanObject(ret)
           ? {
-              planId: (ret as PlanObject).id,
-              status: (ret as PlanObject).status,
+              planId: ret.id,
+              status: ret.status,
             }
           : null,
     },
@@ -631,10 +673,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       payload: (ret) =>
-        ret != null
+        isPlanObject(ret)
           ? {
-              message: `Plan status updated: ${(ret as PlanObject).title} → ${(ret as PlanObject).status}`,
-              planId: (ret as PlanObject).id,
+              message: `Plan status updated: ${ret.title} → ${ret.status}`,
+              planId: ret.id,
               severity: 'info' as const,
             }
           : null,
@@ -642,10 +684,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null
+        isPlanObject(ret)
           ? {
-              planId: (ret as PlanObject).id,
-              status: (ret as PlanObject).status,
+              planId: ret.id,
+              status: ret.status,
             }
           : null,
     },
@@ -678,10 +720,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       payload: (ret) =>
-        ret != null
+        isEnqueuePlanRunResult(ret)
           ? {
               message: 'Plan queued for run',
-              planId: (ret as EnqueuePlanRunResultObject).planId,
+              planId: ret.planId,
               severity: 'info' as const,
             }
           : null,
@@ -689,9 +731,9 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null
+        isEnqueuePlanRunResult(ret)
           ? {
-              planId: (ret as EnqueuePlanRunResultObject).planId,
+              planId: ret.planId,
               status: 'QUEUED',
             }
           : null,
@@ -738,10 +780,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       payload: (ret) =>
-        ret != null
+        isEnqueuePlanRunResult(ret)
           ? {
               message: 'Plan queued for run (orchestrator)',
-              planId: (ret as EnqueuePlanRunResultObject).planId,
+              planId: ret.planId,
               severity: 'info' as const,
             }
           : null,
@@ -749,9 +791,9 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null
+        isEnqueuePlanRunResult(ret)
           ? {
-              planId: (ret as EnqueuePlanRunResultObject).planId,
+              planId: ret.planId,
               status: 'QUEUED',
             }
           : null,
@@ -810,19 +852,18 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       payload: (ret) => {
-        if (ret == null) return null;
-        const r = ret as CancelPlanRunResultObject;
-        if (r.removedJobIds.length > 0) {
+        if (!isCancelPlanRunResult(ret)) return null;
+        if (ret.removedJobIds.length > 0) {
           return {
             message: 'Plan run cancelled (removed from queue)',
-            planId: r.planId,
+            planId: ret.planId,
             severity: 'info' as const,
           };
         }
-        if (r.signaledActiveRunToStop) {
+        if (ret.signaledActiveRunToStop) {
           return {
             message: 'Plan run stop requested (Ralph process)',
-            planId: r.planId,
+            planId: ret.planId,
             severity: 'info' as const,
           };
         }
@@ -832,11 +873,10 @@ export class PlansResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null &&
-        (ret as CancelPlanRunResultObject).planStatusAfter != null
+        isCancelPlanRunResult(ret) && ret.planStatusAfter != null
           ? {
-              planId: (ret as CancelPlanRunResultObject).planId,
-              status: (ret as CancelPlanRunResultObject).planStatusAfter!,
+              planId: ret.planId,
+              status: ret.planStatusAfter,
             }
           : null,
     },

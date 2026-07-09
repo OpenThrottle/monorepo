@@ -360,7 +360,7 @@ export class TranscriptionStreamService {
       return;
     }
 
-    this.applySegments(session, segments as WhisperSegment[]);
+    this.applySegments(session, segments);
     this.publishChunk(session, { done: false, error: null });
   }
 
@@ -487,6 +487,11 @@ function decodeInt16Base64ToFloat32(audioBase64: string): Float32Array {
   return pcm;
 }
 
+/** True for any non-null object (arrays included), narrowing to an indexable record. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 /** Parse a WhisperLive JSON text frame; binary/unparseable frames yield null. */
 function parseWhisperMessage(data: unknown): Record<string, unknown> | null {
   if (typeof data !== 'string') {
@@ -495,9 +500,7 @@ function parseWhisperMessage(data: unknown): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(data);
 
-    return typeof parsed === 'object' && parsed !== null
-      ? (parsed as Record<string, unknown>)
-      : null;
+    return isRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }

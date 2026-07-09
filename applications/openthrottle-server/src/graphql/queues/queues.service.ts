@@ -13,17 +13,11 @@ import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
 } from '../../queues/agentic-test/agentic-test.constants';
-import type {
-  AgenticTestJobPayload,
-  AgenticTestJobResult,
-} from '../../queues/agentic-test/agentic-test.types';
+import type { AgenticTestJobPayload } from '../../queues/agentic-test/agentic-test.types';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
 import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
-import type {
-  DocIngestionJobPayload,
-  DocIngestionJobResult,
-} from '../../queues/doc-ingestion/doc-ingestion.types';
+import type { DocIngestionJobPayload } from '../../queues/doc-ingestion/doc-ingestion.types';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
@@ -34,10 +28,7 @@ import type {
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
-import type {
-  DatabaseBackupJobPayload,
-  DatabaseBackupJobResult,
-} from '../../queues/database-backup/database-backup.types';
+import type { DatabaseBackupJobPayload } from '../../queues/database-backup/database-backup.types';
 
 const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
 
@@ -131,9 +122,15 @@ export function normalizeWorkspaceRelativePaths(
 type AnyJobData =
   | AgenticTestJobPayload
   | AggregateDailyStatsJobData
+  | DatabaseBackupJobPayload
   | DocIngestionJobPayload
   | DynamicJobData
   | RunPlanJobData;
+
+/** @description Narrows an unknown value to a plain object for safe property access. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 interface QueueStats {
   readonly activeCount: number;
@@ -157,13 +154,6 @@ interface JobDto {
   readonly returnvalue: string | null;
   readonly state: string;
   readonly timestamp: number | null;
-}
-
-interface PlanRunExecutionBackendJobData {
-  readonly executionBackend?: unknown;
-  readonly ralph?: {
-    readonly backend?: unknown;
-  };
 }
 
 interface GetJobsResult {
@@ -213,32 +203,20 @@ const REGISTERED_QUEUES = [
 
 @Injectable()
 export class QueuesService implements OnModuleDestroy {
-  private readonly dynamicQueues = new Map<
-    string,
-    Queue<DynamicJobData, void>
-  >();
+  private readonly dynamicQueues = new Map<string, Queue<AnyJobData, void>>();
 
   constructor(
     private readonly configService: ConfigService,
     @InjectQueue(AGENTIC_TEST_QUEUE_NAME)
-    private readonly agenticTestQueue: Queue<
-      AgenticTestJobPayload,
-      AgenticTestJobResult
-    >,
+    private readonly agenticTestQueue: Queue<AnyJobData, void>,
     @InjectQueue(DAILY_STATS_QUEUE_NAME)
-    private readonly dailyStatsQueue: Queue<AggregateDailyStatsJobData, void>,
+    private readonly dailyStatsQueue: Queue<AnyJobData, void>,
     @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
-    private readonly databaseBackupQueue: Queue<
-      DatabaseBackupJobPayload,
-      DatabaseBackupJobResult
-    >,
+    private readonly databaseBackupQueue: Queue<AnyJobData, void>,
     @InjectQueue(DOC_INGESTION_QUEUE_NAME)
-    private readonly docIngestionQueue: Queue<
-      DocIngestionJobPayload,
-      DocIngestionJobResult
-    >,
+    private readonly docIngestionQueue: Queue<AnyJobData, void>,
     @InjectQueue(PLANS_QUEUE_NAME)
-    private readonly plansQueue: Queue<RunPlanJobData, void>,
+    private readonly plansQueue: Queue<AnyJobData, void>,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -265,9 +243,7 @@ export class QueuesService implements OnModuleDestroy {
       };
     }
 
-    if (
-      REGISTERED_QUEUES.includes(trimmed as (typeof REGISTERED_QUEUES)[number])
-    ) {
+    if (REGISTERED_QUEUES.some((queueName) => queueName === trimmed)) {
       return { error: `Queue name "${trimmed}" is reserved` };
     }
 
@@ -293,7 +269,7 @@ export class QueuesService implements OnModuleDestroy {
     }
 
     try {
-      const queue = new BullQueue<DynamicJobData, void>(trimmed, {
+      const queue = new BullQueue<AnyJobData, void>(trimmed, {
         connection: { host, port },
         // Same environment-scoped prefix as the DI-registered queues so
         // dynamic queues stay inside this checkout's keyspace.
@@ -316,28 +292,26 @@ export class QueuesService implements OnModuleDestroy {
    */
   getQueueByName(name: string): Queue<AnyJobData, void> | null {
     if (name === AGENTIC_TEST_QUEUE_NAME) {
-      return this.agenticTestQueue as unknown as Queue<AnyJobData, void>;
+      return this.agenticTestQueue;
     }
 
     if (name === DAILY_STATS_QUEUE_NAME) {
-      return this.dailyStatsQueue as Queue<AnyJobData, void>;
+      return this.dailyStatsQueue;
     }
 
     if (name === DATABASE_BACKUP_QUEUE_NAME) {
-      return this.databaseBackupQueue as unknown as Queue<AnyJobData, void>;
+      return this.databaseBackupQueue;
     }
 
     if (name === DOC_INGESTION_QUEUE_NAME) {
-      return this.docIngestionQueue as unknown as Queue<AnyJobData, void>;
+      return this.docIngestionQueue;
     }
 
     if (name === PLANS_QUEUE_NAME) {
-      return this.plansQueue as Queue<AnyJobData, void>;
+      return this.plansQueue;
     }
 
-    const dynamic = this.dynamicQueues.get(name) ?? null;
-
-    return dynamic as Queue<AnyJobData, void> | null;
+    return this.dynamicQueues.get(name) ?? null;
   }
 
   /**
@@ -369,9 +343,9 @@ export class QueuesService implements OnModuleDestroy {
       return { hasNext: false, jobs: [] };
     }
 
-    const types = states.filter((s) =>
-      (VALID_JOB_STATES as readonly string[]).includes(s),
-    ) as JobState[];
+    const types = states.filter((s): s is JobState =>
+      VALID_JOB_STATES.some((valid) => valid === s),
+    );
 
     if (types.length === 0) {
       return { hasNext: false, jobs: [] };
@@ -451,22 +425,17 @@ export class QueuesService implements OnModuleDestroy {
     data: unknown,
     queueName: string | null,
   ): string | null {
-    if (
-      queueName !== PLANS_QUEUE_NAME ||
-      data == null ||
-      typeof data !== 'object'
-    ) {
+    if (queueName !== PLANS_QUEUE_NAME || !isRecord(data)) {
       return null;
     }
 
-    const jobData = data as PlanRunExecutionBackendJobData;
-
-    if (typeof jobData.executionBackend === 'string') {
-      return jobData.executionBackend;
+    if (typeof data.executionBackend === 'string') {
+      return data.executionBackend;
     }
 
-    if (typeof jobData.ralph?.backend === 'string') {
-      return jobData.ralph.backend;
+    const ralph = data.ralph;
+    if (isRecord(ralph) && typeof ralph.backend === 'string') {
+      return ralph.backend;
     }
 
     return DEFAULT_PLAN_RUN_EXECUTION_BACKEND;
@@ -739,10 +708,9 @@ export class QueuesService implements OnModuleDestroy {
       return null;
     }
     try {
-      const parsed = JSON.parse(data) as unknown;
-      if (parsed != null && typeof parsed === 'object' && 'planId' in parsed) {
-        const planId = (parsed as { planId?: unknown }).planId;
-        return typeof planId === 'string' ? planId : null;
+      const parsed: unknown = JSON.parse(data);
+      if (isRecord(parsed) && typeof parsed.planId === 'string') {
+        return parsed.planId;
       }
     } catch {
       // ignore

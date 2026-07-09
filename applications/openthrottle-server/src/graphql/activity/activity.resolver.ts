@@ -32,8 +32,8 @@ type ActivityRow =
   | ActivityTaskUpdatedRowObject;
 
 function getTimestamp(row: ActivityRow): Date {
-  if ('createdAt' in row) return row.createdAt as Date;
-  return (row as ActivityTaskUpdatedRowObject).updatedAt as Date;
+  if ('createdAt' in row) return row.createdAt;
+  return row.updatedAt;
 }
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
@@ -183,7 +183,8 @@ export class ActivityResolver {
   ): Promise<LastActivityResultObject | null> {
     const { planId, taskId } = input;
     const repo = this.plansService.getRepository();
-    const q = repo.manager.query.bind(repo.manager);
+    const q = <T>(sql: string, params?: unknown[]): Promise<T> =>
+      repo.manager.query(sql, params);
 
     type Candidate = {
       at: string;
@@ -196,15 +197,17 @@ export class ActivityResolver {
     const candidates: Candidate[] = [];
 
     if (taskId) {
-      const commitRows = (await q(
+      const commitRows = await q<
+        {
+          created_at: string;
+          message: string | null;
+          repo: string;
+          sha: string;
+        }[]
+      >(
         `SELECT created_at, repo, sha, message FROM commit_links WHERE task_id = $1 ORDER BY created_at DESC LIMIT 1`,
         [taskId],
-      )) as {
-        created_at: string;
-        message: string | null;
-        repo: string;
-        sha: string;
-      }[];
+      );
       const row = commitRows[0];
       if (row) {
         candidates.push({
@@ -219,15 +222,17 @@ export class ActivityResolver {
         });
       }
     } else {
-      const commitRows = (await q(
+      const commitRows = await q<
+        {
+          created_at: string;
+          message: string | null;
+          repo: string;
+          sha: string;
+        }[]
+      >(
         `SELECT created_at, repo, sha, message FROM commit_links WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
         [planId],
-      )) as {
-        created_at: string;
-        message: string | null;
-        repo: string;
-        sha: string;
-      }[];
+      );
       const row = commitRows[0];
       if (row) {
         candidates.push({
@@ -243,10 +248,12 @@ export class ActivityResolver {
       }
     }
 
-    const outputRows = (await q(
+    const outputRows = await q<
+      { content: string; created_at: string; iteration: number | null }[]
+    >(
       `SELECT content, created_at, iteration FROM plan_output_stream WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [planId],
-    )) as { content: string; created_at: string; iteration: number | null }[];
+    );
     const outRow = outputRows[0];
     if (outRow) {
       const preview =
@@ -263,10 +270,9 @@ export class ActivityResolver {
     }
 
     if (taskId) {
-      const taskRows = (await q(
-        `SELECT title, status, updated_at FROM tasks WHERE id = $1`,
-        [taskId],
-      )) as { status: string; title: string; updated_at: string }[];
+      const taskRows = await q<
+        { status: string; title: string; updated_at: string }[]
+      >(`SELECT title, status, updated_at FROM tasks WHERE id = $1`, [taskId]);
       const tRow = taskRows[0];
       if (tRow) {
         candidates.push({
@@ -281,10 +287,12 @@ export class ActivityResolver {
         });
       }
     } else {
-      const taskRows = (await q(
+      const taskRows = await q<
+        { id: string; status: string; title: string; updated_at: string }[]
+      >(
         `SELECT id, title, status, updated_at FROM tasks WHERE plan_id = $1 ORDER BY updated_at DESC LIMIT 1`,
         [planId],
-      )) as { id: string; status: string; title: string; updated_at: string }[];
+      );
       const tRow = taskRows[0];
       if (tRow) {
         candidates.push({
@@ -331,19 +339,11 @@ export class ActivityResolver {
     offset?: number,
   ): Promise<ActivityByDateResultObject> {
     const repo = this.plansService.getRepository();
-    const q = repo.manager.query.bind(repo.manager);
+    const q = <T>(sql: string, params?: unknown[]): Promise<T> =>
+      repo.manager.query(sql, params);
 
     const [commitRows, outputRows, taskRows] = await Promise.all([
-      q(
-        `SELECT cl.id, cl.plan_id, cl.task_id, cl.repo, cl.sha, cl.message, cl.created_at,
-                p.title AS plan_title, t.title AS task_title
-         FROM commit_links cl
-         JOIN plans p ON cl.plan_id = p.id
-         LEFT JOIN tasks t ON cl.task_id = t.id
-         WHERE cl.created_at >= $1::timestamptz AND cl.created_at < $2::timestamptz
-         ORDER BY cl.created_at DESC`,
-        [startIso, endIso],
-      ) as Promise<
+      q<
         {
           created_at: string;
           id: string;
@@ -355,15 +355,17 @@ export class ActivityResolver {
           task_id: string | null;
           task_title: string | null;
         }[]
-      >,
-      q(
-        `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, p.title AS plan_title
-         FROM plan_output_stream pos
-         JOIN plans p ON pos.plan_id = p.id
-         WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
-         ORDER BY pos.created_at ASC`,
+      >(
+        `SELECT cl.id, cl.plan_id, cl.task_id, cl.repo, cl.sha, cl.message, cl.created_at,
+                p.title AS plan_title, t.title AS task_title
+         FROM commit_links cl
+         JOIN plans p ON cl.plan_id = p.id
+         LEFT JOIN tasks t ON cl.task_id = t.id
+         WHERE cl.created_at >= $1::timestamptz AND cl.created_at < $2::timestamptz
+         ORDER BY cl.created_at DESC`,
         [startIso, endIso],
-      ) as Promise<
+      ),
+      q<
         {
           content: string;
           created_at: string;
@@ -372,15 +374,15 @@ export class ActivityResolver {
           plan_id: string;
           plan_title: string;
         }[]
-      >,
-      q(
-        `SELECT t.id, t.plan_id, t.title, t.status, t.updated_at, p.title AS plan_title
-         FROM tasks t
-         JOIN plans p ON t.plan_id = p.id
-         WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
-         ORDER BY t.updated_at DESC`,
+      >(
+        `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, p.title AS plan_title
+         FROM plan_output_stream pos
+         JOIN plans p ON pos.plan_id = p.id
+         WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
+         ORDER BY pos.created_at ASC`,
         [startIso, endIso],
-      ) as Promise<
+      ),
+      q<
         {
           id: string;
           plan_id: string;
@@ -389,7 +391,14 @@ export class ActivityResolver {
           title: string;
           updated_at: string;
         }[]
-      >,
+      >(
+        `SELECT t.id, t.plan_id, t.title, t.status, t.updated_at, p.title AS plan_title
+         FROM tasks t
+         JOIN plans p ON t.plan_id = p.id
+         WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
+         ORDER BY t.updated_at DESC`,
+        [startIso, endIso],
+      ),
     ]);
 
     const commits = commitRows.map((r) => {

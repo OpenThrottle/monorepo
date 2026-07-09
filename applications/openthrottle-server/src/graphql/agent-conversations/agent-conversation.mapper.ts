@@ -61,5 +61,5 @@ export const parseAgentConversationMetadataJson = (
     return null;
   }
 
-  return JSON.parse(metadataJson) as Record<string, unknown>;
+  return JSON.parse(metadataJson);
 };

@@ -30,12 +30,12 @@ export class MetricsResolver {
     description: `Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged.`,
   })
   metrics(): MetricsObject {
-    return {} as MetricsObject;
+    return new MetricsObject();
   }
 
   @ResolveField(() => ServerMetricsObject)
   serverSnapshot(): ServerMetricsObject {
-    return this.processMetrics.getCurrentSnapshot() as ServerMetricsObject;
+    return this.processMetrics.getCurrentSnapshot();
   }
 
   /**
