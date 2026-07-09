@@ -15,4 +15,5 @@ export * from './utils/logger';
 export * from './utils/metadata';
 export * from './utils/parsers';
 export * from './utils/seo';
+export * from './utils/theme';
 export * from './types';

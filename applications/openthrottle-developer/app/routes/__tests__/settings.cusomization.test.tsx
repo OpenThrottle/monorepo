@@ -8,9 +8,11 @@ import SettingsAppearance from '../settings.appearance';
 import {
   APPEARANCE_BRAND_OVERRIDE_KEYS,
   APPEARANCE_THEME_COLOR_TOKEN_KEYS,
+  DEFAULT_BRAND_HSL,
+} from '@openthrottle/react-router-utils';
+import {
   configAtom,
   DEFAULT_APPEARANCE_CONFIG,
-  DEFAULT_BRAND_HSL,
   type ConfigObject,
 } from '~/global/data/atom.config';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
@@ -106,12 +108,24 @@ describe('routes/settings.appearance.tsx (customization)', () => {
       const { store } = renderAppearance();
 
       expect(
-        screen.getByText(`Default: ${DEFAULT_APPEARANCE_CONFIG.theme}`),
+        screen.getByText(
+          new RegExp(`Default: ${DEFAULT_APPEARANCE_CONFIG.theme}`),
+        ),
       ).toBeInTheDocument();
 
       await user.click(screen.getByLabelText('Dark mode'));
 
       expect(store.get(configAtom).theme).toBe('dark');
+    });
+
+    test('selecting System updates configAtom to theme: system', async () => {
+      const user = userEvent.setup();
+      // Start from an explicit mode so selecting System is a real change.
+      const { store } = renderAppearance({ theme: 'light' });
+
+      await user.click(screen.getByLabelText('System mode'));
+
+      expect(store.get(configAtom).theme).toBe('system');
     });
   });
 
