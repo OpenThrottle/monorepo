@@ -10,11 +10,16 @@ import {
   UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
 } from '../postgres.ts';
 
-const mockState = {
-  connectReject: undefined as Error | undefined,
-  endReject: undefined as Error | undefined,
-  queryLog: [] as string[],
-  queryReject: undefined as Error | undefined,
+const mockState: {
+  connectReject: Error | undefined;
+  endReject: Error | undefined;
+  queryLog: string[];
+  queryReject: Error | undefined;
+} = {
+  connectReject: undefined,
+  endReject: undefined,
+  queryLog: [],
+  queryReject: undefined,
 };
 
 vi.mock('pg', () => ({

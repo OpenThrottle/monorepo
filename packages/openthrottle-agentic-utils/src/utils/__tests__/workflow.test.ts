@@ -21,6 +21,15 @@ import {
 /** Marker file that identifies the OpenThrottle monorepo root. */
 const OPENTHROTTLE_WORKSPACE_MARKER = '.openthrottle.mjs';
 
+/** Narrows an optional resolved root to a string, failing the test when undefined. */
+function assertResolvedRoot(
+  value: string | undefined,
+): asserts value is string {
+  if (value === undefined) {
+    throw new Error('expected getOpenThrottleRoot to resolve a directory');
+  }
+}
+
 /** Temp dir without a workspace marker. */
 let emptyRoot: string;
 /** Temp dir with the OpenThrottle marker to simulate the monorepo root. */
@@ -53,10 +62,9 @@ describe('getOpenThrottleRoot', () => {
     });
 
     expect(resolved).toBeDefined();
+    assertResolvedRoot(resolved);
     expect(
-      fs.existsSync(
-        path.join(resolved as string, OPENTHROTTLE_WORKSPACE_MARKER),
-      ),
+      fs.existsSync(path.join(resolved, OPENTHROTTLE_WORKSPACE_MARKER)),
     ).toBe(true);
   });
 
@@ -77,10 +85,9 @@ describe('getOpenThrottleRoot', () => {
     const resolved = getOpenThrottleRoot({});
 
     expect(resolved).toBeDefined();
+    assertResolvedRoot(resolved);
     expect(
-      fs.existsSync(
-        path.join(resolved as string, OPENTHROTTLE_WORKSPACE_MARKER),
-      ),
+      fs.existsSync(path.join(resolved, OPENTHROTTLE_WORKSPACE_MARKER)),
     ).toBe(true);
   });
 });
