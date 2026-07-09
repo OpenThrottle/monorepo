@@ -122,6 +122,14 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/usage',
       },
     ],
+    Organization: [
+      {
+        children: 'Chats',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: MessageCircleCode,
+        to: '/',
+      },
+    ],
     Settings: [
       {
         children: 'Application',
