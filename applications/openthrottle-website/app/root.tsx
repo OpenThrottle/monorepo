@@ -56,9 +56,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
-
-  // FIXME: Replace with the actual repo when we launch
-  // const repo = `facebook/react`;
   const repo = `openthrottle/openthrottle`;
 
   // NOTE: The GitHub stars count is intentionally not fetched here. A blocking,

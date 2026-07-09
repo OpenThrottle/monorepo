@@ -9,6 +9,7 @@ export * from './config/openthrottle';
 // export * from './data';
 // export * from './hooks';
 export * from './hooks/useForm';
+export * from './hooks/useResolvedThemeMode';
 export * from './utils/csp';
 export * from './utils/environment';
 export * from './utils/logger';

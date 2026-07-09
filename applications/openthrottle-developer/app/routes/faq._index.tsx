@@ -17,7 +17,7 @@ type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'FAQ',
-  links: (_match) => [],
+  links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
 export const links: Route.LinksFunction = () => {
