@@ -9,6 +9,9 @@ export interface WorkspaceEditorMultiSelectProps {
   value: WorkspaceEditorId[];
 }
 
+const isWorkspaceEditorId = (value: string): value is WorkspaceEditorId =>
+  WORKSPACE_EDITOR_OPTIONS.some((opt) => opt.value === value);
+
 /**
  * @description Multi-select for workspace editor preferences (Cursor, VS Code).
  */
@@ -36,7 +39,7 @@ export const WorkspaceEditorMultiSelect = (
       ))}
       <MultiSelect
         data-testid="WorkspaceEditorMultiSelect"
-        onChange={(next) => onChange(next as WorkspaceEditorId[])}
+        onChange={(next) => onChange(next.filter(isWorkspaceEditorId))}
         options={WORKSPACE_EDITOR_OPTIONS.map((opt) => ({
           label: opt.label,
           value: opt.value,

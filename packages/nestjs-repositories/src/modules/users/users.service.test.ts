@@ -4,6 +4,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { User } from './user.entity';
 import { usersFactory } from './users.factory';
 import { UsersService } from './users.service';
@@ -27,15 +28,11 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: createMock<GetRepository>({
-            create: (data: DeepPartial<User>) => data as unknown as User,
+            create: (data: DeepPartial<User>) => asMock<User>(data),
             find: () => Promise.resolve(usersFactory.buildList(2)),
             findOne: () => Promise.resolve(usersFactory.build()),
             merge: () => ({}),
-            save: async (entity: DeepPartial<User>) => {
-              // FIXME: Tighten this up
-
-              return entity as unknown as User;
-            },
+            save: async (entity: DeepPartial<User>) => asMock<User>(entity),
           }),
         },
       ],

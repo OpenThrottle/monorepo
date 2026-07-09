@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MockedFunction } from 'vitest';
 import {
   GetPlanDocument,
   GetServerHealthDocument,
@@ -17,6 +16,21 @@ import type {
   WorkflowRalphIterationRunner,
 } from '../../contract/ralph-orchestrator-deps.ts';
 import { createWorkflowRalphOrchestrator } from '../orchestrator.ts';
+
+/**
+ * Adapts a loosely-typed mock implementation to the generic {@link WorkflowExecuteGraphqlV2}
+ * contract without an assertion: the public overload advertises the target type while the
+ * implementation signature stays `unknown`-based.
+ */
+function asExecuteGraphqlV2(
+  impl: (document: unknown, variables?: unknown) => Promise<unknown>,
+): WorkflowExecuteGraphqlV2;
+function asExecuteGraphqlV2(impl: unknown): unknown {
+  return impl;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';
@@ -79,33 +93,40 @@ const baseTask = (
 const readUpdateInput = (
   variables: unknown,
 ): { readonly id?: string; readonly status: string } => {
-  const input = (variables as { input: { id?: string; status: string } }).input;
+  if (
+    isRecord(variables) &&
+    isRecord(variables.input) &&
+    typeof variables.input.status === 'string'
+  ) {
+    const { id, status } = variables.input;
 
-  return input;
+    return { id: typeof id === 'string' ? id : undefined, status };
+  }
+
+  throw new Error('unexpected update variables shape');
 };
 
 const createMockExecute = (opts: {
   readonly getTasksByPlanId?: () => GetTasksByPlanIdQuery['tasksByPlanId'];
 }): WorkflowExecuteGraphqlV2 =>
-  (async (document) => {
-    const doc = document as unknown;
-    if (doc === GetServerHealthDocument) {
+  asExecuteGraphqlV2(async (document) => {
+    if (document === GetServerHealthDocument) {
       return { serverHealth: serverHealthOk };
     }
-    if (doc === GetPlanDocument) {
+    if (document === GetPlanDocument) {
       return { plan: basePlan() };
     }
-    if (doc === GetTasksByPlanIdDocument) {
+    if (document === GetTasksByPlanIdDocument) {
       return { tasksByPlanId: opts.getTasksByPlanId?.() ?? [] };
     }
-    if (doc === UpdatePlanDocument) {
+    if (document === UpdatePlanDocument) {
       return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
     }
-    if (doc === UpdateTaskDocument) {
+    if (document === UpdateTaskDocument) {
       return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
     }
     throw new Error('unmocked GraphQL document in test');
-  }) as WorkflowExecuteGraphqlV2;
+  });
 
 describe('createWorkflowRalphOrchestrator task selection', () => {
   it('picks lowest sortOrder PENDING task when createdAt order differs', async () => {
@@ -115,20 +136,18 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
     });
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [
-          baseTask(TASK_B, 'PENDING', {
-            createdAt: '2026-01-02T00:00:00.000Z',
-            sortOrder: 1000,
-          }),
-          baseTask(TASK_A, 'PENDING', {
-            createdAt: '2026-01-01T00:00:00.000Z',
-            sortOrder: 2000,
-          }),
-        ],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [
+        baseTask(TASK_B, 'PENDING', {
+          createdAt: '2026-01-02T00:00:00.000Z',
+          sortOrder: 1000,
+        }),
+        baseTask(TASK_A, 'PENDING', {
+          createdAt: '2026-01-01T00:00:00.000Z',
+          sortOrder: 2000,
+        }),
+      ],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -168,11 +187,9 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -240,11 +257,9 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
     });
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -277,8 +292,8 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn((async (document) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -289,7 +304,7 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
         return { tasksByPlanId: [] };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -323,8 +338,8 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
     const updateTaskInputs: Array<{ id: string; status: string }> = [];
-    const executeGraphqlV2 = vi.fn((async (document, variables) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -343,7 +358,7 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
         return { updateTask: baseTask(UPPER_TASK, input.status) };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -365,8 +380,8 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
 
     let taskStatus = 'IN_PROGRESS';
     const planUpdates: string[] = [];
-    const executeGraphqlV2 = vi.fn((async (document, variables) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -390,7 +405,7 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
         return { updateTask: baseTask(TASK_A, input.status) };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -418,11 +433,9 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
     const run = vi.fn(async () => '');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -455,11 +468,9 @@ describe('createWorkflowRalphOrchestrator diagnostics', () => {
     });
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -481,8 +492,8 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn((async (document) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -493,7 +504,7 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
         return { tasksByPlanId: [baseTask(TASK_A, 'PENDING')] };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -514,8 +525,8 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn((async (document) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -526,7 +537,7 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
         return { tasksByPlanId: [baseTask(TASK_A, 'PENDING')] };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -544,8 +555,8 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
     const planUpdates: string[] = [];
-    const executeGraphqlV2 = vi.fn((async (document, variables) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -564,7 +575,7 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
         return { updateTask: baseTask(TASK_A, 'COMPLETED') };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -590,8 +601,8 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
 
     let taskStatus = 'PENDING';
     const taskUpdates: Array<{ id: string; status: string }> = [];
-    const executeGraphqlV2 = vi.fn((async (document, variables) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -611,7 +622,7 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
         return { updateTask: baseTask(TASK_A, input.status) };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -637,11 +648,9 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
     const run = vi.fn(async () => '<promise>ERROR</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -661,11 +670,9 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
     const run = vi.fn(async () => '<promise>INPUT_REQUIRED</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -687,11 +694,9 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
     );
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -709,11 +714,9 @@ describe('createWorkflowRalphOrchestrator abort cancellation', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -744,11 +747,9 @@ describe('createWorkflowRalphOrchestrator abort cancellation', () => {
     });
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
-      createMockExecute({
-        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
-      }),
-    ) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
 
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
@@ -777,8 +778,8 @@ describe('createWorkflowRalphOrchestrator lifecycle beforeEach blocking', () => 
 
     let taskStatus = 'PENDING';
     const taskUpdates: string[] = [];
-    const executeGraphqlV2 = vi.fn((async (document, variables) => {
-      const doc = document as unknown;
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      const doc = document;
       if (doc === GetServerHealthDocument) {
         return { serverHealth: serverHealthOk };
       }
@@ -798,7 +799,7 @@ describe('createWorkflowRalphOrchestrator lifecycle beforeEach blocking', () => 
         return { updateTask: baseTask(TASK_A, input.status) };
       }
       throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2) as MockedFunction<WorkflowExecuteGraphqlV2>;
+    });
 
     const runTask = vi.fn(
       async (params: {

@@ -41,6 +41,15 @@ const mockTask: TaskRow = {
 
 const mockTasks: TaskRow[] = [mockTask];
 
+/**
+ * @description Adapts a no-op impl to `process.exit`'s `never` return type so the spy
+ * swallows exits without a cast.
+ */
+function toProcessExit(impl: () => void): typeof process.exit;
+function toProcessExit(impl: () => void): unknown {
+  return impl;
+}
+
 const { updateTaskStatusMock, runIterationMock, getNxProjectNamesMock } =
   vi.hoisted(() => ({
     getNxProjectNamesMock: vi.fn().mockResolvedValue([]),
@@ -99,7 +108,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
   beforeEach(() => {
     exitSpy = vi
       .spyOn(process, 'exit')
-      .mockImplementation((() => {}) as typeof process.exit);
+      .mockImplementation(toProcessExit(() => {}));
     updateTaskStatusMock.mockClear();
     runIterationMock.mockReturnValue('agent output');
     process.stdin.isTTY = true;
@@ -146,7 +155,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
   beforeEach(() => {
     exitSpy = vi
       .spyOn(process, 'exit')
-      .mockImplementation((() => {}) as typeof process.exit);
+      .mockImplementation(toProcessExit(() => {}));
     getNxProjectNamesMock.mockClear();
     getNxProjectNamesMock.mockResolvedValue(['my-app']);
     process.stdin.isTTY = true;
@@ -204,7 +213,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
   beforeEach(() => {
     exitSpy = vi
       .spyOn(process, 'exit')
-      .mockImplementation((() => {}) as typeof process.exit);
+      .mockImplementation(toProcessExit(() => {}));
     getNxProjectNamesMock.mockClear();
     getNxProjectNamesMock.mockResolvedValue(['my-app']);
     process.stdin.isTTY = true;

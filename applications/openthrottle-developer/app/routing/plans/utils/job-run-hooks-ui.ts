@@ -255,7 +255,7 @@ export const parseJobRunHooksJsonFromPlan = (
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(trimmed) as unknown;
+    parsed = JSON.parse(trimmed);
   } catch {
     throw new Error('jobRunHooksJson must be valid JSON');
   }

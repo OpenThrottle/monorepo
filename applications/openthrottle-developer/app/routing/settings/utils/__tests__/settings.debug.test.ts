@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { readStorageEntries, summarizeStoragePair } from '../settings.debug';
 
+/** Coerces a partial mock to a target type without a type assertion. */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 describe('settings.debug', () => {
   describe('summarizeStoragePair', () => {
     test('masks token-like storage keys', () => {
@@ -23,12 +29,12 @@ describe('settings.debug', () => {
 
   describe('readStorageEntries', () => {
     test('returns sorted key previews from storage', () => {
-      const storage = {
+      const storage = asMock<Storage>({
         getItem: (key: string) =>
           key === 'b-key' ? 'two' : key === 'a-key' ? 'one' : null,
         key: (index: number) => (index === 0 ? 'b-key' : 'a-key'),
         length: 2,
-      } as Storage;
+      });
 
       expect(readStorageEntries(storage)).toStrictEqual([
         { key: 'a-key', preview: 'one' },

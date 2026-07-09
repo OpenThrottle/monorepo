@@ -1,9 +1,13 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import Index from '../prompts._index';
 import type { PromptCardFragment } from '~/__generated__/graphql';
 import { CustomPromptType } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+import type { Route } from '@/app/routes/+types/prompts._index';
+
+type PromptsIndexLoaderData = Route.ComponentProps['loaderData'];
 
 const mockPrompt: PromptCardFragment = {
   __typename: 'CustomPromptObject',
@@ -18,29 +22,40 @@ const mockPrompt: PromptCardFragment = {
   updatedAt: '2024-01-20T15:30:00Z',
 };
 
-const mockLoaderDataWithPrompts = {
+const mockLoaderDataWithPrompts: PromptsIndexLoaderData = {
   countAgents: 1,
   countSkills: 0,
   limit: 20,
   page: 1,
   prompts: [mockPrompt],
-  search: null as string | null,
+  search: null,
   total: 1,
   totalPages: 1,
-  types: [] as CustomPromptType[],
+  types: [],
 };
 
-const mockLoaderDataEmpty = {
+const mockLoaderDataEmpty: PromptsIndexLoaderData = {
   countAgents: 0,
   countSkills: 0,
   limit: 20,
   page: 1,
-  prompts: [] as PromptCardFragment[],
-  search: null as string | null,
+  prompts: [],
+  search: null,
   total: 0,
   totalPages: 0,
-  types: [] as CustomPromptType[],
+  types: [],
 };
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/prompts._index',
+    loaderData: mockLoaderDataEmpty,
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/prompts._index.tsx', () => {
   test('renders PromptsTable with prompt rows and no card grid', () => {
@@ -48,7 +63,7 @@ describe('routes/prompts._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataWithPrompts}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />,
     );
@@ -64,7 +79,7 @@ describe('routes/prompts._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataEmpty}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />,
     );
@@ -85,7 +100,7 @@ describe('routes/prompts._index.tsx', () => {
           total: 25,
           totalPages: 3,
         }}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />,
     );

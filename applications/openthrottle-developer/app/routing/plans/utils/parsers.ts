@@ -19,14 +19,17 @@ export type PlanDetailTab =
  */
 export const PLANS_DETAIL_TAB_SEARCH_PARAM = 'tab';
 
-const PLAN_DETAIL_TAB_VALUES = new Set<string>([
+const PLAN_DETAIL_TAB_VALUES: readonly PlanDetailTab[] = [
   'configuration',
   'metadata',
   'overview',
   'output',
   'requirements',
   'tasks',
-]);
+];
+
+const isPlanDetailTab = (raw: string): raw is PlanDetailTab =>
+  PLAN_DETAIL_TAB_VALUES.some((tab) => tab === raw);
 
 /**
  * @description Parses `plansDetailTab` for plan detail primary tabs (Details, Tasks, …).
@@ -38,7 +41,7 @@ export const parsePlanDetailTab = (
     return null;
   }
 
-  return PLAN_DETAIL_TAB_VALUES.has(raw) ? (raw as PlanDetailTab) : null;
+  return isPlanDetailTab(raw) ? raw : null;
 };
 
 /**
@@ -57,6 +60,17 @@ export const parsePlanTasksView = (
 /**
  * @description Parses sortBy and sortOrder from URL search params; defaults to createdAt-desc.
  */
+// NOTE: preserves existing behavior — both sortBy and sortOrder are validated
+// against PLANS_SORT_ORDER (`asc`/`desc`). This looks like a pre-existing bug
+// for sortBy (it never matches a real PlansSortBy and always defaults to
+// `createdAt`), but it is kept as-is here to avoid a behavior change during the
+// as-cast cleanup.
+const isPlansSortByValue = (value: string | null): value is PlansSortBy =>
+  value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+
+const isPlansSortOrderValue = (value: string | null): value is PlansSortOrder =>
+  value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+
 export function parsePlansSortFromSearch(searchParams: URLSearchParams): {
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
@@ -65,12 +79,8 @@ export function parsePlansSortFromSearch(searchParams: URLSearchParams): {
   const order = searchParams.get('sortOrder');
 
   return {
-    sortBy: (PLANS_SORT_ORDER as readonly string[]).includes(by ?? '')
-      ? (by as PlansSortBy)
-      : 'createdAt',
-    sortOrder: (PLANS_SORT_ORDER as readonly string[]).includes(order ?? '')
-      ? (order as PlansSortOrder)
-      : 'desc',
+    sortBy: isPlansSortByValue(by) ? by : 'createdAt',
+    sortOrder: isPlansSortOrderValue(order) ? order : 'desc',
   };
 }
 

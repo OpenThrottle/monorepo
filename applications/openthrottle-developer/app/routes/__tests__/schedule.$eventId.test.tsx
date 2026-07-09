@@ -6,6 +6,11 @@ import Component from '../schedule.$eventId';
 import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
 import { SCHEDULE_NOT_FOUND_COPY } from '~/routing/schedule/data/data.copy';
 
+function stubMatches(): React.ComponentProps<typeof Component>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/schedule.$eventId.tsx', () => {
   test('renders the event details when the event exists', () => {
     const event = SCHEDULE_EVENTS[0];
@@ -15,7 +20,7 @@ describe('routes/schedule.$eventId.tsx', () => {
         <Component
           actionData={undefined}
           loaderData={{ event }}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{ eventId: event?.id }}
         />
       </MemoryRouter>,
@@ -30,7 +35,7 @@ describe('routes/schedule.$eventId.tsx', () => {
         <Component
           actionData={undefined}
           loaderData={{ event: null }}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{ eventId: 'missing' }}
         />
       </MemoryRouter>,

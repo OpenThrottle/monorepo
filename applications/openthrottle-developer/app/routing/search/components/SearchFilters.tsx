@@ -58,9 +58,7 @@ export const SearchFilters = (
           className="border-input bg-background rounded-md border px-2 py-1 text-sm"
           onChange={handleLimitChange}
           value={
-            SEARCH_LIMIT_OPTIONS.includes(
-              limit as (typeof SEARCH_LIMIT_OPTIONS)[number],
-            )
+            SEARCH_LIMIT_OPTIONS.some((option) => option === limit)
               ? limit
               : DEFAULT_SEARCH_LIMIT
           }

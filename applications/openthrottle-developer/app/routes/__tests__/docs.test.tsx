@@ -2,7 +2,20 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import Component from '../docs';
+import type { Route } from '@/app/routes/+types/docs';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/docs',
+    loaderData: {},
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/docs.tsx', () => {
   test('renders the docs sidebar nav from docs-content', () => {
@@ -11,7 +24,7 @@ describe('routes/docs.tsx', () => {
         <Component
           actionData={undefined}
           loaderData={{}}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,

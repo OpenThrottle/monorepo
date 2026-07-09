@@ -23,15 +23,24 @@ const mockTask = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+/**
+ * @description Casts a partial mock to the target type without a type
+ * assertion (the component only reads `row.original`).
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const createMockRow = (
   overrides: Partial<typeof mockTask> = {},
 ): PlanTasksTableCellActionsProps['row'] =>
-  ({
+  asMock<PlanTasksTableCellActionsProps['row']>({
     original: {
       ...mockTask,
       ...overrides,
     },
-  }) as PlanTasksTableCellActionsProps['row'];
+  });
 
 describe('PlanTasksTableCellActions Component', () => {
   let component: RenderResult;

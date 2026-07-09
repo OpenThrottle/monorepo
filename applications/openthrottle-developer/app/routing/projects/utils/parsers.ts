@@ -36,6 +36,12 @@ export function parseProjectsBySearch(
   });
 }
 
+const isProjectsSortBy = (value: string): value is ProjectsSortBy =>
+  PROJECTS_SORT_BY.some((option) => option === value);
+
+const isProjectsSortOrder = (value: string): value is ProjectsSortOrder =>
+  PROJECTS_SORT_ORDER.some((option) => option === value);
+
 /**
  * @description Parses sortBy and sortOrder from URL search params;
  * defaults to createdAt-desc if not provided.
@@ -50,11 +56,7 @@ export function parseProjectsSortFromSearchParams(
   const order = searchParams.get('sortOrder');
 
   return {
-    sortBy: (PROJECTS_SORT_BY as readonly string[]).includes(by ?? '')
-      ? (by as ProjectsSortBy)
-      : 'createdAt',
-    sortOrder: (PROJECTS_SORT_ORDER as readonly string[]).includes(order ?? '')
-      ? (order as ProjectsSortOrder)
-      : 'desc',
+    sortBy: by != null && isProjectsSortBy(by) ? by : 'createdAt',
+    sortOrder: order != null && isProjectsSortOrder(order) ? order : 'desc',
   };
 }

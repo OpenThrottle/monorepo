@@ -6,6 +6,9 @@ const WORKSPACE_EDITOR_VALUES = new Set<string>([
   WorkspaceEditorIdEnum.Vscode,
 ]);
 
+const isWorkspaceEditorId = (value: string): value is WorkspaceEditorId =>
+  WORKSPACE_EDITOR_VALUES.has(value);
+
 /**
  * @description Parses enabled editor ids from form data (repeated `enabledEditors` fields).
  */
@@ -18,12 +21,11 @@ export const parseEnabledEditorsFromFormData = (
 
   const unique: WorkspaceEditorId[] = [];
   for (const value of raw) {
-    if (!WORKSPACE_EDITOR_VALUES.has(value)) {
+    if (!isWorkspaceEditorId(value)) {
       continue;
     }
-    const editor = value as WorkspaceEditorId;
-    if (!unique.includes(editor)) {
-      unique.push(editor);
+    if (!unique.includes(value)) {
+      unique.push(value);
     }
   }
   return unique;

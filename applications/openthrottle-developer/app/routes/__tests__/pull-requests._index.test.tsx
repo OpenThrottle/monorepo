@@ -20,13 +20,20 @@ const mockLoaderData = {
   pulls: [],
 };
 
+function stubMatches(): React.ComponentProps<
+  typeof PullRequestsIndex
+>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/pull-requests._index.tsx', () => {
   test('renders pull requests introduction and toolbar', () => {
     renderRoutesStub(
       <PullRequestsIndex
         actionData={undefined}
         loaderData={mockLoaderData}
-        matches={[] as never}
+        matches={stubMatches()}
         params={{}}
       />,
     );

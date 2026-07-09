@@ -10,6 +10,15 @@ import { PassThrough } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runIteration, runIterationAsync } from '../run-iteration';
 
+/**
+ * @description Presents a bare EventEmitter as a ChildProcess test double whose stdio and
+ * kill are assigned by the caller, without a cast.
+ */
+function asChildProcess(value: EventEmitter): ChildProcess;
+function asChildProcess(value: EventEmitter): unknown {
+  return value;
+}
+
 vi.mock('child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('child_process')>();
   return {
@@ -200,7 +209,7 @@ describe('runIterationAsync backend dispatch', () => {
   beforeEach(() => {
     vi.mocked(spawn).mockClear();
     vi.mocked(spawn).mockImplementation((): ChildProcess => {
-      const child = new EventEmitter() as unknown as ChildProcess;
+      const child = asChildProcess(new EventEmitter());
       child.stdout = new PassThrough();
       child.stderr = new PassThrough();
       child.kill = vi.fn(() => true);

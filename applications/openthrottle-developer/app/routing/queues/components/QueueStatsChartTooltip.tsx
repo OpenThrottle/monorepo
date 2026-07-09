@@ -14,14 +14,16 @@ type QueueStatsChartRow = Record<
   name: string;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const isQueueStatsChartRow = (value: unknown): value is QueueStatsChartRow => {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const row = value as Record<string, unknown>;
   return (
-    typeof row.name === 'string' &&
-    QUEUE_STATS_CHART_SERIES.every((key) => typeof row[key] === 'number')
+    typeof value.name === 'string' &&
+    QUEUE_STATS_CHART_SERIES.every((key) => typeof value[key] === 'number')
   );
 };
 

@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import TermsOfUse from '../legal.terms-of-use';
 
+function stubMatches(): React.ComponentProps<typeof TermsOfUse>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/legal.terms-of-use.tsx', () => {
   test('should render terms heading', () => {
     const view = render(
@@ -11,7 +16,7 @@ describe('routes/legal.terms-of-use.tsx', () => {
         <TermsOfUse
           actionData={undefined}
           loaderData={{}}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{}}
         />
       </MemoryRouter>,

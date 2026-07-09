@@ -50,6 +50,16 @@ class StubWorkflow extends AgenticWorkflowBase<'done', 'failed'> {
   }
 }
 
+/**
+ * @description Narrows a registry-resolved workflow to {@link StubWorkflow} so tests can read
+ * {@link StubWorkflow.describeMarker} without a cast. Throws if the resolved workflow is not a stub.
+ */
+function assertStubWorkflow(value: unknown): asserts value is StubWorkflow {
+  if (!(value instanceof StubWorkflow)) {
+    throw new Error('Expected the resolved workflow to be a StubWorkflow');
+  }
+}
+
 const workerAuthFixture = (): AgenticWorkflowWorkerGraphqlAuth => ({
   token: 'worker-test-token',
   url: 'http://localhost:6021/graphql',
@@ -139,7 +149,10 @@ describe('NestjsAgenticWorkflowModule', () => {
           imports: [WorkerGraphqlUrlStubModule],
           inject: [WORKER_GRAPHQL_URL],
           useFactory: (...args: unknown[]) => {
-            const url = args[0] as unknown as string;
+            const [url] = args;
+            if (typeof url !== 'string') {
+              throw new Error('Expected injected WORKER_GRAPHQL_URL string');
+            }
 
             return {
               executeGraphqlV2,
@@ -183,7 +196,8 @@ describe('NestjsAgenticWorkflowModule', () => {
 
       const resolved = registry.resolve('ralph');
       expect(resolved).toBeInstanceOf(StubWorkflow);
-      expect((resolved as StubWorkflow).describeMarker()).toBe('ralph-marker');
+      assertStubWorkflow(resolved);
+      expect(resolved.describeMarker()).toBe('ralph-marker');
       expect(registry.ids()).toEqual(['ralph']);
     });
 
@@ -206,7 +220,8 @@ describe('NestjsAgenticWorkflowModule', () => {
 
       const resolved = registry.resolve('ralph');
       expect(resolved).toBeInstanceOf(StubWorkflow);
-      expect((resolved as StubWorkflow).describeMarker()).toBe('async-marker');
+      assertStubWorkflow(resolved);
+      expect(resolved.describeMarker()).toBe('async-marker');
       expect(registry.ids()).toEqual(['ralph']);
     });
 
@@ -247,9 +262,9 @@ describe('NestjsAgenticWorkflowModule', () => {
         AGENTIC_WORKFLOW_REGISTRY,
       );
 
-      expect((registry.resolve('ralph') as StubWorkflow).describeMarker()).toBe(
-        'deps-marker',
-      );
+      const resolved = registry.resolve('ralph');
+      assertStubWorkflow(resolved);
+      expect(resolved.describeMarker()).toBe('deps-marker');
     });
 
     it('resolves multiple workflows side-by-side', async () => {

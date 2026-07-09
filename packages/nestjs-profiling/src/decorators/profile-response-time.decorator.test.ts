@@ -10,6 +10,9 @@ import { ProfileResponseTime } from './profile-response-time.decorator';
 const FUNCTION_META_KEY = 'design:paramtypes';
 const PROTOTYPE_META_KEY = '__routeArguments__';
 
+const isFunction = (value: unknown): value is (...args: unknown[]) => unknown =>
+  typeof value === 'function';
+
 describe('ProfileResponseTime', () => {
   it('measures and reports sync method execution time', () => {
     const logSpy = vi
@@ -87,8 +90,10 @@ describe('ProfileResponseTime', () => {
     // evaluate bottom-up) and the metadata exists before the profiling wrapper copies it.
     const SeedMetadata = (): MethodDecorator => {
       return (target, propertyKey, descriptor): void => {
-        const original = descriptor.value as object;
-        Reflect.defineMetadata(FUNCTION_META_KEY, functionMeta, original);
+        const original = descriptor.value;
+        if (isFunction(original)) {
+          Reflect.defineMetadata(FUNCTION_META_KEY, functionMeta, original);
+        }
         Reflect.defineMetadata(
           PROTOTYPE_META_KEY,
           prototypeMeta,
@@ -106,7 +111,7 @@ describe('ProfileResponseTime', () => {
       }
     }
 
-    const wrapped = TestClass.prototype.resolveThing as unknown as object;
+    const wrapped: object = TestClass.prototype.resolveThing;
 
     // Function-object metadata copied from the original method onto the wrapper.
     expect(Reflect.getMetadata(FUNCTION_META_KEY, wrapped)).toEqual(

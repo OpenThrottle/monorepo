@@ -13,4 +13,4 @@ export type WorkspaceEditorId = (typeof WORKSPACE_EDITOR_IDS)[number];
 export const isWorkspaceEditorId = (
   value: string,
 ): value is WorkspaceEditorId =>
-  (WORKSPACE_EDITOR_IDS as readonly string[]).includes(value);
+  WORKSPACE_EDITOR_IDS.some((editorId) => editorId === value);

@@ -80,13 +80,13 @@ describe('SettingsKeysForm Component', () => {
       expect(
         screen.getByTestId('SettingsKeysForm-submit-button'),
       ).toBeEnabled();
-      const intentInput = document.querySelector(
+      const intentInput = document.querySelector<HTMLInputElement>(
         'input[name="intent"]',
-      ) as HTMLInputElement | null;
+      );
       expect(intentInput?.value).toBe('createCredential');
-      const accountInput = document.querySelector(
+      const accountInput = document.querySelector<HTMLInputElement>(
         'input[name="serviceAccountId"]',
-      ) as HTMLInputElement | null;
+      );
       expect(accountInput?.value).toBe('sa-1');
     });
 

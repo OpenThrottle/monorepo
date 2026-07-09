@@ -10,6 +10,11 @@ const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 
+/** Narrows an action result to a `Response`, failing the test otherwise. */
+function assertResponse(value: unknown): asserts value is Response {
+  expect(value).toBeInstanceOf(Response);
+}
+
 describe('routes/plans.create.tsx', () => {
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
@@ -81,7 +86,8 @@ describe('routes/plans.create.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect((result as Response).status).toBe(302);
+      assertResponse(result);
+      expect(result.status).toBe(302);
     });
   });
 });

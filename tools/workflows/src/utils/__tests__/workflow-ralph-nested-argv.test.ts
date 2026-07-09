@@ -2,12 +2,22 @@
  * @description Tests for nested workflow-ralph argv (runChildJob / queue processors).
  */
 
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 import { describe, expect, it } from 'vitest';
 import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 import {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
 } from '../workflow-ralph-nested-argv';
+
+/**
+ * @description Presents a legacy uppercase debug value (e.g. persisted `DEBUG`/`VERBOSE`)
+ * as a {@link WorkflowConfigDebug} so tests exercise runtime normalization without a cast.
+ */
+function legacyDebugValue(value: string): WorkflowConfigDebug;
+function legacyDebugValue(value: string): string {
+  return value;
+}
 
 describe('buildWorkflowRalphRunTuningArgv', () => {
   it('returns empty when input is empty', () => {
@@ -58,10 +68,10 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
 
   it('normalizes legacy uppercase DEBUG and VERBOSE debug values', () => {
     expect(
-      buildWorkflowRalphRunTuningArgv({ debug: 'DEBUG' as 'debug' }),
+      buildWorkflowRalphRunTuningArgv({ debug: legacyDebugValue('DEBUG') }),
     ).toEqual(['--debug']);
     expect(
-      buildWorkflowRalphRunTuningArgv({ debug: 'VERBOSE' as 'verbose' }),
+      buildWorkflowRalphRunTuningArgv({ debug: legacyDebugValue('VERBOSE') }),
     ).toEqual(['--verbose']);
   });
 
@@ -126,14 +136,14 @@ describe('mergeRalphNestedRunTuningWithExecutionBackend', () => {
   it('normalizes legacy uppercase debug on merge', () => {
     expect(
       mergeRalphNestedRunTuningWithExecutionBackend(
-        { debug: 'VERBOSE' as 'verbose' },
+        { debug: legacyDebugValue('VERBOSE') },
         'cursor',
       ),
     ).toEqual({ backend: 'cursor', debug: 'verbose' });
     expect(
       buildWorkflowRalphRunTuningArgv(
         mergeRalphNestedRunTuningWithExecutionBackend(
-          { debug: 'DEBUG' as 'debug' },
+          { debug: legacyDebugValue('DEBUG') },
           'cursor',
         ),
       ),

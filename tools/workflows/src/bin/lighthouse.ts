@@ -50,7 +50,7 @@ const getLighthouseConfig = (deviceType: LighthouseDeviceType): Flags => {
         rttMs: 150,
         throughputKbps: 1638.4,
       },
-    } as Flags;
+    };
   }
 
   // Desktop configuration
@@ -68,7 +68,7 @@ const getLighthouseConfig = (deviceType: LighthouseDeviceType): Flags => {
       rttMs: 40,
       throughputKbps: 10240,
     },
-  } as Flags;
+  };
 };
 
 /**
@@ -363,7 +363,7 @@ const readBaselineResults = (): LighthouseBaselineResultsFile | null => {
 
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(content) as LighthouseBaselineResultsFile;
+    const parsed: LighthouseBaselineResultsFile = JSON.parse(content);
 
     return parsed;
   } catch {
@@ -520,39 +520,40 @@ const runAuditsForAllDevices = async (url: string): Promise<void> => {
 /**
  * @description Extracts audit issues from Lighthouse report
  */
+interface LighthouseAuditLike {
+  readonly description?: string;
+  readonly details?: {
+    readonly items?: readonly unknown[];
+    readonly overallSavingsBytes?: number;
+    readonly overallSavingsMs?: number;
+  };
+  readonly displayValue?: string;
+  readonly score: number | null;
+  readonly title: string;
+}
+
+const isLighthouseAuditLike = (value: unknown): value is LighthouseAuditLike =>
+  typeof value === 'object' &&
+  value !== null &&
+  'score' in value &&
+  'title' in value;
+
 const extractAuditIssues = (
   audits: Record<string, unknown>,
 ): readonly LighthouseAuditIssue[] => {
   const issues: LighthouseAuditIssue[] = [];
 
   for (const [auditId, audit] of Object.entries(audits)) {
-    if (
-      audit &&
-      typeof audit === 'object' &&
-      'score' in audit &&
-      'title' in audit
-    ) {
-      const auditObj = audit as {
-        readonly description?: string;
-        readonly details?: {
-          readonly items?: readonly unknown[];
-          readonly overallSavingsBytes?: number;
-          readonly overallSavingsMs?: number;
-        };
-        readonly displayValue?: string;
-        readonly score: number | null;
-        readonly title: string;
-      };
-
+    if (isLighthouseAuditLike(audit)) {
       // Only include audits that have issues (score < 1.0 or null)
-      if (auditObj.score === null || auditObj.score < 1.0) {
+      if (audit.score === null || audit.score < 1.0) {
         issues.push({
           auditId,
-          description: auditObj.description ?? '',
-          details: auditObj.details,
-          displayValue: auditObj.displayValue,
-          score: auditObj.score,
-          title: auditObj.title,
+          description: audit.description ?? '',
+          details: audit.details,
+          displayValue: audit.displayValue,
+          score: audit.score,
+          title: audit.title,
         });
       }
     }
@@ -1431,6 +1432,11 @@ interface LighthouseOptions {
   url: string[];
 }
 
+const isDeviceOption = (
+  value: string,
+): value is 'both' | 'desktop' | 'mobile' =>
+  value === 'both' || value === 'desktop' || value === 'mobile';
+
 /**
  * @description Main entry point
  */
@@ -1444,7 +1450,7 @@ const main = async (): Promise<void> => {
       '-u, --url <url>',
       'URL(s) to audit (can be repeated); defaults to mattscholta.com if omitted',
       (v: string, prev: string[]) => (prev ?? []).concat(v),
-      [] as string[],
+      [],
     )
     .option(
       '-d, --device <type>',
@@ -1453,7 +1459,7 @@ const main = async (): Promise<void> => {
     )
     .action(async (options: LighthouseOptions) => {
       const device = options.device.toLowerCase();
-      if (device !== 'both' && device !== 'mobile' && device !== 'desktop') {
+      if (!isDeviceOption(device)) {
         program.error(
           `Invalid --device: ${options.device}. Use mobile, desktop, or both.`,
           { exitCode: 1 },
@@ -1462,7 +1468,7 @@ const main = async (): Promise<void> => {
 
       const urls = resolveUrls(options.url);
       const deviceType: LighthouseDeviceType | undefined =
-        device === 'both' ? undefined : (device as LighthouseDeviceType);
+        isDeviceOption(device) && device !== 'both' ? device : undefined;
 
       await runAuditsForAllUrlsAndDevices(urls, deviceType);
       process.exit(0);

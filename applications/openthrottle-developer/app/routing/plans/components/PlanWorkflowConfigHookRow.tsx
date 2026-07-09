@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type {
   JobRunHookDraftRow,
+  JobRunHookKind,
   JobRunHookOnFailure,
   JobRunHookPhase,
 } from '~/routing/plans/utils/job-run-hooks-ui';
@@ -26,6 +27,17 @@ import {
   moveRowWithinPhase,
   updateRow,
 } from '~/routing/plans/utils/job-run-hooks-draft';
+
+const isJobRunHookKind = (value: string): value is JobRunHookKind =>
+  value === 'prompt_profile' || value === 'skill';
+
+const isJobRunHookOnFailureValue = (
+  value: string,
+): value is JobRunHookOnFailure | 'default' =>
+  value === 'block' ||
+  value === 'default' ||
+  value === 'ignore' ||
+  value === 'warn';
 
 export interface PlanWorkflowConfigHookRowProps {
   hooks: readonly JobRunHookDraftRow[];
@@ -189,9 +201,11 @@ export const PlanWorkflowConfigHookRow = (
         <div className="space-y-2">
           <Label htmlFor={`hook-kind-${row.draftId}`}>Kind</Label>
           <Select
-            onValueChange={(value) =>
-              handleKindChange(row.draftId, value as 'prompt_profile' | 'skill')
-            }
+            onValueChange={(value) => {
+              if (isJobRunHookKind(value)) {
+                handleKindChange(row.draftId, value);
+              }
+            }}
             value={kindValue}
           >
             <SelectTrigger id={`hook-kind-${row.draftId}`}>
@@ -211,12 +225,11 @@ export const PlanWorkflowConfigHookRow = (
         <div className="space-y-2">
           <Label htmlFor={`hook-on-failure-${row.draftId}`}>On failure</Label>
           <Select
-            onValueChange={(value) =>
-              handleOnFailureChange(
-                row.draftId,
-                value as JobRunHookOnFailure | 'default',
-              )
-            }
+            onValueChange={(value) => {
+              if (isJobRunHookOnFailureValue(value)) {
+                handleOnFailureChange(row.draftId, value);
+              }
+            }}
             value={onFailureValue}
           >
             <SelectTrigger id={`hook-on-failure-${row.draftId}`}>

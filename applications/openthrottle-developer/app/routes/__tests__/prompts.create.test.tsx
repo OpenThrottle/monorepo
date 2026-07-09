@@ -2,12 +2,20 @@ import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, meta } from '../prompts.create';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 
 vi.mock('@openthrottle/react-router-graphql');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
+
+function assertInstanceOf<T>(
+  value: unknown,
+  ctor: new (...args: never[]) => T,
+): asserts value is T {
+  expect(value).toBeInstanceOf(ctor);
+}
 
 describe('routes/prompts.create.tsx', () => {
   const mockCreatedPrompt = {
@@ -46,7 +54,8 @@ describe('routes/prompts.create.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect((result as Response).status).toBe(302);
+      assertInstanceOf(result, Response);
+      expect(result.status).toBe(302);
     });
 
     test('should return error when title is missing', async () => {
@@ -140,7 +149,17 @@ describe('routes/prompts.create.tsx', () => {
           search: '',
           state: {},
         },
-        matches: [] as never,
+        matches: [
+          { ...buildRootMatch(), meta: [] },
+          {
+            handle: undefined,
+            id: 'routes/prompts.create',
+            loaderData: {},
+            meta: [],
+            params: {},
+            pathname: '/',
+          },
+        ],
         params: {},
       });
 

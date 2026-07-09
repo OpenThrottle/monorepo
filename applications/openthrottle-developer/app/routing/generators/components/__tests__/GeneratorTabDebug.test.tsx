@@ -15,6 +15,13 @@ const mockGenerator: GeneratorDetailCardFragment = {
   schemaJson: null,
 };
 
+/** Narrows an element to a textarea, failing the test otherwise. */
+function assertTextArea(
+  element: HTMLElement,
+): asserts element is HTMLTextAreaElement {
+  expect(element).toBeInstanceOf(HTMLTextAreaElement);
+}
+
 function renderTab(
   generator: GeneratorDetailCardFragment = mockGenerator,
 ): RenderResult {
@@ -76,7 +83,8 @@ describe('GeneratorTabDebug', () => {
     const view = renderTab();
     const box = view.getByPlaceholderText(
       /Paste terminal output after running a generator command/,
-    ) as HTMLTextAreaElement;
+    );
+    assertTextArea(box);
 
     await user.type(box, 'x');
     expect(localStorage.getItem(key)).toBe('x');

@@ -24,24 +24,11 @@ import {
 } from '../tokens/stripe-tokens';
 
 /**
- * Stripe subscription shape we use. As of API version `2026-02-25.clover`, `current_period_start`
- * and `current_period_end` live on each subscription **item** (`items.data[].current_period_*`),
- * not on the subscription root — so we read them from the first item.
+ * As of API version `2026-02-25.clover`, `current_period_start` and
+ * `current_period_end` live on each subscription **item**
+ * (`items.data[].current_period_*`), not on the subscription root — so we read
+ * them from the first item.
  */
-interface StripeSubscriptionItemPayload {
-  current_period_end?: number;
-  current_period_start?: number;
-  price?: { id?: string };
-}
-
-interface StripeSubscriptionPayload {
-  cancel_at_period_end: boolean;
-  customer: string;
-  id: string;
-  items: { data: StripeSubscriptionItemPayload[] };
-  metadata?: { user_id?: string };
-  status: string;
-}
 
 /** Converts a Unix-seconds timestamp to a `Date`, or `null` when absent. */
 const toDateOrNull = (unixSeconds: number | undefined): Date | null =>
@@ -112,21 +99,18 @@ export class StripeWebhookHandlerService {
 
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await this.handleCheckoutSessionCompleted(session);
+        await this.handleCheckoutSessionCompleted(event.data.object);
         break;
       }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as StripeSubscriptionPayload;
-        await this.handleSubscriptionUpsert(subscription);
+        await this.handleSubscriptionUpsert(event.data.object);
         break;
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as StripeSubscriptionPayload;
-        await this.handleSubscriptionDeleted(subscription);
+        await this.handleSubscriptionDeleted(event.data.object);
         break;
       }
 
@@ -156,9 +140,8 @@ export class StripeWebhookHandlerService {
     }
 
     const stripe = this.getStripe();
-    const sub = (await stripe.subscriptions.retrieve(
-      subscriptionId,
-    )) as StripeSubscriptionPayload;
+    const sub: Stripe.Subscription =
+      await stripe.subscriptions.retrieve(subscriptionId);
 
     const item = sub.items.data[0];
     const priceId = item?.price?.id;
@@ -176,7 +159,7 @@ export class StripeWebhookHandlerService {
   }
 
   private async handleSubscriptionUpsert(
-    subscription: StripeSubscriptionPayload,
+    subscription: Stripe.Subscription,
   ): Promise<void> {
     const item = subscription.items.data[0];
     const priceId = item?.price?.id;
@@ -200,7 +183,7 @@ export class StripeWebhookHandlerService {
   }
 
   private async handleSubscriptionDeleted(
-    subscription: StripeSubscriptionPayload,
+    subscription: Stripe.Subscription,
   ): Promise<void> {
     const existing = await this.subscriptions.findByStripeSubscriptionId(
       subscription.id,
@@ -227,14 +210,12 @@ export class StripeWebhookHandlerService {
    * @description Resolves userId from existing record or subscription metadata. Returns null if unknown (e.g. event before checkout.session.completed).
    */
   private async resolveUserIdFromSubscription(
-    subscription: StripeSubscriptionPayload,
+    subscription: Stripe.Subscription,
   ): Promise<string | null> {
     const existing = await this.subscriptions.findByStripeSubscriptionId(
       subscription.id,
     );
     if (existing) return existing.userId;
-    const userId = (subscription.metadata as { user_id?: string } | null)
-      ?.user_id;
-    return userId ?? null;
+    return subscription.metadata?.user_id ?? null;
   }
 }

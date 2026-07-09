@@ -86,12 +86,15 @@ export const action = async (args: Route.ActionArgs) => {
 
   console.log('action', formData);
 
+  const planIdEntry = formData.get('planId');
+  const planId = typeof planIdEntry === 'string' ? planIdEntry : '';
+
   const result = await executeGraphqlWithAuth(
     args.request,
     TestWorkflowDocument,
     {
       input: {
-        planId: (formData.get('planId') as string) ?? '',
+        planId,
         ralph: {
           ralphDebugCli: RalphNestedDebugCli.Verbose,
         },

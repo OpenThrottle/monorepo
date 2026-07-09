@@ -3,8 +3,10 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import type { Project } from '../projects/project.entity';
 import { ProjectsService } from '../projects/projects.service';
 import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
@@ -13,7 +15,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
   const repoId = '22222222-2222-4222-8222-222222222222';
 
-  const mockEntity: WorkspaceLocalRepository = {
+  const mockEntity = asMock<WorkspaceLocalRepository>({
     createdAt: new Date('2026-05-18T12:00:00.000Z'),
     displayName: 'OpenThrottle',
     filesystemPath: '/Users/dev/openthrottle',
@@ -23,7 +25,7 @@ describe('WorkspaceLocalRepositoriesService', () => {
     projectId: null,
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
-  } as WorkspaceLocalRepository;
+  });
 
   const mockRepository = {
     create: vi.fn((data: Partial<WorkspaceLocalRepository>) => ({
@@ -183,9 +185,9 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('assigns a project when projectId exists', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue({
-        id: projectId,
-      } as never);
+      vi.mocked(mockProjectsService.findById).mockResolvedValue(
+        asMock<Project>({ id: projectId }),
+      );
       vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
       vi.mocked(mockRepository.save).mockImplementation(
         async (entity) => entity,
@@ -225,9 +227,9 @@ describe('WorkspaceLocalRepositoriesService', () => {
     });
 
     it('assigns a project when projectId exists', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue({
-        id: projectId,
-      } as never);
+      vi.mocked(mockProjectsService.findById).mockResolvedValue(
+        asMock<Project>({ id: projectId }),
+      );
       vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
       vi.mocked(mockRepository.save).mockImplementation(
         async (entity) => entity,

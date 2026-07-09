@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MockedFunction } from 'vitest';
+import type { Mock, MockedFunction } from 'vitest';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import {
   createWorkflowRalphOrchestrator,
   GetPlanDocument,
@@ -119,35 +121,88 @@ const createMockExecute = (opts: {
   const getTasksByPlanId =
     opts.getTasksByPlanId ?? ((): GetTasksByPlanIdQuery['tasksByPlanId'] => []);
 
-  return (async (document) => {
-    const doc = document as unknown;
-    if (doc === GetServerHealthDocument) {
+  return toWorkflowExecute(async (document) => {
+    if (document === GetServerHealthDocument) {
       return { serverHealth: serverHealthOk };
     }
-    if (doc === GetTaskDocument) {
+    if (document === GetTaskDocument) {
       return { task: getTask() };
     }
-    if (doc === GetPlanDocument) {
+    if (document === GetPlanDocument) {
       return { plan: getPlan() };
     }
-    if (doc === GetTasksByPlanIdDocument) {
+    if (document === GetTasksByPlanIdDocument) {
       return { tasksByPlanId: getTasksByPlanId() };
     }
-    if (doc === UpdatePlanDocument) {
+    if (document === UpdatePlanDocument) {
       return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
     }
-    if (doc === UpdateTaskDocument) {
+    if (document === UpdateTaskDocument) {
       return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
     }
     opts.onUnhandled?.();
     throw new Error('unmocked GraphQL document in test');
-  }) as WorkflowExecuteGraphqlV2;
+  });
 };
 
-const wrapWorkflowExecute = (
+/**
+ * @description Adapts an `unknown`-typed document router to the generic {@link WorkflowExecuteGraphqlV2}
+ * contract. The overload exposes the public generic signature while the implementation operates in
+ * `unknown`, so mock bodies need no type assertion at the boundary.
+ */
+function toWorkflowExecute(
+  resolve: (document: unknown, variables?: unknown) => Promise<unknown>,
+): WorkflowExecuteGraphqlV2 {
+  function execute<TData, TVariables extends Record<string, unknown>>(
+    document: TypedDocumentNode<TData, TVariables>,
+    variables?: TVariables,
+    options?: ExecuteGraphqlOptionsV2,
+  ): Promise<TData>;
+  function execute(document: unknown, variables?: unknown): Promise<unknown> {
+    return resolve(document, variables);
+  }
+
+  return execute;
+}
+
+/** Narrowing guard for a plain object of unknown-valued keys. */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * @description Reads the `{ id, status }` payload from an unknown `updatePlan` variables object,
+ * throwing when the shape is unexpected (keeps the mock cast-free at the GraphQL boundary).
+ */
+const readUpdatePlanInput = (
+  variables: unknown,
+): { id: string; status: string } => {
+  if (
+    isRecord(variables) &&
+    isRecord(variables.input) &&
+    typeof variables.input.id === 'string' &&
+    typeof variables.input.status === 'string'
+  ) {
+    return { id: variables.input.id, status: variables.input.status };
+  }
+
+  throw new Error(
+    'expected updatePlan variables with input.id and input.status',
+  );
+};
+
+/**
+ * @description Wraps an executor in a Vitest mock. The overload advertises `MockedFunction` (which
+ * intersects the original generic signature, so it stays assignable to {@link WorkflowExecuteGraphqlV2}),
+ * while the implementation returns the plain `Mock` produced by `vi.fn` — no assertion needed.
+ */
+function wrapWorkflowExecute(
   impl: WorkflowExecuteGraphqlV2,
-): MockedFunction<WorkflowExecuteGraphqlV2> =>
-  vi.fn(impl) as unknown as MockedFunction<WorkflowExecuteGraphqlV2>;
+): MockedFunction<WorkflowExecuteGraphqlV2>;
+function wrapWorkflowExecute(
+  impl: WorkflowExecuteGraphqlV2,
+): Mock<WorkflowExecuteGraphqlV2> {
+  return vi.fn(impl);
+}
 
 const noopRunner: WorkflowRalphIterationRunner = {
   run: async () => '',
@@ -175,9 +230,11 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns unhandled when GraphQL fails (e.g. health check)', async () => {
-    const executeGraphqlV2 = wrapWorkflowExecute((async () => {
-      throw new Error('network');
-    }) as WorkflowExecuteGraphqlV2);
+    const executeGraphqlV2 = wrapWorkflowExecute(
+      toWorkflowExecute(async () => {
+        throw new Error('network');
+      }),
+    );
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
       iterationRunner: noopRunner,
@@ -543,30 +600,28 @@ describe('createWorkflowRalphOrchestrator', () => {
 
   it('promotes plan when resuming an IN_PROGRESS task while plan is QUEUED', async () => {
     const updatePlanCalls: Array<{ id: string; status: string }> = [];
-    const executeGraphqlV2 = wrapWorkflowExecute((async (
-      document,
-      variables,
-    ) => {
-      const doc = document as unknown;
-      if (doc === GetServerHealthDocument) {
-        return { serverHealth: serverHealthOk };
-      }
-      if (doc === GetPlanDocument) {
-        return { plan: basePlan({ status: 'QUEUED' }) };
-      }
-      if (doc === GetTasksByPlanIdDocument) {
-        return { tasksByPlanId: [baseTask(TASK_A, 'IN_PROGRESS')] };
-      }
-      if (doc === UpdatePlanDocument) {
-        const input = variables?.input as { id: string; status: string };
-        updatePlanCalls.push(input);
-        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
-      }
-      if (doc === UpdateTaskDocument) {
-        return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
-      }
-      throw new Error('unmocked GraphQL document in test');
-    }) as WorkflowExecuteGraphqlV2);
+    const executeGraphqlV2 = wrapWorkflowExecute(
+      toWorkflowExecute(async (document, variables) => {
+        if (document === GetServerHealthDocument) {
+          return { serverHealth: serverHealthOk };
+        }
+        if (document === GetPlanDocument) {
+          return { plan: basePlan({ status: 'QUEUED' }) };
+        }
+        if (document === GetTasksByPlanIdDocument) {
+          return { tasksByPlanId: [baseTask(TASK_A, 'IN_PROGRESS')] };
+        }
+        if (document === UpdatePlanDocument) {
+          const input = readUpdatePlanInput(variables);
+          updatePlanCalls.push(input);
+          return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+        }
+        if (document === UpdateTaskDocument) {
+          return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
+        }
+        throw new Error('unmocked GraphQL document in test');
+      }),
+    );
     const iterationRunner: WorkflowRalphIterationRunner = {
       run: async () => '<promise>COMPLETE</promise>',
     };

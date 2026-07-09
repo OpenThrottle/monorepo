@@ -30,6 +30,8 @@ const mockJob = {
   timestamp: 1_700_000_000_000,
 } as const;
 
+const emptyJobs: (typeof mockJob)[] = [];
+
 const mockQueue = {
   activeCount: 0,
   completedCount: 1,
@@ -37,7 +39,7 @@ const mockQueue = {
   failedCount: 0,
   jobs: {
     hasNext: false,
-    jobs: [] as (typeof mockJob)[],
+    jobs: emptyJobs,
   },
   name: 'plans',
   waitingCount: 0,

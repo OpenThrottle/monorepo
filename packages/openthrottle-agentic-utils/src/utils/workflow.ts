@@ -219,7 +219,7 @@ export type WorkflowRunnerId = (typeof WORKFLOW_RUNNER_IDS)[number];
 export const isWorkflowRunnerId = (
   value: string,
 ): value is WorkflowRunnerId => {
-  return (WORKFLOW_RUNNER_IDS as readonly string[]).includes(value);
+  return WORKFLOW_RUNNER_IDS.some((id) => id === value);
 };
 
 /**

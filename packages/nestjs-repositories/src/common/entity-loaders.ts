@@ -41,9 +41,9 @@ export function createEntityByIdLoader<
   return new DataLoader<string, TEntity | null>(async (ids) => {
     if (ids.length === 0) return [];
 
-    const rows = await accessor.getRepository().find({
-      where: { id: In([...ids]) } as FindOptionsWhere<TEntity>,
-    });
+    const where: FindOptionsWhere<TEntity> = {};
+    Object.assign(where, { id: In([...ids]) });
+    const rows = await accessor.getRepository().find({ where });
 
     const byId = new Map<string, TEntity>();
     for (const row of rows) {
@@ -84,10 +84,9 @@ export function createCollectionByColumnLoader<TEntity extends ObjectLiteral>(
     if (keys.length === 0) return [];
 
     const ids = [...new Set(keys)];
-    const rows = await accessor.getRepository().find({
-      order,
-      where: { [column]: In(ids) } as FindOptionsWhere<TEntity>,
-    });
+    const where: FindOptionsWhere<TEntity> = {};
+    Object.assign(where, { [column]: In(ids) });
+    const rows = await accessor.getRepository().find({ order, where });
 
     const byKey = new Map<string, TEntity[]>();
     for (const row of rows) {

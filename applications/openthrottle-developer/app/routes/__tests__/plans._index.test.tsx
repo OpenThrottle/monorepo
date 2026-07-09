@@ -3,7 +3,9 @@ import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../plans._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import type { Route } from '@/app/routes/+types/plans._index';
 
 const mockPlan: PlanCardFragment = {
   __typename: 'PlanObject',
@@ -24,9 +26,9 @@ const mockPlan: PlanCardFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const mockLoaderDataWithStats = {
+const mockLoaderDataWithStats: Route.ComponentProps['loaderData'] = {
   assigneeOptions: ['visormatt'],
-  assignees: [] as string[],
+  assignees: [],
   limit: 20,
   page: 1,
   plans: [mockPlan],
@@ -47,18 +49,18 @@ const mockLoaderDataWithStats = {
       status: 'PENDING',
     },
   ],
-  statuses: [] as string[],
+  statuses: [],
   totalCount: 1,
   totalCountAll: 11,
   totalCountQueued: 2,
 };
 
-const mockLoaderDataEmpty = {
-  assigneeOptions: [] as string[],
-  assignees: [] as string[],
+const mockLoaderDataEmpty: Route.ComponentProps['loaderData'] = {
+  assigneeOptions: [],
+  assignees: [],
   limit: 20,
   page: 1,
-  plans: [] as PlanCardFragment[],
+  plans: [],
   statusCounts: [
     {
       __typename: 'PlanStatusCountObject' as const,
@@ -71,11 +73,22 @@ const mockLoaderDataEmpty = {
       status: 'COMPLETED',
     },
   ],
-  statuses: [] as string[],
+  statuses: [],
   totalCount: 0,
   totalCountAll: 0,
   totalCountQueued: 0,
 };
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/plans._index',
+    loaderData: mockLoaderDataWithStats,
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/plans._index.tsx', () => {
   test('should render with distinct stat cards: Total, In progress (all), Completed (all)', () => {
@@ -83,7 +96,7 @@ describe('routes/plans._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataWithStats}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -107,7 +120,7 @@ describe('routes/plans._index.tsx', () => {
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataEmpty}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -131,7 +144,7 @@ describe('routes/plans._index.tsx', () => {
           statuses: ['IN_PROGRESS', 'PENDING'],
           totalCount: 100,
         }}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );

@@ -46,7 +46,7 @@ const defaultPlanRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'] =
 
 describe('PlanTabDetails Component', () => {
   test('renders overview tab with plan toolbar and workflow transparency', async () => {
-    const setFullscreen = vi.fn() as PlanTabDetailsProps['setFullscreen'];
+    const setFullscreen = vi.fn<PlanTabDetailsProps['setFullscreen']>();
     const props: PlanTabDetailsProps = {
       fullscreen: false,
       ralphTuningJson: '',

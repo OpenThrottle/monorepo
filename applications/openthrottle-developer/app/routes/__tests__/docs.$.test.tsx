@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Component from '../docs.$';
 
+function stubMatches(): React.ComponentProps<typeof Component>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/docs.$.tsx', () => {
   test('renders the doc page matching the splat path', () => {
     const view = render(
@@ -11,7 +16,7 @@ describe('routes/docs.$.tsx', () => {
         <Component
           actionData={undefined}
           loaderData={{ title: 'Getting Started' }}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{ '*': 'getting-started' }}
         />
       </MemoryRouter>,
