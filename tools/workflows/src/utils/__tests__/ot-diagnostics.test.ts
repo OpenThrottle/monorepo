@@ -57,12 +57,12 @@ describe('ot-diagnostics', () => {
     expect(line).toContain('[plans-spawn:ot-diagnostics]');
 
     const brace = line!.indexOf('{');
-    const parsed = JSON.parse(line!.slice(brace)) as {
+    const parsed: {
       envPresence: { anthropicApiKeySet: boolean };
       home: string;
       postgresIdentity: string;
       unixUser: string;
-    };
+    } = JSON.parse(line!.slice(brace));
 
     expect(parsed.home).toBe('/home/w');
     expect(parsed.unixUser).toBe('wuser');

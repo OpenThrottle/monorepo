@@ -61,9 +61,12 @@ describe('getOpenThrottleRoot', () => {
 
     // Module walk-up lands in the OpenThrottle monorepo (has pnpm-workspace.yaml).
     expect(resolved).toBeDefined();
-    expect(
-      fs.existsSync(path.join(resolved as string, 'pnpm-workspace.yaml')),
-    ).toBe(true);
+    if (resolved === undefined) {
+      throw new Error('expected getOpenThrottleRoot to resolve a root');
+    }
+    expect(fs.existsSync(path.join(resolved, 'pnpm-workspace.yaml'))).toBe(
+      true,
+    );
   });
 });
 

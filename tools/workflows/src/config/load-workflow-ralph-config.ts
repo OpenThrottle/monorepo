@@ -366,7 +366,7 @@ export const normalizeWorkflowRalphDefaultsFileV1 = (
     out.lifecycleHooksChildJobs = o.lifecycleHooksChildJobs;
   }
 
-  return out as WorkflowRalphDefaultsFileV1Json;
+  return out;
 };
 
 /**
@@ -620,7 +620,7 @@ export const readWorkflowRalphConfigEnv = (
     out.lifecycleHooksChildJobs = lifecycleHooksChildJobs;
   }
 
-  return out as WorkflowRalphDefaultsFileV1Json;
+  return out;
 };
 
 const mergeSpawn = (

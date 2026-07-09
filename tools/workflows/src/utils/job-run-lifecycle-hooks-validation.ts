@@ -51,6 +51,11 @@ const JOB_RUN_HOOK_PROMPT_DELIVERY: readonly JobRunHookPromptDelivery[] = [
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const isOneOf = <T extends string>(
+  allowed: readonly T[],
+  value: string,
+): value is T => allowed.some((entry) => entry === value);
+
 const normalizeOptionalString = (
   value: unknown,
   field: string,
@@ -85,28 +90,22 @@ const parseOptionalPositiveInt = (
 };
 
 const parsePhase = (value: unknown): JobRunHookPhase => {
-  if (
-    typeof value !== 'string' ||
-    !JOB_RUN_HOOK_PHASES_WIRE.includes(value as JobRunHookPhaseWire)
-  ) {
+  if (typeof value !== 'string' || !isOneOf(JOB_RUN_HOOK_PHASES_WIRE, value)) {
     throw new Error(
       `phase must be one of: ${JOB_RUN_HOOK_PHASES_WIRE.join(', ')}`,
     );
   }
-  return normalizeJobRunHookPhase(value as JobRunHookPhaseWire);
+  return normalizeJobRunHookPhase(value);
 };
 
 const parseOnFailure = (value: unknown): JobRunHookOnFailure | undefined => {
   if (value === undefined || value === null) return undefined;
-  if (
-    typeof value !== 'string' ||
-    !JOB_RUN_HOOK_ON_FAILURE.includes(value as JobRunHookOnFailure)
-  ) {
+  if (typeof value !== 'string' || !isOneOf(JOB_RUN_HOOK_ON_FAILURE, value)) {
     throw new Error(
       `onFailure must be one of: ${JOB_RUN_HOOK_ON_FAILURE.join(', ')}`,
     );
   }
-  return value as JobRunHookOnFailure;
+  return value;
 };
 
 const parsePromptDelivery = (
@@ -115,13 +114,13 @@ const parsePromptDelivery = (
   if (value === undefined || value === null) return undefined;
   if (
     typeof value !== 'string' ||
-    !JOB_RUN_HOOK_PROMPT_DELIVERY.includes(value as JobRunHookPromptDelivery)
+    !isOneOf(JOB_RUN_HOOK_PROMPT_DELIVERY, value)
   ) {
     throw new Error(
       `promptDelivery must be one of: ${JOB_RUN_HOOK_PROMPT_DELIVERY.join(', ')}`,
     );
   }
-  return value as JobRunHookPromptDelivery;
+  return value;
 };
 
 const parseConditions = (value: unknown): JobRunHookConditions | undefined => {
@@ -136,15 +135,12 @@ const parseConditions = (value: unknown): JobRunHookConditions | undefined => {
       throw new Error('conditions.runKinds must be an array');
     }
     runKinds = value.runKinds.map((item, index) => {
-      if (
-        typeof item !== 'string' ||
-        !JOB_RUN_HOOK_RUN_KINDS.includes(item as JobRunHookRunKind)
-      ) {
+      if (typeof item !== 'string' || !isOneOf(JOB_RUN_HOOK_RUN_KINDS, item)) {
         throw new Error(
           `conditions.runKinds[${index}] must be one of: ${JOB_RUN_HOOK_RUN_KINDS.join(', ')}`,
         );
       }
-      return item as JobRunHookRunKind;
+      return item;
     });
     if (runKinds.length === 0) {
       throw new Error('conditions.runKinds must not be empty when set');
@@ -177,15 +173,12 @@ const parseConditions = (value: unknown): JobRunHookConditions | undefined => {
       'failed',
     ];
     whenTaskOutcome = value.whenTaskOutcome.map((item, index) => {
-      if (
-        typeof item !== 'string' ||
-        !allowed.includes(item as JobRunHookTaskOutcome)
-      ) {
+      if (typeof item !== 'string' || !isOneOf(allowed, item)) {
         throw new Error(
           `conditions.whenTaskOutcome[${index}] must be one of: ${allowed.join(', ')}`,
         );
       }
-      return item as JobRunHookTaskOutcome;
+      return item;
     });
     if (whenTaskOutcome.length === 0) {
       throw new Error('conditions.whenTaskOutcome must not be empty when set');

@@ -61,10 +61,10 @@ const graphqlRequest = async <T>(
     method: 'POST',
   });
 
-  const payload = (await response.json()) as {
+  const payload: {
     data?: T;
     errors?: { message: string }[];
-  };
+  } = await response.json();
 
   if (payload.errors?.length) {
     throw new Error(payload.errors.map((error) => error.message).join('; '));
