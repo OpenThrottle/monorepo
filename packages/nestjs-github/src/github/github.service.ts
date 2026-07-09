@@ -536,16 +536,23 @@ export class GitHubService {
   }
 }
 
+/** Type guard: value exposes a `Headers`-like `get(name)` accessor. */
+function hasHeaderGetter(
+  value: unknown,
+): value is { get(name: string): string | null } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'get' in value &&
+    typeof value.get === 'function'
+  );
+}
+
 /** Reads a header defensively so test stubs without a `Headers` object work. */
 function readHeader(res: Response, name: string): string | null {
-  const headers: unknown = (res as { headers?: unknown }).headers;
-  if (
-    headers !== null &&
-    typeof headers === 'object' &&
-    'get' in headers &&
-    typeof (headers as Headers).get === 'function'
-  ) {
-    return (headers as Headers).get(name);
+  const headers: unknown = res.headers;
+  if (hasHeaderGetter(headers)) {
+    return headers.get(name);
   }
   return null;
 }
@@ -659,19 +666,24 @@ function parseUnknownArray(value: unknown): unknown[] {
   return value;
 }
 
+/** Type guard: the minimal fields of a single PR list/detail item we map. */
+function isPullItem(value: unknown): value is GitHubPullItem {
+  return (
+    isObject(value) &&
+    typeof value.created_at === 'string' &&
+    typeof value.html_url === 'string' &&
+    typeof value.number === 'number' &&
+    typeof value.title === 'string' &&
+    typeof value.updated_at === 'string'
+  );
+}
+
 /** Validates the minimal fields of a single PR list/detail item we map. */
 function parsePullItem(value: unknown): GitHubPullItem {
-  if (
-    !isObject(value) ||
-    typeof value.created_at !== 'string' ||
-    typeof value.html_url !== 'string' ||
-    typeof value.number !== 'number' ||
-    typeof value.title !== 'string' ||
-    typeof value.updated_at !== 'string'
-  ) {
+  if (!isPullItem(value)) {
     shapeError('pull request');
   }
-  return value as unknown as GitHubPullItem;
+  return value;
 }
 
 /** Validates an array of PR list items. */
@@ -679,30 +691,40 @@ function parsePullItemArray(value: unknown): GitHubPullItem[] {
   return parseUnknownArray(value).map((item) => parsePullItem(item));
 }
 
+/** Type guard: the diff-stat fields read from the single-PR detail endpoint. */
+function isPullDetail(value: unknown): value is GitHubPullDetail {
+  return (
+    isObject(value) &&
+    typeof value.additions === 'number' &&
+    typeof value.changed_files === 'number' &&
+    typeof value.deletions === 'number' &&
+    typeof value.number === 'number'
+  );
+}
+
 /** Validates the diff-stat fields read from the single-PR detail endpoint. */
 function parsePullDetail(value: unknown): GitHubPullDetail {
-  if (
-    !isObject(value) ||
-    typeof value.additions !== 'number' ||
-    typeof value.changed_files !== 'number' ||
-    typeof value.deletions !== 'number' ||
-    typeof value.number !== 'number'
-  ) {
+  if (!isPullDetail(value)) {
     shapeError('pull request detail');
   }
-  return value as unknown as GitHubPullDetail;
+  return value;
+}
+
+/** Type guard: a single issue/PR item (labels array + number + state) we map. */
+function isIssueItem(value: unknown): value is GitHubIssueItem {
+  return (
+    isObject(value) &&
+    Array.isArray(value.labels) &&
+    typeof value.number === 'number'
+  );
 }
 
 /** Validates a single issue/PR item (labels array + number + state) we map. */
 function parseIssueItem(value: unknown): GitHubIssueItem {
-  if (
-    !isObject(value) ||
-    !Array.isArray(value.labels) ||
-    typeof value.number !== 'number'
-  ) {
+  if (!isIssueItem(value)) {
     shapeError('issue');
   }
-  return value as unknown as GitHubIssueItem;
+  return value;
 }
 
 /** Validates an array of issue/PR items. */
@@ -710,18 +732,23 @@ function parseIssueItemArray(value: unknown): GitHubIssueItem[] {
   return parseUnknownArray(value).map((item) => parseIssueItem(item));
 }
 
+/** Type guard: a single review item (state + submitted_at) we map. */
+function isReviewItem(value: unknown): value is GitHubReviewItem {
+  return (
+    isObject(value) &&
+    typeof value.submitted_at === 'string' &&
+    (value.state === 'APPROVED' ||
+      value.state === 'CHANGES_REQUESTED' ||
+      value.state === 'COMMENT')
+  );
+}
+
 /** Validates a single review item (state + submitted_at) we map. */
 function parseReviewItem(value: unknown): GitHubReviewItem {
-  if (
-    !isObject(value) ||
-    typeof value.submitted_at !== 'string' ||
-    (value.state !== 'APPROVED' &&
-      value.state !== 'CHANGES_REQUESTED' &&
-      value.state !== 'COMMENT')
-  ) {
+  if (!isReviewItem(value)) {
     shapeError('review');
   }
-  return value as unknown as GitHubReviewItem;
+  return value;
 }
 
 /** Validates an array of review items. */

@@ -15,6 +15,7 @@
     "passport-jwt": "catalog:"
   },
   "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^",
     "@types/passport-jwt": "catalog:"
   },
   "exports": {

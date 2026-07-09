@@ -12,7 +12,9 @@
     "@nestjs/graphql": "catalog:",
     "graphql": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

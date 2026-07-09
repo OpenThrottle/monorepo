@@ -7,8 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -53,7 +54,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted"

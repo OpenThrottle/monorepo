@@ -1,4 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
 import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
 import {
@@ -10,9 +11,9 @@ import {
 const createConfigService = (
   values: Readonly<Record<string, string | undefined>>,
 ): ConfigService =>
-  ({
+  asMock<ConfigService>({
     get: (key: string): string | undefined => values[key],
-  }) as unknown as ConfigService;
+  });
 
 const STRONG_SECRET = 'a'.repeat(JWT_SECRET_MIN_BYTES);
 
