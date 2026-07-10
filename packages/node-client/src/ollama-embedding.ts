@@ -42,10 +42,6 @@ export function isOllamaEmbeddingConfigured(): boolean {
   );
 }
 
-interface OllamaEmbeddingsResponse {
-  readonly embedding: number[];
-}
-
 /**
  * @description Embeds text via local Ollama API (POST /api/embeddings). Dimension is model-specific.
  * @param text Input text to embed.
@@ -81,8 +77,11 @@ export async function embedWithOllama(
       return undefined;
     }
 
-    const data = (await response.json()) as OllamaEmbeddingsResponse;
-    const embedding = data?.embedding;
+    const data: unknown = await response.json();
+    const embedding =
+      typeof data === 'object' && data !== null && 'embedding' in data
+        ? data.embedding
+        : undefined;
 
     if (!Array.isArray(embedding) || embedding.length === 0) {
       console.error(

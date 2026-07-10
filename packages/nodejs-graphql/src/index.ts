@@ -109,7 +109,7 @@ export async function executeGraphql<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  const json = await parseGraphqlResponseBody(res);
+  const json = await parseGraphqlResponseBody<TData>(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -127,12 +127,10 @@ export async function executeGraphql<
     throw new Error('GraphQL response missing data');
   }
 
-  // `as TData` is sound here despite the repo's no-`as` convention: this is the
-  // post-validation success path (HTTP OK, no GraphQL errors, non-null `data`),
-  // and `parseDateTimeInResponse` returns `unknown` only because the recursive
-  // Date-walk erases the type. The codegen `TypedDocumentNode` guarantees the
-  // shape. Do not "tighten" this away — there is no runtime type to narrow to.
-  return parseDateTimeInResponse(json.data) as TData;
+  // Trusted success path: `json.data` is `TData` (the typed
+  // `parseGraphqlResponseBody<TData>` carries the codegen shape) and
+  // `parseDateTimeInResponse` preserves it, so no assertion is needed.
+  return parseDateTimeInResponse(json.data);
 }
 
 /**
@@ -205,7 +203,7 @@ export async function executeGraphqlAtUrl<
     rethrowAsTimeoutIfAborted(error, options?.timeoutMs);
   }
 
-  const json = await parseGraphqlResponseBody(res);
+  const json = await parseGraphqlResponseBody<TData>(res);
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -223,10 +221,9 @@ export async function executeGraphqlAtUrl<
     throw new Error('GraphQL response missing data');
   }
 
-  // `as TData` is sound here: post-validation success path; the cast only
-  // re-attaches the codegen-guaranteed shape that `parseDateTimeInResponse`'s
-  // `unknown` return erases. See the note on the cast in `executeGraphql`.
-  return parseDateTimeInResponse(json.data) as TData;
+  // Trusted success path: `json.data` is `TData` via the typed
+  // `parseGraphqlResponseBody<TData>`; `parseDateTimeInResponse` preserves it.
+  return parseDateTimeInResponse(json.data);
 }
 
 /**

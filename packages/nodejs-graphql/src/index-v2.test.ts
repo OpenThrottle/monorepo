@@ -1,13 +1,23 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { parse } from 'graphql';
+import { type DocumentNode, parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { executeGraphqlV2 } from './index-v2.ts';
 import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from './utils.ts';
 
-const doc = parse('{ __typename }') as TypedDocumentNode<
-  { readonly __typename: string },
-  Record<string, never>
->;
+// See graphql-v2.test.ts: the generic overload brands the parsed document with
+// the caller's result/variables types without a type assertion.
+function typedDocument<
+  TData,
+  TVariables extends Record<string, unknown> = Record<string, never>,
+>(source: string): TypedDocumentNode<TData, TVariables>;
+function typedDocument(source: string): DocumentNode {
+  return parse(source);
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const doc = typedDocument<{ readonly __typename: string }>('{ __typename }');
 
 const url = 'https://api.example/graphql';
 
@@ -171,7 +181,10 @@ describe('executeGraphqlV2 auth header construction', () => {
     await executeGraphqlV2(doc, undefined, { token: 'tok-123', url });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer tok-123');
   });
 
@@ -184,7 +197,10 @@ describe('executeGraphqlV2 auth header construction', () => {
     await executeGraphqlV2(doc, undefined, { url });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBe('Bearer env-token');
   });
 
@@ -197,7 +213,10 @@ describe('executeGraphqlV2 auth header construction', () => {
     await executeGraphqlV2(doc, undefined, { token: '', url });
 
     const init = fetchSpy.mock.calls[0]?.[1];
-    const headers = init?.headers as Record<string, string>;
+    const headers = init?.headers;
+    if (!isRecord(headers)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(headers.Authorization).toBeUndefined();
   });
 });

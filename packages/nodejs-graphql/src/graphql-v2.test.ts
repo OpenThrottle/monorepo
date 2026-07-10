@@ -1,5 +1,5 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { parse } from 'graphql';
+import { type DocumentNode, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import type {
   GraphqlV2Failure,
@@ -7,15 +7,27 @@ import type {
 } from './graphql-v2.ts';
 import { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
 
-const emptyVarsDoc = parse('{ __typename }') as TypedDocumentNode<
-  { readonly __typename: string },
-  Record<string, never>
->;
+// Parse a GraphQL string and brand it with the caller-supplied result/variables
+// types. The generic overload carries the phantom `TypedDocumentNode` types that
+// `parse` (which returns a plain `DocumentNode`) erases, without an assertion.
+function typedDocument<
+  TData,
+  TVariables extends Record<string, unknown> = Record<string, never>,
+>(source: string): TypedDocumentNode<TData, TVariables>;
+function typedDocument(source: string): DocumentNode {
+  return parse(source);
+}
 
-const dateFieldDoc = parse('query Q { item { at } }') as TypedDocumentNode<
-  { readonly item: { readonly at: Date } },
-  Record<string, never>
->;
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const emptyVarsDoc = typedDocument<{ readonly __typename: string }>(
+  '{ __typename }',
+);
+
+const dateFieldDoc = typedDocument<{ readonly item: { readonly at: Date } }>(
+  'query Q { item { at } }',
+);
 
 const createJsonResponse = (init: ResponseInit, body: unknown): Response =>
   new Response(JSON.stringify(body), {
@@ -43,7 +55,7 @@ describe('executeGraphql_v2', () => {
     }
 
     expect(result.data.item.at).toBeInstanceOf(Date);
-    expect((result.data.item.at as Date).toISOString()).toBe(at);
+    expect(result.data.item.at.toISOString()).toBe(at);
   });
 
   it('skips DateTime parsing when parseDateTime is false', async () => {
@@ -209,7 +221,7 @@ describe('executeGraphql_v2', () => {
     }
 
     expect(result.error.kind).toBe('missing_data');
-    expect((result.error as CodeFailure).code).toBe('E_MISSING');
+    expect(result.error.code).toBe('E_MISSING');
   });
 
   it('returns http failure even when a data payload is present on a non-OK status', async () => {
@@ -270,7 +282,7 @@ describe('executeGraphql_v2', () => {
       url: 'https://api.example/graphql',
     });
 
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const init: RequestInit = fetchMock.mock.calls[0]?.[1];
     expect(init.cache).toBe('no-store');
     expect(init.keepalive).toBe(true);
     expect(init.method).toBe('POST');
@@ -303,7 +315,7 @@ describe('executeGraphql_v2', () => {
       url: 'https://api.example/graphql',
     });
 
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const init: RequestInit = fetchMock.mock.calls[0]?.[1];
     expect(init.method).toBe('POST');
     expect(init.body).not.toBe('evil');
     expect(init.signal).toBe(callerSignal);
@@ -324,8 +336,11 @@ describe('executeGraphql_v2', () => {
       url: 'https://api.example/graphql',
     });
 
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
-    const hdrs = init.headers as Record<string, string>;
+    const init: RequestInit = fetchMock.mock.calls[0]?.[1];
+    const hdrs = init.headers;
+    if (!isRecord(hdrs)) {
+      throw new Error('Expected headers to be a record');
+    }
     expect(hdrs.Authorization).toBe('Bearer new');
     expect(hdrs['X-Trace']).toBe('1');
   });

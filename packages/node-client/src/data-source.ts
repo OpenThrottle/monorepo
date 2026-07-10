@@ -81,12 +81,18 @@ export async function runQuery<T = unknown>(
   sql: string,
   params?: unknown[],
 ): Promise<QueryResult<T>> {
-  const raw = await ds.query(sql, params);
+  const raw: unknown = await ds.query(sql, params);
   if (Array.isArray(raw)) {
-    return { rowCount: raw.length, rows: raw as T[] };
+    return { rowCount: raw.length, rows: raw };
   }
 
-  const r = raw as { rowCount?: number; rows?: T[] };
+  if (typeof raw === 'object' && raw !== null) {
+    const rows = 'rows' in raw && Array.isArray(raw.rows) ? raw.rows : [];
+    const rowCount =
+      'rowCount' in raw && typeof raw.rowCount === 'number' ? raw.rowCount : 0;
 
-  return { rowCount: r.rowCount ?? 0, rows: r.rows ?? [] };
+    return { rowCount, rows };
+  }
+
+  return { rowCount: 0, rows: [] };
 }
