@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../nestjs-testing/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]
