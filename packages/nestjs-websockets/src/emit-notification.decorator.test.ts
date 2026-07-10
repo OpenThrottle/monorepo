@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Reflector } from '@nestjs/core';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
 import {
   EMIT_NOTIFICATION_KEY,
@@ -13,9 +14,10 @@ const reflector = new Reflector();
 function getEmitNotificationMetadata(
   handler: (...args: unknown[]) => unknown,
 ): EmitNotificationMetadataValue | undefined {
-  return reflector.get(EMIT_NOTIFICATION_KEY, handler) as
-    | EmitNotificationMetadataValue
-    | undefined;
+  return reflector.get<EmitNotificationMetadataValue | undefined>(
+    EMIT_NOTIFICATION_KEY,
+    handler,
+  );
 }
 
 describe('EmitNotification', () => {
@@ -29,9 +31,9 @@ describe('EmitNotification', () => {
       @EmitNotification('plan.updated')
       updatePlan(): void {}
     }
-    const meta = getEmitNotificationMetadata(Test.prototype.updatePlan) as
-      | EmitNotificationMetadata
-      | undefined;
+    const meta = asMock<EmitNotificationMetadata | undefined>(
+      getEmitNotificationMetadata(Test.prototype.updatePlan),
+    );
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.updated');
     expect(meta?.payload).toBeUndefined();
@@ -45,9 +47,9 @@ describe('EmitNotification', () => {
         return null;
       }
     }
-    const meta = getEmitNotificationMetadata(Test.prototype.completeTask) as
-      | EmitNotificationMetadata
-      | undefined;
+    const meta = asMock<EmitNotificationMetadata | undefined>(
+      getEmitNotificationMetadata(Test.prototype.completeTask),
+    );
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('task.completed');
     expect(meta?.payload).toBe(payloadFn);
@@ -62,9 +64,9 @@ describe('EmitNotification', () => {
       })
       setStatus(): void {}
     }
-    const meta = getEmitNotificationMetadata(Test.prototype.setStatus) as
-      | EmitNotificationMetadata
-      | undefined;
+    const meta = asMock<EmitNotificationMetadata | undefined>(
+      getEmitNotificationMetadata(Test.prototype.setStatus),
+    );
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.status_changed');
     expect(meta?.payload).toBe(payloadFn);
@@ -74,7 +76,7 @@ describe('EmitNotification', () => {
     const payload1 = (ret: unknown): unknown => ret ?? null;
     const payload2 = (ret: unknown): unknown =>
       ret != null && typeof ret === 'object' && 'id' in ret
-        ? { planId: (ret as { id: string }).id, status: 'COMPLETED' }
+        ? { planId: ret.id, status: 'COMPLETED' }
         : null;
     class Test {
       @EmitNotification([
@@ -83,9 +85,9 @@ describe('EmitNotification', () => {
       ])
       setPlanStatus(): void {}
     }
-    const meta = getEmitNotificationMetadata(
-      Test.prototype.setPlanStatus,
-    ) as EmitNotificationMetadata[];
+    const meta = asMock<EmitNotificationMetadata[]>(
+      getEmitNotificationMetadata(Test.prototype.setPlanStatus),
+    );
     expect(Array.isArray(meta)).toBe(true);
     expect(meta).toHaveLength(2);
     expect(meta[0]?.event).toBe('plan.updated');
