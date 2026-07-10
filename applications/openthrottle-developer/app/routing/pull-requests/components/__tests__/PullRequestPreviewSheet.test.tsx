@@ -59,6 +59,7 @@ describe('PullRequestPreviewSheet', () => {
   test('renders preview body when the PR is in the current list', () => {
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => (
           <PullRequestPreviewSheet
             filters={baseFilters}
@@ -82,6 +83,7 @@ describe('PullRequestPreviewSheet', () => {
   test('renders missing state when pr is set but the PR is not in the filtered list', () => {
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => (
           <PullRequestPreviewSheet
             {...props}
@@ -113,6 +115,7 @@ describe('PullRequestPreviewSheet', () => {
 
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => <PreviewHarness {...props} />,
         path: '/pull-requests',
       },

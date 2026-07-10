@@ -52,6 +52,7 @@ describe('QueuesTable Component', () => {
 
   test('renders table with column headers when queues provided', () => {
     props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
@@ -80,6 +81,7 @@ describe('QueuesTable Component', () => {
 
   test('renders one row per queue with name link and View action', () => {
     props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
@@ -107,6 +109,7 @@ describe('QueuesTable Component', () => {
 
   test('renders queue counts in table cells', () => {
     props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
@@ -123,6 +126,7 @@ describe('QueuesTable Component', () => {
 
   test('exposes accessible labels for zero-count backlog and failed', () => {
     props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
@@ -139,6 +143,7 @@ describe('QueuesTable Component', () => {
 
   test('queue name links and View actions receive keyboard focus in row order', async () => {
     props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },

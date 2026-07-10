@@ -25,6 +25,7 @@ describe('OpenThrottleModal Component', () => {
   });
 
   test('shows dialog with an accessible name when search param matches', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <OpenThrottleModal param="modal" title="Edit settings" value="open" />
     );
@@ -41,6 +42,7 @@ describe('OpenThrottleModal Component', () => {
 
   test('closes the dialog when onOpenChange(false) fires (Esc)', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <OpenThrottleModal param="modal" title="Edit settings" value="open" />
     );

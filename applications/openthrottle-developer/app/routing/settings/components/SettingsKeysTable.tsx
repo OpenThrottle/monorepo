@@ -1,31 +1,18 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { formatDate } from 'date-fns';
-import { KeyRoundIcon } from 'lucide-react';
-import { useFetcher, useRevalidator } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  Badge,
-  Button,
-  DataTable,
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-  Input,
-  toast,
-  type BadgeProps,
-} from '@openthrottle/react-router-shadcn';
+import { DataTable } from '@openthrottle/react-router-shadcn';
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
-import { action as settingsKeysAction } from '~/routes/settings.keys';
+import { SettingsKeysCredentialStatusBadge } from '~/routing/settings/components/SettingsKeysCredentialStatusBadge';
+import { SettingsKeysRevokeCell } from '~/routing/settings/components/SettingsKeysRevokeCell';
+import { SettingsKeysTableEmpty } from '~/routing/settings/components/SettingsKeysTableEmpty';
+import {
+  credentialDisplayName,
+  credentialRowId,
+  formatCredentialTimestamp,
+  getSettingsKeysCredentialStatus,
+} from '~/routing/settings/utils/settings-keys-credential';
+import type { SettingsKeysCredentialStatus } from '~/routing/settings/utils/settings-keys-credential';
 
 export interface SettingsKeysTableProps {
   actionError?: string | null;
@@ -34,200 +21,8 @@ export interface SettingsKeysTableProps {
   credentials?: readonly ServiceAccountCredentialFieldsFragment[];
 }
 
-export type SettingsKeysCredentialStatus = 'active' | 'expired' | 'revoked';
-
-const SETTINGS_KEYS_TABLE_DATE_FORMAT = 'MMM d, yyyy';
-
-const credentialStatusLabels: Record<SettingsKeysCredentialStatus, string> = {
-  active: 'Active',
-  expired: 'Expired',
-  revoked: 'Revoked',
-};
-
-const credentialStatusBadgeColor: Record<
-  SettingsKeysCredentialStatus,
-  BadgeProps['color']
-> = {
-  active: 'green',
-  expired: 'amber',
-  revoked: 'slate',
-};
-
-/**
- * @description Derives credential lifecycle status for table badges and revoke eligibility.
- */
-export const getSettingsKeysCredentialStatus = (
-  credential: Pick<
-    ServiceAccountCredentialFieldsFragment,
-    'expiresAt' | 'revokedAt'
-  >,
-): SettingsKeysCredentialStatus => {
-  if (credential.revokedAt != null) {
-    return 'revoked';
-  }
-  if (credential.expiresAt != null) {
-    const expires = new Date(credential.expiresAt);
-    if (!Number.isNaN(expires.getTime()) && expires.getTime() < Date.now()) {
-      return 'expired';
-    }
-  }
-  return 'active';
-};
-
-const formatCredentialTimestamp = (value: unknown): string => {
-  if (
-    typeof value !== 'string' &&
-    typeof value !== 'number' &&
-    !(value instanceof Date)
-  ) {
-    return '—';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '—';
-  }
-  return formatDate(date, SETTINGS_KEYS_TABLE_DATE_FORMAT);
-};
-
-const credentialRowId = (
-  credential: ServiceAccountCredentialFieldsFragment,
-): string => credential.id;
-
-const credentialDisplayName = (
-  credential: ServiceAccountCredentialFieldsFragment,
-): string => credential.label?.trim() || credential.prefix;
-
-interface SettingsKeysCredentialStatusBadgeProps {
-  credential: ServiceAccountCredentialFieldsFragment;
-}
-
-const SettingsKeysCredentialStatusBadge = (
-  props: SettingsKeysCredentialStatusBadgeProps,
-): React.ReactElement => {
-  const { credential } = props;
-  const status = getSettingsKeysCredentialStatus(credential);
-
-  return (
-    <Badge
-      color={credentialStatusBadgeColor[status]}
-      data-testid={`SettingsKeysTable-status-${credential.id}`}
-      size="xs"
-    >
-      {credentialStatusLabels[status]}
-    </Badge>
-  );
-};
-
-interface SettingsKeysRevokeCellProps {
-  canRevoke: boolean;
-  credential: ServiceAccountCredentialFieldsFragment;
-}
-
-const SettingsKeysRevokeCell = (
-  props: SettingsKeysRevokeCellProps,
-): React.ReactElement | null => {
-  const { canRevoke, credential } = props;
-
-  // Hooks
-  const revokeBusyRef = React.useRef(false);
-  const fetcher = useFetcher<typeof settingsKeysAction>();
-  const revalidator = useRevalidator();
-  const [open, setOpen] = React.useState(false);
-
-  // Setup
-  const RevokeForm = fetcher.Form;
-  const isSubmitting = fetcher.state !== 'idle';
-  const status = getSettingsKeysCredentialStatus(credential);
-  const displayName = credentialDisplayName(credential);
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-  React.useEffect(() => {
-    const busy = fetcher.state !== 'idle';
-
-    if (revokeBusyRef.current && !busy) {
-      const data = fetcher.data;
-
-      if (data != null && typeof data === 'object') {
-        if ('ok' in data && data.ok === true) {
-          toast.success('Credential revoked.');
-          revalidator.revalidate();
-          setOpen(false);
-        } else if ('error' in data && typeof data.error === 'string') {
-          toast.error(data.error);
-        }
-      }
-    }
-    revokeBusyRef.current = busy;
-  }, [fetcher.state, fetcher.data, revalidator]);
-
-  // 🔌 Short Circuit
-  if (status !== 'active') {
-    return <span className="text-muted-foreground px-3 py-2 text-xs">—</span>;
-  }
-
-  return (
-    <div className="px-3 py-2">
-      <AlertDialog onOpenChange={setOpen} open={open}>
-        <AlertDialogTrigger asChild={true}>
-          <Button
-            aria-label={`Revoke credential ${displayName}`}
-            data-testid={`SettingsKeysTable-revoke-trigger-${credential.id}`}
-            disabled={!canRevoke || isSubmitting}
-            size="xs"
-            type="button"
-            variant="outline"
-          >
-            {isSubmitting ? 'Revoking…' : 'Revoke'}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke credential?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Revoking &quot;{displayName}&quot; ({credential.prefix}) stops
-              this token from authenticating on the next request. This cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <RevokeForm action="/settings/keys" method="post">
-            <Input name="intent" type="hidden" value="revokeCredential" />
-            <Input name="credentialId" type="hidden" value={credential.id} />
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isSubmitting} type="button">
-                Cancel
-              </AlertDialogCancel>
-              <Button
-                data-testid={`SettingsKeysTable-revoke-submit-${credential.id}`}
-                disabled={!canRevoke || isSubmitting}
-                type="submit"
-                variant="destructive"
-              >
-                {isSubmitting ? 'Revoking…' : 'Revoke'}
-              </Button>
-            </AlertDialogFooter>
-          </RevokeForm>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-const SettingsKeysTableEmpty = (): React.ReactElement => (
-  <Empty data-testid="SettingsKeysTable-empty">
-    <EmptyMedia variant="icon">
-      <KeyRoundIcon className="size-6" />
-    </EmptyMedia>
-    <EmptyTitle>No credentials yet</EmptyTitle>
-    <EmptyDescription>
-      Create a credential to get a one-time bearer token for MCP, Ralph workers,
-      or CI. Existing secrets are never shown again after creation.
-    </EmptyDescription>
-  </Empty>
-);
+export type { SettingsKeysCredentialStatus };
+export { getSettingsKeysCredentialStatus };
 
 export const SettingsKeysTable = (
   props: SettingsKeysTableProps,

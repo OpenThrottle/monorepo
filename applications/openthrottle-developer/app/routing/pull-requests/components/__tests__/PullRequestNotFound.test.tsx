@@ -61,6 +61,7 @@ describe('PullRequestNotFound Component', () => {
         owner: 'acme',
         repo: 'demo',
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestNotFound {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const component = render(<RoutesStub />);

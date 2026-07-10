@@ -18,7 +18,7 @@ const generatorsData = ((): Record<string, GeneratorMeta> => {
   const pkgPath = require.resolve('@tools/generators/package.json');
   const generatorsPath = join(dirname(pkgPath), 'generators.json');
   const raw = readFileSync(generatorsPath, 'utf-8');
-  const data = JSON.parse(raw) as { generators: Record<string, GeneratorMeta> };
+  const data: { generators: Record<string, GeneratorMeta> } = JSON.parse(raw);
   return data.generators;
 })();
 
@@ -52,7 +52,7 @@ export function getGeneratorByName(name: string): GeneratorDetail | null {
     const pkgDir = dirname(pkgPath);
     const schemaPath = join(pkgDir, meta.schema.replace(/^\.\//, ''));
     const raw = readFileSync(schemaPath, 'utf-8');
-    schema = JSON.parse(raw) as Record<string, unknown>;
+    schema = JSON.parse(raw);
   } catch {
     // schema remains null
   }

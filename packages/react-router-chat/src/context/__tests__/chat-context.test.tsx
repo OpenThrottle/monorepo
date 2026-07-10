@@ -51,6 +51,7 @@ describe('ChatProvider', () => {
     test('should render New chat control in ChatDialog header', async () => {
       const onStartNewChat = vi.fn();
       const user = userEvent.setup();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Comp = () => (
         <TooltipProvider>
           <ChatProvider

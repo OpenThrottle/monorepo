@@ -40,10 +40,10 @@ describe('PlansLoaders', () => {
 
   describe('projectLoader', () => {
     test('batches many load() calls into one find and maps to key order', async () => {
-      const projects = [
-        { id: 'p2', name: 'Two' },
-        { id: 'p1', name: 'One' },
-      ] as Project[];
+      const projects: Project[] = [
+        createMock<Project>({ id: 'p2', name: 'Two' }),
+        createMock<Project>({ id: 'p1', name: 'One' }),
+      ];
       findProjects.mockResolvedValue(projects);
 
       const [a, b, missing] = await Promise.all([

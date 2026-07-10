@@ -33,9 +33,8 @@ export async function updateMatchingTasksAndEmitStatusChanged(params: {
     .returning(['id'])
     .execute();
 
-  const updatedIds = (result.raw as ReadonlyArray<{ readonly id: string }>).map(
-    (row) => row.id,
-  );
+  const rawRows: ReadonlyArray<{ readonly id: string }> = result.raw;
+  const updatedIds = rawRows.map((row) => row.id);
 
   for (const id of updatedIds) {
     params.notifications.emitTaskStatusChanged({

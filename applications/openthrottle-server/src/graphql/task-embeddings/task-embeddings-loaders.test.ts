@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { type Task, TasksService } from '@openthrottle/nestjs-repositories';
+import { TasksService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
@@ -20,7 +20,7 @@ describe('TaskEmbeddingsLoaders', () => {
     findTasks.mockResolvedValue([
       { id: 't2', title: 'Two' },
       { id: 't1', title: 'One' },
-    ] as Task[]);
+    ]);
 
     const [a, b, missing] = await Promise.all([
       loaders.taskLoader.load('t1'),

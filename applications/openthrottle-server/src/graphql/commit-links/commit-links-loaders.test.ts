@@ -1,10 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import {
-  type Plan,
-  type Task,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CommitLinksLoaders } from './commit-links-loaders';
 
@@ -30,7 +25,7 @@ describe('CommitLinksLoaders', () => {
     findPlans.mockResolvedValue([
       { id: 'p2', title: 'Two' },
       { id: 'p1', title: 'One' },
-    ] as Plan[]);
+    ]);
 
     const [a, b, missing] = await Promise.all([
       loaders.planLoader.load('p1'),
@@ -45,7 +40,7 @@ describe('CommitLinksLoaders', () => {
   });
 
   test('taskLoader batches many load() calls into one find and maps to key order', async () => {
-    findTasks.mockResolvedValue([{ id: 't1', title: 'One' }] as Task[]);
+    findTasks.mockResolvedValue([{ id: 't1', title: 'One' }]);
 
     const [a, missing] = await Promise.all([
       loaders.taskLoader.load('t1'),

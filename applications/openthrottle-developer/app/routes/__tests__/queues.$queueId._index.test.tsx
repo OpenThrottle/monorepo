@@ -158,6 +158,7 @@ describe('routes/queues.$queueId.tsx', () => {
   });
 
   test('renders QueueJobsTable when jobs are present', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <QueueDetailIndex
         actionData={undefined}

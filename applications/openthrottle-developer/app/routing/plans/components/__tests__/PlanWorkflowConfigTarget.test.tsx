@@ -33,6 +33,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     const input = getDefaultWorkflowRalphRunOptionsInput({
       planId: PLAN_ID_FIXTURE,
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <PlanWorkflowConfigTarget
         heading="01. Target"
@@ -50,6 +51,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
 
   test('shows UUID alert when plan id is not a valid UUID', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),
@@ -76,6 +78,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
 
   test('switches to task mode and shows --task input', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),
@@ -105,6 +108,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
 
   test('shows UUID alert for invalid task id in task mode', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),

@@ -3,6 +3,7 @@
  */
 
 import { plansFactory, tasksFactory } from '@openthrottle/nestjs-repositories';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, beforeAll, test, vi } from 'vitest';
 import {
@@ -22,10 +23,10 @@ const mockTask = tasksFactory.build();
 
 const mockPlanLoad = vi.fn().mockResolvedValue(null);
 const mockTaskLoad = vi.fn().mockResolvedValue(null);
-const mockLoaders: ActivityLoaders = {
+const mockLoaders: ActivityLoaders = createMock<ActivityLoaders>({
   planLoader: { load: mockPlanLoad },
   taskLoader: { load: mockTaskLoad },
-} as unknown as ActivityLoaders;
+});
 
 beforeEach(() => {
   mockPlanLoad.mockReset().mockResolvedValue(null);

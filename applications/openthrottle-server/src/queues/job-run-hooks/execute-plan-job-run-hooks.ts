@@ -149,7 +149,7 @@ export const executePlanJobRunHooks = async (
   const planContextBlock = formatPlanAndTasksForPrompt(plan, tasks);
   const cwd = getWorkspaceRoot(jobData);
   const backend = executionBackendFromJobData(jobData);
-  const ralph = jobData.ralph as RalphNestedRunTuningInput | undefined;
+  const ralph: RalphNestedRunTuningInput | undefined = jobData.ralph;
   const model = ralph?.model ?? undefined;
 
   const iterationRunner = createCursorWorkflowRalphIterationRunner();

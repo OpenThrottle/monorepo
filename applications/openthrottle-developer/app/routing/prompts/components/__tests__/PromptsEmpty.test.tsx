@@ -33,6 +33,7 @@ describe('PromptsEmpty Component', () => {
     });
 
     test('shows filtered-empty copy and link to clear filters', () => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PromptsEmpty {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const component = render(<RoutesStub />);

@@ -1,5 +1,8 @@
 import type { Plan, PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
+import {
+  PlanEmbeddingsService,
+  getDefaultPlanRunConfigStorage,
+} from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
@@ -12,9 +15,9 @@ const mockPlanEmbeddingsService = createMock<PlanEmbeddingsService>({
   getRepository: vi.fn().mockReturnValue(planEmbeddingsRepo),
 });
 const mockPlanLoad = vi.fn().mockResolvedValue(null);
-const mockLoaders: PlanEmbeddingsLoaders = {
+const mockLoaders: PlanEmbeddingsLoaders = createMock<PlanEmbeddingsLoaders>({
   planLoader: { load: mockPlanLoad },
-} as unknown as PlanEmbeddingsLoaders;
+});
 
 describe('PlanEmbeddingsResolver', () => {
   let resolver: PlanEmbeddingsResolver;
@@ -23,16 +26,23 @@ describe('PlanEmbeddingsResolver', () => {
     assignee: null,
     author: 'Plan author',
     category: 'Plan category',
+    commitLinks: [],
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     description: 'Plan description',
     id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+    jobRunHooks: { hooks: [] },
+    planEmbeddings: [],
+    planOutputChunks: [],
     project: null,
     projectId: null,
+    projectRelation: null,
+    runConfig: getDefaultPlanRunConfigStorage(),
     status: 'IN_PROGRESS',
     summary: null,
+    tasks: [],
     title: 'Plan title',
     updatedAt: new Date('2026-02-01T22:00:00.000Z'),
-  } as Plan;
+  };
 
   const mockPlanEmbedding: PlanEmbedding = {
     content: 'Plan content chunk for embedding',
@@ -48,6 +58,7 @@ describe('PlanEmbeddingsResolver', () => {
       createdAt: new Date('2026-02-01T22:00:00.000Z'),
       description: 'Plan description',
       id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+      jobRunHooks: { hooks: [] },
       planEmbeddings: [],
       planOutputChunks: [],
       project: 'Plan project',
@@ -62,6 +73,7 @@ describe('PlanEmbeddingsResolver', () => {
         tasks: [],
         updatedAt: new Date('2026-02-01T22:00:00.000Z'),
       },
+      runConfig: getDefaultPlanRunConfigStorage(),
       status: 'IN_PROGRESS',
       summary: 'Plan summary',
       tasks: [],
@@ -69,7 +81,7 @@ describe('PlanEmbeddingsResolver', () => {
       updatedAt: new Date('2026-02-01T22:00:00.000Z'),
     },
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
-  } as unknown as PlanEmbedding;
+  };
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({

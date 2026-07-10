@@ -88,6 +88,7 @@ describe('routes/notes.$noteId.tsx', () => {
   test('renders the empty state when the note is missing', () => {
     const Stub = createTestRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: (): React.ReactElement => (
           <NoteDetail
             actionData={undefined}

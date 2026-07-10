@@ -1,81 +1,15 @@
 import * as React from 'react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-  Markdown,
-} from '@openthrottle/react-router-shadcn';
-import { ChevronDown } from 'lucide-react';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
-import { formatJsonPayload } from '../utils/index';
-import type { ChatTurnEvent, ChatTurnUsageEvent } from '../types';
+import { ChatTurnUsageSummary } from './ChatTurnUsageSummary';
+import { RunningIndicator } from './RunningIndicator';
+import type { ChatTurnEvent } from '../types';
 
 export interface ChatTurnTimelineProps {
   /** Structured, ordered events for an assistant turn. */
   readonly events: readonly ChatTurnEvent[];
 }
-
-/** Collapsed token/usage summary from the terminal usage event. */
-const ChatTurnUsageSummary = (props: {
-  readonly event: ChatTurnUsageEvent;
-}): React.ReactElement | null => {
-  const { event } = props;
-  const usage = formatJsonPayload(event.usageJson);
-  const hasError = event.error !== null && event.error.trim() !== '';
-
-  // 🔌 Short Circuit
-  if (hasError) {
-    return (
-      <p className="text-destructive text-xs break-words" role="alert">
-        {event.error}
-      </p>
-    );
-  }
-
-  if (usage === null) {
-    return null;
-  }
-
-  // Markup
-  return (
-    <Collapsible className="text-muted-foreground" data-testid="ChatTurnUsage">
-      <CollapsibleTrigger
-        className="flex items-center gap-1 text-[0.7rem] font-medium [&[data-state=open]>svg]:rotate-180"
-        data-testid="ChatTurnUsage-trigger"
-      >
-        <ChevronDown
-          aria-hidden="true"
-          className="h-3 w-3 shrink-0 transition-transform duration-200"
-        />
-        <span>Usage</span>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <Markdown
-          className="text-[0.7rem] break-words [&_pre]:whitespace-pre-wrap"
-          content={usage}
-        />
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
-/** Subtle in-progress affordance shown until the turn's terminal event lands. */
-const RunningIndicator = (): React.ReactElement => (
-  <p
-    aria-live="polite"
-    className="text-muted-foreground flex items-center gap-1.5 text-xs"
-    data-testid="ChatTurnTimeline-running"
-    role="status"
-  >
-    <span
-      aria-hidden="true"
-      className="bg-muted-foreground/60 h-1.5 w-1.5 animate-pulse rounded-full motion-reduce:animate-none"
-    />
-    Working…
-  </p>
-);
 
 /**
  * @description Renders an assistant turn as an ordered timeline that interleaves

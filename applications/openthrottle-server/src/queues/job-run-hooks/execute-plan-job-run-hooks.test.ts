@@ -9,8 +9,12 @@ import {
   PlanOutputStreamService,
   PlansService,
   TasksService,
+  type Plan,
+  type PlanOutputStreamChunk,
+  type Task,
 } from '@openthrottle/nestjs-repositories';
 import type { JobRunHooksConfig } from '@tools/workflows';
+import type { Repository } from 'typeorm';
 
 const mockExecuteJobRunHooksPhase = vi.fn();
 const mockCreateCursorWorkflowRalphIterationRunner = vi.fn();
@@ -57,26 +61,26 @@ const mockPlanFindOne = vi.fn();
 const mockTaskFind = vi.fn().mockResolvedValue([]);
 const mockPlansService = createMock<PlansService>({
   getRepository: () =>
-    ({
+    createMock<Repository<Plan>>({
       findOne: mockPlanFindOne,
       update: mockRepoUpdate,
-    }) as unknown as ReturnType<PlansService['getRepository']>,
+    }),
 });
 
 const mockTasksService = createMock<TasksService>({
   getRepository: () =>
-    ({
+    createMock<Repository<Task>>({
       find: mockTaskFind,
-    }) as unknown as ReturnType<TasksService['getRepository']>,
+    }),
 });
 
 const mockPlanOutputSave = vi.fn().mockResolvedValue(undefined);
 const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
   getRepository: () =>
-    ({
-      create: vi.fn((data: unknown) => data),
+    createMock<Repository<PlanOutputStreamChunk>>({
+      create: vi.fn(),
       save: mockPlanOutputSave,
-    }) as unknown as ReturnType<PlanOutputStreamService['getRepository']>,
+    }),
 });
 
 const baseJobData = {

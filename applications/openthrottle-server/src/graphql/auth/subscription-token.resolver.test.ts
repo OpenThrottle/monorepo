@@ -1,5 +1,7 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import type { UsersService } from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { SubscriptionTokenResolver } from './subscription-token.resolver';
@@ -14,10 +16,10 @@ function makeJwtService(): JwtService {
 }
 
 function makeAuthService(jwtService: JwtService, issuer?: string): AuthService {
-  const config = {
+  const config = createMock<ConfigService>({
     get: vi.fn((key: string) => (key === 'JWT_ISSUER' ? issuer : undefined)),
-  } as unknown as ConfigService;
-  const usersService = {} as never;
+  });
+  const usersService = createMock<UsersService>();
   return new AuthService(config, jwtService, usersService);
 }
 
@@ -50,9 +52,9 @@ describe('AuthService.signSubscriptionToken', () => {
 
 describe('SubscriptionTokenResolver', () => {
   it('mints a token for the authenticated user from the connection context', () => {
-    const authService = {
+    const authService = createMock<AuthService>({
       signSubscriptionToken: vi.fn().mockReturnValue('signed-token'),
-    } as unknown as AuthService;
+    });
     const resolver = new SubscriptionTokenResolver(authService);
 
     expect(resolver.mintSubscriptionToken('user-7')).toBe('signed-token');

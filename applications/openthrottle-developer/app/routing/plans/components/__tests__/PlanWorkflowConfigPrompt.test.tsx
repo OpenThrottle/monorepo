@@ -53,6 +53,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
       promptLayer: 'named',
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
@@ -79,6 +80,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
       promptLayer: 'named',
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
@@ -100,6 +102,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
       promptLayer: 'file',
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText, queryByLabelText } = render(<RoutesStub />);

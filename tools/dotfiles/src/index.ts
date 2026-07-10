@@ -144,12 +144,8 @@ export const eslintConfig = tslint.config([
     },
 
     rules: {
-      // Temporarily relaxed to 'warn': raising this to 'error' (see the
-      // dotfiles audit-remediation work) turned ~32 consuming projects CI-red
-      // for pre-existing `as` usage that was never cleaned up. Tracked for
-      // proper remediation + re-escalation to 'error' as an OT bug.
       '@typescript-eslint/consistent-type-assertions': [
-        'warn',
+        'error',
         { assertionStyle: 'never' },
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -185,6 +181,7 @@ export const eslintConfig = tslint.config([
       'react/jsx-sort-props': 'error',
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
+      'react/no-multi-comp': ['error', { ignoreStateless: false }],
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       'sort-keys': [
@@ -227,6 +224,18 @@ export const eslintConfig = tslint.config([
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toThrowErrorMatchingInlineSnapshot"]`,
         },
       ],
+    },
+  },
+
+  /**
+   * React Router route modules legitimately co-locate a route component with
+   * framework-convention exports (`Layout`, `App`, `ErrorBoundary`,
+   * `HydrateFallback`), so `react/no-multi-comp` does not apply to `root.tsx`.
+   */
+  {
+    files: ['**/root.tsx'],
+    rules: {
+      'react/no-multi-comp': 'off',
     },
   },
 ]);

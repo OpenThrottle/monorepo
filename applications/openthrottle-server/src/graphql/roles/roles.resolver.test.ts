@@ -32,15 +32,18 @@ describe('RolesResolver', () => {
     id: 'role-uuid',
     name: 'admin',
     permissions: [],
+    serviceAccounts: [],
     updatedAt: new Date(),
-  } as unknown as Role;
+    users: [],
+  };
 
   const mockPermission: Permission = {
     createdAt: new Date(),
     description: 'Read users',
     id: 'perm-uuid',
     name: 'users:read',
-  } as Permission;
+    roles: [],
+  };
 
   const mockRolesService = createMock<RolesService>({
     addPermissionToRole: vi.fn().mockResolvedValue(true),

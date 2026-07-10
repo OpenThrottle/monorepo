@@ -87,6 +87,7 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
   test('hides all entries when filter selection is empty', async () => {
     const user = userEvent.setup();
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const ControlledFilter = () => {
       const [selectedEventNames, setSelectedEventNames] = React.useState<
         readonly NotificationEventName[]

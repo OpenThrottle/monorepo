@@ -77,6 +77,7 @@ describe('PullRequestsTable Component', () => {
         listQuery: '',
         pulls: [mockPull],
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestsTable {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -126,6 +127,7 @@ describe('PullRequestsTable Component', () => {
         listQuery: 'state=open',
         pulls: [mockPull],
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestsTable {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);

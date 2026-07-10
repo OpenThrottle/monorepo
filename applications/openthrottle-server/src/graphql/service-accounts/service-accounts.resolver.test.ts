@@ -35,11 +35,13 @@ describe('ServiceAccountsResolver', () => {
 
   const mockServiceAccount: ServiceAccount = {
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
+    credentials: [],
     description: 'MCP automation',
     disabledAt: null,
     id: '11111111-1111-4111-8111-111111111111',
     name: 'openthrottle-mcp',
-  } as ServiceAccount;
+    roles: [],
+  };
 
   const mockCredential: ServiceAccountCredential = {
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
@@ -50,8 +52,9 @@ describe('ServiceAccountsResolver', () => {
     prefix: 'abcdefghijkl',
     revokedAt: null,
     secretHash: 'hashed',
+    serviceAccount: mockServiceAccount,
     serviceAccountId: mockServiceAccount.id,
-  } as ServiceAccountCredential;
+  };
 
   const mockServiceAccountsService = createMock<ServiceAccountsService>();
   const mockRolesService = createMock<RolesService>({
@@ -148,7 +151,16 @@ describe('ServiceAccountsResolver', () => {
 
   describe('rolesForServiceAccount', () => {
     test('returns roles from RolesService', async () => {
-      const mockRole = { id: 'role-id', name: 'mcp' } as Role;
+      const mockRole: Role = {
+        createdAt: new Date('2026-02-02T10:00:00.000Z'),
+        description: null,
+        id: 'role-id',
+        name: 'mcp',
+        permissions: [],
+        serviceAccounts: [],
+        updatedAt: new Date('2026-02-02T10:00:00.000Z'),
+        users: [],
+      };
       vi.mocked(mockRolesService.findRolesForServiceAccount).mockResolvedValue([
         mockRole,
       ]);

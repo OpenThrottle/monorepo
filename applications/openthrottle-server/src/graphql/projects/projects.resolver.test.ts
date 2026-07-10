@@ -3,10 +3,33 @@ import {
   ProjectsService,
 } from '@openthrottle/nestjs-repositories';
 import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { ProjectsResolver } from './projects.resolver';
+
+const buildMockPlan = (projectId: string): Plan => ({
+  assignee: null,
+  author: 'visormatt',
+  category: 'infra',
+  commitLinks: [],
+  createdAt: new Date('2026-02-03T10:00:00.000Z'),
+  description: null,
+  id: 'plan-1',
+  jobRunHooks: { hooks: [] },
+  planEmbeddings: [],
+  planOutputChunks: [],
+  project: null,
+  projectId,
+  projectRelation: null,
+  runConfig: getDefaultPlanRunConfigStorage(),
+  status: 'completed',
+  summary: null,
+  tasks: [],
+  title: 'Plan One',
+  updatedAt: new Date('2026-02-03T10:00:00.000Z'),
+});
 
 describe('ProjectsResolver', () => {
   let resolver: ProjectsResolver;
@@ -20,15 +43,17 @@ describe('ProjectsResolver', () => {
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     name: 'openthrottle-server',
     nxProjectName: 'applications/openthrottle-server',
+    plans: [],
+    tasks: [],
     updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-  } as Project;
+  };
 
   const plansLoad = vi.fn().mockResolvedValue([]);
   const tasksLoad = vi.fn().mockResolvedValue([]);
-  const mockProjectsLoaders: ProjectsLoaders = {
+  const mockProjectsLoaders: ProjectsLoaders = createMock<ProjectsLoaders>({
     plansByProjectIdLoader: { load: plansLoad },
     tasksByProjectIdLoader: { load: tasksLoad },
-  } as unknown as ProjectsLoaders;
+  });
 
   beforeAll(async () => {
     plansByProjectIdLoader = { load: plansLoad };
@@ -155,22 +180,7 @@ describe('ProjectsResolver', () => {
 
   describe('plans (ResolveField)', () => {
     test('returns plans from plansByProjectIdLoader.load(projectId)', async () => {
-      const mockPlans: Plan[] = [
-        {
-          assignee: null,
-          author: 'visormatt',
-          category: 'infra',
-          createdAt: new Date('2026-02-03T10:00:00.000Z'),
-          description: null,
-          id: 'plan-1',
-          project: null,
-          projectId: mockProject.id,
-          status: 'completed',
-          summary: null,
-          title: 'Plan One',
-          updatedAt: new Date('2026-02-03T10:00:00.000Z'),
-        } as Plan,
-      ];
+      const mockPlans: Plan[] = [buildMockPlan(mockProject.id)];
       vi.mocked(plansByProjectIdLoader.load).mockResolvedValue(mockPlans);
 
       const result = await resolver.plans(mockProject);
@@ -198,7 +208,7 @@ describe('ProjectsResolver', () => {
           createdAt: new Date('2026-02-03T10:00:00.000Z'),
           description: null,
           id: 'task-1',
-          plan: undefined as unknown as Plan,
+          plan: buildMockPlan(mockProject.id),
           planId: 'plan-1',
           project: null,
           projectId: mockProject.id,

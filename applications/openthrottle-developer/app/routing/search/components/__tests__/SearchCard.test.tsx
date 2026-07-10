@@ -58,6 +58,7 @@ describe('SearchCard Component', () => {
       planTitle: 'Untitled Plan',
       source: 'plan',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const view = render(<RoutesStub />);
@@ -81,6 +82,7 @@ describe('SearchCard Component', () => {
         planTitle: 'My Plan',
         source: 'plan',
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -110,6 +112,7 @@ describe('SearchCard Component', () => {
         taskId: 'task-789',
         taskTitle: 'A task',
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -143,6 +146,7 @@ describe('SearchCard Component', () => {
         taskId: null,
         taskTitle: null,
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -185,6 +189,7 @@ describe('SearchCard Component', () => {
         taskId: null,
         taskTitle: null,
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -217,6 +222,7 @@ describe('SearchCard Component', () => {
         taskId: null,
         taskTitle: null,
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const view = render(<RoutesStub />);
@@ -233,6 +239,7 @@ describe('SearchCard Component', () => {
     props.result = mockSearchChunk({
       content: 'Snippet of plan or task text.',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const view = render(<RoutesStub />);

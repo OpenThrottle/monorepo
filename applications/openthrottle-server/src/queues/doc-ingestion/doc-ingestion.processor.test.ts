@@ -33,10 +33,10 @@ describe('DocIngestionProcessor', () => {
   });
 
   it('should throw when payload has no directories or files', async () => {
-    const job = {
+    const job = createMock<DocIngestionJob>({
       data: { directories: [], files: [] },
       id: 'job-1',
-    } as unknown as DocIngestionJob;
+    });
 
     await expect(processor.process(job)).rejects.toThrow(
       'Doc-ingestion job requires at least one of directories or files in the payload.',
@@ -44,10 +44,10 @@ describe('DocIngestionProcessor', () => {
   });
 
   it('should throw when payload has directories undefined and files undefined', async () => {
-    const job = {
+    const job = createMock<DocIngestionJob>({
       data: {},
       id: 'job-1',
-    } as DocIngestionJob;
+    });
 
     await expect(processor.process(job)).rejects.toThrow(
       'Doc-ingestion job requires at least one of directories or files in the payload.',

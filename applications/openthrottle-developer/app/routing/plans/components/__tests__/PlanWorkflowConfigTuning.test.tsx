@@ -54,6 +54,7 @@ describe('PlanWorkflowConfigTuning Component', () => {
       ...props,
       setIterationTimeoutText,
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigTuning {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
@@ -85,6 +86,7 @@ describe('PlanWorkflowConfigTuning Component', () => {
         setInput,
         setIterationTimeoutText: vi.fn(),
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PlanWorkflowConfigTuning {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByLabelText } = render(<RoutesStub />);

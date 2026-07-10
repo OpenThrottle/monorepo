@@ -35,13 +35,12 @@ const userRow = (
 
 const serviceAccountRow = (
   fields: Pick<ServiceAccount, 'disabledAt' | 'description' | 'id' | 'name'>,
-): ServiceAccount =>
-  ({
-    createdAt: new Date('2019-01-01T00:00:00.000Z'),
-    credentials: [],
-    roles: [],
-    ...fields,
-  }) as ServiceAccount;
+): ServiceAccount => ({
+  createdAt: new Date('2019-01-01T00:00:00.000Z'),
+  credentials: [],
+  roles: [],
+  ...fields,
+});
 
 describe('GlobalClsAuthHook', () => {
   let hook: GlobalClsAuthHook;

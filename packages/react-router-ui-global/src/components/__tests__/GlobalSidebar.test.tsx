@@ -27,6 +27,7 @@ describe('GlobalSidebar Component', () => {
       },
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalSidebar {...props} />
@@ -34,6 +35,7 @@ describe('GlobalSidebar Component', () => {
     );
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Dashboard page</div>, path: '/dashboard' },
     ]);
 

@@ -3,16 +3,18 @@ import {
   PLAN_TASK_LIST_ORDER,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Task } from '@openthrottle/nestjs-repositories';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
-import type { TaskObject } from './task.object';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
@@ -25,7 +27,7 @@ describe('TasksResolver', () => {
     count: vi.fn(),
     create: vi.fn((data: Record<string, unknown>) => ({
       ...data,
-      id: (data.id as string | undefined) ?? 'generated-task-id',
+      id: typeof data.id === 'string' ? data.id : 'generated-task-id',
     })),
     delete: vi.fn(),
     find: vi.fn(),
@@ -68,7 +70,7 @@ describe('TasksResolver', () => {
     createdAt: new Date('2026-02-01T21:33:51.891Z'),
     description: 'Create TaskData type if needed',
     id: 'b366d480-6a4f-498b-8755-23ade25d2b24',
-    plan: {
+    plan: createMock<Plan>({
       assignee: null,
       author: 'Plan author',
       category: 'Plan category',
@@ -86,7 +88,7 @@ describe('TasksResolver', () => {
       tasks: [],
       title: 'Plan title',
       updatedAt: new Date('2026-02-01T21:33:51.891Z'),
-    },
+    }),
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
     project: null,
     projectId: null,
@@ -98,7 +100,7 @@ describe('TasksResolver', () => {
     taskEmbeddings: [],
     title: 'Add graphql/tasks/',
     updatedAt: new Date('2026-02-01T21:33:51.891Z'),
-  } as unknown as Task;
+  };
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -147,11 +149,8 @@ describe('TasksResolver', () => {
       expect(result?.description).toBe(mockTask.description);
       expect(result?.category).toBe(mockTask.category);
       expect(result?.status).toBe(mockTask.status);
-      expect(
-        JSON.stringify(
-          (result as { requirements?: unknown[] }).requirements ?? [],
-        ),
-      ).toBe('[]');
+      const requirements = isRecord(result) ? result.requirements : undefined;
+      expect(JSON.stringify(requirements ?? [])).toBe('[]');
       expect(result?.createdAt).toEqual(mockTask.createdAt);
       expect(result?.updatedAt).toEqual(mockTask.updatedAt);
     });
@@ -322,13 +321,14 @@ describe('TasksResolver', () => {
         projectId: null,
         projectRelation: null,
         requirementsJson: '[]',
+        sortOrder: mockTask.sortOrder,
         status: mockTask.status,
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await resolver.plan(parent as unknown as TaskObject);
+      const result = await resolver.plan(parent);
 
       expect(result).toBeNull();
     });
@@ -389,13 +389,14 @@ describe('TasksResolver', () => {
         projectId: null,
         projectRelation: null,
         requirementsJson: '[]',
+        sortOrder: mockTask.sortOrder,
         status: mockTask.status,
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await r.plan(parent as unknown as TaskObject);
+      const result = await r.plan(parent);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockTask.planId);
@@ -444,13 +445,14 @@ describe('TasksResolver', () => {
         projectId: null,
         projectRelation: null,
         requirementsJson: '[]',
+        sortOrder: mockTask.sortOrder,
         status: mockTask.status,
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
       };
 
-      const result = await r.plan(parent as unknown as TaskObject);
+      const result = await r.plan(parent);
 
       expect(result).toBeNull();
     });
@@ -458,7 +460,7 @@ describe('TasksResolver', () => {
 
   describe('updateTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits plan status when task enters IN_PROGRESS and plan was promoted', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(repo.findOne).mockResolvedValue({
         ...mockTask,
         status: 'PENDING',
@@ -496,7 +498,7 @@ describe('TasksResolver', () => {
     });
 
     test('calls sync but does not emit when plan was already IN_PROGRESS (idempotent no-op)', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(repo.findOne).mockResolvedValue({
         ...mockTask,
         status: 'PENDING',
@@ -589,7 +591,7 @@ describe('TasksResolver', () => {
 
   describe('updateTask — parent plan COMPLETED reconcile', () => {
     test('completes the plan and emits when the last task completes', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(repo.findOne).mockResolvedValue({
         ...mockTask,
         status: 'IN_PROGRESS',
@@ -628,7 +630,7 @@ describe('TasksResolver', () => {
     });
 
     test('reconciles but does not emit when tasks remain (plan unchanged)', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(repo.findOne).mockResolvedValue({
         ...mockTask,
         status: 'IN_PROGRESS',
@@ -694,7 +696,7 @@ describe('TasksResolver', () => {
   });
 
   describe('createTask — sortOrder', () => {
-    const planId = mockTask.planId as string;
+    const planId = mockTask.planId;
 
     test('auto-assigns sortOrder via resolveNextSortOrder when omitted', async () => {
       vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(3000);
@@ -778,7 +780,7 @@ describe('TasksResolver', () => {
   });
 
   describe('createTask — requirements parsing', () => {
-    const planId = mockTask.planId as string;
+    const planId = mockTask.planId;
 
     const baseInput = {
       assignee: null,
@@ -857,7 +859,7 @@ describe('TasksResolver', () => {
 
   describe('createTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits when new task is created as IN_PROGRESS and plan was promoted', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
@@ -890,7 +892,7 @@ describe('TasksResolver', () => {
     });
 
     test('does not call sync when created task is not IN_PROGRESS', async () => {
-      const planId = mockTask.planId as string;
+      const planId = mockTask.planId;
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
         id: 'new-task-id',
@@ -917,7 +919,7 @@ describe('TasksResolver', () => {
   });
 
   describe('reorderPlanTasks', () => {
-    const planId = mockTask.planId as string;
+    const planId = mockTask.planId;
     const taskA = { ...mockTask, id: 'task-a', sortOrder: 2000, title: 'A' };
     const taskB = {
       ...mockTask,

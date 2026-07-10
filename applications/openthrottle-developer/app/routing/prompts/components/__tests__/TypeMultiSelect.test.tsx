@@ -41,6 +41,7 @@ describe('TypeMultiSelect Component', () => {
         value: ['AGENTS', 'SKILLS'],
       };
 
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <TypeMultiSelect {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
@@ -62,6 +63,7 @@ describe('TypeMultiSelect Component', () => {
         value: ['AGENTS'],
       };
 
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <TypeMultiSelect {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 

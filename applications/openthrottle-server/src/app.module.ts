@@ -22,7 +22,7 @@ import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
-import type { DynamicModule, Provider } from '@nestjs/common';
+import type { ClassProvider, DynamicModule, Provider } from '@nestjs/common';
 import {
   getOpenthrottleServerDevJsonlLogDirectory,
   isOpenthrottleServerDevJsonlLoggingEnabled,
@@ -83,6 +83,19 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 
 type AppModuleImports = NonNullable<DynamicModule['imports']>;
 
+/**
+ * `multi` + `useClass` on the `APP_INTERCEPTOR` token is a runtime-valid Nest
+ * pattern, but `ClassProvider` does not declare `multi` (only factory-style
+ * providers do), so widen the annotation to permit it without an assertion.
+ */
+const emitNotificationInterceptorProvider: ClassProvider & {
+  multi?: boolean;
+} = {
+  multi: true,
+  provide: APP_INTERCEPTOR,
+  useClass: EmitNotificationInterceptor,
+};
+
 const appProviders: Provider[] = [
   GlobalClsAuthHook,
   GlobalAuthGuard,
@@ -92,11 +105,7 @@ const appProviders: Provider[] = [
     provide: APP_GUARD,
     useClass: GlobalAuthGuard,
   },
-  {
-    multi: true,
-    provide: APP_INTERCEPTOR,
-    useClass: EmitNotificationInterceptor,
-  } as Provider,
+  emitNotificationInterceptorProvider,
 ];
 
 /**

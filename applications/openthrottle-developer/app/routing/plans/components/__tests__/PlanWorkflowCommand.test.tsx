@@ -60,6 +60,7 @@ describe('PlanWorkflowCommand Component', () => {
       command:
         'pnpm exec workflow-ralph --plan 11111111-1111-4111-8111-111111111111 --model fast',
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowCommand {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
@@ -75,6 +76,7 @@ describe('PlanWorkflowCommand Component', () => {
     const props: PlanWorkflowCommandProps = {
       command: line,
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowCommand {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);

@@ -1,4 +1,6 @@
+import type { ChildProcess } from 'child_process';
 import { spawn as nodeSpawn } from 'child_process';
+import type { Readable } from 'stream';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
@@ -15,6 +17,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
+import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
@@ -32,6 +35,47 @@ import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/work
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
+
+/**
+ * Type-guard helpers for reaching PlansProcessor's private `notifications` field and
+ * `buildEnhancedMetrics` method from tests without an `as` cast. Narrowing must start from
+ * `unknown` (not the class type) so TS doesn't collapse the private-member intersection to `never`.
+ */
+function isNotificationsHolder(
+  value: unknown,
+): value is { notifications: NotificationsService } {
+  return (
+    typeof value === 'object' && value !== null && 'notifications' in value
+  );
+}
+
+function getProcessorNotifications(instance: unknown): NotificationsService {
+  if (!isNotificationsHolder(instance)) {
+    throw new Error('Expected processor to expose notifications');
+  }
+
+  return instance.notifications;
+}
+
+function isEnhancedMetricsBuilder(value: unknown): value is {
+  buildEnhancedMetrics: (result: PlanRunJobResult) => EnhancedTaskRunMetrics;
+} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'buildEnhancedMetrics' in value
+  );
+}
+
+function getBuildEnhancedMetrics(
+  instance: unknown,
+): (result: PlanRunJobResult) => EnhancedTaskRunMetrics {
+  if (!isEnhancedMetricsBuilder(instance)) {
+    throw new Error('Expected processor to expose buildEnhancedMetrics');
+  }
+
+  return instance.buildEnhancedMetrics.bind(instance);
+}
 
 vi.mock('child_process', () => ({
   spawn: vi.fn(),
@@ -101,19 +145,19 @@ const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
   getRepository: () =>
-    ({
+    createMock<ReturnType<PlansService['getRepository']>>({
       find: mockRepoFind,
       findOne: mockRepoFindOne,
       update: mockRepoUpdate,
-    }) as unknown as ReturnType<PlansService['getRepository']>,
+    }),
 });
 
 const mockTasksService = createMock<TasksService>({
   getRepository: () =>
-    ({
+    createMock<ReturnType<TasksService['getRepository']>>({
       find: vi.fn().mockResolvedValue([]),
       findOne: mockTaskRepoFindOne,
-    }) as unknown as ReturnType<TasksService['getRepository']>,
+    }),
   syncParentPlanStatus: mocksyncParentPlanStatus,
 });
 
@@ -130,15 +174,13 @@ const mockProcessMetrics = createMock<ProcessMetricsService>({
 });
 
 const mockSave = vi.fn().mockResolvedValue(undefined);
-const mockCreate = vi.fn(
-  (data: { content: string; iteration: null; planId: string }) => ({ ...data }),
-);
+const mockCreate = vi.fn();
 const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
   getRepository: () =>
-    ({
+    createMock<ReturnType<PlanOutputStreamService['getRepository']>>({
       create: mockCreate,
       save: mockSave,
-    }) as unknown as ReturnType<PlanOutputStreamService['getRepository']>,
+    }),
 });
 
 const mockGetJobs = vi.fn().mockResolvedValue([]);
@@ -155,34 +197,37 @@ describe('PlansProcessor', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
-    mockJob = {
+    mockJob = createMock<RunPlanJob>({
       data: {
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
         runKind: 'orchestrator',
       },
       id: 'job-1',
-    } as RunPlanJob;
+    });
 
-    mockSpawn.mockImplementation((() => {
-      let closeHandler:
-        | ((code: number | null, signal: NodeJS.Signals | null) => void)
-        | undefined;
-      const stub = {
-        on: vi.fn((ev: string, fn: (...args: unknown[]) => void) => {
-          if (ev === 'close') {
-            closeHandler = fn as (
-              code: number | null,
-              signal: NodeJS.Signals | null,
-            ) => void;
-            setImmediate(() => closeHandler?.(0, null));
-          }
-        }),
+    mockSpawn.mockImplementation(() => {
+      const stub = createMock<ChildProcess>({
         pid: 42,
-        stderr: { on: vi.fn() },
-        stdout: { on: vi.fn() },
-      };
-      return stub as unknown as ReturnType<typeof nodeSpawn>;
-    }) as typeof nodeSpawn);
+        stderr: createMock<Readable>(),
+        stdout: createMock<Readable>(),
+      });
+
+      // Annotate params explicitly: ChildProcess['on'] is overloaded and its last
+      // overload is `on(event: 'spawn', listener: () => void)`, so an un-annotated
+      // implementation infers `event: 'spawn'` / `listener: () => void`, which breaks
+      // both the `=== 'close'` compare and the two-arg listener invocation below.
+      stub.on.mockImplementation(
+        (event: string, listener: (...args: unknown[]) => void) => {
+          if (event === 'close') {
+            setImmediate(() => listener(0, null));
+          }
+
+          return stub;
+        },
+      );
+
+      return stub;
+    });
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -270,13 +315,13 @@ describe('PlansProcessor', () => {
   });
 
   it('runs after_run hooks on orchestrator success before queue notification', async () => {
-    mockJob = {
+    mockJob = createMock<RunPlanJob>({
       data: {
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
         runKind: 'orchestrator',
       },
       id: 'job-1',
-    } as RunPlanJob;
+    });
 
     await processor.process(mockJob);
 
@@ -294,14 +339,17 @@ describe('PlansProcessor', () => {
 
   it('should skip main run when before_run hook blocks', async () => {
     mockRunBeforeRunHooksAndHandleBlock.mockResolvedValueOnce(true);
-    mockJob = {
+    // `runBeforeRunHooksAndHandleBlock` is fully mocked above, so the hook's `phase`
+    // value is never inspected; `beforeAll` is used here (rather than the legacy
+    // 'before_run' wire value) so this literal satisfies JobRunHookPhase directly.
+    mockJob = createMock<RunPlanJob>({
       data: {
         jobRunHooks: {
           hooks: [
             {
               kind: 'prompt_profile',
               onFailure: 'block',
-              phase: 'before_run',
+              phase: 'beforeAll',
               prompt: '/agents/ralph',
               promptDelivery: 'named',
             },
@@ -311,7 +359,7 @@ describe('PlansProcessor', () => {
         runKind: 'orchestrator',
       },
       id: 'job-1',
-    } as unknown as RunPlanJob;
+    });
 
     await processor.process(mockJob);
 
@@ -321,13 +369,13 @@ describe('PlansProcessor', () => {
   });
 
   it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
-    mockJob = {
+    mockJob = createMock<RunPlanJob>({
       data: {
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
         runKind: 'orchestrator',
       },
       id: 'job-1',
-    } as RunPlanJob;
+    });
 
     const result = await processor.process(mockJob);
 
@@ -370,19 +418,19 @@ describe('PlansProcessor', () => {
         planId: mockJob.data.planId,
       }),
     );
-    const content = mockCreate.mock.calls[0]?.[0]?.content as string;
+    const content = mockCreate.mock.calls[0]?.[0]?.content;
     expect(content).toMatch(/RSS .+ MB, heap .+ MB, CPU user .+ ms/);
   });
 
   describe('orchestrator path + cancel', () => {
     it('emits cancel notification (info) when orchestrator outcome is cancelled', async () => {
-      mockJob = {
+      mockJob = createMock<RunPlanJob>({
         data: {
           planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
           runKind: 'orchestrator',
         },
         id: 'job-1',
-      } as RunPlanJob;
+      });
 
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
         exitCode: 0,
@@ -392,9 +440,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
+      const notifications = getProcessorNotifications(processor);
 
       expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -423,9 +469,7 @@ describe('PlansProcessor', () => {
       expect(mockRepoFindOne).toHaveBeenCalledWith({
         where: { id: mockJob.data.planId },
       });
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
+      const notifications = getProcessorNotifications(processor);
       expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({
           jobType: 'plans',
@@ -448,9 +492,7 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
+      const notifications = getProcessorNotifications(processor);
       expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('Plan run finished'),
@@ -518,9 +560,7 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
+      const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
@@ -544,9 +584,7 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
+      const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
     });
 
@@ -571,7 +609,7 @@ describe('PlansProcessor', () => {
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
-        job: { data: { planId }, id: 'job-1' } as RunPlanJob,
+        job: createMock<RunPlanJob>({ data: { planId }, id: 'job-1' }),
       });
 
       expect(mockRepoUpdate).toHaveBeenCalledWith(
@@ -583,7 +621,7 @@ describe('PlansProcessor', () => {
     it('onPlanJobFailed does nothing when job has no planId', async () => {
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
-        job: { data: {}, id: 'job-1' } as RunPlanJob,
+        job: createMock<RunPlanJob>({ data: {}, id: 'job-1' }),
       });
 
       expect(mockRepoUpdate).not.toHaveBeenCalled();
@@ -623,17 +661,14 @@ describe('PlansProcessor', () => {
      * stalled and re-enter the waiting queue. See plans.constants and plans.processor.ts.
      */
     it('passes explicit Worker options for stalled job recovery', () => {
-      const workerOptions = Reflect.getMetadata(
-        WORKER_METADATA_KEY,
-        PlansProcessor,
-      ) as
+      const workerOptions:
         | {
             concurrency?: number;
             lockDuration?: number;
             maxStalledCount?: number;
             stalledInterval?: number;
           }
-        | undefined;
+        | undefined = Reflect.getMetadata(WORKER_METADATA_KEY, PlansProcessor);
 
       expect(workerOptions).toBeDefined();
       expect(workerOptions).toHaveProperty('concurrency', 1);
@@ -652,10 +687,8 @@ describe('PlansProcessor', () => {
     });
 
     it('uses plans queue name in Processor metadata', () => {
-      const processorMetadata = Reflect.getMetadata(
-        'bullmq:processor_metadata',
-        PlansProcessor,
-      ) as { name?: string } | undefined;
+      const processorMetadata: { name?: string } | undefined =
+        Reflect.getMetadata('bullmq:processor_metadata', PlansProcessor);
 
       expect(processorMetadata).toBeDefined();
       expect(processorMetadata?.name).toBe(PLANS_QUEUE_NAME);
@@ -701,11 +734,7 @@ describe('PlansProcessor', () => {
         wallClockMetrics: validWallClockMetrics,
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
       const enhanced = buildEnhancedMetrics(result);
 
@@ -733,11 +762,7 @@ describe('PlansProcessor', () => {
         wallClockMetrics: validWallClockMetrics,
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
       const enhanced = buildEnhancedMetrics(result);
 
@@ -765,16 +790,9 @@ describe('PlansProcessor', () => {
         wallClockMetrics: validWallClockMetrics,
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
-      const enhanced = buildEnhancedMetrics(result) as {
-        atEnd: typeof snapshotStub;
-        atStart: typeof snapshotStub;
-      };
+      const enhanced = buildEnhancedMetrics(result);
 
       expect(enhanced).toHaveProperty('atStart', snapshotStub);
       expect(enhanced).toHaveProperty('atEnd', snapshotStub);
@@ -796,15 +814,9 @@ describe('PlansProcessor', () => {
         wallClockMetrics: validWallClockMetrics,
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
-      const enhanced = buildEnhancedMetrics(result) as {
-        childProcessMetrics?: ChildProcessMetrics;
-      };
+      const enhanced = buildEnhancedMetrics(result);
 
       expect(enhanced.childProcessMetrics).toBeUndefined();
     });
@@ -825,15 +837,9 @@ describe('PlansProcessor', () => {
         taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
-      const enhanced = buildEnhancedMetrics(result) as {
-        wallClockMetrics?: WallClockMetrics;
-      };
+      const enhanced = buildEnhancedMetrics(result);
 
       expect(enhanced.wallClockMetrics).toBeUndefined();
     });
@@ -843,18 +849,9 @@ describe('PlansProcessor', () => {
         taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
       };
 
-      const buildEnhancedMetrics = (
-        processor as unknown as {
-          buildEnhancedMetrics: (r: PlanRunJobResult) => unknown;
-        }
-      ).buildEnhancedMetrics.bind(processor);
+      const buildEnhancedMetrics = getBuildEnhancedMetrics(processor);
 
-      const enhanced = buildEnhancedMetrics(result) as {
-        atEnd: typeof snapshotStub;
-        atStart: typeof snapshotStub;
-        childProcessMetrics?: ChildProcessMetrics;
-        wallClockMetrics?: WallClockMetrics;
-      };
+      const enhanced = buildEnhancedMetrics(result);
 
       expect(enhanced.atStart).toEqual(snapshotStub);
       expect(enhanced.atEnd).toEqual(snapshotStub);

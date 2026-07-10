@@ -67,6 +67,7 @@ describe('QueuesStats Component', () => {
   describe('when queues has items', () => {
     beforeEach(() => {
       props = { queues: mockQueues };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const StatsComponent = () => <QueuesStats {...props} />;
       const RoutesStub = createRoutesStub([
         { Component: StatsComponent, path: '/' },
@@ -112,6 +113,7 @@ describe('QueuesStats Component', () => {
   describe('when queues include high-volume plans completed history', () => {
     beforeEach(() => {
       props = { queues: [...REPRESENTATIVE_SKEWED_QUEUES] };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const StatsComponent = () => <QueuesStats {...props} />;
       const RoutesStub = createRoutesStub([
         { Component: StatsComponent, path: '/' },

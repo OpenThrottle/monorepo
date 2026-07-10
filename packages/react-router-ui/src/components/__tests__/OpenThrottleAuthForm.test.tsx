@@ -47,6 +47,7 @@ describe('OpenThrottleAuthForm Component', () => {
     const onSubmit = vi.fn();
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local mock component
         Component: () => <OpenThrottleAuthForm onSubmit={onSubmit} />,
         path: '/',
       },

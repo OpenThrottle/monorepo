@@ -3,8 +3,6 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { afterEach, describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
-
-type RalphDebugCliInput = RalphPlanRunTuningInput['ralphDebugCli'];
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
@@ -94,7 +92,7 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'debug' as RalphDebugCliInput,
+        ralphDebugCli: 'debug',
       }),
     ).toEqual({ debug: 'debug' });
   });
@@ -103,13 +101,15 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'DEBUG' as unknown as RalphDebugCliInput,
+        // @ts-expect-error legacy uppercase ralphDebugCli simulates untyped persisted/CLI data
+        ralphDebugCli: 'DEBUG',
       }),
     ).toEqual({ debug: 'debug' });
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'VERBOSE' as unknown as RalphDebugCliInput,
+        // @ts-expect-error legacy uppercase ralphDebugCli simulates untyped persisted/CLI data
+        ralphDebugCli: 'VERBOSE',
       }),
     ).toEqual({ debug: 'verbose' });
   });
@@ -118,22 +118,31 @@ describe('parseEnqueueRalphTuning', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'omit' as RalphDebugCliInput,
+        ralphDebugCli: 'omit',
       }),
     ).toBeUndefined();
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: 'DEBUGG' as unknown as RalphDebugCliInput,
+        // @ts-expect-error legacy uppercase ralphDebugCli simulates untyped persisted/CLI data
+        ralphDebugCli: 'DEBUGG',
       }),
     ).toBeUndefined();
   });
 
   test('ralphTuningForChildJob normalizes legacy uppercase debug on job payload', () => {
     expect(
-      ralphTuningForChildJob({ debug: 'DEBUG' as 'debug', iterations: 2 }),
+      ralphTuningForChildJob(
+        // @ts-expect-error -- simulates a legacy persisted uppercase debug value outside WorkflowConfigDebug
+        { debug: 'DEBUG', iterations: 2 },
+      ),
     ).toEqual({ iterations: 2, ralphDebugCli: 'debug' });
-    expect(ralphTuningForChildJob({ debug: 'VERBOSE' as 'verbose' })).toEqual({
+    expect(
+      ralphTuningForChildJob(
+        // @ts-expect-error -- simulates a legacy persisted uppercase debug value outside WorkflowConfigDebug
+        { debug: 'VERBOSE' },
+      ),
+    ).toEqual({
       ralphDebugCli: 'verbose',
     });
   });

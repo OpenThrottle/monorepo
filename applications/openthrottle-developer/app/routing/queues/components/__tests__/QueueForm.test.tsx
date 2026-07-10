@@ -34,6 +34,7 @@ describe('QueueForm Component', () => {
   describe('when actionData includes an error', () => {
     beforeEach(() => {
       props = { actionData: { error: 'Queue name already exists' } };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <QueueForm {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);

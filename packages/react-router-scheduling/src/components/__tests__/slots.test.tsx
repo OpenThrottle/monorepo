@@ -29,6 +29,7 @@ describe('buildCustomComponents', () => {
 
   it('hands an event slot a domain CalendarEvent adapted from the engine event', () => {
     let received: CalendarEvent | undefined;
+    // eslint-disable-next-line react/no-multi-comp -- test-local slot renderer component
     const Renderer: CalendarEventSlot = ({ calendarEvent }) => {
       received = calendarEvent;
       return <div>{calendarEvent.title}</div>;
@@ -53,6 +54,7 @@ describe('buildCustomComponents', () => {
   });
 
   it('renders a header slot as free content (no event forwarded)', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local slot renderer component
     const Header: CalendarHeaderSlot = () => <div>Brand</div>;
     const result = buildCustomComponents({ headerContent: Header });
     const Wrapper = result?.headerContent;

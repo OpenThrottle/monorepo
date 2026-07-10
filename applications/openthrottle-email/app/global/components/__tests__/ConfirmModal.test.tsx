@@ -30,6 +30,7 @@ describe('ConfirmModal Component', () => {
   test('calls onConfirm when confirm button is clicked', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <ConfirmModal
         confirmLabel="OK"
@@ -49,6 +50,7 @@ describe('ConfirmModal Component', () => {
   test('calls onCancel when cancel button is clicked', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <ConfirmModal
         confirmLabel="OK"

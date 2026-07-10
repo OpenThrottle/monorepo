@@ -115,6 +115,7 @@ describe('ChatDialog Component', () => {
 
   describe('when open is controlled', () => {
     test('should show dialog when open is true without clicking trigger', () => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local harness component
       const Controlled = (): React.ReactElement => {
         const [open, setOpen] = React.useState(true);
         return (
@@ -140,6 +141,7 @@ describe('ChatDialog Component', () => {
     test('should show New chat control in dialog header', async () => {
       const user = userEvent.setup();
       const onStartNewChat = vi.fn();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Comp = () => (
         <TooltipProvider>
           <ChatProvider
@@ -180,6 +182,7 @@ describe('ChatDialog Component', () => {
 
   describe('when messages and onSendMessage are missing', () => {
     test('should surface error without ChatProvider', () => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       const Broken = (): React.ReactElement => (
         <ChatDialog triggerLabel="Broken" />
       );

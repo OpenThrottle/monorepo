@@ -14,15 +14,12 @@ import { ServiceAccountAuthService } from '../auth/service-account-auth.service'
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
 
-type RequestWithAuthHeader = {
-  headers?: { authorization?: string | string[] };
-  user?: unknown;
-};
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const readAuthorizationHeader = (
-  req: RequestWithAuthHeader,
-): string | undefined => {
-  const raw = req.headers?.authorization;
+const readAuthorizationHeader = (req: object): string | undefined => {
+  const headers = 'headers' in req ? req.headers : undefined;
+  const raw = isRecord(headers) ? headers.authorization : undefined;
 
   if (typeof raw === 'string') {
     return raw;
@@ -59,9 +56,12 @@ export class GlobalAuthGuard implements CanActivate {
       return true;
     }
 
-    const req = getRequestFromExecutionContext(
-      context,
-    ) as RequestWithAuthHeader;
+    const req = getRequestFromExecutionContext(context);
+
+    if (req == null) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
     const authorization = readAuthorizationHeader(req);
 
     if (

@@ -50,6 +50,7 @@ describe('SearchPlanCard Component', () => {
       planId: null,
       planTitle: 'Untitled Plan',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchPlanCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -66,6 +67,7 @@ describe('SearchPlanCard Component', () => {
         planId: 'plan-123',
         planTitle: 'My Plan',
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchPlanCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
@@ -86,6 +88,7 @@ describe('SearchPlanCard Component', () => {
         taskId: 'task-999',
         taskTitle: 'Do the thing',
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchPlanCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
@@ -101,6 +104,7 @@ describe('SearchPlanCard Component', () => {
       content: 'Specific plan content',
       similarity: 0.92,
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchPlanCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -113,6 +117,7 @@ describe('SearchPlanCard Component', () => {
 
   test('should show source badge', () => {
     props.result = mockSearchChunk({ source: 'plan' });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchPlanCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);

@@ -34,6 +34,7 @@ describe('ProjectsStats Component', () => {
 
   describe('when plansLinkedCount is provided', () => {
     test('should show plans linked card when plansLinkedCount is provided', () => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const WithPlans = () => (
         <ProjectsStats plansLinkedCount={5} totalProjects={2} />
       );

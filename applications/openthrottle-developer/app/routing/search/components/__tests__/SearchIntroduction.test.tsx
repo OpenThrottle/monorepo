@@ -40,6 +40,7 @@ describe('SearchIntroduction Component', () => {
       onExpandRankingChange,
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchIntroduction {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);

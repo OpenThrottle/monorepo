@@ -45,6 +45,7 @@ describe('AgentsSkillsRegistry', () => {
   test('renders layout counts and entry slugs for provided entries', () => {
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => <AgentsSkillsRegistry entries={SAMPLE_ENTRIES} />,
         path: '/',
       },
@@ -62,6 +63,7 @@ describe('AgentsSkillsRegistry', () => {
     const user = userEvent.setup();
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => <AgentsSkillsRegistry entries={SAMPLE_ENTRIES} />,
         path: '/',
       },
@@ -82,6 +84,7 @@ describe('AgentsSkillsRegistry', () => {
   test('GitHub links point at main-branch blob URLs for repo-relative paths', () => {
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => <AgentsSkillsRegistry entries={SAMPLE_ENTRIES} />,
         path: '/',
       },
@@ -107,6 +110,7 @@ describe('AgentsSkillsRegistry', () => {
   test('renders Copy path controls for each visible skill row', () => {
     const RoutesStub = createRoutesStub([
       {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         Component: () => <AgentsSkillsRegistry entries={SAMPLE_ENTRIES} />,
         path: '/',
       },

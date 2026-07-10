@@ -7,13 +7,13 @@ import {
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
   AgentConversationsService,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import type {
-  AgentConversation,
-  AgentConversationMessage,
   CustomPrompt,
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
@@ -55,11 +55,14 @@ const discovery: DiscoveryResult = {
   scannedHosts: ['localhost'],
 };
 
-const conversation = { id: 'conv-1', userId: 'user-1' } as AgentConversation;
-const userMessage = {
+const conversation = agentConversationsFactory.build({
+  id: 'conv-1',
+  userId: 'user-1',
+});
+const userMessage = agentConversationMessagesFactory.build({
   id: 'user-msg-1',
   role: 'user',
-} as AgentConversationMessage;
+});
 
 function build(): {
   asyncIterator: ReturnType<typeof vi.fn>;
@@ -184,9 +187,11 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
   it('routes a cursor backend: resolves the repo cwd, mints a session, starts the cursor stream', async () => {
     const { repositories, resolver, streamService } = build();
-    vi.mocked(repositories.findByIdForUser).mockResolvedValue({
-      filesystemPath: '/repo/checkout',
-    } as WorkspaceLocalRepository);
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
     createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
 
     const result = await resolver.startConversationStream(human, {
@@ -216,13 +221,15 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
   it('resolves a cursor persona system prompt from the custom_prompts registry by id', async () => {
     const { personaFindOne, repositories, resolver, streamService } = build();
-    vi.mocked(repositories.findByIdForUser).mockResolvedValue({
-      filesystemPath: '/repo/checkout',
-    } as WorkspaceLocalRepository);
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
     createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
-    personaFindOne.mockResolvedValue({
-      content: 'You are the registry persona.',
-    } as CustomPrompt);
+    personaFindOne.mockResolvedValue(
+      createMock<CustomPrompt>({ content: 'You are the registry persona.' }),
+    );
     const personaId = '11111111-1111-4111-8111-111111111111';
 
     await resolver.startConversationStream(human, {

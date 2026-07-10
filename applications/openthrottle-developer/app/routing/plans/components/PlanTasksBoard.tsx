@@ -2,14 +2,13 @@ import * as React from 'react';
 import clsx from 'clsx';
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useDrag, useDrop } from 'react-dnd';
 import { toast } from '@openthrottle/react-router-shadcn';
 import { useFetcher, useRevalidator } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { PlanTaskCard } from '~/routing/plans/components/PlanTaskCard';
+import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanTaskCard';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
-import { PlanTasksColumn } from '~/routing/plans/components/PlanTasksColumn';
+import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import {
   getPlanTaskBoardColumnId,
   getPlanTaskBoardColumnTitle,
@@ -17,16 +16,6 @@ import {
   PLAN_TASK_BOARD_COLUMN_ORDER,
   type PlanTaskBoardGroupKey,
 } from '~/routing/plans/utils/group-plan-tasks-by-status';
-
-/** @description react-dnd drag type for plan task cards on the board. */
-const PLAN_TASK_DRAG_TYPE = 'plan-task-card' as const;
-
-interface PlanTaskDragItem {
-  currentStatus: string;
-  planId: string;
-  taskId: string;
-  type: typeof PLAN_TASK_DRAG_TYPE;
-}
 
 export interface PlanTasksBoardProps {
   className?: string;
@@ -36,139 +25,6 @@ type PlanDetailActionData =
   | { ok: true }
   | { updateTaskError: string }
   | undefined;
-
-interface DraggablePlanTaskCardProps {
-  planId: string;
-  task: PlanTaskRowFragment;
-}
-
-/**
- * @description Draggable wrapper; whole card is a drag handle (links remain clickable without starting a drag).
- */
-const DraggablePlanTaskCard = (
-  props: DraggablePlanTaskCardProps,
-): React.ReactElement => {
-  const { planId, task } = props;
-
-  // Hooks
-  const [{ isDragging }, drag] = useDrag({
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    item: (): PlanTaskDragItem => ({
-      currentStatus: task.status ?? '',
-      planId,
-      taskId: task.id,
-      type: PLAN_TASK_DRAG_TYPE,
-    }),
-    type: PLAN_TASK_DRAG_TYPE,
-  });
-
-  // Setup
-  // react-dnd's ConnectDragSource is itself a ref-callback style connector, so
-  // wrap it in a real RefCallback rather than casting past the typing gap.
-  const dragRef: React.RefCallback<HTMLDivElement> = (node) => {
-    drag(node);
-  };
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div
-      className={clsx(
-        'touch-manipulation rounded-md',
-        isDragging && 'opacity-50',
-      )}
-      ref={dragRef}
-    >
-      <PlanTaskCard task={task} />
-    </div>
-  );
-};
-
-interface PlanTasksColumnDropProps {
-  acceptsDrop: boolean;
-  children: React.ReactNode;
-  columnId: string;
-  columnKey: PlanTaskBoardGroupKey;
-  emptyLabel?: string;
-  onDropTask: (taskId: string, newStatus: string) => void;
-  title: string;
-}
-
-/**
- * @description Drop target for a status column; highlights when a task can be dropped here.
- */
-const PlanTasksColumnDrop = (
-  props: PlanTasksColumnDropProps,
-): React.ReactElement => {
-  const {
-    acceptsDrop,
-    children,
-    columnId,
-    columnKey,
-    emptyLabel,
-    onDropTask,
-    title,
-  } = props;
-
-  // Hooks
-  const [{ isOver, canDrop }, drop] = useDrop<
-    PlanTaskDragItem,
-    void,
-    { canDrop: boolean; isOver: boolean }
-  >({
-    accept: PLAN_TASK_DRAG_TYPE,
-    canDrop: () => acceptsDrop,
-    collect: (monitor) => ({
-      canDrop: monitor.canDrop(),
-      isOver: monitor.isOver({ shallow: true }),
-    }),
-    drop: (item) => {
-      if (!acceptsDrop || columnKey === 'UNKNOWN') return;
-      const targetStatus = columnKey;
-      if (item.currentStatus === targetStatus) return;
-      onDropTask(item.taskId, targetStatus);
-    },
-  });
-
-  // Setup
-  const highlight =
-    acceptsDrop && canDrop && isOver ? 'ring-2 ring-primary ring-offset-2' : '';
-
-  let dropRef: React.RefCallback<HTMLElement> | undefined;
-  if (acceptsDrop) {
-    dropRef = (node) => {
-      drop(node);
-    };
-  }
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <PlanTasksColumn
-      className={highlight}
-      columnId={columnId}
-      droppableRef={dropRef}
-      emptyLabel={emptyLabel}
-      title={title}
-    >
-      {children}
-    </PlanTasksColumn>
-  );
-};
 
 /**
  * @description Inner board: grouping, optimistic status updates, and react-dnd (must sit under {@link DndProvider}).
