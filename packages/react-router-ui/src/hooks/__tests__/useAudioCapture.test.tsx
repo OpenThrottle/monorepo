@@ -141,7 +141,9 @@ describe('useAudioCapture', () => {
       const [worklet] = MockAudioWorkletNode.instances;
       const chunk = new Float32Array(4000);
       act(() => {
-        worklet.port.onmessage?.({ data: chunk } as MessageEvent<Float32Array>);
+        worklet.port.onmessage?.(
+          new MessageEvent<Float32Array>('message', { data: chunk }),
+        );
       });
 
       expect(onChunk).toHaveBeenCalledWith(chunk);

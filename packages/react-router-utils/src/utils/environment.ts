@@ -71,8 +71,7 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
 export const getServerEnv = (): OpenThrottleServerEnv => {
   // ENV_SOURCE is the public tier in the browser; the server-only keys live on
   // the full env (`process.env`) member of the union and are read by name here.
-  const fullEnv = ENV_SOURCE as OpenThrottleEnv;
-  const apiUrlInternal = fullEnv['API_URL_INTERNAL'];
+  const apiUrlInternal = ENV_SOURCE['API_URL_INTERNAL'];
 
   if (!apiUrlInternal) throw new Error('API_URL_INTERNAL is not set');
 

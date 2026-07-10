@@ -21,9 +21,16 @@ type RawEnv = Readonly<Record<string, string | undefined>>;
  * narrowed to the raw string record without assuming any key is present.
  * `window` is referenced only when `IS_BROWSER`, so this stays SSR-safe.
  */
+const isRawEnv = (value: unknown): value is RawEnv =>
+  typeof value === 'object' && value !== null;
+
 const readBrowserEnv = (): RawEnv => {
-  const win = window as { env?: RawEnv };
-  return win.env ?? {};
+  if (!('env' in window)) {
+    return {};
+  }
+
+  const candidate: unknown = window.env;
+  return isRawEnv(candidate) ? candidate : {};
 };
 
 const rawEnv: RawEnv = IS_BROWSER ? readBrowserEnv() : process.env;
@@ -36,8 +43,10 @@ const rawEnv: RawEnv = IS_BROWSER ? readBrowserEnv() : process.env;
  * explicit place the untyped env boundary is narrowed to the typed shape — a
  * single assertion, not the former `as unknown as` double cast.
  */
-const toTypedEnv = (source: RawEnv): OpenThrottleEnv =>
-  source as OpenThrottleEnv;
+function toTypedEnv(source: RawEnv): OpenThrottleEnv;
+function toTypedEnv(source: RawEnv): unknown {
+  return source;
+}
 
 export const ENV_SOURCE: OpenThrottleEnv = toTypedEnv(rawEnv);
 

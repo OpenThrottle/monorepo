@@ -8,17 +8,18 @@ import { useUrlSyncedTabValue } from '../useUrlSyncedTabValue';
 const PARAM = 'tab';
 const DISPLAY_ID = 'search-params-string';
 
-const PLAN_DETAIL_TABS = new Set(['overview', 'tasks', 'output']);
+type PlanDetailTab = 'overview' | 'tasks' | 'output';
 
-function parsePlanDetailTab(
-  raw: string | null,
-): 'overview' | 'tasks' | 'output' | undefined {
+const PLAN_DETAIL_TABS = new Set<string>(['overview', 'tasks', 'output']);
+
+const isPlanDetailTab = (raw: string): raw is PlanDetailTab =>
+  PLAN_DETAIL_TABS.has(raw);
+
+function parsePlanDetailTab(raw: string | null): PlanDetailTab | undefined {
   if (raw === null || raw === '') {
     return undefined;
   }
-  return PLAN_DETAIL_TABS.has(raw)
-    ? (raw as 'overview' | 'tasks' | 'output')
-    : undefined;
+  return isPlanDetailTab(raw) ? raw : undefined;
 }
 
 function TabHarness(props: { readonly withParse?: boolean }) {

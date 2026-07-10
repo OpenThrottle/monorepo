@@ -12,6 +12,9 @@ export interface PersistedAgentConversationMessage {
   readonly toolMetadataJson: string | null;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const parseMcpToolFromToolMetadataJson = (
   toolMetadataJson: string | null,
 ): string | null => {
@@ -22,11 +25,11 @@ const parseMcpToolFromToolMetadataJson = (
   try {
     const parsed: unknown = JSON.parse(toolMetadataJson);
 
-    if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    if (!isRecord(parsed)) {
       return null;
     }
 
-    const tool = (parsed as Record<string, unknown>).tool;
+    const tool = parsed.tool;
 
     return typeof tool === 'string' && tool.length > 0 ? tool : null;
   } catch {

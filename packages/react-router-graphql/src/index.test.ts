@@ -1,4 +1,5 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { Kind } from 'graphql';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const executeGraphqlMock = vi.fn();
@@ -33,7 +34,10 @@ const {
   isTimeoutError,
 } = await import('./index');
 
-const document = {} as TypedDocumentNode<unknown, Record<string, unknown>>;
+const document: TypedDocumentNode<unknown, Record<string, unknown>> = {
+  definitions: [],
+  kind: Kind.DOCUMENT,
+};
 
 const makeRequest = (): Request =>
   new Request('https://example.test', {

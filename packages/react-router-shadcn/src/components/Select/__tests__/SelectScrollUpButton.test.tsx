@@ -28,9 +28,9 @@ describe('SelectScrollUpButton Component', () => {
   });
 
   afterEach(() => {
-    delete (HTMLElement.prototype as { scrollHeight?: number }).scrollHeight;
-    delete (HTMLElement.prototype as { clientHeight?: number }).clientHeight;
-    delete (HTMLElement.prototype as { scrollTop?: number }).scrollTop;
+    Reflect.deleteProperty(HTMLElement.prototype, 'scrollHeight');
+    Reflect.deleteProperty(HTMLElement.prototype, 'clientHeight');
+    Reflect.deleteProperty(HTMLElement.prototype, 'scrollTop');
   });
 
   test('should render inside SelectContent when the viewport can scroll', async () => {

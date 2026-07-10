@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import type { CurveProps, DataKey } from 'recharts';
+import type { CurveProps } from 'recharts';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
 import { ChartTooltipContent } from './Chart/ChartTooltipContent';
 import type { ChartConfig } from './chart-config';
+import { toDataKey } from './chart-data-key';
 
 const DEFAULT_COLOR = 'var(--chart-1)';
 
@@ -58,7 +59,6 @@ export function SimpleLineChart<T extends Record<string, string | number>>(
   // Hooks
 
   // Setup
-  const categoryAxisKey = categoryKey as DataKey<T>;
 
   // Handlers
   const config: ChartConfig = React.useMemo(
@@ -83,14 +83,14 @@ export function SimpleLineChart<T extends Record<string, string | number>>(
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis
           axisLine={false}
-          dataKey={categoryAxisKey}
+          dataKey={toDataKey<T>(categoryKey)}
           tickLine={false}
           tickMargin={8}
         />
         <YAxis axisLine={false} tickLine={false} tickMargin={4} width={36} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Line
-          dataKey={valueKey as DataKey<T>}
+          dataKey={toDataKey<T>(valueKey)}
           dot={showDots}
           stroke={`var(--color-${valueKey})`}
           strokeWidth={2}

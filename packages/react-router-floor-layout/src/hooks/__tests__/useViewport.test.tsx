@@ -7,6 +7,17 @@ import { describe, expect, it } from 'vitest';
 
 import { useViewport, type UseViewportResult } from '../useViewport';
 
+/**
+ * Present a structural test double as its real type. The public overload hands
+ * the caller `T`; the implementation stays `unknown`-typed, so the mock
+ * boundary needs no `as` cast. The hook only touches a handful of members on
+ * these DOM/React event objects, so a partial mock is sufficient.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const FLOOR = { height: 120, width: 120 };
 const RECT: DOMRect = {
   bottom: 100,
@@ -26,11 +37,11 @@ const RECT: DOMRect = {
  * a no-op here — renderHook has no real DOM target.
  */
 function attachSvg(result: UseViewportResult): void {
-  const svg = {
+  const svg = asMock<SVGSVGElement>({
     getBoundingClientRect: () => RECT,
     releasePointerCapture: () => undefined,
     setPointerCapture: () => undefined,
-  } as unknown as SVGSVGElement;
+  });
   // svgRef is a stable ref across renders, so reading it from the first
   // snapshot is fine.
   result.svgRef.current = svg;
@@ -45,12 +56,12 @@ function pointerEvent(
     releasePointerCapture: () => undefined,
     setPointerCapture: () => undefined,
   };
-  return {
+  return asMock<ReactPointerEvent>({
     clientX,
     clientY,
     currentTarget: target,
     pointerId,
-  } as unknown as ReactPointerEvent;
+  });
 }
 
 describe('useViewport — pointer arbitration', () => {
@@ -142,12 +153,14 @@ describe('useViewport — wheel + button zoom', () => {
 
     const startWidth = result.current.viewBox.width;
     act(() =>
-      result.current.onWheel({
-        clientX: 50,
-        clientY: 50,
-        deltaY: -240,
-        preventDefault: () => undefined,
-      } as unknown as ReactWheelEvent),
+      result.current.onWheel(
+        asMock<ReactWheelEvent>({
+          clientX: 50,
+          clientY: 50,
+          deltaY: -240,
+          preventDefault: () => undefined,
+        }),
+      ),
     );
 
     expect(result.current.viewBox.width).toBeLessThan(startWidth);

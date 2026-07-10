@@ -12,24 +12,34 @@ export interface GlobalLayoutBreadcrumbsProps {
   className?: string;
 }
 
+type BreadcrumbMatch = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
+
+/**
+ * Narrows a router match to one whose `handle` is a breadcrumb handle object.
+ * Route handles are typed `unknown` by `useMatches`, so this guard replaces the
+ * former blanket cast — only matches with an object handle flow downstream.
+ */
+const hasBreadcrumbHandle = (match: UIMatch): match is BreadcrumbMatch =>
+  typeof match.handle === 'object' && match.handle !== null;
+
 export const GlobalLayoutBreadcrumbs = (
   props: GlobalLayoutBreadcrumbsProps,
 ): React.ReactElement => {
   const { className } = props;
 
-  type Matches = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
-
   // Hooks
-  const matches = useMatches() as Matches[];
+  const matches = useMatches();
 
   // Setup
-  const breadcrumb = matches
-    .filter((match) => match.handle && match.handle?.breadcrumb)
-    .map((match) => match.handle?.breadcrumb?.(match));
+  const breadcrumbMatches = matches.filter(hasBreadcrumbHandle);
 
-  const links = matches
-    .filter((match) => match.handle && match.handle.links)
-    .map((match) => match.handle?.links?.(match) ?? []);
+  const breadcrumb = breadcrumbMatches
+    .filter((match) => match.handle.breadcrumb)
+    .map((match) => match.handle.breadcrumb?.(match));
+
+  const links = breadcrumbMatches
+    .filter((match) => match.handle.links)
+    .map((match) => match.handle.links?.(match) ?? []);
 
   // if (links[0]) {
   //   links[0].unshift({

@@ -45,6 +45,10 @@ export function Sidebar({
   }
 
   if (isMobile) {
+    const mobileStyle: React.CSSProperties & Record<`--${string}`, string> = {
+      '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
+    };
+
     return (
       <Sheet onOpenChange={setOpenMobile} open={openMobile} {...props}>
         <SheetContent
@@ -53,11 +57,7 @@ export function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           side={side}
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          style={mobileStyle}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>

@@ -96,12 +96,18 @@ const clearConversationIdFromStorage = (key: string): void => {
   }
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const nullableString = (value: unknown): string | null =>
+  typeof value === 'string' ? value : null;
+
 const parseChatTurnResult = (data: unknown): ChatTurnResult | null => {
-  if (data === null || typeof data !== 'object') {
+  if (!isRecord(data)) {
     return null;
   }
 
-  const d = data as Record<string, unknown>;
+  const d = data;
 
   // Only require the load-bearing fields. A minimal valid turn carrying just
   // `assistantText` + `errorMessage` must parse — the remaining fields are
@@ -112,27 +118,26 @@ const parseChatTurnResult = (data: unknown): ChatTurnResult | null => {
   }
 
   return {
-    assistantText: (d.assistantText as string | null | undefined) ?? null,
-    conversationId: (d.conversationId as string | null | undefined) ?? null,
-    errorMessage: (d.errorMessage as string | null | undefined) ?? null,
-    mcpTool: (d.mcpTool as string | null | undefined) ?? null,
+    assistantText: nullableString(d.assistantText),
+    conversationId: nullableString(d.conversationId),
+    errorMessage: nullableString(d.errorMessage),
+    mcpTool: nullableString(d.mcpTool),
     readOnlyAgentsChat:
       typeof d.readOnlyAgentsChat === 'boolean' ? d.readOnlyAgentsChat : true,
     routingConfidence:
       typeof d.routingConfidence === 'number' ? d.routingConfidence : null,
-    routingReason: (d.routingReason as string | null | undefined) ?? null,
-    structuredPayloadJson:
-      (d.structuredPayloadJson as string | null | undefined) ?? null,
-    toolMetadataJson: (d.toolMetadataJson as string | null | undefined) ?? null,
+    routingReason: nullableString(d.routingReason),
+    structuredPayloadJson: nullableString(d.structuredPayloadJson),
+    toolMetadataJson: nullableString(d.toolMetadataJson),
   };
 };
 
 const parseChatMessage = (value: unknown): ChatMessage | null => {
-  if (value == null || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return null;
   }
 
-  const message = value as Record<string, unknown>;
+  const message = value;
 
   if (
     typeof message.body !== 'string' ||
@@ -168,11 +173,11 @@ const parseChatMessage = (value: unknown): ChatMessage | null => {
 const parseLoadAgentConversationMessagesResult = (
   data: unknown,
 ): LoadAgentConversationMessagesResult | null => {
-  if (data === null || typeof data !== 'object') {
+  if (!isRecord(data)) {
     return null;
   }
 
-  const d = data as Record<string, unknown>;
+  const d = data;
 
   if (!('errorMessage' in d) || !('messages' in d)) {
     return null;
@@ -189,8 +194,8 @@ const parseLoadAgentConversationMessagesResult = (
     .filter((message): message is ChatMessage => message != null);
 
   return {
-    conversationId: (d.conversationId as string | null | undefined) ?? null,
-    errorMessage: (d.errorMessage as string | null | undefined) ?? null,
+    conversationId: nullableString(d.conversationId),
+    errorMessage: nullableString(d.errorMessage),
     messages,
   };
 };

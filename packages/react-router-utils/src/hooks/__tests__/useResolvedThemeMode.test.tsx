@@ -11,7 +11,9 @@ interface FakeMediaQueryList {
 }
 
 const installMatchMedia = (initialMatches: boolean): FakeMediaQueryList => {
-  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const listeners = new Set<
+    (event: Pick<MediaQueryListEvent, 'matches'>) => void
+  >();
   const mql: FakeMediaQueryList = {
     addEventListener: vi.fn((_type: string, listener) => {
       listeners.add(listener);
@@ -19,7 +21,7 @@ const installMatchMedia = (initialMatches: boolean): FakeMediaQueryList => {
     dispatch: (matches: boolean) => {
       mql.matches = matches;
       for (const listener of listeners) {
-        listener({ matches } as MediaQueryListEvent);
+        listener({ matches });
       }
     },
     matches: initialMatches,
