@@ -69,7 +69,8 @@ describe('validateEnabledEditors', () => {
 
   test('throws for unknown editor ids', () => {
     expect(() =>
-      validateEnabledEditors(['unknown' as WorkspaceEditorIdEnum]),
+      // @ts-expect-error - deliberately invalid editor id to exercise the runtime guard
+      validateEnabledEditors(['unknown']),
     ).toThrow(/unknown editor id/);
   });
 });

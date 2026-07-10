@@ -1,3 +1,4 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
@@ -7,6 +8,7 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
@@ -14,23 +16,23 @@ import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence';
 import { AgentsResolver } from './agents.resolver';
 
 const createConfigStub = (): ConfigService =>
-  ({
+  createMock<ConfigService>({
     get: () => undefined,
-  }) as unknown as ConfigService;
+  });
 
 /**
  * @description MCP surface stub covering every tool the agents MCP dispatch layer may call; uncalled paths reject.
  */
 const createRoutedMcpSurfaceMock = (handlers: {
-  readonly health?: ReturnType<typeof vi.fn>;
-  readonly listSources?: ReturnType<typeof vi.fn>;
-  readonly semanticSearch: ReturnType<typeof vi.fn>;
+  readonly health?: Mock;
+  readonly listSources?: Mock;
+  readonly semanticSearch: Mock;
 }): McpDeveloperMcpSurface => {
-  const unexpected = vi.fn(() =>
-    Promise.reject(new Error('unexpected MCP surface call')),
-  );
+  const unexpected = vi
+    .fn()
+    .mockRejectedValue(new Error('unexpected MCP surface call'));
 
-  return {
+  return createMock<McpDeveloperMcpSurface>({
     getActivityByDate: unexpected,
     getDocument: unexpected,
     getLastActivity: unexpected,
@@ -45,13 +47,13 @@ const createRoutedMcpSurfaceMock = (handlers: {
     listSources: handlers.listSources ?? unexpected,
     listTasksByCategory: unexpected,
     semanticSearch: handlers.semanticSearch,
-  } as unknown as McpDeveloperMcpSurface;
+  });
 };
 
 const createLlmRouterStub = (): {
-  readonly getActiveRouterModelSnapshot: ReturnType<typeof vi.fn>;
-  readonly refineRoute: ReturnType<typeof vi.fn>;
-  readonly shouldAttemptLlmRefinement: ReturnType<typeof vi.fn>;
+  readonly getActiveRouterModelSnapshot: Mock;
+  readonly refineRoute: Mock;
+  readonly shouldAttemptLlmRefinement: Mock;
 } => ({
   getActiveRouterModelSnapshot: vi.fn(() => null),
   refineRoute: vi.fn(async () => null),
@@ -59,9 +61,9 @@ const createLlmRouterStub = (): {
 });
 
 const createAgentConversationsServiceStub = (): {
-  readonly appendTurn: ReturnType<typeof vi.fn>;
-  readonly createConversation: ReturnType<typeof vi.fn>;
-  readonly getConversationForUser: ReturnType<typeof vi.fn>;
+  readonly appendTurn: Mock;
+  readonly createConversation: Mock;
+  readonly getConversationForUser: Mock;
 } => ({
   appendTurn: vi.fn(async () => ({
     assistantMessage: {},
@@ -75,10 +77,10 @@ const createAgentConversationsServiceStub = (): {
 
 describe('AgentsResolver', () => {
   let resolver: AgentsResolver;
-  let semanticSearch: ReturnType<typeof vi.fn>;
-  let appendTurn: ReturnType<typeof vi.fn>;
-  let createConversation: ReturnType<typeof vi.fn>;
-  let getConversationForUser: ReturnType<typeof vi.fn>;
+  let semanticSearch: Mock;
+  let appendTurn: Mock;
+  let createConversation: Mock;
+  let getConversationForUser: Mock;
   const llmRouterStub = createLlmRouterStub();
 
   const humanPrincipal = {

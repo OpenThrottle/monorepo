@@ -18,11 +18,6 @@ import {
   CardTitle,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -55,54 +50,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/users.$userId';
 import { UserIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-
-interface AssignRoleSelectFormProps {
-  readonly availableRoles: Array<{ id: string; name: string }>;
-  readonly fetcher: ReturnType<typeof useFetcher<typeof action>>;
-}
-
-/**
- * @description Assign-role form using shadcn-ui Select; syncs selected value to a hidden input for form submission.
- */
-function AssignRoleSelectForm(
-  props: AssignRoleSelectFormProps,
-): React.ReactElement {
-  const { availableRoles, fetcher } = props;
-  const [selectedRoleId, setSelectedRoleId] = React.useState<string>('');
-
-  const Form = fetcher.Form;
-
-  return (
-    <Form method="post">
-      <input name="intent" type="hidden" value="assignRole" />
-      <input name="roleId" type="hidden" value={selectedRoleId} />
-      <div className="flex items-center gap-2">
-        <Select
-          onValueChange={setSelectedRoleId}
-          value={selectedRoleId || undefined}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Assign role…" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableRoles.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          disabled={fetcher.state !== 'idle' || !selectedRoleId}
-          size="sm"
-          type="submit"
-        >
-          Assign
-        </Button>
-      </div>
-    </Form>
-  );
-}
+import { AssignRoleSelectForm } from '~/routing/users/components/AssignRoleSelectForm';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

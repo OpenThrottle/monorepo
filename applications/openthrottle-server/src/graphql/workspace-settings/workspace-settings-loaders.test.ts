@@ -21,9 +21,9 @@ describe('WorkspaceSettingsLoaders', () => {
 
   test('projectLoader batches many load() calls into one find and maps to key order', async () => {
     findProjects.mockResolvedValue([
-      { id: 'p2', name: 'Two' },
-      { id: 'p1', name: 'One' },
-    ] as Project[]);
+      createMock<Project>({ id: 'p2', name: 'Two' }),
+      createMock<Project>({ id: 'p1', name: 'One' }),
+    ]);
 
     const [a, b, missing] = await Promise.all([
       loaders.projectLoader.load('p1'),

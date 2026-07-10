@@ -47,6 +47,7 @@ function StoreProbe(): React.ReactElement {
 }
 
 const renderBridge = (): void => {
+  // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = (): React.ReactElement => (
     <NotificationsStoreProvider persist={false}>
       <NotificationsSubscriptionBridge client={null} document={testDocument}>

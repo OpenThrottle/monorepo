@@ -46,10 +46,10 @@ describe('CommitLinksResolver', () => {
 
   const mockPlanLoad = vi.fn().mockResolvedValue(null);
   const mockTaskLoad = vi.fn().mockResolvedValue(null);
-  const mockLoaders: CommitLinksLoaders = {
+  const mockLoaders: CommitLinksLoaders = createMock<CommitLinksLoaders>({
     planLoader: { load: mockPlanLoad },
     taskLoader: { load: mockTaskLoad },
-  } as unknown as CommitLinksLoaders;
+  });
 
   beforeEach(() => {
     mockPlanLoad.mockReset().mockResolvedValue(null);

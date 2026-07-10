@@ -14,6 +14,7 @@ describe('DocumentUploadProgress Component', () => {
   });
 
   test('renders busy status when parsing', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <DocumentUploadProgress
         state={{ kind: 'busy', message: 'Parsing…', value: 50 }}

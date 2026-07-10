@@ -17,12 +17,14 @@ interface FakeRequest {
 }
 
 const buildContext = (input: unknown, req: FakeRequest): ExecutionContext => {
-  vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-    getArgs: () => ({ input }),
-    getContext: () => ({ req }),
-  } as unknown as GqlExecutionContext);
+  vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+    createMock<GqlExecutionContext>({
+      getArgs: () => ({ input }),
+      getContext: () => ({ req }),
+    }),
+  );
 
-  return {} as ExecutionContext;
+  return createMock<ExecutionContext>();
 };
 
 describe('GqlLocalCredentialsGuard', () => {

@@ -7,20 +7,19 @@ import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '@openthrottle/nestjs-repositories';
-import type { User } from '@openthrottle/nestjs-repositories';
+import { UsersService, usersFactory } from '@openthrottle/nestjs-repositories';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AuthService } from './auth.service';
 
-const mockUser: User = {
+const mockUser = usersFactory.build({
   createdAt: new Date('2026-02-02T10:00:00.000Z'),
   disabledAt: null,
   email: 'user@example.com',
   githubUsername: 'visormatt',
   id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-} as User;
+});
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -87,7 +86,7 @@ describe('AuthService', () => {
       vi.mocked(configService.get).mockReturnValue(undefined);
       vi.mocked(jwtService.sign).mockReturnValue('signed-jwt');
 
-      await service.login({ ...mockUser, email: null } as User);
+      await service.login({ ...mockUser, email: null });
 
       expect(jwtService.sign).toHaveBeenCalledWith(
         { email: undefined, sub: mockUser.id },
@@ -201,7 +200,7 @@ describe('AuthService', () => {
       vi.mocked(usersService.create).mockResolvedValue({
         ...mockUser,
         email: null,
-      } as User);
+      });
 
       const result = await service.register({
         email: 'fallback@example.com',

@@ -62,7 +62,7 @@ describe('eslintConfig flat config', () => {
     const value = ruleEntry('@typescript-eslint/consistent-type-assertions');
 
     expect(Array.isArray(value)).toBe(true);
-    expect(Array.isArray(value) ? value[0] : undefined).toBe('warn');
+    expect(Array.isArray(value) ? value[0] : undefined).toBe('error');
     const options = Array.isArray(value) ? value[1] : undefined;
     expect(isRecord(options) ? options.assertionStyle : undefined).toBe(
       'never',

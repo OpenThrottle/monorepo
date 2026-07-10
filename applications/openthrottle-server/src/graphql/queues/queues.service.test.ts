@@ -722,8 +722,9 @@ describe('QueuesService', () => {
       const bad = await service.enqueuePlanRalphOrchestrator({
         jobData: {
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          // @ts-expect-error deliberately invalid runKind to exercise the guard
           runKind: 'spawn',
-        } as unknown as RunPlanOrchestratorJobData,
+        },
       });
       expect(bad).toEqual({ error: 'jobData.runKind must be orchestrator' });
       expect(mockAdd).not.toHaveBeenCalled();

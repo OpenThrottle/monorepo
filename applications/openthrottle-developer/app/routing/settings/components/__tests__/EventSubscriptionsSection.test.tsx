@@ -58,6 +58,7 @@ describe('EventSubscriptionsSection', () => {
       EVENT_SUBSCRIPTIONS_STORAGE_KEY,
       JSON.stringify(stored),
     );
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <EventSubscriptionsSection />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);

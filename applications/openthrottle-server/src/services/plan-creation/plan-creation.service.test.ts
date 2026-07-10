@@ -8,7 +8,7 @@ import {
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan } from '@openthrottle/nestjs-repositories';
+import type { PlanData } from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 import { PlanCreationService } from './plan-creation.service';
@@ -140,7 +140,7 @@ describe('PlanCreationService', () => {
     const prev = process.env.GITHUB_USER;
     process.env.GITHUB_USER = 'fromenv';
 
-    const saved = {
+    const saved: PlanData = {
       assignee: null,
       author: 'fromenv',
       category: 'feature',
@@ -153,7 +153,7 @@ describe('PlanCreationService', () => {
       summary: null,
       title: 'My plan',
       updatedAt: new Date(),
-    } as Plan;
+    };
 
     planRepo.create.mockReturnValue(saved);
     planRepo.save.mockResolvedValue(saved);
@@ -187,7 +187,7 @@ describe('PlanCreationService', () => {
   });
 
   it('persists default runConfig when runConfigJson is omitted', async () => {
-    const saved = {
+    const saved: PlanData = {
       assignee: null,
       author: 'visormatt',
       category: 'feature',
@@ -200,7 +200,7 @@ describe('PlanCreationService', () => {
       summary: null,
       title: 'Plan',
       updatedAt: new Date(),
-    } as Plan;
+    };
 
     planRepo.create.mockReturnValue(saved);
     planRepo.save.mockResolvedValue(saved);
@@ -228,7 +228,7 @@ describe('PlanCreationService', () => {
   });
 
   it('stores null assignee when input is not a valid GitHub login', async () => {
-    const saved = {
+    const saved: PlanData = {
       assignee: null,
       author: 'visormatt',
       category: 'feature',
@@ -241,7 +241,7 @@ describe('PlanCreationService', () => {
       summary: null,
       title: 'Plan',
       updatedAt: new Date(),
-    } as Plan;
+    };
 
     planRepo.create.mockReturnValue(saved);
     planRepo.save.mockResolvedValue(saved);
@@ -315,7 +315,7 @@ describe('PlanCreationService', () => {
   it('persists embedding when embedQuery returns a vector', async () => {
     vi.mocked(embedQuery).mockResolvedValue([0.1, 0.2]);
 
-    const saved = {
+    const saved: PlanData = {
       assignee: null,
       author: 'visormatt',
       category: 'feature',
@@ -328,7 +328,7 @@ describe('PlanCreationService', () => {
       summary: null,
       title: 'Plan',
       updatedAt: new Date(),
-    } as Plan;
+    };
 
     const embeddingRow = { content: 'x', id: 'e1' };
     planRepo.create.mockReturnValue(saved);

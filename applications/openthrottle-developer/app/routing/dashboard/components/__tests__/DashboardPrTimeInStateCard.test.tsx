@@ -43,6 +43,7 @@ describe('DashboardPrTimeInStateCard Component', () => {
       className: 'custom-class',
       prTimeInStateSummary: mockPrTimeInStateSummary,
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const CustomComponent = () => (
       <DashboardPrTimeInStateCard {...customProps} />
     );
@@ -64,6 +65,7 @@ describe('DashboardPrTimeInStateCard Component empty state', () => {
     const props: DashboardPrTimeInStateCardProps = {
       prTimeInStateSummary: [],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <DashboardPrTimeInStateCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const result = render(<RoutesStub />);

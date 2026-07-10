@@ -20,6 +20,7 @@ function ScrollLayout(): React.ReactElement {
   );
 }
 
+// eslint-disable-next-line react/no-multi-comp -- test-local mock component
 function PageA(): React.ReactElement {
   return (
     <div>
@@ -31,6 +32,7 @@ function PageA(): React.ReactElement {
   );
 }
 
+// eslint-disable-next-line react/no-multi-comp -- test-local mock component
 function PageB(): React.ReactElement {
   const navigate = useNavigate();
 

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { type Plan, PlansService } from '@openthrottle/nestjs-repositories';
+import { PlansService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 
@@ -20,7 +20,7 @@ describe('PlanEmbeddingsLoaders', () => {
     findPlans.mockResolvedValue([
       { id: 'p2', title: 'Two' },
       { id: 'p1', title: 'One' },
-    ] as Plan[]);
+    ]);
 
     const [a, b, missing] = await Promise.all([
       loaders.planLoader.load('p1'),

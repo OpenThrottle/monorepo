@@ -11,6 +11,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { ConfigService } from '@nestjs/config';
 import { createMock } from '@golevelup/ts-vitest';
+import type DataLoader from 'dataloader';
 import { Test } from '@nestjs/testing';
 import { mkdtempSync } from 'fs';
 import { join } from 'path';
@@ -18,7 +19,6 @@ import { tmpdir } from 'os';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
-import type { UpdateWorkspaceProfileInput } from './workspace-settings.input';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
 import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
@@ -36,7 +36,7 @@ describe('WorkspaceSettingsResolver', () => {
     projectId: null,
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
-  } as WorkspaceLocalRepository;
+  };
 
   const projectId = '33333333-3333-4333-8333-333333333333';
 
@@ -47,7 +47,7 @@ describe('WorkspaceSettingsResolver', () => {
     enabledEditors: [],
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
-  } as UserWorkspaceSettings;
+  };
 
   const mockWorkspaceLocalRepositoriesService =
     createMock<WorkspaceLocalRepositoriesService>({
@@ -67,9 +67,11 @@ describe('WorkspaceSettingsResolver', () => {
     });
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
-  const mockLoaders: WorkspaceSettingsLoaders = {
-    projectLoader: { load: mockProjectLoad },
-  } as unknown as WorkspaceSettingsLoaders;
+  const mockLoaders = createMock<WorkspaceSettingsLoaders>({
+    projectLoader: createMock<DataLoader<string, Project | null>>({
+      load: mockProjectLoad,
+    }),
+  });
 
   const mockWorkspaceEditorConfigService =
     createMock<WorkspaceEditorConfigService>({
@@ -163,10 +165,10 @@ describe('WorkspaceSettingsResolver', () => {
     });
 
     test('validates and persists enabled editors', async () => {
-      const withEditors = {
+      const withEditors: UserWorkspaceSettings = {
         ...mockProfile,
         enabledEditors: ['cursor', 'vscode'],
-      } as UserWorkspaceSettings;
+      };
       vi.mocked(
         mockUserWorkspaceSettingsService.updateProfile,
       ).mockResolvedValue(withEditors);
@@ -177,7 +179,7 @@ describe('WorkspaceSettingsResolver', () => {
           WorkspaceEditorIdEnum.VSCODE,
           WorkspaceEditorIdEnum.CURSOR,
         ],
-      } as UpdateWorkspaceProfileInput);
+      });
 
       expect(result).toEqual(toUserWorkspaceProfileObject(withEditors));
       expect(
@@ -194,7 +196,7 @@ describe('WorkspaceSettingsResolver', () => {
 
       await resolver.updateWorkspaceProfile(userId, {
         enabledEditors: [],
-      } as UpdateWorkspaceProfileInput);
+      });
 
       expect(
         mockUserWorkspaceSettingsService.updateProfile,
@@ -355,7 +357,7 @@ describe('WorkspaceSettingsResolver', () => {
     });
 
     test('loads project through projectLoader when projectId is set', async () => {
-      const project = { id: 'p1', name: 'openthrottle' } as Project;
+      const project = createMock<Project>({ id: 'p1', name: 'openthrottle' });
       mockProjectLoad.mockResolvedValueOnce(project);
 
       const result = await resolver.project({

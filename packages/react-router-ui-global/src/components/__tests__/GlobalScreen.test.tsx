@@ -18,6 +18,7 @@ describe('GlobalScreen Component', () => {
   });
 
   test('renders beta banner when beta is true', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalScreen beta={true}>
         <span>screen-child</span>

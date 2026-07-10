@@ -18,11 +18,6 @@ import {
   CardTitle,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -51,66 +46,8 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ShieldCheckIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
+import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissionSelectForm';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
-
-interface AddPermissionSelectFormProps {
-  readonly availablePermissions: Array<{ id: string; name: string }>;
-  readonly fetcher: ReturnType<typeof useFetcher<typeof action>>;
-}
-
-/**
- * @description Add-permission form using shadcn-ui Select; syncs selected value to a hidden input for form submission.
- */
-function AddPermissionSelectForm(
-  props: AddPermissionSelectFormProps,
-): React.ReactElement {
-  const { availablePermissions, fetcher } = props;
-
-  // Hooks
-  const [permissionId, setPermissionId] = React.useState<string>('');
-
-  // Setup
-  const Form = fetcher.Form;
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Form method="post">
-      <input name="intent" type="hidden" value="addPermission" />
-      <input name="permissionId" type="hidden" value={permissionId} />
-      <div className="flex items-center gap-2">
-        <Select
-          onValueChange={setPermissionId}
-          value={permissionId || undefined}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Add permission…" />
-          </SelectTrigger>
-          <SelectContent>
-            {availablePermissions.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          disabled={fetcher.state !== 'idle' || !permissionId}
-          size="sm"
-          type="submit"
-        >
-          Add
-        </Button>
-      </div>
-    </Form>
-  );
-}
 
 type HandleData = Route.ComponentProps['loaderData'];
 

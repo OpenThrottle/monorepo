@@ -28,6 +28,7 @@ describe('SearchFilters Component', () => {
   beforeEach(() => {
     props = {};
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchFiltersWithQueryString {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
@@ -56,6 +57,7 @@ describe('SearchFilters Component', () => {
   test('should set limit and reset page to 1 while preserving other params', async () => {
     cleanup();
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchFiltersWithQueryString {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const view = render(

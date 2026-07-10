@@ -1,3 +1,4 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -7,14 +8,14 @@ const publish = vi.fn().mockResolvedValue(undefined);
 const warn = vi.fn();
 
 function makeService(): NotificationsService {
-  const pubSub = { publish } as unknown as PubSubEngine;
-  const logger = { warn } as unknown as LoggerService;
+  const pubSub = createMock<PubSubEngine>({ publish });
+  const logger = createMock<LoggerService>({ warn });
   return new NotificationsService(pubSub, logger);
 }
 
 /** Topics passed to publish across all calls. */
 function publishedTopics(): string[] {
-  return publish.mock.calls.map((call) => call[0] as string);
+  return publish.mock.calls.map((call) => call[0]);
 }
 
 afterEach(() => vi.clearAllMocks());
@@ -28,9 +29,7 @@ describe('NotificationsService PubSub fanout', () => {
     );
     // Envelope is keyed by `event` with the discriminator set.
     const [, envelope] = publish.mock.calls[0] ?? [];
-    expect((envelope as { event: { event: string } }).event.event).toBe(
-      'plan.status_changed',
-    );
+    expect(envelope.event.event).toBe('plan.status_changed');
   });
 
   it('fans task.completed out to the firehose + plan lifecycle topics', () => {

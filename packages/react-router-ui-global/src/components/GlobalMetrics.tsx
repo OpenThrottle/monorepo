@@ -50,10 +50,8 @@ import {
   formatMetricsSummary,
 } from '../utils/utils.global';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import {
-  GlobalMetricsInfoModal,
-  GlobalMetricsInfoTrigger,
-} from './GlobalMetricsInfoModal';
+import { GlobalMetricsInfoModal } from './GlobalMetricsInfoModal';
+import { GlobalMetricsInfoTrigger } from './GlobalMetricsInfoTrigger';
 
 export interface GlobalMetricsProps {
   readonly className?: string;

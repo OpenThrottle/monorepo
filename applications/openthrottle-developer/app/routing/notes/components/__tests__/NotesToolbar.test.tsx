@@ -20,6 +20,7 @@ function NotesToolbarWithQueryString(props: NotesToolbarProps) {
 function renderToolbar(
   initialEntry = '/',
 ): RenderResult & { RoutesStub: ReturnType<typeof createRoutesStub> } {
+  // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = () => <NotesToolbarWithQueryString />;
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   const view = render(<RoutesStub initialEntries={[initialEntry]} />);

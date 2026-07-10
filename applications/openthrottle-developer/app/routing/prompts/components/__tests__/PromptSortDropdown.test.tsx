@@ -25,6 +25,7 @@ describe('PromptSortDropdown Component', () => {
   });
 
   test('should have aria-label', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PromptSortDropdown {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
@@ -34,6 +35,7 @@ describe('PromptSortDropdown Component', () => {
   });
 
   test('should show "Recently updated" as default selected option', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PromptSortDropdown {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
@@ -49,6 +51,7 @@ describe('PromptSortDropdown Component', () => {
       sortBy: 'updatedAt',
       sortOrder: 'desc',
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PromptSortDropdown {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);

@@ -21,7 +21,7 @@ describe('NotesResolver', () => {
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     id: 'ddc5ff9d-8dee-4d99-b9ee-b7c5a0bd879f',
     updatedAt: new Date('2026-02-01T22:05:00.000Z'),
-  } as Note;
+  };
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({

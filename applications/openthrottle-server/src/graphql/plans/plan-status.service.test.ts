@@ -15,11 +15,11 @@ import { PlanStatusService } from './plan-status.service';
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
   'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';
 
-const mockPlan = {
+const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
   status: 'PENDING',
   title: 'Test plan',
-} as Plan;
+});
 
 describe('PlanStatusService', () => {
   const mockGetJobs = vi.fn().mockResolvedValue([]);
@@ -63,9 +63,9 @@ describe('PlanStatusService', () => {
 
   const service = new PlanStatusService(
     mockNotificationsService,
-    {
+    createMock<PlanRunCancellationService>({
       abort: mockPlanRunCancellationAbort,
-    } as unknown as PlanRunCancellationService,
+    }),
     mockPlansService,
     mockTasksService,
     mockPlansQueue,
@@ -133,8 +133,8 @@ describe('PlanStatusService', () => {
 
   describe('setStatus', () => {
     test('persists and returns the updated plan', async () => {
-      const planToUpdate = { ...mockPlan, status: 'PENDING' } as Plan;
-      const saved = { ...planToUpdate, status: 'COMPLETED' } as Plan;
+      const planToUpdate = { ...mockPlan, status: 'PENDING' };
+      const saved = { ...planToUpdate, status: 'COMPLETED' };
       repo.findOne.mockResolvedValue(planToUpdate);
       repo.save.mockResolvedValue(saved);
 
@@ -147,9 +147,9 @@ describe('PlanStatusService', () => {
     });
 
     test('normalizes the requested status to uppercase', async () => {
-      const planToUpdate = { ...mockPlan, status: 'pending' } as Plan;
+      const planToUpdate = { ...mockPlan, status: 'pending' };
       repo.findOne.mockResolvedValue(planToUpdate);
-      repo.save.mockImplementation(async (e) => e as Plan);
+      repo.save.mockImplementation(async (e) => e);
 
       const result = await service.setStatus(mockPlan.id, 'in_progress');
 
@@ -157,9 +157,9 @@ describe('PlanStatusService', () => {
     });
 
     test('transitions QUEUED to IN_PROGRESS', async () => {
-      const queued = { ...mockPlan, status: 'QUEUED' } as Plan;
+      const queued = { ...mockPlan, status: 'QUEUED' };
       repo.findOne.mockResolvedValue(queued);
-      repo.save.mockImplementation(async (e) => e as Plan);
+      repo.save.mockImplementation(async (e) => e);
 
       const result = await service.setStatus(mockPlan.id, 'IN_PROGRESS');
 

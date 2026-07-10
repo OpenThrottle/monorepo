@@ -1,7 +1,11 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { Task } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { Repository } from 'typeorm';
+import type {
+  Repository,
+  SelectQueryBuilder,
+  UpdateQueryBuilder,
+} from 'typeorm';
 import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes';
 import type { NotificationsService } from './notifications.service';
 
@@ -12,19 +16,22 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
   });
 
   // The helper runs a single `UPDATE ... RETURNING id` query builder; mock the chain and let each
-  // test drive what RETURNING yields.
+  // test drive what RETURNING yields. `.update()` on the select builder yields an update builder
+  // that carries `set`/`where`/`andWhere`/`returning`/`execute`.
   const execute = vi.fn();
-  const queryBuilder = {
+  const updateQueryBuilder = createMock<UpdateQueryBuilder<Task>>({
     andWhere: vi.fn().mockReturnThis(),
     execute,
     returning: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
-  };
-  const taskRepo = {
+  });
+  const queryBuilder = createMock<SelectQueryBuilder<Task>>({
+    update: vi.fn(() => updateQueryBuilder),
+  });
+  const taskRepo = createMock<Repository<Task>>({
     createQueryBuilder: vi.fn(() => queryBuilder),
-  } as unknown as Repository<Task>;
+  });
 
   beforeEach(() => {
     emitTaskStatusChanged.mockClear();

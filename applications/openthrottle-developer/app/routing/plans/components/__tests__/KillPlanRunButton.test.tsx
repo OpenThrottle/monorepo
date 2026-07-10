@@ -41,6 +41,7 @@ describe('KillPlanRunButton', () => {
   });
 
   test('shows Kill run trigger when show is true', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -55,6 +56,7 @@ describe('KillPlanRunButton', () => {
   });
 
   test('exposes aria-label and title on trigger for assistive tech and hover', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -77,6 +79,7 @@ describe('KillPlanRunButton', () => {
     const user = userEvent.setup();
     let cancelPlanRunPosts = 0;
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -117,6 +120,7 @@ describe('KillPlanRunButton', () => {
   test('focus returns to Kill run trigger after Escape closes dialog', async () => {
     const user = userEvent.setup();
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -149,6 +153,7 @@ describe('KillPlanRunButton', () => {
       signaledActiveRunToStop: false,
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -190,6 +195,7 @@ describe('KillPlanRunButton', () => {
     const user = userEvent.setup();
     let cancelPlanRunPosts = 0;
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -248,6 +254,7 @@ describe('KillPlanRunButton', () => {
       releaseCancel = resolve;
     });
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -294,6 +301,7 @@ describe('KillPlanRunButton', () => {
   test('shows error toast when action returns cancelPlanRunError (API/network failure)', async () => {
     const user = userEvent.setup();
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );
@@ -345,6 +353,7 @@ describe('KillPlanRunButton', () => {
       releaseCancel = resolve;
     });
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
     );

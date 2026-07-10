@@ -172,7 +172,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         secretHash: hash,
         serviceAccount: { disabledAt: null },
         serviceAccountId,
-      } as ServiceAccountCredential);
+      });
       vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
         ['plans:read'],
       );
@@ -208,7 +208,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         secretHash: hash,
         serviceAccount: { disabledAt: null },
         serviceAccountId,
-      } as ServiceAccountCredential);
+      });
 
       const req = {
         headers: {
@@ -238,7 +238,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
         secretHash: hash,
         serviceAccount: { disabledAt: null },
         serviceAccountId,
-      } as ServiceAccountCredential);
+      });
       vi.mocked(rolesService.getPermissionsForServiceAccount).mockResolvedValue(
         ['plans:read'],
       );

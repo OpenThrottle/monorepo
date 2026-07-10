@@ -100,6 +100,7 @@ describe('useDebouncedSearchParam', () => {
   });
 
   test('applies transformCommittedParams on commit', async () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     function HarnessWithTransform() {
       const [searchParams] = useSearchParams();
       const hook = useDebouncedSearchParam({

@@ -13,10 +13,10 @@ import { CodeIndexProcessor } from './code-index.processor';
 import type { CodeIndexJob } from './code-index.types';
 
 function buildJob(data: Partial<CodeIndexJob['data']> = {}): CodeIndexJob {
-  return {
+  return createMock<CodeIndexJob>({
     data: { repositoryId: 'repo-1', userId: 'user-1', ...data },
     id: 'job-1',
-  } as CodeIndexJob;
+  });
 }
 
 describe('CodeIndexProcessor', () => {

@@ -4,10 +4,9 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-  Markdown,
-  ScrollArea,
 } from '@openthrottle/react-router-shadcn';
 import { Check, ChevronDown, Loader2, Wrench, X } from 'lucide-react';
+import { ToolPayload } from './ToolPayload';
 import { formatJsonPayload } from '../utils/index';
 import { ChatToolStatus } from '../types';
 import type {
@@ -48,30 +47,6 @@ const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
     label: 'succeeded',
     spin: false,
   },
-};
-
-interface ToolPayloadProps {
-  readonly content: string;
-  readonly label: string;
-}
-
-/** One labeled, scroll-bounded JSON payload section (args or result). */
-const ToolPayload = (props: ToolPayloadProps): React.ReactElement => {
-  const { content, label } = props;
-
-  return (
-    <section className="space-y-1">
-      <p className="text-muted-foreground text-[0.7rem] font-medium tracking-wide uppercase">
-        {label}
-      </p>
-      <ScrollArea className="max-h-48 rounded border">
-        <Markdown
-          className="text-xs break-words [&_pre]:whitespace-pre-wrap"
-          content={content}
-        />
-      </ScrollArea>
-    </section>
-  );
 };
 
 /**

@@ -1,3 +1,4 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { ConfigService } from '@nestjs/config';
 import { describe, expect, test } from 'vitest';
 import {
@@ -7,18 +8,18 @@ import {
 
 describe('readAgentsChatMutationsEnabledFromConfig', () => {
   test('returns false when unset', () => {
-    const config = {
+    const config = createMock<ConfigService>({
       get: () => undefined,
-    } as unknown as ConfigService;
+    });
 
     expect(readAgentsChatMutationsEnabledFromConfig(config)).toBe(false);
   });
 
   test('returns true for affirmative string values', () => {
     for (const raw of ['true', 'TRUE', '1', 'yes']) {
-      const config = {
+      const config = createMock<ConfigService>({
         get: () => raw,
-      } as unknown as ConfigService;
+      });
 
       expect(readAgentsChatMutationsEnabledFromConfig(config)).toBe(true);
     }

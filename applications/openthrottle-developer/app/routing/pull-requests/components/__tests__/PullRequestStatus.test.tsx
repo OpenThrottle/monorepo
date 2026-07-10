@@ -26,6 +26,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is closed', () => {
     beforeEach(() => {
       props = { state: 'closed' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -39,6 +40,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is merged', () => {
     beforeEach(() => {
       props = { state: 'merged' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -52,6 +54,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is draft', () => {
     beforeEach(() => {
       props = { state: 'draft' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -65,6 +68,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is reopened', () => {
     beforeEach(() => {
       props = { state: 'reopened' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -78,6 +82,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is syncing', () => {
     beforeEach(() => {
       props = { state: 'syncing' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -91,6 +96,7 @@ describe('PullRequestStatus Component', () => {
   describe('when state is unknown', () => {
     beforeEach(() => {
       props = { state: 'unknown' };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PullRequestStatus {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);

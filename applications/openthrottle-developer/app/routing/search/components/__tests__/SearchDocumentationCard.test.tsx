@@ -48,6 +48,7 @@ describe('SearchDocumentationCard Component', () => {
 
   test('should show source badge', () => {
     props.result = mockSearchChunk({ source: 'documentation' });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchDocumentationCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -62,6 +63,7 @@ describe('SearchDocumentationCard Component', () => {
       content: 'Specific doc content',
       similarity: 0.91,
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchDocumentationCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -79,6 +81,7 @@ describe('SearchDocumentationCard Component', () => {
         sourceRepo: 'owner/monorepo',
         sourceSha: null,
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchDocumentationCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
@@ -103,6 +106,7 @@ describe('SearchDocumentationCard Component', () => {
         sourceRepo: 'org/repo',
         sourceSha: 'abc123',
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <SearchDocumentationCard {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
@@ -124,6 +128,7 @@ describe('SearchDocumentationCard Component', () => {
       sourceRepo: null,
       sourceSha: null,
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchDocumentationCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);

@@ -6,6 +6,17 @@ import type { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-m
 import type { AgentsMcpToolHandlerResult } from './agents-mcp-chat.mapper';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 
+/*
+ * The rule router and the LLM-refinement parser both produce
+ * `AgentsMcpRouteDecision.args` as `Record<string, unknown>` by design (the
+ * tool is chosen at runtime), and every `McpDeveloperMcpSurface` handler
+ * re-validates its own input via Zod (`safeParse`). Forwarding the untyped
+ * args to the selected method is therefore safe; a cast-free rewrite would
+ * require a discriminated-union contract the runtime-tool LLM path cannot
+ * satisfy.
+ */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- trusted MCP dispatch boundary: router/LLM args are Record<string, unknown> and each handler safeParses (see note above) */
+
 /**
  * @description Invokes the MCP surface method for {@link AgentsMcpRouteDecision.tool} with router-produced args.
  */

@@ -145,6 +145,7 @@ describe('routes/dashboard._index.tsx', () => {
   });
 
   test('should render PRs by author section with full githubStats from loader', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}
@@ -169,6 +170,7 @@ describe('routes/dashboard._index.tsx', () => {
   });
 
   test('should render PRs by author empty state when both series are empty', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}
@@ -196,6 +198,7 @@ describe('routes/dashboard._index.tsx', () => {
   });
 
   test('should render recent activity outside the content grid', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}

@@ -45,7 +45,7 @@ describe('AgentConversationsResolver', () => {
     title: 'Hello world',
     updatedAt: new Date('2026-06-07T10:05:00.000Z'),
     userId: humanPrincipal.sub,
-  } as AgentConversation;
+  };
 
   const mockMessage: AgentConversationMessage = {
     content: 'Hi',
@@ -59,7 +59,7 @@ describe('AgentConversationsResolver', () => {
     routingTier: null,
     sortOrder: 1,
     toolMetadata: null,
-  } as AgentConversationMessage;
+  };
 
   const mockConversationRepository = {
     count: vi.fn(),

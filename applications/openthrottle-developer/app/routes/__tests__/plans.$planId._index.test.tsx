@@ -177,6 +177,7 @@ describe('routes/plans.$planId.tsx', () => {
   });
 
   test('should render empty state when plan not found', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <TooltipProvider>
         <PlanDetail

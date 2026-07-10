@@ -1,5 +1,11 @@
-import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
-import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
+import type {
+  Plan,
+  PlanOutputStreamChunk,
+} from '@openthrottle/nestjs-repositories';
+import {
+  PlanOutputStreamService,
+  getDefaultPlanRunConfigStorage,
+} from '@openthrottle/nestjs-repositories';
 import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
@@ -26,13 +32,36 @@ const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
 describe('PlanOutputStreamResolver', () => {
   let resolver: PlanOutputStreamResolver;
 
+  const mockPlan: Plan = {
+    assignee: null,
+    author: 'Plan author',
+    category: 'Plan category',
+    commitLinks: [],
+    createdAt: new Date('2026-02-01T22:00:00.000Z'),
+    description: 'Plan description',
+    id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+    jobRunHooks: { hooks: [] },
+    planEmbeddings: [],
+    planOutputChunks: [],
+    project: null,
+    projectId: null,
+    projectRelation: null,
+    runConfig: getDefaultPlanRunConfigStorage(),
+    status: 'IN_PROGRESS',
+    summary: null,
+    tasks: [],
+    title: 'Plan title',
+    updatedAt: new Date('2026-02-01T22:00:00.000Z'),
+  };
+
   const mockChunk: PlanOutputStreamChunk = {
     content: 'Iteration output chunk',
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     id: 'fe000420-9f10-4d74-b7f2-d9c5c211ed50',
     iteration: 1,
+    plan: mockPlan,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
-  } as PlanOutputStreamChunk;
+  };
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -164,10 +193,8 @@ describe('PlanOutputStreamResolver', () => {
         .mockImplementation((entity: { planId: string }) =>
           Promise.resolve({ ...entity, id: 'new-chunk-id' }),
         );
-      vi.mocked(planOutputStreamRepo.create).mockImplementation(
-        create as never,
-      );
-      vi.mocked(planOutputStreamRepo.save).mockImplementation(save as never);
+      vi.mocked(planOutputStreamRepo.create).mockImplementation(create);
+      vi.mocked(planOutputStreamRepo.save).mockImplementation(save);
 
       const result = await resolver.appendPlanOutput({
         content: 'New output',
@@ -194,8 +221,8 @@ describe('PlanOutputStreamResolver', () => {
         iteration: null,
         planId: mockChunk.planId,
       };
-      vi.mocked(planOutputStreamRepo.create).mockReturnValue(created as never);
-      vi.mocked(planOutputStreamRepo.save).mockResolvedValue(created as never);
+      vi.mocked(planOutputStreamRepo.create).mockReturnValue(created);
+      vi.mocked(planOutputStreamRepo.save).mockResolvedValue(created);
 
       const result = await resolver.appendPlanOutput({
         content: 'No iteration',

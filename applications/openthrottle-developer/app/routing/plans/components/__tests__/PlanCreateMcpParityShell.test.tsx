@@ -26,6 +26,7 @@ describe('PlanCreateMcpParityShell Component', () => {
 
   test('should render children when provided', () => {
     props = { children: <p data-testid="child">Child content</p> };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanCreateMcpParityShell {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
