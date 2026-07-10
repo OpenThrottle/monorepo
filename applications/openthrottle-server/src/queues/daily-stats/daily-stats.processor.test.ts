@@ -8,6 +8,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates';
 import type { AggregateDailyStatsJob } from './daily-stats.types';
 import { DailyStatsProcessor } from './daily-stats.processor';
 
@@ -47,6 +48,8 @@ describe('DailyStatsProcessor', () => {
   let processor: DailyStatsProcessor;
   let mockJob: AggregateDailyStatsJob;
   let mockUpsertForDate: ReturnType<typeof vi.fn<MockUpsertForDate>>;
+  let mockGetLatestDate: ReturnType<typeof vi.fn>;
+  let mockGetExistingDatesInRange: ReturnType<typeof vi.fn>;
   let mockEmitQueueJobCompleted: ReturnType<typeof vi.fn>;
   let mockLoggerError: ReturnType<typeof vi.fn>;
   let mockLoggerInfo: ReturnType<typeof vi.fn>;
@@ -54,8 +57,16 @@ describe('DailyStatsProcessor', () => {
   let planRepoMocks: ReturnType<typeof createRepoMocks>['planRepo'];
   let taskRepoMocks: ReturnType<typeof createRepoMocks>['taskRepo'];
 
+  // Dynamic anchors so tests are stable on any run date.
+  const yesterday = getPreviousUtcDayYmd();
+  const dayBeforeYesterday = addUtcDaysToYmd(yesterday, -1);
+
   beforeEach(async () => {
     mockUpsertForDate = vi.fn<MockUpsertForDate>().mockResolvedValue({});
+    // Default: last row is 2 days ago and nothing else present → the only
+    // missing day is yesterday (the normal daily case).
+    mockGetLatestDate = vi.fn().mockResolvedValue(dayBeforeYesterday);
+    mockGetExistingDatesInRange = vi.fn().mockResolvedValue(new Set<string>());
     mockEmitQueueJobCompleted = vi.fn();
     mockLoggerError = vi.fn();
     mockLoggerInfo = vi.fn();
@@ -74,7 +85,11 @@ describe('DailyStatsProcessor', () => {
         DailyStatsProcessor,
         {
           provide: DailyStatsService,
-          useValue: { upsertForDate: mockUpsertForDate },
+          useValue: {
+            getExistingDatesInRange: mockGetExistingDatesInRange,
+            getLatestDate: mockGetLatestDate,
+            upsertForDate: mockUpsertForDate,
+          },
         },
         {
           provide: LoggerService,
@@ -124,13 +139,20 @@ describe('DailyStatsProcessor', () => {
     expect(result.tasksByStatus).toEqual({});
   });
 
-  it('should call upsertForDate and emit success notification on happy path', async () => {
+  it('aggregates an arbitrary target date (UTC) when one is supplied', async () => {
+    const result = await processor.aggregateDailyStats('2026-02-08');
+
+    expect(result.date).toBe('2026-02-08');
+    expect(planRepoMocks.count).toHaveBeenCalled();
+  });
+
+  it('upserts a zero-count row for a quiet day so the chart stays continuous', async () => {
     await processor.process(mockJob);
 
     expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
     const [dateArg, payload] = mockUpsertForDate.mock.calls[0];
 
-    expect(dateArg).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(dateArg).toBe(yesterday);
     expect(payload).toMatchObject({
       plansByStatus: {},
       plansCompleted: 0,
@@ -141,14 +163,62 @@ describe('DailyStatsProcessor', () => {
       tasksCreated: 0,
       tasksUpdated: 0,
     });
+    expect(mockEmitQueueJobCompleted).toHaveBeenCalledTimes(1);
     expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
       jobType: 'daily-stats',
-      message: expect.stringContaining('Daily stats aggregated for'),
+      message: `Daily stats aggregated for ${yesterday}`,
       severity: 'success',
     });
   });
 
-  it('should resolve without throwing, log error, and emit error notification when upsert fails', async () => {
+  it('backfills every missing day in the gap and emits ONE summary notification', async () => {
+    // Last row is 4 days before yesterday → window is [y-3 .. y] (4 days).
+    const latest = addUtcDaysToYmd(yesterday, -4);
+    const present = addUtcDaysToYmd(yesterday, -2);
+    mockGetLatestDate.mockResolvedValue(latest);
+    mockGetExistingDatesInRange.mockResolvedValue(new Set<string>([present]));
+
+    await processor.process(mockJob);
+
+    const upsertedDates = mockUpsertForDate.mock.calls.map(([date]) => date);
+    expect(upsertedDates).toEqual([
+      addUtcDaysToYmd(yesterday, -3),
+      addUtcDaysToYmd(yesterday, -1),
+      yesterday,
+    ]);
+    // Exactly one notification for the whole batch, not one per day.
+    expect(mockEmitQueueJobCompleted).toHaveBeenCalledTimes(1);
+    expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
+      jobType: 'daily-stats',
+      message: `Daily stats backfilled 3 days (${addUtcDaysToYmd(yesterday, -3)}..${yesterday})`,
+      severity: 'success',
+    });
+  });
+
+  it('is a no-op when the table is already current (no upsert, no notification)', async () => {
+    mockGetLatestDate.mockResolvedValue(yesterday);
+
+    await processor.process(mockJob);
+
+    expect(mockGetExistingDatesInRange).not.toHaveBeenCalled();
+    expect(mockUpsertForDate).not.toHaveBeenCalled();
+    expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when every candidate day is already present', async () => {
+    const latest = addUtcDaysToYmd(yesterday, -2);
+    mockGetLatestDate.mockResolvedValue(latest);
+    mockGetExistingDatesInRange.mockResolvedValue(
+      new Set<string>([addUtcDaysToYmd(yesterday, -1), yesterday]),
+    );
+
+    await processor.process(mockJob);
+
+    expect(mockUpsertForDate).not.toHaveBeenCalled();
+    expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
+  });
+
+  it('resolves without throwing, logs error, and emits error notification when upsert fails', async () => {
     mockUpsertForDate.mockRejectedValueOnce(new Error('upsert failed'));
 
     await expect(processor.process(mockJob)).resolves.toBeUndefined();
@@ -164,7 +234,7 @@ describe('DailyStatsProcessor', () => {
     });
   });
 
-  it('should resolve without throwing and emit error when aggregation fails', async () => {
+  it('resolves without throwing and emits error when aggregation fails', async () => {
     planRepoMocks.count.mockRejectedValueOnce(new Error('count failed'));
 
     await expect(processor.process(mockJob)).resolves.toBeUndefined();
@@ -201,7 +271,7 @@ describe('DailyStatsProcessor', () => {
         DailyStatsProcessor,
         {
           provide: DailyStatsService,
-          useValue: { upsertForDate: mockUpsertForDate },
+          useValue: createMock<DailyStatsService>(),
         },
         {
           provide: LoggerService,
@@ -244,7 +314,7 @@ describe('DailyStatsProcessor', () => {
         DailyStatsProcessor,
         {
           provide: DailyStatsService,
-          useValue: { upsertForDate: mockUpsertForDate },
+          useValue: createMock<DailyStatsService>(),
         },
         {
           provide: LoggerService,
