@@ -67,8 +67,7 @@
         }
       },
       "test": {},
-      "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck": {}
     }
   },
   "private": true,

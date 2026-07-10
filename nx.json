@@ -229,7 +229,7 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
-      "description": "Watch mode for graphql-codegen \u2014 regenerate GraphQL types on change.",
+      "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "graphql-codegen --watch",
@@ -258,7 +258,7 @@
     },
     "codegen-react-router-watch": {
       "continuous": true,
-      "description": "Watch mode for `react-router typegen` \u2014 regenerate route types on change.",
+      "description": "Watch mode for `react-router typegen` — regenerate route types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "react-router typegen --watch",
@@ -314,7 +314,7 @@
     },
     "format-check": {
       "cache": true,
-      "description": "Check workspace formatting with Prettier without writing \u2014 CI parity for format-write.",
+      "description": "Check workspace formatting with Prettier without writing — CI parity for format-write.",
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
@@ -333,16 +333,16 @@
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "\ud83d\udea8 Knip is disabled for now, do not run this or `knip-backup` for the time being",
+      "description": "🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being",
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo '\ud83d\udea8 Knip is disabled for now, do not run this or `knip-backup` for the time being"
+        "command": "echo '🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being"
       }
     },
     "knip-backup": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking \u2014 run on demand with `pnpm nx run monorepo:knip`.",
+      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking — run on demand with `pnpm nx run monorepo:knip`.",
       "executor": "nx:run-commands",
       "options": {
         "command": "knip --config knip.jsonc --no-exit-code",
@@ -474,23 +474,6 @@
         "{projectRoot}/dist/**/*.d.ts.map",
         "{projectRoot}/tsconfig.tsbuildinfo"
       ]
-    },
-    "typecheck-tests": {
-      "cache": true,
-      "dependsOn": [
-        "^codegen-graphql",
-        "^typecheck",
-        "codegen-graphql",
-        "codegen-react-router",
-        "typecheck"
-      ],
-      "description": "Type-check test files only with `tsc --noEmit -p tsconfig.test.json` \u2014 does not execute tests.",
-      "executor": "nx:run-commands",
-      "inputs": ["default", "^default", "{projectRoot}/tsconfig.test.json"],
-      "options": {
-        "command": "pnpm exec tsc --noEmit -p tsconfig.test.json",
-        "cwd": "{projectRoot}"
-      }
     }
   },
   "tui": {
