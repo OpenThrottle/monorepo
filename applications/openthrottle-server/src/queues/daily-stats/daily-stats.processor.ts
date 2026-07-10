@@ -10,47 +10,31 @@ import {
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
+import {
+  addUtcDaysToYmd,
+  enumerateYmdRange,
+  getPreviousUtcDayYmd,
+  getUtcDayBounds,
+} from './daily-stats.dates';
 import type {
   AggregateDailyStatsJob,
+  CatchUpSummary,
   DailyStatsAggregate,
 } from './daily-stats.types';
 
 const CONCURRENCY = 1;
 
 /**
- * @description Returns the previous calendar day boundaries in UTC [start, end).
+ * @description Upper bound on how many days back a single catch-up run will
+ * backfill. Caps work (and notification noise) after long downtime; older holes
+ * are left for a manual backfill rather than silently scanning the whole table.
  */
-function getPreviousUtcDayBounds(): {
-  dateYmd: string;
-  dayEnd: Date;
-  dayStart: Date;
-} {
-  const now = new Date();
-  const dayEnd = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      0,
-      0,
-      0,
-      0,
-    ),
-  );
-  const dayStart = new Date(dayEnd);
-  dayStart.setUTCDate(dayStart.getUTCDate() - 1);
-
-  const y = dayStart.getUTCFullYear();
-  const m = String(dayStart.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(dayStart.getUTCDate()).padStart(2, '0');
-
-  const dateYmd = `${y}-${m}-${d}`;
-
-  return { dateYmd, dayEnd, dayStart };
-}
+const MAX_CATCHUP_DAYS = 60;
 
 /**
- * @description Processes daily stats aggregation jobs. Runs on a schedule (e.g. 6am UTC) and aggregates plans/tasks stats for the previous day.
+ * @description Processes daily stats aggregation jobs. Runs on a schedule (6am
+ * UTC) and, on boot + each run, self-heals any missed days by backfilling every
+ * gap between the last persisted `daily_stats.date` and yesterday (UTC).
  */
 @Processor(DAILY_STATS_QUEUE_NAME, {
   ...defaultWorkerOptions,
@@ -70,10 +54,22 @@ export class DailyStatsProcessor
     super();
   }
 
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
     const message = `Daily stats queue worker started (concurrency=${CONCURRENCY})`;
-
     this.logger.info(message, DailyStatsProcessor.name);
+
+    // Self-heal on boot: a worker that was down at 6am UTC never wrote those
+    // days. Backfill them now so downtime doesn't leave permanent holes. Guarded
+    // so a backfill failure never blocks worker startup.
+    try {
+      await this.runCatchUp();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Daily stats on-boot catch-up failed: ${detail}`,
+        DailyStatsProcessor.name,
+      );
+    }
   }
 
   async onApplicationShutdown(signal?: string): Promise<void> {
@@ -89,7 +85,60 @@ export class DailyStatsProcessor
     this.logger.info(message, DailyStatsProcessor.name);
 
     try {
-      const aggregate = await this.aggregateDailyStats();
+      await this.runCatchUp();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `♦️ Daily stats job failed: jobId=${job.id}, error=${detail}`,
+        DailyStatsProcessor.name,
+      );
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'daily-stats',
+        message: `Daily stats job failed: ${job.id}`,
+        severity: 'error',
+      });
+    }
+  }
+
+  /**
+   * @description Aggregates + persists every calendar day (UTC) missing from
+   * daily_stats between the last persisted date and yesterday, bounded to the
+   * last {@link MAX_CATCHUP_DAYS} days. Idempotent: already-present days are
+   * skipped, so a re-run with no gaps is a no-op. Emits a single summary
+   * notification for the batch (never one per day). Returns the batch summary.
+   */
+  async runCatchUp(): Promise<CatchUpSummary> {
+    const yesterdayYmd = getPreviousUtcDayYmd();
+    const flooredStartYmd = addUtcDaysToYmd(
+      yesterdayYmd,
+      -(MAX_CATCHUP_DAYS - 1),
+    );
+
+    const latestYmd = await this.dailyStatsService.getLatestDate();
+    const startYmd =
+      latestYmd == null
+        ? flooredStartYmd
+        : maxYmd(addUtcDaysToYmd(latestYmd, 1), flooredStartYmd);
+
+    // Already current (or ahead): nothing to aggregate.
+    if (startYmd > yesterdayYmd) {
+      return { backfilled: [], from: startYmd, skipped: [], to: yesterdayYmd };
+    }
+
+    const candidates = enumerateYmdRange(startYmd, yesterdayYmd);
+    const existing = await this.dailyStatsService.getExistingDatesInRange(
+      startYmd,
+      yesterdayYmd,
+    );
+    const missing = candidates.filter((ymd) => !existing.has(ymd));
+    const skipped = candidates.filter((ymd) => existing.has(ymd));
+
+    // Sequential on purpose: each day's aggregation fans out to ~10 count/find
+    // queries, so backfilling a long gap concurrently would swamp the DB.
+    for (const ymd of missing) {
+      // eslint-disable-next-line no-await-in-loop -- see note above
+      const aggregate = await this.aggregateDailyStats(ymd);
+      // eslint-disable-next-line no-await-in-loop -- see note above
       await this.dailyStatsService.upsertForDate(aggregate.date, {
         plansByStatus: aggregate.plansByStatus,
         plansCompleted: aggregate.plansCompleted,
@@ -100,32 +149,61 @@ export class DailyStatsProcessor
         tasksCreated: aggregate.tasksCreated,
         tasksUpdated: aggregate.tasksUpdated,
       });
-      this.logger.log(
-        `Daily stats aggregated for ${aggregate.date}: plans created=${aggregate.plansCreated} completed=${aggregate.plansCompleted} updated=${aggregate.plansUpdated}; tasks created=${aggregate.tasksCreated} completed=${aggregate.tasksCompleted} updated=${aggregate.tasksUpdated}`,
-        DailyStatsProcessor.name,
-      );
-
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'daily-stats',
-        message: `Daily stats aggregated for ${aggregate.date}`,
-        severity: 'success',
-      });
-    } catch (error) {
-      const message = `♦️ Daily stats job failed: jobId=${job.id}, error=${error instanceof Error ? error.message : String(error)}`;
-      this.logger.error(message, DailyStatsProcessor.name);
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'daily-stats',
-        message: `Daily stats job failed: ${job.id}`,
-        severity: 'error',
-      });
     }
+
+    const summary: CatchUpSummary = {
+      backfilled: missing,
+      from: startYmd,
+      skipped,
+      to: yesterdayYmd,
+    };
+    this.reportCatchUp(summary);
+
+    return summary;
   }
 
   /**
-   * @description Aggregates plan and task stats for the previous calendar day (UTC). Used by process() and by persistence (daily_stats table) when added.
+   * @description Logs the catch-up outcome and, when at least one day was
+   * written, emits ONE success notification for the batch.
    */
-  async aggregateDailyStats(): Promise<DailyStatsAggregate> {
-    const { dateYmd, dayEnd, dayStart } = getPreviousUtcDayBounds();
+  private reportCatchUp(summary: CatchUpSummary): void {
+    const { backfilled, skipped } = summary;
+
+    if (backfilled.length === 0) {
+      this.logger.log(
+        `Daily stats catch-up: no missing days in ${summary.from}..${summary.to} (${skipped.length} already present)`,
+        DailyStatsProcessor.name,
+      );
+
+      return;
+    }
+
+    this.logger.log(
+      `Daily stats catch-up: backfilled ${backfilled.length} day(s) [${backfilled.join(', ')}]; skipped ${skipped.length} already present`,
+      DailyStatsProcessor.name,
+    );
+
+    const message =
+      backfilled.length === 1
+        ? `Daily stats aggregated for ${backfilled[0]}`
+        : `Daily stats backfilled ${backfilled.length} days (${backfilled[0]}..${backfilled[backfilled.length - 1]})`;
+
+    this.notifications.emitQueueJobCompleted({
+      jobType: 'daily-stats',
+      message,
+      severity: 'success',
+    });
+  }
+
+  /**
+   * @description Aggregates plan and task stats for a single calendar day (UTC).
+   * Defaults to the previous UTC day (the scheduled job's target); pass an
+   * explicit `YYYY-MM-DD` to aggregate an arbitrary day during catch-up.
+   */
+  async aggregateDailyStats(
+    targetYmd: string = getPreviousUtcDayYmd(),
+  ): Promise<DailyStatsAggregate> {
+    const { dayEnd, dayStart } = getUtcDayBounds(targetYmd);
     const planRepo = this.plansService.getRepository();
     const taskRepo = this.tasksService.getRepository();
     const createdInRange = {
@@ -183,7 +261,7 @@ export class DailyStatsProcessor
     );
 
     return {
-      date: dateYmd,
+      date: targetYmd,
       plansByStatus,
       plansCompleted,
       plansCreated,
@@ -194,6 +272,14 @@ export class DailyStatsProcessor
       tasksUpdated,
     };
   }
+}
+
+/**
+ * @description Returns the later (chronologically greater) of two ymd strings.
+ * Relies on zero-padded ISO ymds comparing correctly as strings.
+ */
+function maxYmd(a: string, b: string): string {
+  return a >= b ? a : b;
 }
 
 interface IdStatus {
