@@ -46,8 +46,8 @@ export function registerOutputTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { chunk },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         return {
           content: [
             {
@@ -86,8 +86,8 @@ export function registerOutputTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { chunks },
         };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         return {
           content: [
             {

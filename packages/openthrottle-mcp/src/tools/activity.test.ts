@@ -119,9 +119,7 @@ describe('getLastActivityToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await getLastActivityToolHandler(
-        {} as Parameters<typeof getLastActivityToolHandler>[0],
-      );
+      const result = await getLastActivityToolHandler({});
 
       expect(result).toMatchObject({
         content: [

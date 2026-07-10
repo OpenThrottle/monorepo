@@ -108,11 +108,10 @@ async function handleGetActivityByDate(args: {
 
     return {
       content: [{ text, type: 'text' as const }],
-      structuredContent: activity as unknown as Record<string, unknown>,
+      structuredContent: { ...activity },
     };
   } catch (error: unknown) {
-    const isError = error instanceof Error;
-    const message = isError ? (error as Error).message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     const text = `get_activity_by_date failed: ${message}`;
 
     return {
@@ -163,8 +162,7 @@ async function handleGetLastActivity(args: {
       structuredContent: { result: activityResult },
     };
   } catch (error: unknown) {
-    const isError = error instanceof Error;
-    const message = isError ? (error as Error).message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     const text = `get_last_activity failed: ${message}`;
 
     return {

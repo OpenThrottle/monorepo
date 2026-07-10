@@ -4,7 +4,7 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
-import { parseDateTimeInResponse } from './utils.ts';
+import { isGraphqlEnvelope, parseDateTimeInResponse } from './utils.ts';
 
 interface ExecuteGraphqlAtUrlOptions {
   /** When set, sent as Authorization: Bearer <token>. Omit for unauthenticated requests. */
@@ -43,10 +43,12 @@ export async function executeGraphqlAtUrl<
 
   // FIXME: Swap out eventually
 
-  const json = (await res.json()) as {
-    readonly data?: TData;
-    readonly errors?: ReadonlyArray<{ readonly message: string }>;
-  };
+  const json: unknown = await res.json();
+  if (!isGraphqlEnvelope<TData>(json)) {
+    throw new Error(
+      `openthrottle-server GraphQL error ${res.status}: ${res.statusText}`,
+    );
+  }
 
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -66,5 +68,5 @@ export async function executeGraphqlAtUrl<
 
   // FIXME: Swap out eventually
 
-  return parseDateTimeInResponse(json.data) as TData;
+  return parseDateTimeInResponse(json.data);
 }

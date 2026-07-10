@@ -51,13 +51,12 @@ export function registerCommitTools(server: McpServer): void {
           structuredContent: { link },
         };
       } catch (error: unknown) {
-        const isError = error instanceof Error;
-        const isString = typeof error === 'string';
-        const message = isError
-          ? (error as Error).message
-          : isString
-            ? (error as string)
-            : 'Unknown error';
+        const message =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : 'Unknown error';
 
         const text = `link_commit failed: ${message}`;
 

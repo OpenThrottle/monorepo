@@ -70,8 +70,8 @@ export class NestjsSlackService {
           method: 'POST',
           signal: AbortSignal.timeout(timeoutMs),
         });
-      } catch (err) {
-        if (this.isTimeoutError(err)) {
+      } catch (error) {
+        if (this.isTimeoutError(error)) {
           // A timeout is transient: retry it unless we're out of attempts.
           if (isLastAttempt) {
             const message = `webhook request timed out after ${timeoutMs}ms.`;
@@ -86,7 +86,7 @@ export class NestjsSlackService {
 
         // Other fetch rejections are network errors: also transient.
         if (isLastAttempt) {
-          throw err;
+          throw error;
         }
 
         // eslint-disable-next-line no-await-in-loop -- backoff between attempts is intentionally sequential
@@ -182,7 +182,7 @@ export class NestjsSlackService {
    * rejects with a DOMException/Error named 'TimeoutError' when the signal
    * fires. No body is inspected so nothing sensitive is leaked.
    */
-  private isTimeoutError(err: unknown): boolean {
-    return err instanceof Error && err.name === 'TimeoutError';
+  private isTimeoutError(error: unknown): boolean {
+    return error instanceof Error && error.name === 'TimeoutError';
   }
 }

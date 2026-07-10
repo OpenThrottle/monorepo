@@ -56,8 +56,8 @@ async function createNoteHandler(
       ],
       structuredContent: { note },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       content: [
         { text: `create_note failed: ${message}`, type: 'text' as const },
@@ -92,8 +92,8 @@ async function getNoteHandler(
       content: [{ text: JSON.stringify(note, null, 2), type: 'text' as const }],
       structuredContent: { note },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       content: [{ text: `get_note failed: ${message}`, type: 'text' as const }],
       isError: true,
@@ -121,8 +121,8 @@ async function listNotesHandler(
       content: [{ text, type: 'text' as const }],
       structuredContent: { notes: [...notes] },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       content: [
         { text: `list_notes failed: ${message}`, type: 'text' as const },
@@ -155,8 +155,8 @@ async function updateNoteHandler(
       content: [{ text: JSON.stringify(note, null, 2), type: 'text' as const }],
       structuredContent: { note },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       content: [
         { text: `update_note failed: ${message}`, type: 'text' as const },
@@ -183,8 +183,8 @@ async function deleteNoteHandler(
       content: [{ text, type: 'text' as const }],
       structuredContent: { deleted },
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       content: [
         { text: `delete_note failed: ${message}`, type: 'text' as const },
