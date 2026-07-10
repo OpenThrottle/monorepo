@@ -25,8 +25,7 @@ pnpm nx run <project>:test                          # run a project's Vitest tes
 pnpm nx run <project>:test -- path/to/file.test.ts  # single test file
 pnpm nx run <project>:test --watch                  # watch mode
 pnpm nx run <project>:lint
-pnpm nx run <project>:typecheck
-pnpm nx run <project>:typecheck-tests               # tsc on test files only — does NOT execute tests
+pnpm nx run <project>:typecheck                     # tsc over source AND test files — does NOT execute tests
 
 pnpm nx affected --target=lint --parallel           # affected projects only
 pnpm run check:local                                # full local CI parity (lint, typecheck, tests, codegen, knip)
@@ -34,7 +33,7 @@ pnpm nx:validate-tags                               # validate project tags
 pnpm nx run monorepo:knip                           # dead-code report ONLY — never `knip --fix` on app UI
 ```
 
-`typecheck-tests` and `test` are not interchangeable: the former only type-checks test files; only `test` executes Vitest assertions.
+`typecheck` and `test` are not interchangeable: `typecheck` type-checks source and test files (`tsc`, no execution); only `test` executes Vitest assertions.
 
 ## Picking the right models for workflows and subagents
 
@@ -66,7 +65,7 @@ How to apply:
 
 ### Source-first React Router packages (no `build` target)
 
-The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.md for the full list of 16) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`typecheck-tests`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check.
+The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.md for the full list of 16) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check.
 
 ### GraphQL schema + codegen flow
 
