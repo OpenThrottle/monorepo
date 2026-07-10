@@ -18,7 +18,7 @@ Fetch-based GraphQL client for React Router loaders/actions and Node scripts aga
 - Effectively source-first despite appearances: `package.json` declares a real `build`
   target and `exports` → `./dist/...`, but **every consumer is workspace TypeScript that
   transpiles `src` directly** — nothing imports from `dist`. Validate with
-  `lint`/`typecheck`/`typecheck-tests`/`test`; the `build`/`__dev` targets are an optional
+  `lint`/`typecheck`/`test`; the `build`/`__dev` targets are an optional
   standalone emit only.
 - Single main entry, named imports only — no supported deep import path (see
   [../AGENTS.md](../AGENTS.md)).

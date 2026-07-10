@@ -59,7 +59,7 @@ This package follows the repo-wide `@openthrottle/nestjs-*` convention and inten
 - `main` / `module` / `types` point at `./src/index.ts` — in-repo consumers (Vite / ts) transpile the TypeScript source directly, so no build step is required for local integration.
 - `exports` points at `./dist/...` — the published / Node `require`-resolved entry, produced by the `build` target.
 
-This is deliberate and consistent across all sibling `nestjs-*` packages; do not "fix" it by dropping one mapping. Use `lint` / `typecheck` / `typecheck-tests` / `test` to validate, and a consumer app (e.g. `openthrottle-server`) as the integration check.
+This is deliberate and consistent across all sibling `nestjs-*` packages; do not "fix" it by dropping one mapping. Use `lint` / `typecheck` / `test` to validate, and a consumer app (e.g. `openthrottle-server`) as the integration check.
 
 ### 4. Environment variables
 

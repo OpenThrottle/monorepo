@@ -30,8 +30,7 @@
       "lint": {},
       "test": {},
       "test-e2e": {},
-      "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck": {}
     }
   },
   "private": true,

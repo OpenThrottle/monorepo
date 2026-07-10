@@ -116,8 +116,7 @@ all point at `./src/index.ts`. Every consumer is workspace TypeScript that
 transpiles the source directly (no consumer imports from `dist` or via a `./*`
 subpath), so there is no published build artifact to resolve. The `build` /
 `__dev` Nx targets still exist for an optional standalone `dist` emit, but the
-package is **not** consumed from `dist` — validate with `lint` / `typecheck` /
-`typecheck-tests` / `test`.
+package is **not** consumed from `dist` — validate with `lint` / `typecheck` / `test`.
 
 ## Installation
 

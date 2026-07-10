@@ -155,7 +155,6 @@
       },
       "test": {},
       "typecheck": {},
-      "typecheck-tests": {},
       "worker": {
         "continuous": true,
         "dependsOn": [

@@ -178,7 +178,6 @@ square-footage readouts; full screen-reader-operable canvas editing.
 ```bash
 pnpm nx run @openthrottle/react-router-floor-layout:lint
 pnpm nx run @openthrottle/react-router-floor-layout:typecheck
-pnpm nx run @openthrottle/react-router-floor-layout:typecheck-tests
 pnpm nx run @openthrottle/react-router-floor-layout:test
 ```
 
