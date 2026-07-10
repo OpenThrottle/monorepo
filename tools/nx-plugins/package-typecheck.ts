@@ -81,7 +81,7 @@ export const createNodesV2: CreateNodesV2 = [
                     },
                   ],
                   metadata: {
-                    description: `Static type-check of source + tests: tsc --build (emits dist .d.ts) then tsc --noEmit on tsconfig.test.json. Replaces the old typecheck/typecheck-tests split.`,
+                    description: `Static type-check of source + tests: tsc --build (emits dist .d.ts) then tsc --noEmit on tsconfig.test.json.`,
                     technologies: ['typescript'],
                   },
                   options: {
