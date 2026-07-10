@@ -33,7 +33,7 @@
       "plugin": "@nx/js/typescript",
       "options": {
         "typecheck": {
-          "targetName": "typecheck"
+          "targetName": "__NOT_USED__typecheck"
         },
         "build": {
           "targetName": "build",
@@ -62,6 +62,9 @@
     },
     {
       "plugin": "./tools/nx-plugins/react-router-typecheck.ts"
+    },
+    {
+      "plugin": "./tools/nx-plugins/package-typecheck.ts"
     }
   ],
   "pluginsConfig": {
