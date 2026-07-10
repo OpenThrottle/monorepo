@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { BadGatewayException, GatewayTimeoutException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   GITHUB_REQUEST_TIMEOUT_DEFAULT_MS,
   GitHubService,
@@ -463,7 +464,7 @@ describe('GitHubService', () => {
     const service = new GitHubService(mockConfig);
     await service.listPulls('owner', 'repo', { state: 'open' });
 
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const init = asMock<RequestInit | undefined>(fetchMock.mock.calls[0]?.[1]);
     expect(init?.signal).toBeInstanceOf(AbortSignal);
 
     vi.unstubAllGlobals();
@@ -544,7 +545,7 @@ describe('GitHubService', () => {
       // Run the backoff callback immediately so the test does not actually wait.
       .mockImplementation((cb: () => void) => {
         cb();
-        return 0 as unknown as ReturnType<typeof setTimeout>;
+        return asMock<ReturnType<typeof setTimeout>>(0);
       });
 
     const rateLimited = {
@@ -578,7 +579,7 @@ describe('GitHubService', () => {
       .spyOn(globalThis, 'setTimeout')
       .mockImplementation((cb: () => void) => {
         cb();
-        return 0 as unknown as ReturnType<typeof setTimeout>;
+        return asMock<ReturnType<typeof setTimeout>>(0);
       });
 
     const serverError = {
@@ -623,12 +624,12 @@ describe('GitHubService', () => {
 
   test('readRateLimit parses X-RateLimit-* headers', () => {
     const service = new GitHubService(mockConfig);
-    const res = {
+    const res = asMock<Response>({
       headers: new Headers({
         'x-ratelimit-remaining': '7',
         'x-ratelimit-reset': '1718000000',
       }),
-    } as unknown as Response;
+    });
 
     expect(service.readRateLimit(res)).toEqual({
       remaining: 7,
@@ -638,7 +639,7 @@ describe('GitHubService', () => {
 
   test('readRateLimit returns nulls when headers are absent', () => {
     const service = new GitHubService(mockConfig);
-    const res = { headers: new Headers() } as unknown as Response;
+    const res = asMock<Response>({ headers: new Headers() });
 
     expect(service.readRateLimit(res)).toEqual({
       remaining: null,
@@ -810,7 +811,7 @@ describe('GitHubService', () => {
       .spyOn(globalThis, 'setTimeout')
       .mockImplementation((cb: () => void) => {
         cb();
-        return 0 as unknown as ReturnType<typeof setTimeout>;
+        return asMock<ReturnType<typeof setTimeout>>(0);
       });
     vi.stubGlobal(
       'fetch',

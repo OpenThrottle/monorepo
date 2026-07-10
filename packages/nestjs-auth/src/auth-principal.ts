@@ -111,16 +111,21 @@ const userPrincipalFromUnknown = (
 };
 
 /**
+ * @description Narrows an unknown value to an indexable record without a cast.
+ */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+/**
  * @description Type guard for {@link AuthPrincipal} on `request.user`.
  */
 export const isAuthPrincipal = (value: unknown): value is AuthPrincipal => {
-  if (typeof value !== 'object' || value === null) {
+  if (!isRecord(value)) {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
-  const kind = record.kind;
-  const sub = record.sub;
+  const kind = value.kind;
+  const sub = value.sub;
 
   if (typeof sub !== 'string') {
     return false;
@@ -138,7 +143,7 @@ export const isAuthPrincipal = (value: unknown): value is AuthPrincipal => {
     return true;
   }
 
-  return userPrincipalFromUnknown(record) != null;
+  return userPrincipalFromUnknown(value) != null;
 };
 
 /**
@@ -147,16 +152,11 @@ export const isAuthPrincipal = (value: unknown): value is AuthPrincipal => {
 export const normalizeRequestAuthPrincipal = (
   user: unknown,
 ): AuthPrincipal | undefined => {
-  if (user == null) {
+  if (!isRecord(user)) {
     return undefined;
   }
 
-  if (typeof user !== 'object') {
-    return undefined;
-  }
-
-  const record = user as Record<string, unknown>;
-  const kind = record.kind;
+  const kind = user.kind;
 
   if (
     kind !== undefined &&
@@ -167,7 +167,7 @@ export const normalizeRequestAuthPrincipal = (
   }
 
   if (kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT) {
-    const sub = record.sub;
+    const sub = user.sub;
 
     if (typeof sub !== 'string') {
       return undefined;
@@ -177,8 +177,8 @@ export const normalizeRequestAuthPrincipal = (
   }
 
   if (kind === AUTH_PRINCIPAL_KIND_USER) {
-    return userPrincipalFromUnknown(record);
+    return userPrincipalFromUnknown(user);
   }
 
-  return userPrincipalFromUnknown(record);
+  return userPrincipalFromUnknown(user);
 };

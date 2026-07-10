@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -29,23 +30,21 @@ const getCurrentUserFactory = (): ParamFactory => {
     }
   }
 
-  const args = Reflect.getMetadata(
-    ROUTE_ARGS_METADATA,
-    Probe,
-    'handler',
-  ) as Record<string, { factory: ParamFactory }>;
+  const args = asMock<Record<string, { factory: ParamFactory }>>(
+    Reflect.getMetadata(ROUTE_ARGS_METADATA, Probe, 'handler'),
+  );
   const [first] = Object.values(args);
 
   return first.factory;
 };
 
 const createHttpContext = (httpReq: { user?: unknown }): ExecutionContext =>
-  ({
+  asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('http'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
-  }) as unknown as ExecutionContext;
+  });
 
 describe('CurrentUser', () => {
   const factory = getCurrentUserFactory();
@@ -91,14 +90,16 @@ describe('CurrentUser', () => {
 
   it('reads the request from the GraphQL context', () => {
     const gqlReq = { user: jwtUser };
-    const ctx = {
+    const ctx = asMock<ExecutionContext>({
       getType: vi.fn().mockReturnValue('graphql'),
       switchToHttp: vi.fn(),
-    } as unknown as ExecutionContext;
+    });
 
-    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-      getContext: () => ({ req: gqlReq }),
-    } as GqlExecutionContext);
+    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+      asMock<GqlExecutionContext>({
+        getContext: () => ({ req: gqlReq }),
+      }),
+    );
 
     expect(factory('sub', ctx)).toBe('user-uuid-1');
   });

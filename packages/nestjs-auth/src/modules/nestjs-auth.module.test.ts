@@ -1,3 +1,4 @@
+import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
 import { JWT_SECRET_MIN_BYTES } from '../strategies/jwt.strategy';
 import { NESTJS_AUTH_OPTIONS } from '../config/nestjs-auth.tokens';
@@ -64,7 +65,7 @@ describe('NestjsAuthModule', () => {
 
     it('rejects a factory returning a non-object', async () => {
       const module = NestjsAuthModule.forRootAsync({
-        useFactory: () => undefined as unknown as NestjsAuthOptions,
+        useFactory: () => asMock<NestjsAuthOptions>(undefined),
       });
 
       const optionsProvider = findFactoryProvider(
@@ -79,7 +80,7 @@ describe('NestjsAuthModule', () => {
 
     it('rejects a factory returning an object without jwtSecret', async () => {
       const module = NestjsAuthModule.forRootAsync({
-        useFactory: () => ({ jwtIssuer: 'x' }) as unknown as NestjsAuthOptions,
+        useFactory: () => asMock<NestjsAuthOptions>({ jwtIssuer: 'x' }),
       });
 
       const optionsProvider = findFactoryProvider(

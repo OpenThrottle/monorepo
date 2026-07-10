@@ -14,6 +14,14 @@ import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
  * malformed object (e.g. missing `jwtSecret`) fails loudly here instead of producing
  * a confusing downstream error.
  */
+const hasNonEmptyStringJwtSecret = (
+  value: object,
+): value is NestjsAuthOptions => {
+  const jwtSecret = Reflect.get(value, 'jwtSecret');
+
+  return typeof jwtSecret === 'string' && jwtSecret.length > 0;
+};
+
 const assertNestjsAuthOptions = (value: unknown): NestjsAuthOptions => {
   if (typeof value !== 'object' || value === null) {
     throw new Error(
@@ -21,15 +29,13 @@ const assertNestjsAuthOptions = (value: unknown): NestjsAuthOptions => {
     );
   }
 
-  const jwtSecret = Reflect.get(value, 'jwtSecret');
-
-  if (typeof jwtSecret !== 'string' || jwtSecret.length === 0) {
+  if (!hasNonEmptyStringJwtSecret(value)) {
     throw new Error(
       'NestjsAuthModule.forRootAsync: returned options.jwtSecret must be a non-empty string',
     );
   }
 
-  return value as NestjsAuthOptions;
+  return value;
 };
 
 /**

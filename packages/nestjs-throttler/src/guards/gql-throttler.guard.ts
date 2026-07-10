@@ -86,7 +86,7 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
       // @nestjs/apollo surfaces the ws upgrade request as `req`, so the check
       // above passes — but there is still no Express response to set
       // rate-limit headers on. Skip whenever no usable `res.header` exists.
-      const httpResponse = (res ?? req.res) as { header?: unknown } | undefined;
+      const httpResponse = res ?? req.res;
       if (typeof httpResponse?.header !== 'function') {
         return true;
       }
