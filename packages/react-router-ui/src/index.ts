@@ -25,6 +25,7 @@ export * from './components/OpenThrottleTable';
 export * from './components/OpenThrottleTabs';
 export * from './components/OpenThrottleTabLink';
 export * from './components/OpenThrottleTabsNav';
+export * from './components/OpenThrottleThemeToggle';
 export * from './components/OpenThrottleWebsocketDebugger';
 export * from './components/websocket-debugger';
 

@@ -45,9 +45,12 @@ import {
 } from '@openthrottle/react-router-auth';
 import {
   artwork,
+  buildAppearanceRootCssBlock,
+  buildThemePrehydrationScript,
   FEATURE_BETA_PREVIEW,
   OPENTHROTTLE_BUCKET,
   OPENTHROTTLE_META_DESCRIPTION,
+  resolveThemeMode,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
@@ -79,11 +82,7 @@ import {
 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
-import {
-  buildAppearanceRootCssBlock,
-  CONFIG_STORAGE_KEY,
-  configAtom,
-} from '~/global/data/atom.config';
+import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   REGEX_UUID,
@@ -293,13 +292,15 @@ export const meta = (_args: Route.MetaArgs) => {
 const THEME_STYLESHEET = buildThemeStylesheet(THEMES);
 
 /**
- * Pre-hydration script: reads the persisted appearance config and applies the
- * palette (`data-theme`) and the light/dark class on `<html>` before first
- * paint, so there is no flash-of-wrong-theme.
+ * Pre-hydration script (system-aware): reads the persisted appearance config
+ * and applies the palette (`data-theme`) plus the resolved light/dark class on
+ * `<html>` before first paint, so there is no flash-of-wrong-theme. `system`
+ * mode is resolved here via `matchMedia('(prefers-color-scheme: dark)')` since
+ * the server cannot know the OS preference. Shared with all RR apps via
+ * {@link buildThemePrehydrationScript}.
  */
-const THEME_PREHYDRATION_SCRIPT = `(function(){try{var raw=window.localStorage.getItem(${JSON.stringify(
-  CONFIG_STORAGE_KEY,
-)});if(!raw)return;var c=JSON.parse(raw);var d=document.documentElement;if(c&&typeof c.themeId==='string'){d.setAttribute('data-theme',c.themeId);}if(c&&c.theme==='dark'){d.classList.add('dark');}else if(c&&c.theme==='light'){d.classList.remove('dark');}}catch(e){}})();`;
+const THEME_PREHYDRATION_SCRIPT =
+  buildThemePrehydrationScript(CONFIG_STORAGE_KEY);
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
@@ -307,6 +308,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [_user, setUser] = useAtom(userAtom);
   const [config] = useAtom(configAtom);
   const nonce = useNonce();
+  // Lazily read the OS preference on the client so the very first client render
+  // resolves `system` correctly (SSR has no OS knowledge → false).
+  const [prefersDark, setPrefersDark] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return false;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   // Setup
   const env = data?.env ?? {};
@@ -332,8 +341,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [data?.user, data?.userLoadOk, setUser]);
 
-  const isDarkTheme = config.theme === 'dark';
+  const isDarkTheme = resolveThemeMode(config.theme, prefersDark) === 'dark';
   const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
+
+  // Keep `prefersDark` in sync with the OS. The change listener is attached
+  // only while in system mode — the one mode where the OS preference changes
+  // the resolved theme — and removed when leaving system mode or on unmount.
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return;
+    }
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    setPrefersDark(query.matches);
+    if (config.theme !== 'system') {
+      return;
+    }
+    const handlePrefersDarkChange = (event: MediaQueryListEvent): void => {
+      setPrefersDark(event.matches);
+    };
+    query.addEventListener('change', handlePrefersDarkChange);
+    return () => {
+      query.removeEventListener('change', handlePrefersDarkChange);
+    };
+  }, [config.theme]);
 
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkTheme);
