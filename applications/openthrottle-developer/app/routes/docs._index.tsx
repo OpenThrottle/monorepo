@@ -13,8 +13,8 @@ const indexEntry = docsManifest.find((entry) => entry.path === '/docs');
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Docs',
-  links: (_match) => [],
+  breadcrumb: (_match) => 'Documentation',
+  links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {

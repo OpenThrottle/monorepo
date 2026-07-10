@@ -38,7 +38,10 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
       text={match.params.noteId ?? 'not-found'}
     />
   ),
-  links: (_match) => [{ children: 'Notes', to: '/notes' }],
+  links: (_match) => [
+    { children: 'User', to: '/profile' },
+    { children: 'Notes', to: '/notes' },
+  ],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
