@@ -4,6 +4,22 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 import { DailyStat } from './daily-stat.entity';
 
+/**
+ * @description Normalizes a Postgres `date` value (pg returns `YYYY-MM-DD`
+ * strings; TypeORM may hand back a `Date`) to a UTC `YYYY-MM-DD` string.
+ */
+function normalizeYmd(value: Date | string): string {
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
+
+  const y = value.getUTCFullYear();
+  const m = String(value.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(value.getUTCDate()).padStart(2, '0');
+
+  return `${y}-${m}-${d}`;
+}
+
 @Injectable()
 export class DailyStatsService {
   constructor(
@@ -19,6 +35,43 @@ export class DailyStatsService {
    */
   getRepository(): Repository<DailyStat> {
     return this.dailyStatRepository;
+  }
+
+  /**
+   * @description Returns the most recent `date` present in daily_stats as a UTC
+   * `YYYY-MM-DD` string, or null when the table is empty. Used by the processor
+   * to find the floor of a catch-up backfill window.
+   */
+  async getLatestDate(): Promise<string | null> {
+    const row = await this.dailyStatRepository
+      .createQueryBuilder('ds')
+      .select('ds.date', 'date')
+      .orderBy('ds.date', 'DESC')
+      .limit(1)
+      .getRawOne<{ date: Date | string }>();
+
+    return row ? normalizeYmd(row.date) : null;
+  }
+
+  /**
+   * @description Returns the set of `date`s already present in daily_stats within
+   * the inclusive `[startYmd, endYmd]` window, as UTC `YYYY-MM-DD` strings. Used
+   * for gap detection so only missing days are recomputed.
+   */
+  async getExistingDatesInRange(
+    startYmd: string,
+    endYmd: string,
+  ): Promise<Set<string>> {
+    const rows = await this.dailyStatRepository
+      .createQueryBuilder('ds')
+      .select('ds.date', 'date')
+      .where('ds.date >= :startYmd AND ds.date <= :endYmd', {
+        endYmd,
+        startYmd,
+      })
+      .getRawMany<{ date: Date | string }>();
+
+    return new Set(rows.map((row) => normalizeYmd(row.date)));
   }
 
   /**
