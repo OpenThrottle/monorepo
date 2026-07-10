@@ -51,10 +51,10 @@ export const formatters = {
  */
 export type FormatterName = keyof typeof formatters;
 
-const formatterNames = Object.keys(formatters) as FormatterName[];
+const formatterNames: readonly string[] = Object.keys(formatters);
 
 /**
  * @description Type guard: is the given string a known formatter name?
  */
 export const isFormatterName = (value: string): value is FormatterName =>
-  formatterNames.includes(value as FormatterName);
+  formatterNames.includes(value);

@@ -70,7 +70,7 @@ export const validateWorkflowRalphRunOptionsState = (
   }
 
   const backend = input.executionBackend.trim().toLowerCase();
-  if (!(WORKFLOW_RALPH_KNOWN_BACKENDS as readonly string[]).includes(backend)) {
+  if (!WORKFLOW_RALPH_KNOWN_BACKENDS.some((known) => known === backend)) {
     issues.push({
       code: 'backend',
       message: `Unknown execution backend "${input.executionBackend.trim()}". Supported: ${WORKFLOW_RALPH_KNOWN_BACKENDS.join(', ')}`,

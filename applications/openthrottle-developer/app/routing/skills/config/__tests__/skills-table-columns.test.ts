@@ -5,6 +5,11 @@ import {
   skillsTableColumns,
 } from '~/routing/skills/config/skills-table-columns';
 
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 describe('routing/skills config skills-table-columns', () => {
   describe('getSkillsTableRowId', () => {
     test('prefers slug over path and index', () => {
@@ -43,7 +48,7 @@ describe('routing/skills config skills-table-columns', () => {
       const headers = skillsTableColumns.map((column) => {
         const header = column.header;
         if (typeof header === 'function') {
-          return header({} as never);
+          return header(asMock<Parameters<typeof header>[0]>({}));
         }
         return header;
       });

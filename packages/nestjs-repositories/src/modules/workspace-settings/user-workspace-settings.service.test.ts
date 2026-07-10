@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
@@ -9,14 +10,14 @@ import { UserWorkspaceSettingsService } from './user-workspace-settings.service'
 describe('UserWorkspaceSettingsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
 
-  const mockSettings: UserWorkspaceSettings = {
+  const mockSettings = asMock<UserWorkspaceSettings>({
     contactDisplayName: null,
     contactEmail: null,
     createdAt: new Date('2026-05-18T12:00:00.000Z'),
     enabledEditors: [],
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
-  } as UserWorkspaceSettings;
+  });
 
   const mockRepository = {
     create: vi.fn((data: Partial<UserWorkspaceSettings>) => ({

@@ -4,6 +4,7 @@ import { tmpdir } from 'os';
 import { createMock } from '@golevelup/ts-vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   CONTAINER_WORKSPACES_DIR_ENV,
   HOST_WORKSPACES_DIR_ENV,
@@ -46,10 +47,12 @@ describe('WorkspaceEditorConfigService', () => {
   });
 
   test('returns empty when no editors are enabled', async () => {
-    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
-      enabledEditors: [],
-      userId,
-    } as unknown as UserWorkspaceSettings);
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue(
+      asMock<UserWorkspaceSettings>({
+        enabledEditors: [],
+        userId,
+      }),
+    );
 
     const results = await service.applyForUser(userId, {
       apiBaseUrl: 'http://localhost:6021',
@@ -61,17 +64,19 @@ describe('WorkspaceEditorConfigService', () => {
   test('writes cursor MCP config and manifest for linked repo', async () => {
     const repoId = '22222222-2222-4222-8222-222222222222';
 
-    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
-      enabledEditors: ['cursor'],
-      userId,
-    } as UserWorkspaceSettings);
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue(
+      asMock<UserWorkspaceSettings>({
+        enabledEditors: ['cursor'],
+        userId,
+      }),
+    );
 
     mockWorkspaceLocalRepositoriesService.listByUserId.mockResolvedValue([
-      {
+      asMock<WorkspaceLocalRepository>({
         filesystemPath: repositoryRoot,
         id: repoId,
         userId,
-      } as WorkspaceLocalRepository,
+      }),
     ]);
 
     const results = await service.applyForUser(userId, {
@@ -99,17 +104,19 @@ describe('WorkspaceEditorConfigService', () => {
     vi.stubEnv(HOST_WORKSPACES_DIR_ENV, hostWorkspaces);
     vi.stubEnv(CONTAINER_WORKSPACES_DIR_ENV, containerParent);
 
-    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
-      enabledEditors: ['cursor'],
-      userId,
-    } as UserWorkspaceSettings);
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue(
+      asMock<UserWorkspaceSettings>({
+        enabledEditors: ['cursor'],
+        userId,
+      }),
+    );
     // filesystemPath stays host-truthful (as stored in the DB).
     mockWorkspaceLocalRepositoriesService.listByUserId.mockResolvedValue([
-      {
+      asMock<WorkspaceLocalRepository>({
         filesystemPath: hostPath,
         id: repoId,
         userId,
-      } as WorkspaceLocalRepository,
+      }),
     ]);
 
     const results = await service.applyForUser(userId, {
@@ -126,16 +133,18 @@ describe('WorkspaceEditorConfigService', () => {
   test('leaves the write path unchanged when bridge env is unset', async () => {
     const repoId = '44444444-4444-4444-8444-444444444444';
 
-    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
-      enabledEditors: ['cursor'],
-      userId,
-    } as UserWorkspaceSettings);
+    mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue(
+      asMock<UserWorkspaceSettings>({
+        enabledEditors: ['cursor'],
+        userId,
+      }),
+    );
     mockWorkspaceLocalRepositoriesService.listByUserId.mockResolvedValue([
-      {
+      asMock<WorkspaceLocalRepository>({
         filesystemPath: repositoryRoot,
         id: repoId,
         userId,
-      } as WorkspaceLocalRepository,
+      }),
     ]);
 
     const results = await service.applyForUser(userId, {

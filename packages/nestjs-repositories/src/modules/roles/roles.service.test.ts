@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { ServiceAccount } from '../service-accounts/service-account.entity';
 import { User } from '../users/user.entity';
 import { Permission } from './permission.entity';
@@ -130,7 +131,7 @@ describe('RolesService (service accounts)', () => {
         id: serviceAccountId,
         name: 'openthrottle-mcp',
         roles: [adminRole, viewerRole],
-      } as ServiceAccount);
+      });
 
       const permissions =
         await service.getPermissionsForServiceAccount(serviceAccountId);
@@ -146,7 +147,7 @@ describe('RolesService (service accounts)', () => {
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue({
         id: serviceAccountId,
         roles: [role(roleAId, 'admin', []), role(roleBId, 'viewer', [])],
-      } as ServiceAccount);
+      });
 
       const names =
         await service.findRoleNamesByServiceAccountId(serviceAccountId);
@@ -173,7 +174,7 @@ describe('RolesService (service accounts)', () => {
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue({
         id: serviceAccountId,
         roles: [adminRole],
-      } as ServiceAccount);
+      });
 
       const roles = await service.findRolesForServiceAccount(serviceAccountId);
 
@@ -199,16 +200,16 @@ describe('RolesService (service accounts)', () => {
     });
 
     it('appends role and saves when not already assigned', async () => {
-      const existing = {
+      const existing = asMock<ServiceAccount>({
         id: serviceAccountId,
-        roles: [] as Role[],
-      } as ServiceAccount;
+        roles: [],
+      });
       const adminRole = role(roleAId, 'admin', []);
 
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue(existing);
       vi.mocked(roleRepository.findOne).mockResolvedValue(adminRole);
       vi.mocked(serviceAccountRepository.save).mockImplementation(
-        async (entity) => entity as ServiceAccount,
+        async (entity) => entity,
       );
 
       const result = await service.assignRoleToServiceAccount(
@@ -224,10 +225,10 @@ describe('RolesService (service accounts)', () => {
 
     it('is idempotent when role is already assigned', async () => {
       const adminRole = role(roleAId, 'admin', []);
-      const existing = {
+      const existing = asMock<ServiceAccount>({
         id: serviceAccountId,
         roles: [adminRole],
-      } as ServiceAccount;
+      });
 
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue(existing);
       vi.mocked(roleRepository.findOne).mockResolvedValue(adminRole);
@@ -254,14 +255,14 @@ describe('RolesService (service accounts)', () => {
     it('removes the role and saves', async () => {
       const adminRole = role(roleAId, 'admin', []);
       const viewerRole = role(roleBId, 'viewer', []);
-      const existing = {
+      const existing = asMock<ServiceAccount>({
         id: serviceAccountId,
         roles: [adminRole, viewerRole],
-      } as ServiceAccount;
+      });
 
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue(existing);
       vi.mocked(serviceAccountRepository.save).mockImplementation(
-        async (entity) => entity as ServiceAccount,
+        async (entity) => entity,
       );
 
       const result = await service.removeRoleFromServiceAccount(

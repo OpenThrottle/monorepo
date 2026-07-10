@@ -8,7 +8,10 @@ import {
 import { List, Table2 } from 'lucide-react';
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  isPlanStatusKey,
+  PlanStatusBadge,
+} from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
@@ -143,9 +146,11 @@ PlanTabTasks.buildTable = (): ColumnDef<
         const status = row.original.status;
         return (
           <div className="p-2">
-            <PlanStatusBadge
-              status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
-            />
+            {isPlanStatusKey(status) ? (
+              <PlanStatusBadge status={status} />
+            ) : (
+              status
+            )}
           </div>
         );
       },

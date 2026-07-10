@@ -191,10 +191,10 @@ describe('configAtom localStorage', () => {
     const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
     expect(raw).not.toBeNull();
 
-    const parsed = JSON.parse(raw ?? '{}') as {
+    const parsed: {
       brand: string;
       theme: string;
-    };
+    } = JSON.parse(raw ?? '{}');
     expect(parsed.brand).toBe('#112233');
     expect(parsed.theme).toBe('dark');
   });

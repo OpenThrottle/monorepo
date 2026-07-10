@@ -31,6 +31,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
+const isCustomPromptType = (value: string): value is CustomPromptType =>
+  Object.values(CustomPromptType).some((type) => type === value);
+
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.url;
 
@@ -59,7 +62,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   const q = searchParams.get('q')?.trim() ?? null;
   const search = q && q.length > 0 ? q : null;
 
-  const promptType = types.length === 1 ? (types[0] as CustomPromptType) : null;
+  const firstType = types.length === 1 ? types[0] : undefined;
+  const promptType =
+    firstType != null && isCustomPromptType(firstType) ? firstType : null;
   const result = await executeGraphqlWithAuth(
     args.request,
     GetPromptsDocument,

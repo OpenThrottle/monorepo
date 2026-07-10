@@ -9,11 +9,16 @@ const mockConfig = {
   transport: 'postgres-direct' as const,
 };
 
-const mockState = {
-  connectReject: undefined as Error | undefined,
-  planStatus: 'PENDING' as string,
-  planTaskStatuses: [] as string[],
-  queryLog: [] as string[],
+const mockState: {
+  connectReject: Error | undefined;
+  planStatus: string;
+  planTaskStatuses: string[];
+  queryLog: string[];
+} = {
+  connectReject: undefined,
+  planStatus: 'PENDING',
+  planTaskStatuses: [],
+  queryLog: [],
 };
 
 const planRow = {

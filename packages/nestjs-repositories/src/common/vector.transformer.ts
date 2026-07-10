@@ -30,9 +30,7 @@ export const vectorTransformer: ValueTransformer = {
     if (value == null) return null;
     if (!Array.isArray(value)) return null;
 
-    // FIXME: Tighten this up
-
-    const arr = value as number[];
+    const arr: readonly unknown[] = value;
     if (arr.length !== VECTOR_DIM) return null;
 
     return `[${arr.join(',')}]`;

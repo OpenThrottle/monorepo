@@ -21,6 +21,11 @@ import {
 } from '../build-workflow-ralph-argv';
 import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
 ): WorkflowRalphRunOptionsInput => ({
@@ -537,13 +542,13 @@ describe('buildWorkflowRalphDebugBundleText', () => {
       planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
       workflowInput: basePlanInput(),
     });
-    const parsed = JSON.parse(text) as {
+    const parsed: {
       argvSegments: readonly string[];
       canonicalCommand: string;
       planId: string;
       precedence: string;
       queue: { jobListPath: string };
-    };
+    } = JSON.parse(text);
 
     expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
     expect(parsed.precedence).toContain('CLI flags');
@@ -614,7 +619,10 @@ describe('validateWorkflowRalphRunOptionsState', () => {
 
   test('fails when execution backend is not a known id', () => {
     const result = validateWorkflowRalphRunOptionsState(
-      basePlanInput({ executionBackend: 'codex' as 'cursor' }),
+      basePlanInput({
+        executionBackend:
+          asMock<WorkflowRalphRunOptionsInput['executionBackend']>('codex'),
+      }),
       '',
       { requireCliTargetIds: true },
     );

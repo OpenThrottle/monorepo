@@ -27,6 +27,9 @@ export const DEFAULT_APPEARANCE_CONFIG: ConfigObject = {
 const isThemeMode = (value: unknown): value is ThemeMode =>
   value === 'dark' || value === 'light' || value === 'system';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * @description Coerce unknown persisted JSON into a valid {@link ConfigObject}.
  * Migrates legacy `accentColor` to `brand`. The `themeId` palette check is
@@ -38,11 +41,11 @@ export const normalizeAppearanceConfig = (
   value: unknown,
   isValidThemeId: (themeId: unknown) => boolean = isThemeId,
 ): ConfigObject => {
-  if (typeof value !== 'object' || value === null) {
+  if (!isRecord(value)) {
     return DEFAULT_APPEARANCE_CONFIG;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
   const theme = isThemeMode(record.theme)
     ? record.theme
     : DEFAULT_APPEARANCE_CONFIG.theme;

@@ -41,12 +41,26 @@ export interface WorkspaceEditorConfigApplication {
 const layoutForEditor = (editorId: WorkspaceEditorId): RepoSkillPathLayout =>
   editorId === 'cursor' ? 'cursor' : 'agents';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const parseJsonFile = (raw: string): McpServersJson => {
   const parsed: unknown = JSON.parse(raw);
-  if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (!isRecord(parsed)) {
     return {};
   }
-  return parsed as McpServersJson;
+  const { mcpServers } = parsed;
+  return {
+    ...parsed,
+    mcpServers: isRecord(mcpServers)
+      ? Object.fromEntries(
+          Object.entries(mcpServers).filter(
+            (entry): entry is [string, Record<string, unknown>] =>
+              isRecord(entry[1]),
+          ),
+        )
+      : undefined,
+  };
 };
 
 @Injectable()
@@ -145,9 +159,9 @@ export class WorkspaceEditorConfigService {
       const mcpRelativePath = paths.mcpConfigRelativePath;
       const mcpAbsolutePath = join(repositoryRoot, mcpRelativePath);
       const existingRaw = await this.readOptionalFile(mcpAbsolutePath);
-      const existing = existingRaw
+      const existing: McpServersJson = existingRaw
         ? parseJsonFile(existingRaw)
-        : ({} as McpServersJson);
+        : {};
       const merged = mergeManagedMcpServers(existing, managedMcp);
       await this.writeJsonFile(mcpAbsolutePath, merged);
       filesWritten.push(mcpRelativePath);

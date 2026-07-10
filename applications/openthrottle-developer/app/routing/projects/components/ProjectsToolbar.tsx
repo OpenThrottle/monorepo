@@ -4,8 +4,10 @@ import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { useSearchParams } from 'react-router';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
-  ProjectsSortBy,
-  ProjectsSortOrder,
+  PROJECTS_SORT_BY,
+  PROJECTS_SORT_ORDER,
+  type ProjectsSortBy,
+  type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 
 type ViewMode = 'table' | 'card';
@@ -27,6 +29,11 @@ export const ProjectsToolbar = (
   props: ProjectsToolbarProps,
 ): React.ReactElement => {
   const { className, limit, page, search, sortBy, sortOrder, view } = props;
+
+  const resolvedSortBy: ProjectsSortBy =
+    PROJECTS_SORT_BY.find((v) => v === sortBy) ?? 'createdAt';
+  const resolvedSortOrder: ProjectsSortOrder =
+    PROJECTS_SORT_ORDER.find((v) => v === sortOrder) ?? 'desc';
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -135,8 +142,8 @@ export const ProjectsToolbar = (
 
         <ProjectsSortDropdown
           onChange={handleSortChange}
-          sortBy={sortBy as ProjectsSortBy}
-          sortOrder={sortOrder as ProjectsSortOrder}
+          sortBy={resolvedSortBy}
+          sortOrder={resolvedSortOrder}
         />
 
         <div className="min-w-0 flex-1" />

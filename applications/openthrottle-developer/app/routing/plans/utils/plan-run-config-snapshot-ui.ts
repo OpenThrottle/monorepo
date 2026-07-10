@@ -21,6 +21,9 @@ interface PlanRunSnapshotShape {
   };
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const parseSnapshot = (
   runConfigSnapshotJson: string | null | undefined,
 ): PlanRunSnapshotShape | null => {
@@ -28,11 +31,42 @@ const parseSnapshot = (
     return null;
   }
 
+  let parsed: unknown;
   try {
-    return JSON.parse(runConfigSnapshotJson) as PlanRunSnapshotShape;
+    parsed = JSON.parse(runConfigSnapshotJson);
   } catch {
     return null;
   }
+
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const ralphRaw = parsed.ralph;
+  const ralph: PlanRunSnapshotRalphShape | undefined = isRecord(ralphRaw)
+    ? {
+        executionBackend:
+          typeof ralphRaw.executionBackend === 'string'
+            ? ralphRaw.executionBackend
+            : undefined,
+        iterations:
+          typeof ralphRaw.iterations === 'number'
+            ? ralphRaw.iterations
+            : undefined,
+      }
+    : undefined;
+
+  const workspaceRaw = parsed.workspace;
+  const workspace = isRecord(workspaceRaw)
+    ? {
+        workingDirectory:
+          typeof workspaceRaw.workingDirectory === 'string'
+            ? workspaceRaw.workingDirectory
+            : undefined,
+      }
+    : undefined;
+
+  return { ralph, workspace };
 };
 
 /**

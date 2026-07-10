@@ -4,7 +4,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import SkillsIndex from '../skills._index';
+import type { Route } from '@/app/routes/+types/skills._index';
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
@@ -12,6 +14,17 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
     summary: 'Explore Nx workspace structure.',
+  },
+];
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/skills._index',
+    loaderData: { entries: SAMPLE_ENTRIES },
+    params: {},
+    pathname: '/',
   },
 ];
 
@@ -26,7 +39,7 @@ describe('routes/skills._index.tsx', () => {
           <SkillsIndex
             actionData={undefined}
             loaderData={{ entries: SAMPLE_ENTRIES }}
-            matches={[] as never}
+            matches={matches}
             params={{}}
           />
         </MemoryRouter>

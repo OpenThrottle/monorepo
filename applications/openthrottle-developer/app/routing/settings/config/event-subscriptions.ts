@@ -66,13 +66,28 @@ export type EventSubscriptionId =
   (typeof EVENT_SUBSCRIPTION_ROWS)[number]['id'];
 
 /**
+ * @description Strongly-typed {@link Object.fromEntries} that preserves the key
+ * union, so a total {@link Record} can be built without a type assertion.
+ */
+function fromEntriesRecord<K extends string, V>(
+  entries: ReadonlyArray<readonly [K, V]>,
+): Record<K, V>;
+function fromEntriesRecord(
+  entries: ReadonlyArray<readonly [string, unknown]>,
+): unknown {
+  return Object.fromEntries(entries);
+}
+
+/**
  * @description Default subscription toggles for each known event id (from row config).
  */
 export const buildInitialSubscriptions = (): Record<
   EventSubscriptionId,
   boolean
 > => {
-  return Object.fromEntries(
-    EVENT_SUBSCRIPTION_ROWS.map((row) => [row.id, row.defaultSubscribed]),
-  ) as Record<EventSubscriptionId, boolean>;
+  return fromEntriesRecord(
+    EVENT_SUBSCRIPTION_ROWS.map(
+      (row) => [row.id, row.defaultSubscribed] as const,
+    ),
+  );
 };

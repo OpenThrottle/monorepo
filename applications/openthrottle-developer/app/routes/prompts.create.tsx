@@ -4,6 +4,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   EditorWindow,
   PROMPT_TYPE_OPTIONS,
+  PROMPT_TYPE_VALUES,
 } from '@openthrottle/react-router-editor';
 import type { PromptType } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
@@ -35,6 +36,9 @@ import type { CreateCustomPromptInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/prompts.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
+
+const isPromptType = (value: string): value is PromptType =>
+  PROMPT_TYPE_VALUES.some((candidate) => candidate === value);
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create Prompt',
@@ -182,7 +186,11 @@ export default function Component(
               <Select
                 aria-label="Prompt type"
                 name="promptType"
-                onValueChange={(value) => setPromptType(value as PromptType)}
+                onValueChange={(value) => {
+                  if (isPromptType(value)) {
+                    setPromptType(value);
+                  }
+                }}
                 value={promptType}
               >
                 <SelectTrigger>

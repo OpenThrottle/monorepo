@@ -3,9 +3,11 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 import NoteDetail from '../notes.$noteId';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import { createTestRoutesStub } from '~/testing/route-fixtures';
 import { render } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { Route } from '@/app/routes/+types/notes.$noteId';
 
 const note = {
   __typename: 'NoteObject' as const,
@@ -16,6 +18,17 @@ const note = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/notes.$noteId',
+    loaderData: { note: null },
+    params: { noteId: 'note-1' },
+    pathname: '/',
+  },
+];
+
 function renderNoteDetail(initialEntries: readonly string[]): void {
   const Stub = createTestRoutesStub([
     {
@@ -23,7 +36,7 @@ function renderNoteDetail(initialEntries: readonly string[]): void {
         <NoteDetail
           actionData={undefined}
           loaderData={{ note }}
-          matches={[] as never}
+          matches={matches}
           params={{ noteId: 'note-1' }}
         />
       ),
@@ -79,7 +92,7 @@ describe('routes/notes.$noteId.tsx', () => {
           <NoteDetail
             actionData={undefined}
             loaderData={{ note: null }}
-            matches={[] as never}
+            matches={matches}
             params={{ noteId: 'missing' }}
           />
         ),

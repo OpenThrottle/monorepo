@@ -9,6 +9,16 @@ import {
 } from './jsonl-payload';
 import { createLogRedactor } from './log-redaction';
 
+/**
+ * @description Cast-free partial-mock helper: returns the given value typed as `T`. Used here to
+ * feed deliberately non-JSON `extra` fixtures (bigint, functions, cycles) into the `JsonValue`
+ * record type. The public overload narrows to `T`; the implementation stays `unknown`.
+ */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 describe('structuredLogRecordToJsonlPayload', () => {
   it('maps timestampIso to timestamp and omits undefined ids', () => {
     const record: StructuredLogRecord = {
@@ -133,13 +143,13 @@ describe('structuredLogRecordToJsonlPayload', () => {
   });
 
   it('drops non-JSON extra values (bigint, undefined, function) and keeps valid siblings', () => {
-    const dirtyExtra = {
+    const dirtyExtra = asMock<Readonly<Record<string, JsonValue>>>({
       big: 10n,
       fn: () => undefined,
       missing: undefined,
       ok: 'kept',
       okNumber: 42,
-    } as unknown as Readonly<Record<string, JsonValue>>;
+    });
 
     const record: StructuredLogRecord = {
       context: '',
@@ -160,10 +170,10 @@ describe('structuredLogRecordToJsonlPayload', () => {
   });
 
   it('omits extra entirely when no value is JSON-serializable', () => {
-    const allInvalid = {
+    const allInvalid = asMock<Readonly<Record<string, JsonValue>>>({
       big: 1n,
       fn: () => undefined,
-    } as unknown as Readonly<Record<string, JsonValue>>;
+    });
 
     const record: StructuredLogRecord = {
       context: '',
@@ -183,10 +193,10 @@ describe('structuredLogRecordToJsonlPayload', () => {
   it('drops a circular extra value without throwing and serializes safely', () => {
     const circular: Record<string, unknown> = { name: 'loop' };
     circular.self = circular;
-    const extraWithCycle = {
+    const extraWithCycle = asMock<Readonly<Record<string, JsonValue>>>({
       circular,
       safe: 'present',
-    } as unknown as Readonly<Record<string, JsonValue>>;
+    });
 
     const record: StructuredLogRecord = {
       context: '',

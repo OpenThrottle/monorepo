@@ -8,6 +8,12 @@ import type {
 } from '~/routing/prompts/config/types';
 import { ProjectsSortDropdown } from '../ProjectsSortDropdown';
 
+/** Feeds an intentionally invalid sort value without a type assertion. */
+function asSortBy(value: string): ProjectsSortBy;
+function asSortBy(value: string): unknown {
+  return value;
+}
+
 describe('ProjectsSortDropdown', () => {
   test('renders current sort label and calls onChange when selection changes', async () => {
     const onChange =
@@ -33,7 +39,7 @@ describe('ProjectsSortDropdown', () => {
     render(
       <ProjectsSortDropdown
         onChange={() => {}}
-        sortBy={'invalid' as ProjectsSortBy}
+        sortBy={asSortBy('invalid')}
         sortOrder="desc"
       />,
     );

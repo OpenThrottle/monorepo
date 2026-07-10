@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import PersonaDetail from '../personas.$personaId';
 
+function stubMatches(): React.ComponentProps<typeof PersonaDetail>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/personas.$personaId.tsx', () => {
   test('renders persona detail heading', () => {
     render(
@@ -18,7 +23,7 @@ describe('routes/personas.$personaId.tsx', () => {
               summary: 'Architecture lens.',
             },
           }}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{ personaId: 'architect' }}
         />
       </MemoryRouter>,

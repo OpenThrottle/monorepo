@@ -3,6 +3,20 @@ import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Component, { action } from '../schedule.create';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { createActionArgs } from '@openthrottle/react-router-testing';
+import type { Route } from '@/app/routes/+types/schedule.create';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/schedule.create',
+    loaderData: {},
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/schedule.create.tsx', () => {
   test('renders the schedule create form', () => {
@@ -10,7 +24,7 @@ describe('routes/schedule.create.tsx', () => {
       <Component
         actionData={undefined}
         loaderData={{}}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />
     );
@@ -31,12 +45,12 @@ describe('routes/schedule.create.tsx', () => {
     body.set('title', 'Launch');
     body.set('startsAt', '2026-06-20T10:00');
 
-    const request = new Request('http://localhost/schedule/create', {
-      body,
-      method: 'POST',
-    });
-
-    const response = await action({ params: {}, request } as never);
+    const response = await action(
+      createActionArgs<Route.ActionArgs>({
+        body,
+        url: 'http://localhost/schedule/create',
+      }),
+    );
 
     if (!(response instanceof Response)) {
       throw new Error('expected the action to return a redirect Response');
@@ -50,12 +64,12 @@ describe('routes/schedule.create.tsx', () => {
     const body = new FormData();
     body.set('startsAt', '2026-06-20T10:00');
 
-    const request = new Request('http://localhost/schedule/create', {
-      body,
-      method: 'POST',
-    });
-
-    const result = await action({ params: {}, request } as never);
+    const result = await action(
+      createActionArgs<Route.ActionArgs>({
+        body,
+        url: 'http://localhost/schedule/create',
+      }),
+    );
 
     expect(result).toEqual({ error: 'Title is required.' });
   });

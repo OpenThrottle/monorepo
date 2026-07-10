@@ -172,7 +172,7 @@ export const installClientLogSink = (): void => {
   installed = true;
 
   for (const level of LEVELS) {
-    const previous = console[level] as ConsoleImpl;
+    const previous: ConsoleImpl = console[level];
     savedConsole[level] = previous;
     console[level] = (...args: unknown[]) => {
       push(level, args);
@@ -210,7 +210,7 @@ export const resetClientLogSinkForTesting = (): void => {
     for (const level of LEVELS) {
       const previous = savedConsole[level];
       if (previous) {
-        console[level] = previous as (typeof console)[typeof level];
+        console[level] = previous;
       }
     }
     if (errorListener) {
@@ -220,9 +220,9 @@ export const resetClientLogSinkForTesting = (): void => {
       window.removeEventListener('unhandledrejection', rejectionListener);
     }
   }
-  Object.keys(savedConsole).forEach((k) => {
-    delete savedConsole[k as ClientLogLevel];
-  });
+  for (const level of LEVELS) {
+    delete savedConsole[level];
+  }
   errorListener = undefined;
   rejectionListener = undefined;
   installed = false;

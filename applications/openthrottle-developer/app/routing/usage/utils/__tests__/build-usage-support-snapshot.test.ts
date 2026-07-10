@@ -20,7 +20,7 @@ describe('buildUsageSupportSnapshotJson', () => {
       rangeStartIso: '2026-01-01T00:00:00.000Z',
     });
 
-    const parsed = JSON.parse(json) as {
+    const parsed: {
       readonly analyticsNote: string;
       readonly dailyRows: unknown[];
       readonly generatedAt: string;
@@ -35,7 +35,7 @@ describe('buildUsageSupportSnapshotJson', () => {
         readonly tasksCreated: number;
         readonly tasksUpdated: number;
       };
-    };
+    } = JSON.parse(json);
 
     expect(parsed.rangeDays).toBe(30);
     expect(parsed.rangeStart).toBe('2026-01-01T00:00:00.000Z');

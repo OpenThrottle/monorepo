@@ -10,6 +10,12 @@ import {
   StripeProductsService,
 } from './stripe-products.service';
 
+/** @description Presents a partial structural fixture as the target Stripe type without a cast. */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const { mockPricesList, mockProductsList, mockProductsRetrieve } = vi.hoisted(
   () => ({
     mockPricesList: vi.fn(),
@@ -58,9 +64,9 @@ vi.mock('../config/stripe-config', async () => {
 
 describe('partitionPricesByDefault', () => {
   it('puts matching default_price id in defaultPrice and others in additionalPrices', () => {
-    const priceDefault = { id: 'price_def' } as Stripe.Price;
-    const priceOther = { id: 'price_other' } as Stripe.Price;
-    const product = { default_price: 'price_def' } as Stripe.Product;
+    const priceDefault = asMock<Stripe.Price>({ id: 'price_def' });
+    const priceOther = asMock<Stripe.Price>({ id: 'price_other' });
+    const product = asMock<Stripe.Product>({ default_price: 'price_def' });
 
     const result = partitionPricesByDefault(product, [
       priceDefault,
@@ -72,9 +78,12 @@ describe('partitionPricesByDefault', () => {
   });
 
   it('returns null default and all prices as additional when product has no default_price', () => {
-    const prices = [{ id: 'p1' }, { id: 'p2' }] as unknown as Stripe.Price[];
+    const prices = [
+      asMock<Stripe.Price>({ id: 'p1' }),
+      asMock<Stripe.Price>({ id: 'p2' }),
+    ];
 
-    const product = { default_price: null } as unknown as Stripe.Product;
+    const product = asMock<Stripe.Product>({ default_price: null });
 
     const result = partitionPricesByDefault(product, prices);
 
@@ -89,11 +98,11 @@ describe('StripeProductsService', () => {
   });
 
   it('listActiveProducts returns data from stripe.products.list', async () => {
-    const p = {
+    const p = asMock<Stripe.Product>({
       active: true,
       id: 'prod_1',
       name: 'Pro',
-    } as unknown as Stripe.Product;
+    });
 
     mockProductsList.mockResolvedValue({ data: [p] });
 
@@ -109,11 +118,11 @@ describe('StripeProductsService', () => {
   });
 
   it('listActivePricesForProduct returns data from stripe.prices.list', async () => {
-    const price = {
+    const price = asMock<Stripe.Price>({
       active: true,
       id: 'price_1',
       product: 'prod_1',
-    } as unknown as Stripe.Price;
+    });
     mockPricesList.mockResolvedValue({ data: [price] });
 
     const moduleRef = await Test.createTestingModule({
@@ -132,8 +141,8 @@ describe('StripeProductsService', () => {
   });
 
   it('listActivePricesForProducts dedupes ids and returns a map per product', async () => {
-    const priceA = { id: 'pa', product: 'prod_a' } as Stripe.Price;
-    const priceB = { id: 'pb', product: 'prod_b' } as Stripe.Price;
+    const priceA = asMock<Stripe.Price>({ id: 'pa', product: 'prod_a' });
+    const priceB = asMock<Stripe.Price>({ id: 'pb', product: 'prod_b' });
     mockPricesList.mockImplementation(async (params: { product: string }) => {
       if (params.product === 'prod_a') {
         return { data: [priceA] };

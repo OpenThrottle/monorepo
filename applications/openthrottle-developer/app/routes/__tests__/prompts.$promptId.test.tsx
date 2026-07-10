@@ -3,12 +3,20 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader, meta } from '../prompts.$promptId';
 import { CustomPromptType } from '~/__generated__/graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 
 vi.mock('@openthrottle/react-router-graphql');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
+
+function assertInstanceOf<T>(
+  value: unknown,
+  ctor: new (...args: never[]) => T,
+): asserts value is T {
+  expect(value).toBeInstanceOf(ctor);
+}
 
 describe('routes/prompts.$promptId.tsx', () => {
   const mockPrompt = {
@@ -58,8 +66,8 @@ describe('routes/prompts.$promptId.tsx', () => {
         });
         expect.fail('Expected loader to throw');
       } catch (error) {
-        expect(error).toBeInstanceOf(Response);
-        expect((error as Response).status).toBe(400);
+        assertInstanceOf(error, Response);
+        expect(error.status).toBe(400);
       }
     });
 
@@ -78,8 +86,8 @@ describe('routes/prompts.$promptId.tsx', () => {
         });
         expect.fail('Expected loader to throw');
       } catch (error) {
-        expect(error).toBeInstanceOf(Response);
-        expect((error as Response).status).toBe(404);
+        assertInstanceOf(error, Response);
+        expect(error.status).toBe(404);
       }
     });
   });
@@ -153,7 +161,8 @@ describe('routes/prompts.$promptId.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect((result as Response).status).toBe(302);
+      assertInstanceOf(result, Response);
+      expect(result.status).toBe(302);
     });
   });
 
@@ -170,7 +179,17 @@ describe('routes/prompts.$promptId.tsx', () => {
           search: '',
           state: {},
         },
-        matches: [] as never,
+        matches: [
+          { ...buildRootMatch(), meta: [] },
+          {
+            handle: undefined,
+            id: 'routes/prompts.$promptId',
+            loaderData: { prompt: mockPrompt },
+            meta: [],
+            params: { promptId: 'test-id' },
+            pathname: '/',
+          },
+        ],
         params: { promptId: 'test-id' },
       });
 

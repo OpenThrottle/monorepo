@@ -37,10 +37,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     { end: endIso, start: startIso },
   );
 
-  const dailyStats = result.dailyStatsRange.items ?? [];
+  const dailyStats: DashboardDailyStatsCardFragment[] =
+    result.dailyStatsRange.items ?? [];
 
   return {
-    dailyStats: dailyStats as DashboardDailyStatsCardFragment[],
+    dailyStats,
     rangeDays: 30,
     rangeEndIso: endIso,
     rangeStartIso: startIso,

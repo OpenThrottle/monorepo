@@ -204,6 +204,9 @@
     },
     {
       "path": "./packages/node-client"
+    },
+    {
+      "path": "./packages/nestjs-testing"
     }
   ]
 }

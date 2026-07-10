@@ -3,7 +3,10 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import { loader } from '../plans.$planId._index';
 import { PlanDetailIndexLoaderDocument } from '~/__generated__/graphql';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import {
+  createLoaderArgs,
+  createTestRouterContext,
+} from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -19,13 +22,9 @@ describe('routes/plans.$planId._index loader', () => {
   });
 
   test('returns an empty data shape and skips GraphQL when planId is missing', async () => {
-    const result = await loader({
-      context: createTestRouterContext(),
-      params: {},
-      pattern: '/plans/:planId',
-      request: new Request('http://localhost/plans/'),
-      url: new URL('http://localhost/plans/'),
-    } as unknown as Route.LoaderArgs);
+    const result = await loader(
+      createLoaderArgs<Route.LoaderArgs>({ url: 'http://localhost/plans/' }),
+    );
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     expect(result).toEqual({

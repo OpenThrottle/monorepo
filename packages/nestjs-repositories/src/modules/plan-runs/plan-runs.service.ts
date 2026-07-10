@@ -4,7 +4,6 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
-import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
 import type { PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
@@ -48,22 +47,23 @@ export class PlanRunsService {
     const repo = manager
       ? manager.getRepository(PlanRun)
       : this.getRepository();
+    // The snapshot is written to an opaque jsonb column; type it as `object | null`
+    // so TypeORM's QueryDeepPartialEntity does not deep-recurse into the snapshot's
+    // `readonly unknown[]` members (which it cannot express), keeping upsert cast-free.
+    const runConfigSnapshot: object | null = input.runConfigSnapshot ?? null;
     const rowInput = {
       actorUserId: input.actorUserId ?? null,
       bullmqJobId: input.bullmqJobId,
       executionBackend: input.executionBackend,
       planId: input.planId,
       queueName: input.queueName,
-      runConfigSnapshot: input.runConfigSnapshot ?? null,
+      runConfigSnapshot,
       runKind: input.runKind,
       status: 'QUEUED',
     };
 
     const row = repo.create(rowInput);
-    await repo.upsert(rowInput as QueryDeepPartialEntity<PlanRun>, [
-      'queueName',
-      'bullmqJobId',
-    ]);
+    await repo.upsert(rowInput, ['queueName', 'bullmqJobId']);
 
     return (
       (await repo.findOne({

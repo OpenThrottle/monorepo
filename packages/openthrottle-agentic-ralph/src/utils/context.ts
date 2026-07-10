@@ -27,6 +27,12 @@ const WORKFLOW_RUNNER_IDS: WorkflowConfigRunner[] = [
 ];
 
 /**
+ * Type guard: narrows an arbitrary string to a known {@link WorkflowConfigRunner}.
+ */
+const isWorkflowRunnerId = (value: string): value is WorkflowConfigRunner =>
+  WORKFLOW_RUNNER_IDS.some((id) => id === value);
+
+/**
  * Maps GraphQL / queue job backend strings to {@link WorkflowConfigRunner}.
  */
 const resolveExecutionBackend = (
@@ -38,8 +44,8 @@ const resolveExecutionBackend = (
 
   const n = raw.trim().toLowerCase();
 
-  if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as unknown as WorkflowConfigRunner;
+  if (isWorkflowRunnerId(n)) {
+    return n;
   }
 
   return DEFAULT_RUNNER;

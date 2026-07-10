@@ -3,8 +3,10 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../projects._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
+import type { Route } from '@/app/routes/+types/projects._index';
 
 const mockProjects: ProjectWithStats[] = [
   {
@@ -44,6 +46,17 @@ const mockLoaderDataEmpty = {
   view: 'table' as const,
 };
 
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/projects._index',
+    loaderData: mockLoaderDataWithProjects,
+    params: {},
+    pathname: '/',
+  },
+];
+
 describe('routes/projects._index.tsx', () => {
   test('should render with projects (table view)', () => {
     const component = render(
@@ -51,7 +64,7 @@ describe('routes/projects._index.tsx', () => {
         <Index
           actionData={undefined}
           loaderData={mockLoaderDataWithProjects}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,
@@ -69,7 +82,7 @@ describe('routes/projects._index.tsx', () => {
         <Index
           actionData={undefined}
           loaderData={mockLoaderDataEmpty}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,
@@ -100,7 +113,7 @@ describe('routes/projects._index.tsx', () => {
           totalCount: 100,
           view: 'card',
         }}
-        matches={[] as never}
+        matches={matches}
         params={{}}
       />,
     );

@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { buildAuthCookie } from '@openthrottle/react-router-auth';
+import { createLoaderArgs } from '@openthrottle/react-router-testing';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
@@ -77,18 +78,28 @@ const COOKIE_WITH_TOKEN = buildAuthCookie('jwt-token-value');
 const loaderArgs = (
   url: string,
   options?: { readonly cookie?: string },
-): Route.LoaderArgs => {
-  const headers = options?.cookie
-    ? new Headers({ cookie: options.cookie })
-    : undefined;
+): Route.LoaderArgs => ({
+  ...createLoaderArgs<Route.LoaderArgs>({
+    headers: options?.cookie ? { cookie: options.cookie } : undefined,
+    url,
+  }),
+  // The root loader reads `url` (supplied by app middleware in production).
+  url: new URL(url),
+});
 
-  return {
-    context: undefined,
-    params: {},
-    request: new Request(url, headers ? { headers } : undefined),
-    url: new URL(url),
-  } as unknown as Route.LoaderArgs;
-};
+/** Narrows a loader result to a `Response` (redirect) without a cast. */
+function assertIsResponse(value: unknown): asserts value is Response {
+  if (!(value instanceof Response)) {
+    throw new Error('Expected loader result to be a Response');
+  }
+}
+
+/** Narrows a loader result to the non-`Response` (data) branch without a cast. */
+function assertIsData<T>(value: T): asserts value is Exclude<T, Response> {
+  if (value instanceof Response) {
+    throw new Error('Expected loader result not to be a Response');
+  }
+}
 
 /**
  * Sequence the two GraphQL calls the loader makes when a token is present:
@@ -115,9 +126,9 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     const result = await loader(loaderArgs('http://localhost/dashboard'));
 
     expect(result).toBeInstanceOf(Response);
-    const response = result as Response;
-    expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('/auth');
+    assertIsResponse(result);
+    expect(result.status).toBe(302);
+    expect(result.headers.get('location')).toBe('/auth');
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
@@ -127,7 +138,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     );
 
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).headers.get('location')).toBe('/auth');
+    assertIsResponse(result);
+    expect(result.headers.get('location')).toBe('/auth');
   });
 
   test('does not redirect an unprotected path when no token, and skips the user query', async () => {
@@ -136,7 +148,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     const result = await loader(loaderArgs('http://localhost/auth'));
 
     expect(result).not.toBeInstanceOf(Response);
-    const data = result as Exclude<typeof result, Response>;
+    assertIsData(result);
+    const data = result;
     expect(data.user).toBeNull();
     // No token → userLoadOk is true (not an error, simply logged out).
     expect(data.userLoadOk).toBe(true);
@@ -166,7 +179,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     );
 
     expect(result).not.toBeInstanceOf(Response);
-    const data = result as Exclude<typeof result, Response>;
+    assertIsData(result);
+    const data = result;
     expect(data.user).toEqual(user);
     expect(data.userLoadOk).toBe(true);
     expect(data.serverHealth).toEqual(HEALTHY);
@@ -184,7 +198,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     );
 
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).headers.get('location')).toBe('/auth');
+    assertIsResponse(result);
+    expect(result.headers.get('location')).toBe('/auth');
   });
 
   test('does not redirect an unprotected path when `me` resolves null', async () => {
@@ -195,7 +210,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     );
 
     expect(result).not.toBeInstanceOf(Response);
-    const data = result as Exclude<typeof result, Response>;
+    assertIsData(result);
+    const data = result;
     expect(data.user).toBeNull();
     expect(data.userLoadOk).toBe(true);
   });
@@ -217,7 +233,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     // A failed `me` is not the same as logged-out: userLoadOk is false, and the
     // loader must NOT redirect (it would otherwise bounce a real session on a blip).
     expect(result).not.toBeInstanceOf(Response);
-    const data = result as Exclude<typeof result, Response>;
+    assertIsData(result);
+    const data = result;
     expect(data.user).toBeNull();
     expect(data.userLoadOk).toBe(false);
     expect(data.rootLoaderFailure?.step).toBe('user');
@@ -229,7 +246,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     const result = await loader(loaderArgs('http://localhost/auth'));
 
     expect(result).not.toBeInstanceOf(Response);
-    const data = result as Exclude<typeof result, Response>;
+    assertIsData(result);
+    const data = result;
     expect(data.rootLoaderFailure?.step).toBe('health');
     expect(data.serverHealth.api).not.toBe('healthy');
   });

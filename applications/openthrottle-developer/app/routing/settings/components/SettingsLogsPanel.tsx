@@ -31,6 +31,9 @@ import {
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
+const isClientLogLevel = (value: string): value is ClientLogLevel =>
+  CLIENT_LOG_LEVELS.some((level) => level === value);
+
 export interface SettingsLogsPanelProps {}
 
 export const SettingsLogsPanel = (
@@ -234,7 +237,7 @@ export const SettingsLogsPanel = (
               aria-label="Filter by log level"
               className="flex flex-wrap justify-start gap-1"
               onValueChange={(next) => {
-                setLevelSelection(next as ClientLogLevel[]);
+                setLevelSelection(next.filter(isClientLogLevel));
               }}
               size="sm"
               type="multiple"

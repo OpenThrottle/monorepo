@@ -2,6 +2,10 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
+import type {
+  JobRunHookIterationParams,
+  JobRunHookIterationResult,
+} from '../job-run-hooks-runner';
 import {
   buildJobRunHookAgentPrompt,
   executeJobRunHooksPhase,
@@ -144,7 +148,11 @@ describe('executeJobRunHooksPhase', () => {
 
   it('passes composed agent prompt to runHookIteration for skill hook', async () => {
     const runHookIteration = vi
-      .fn()
+      .fn<
+        (
+          params: JobRunHookIterationParams,
+        ) => Promise<JobRunHookIterationResult>
+      >()
       .mockResolvedValue({ ok: true, output: 'ok' });
 
     const entry = parseJobRunHookEntry({
@@ -168,8 +176,7 @@ describe('executeJobRunHooksPhase', () => {
     });
 
     expect(runHookIteration).toHaveBeenCalledTimes(1);
-    const agentPrompt = runHookIteration.mock.calls[0]?.[0]
-      ?.agentPrompt as string;
+    const agentPrompt = runHookIteration.mock.calls[0]?.[0]?.agentPrompt;
     expect(agentPrompt).toContain('workflow-ralph/SKILL.md');
     expect(agentPrompt).toContain('--- plan ---');
     expect(agentPrompt).toContain('beforeAll');

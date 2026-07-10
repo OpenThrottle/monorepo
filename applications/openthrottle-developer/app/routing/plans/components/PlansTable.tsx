@@ -14,7 +14,10 @@ import { formatDate } from 'date-fns';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { Link, useFetcher, useSearchParams } from 'react-router';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  isPlanStatusKey,
+  PlanStatusBadge,
+} from '~/routing/plans/components/PlanStatusBadge';
 import { PlanStatusKey } from '~/routing/plans/types';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
@@ -119,17 +122,24 @@ PlansTable.buildTable = (
     },
     {
       accessorKey: 'status',
-      cell: ({ row }) => (
-        <div className="p-2">
-          <Link
-            // className="mx-auto"
-            to={`/plans?status=${row.original.status}`}
-            viewTransition={true}
-          >
-            <PlanStatusBadge status={row.original.status as PlanStatusKey} />
-          </Link>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const statusKey: PlanStatusKey = isPlanStatusKey(status)
+          ? status
+          : 'PENDING';
+
+        return (
+          <div className="p-2">
+            <Link
+              // className="mx-auto"
+              to={`/plans?status=${status}`}
+              viewTransition={true}
+            >
+              <PlanStatusBadge status={statusKey} />
+            </Link>
+          </div>
+        );
+      },
       header: () => <div className="p-2">Status</div>,
     },
 

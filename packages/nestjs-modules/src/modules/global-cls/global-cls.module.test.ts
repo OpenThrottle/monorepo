@@ -3,6 +3,12 @@ import { ClsServiceManager } from 'nestjs-cls';
 import { setupGlobalCls } from './global-cls.module';
 import type { GlobalClsStore } from './global-cls.service';
 
+/** @description Presents a blank structural store as {@link GlobalClsStore} without a cast. */
+function asStore<T>(value: unknown): T;
+function asStore(value: unknown): unknown {
+  return value;
+}
+
 /**
  * @description Exercises the CLS middleware `setup` hook directly: it reads the
  * `x-app-name` / `x-app-version` request headers and seeds the `app` context,
@@ -12,7 +18,7 @@ describe('setupGlobalCls', () => {
   const cls = ClsServiceManager.getClsService<GlobalClsStore>();
 
   const runSetup = (headers: Record<string, string | undefined>) =>
-    cls.runWith({} as GlobalClsStore, () => {
+    cls.runWith(asStore<GlobalClsStore>({}), () => {
       setupGlobalCls(cls, { headers });
 
       return cls.get('app');

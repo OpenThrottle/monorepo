@@ -8,6 +8,10 @@ import {
 } from '~/routing/generators/constants/generator-nx-docs';
 import { generators } from '../data.generators';
 
+function assertIsString(value: unknown): asserts value is string {
+  expect(typeof value).toBe('string');
+}
+
 describe('generators data', () => {
   test('lists documentation links in a stable order with canonical targets', () => {
     expect(generators).toHaveLength(5);
@@ -23,8 +27,10 @@ describe('generators data', () => {
 
   test('each entry has link text for the UI', () => {
     for (const entry of generators) {
-      expect(entry.children).toEqual(expect.any(String));
-      expect((entry.children as string).length).toBeGreaterThan(0);
+      const { children } = entry;
+      expect(children).toEqual(expect.any(String));
+      assertIsString(children);
+      expect(children.length).toBeGreaterThan(0);
     }
   });
 });

@@ -13,6 +13,9 @@ interface ParsedQueueJobData {
   readonly taskId: string | undefined;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * @description Parses optional JSON job payload; surfaces copy-friendly formatting for operators.
  */
@@ -32,17 +35,18 @@ export const parseQueueJobDataString = (
   }
 
   try {
-    const parsed = JSON.parse(data) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(data);
+    const record: Record<string, unknown> = isRecord(parsed) ? parsed : {};
     const planId =
-      typeof parsed.planId === 'string' ? parsed.planId : undefined;
+      typeof record.planId === 'string' ? record.planId : undefined;
     const taskId =
-      typeof parsed.taskId === 'string' ? parsed.taskId : undefined;
+      typeof record.taskId === 'string' ? record.taskId : undefined;
     const runKind =
-      typeof parsed.runKind === 'string' ? parsed.runKind : undefined;
-    const mode = typeof parsed.mode === 'string' ? parsed.mode : undefined;
+      typeof record.runKind === 'string' ? record.runKind : undefined;
+    const mode = typeof record.mode === 'string' ? record.mode : undefined;
     const correlationId =
-      typeof parsed.correlationId === 'string'
-        ? parsed.correlationId
+      typeof record.correlationId === 'string'
+        ? record.correlationId
         : undefined;
 
     return {

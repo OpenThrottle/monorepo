@@ -4,6 +4,13 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader } from '../plans.$planId.tasks.create';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
+/** Narrows a loader/action result to a `Response` (redirect) without a cast. */
+function assertIsResponse(value: unknown): asserts value is Response {
+  if (!(value instanceof Response)) {
+    throw new Error('Expected result to be a Response');
+  }
+}
+
 vi.mock('@openthrottle/react-router-graphql');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
@@ -25,7 +32,8 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
         url: new URL('http://localhost/plans//tasks/create'),
       });
 
-      expect((result as Response).status).toBe(302);
+      assertIsResponse(result);
+      expect(result.status).toBe(302);
       expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
@@ -100,7 +108,8 @@ describe('routes/plans.$planId.tasks.create.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect((result as Response).status).toBe(302);
+      assertIsResponse(result);
+      expect(result.status).toBe(302);
     });
   });
 });

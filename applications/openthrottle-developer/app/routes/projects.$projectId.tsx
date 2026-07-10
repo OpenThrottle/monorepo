@@ -91,7 +91,11 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title }];
 });
 
-type ProjectTabValue = 'overview' | 'tasks';
+const PROJECT_TAB_VALUES = ['overview', 'tasks'] as const;
+type ProjectTabValue = (typeof PROJECT_TAB_VALUES)[number];
+
+const isProjectTabValue = (value: string): value is ProjectTabValue =>
+  PROJECT_TAB_VALUES.some((tab) => tab === value);
 
 export default function Component(
   props: Route.ComponentProps,
@@ -121,7 +125,9 @@ export default function Component(
       <Tabs
         className="w-full"
         onValueChange={(next) => {
-          setActiveTab(next as ProjectTabValue);
+          if (isProjectTabValue(next)) {
+            setActiveTab(next);
+          }
         }}
         value={activeTab}
       >

@@ -59,12 +59,23 @@ const baseContext = (
 });
 
 /**
+ * Adapts a loosely-typed mock implementation to the generic {@link WorkflowExecuteGraphqlV2}
+ * contract without an assertion: the public overload advertises the target type while the
+ * implementation signature stays `unknown`-based.
+ */
+function asExecuteGraphqlV2(
+  impl: (document: unknown, variables?: unknown) => Promise<unknown>,
+): WorkflowExecuteGraphqlV2;
+function asExecuteGraphqlV2(impl: unknown): unknown {
+  return impl;
+}
+
+/**
  * @description Routes mock GraphQL responses by codegen document reference (same pattern as workflows Ralph tests).
  */
-const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 => {
-  return (async (document) => {
-    const doc = document as unknown;
-    if (doc === GetServerHealthDocument) {
+const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 =>
+  asExecuteGraphqlV2(async (document) => {
+    if (document === GetServerHealthDocument) {
       return {
         serverHealth: {
           __typename: 'ServerHealthObject',
@@ -75,7 +86,7 @@ const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 => {
         },
       };
     }
-    if (doc === GetPlanDocument) {
+    if (document === GetPlanDocument) {
       return {
         plan: {
           __typename: 'PlanObject',
@@ -94,7 +105,7 @@ const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 => {
         },
       };
     }
-    if (doc === GetTasksByPlanIdDocument) {
+    if (document === GetTasksByPlanIdDocument) {
       return {
         tasksByPlanId: [
           {
@@ -116,12 +127,11 @@ const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 => {
         ],
       };
     }
-    if (doc === UpdatePlanDocument || doc === UpdateTaskDocument) {
+    if (document === UpdatePlanDocument || document === UpdateTaskDocument) {
       return {};
     }
     throw new Error('unmocked GraphQL document in test');
-  }) as WorkflowExecuteGraphqlV2;
-};
+  });
 
 describe('createWorkflowRalphOrchestrator foreign workingDirectory', () => {
   it('passes foreign cwd to iterationRunner and scopes the prompt to the target repo', async () => {

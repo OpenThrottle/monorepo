@@ -3,6 +3,19 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import NotificationsIndex from '../notifications._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import type { Route } from '@/app/routes/+types/notifications._index';
+
+const matches: Route.ComponentProps['matches'] = [
+  buildRootMatch(),
+  {
+    handle: undefined,
+    id: 'routes/notifications._index',
+    loaderData: {},
+    params: {},
+    pathname: '/',
+  },
+];
 
 describe('routes/notifications._index.tsx', () => {
   test('should render', () => {
@@ -11,7 +24,7 @@ describe('routes/notifications._index.tsx', () => {
         <NotificationsIndex
           actionData={undefined}
           loaderData={{}}
-          matches={[] as never}
+          matches={matches}
           params={{}}
         />
       </MemoryRouter>,

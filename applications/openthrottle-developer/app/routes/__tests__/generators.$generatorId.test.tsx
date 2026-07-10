@@ -12,6 +12,11 @@ const mockGenerator: GeneratorDetailCardFragment = {
   schemaJson: null,
 };
 
+function stubMatches(): React.ComponentProps<typeof GeneratorDetail>['matches'];
+function stubMatches(): unknown {
+  return [];
+}
+
 describe('routes/generators.$generatorId.tsx', () => {
   test('renders generator heading and documentation tab', () => {
     render(
@@ -19,7 +24,7 @@ describe('routes/generators.$generatorId.tsx', () => {
         <GeneratorDetail
           actionData={undefined}
           loaderData={{ generator: mockGenerator }}
-          matches={[] as never}
+          matches={stubMatches()}
           params={{ generatorId: '@tools/generators' }}
         />
       </MemoryRouter>,

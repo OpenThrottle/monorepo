@@ -5,6 +5,11 @@ import { describe, expect, test, vi } from 'vitest';
 import { SortDropdown } from '../SortDropdown';
 import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 describe('SortDropdown', () => {
   test('should render with current sort and call onChange when selection changes', async () => {
     const onChange =
@@ -28,7 +33,7 @@ describe('SortDropdown', () => {
     render(
       <SortDropdown
         onChange={() => {}}
-        sortBy={'invalid' as PlansSortBy}
+        sortBy={asMock<PlansSortBy>('invalid')}
         sortOrder="desc"
       />,
     );

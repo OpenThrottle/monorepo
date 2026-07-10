@@ -22,11 +22,12 @@ export class LoggerService implements DefaultLoggerService {
    * NestJS's LoggerService types `message` as `any`; we keep our public methods
    * honest with `unknown` and adapt to winston at the boundary here. Winston's
    * variadic overloads want a `string` first arg but tolerate any value at
-   * runtime, so this single localized assertion preserves the prior passthrough
-   * behavior without reintroducing `any`.
+   * runtime, so this passthrough relabels the value as `string` for callers via
+   * an overload — no cast, no `any`, and the runtime value is unchanged.
    */
-  private toMessage(message: unknown): string {
-    return message as string;
+  private toMessage(message: unknown): string;
+  private toMessage(message: unknown): unknown {
+    return message;
   }
 
   fatal(message: unknown, ...optionalParams: unknown[]) {

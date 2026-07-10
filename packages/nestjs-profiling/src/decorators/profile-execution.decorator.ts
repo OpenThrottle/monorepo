@@ -117,7 +117,7 @@ export function ProfileExecution(
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor,
   ): PropertyDescriptor => {
-    const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
+    const originalMethod: (...args: unknown[]) => unknown = descriptor.value;
     const tag = label ?? String(propertyKey);
     const methodName = String(propertyKey);
 
@@ -156,9 +156,7 @@ export function ProfileExecution(
       };
 
       try {
-        const result = originalMethod.apply(this, args) as
-          | Promise<unknown>
-          | unknown;
+        const result = originalMethod.apply(this, args);
 
         if (result instanceof Promise) {
           return result
@@ -180,7 +178,7 @@ export function ProfileExecution(
               capturedError = { message: e.message, name: e.name };
               throw error;
             })
-            .finally(report) as Promise<unknown>;
+            .finally(report);
         }
 
         if (captureOutput && getProfileExecutionReporter() !== undefined) {

@@ -2,6 +2,7 @@
  * @description Tests for child job: Ralph loop in worktree, branch/SHA, plan completion.
  */
 
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 import { spawn, spawnSync } from 'child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -9,6 +10,47 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChildJobInput, ParentJobHandoff } from '../../types/worktree';
 import { runChildJob } from '../child-job';
+
+/**
+ * @description Structural shape of the spawn child-process test doubles below. Declaring it
+ * explicitly lets `kill`/`on` reference `child` in their closures without a circular-inference
+ * cast, and {@link asMock} converts the finished double to the real `spawn` return type.
+ */
+interface MockRalphChildStream {
+  on: (event: string, callback: (data: string) => void) => void;
+  setEncoding: (encoding?: string) => void;
+}
+interface MockRalphChild {
+  kill: (signal: NodeJS.Signals) => void;
+  killed: boolean;
+  on: (event: string, listener: (...args: unknown[]) => void) => MockRalphChild;
+  once: (
+    event: string,
+    listener: (...args: unknown[]) => void,
+  ) => MockRalphChild;
+  stderr: MockRalphChildStream;
+  stdout: MockRalphChildStream;
+}
+
+/** @description Presents a structural test double as the target type without a cast. */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
+/**
+ * @description Presents a legacy uppercase debug value (e.g. persisted `DEBUG`) as a
+ * {@link WorkflowConfigDebug} so tests exercise runtime normalization without a cast.
+ */
+function legacyDebugValue(value: string): WorkflowConfigDebug;
+function legacyDebugValue(value: string): string {
+  return value;
+}
+
+/** @description Narrows spawn argv (a mixed args/options union) to the args array. */
+function isStringArray(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
 
 const mockConfig = {
   connectionString: 'postgres://localhost/cortex',
@@ -90,9 +132,9 @@ function createMockRalphChild(behavior: {
     code: number | null,
     signal: NodeJS.Signals | null,
   ) => void = () => {};
-  const child = {
+  const child: MockRalphChild = {
     kill: vi.fn(() => {
-      (child as { killed: boolean }).killed = true;
+      child.killed = true;
     }),
     killed: false,
     on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
@@ -123,7 +165,7 @@ function createMockRalphChild(behavior: {
 
   setImmediate(() => closeListener(behavior.status, null));
 
-  return child as unknown as ReturnType<typeof spawn>;
+  return asMock<ReturnType<typeof spawn>>(child);
 }
 
 /**
@@ -134,34 +176,28 @@ function createMockRalphChildCloseOnKill(): ReturnType<typeof spawn> {
     code: number | null,
     signal: NodeJS.Signals | null,
   ) => void = () => {};
-  const child = {
+  const child: MockRalphChild = {
     kill: vi.fn(() => {
-      (child as { killed: boolean }).killed = true;
+      child.killed = true;
       closeListener(null, 'SIGTERM');
     }),
     killed: false,
     on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
     once: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
     stderr: { on: vi.fn(), setEncoding: vi.fn() },
     stdout: { on: vi.fn(), setEncoding: vi.fn() },
   };
-  return child as unknown as ReturnType<typeof spawn>;
+  return asMock<ReturnType<typeof spawn>>(child);
 }
 
 /**
@@ -174,27 +210,21 @@ function createMockRalphChildStreamingPartialThenCloseOnKill(): ReturnType<
     code: number | null,
     signal: NodeJS.Signals | null,
   ) => void = () => {};
-  const child = {
+  const child: MockRalphChild = {
     kill: vi.fn(() => {
-      (child as { killed: boolean }).killed = true;
+      child.killed = true;
       closeListener(null, 'SIGTERM');
     }),
     killed: false,
     on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
     once: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
@@ -210,7 +240,7 @@ function createMockRalphChildStreamingPartialThenCloseOnKill(): ReturnType<
       setEncoding: vi.fn(),
     },
   };
-  return child as unknown as ReturnType<typeof spawn>;
+  return asMock<ReturnType<typeof spawn>>(child);
 }
 
 /** Grace after SIGTERM before SIGKILL — must match `SIGKILL_GRACE_MS` in `child-job.ts`. */
@@ -226,9 +256,9 @@ function createMockRalphChildIgnoresSigtermUntilSigkill(): ReturnType<
     code: number | null,
     signal: NodeJS.Signals | null,
   ) => void = () => {};
-  const child = {
+  const child: MockRalphChild = {
     kill: vi.fn((sig: NodeJS.Signals) => {
-      (child as { killed: boolean }).killed = true;
+      child.killed = true;
       if (sig === 'SIGKILL') {
         closeListener(null, 'SIGKILL');
       }
@@ -236,26 +266,20 @@ function createMockRalphChildIgnoresSigtermUntilSigkill(): ReturnType<
     killed: false,
     on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
     once: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
       if (event === 'close') {
-        closeListener = listener as (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ) => void;
+        closeListener = listener;
       }
       return child;
     }),
     stderr: { on: vi.fn(), setEncoding: vi.fn() },
     stdout: { on: vi.fn(), setEncoding: vi.fn() },
   };
-  return child as unknown as ReturnType<typeof spawn>;
+  return asMock<ReturnType<typeof spawn>>(child);
 }
 
 function createTempDir(): string {
@@ -390,7 +414,7 @@ describe('runChildJob', () => {
     const input: ChildJobInput = {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
-      ralphDebugCli: 'DEBUG' as 'debug',
+      ralphDebugCli: legacyDebugValue('DEBUG'),
     };
     try {
       await runChildJob(input);
@@ -594,7 +618,10 @@ describe('runChildJob', () => {
     };
     try {
       await runChildJob(input);
-      const argv = vi.mocked(spawn).mock.calls[0]?.[1] as string[];
+      const argv = vi.mocked(spawn).mock.calls[0]?.[1];
+      if (!isStringArray(argv)) {
+        throw new Error('expected spawn argv array');
+      }
       expect(argv).toContain('--worktree');
       expect(argv).toContain('wt1');
     } finally {
@@ -629,7 +656,10 @@ describe('runChildJob', () => {
     };
     try {
       await runChildJob(input);
-      const argv = vi.mocked(spawn).mock.calls[0]?.[1] as string[];
+      const argv = vi.mocked(spawn).mock.calls[0]?.[1];
+      if (!isStringArray(argv)) {
+        throw new Error('expected spawn argv array');
+      }
       expect(argv).toEqual(
         expect.arrayContaining(['--worktree', 'custom-name']),
       );
@@ -799,25 +829,18 @@ describe('runChildJob', () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stderr: 'err\n', stdout: 'out\n' }),
     );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
     vi.mocked(spawnSync)
-      .mockReturnValueOnce({
-        error: undefined,
-        output: [],
-        pid: 0,
-        signal: null,
-        status: 0,
-        stderr: '',
-        stdout: 'ralph/test-branch',
-      } as ReturnType<typeof spawnSync>)
-      .mockReturnValueOnce({
-        error: undefined,
-        output: [],
-        pid: 0,
-        signal: null,
-        status: 0,
-        stderr: '',
-        stdout: 'abc123def456',
-      } as ReturnType<typeof spawnSync>);
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
     mockCortexState.tasks = [{ status: 'COMPLETED' }];
 
     const chunks: Array<{ data: string; stream: 'stdout' | 'stderr' }> = [];
@@ -841,25 +864,18 @@ describe('runChildJob', () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stderr: 'err\n', stdout: 'out\n' }),
     );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
     vi.mocked(spawnSync)
-      .mockReturnValueOnce({
-        error: undefined,
-        output: [],
-        pid: 0,
-        signal: null,
-        status: 0,
-        stderr: '',
-        stdout: 'ralph/test-branch',
-      } as ReturnType<typeof spawnSync>)
-      .mockReturnValueOnce({
-        error: undefined,
-        output: [],
-        pid: 0,
-        signal: null,
-        status: 0,
-        stderr: '',
-        stdout: 'abc123def456',
-      } as ReturnType<typeof spawnSync>);
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
     mockCortexState.tasks = [{ status: 'COMPLETED' }];
 
     const planId = '2f94f33c-562d-4a70-8c08-c6d9510317e5';

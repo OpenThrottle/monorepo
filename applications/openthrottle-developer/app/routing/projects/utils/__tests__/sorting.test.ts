@@ -3,6 +3,12 @@ import type { SortBy } from '~/routing/projects/config';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import { sortProjects } from '../sorting';
 
+/** Coerces a value to a target type without a type assertion (for invalid-input branch coverage). */
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 function project(
   overrides: Partial<ProjectWithStats> & Pick<ProjectWithStats, 'id' | 'name'>,
 ): ProjectWithStats {
@@ -96,7 +102,7 @@ describe('sortProjects', () => {
       project({ id: '1', name: 'first' }),
       project({ id: '2', name: 'second' }),
     ];
-    const sorted = sortProjects(projects, 'unknown' as SortBy, 'asc');
+    const sorted = sortProjects(projects, asMock<SortBy>('unknown'), 'asc');
     expect(sorted.map((p) => p.id)).toEqual(['1', '2']);
   });
 });

@@ -32,7 +32,9 @@ describe('PullRequestsToolbar Component', () => {
 
   test('submits as GET and exposes owner, repo, and state controls', () => {
     const form = component.container.querySelector('form');
-    expect(form).not.toBeNull();
+    if (!(form instanceof HTMLFormElement)) {
+      throw new Error('Expected a form element');
+    }
     expect(form).toHaveAttribute('method', 'get');
 
     const owners = component.getAllByPlaceholderText('org or user');
@@ -41,9 +43,7 @@ describe('PullRequestsToolbar Component', () => {
     const repos = component.getAllByPlaceholderText('repository name');
     expect(repos[0]).toHaveValue('demo');
 
-    const stateSelects = (form as HTMLFormElement).querySelectorAll(
-      'select[name="state"]',
-    );
+    const stateSelects = form.querySelectorAll('select[name="state"]');
     expect(stateSelects.length).toBeGreaterThanOrEqual(1);
     expect(stateSelects[0]).toHaveValue('closed');
   });
