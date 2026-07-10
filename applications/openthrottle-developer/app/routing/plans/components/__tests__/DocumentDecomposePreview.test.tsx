@@ -27,6 +27,7 @@ describe('DocumentDecomposePreview Component', () => {
         },
       ],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <DocumentDecomposePreview proposal={proposal} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText } = render(<RoutesStub />);

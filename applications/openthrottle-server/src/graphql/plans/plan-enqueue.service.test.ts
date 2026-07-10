@@ -16,13 +16,15 @@ import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { QueuesService } from '../queues/queues.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
-import type { RalphPlanRunTuningInput } from './plan.input';
 
-const mockPlan = {
+const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
-  jobRunHooks: null,
+  jobRunHooks: { hooks: [] },
   status: 'PENDING',
-} as unknown as Plan;
+});
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 describe('PlanEnqueueService', () => {
   const mockAdd = vi.fn().mockResolvedValue({ id: 'job-1', name: 'run-plan' });
@@ -151,7 +153,11 @@ describe('PlanEnqueueService', () => {
         workingDirectory: null,
       });
 
-      const addJobId = (mockAdd.mock.calls[0]?.[2] as { jobId: string }).jobId;
+      const addOpts = mockAdd.mock.calls[0]?.[2];
+      const addJobId =
+        isRecord(addOpts) && typeof addOpts.jobId === 'string'
+          ? addOpts.jobId
+          : undefined;
       expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe(addJobId);
       expect(result.planId).toBe(mockPlan.id);
@@ -262,9 +268,13 @@ describe('PlanEnqueueService', () => {
         workingDirectory: null,
       });
 
-      const andWhereArgs = mockTaskUpdateQueryBuilder.andWhere.mock
-        .calls[0]?.[1] as { fromStatuses: readonly string[] };
-      expect(andWhereArgs.fromStatuses).not.toContain('COMPLETED');
+      const andWhereArgs =
+        mockTaskUpdateQueryBuilder.andWhere.mock.calls[0]?.[1];
+      const fromStatuses =
+        isRecord(andWhereArgs) && Array.isArray(andWhereArgs.fromStatuses)
+          ? andWhereArgs.fromStatuses
+          : [];
+      expect(fromStatuses).not.toContain('COMPLETED');
     });
 
     test('passes provided priority to queue.add', async () => {
@@ -321,7 +331,7 @@ describe('PlanEnqueueService', () => {
           project: 'applications/openthrottle-server',
           prompt: null,
           promptFile: null,
-          ralphDebugCli: 'verbose' as RalphPlanRunTuningInput['ralphDebugCli'],
+          ralphDebugCli: 'verbose',
           skipWorktreeSetup: null,
           worktree: 'target-one',
           worktreeBase: null,
@@ -466,13 +476,14 @@ describe('PlanEnqueueService', () => {
 
       expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe('job-orch-1');
-      const enqueueArg = mockEnqueuePlanRalphOrchestrator.mock
-        .calls[0]?.[0] as {
-        idempotencyKey: string;
-      };
-      expect(enqueueArg.idempotencyKey).toEqual(expect.any(String));
+      const enqueueArg = mockEnqueuePlanRalphOrchestrator.mock.calls[0]?.[0];
+      const idempotencyKey =
+        isRecord(enqueueArg) && typeof enqueueArg.idempotencyKey === 'string'
+          ? enqueueArg.idempotencyKey
+          : undefined;
+      expect(idempotencyKey).toEqual(expect.any(String));
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
-        idempotencyKey: enqueueArg.idempotencyKey,
+        idempotencyKey,
         jobData: {
           executionBackend: 'cursor',
           planId: mockPlan.id,
@@ -482,7 +493,7 @@ describe('PlanEnqueueService', () => {
       });
       expect(mockRecordQueuedRun).toHaveBeenCalledWith(
         expect.objectContaining({
-          bullmqJobId: enqueueArg.idempotencyKey,
+          bullmqJobId: idempotencyKey,
           planId: mockPlan.id,
           runKind: 'orchestrator',
         }),

@@ -1,13 +1,10 @@
 import * as React from 'react';
-import clsx from 'clsx';
 import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Info } from 'lucide-react';
 import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../config';
-import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
 import { GlobalModal } from './GlobalModal';
 
 export interface GlobalMetricsInfoModalProps {
@@ -15,10 +12,6 @@ export interface GlobalMetricsInfoModalProps {
    * @description Optional deep link to a persistent definitions panel (e.g. Settings → Debug).
    */
   readonly definitionsHref?: string;
-}
-
-export interface GlobalMetricsInfoTriggerProps {
-  readonly className?: string;
 }
 
 const MODAL_KEY = 'ServerMetricsInfo' as const;
@@ -112,42 +105,3 @@ export const GlobalMetricsInfoModal = (
 };
 
 GlobalMetricsInfoModal.key = MODAL_KEY;
-
-/**
- * @description Click-to-open trigger button that sets `modal=ServerMetricsInfo` in the URL
- * (preserving any other params). Pair with {@link GlobalMetricsInfoModal} rendered elsewhere
- * in the tree; the URL is the source of truth, so the trigger and the dialog do not need to
- * share React state.
- */
-export const GlobalMetricsInfoTrigger = (
-  props: GlobalMetricsInfoTriggerProps,
-): React.ReactElement => {
-  const { className } = props;
-
-  const { setOpen } = useUrlSyncedOverlay({
-    // clearParamsOnClose: ['keep'],
-    openValue: MODAL_KEY,
-    param: MODAL_PARAM,
-  });
-
-  const handleClick = React.useCallback((): void => {
-    setOpen(true);
-  }, [setOpen]);
-
-  return (
-    <button
-      aria-label="Metrics interpretation help"
-      className={clsx(
-        'text-muted-foreground hover:text-foreground transition-colors',
-        className,
-      )}
-      data-testid="GlobalMetrics-info-trigger"
-      onClick={handleClick}
-      type="button"
-    >
-      <Info className="h-4 w-4" />
-    </button>
-  );
-};
-
-GlobalMetricsInfoTrigger.key = MODAL_KEY;

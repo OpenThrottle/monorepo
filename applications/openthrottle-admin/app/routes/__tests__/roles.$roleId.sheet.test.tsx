@@ -27,6 +27,10 @@ type ActionData = { ok: true } | { error: string } | undefined;
 const Harness = () => {
   const [actionData, setActionData] = React.useState<ActionData>(undefined);
 
+  // The route `matches` prop is a generated tuple this test does not exercise.
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- RR-generated `matches` tuple stub; not read by RoleDetailComponent in this test
+  const matchesStub = [] as never;
+
   return (
     <div>
       <button onClick={() => setActionData({ ok: true })} type="button">
@@ -35,7 +39,7 @@ const Harness = () => {
       <RoleDetailComponent
         actionData={actionData}
         loaderData={{ permissions: [], role }}
-        matches={[] as never}
+        matches={matchesStub}
         params={{ roleId: 'role-1' }}
       />
     </div>

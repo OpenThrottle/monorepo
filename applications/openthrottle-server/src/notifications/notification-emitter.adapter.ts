@@ -9,6 +9,14 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { Injectable } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 
+/*
+ * `EmitNotificationEmitter.emit(event, payload)` is a fixed cross-package
+ * interface with `payload: unknown`. Each branch forwards a trusted resolver
+ * payload (produced by the EmitNotificationInterceptor) to the matching typed
+ * NotificationsService method; the interface signature cannot be narrowed here.
+ */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- fixed EmitNotificationEmitter interface passes payload: unknown; forwarded to the matching typed emit method (see note above) */
+
 @Injectable()
 export class NotificationEmitterAdapter implements EmitNotificationEmitter {
   constructor(private readonly notifications: NotificationsService) {}

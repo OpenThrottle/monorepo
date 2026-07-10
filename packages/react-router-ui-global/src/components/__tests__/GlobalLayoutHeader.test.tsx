@@ -108,6 +108,7 @@ describe('GlobalLayoutHeader search chrome', () => {
     const user = userEvent.setup();
     const onSearchChromeEvent = vi.fn();
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const ControlledHarness = (): React.ReactElement => {
       const [value, setValue] = React.useState('seed');
       return (

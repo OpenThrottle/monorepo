@@ -52,6 +52,7 @@ describe('DashboardDailyStatsCard Component', () => {
     const singleDayProps: DashboardDailyStatsCardProps = {
       dailyStats: [twoDayStats[0]!],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <DashboardDailyStatsCard {...singleDayProps} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const result = render(<RoutesStub />);
@@ -73,6 +74,7 @@ describe('DashboardDailyStatsCard Component', () => {
       className: 'custom-class',
       dailyStats: [...twoDayStats],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const CustomComponent = () => <DashboardDailyStatsCard {...customProps} />;
     const RoutesStub = createRoutesStub([
       { Component: CustomComponent, path: '/' },
@@ -89,6 +91,7 @@ describe('DashboardDailyStatsCard Component', () => {
 
 describe('DashboardDailyStatsCard Component interactivity', () => {
   function renderCard(props: DashboardDailyStatsCardProps): RenderResult {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <DashboardDailyStatsCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
@@ -115,6 +118,7 @@ describe('DashboardDailyStatsCard Component empty state', () => {
     const props: DashboardDailyStatsCardProps = {
       dailyStats: [],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <DashboardDailyStatsCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const result = render(<RoutesStub />);

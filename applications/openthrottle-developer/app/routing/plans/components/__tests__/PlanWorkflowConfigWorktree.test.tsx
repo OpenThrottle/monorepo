@@ -37,6 +37,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       },
       setInput,
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigWorktree {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
@@ -59,6 +60,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       input: getDefaultWorkflowRalphRunOptionsInput(),
       setInput: vi.fn(),
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigWorktree {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
@@ -80,6 +82,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       },
       setInput: vi.fn(),
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanWorkflowConfigWorktree {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { queryByLabelText } = render(<RoutesStub />);

@@ -30,6 +30,7 @@ describe('PlanStatusBadge Component', () => {
       status: 'QUEUED',
     };
 
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <PlanStatusBadge {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText } = render(<RoutesStub />);

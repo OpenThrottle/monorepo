@@ -62,6 +62,25 @@ const encodeInt16 = (samples: ReadonlyArray<number>): string => {
   return Buffer.from(pcm.buffer).toString('base64');
 };
 
+/** Narrows an `unknown` socket frame to `string`, throwing if it isn't one. */
+const expectString = (value: unknown): string => {
+  if (typeof value !== 'string') {
+    throw new Error(`expected a string frame, got ${typeof value}`);
+  }
+  return value;
+};
+
+/** Narrows an `unknown` socket frame to an instance of `ctor`, throwing if it isn't one. */
+const expectInstanceOf = <T>(
+  value: unknown,
+  ctor: new (...args: never[]) => T,
+): T => {
+  if (!(value instanceof ctor)) {
+    throw new Error(`expected an instance of ${ctor.name}`);
+  }
+  return value;
+};
+
 function buildService(): {
   publish: ReturnType<typeof vi.fn>;
   service: TranscriptionStreamService;
@@ -135,7 +154,7 @@ describe('TranscriptionStreamService', () => {
 
     expect(sessionId).toEqual(expect.any(String));
     expect(socket.url).toBe('ws://localhost:6030');
-    const handshake = JSON.parse(socket.sent[0] as string);
+    const handshake = JSON.parse(expectString(socket.sent[0]));
     expect(handshake).toMatchObject({
       language: 'en',
       model: 'base.en',
@@ -166,7 +185,7 @@ describe('TranscriptionStreamService', () => {
     );
 
     expect(accepted).toBe(true);
-    const relayed = socket.sent.at(-1) as Float32Array;
+    const relayed = expectInstanceOf(socket.sent.at(-1), Float32Array);
     expect(relayed).toBeInstanceOf(Float32Array);
     expect(Array.from(relayed)).toEqual([0.5, -1]);
   });
@@ -215,7 +234,7 @@ describe('TranscriptionStreamService', () => {
 
     expect(service.stop('user-1', sessionId)).toBe(true);
 
-    const eof = socket.sent.at(-1) as Uint8Array;
+    const eof = expectInstanceOf(socket.sent.at(-1), Uint8Array);
     expect(eof).toBeInstanceOf(Uint8Array);
     expect(Buffer.from(eof).toString()).toBe('END_OF_AUDIO');
 

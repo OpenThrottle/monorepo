@@ -116,6 +116,7 @@ describe('routes/plans._index.tsx', () => {
   });
 
   test('should render empty state with zero counts in stat cards', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}
@@ -133,6 +134,7 @@ describe('routes/plans._index.tsx', () => {
   });
 
   test('should render pagination on /plans with assignee and status filters in links', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}

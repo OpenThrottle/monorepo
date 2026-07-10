@@ -1,3 +1,4 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -11,6 +12,10 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
+import {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
+} from '@openthrottle/nestjs-repositories';
 import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import { AgentsChatTurnResult } from './agents.object';
 
@@ -37,13 +42,15 @@ describe('agents-chat-persistence', () => {
 
   describe('resolvePersistedConversation', () => {
     test('creates a conversation when conversationId is omitted', async () => {
-      const createConversation = vi.fn(async () => ({
-        id: 'new-conversation-id',
-      }));
-      const service = {
+      const createConversation = vi
+        .fn()
+        .mockResolvedValue(
+          agentConversationsFactory.build({ id: 'new-conversation-id' }),
+        );
+      const service = createMock<AgentConversationsService>({
         createConversation,
         getConversationForUser: vi.fn(),
-      } as unknown as AgentConversationsService;
+      });
 
       const result = await resolvePersistedConversation(service, {
         conversationId: null,
@@ -61,12 +68,12 @@ describe('agents-chat-persistence', () => {
     });
 
     test('returns not found when conversation is not owned', async () => {
-      const service = {
+      const service = createMock<AgentConversationsService>({
         createConversation: vi.fn(),
         getConversationForUser: vi
           .fn()
           .mockRejectedValue(new NotFoundException()),
-      } as unknown as AgentConversationsService;
+      });
 
       const result = await resolvePersistedConversation(service, {
         conversationId: 'missing-id',
@@ -95,11 +102,11 @@ describe('agents-chat-persistence', () => {
 
   describe('persistSuccessfulAgentsChatTurn', () => {
     test('appends turn with routing metadata', async () => {
-      const appendTurn = vi.fn(async () => ({
-        assistantMessage: {},
-        userMessage: {},
-      }));
-      const service = { appendTurn } as unknown as AgentConversationsService;
+      const appendTurn = vi.fn().mockResolvedValue({
+        assistantMessage: agentConversationMessagesFactory.build(),
+        userMessage: agentConversationMessagesFactory.build(),
+      });
+      const service = createMock<AgentConversationsService>({ appendTurn });
       const turn = new AgentsChatTurnResult();
 
       turn.assistantText = 'Done';

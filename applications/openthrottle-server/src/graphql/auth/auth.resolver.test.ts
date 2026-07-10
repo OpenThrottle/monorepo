@@ -5,7 +5,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { User } from '@openthrottle/nestjs-repositories';
+import { usersFactory } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
@@ -13,14 +13,14 @@ import { AuthService } from './auth.service';
 describe('AuthResolver', () => {
   let resolver: AuthResolver;
 
-  const mockUser: User = {
+  const mockUser = usersFactory.build({
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
     disabledAt: null,
     email: 'user@example.com',
     githubUsername: 'visormatt',
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-  } as User;
+  });
 
   const mockAuthService = createMock<AuthService>({
     login: vi.fn(),

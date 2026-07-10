@@ -34,6 +34,7 @@ describe('GlobalServerHealthBanner', () => {
       props = {
         health: { api: 'ok', database: 'ok', redis: 'ok', websocket: 'ok' },
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <GlobalServerHealthBanner {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -54,6 +55,7 @@ describe('GlobalServerHealthBanner', () => {
           websocket: 'ok',
         },
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <GlobalServerHealthBanner {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
@@ -90,6 +92,7 @@ describe('GlobalServerHealthBanner', () => {
           websocket: 'ok',
         },
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <GlobalServerHealthBanner {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);

@@ -40,10 +40,13 @@ async function bootstrapWorker(): Promise<void> {
  * the OpenThrottle platform.
  */
 async function bootstrap(role: 'all' | 'api'): Promise<void> {
-  const app = await NestFactory.create(buildAppModule({ role }), {
-    rawBody: true, // required for Stripe webhook signature verification (req.rawBody)
-    snapshot: true,
-  });
+  const app = await NestFactory.create<NestExpressApplication>(
+    buildAppModule({ role }),
+    {
+      rawBody: true, // required for Stripe webhook signature verification (req.rawBody)
+      snapshot: true,
+    },
+  );
 
   /**
    * Browsers deliver CSP violation reports with non-JSON content types the
@@ -57,7 +60,7 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
    * parser becomes the ONLY json parser — omitting `application/json` leaves
    * /graphql POST bodies unparsed and Apollo rejects them with 400.
    */
-  (app as NestExpressApplication).useBodyParser('json', {
+  app.useBodyParser('json', {
     type: [
       'application/csp-report',
       'application/json',

@@ -51,7 +51,7 @@ describe('DatabaseBackupProcessor', () => {
   });
 
   it('should spawn pnpm run database:backup with workspace root cwd', async () => {
-    const job = { data: {}, id: 'job-1' } as DatabaseBackupJob;
+    const job = createMock<DatabaseBackupJob>({ data: {}, id: 'job-1' });
 
     const result = await processor.process(job);
 
@@ -74,7 +74,7 @@ describe('DatabaseBackupProcessor', () => {
 
   it('should throw and notify when backup exits non-zero', async () => {
     spawnMock.mockResolvedValue(1);
-    const job = { data: {}, id: 'job-2' } as DatabaseBackupJob;
+    const job = createMock<DatabaseBackupJob>({ data: {}, id: 'job-2' });
 
     await expect(processor.process(job)).rejects.toThrow(
       `${DATABASE_BACKUP_PNPM_SCRIPT} exited with code 1`,
@@ -89,14 +89,14 @@ describe('DatabaseBackupProcessor', () => {
 
   it('should throw when spawn fails', async () => {
     spawnMock.mockRejectedValue(new Error('spawn ENOENT'));
-    const job = { data: {}, id: 'job-3' } as DatabaseBackupJob;
+    const job = createMock<DatabaseBackupJob>({ data: {}, id: 'job-3' });
 
     await expect(processor.process(job)).rejects.toThrow('spawn ENOENT');
   });
 
   it('should throw when backup exits via signal', async () => {
     spawnMock.mockResolvedValue(null);
-    const job = { data: {}, id: 'job-4' } as DatabaseBackupJob;
+    const job = createMock<DatabaseBackupJob>({ data: {}, id: 'job-4' });
 
     await expect(processor.process(job)).rejects.toThrow(
       'exited with code signal',

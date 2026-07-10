@@ -4,7 +4,6 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import type { UpdateUserInput } from './user.input';
 import { UsersResolver } from './users.resolver';
 
 describe('UsersResolver', () => {
@@ -17,8 +16,10 @@ describe('UsersResolver', () => {
     email: 'user@example.com',
     githubUsername: 'visormatt',
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    passwordHash: null,
+    roles: [],
     updatedAt: new Date('2026-02-02T10:00:00.000Z'),
-  } as User;
+  };
 
   const mockUsersService = createMock<UsersService>();
 
@@ -122,10 +123,11 @@ describe('UsersResolver', () => {
       vi.mocked(usersService.update).mockResolvedValue(mockUser);
 
       const result = await resolver.updateUser({
+        disabledAt: undefined,
         email: null,
         githubUsername: 'new-username',
         id: mockUser.id,
-      } as unknown as UpdateUserInput);
+      });
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(mockUser.id);
@@ -135,10 +137,11 @@ describe('UsersResolver', () => {
       vi.mocked(usersService.update).mockResolvedValue(null);
 
       const result = await resolver.updateUser({
+        disabledAt: undefined,
         email: null,
         githubUsername: 'new-username',
         id: 'non-existent-id',
-      } as unknown as UpdateUserInput);
+      });
 
       expect(result).toBeNull();
     });

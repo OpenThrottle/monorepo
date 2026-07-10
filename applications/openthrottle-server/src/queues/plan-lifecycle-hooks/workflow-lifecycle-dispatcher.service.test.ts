@@ -5,17 +5,28 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Queue, QueueEvents } from 'bullmq';
+import type { Job, Queue, QueueEvents } from 'bullmq';
 import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service';
 import type {
   PlanLifecycleHookJobData,
   PlanLifecycleHookJobResult,
 } from './plan-lifecycle-hooks.types';
 
-const mockWaitUntilFinished = vi.fn();
-const mockQueueAdd = vi.fn().mockImplementation(async () => ({
-  waitUntilFinished: mockWaitUntilFinished,
-}));
+type LifecycleHookQueue = Queue<
+  PlanLifecycleHookJobData,
+  PlanLifecycleHookJobResult
+>;
+type LifecycleHookJob = Job<
+  PlanLifecycleHookJobData,
+  PlanLifecycleHookJobResult
+>;
+
+const mockWaitUntilFinished = vi.fn<LifecycleHookJob['waitUntilFinished']>();
+const mockQueueAdd = vi
+  .fn<LifecycleHookQueue['add']>()
+  .mockImplementation(async () =>
+    createMock<LifecycleHookJob>({ waitUntilFinished: mockWaitUntilFinished }),
+  );
 
 describe('WorkflowLifecycleDispatcherFactory', () => {
   let factory: WorkflowLifecycleDispatcherFactory;
@@ -26,19 +37,20 @@ describe('WorkflowLifecycleDispatcherFactory', () => {
 
     factory = new WorkflowLifecycleDispatcherFactory(
       createMock<LoggerService>(),
-      {
+      createMock<LifecycleHookQueue>({
         add: mockQueueAdd,
         opts: { connection: {} },
-      } as unknown as Queue<
-        PlanLifecycleHookJobData,
-        PlanLifecycleHookJobResult
-      >,
+      }),
     );
 
-    (factory as unknown as { queueEvents: QueueEvents }).queueEvents = {
-      close: vi.fn().mockResolvedValue(undefined),
-      waitUntilReady: vi.fn().mockResolvedValue(undefined),
-    } as unknown as QueueEvents;
+    Reflect.set(
+      factory,
+      'queueEvents',
+      createMock<QueueEvents>({
+        close: vi.fn().mockResolvedValue(undefined),
+        waitUntilReady: vi.fn().mockResolvedValue(undefined),
+      }),
+    );
   });
 
   it('enqueues beforeAll child jobs serially for orchestrator runs', async () => {

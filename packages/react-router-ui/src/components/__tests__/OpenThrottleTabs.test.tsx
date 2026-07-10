@@ -32,6 +32,7 @@ function UrlSyncedTabsFixture(
   );
 }
 
+// eslint-disable-next-line react/no-multi-comp -- test-local mock component
 function SearchParamsReader() {
   const [searchParams] = useSearchParams();
   return <span data-testid={SEARCH_PARAMS_ID}>{searchParams.toString()}</span>;
@@ -44,6 +45,7 @@ function renderUrlSyncedTabs(
   } = {},
 ) {
   const { initialEntry = '/', tabsProps = {} } = options;
+  // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = () => (
     <>
       <SearchParamsReader />
@@ -59,6 +61,7 @@ describe('OpenThrottleTabs Component', () => {
     test('renders uncontrolled tabs with default panel visible', () => {
       const RoutesStub = createRoutesStub([
         {
+          // eslint-disable-next-line react/no-multi-comp -- test-local mock component
           Component: () => (
             <OpenThrottleTabs defaultValue="one">
               <TabsList>
@@ -85,6 +88,7 @@ describe('OpenThrottleTabs Component', () => {
     test('merges w-full with custom className on the root', () => {
       const RoutesStub = createRoutesStub([
         {
+          // eslint-disable-next-line react/no-multi-comp -- test-local mock component
           Component: () => (
             <OpenThrottleTabs className="custom-root" defaultValue="one">
               <TabsList>

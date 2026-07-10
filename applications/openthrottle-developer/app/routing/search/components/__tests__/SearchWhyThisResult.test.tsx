@@ -44,6 +44,7 @@ describe('SearchWhyThisResult', () => {
 
   test('should start open when defaultOpen is true', () => {
     const chunk = mockChunk();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <SearchWhyThisResult defaultOpen={true} result={chunk} />
     );
@@ -62,6 +63,7 @@ describe('SearchWhyThisResult', () => {
       pageSize: 10,
       total: 3,
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <SearchWhyThisResult
         defaultOpen={true}
@@ -85,6 +87,7 @@ describe('SearchWhyThisResult', () => {
       sourceRepo: 'visormatt/monorepo',
       sourceSha: 'abc1234567890',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <SearchWhyThisResult result={chunk} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
@@ -101,6 +104,7 @@ describe('SearchWhyThisResult', () => {
       taskId: 'task-z',
       taskTitle: 'T',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <SearchWhyThisResult defaultOpen={true} result={chunk} />
     );
@@ -121,6 +125,7 @@ describe('SearchWhyThisResult', () => {
       sourceRepo: 'org/repo',
       sourceSha: 'deadbeef',
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <SearchWhyThisResult defaultOpen={true} result={chunk} />
     );

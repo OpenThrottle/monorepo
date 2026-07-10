@@ -80,6 +80,7 @@ describe('useUrlSyncedTabValue', () => {
   describe('when parse is provided', () => {
     test('falls back to defaultValue for invalid param', () => {
       const RoutesStub = createRoutesStub([
+        // eslint-disable-next-line react/no-multi-comp -- test-local mock component
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
@@ -91,6 +92,7 @@ describe('useUrlSyncedTabValue', () => {
     test('onValueChange sets param for non-default tab', async () => {
       const user = userEvent.setup();
       const RoutesStub = createRoutesStub([
+        // eslint-disable-next-line react/no-multi-comp -- test-local mock component
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
@@ -107,6 +109,7 @@ describe('useUrlSyncedTabValue', () => {
     test('onValueChange deletes param when selecting default tab', async () => {
       const user = userEvent.setup();
       const RoutesStub = createRoutesStub([
+        // eslint-disable-next-line react/no-multi-comp -- test-local mock component
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 
@@ -121,6 +124,7 @@ describe('useUrlSyncedTabValue', () => {
     test('onValueChange treats invalid next as default and clears param', async () => {
       const user = userEvent.setup();
       const RoutesStub = createRoutesStub([
+        // eslint-disable-next-line react/no-multi-comp -- test-local mock component
         { Component: () => <TabHarness withParse={true} />, path: '/' },
       ]);
 

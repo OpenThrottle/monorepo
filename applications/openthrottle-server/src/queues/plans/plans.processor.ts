@@ -142,7 +142,7 @@ export class PlansProcessor
     const activeJobs = await this.plansQueue.getJobs(['active'], 0, 500);
     const planIdsWithActiveJob = new Set(
       activeJobs
-        .map((job) => job.data?.planId as string | undefined)
+        .map((job) => job.data?.planId)
         .filter((id): id is string => typeof id === 'string'),
     );
 
@@ -219,8 +219,8 @@ export class PlansProcessor
     payload: { error?: Error; job?: RunPlanJob } | RunPlanJob,
     errorArg?: Error,
   ): Promise<void> {
-    const job =
-      'job' in payload && payload.job ? payload.job : (payload as RunPlanJob);
+    const job: RunPlanJob | undefined =
+      'data' in payload ? payload : payload.job;
     const error = ('error' in payload && payload.error) || errorArg;
     const planId = job?.data?.planId;
 

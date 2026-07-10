@@ -1,11 +1,12 @@
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, it, vi } from 'vitest';
 import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver';
 
 const iterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
-const pubSub = {
+const pubSub = createMock<PubSubEngine>({
   asyncIterator: vi.fn().mockReturnValue(iterator),
-} as unknown as PubSubEngine;
+});
 
 const resolver = new NotificationsSubscriptionResolver(pubSub);
 

@@ -47,6 +47,7 @@ describe('PlanTasksColumn Component', () => {
         title: 'In progress',
       };
 
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => <PlanTasksColumn {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 

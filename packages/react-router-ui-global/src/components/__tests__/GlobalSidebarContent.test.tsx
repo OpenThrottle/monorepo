@@ -16,6 +16,7 @@ const StubIcon = (iconProps: { className?: string }) => (
 
 describe('GlobalSidebarContent Component', () => {
   test('renders empty sidebar when no navigation data is provided', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <GlobalSidebarContent />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
@@ -33,6 +34,7 @@ describe('GlobalSidebarContent collapsible sections', () => {
 
   test('should toggle section links when section trigger is activated', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalSidebarContent
@@ -43,7 +45,9 @@ describe('GlobalSidebarContent collapsible sections', () => {
     );
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Alpha page</div>, path: '/alpha' },
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Beta page</div>, path: '/beta' },
     ]);
     render(<RoutesStub />);
@@ -77,6 +81,7 @@ describe('GlobalSidebarContent collapsible sections', () => {
 
   test('should navigate when a section link is activated while expanded', async () => {
     const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalSidebarContent data={navigationData} />
@@ -84,7 +89,9 @@ describe('GlobalSidebarContent collapsible sections', () => {
     );
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Alpha page</div>, path: '/alpha' },
+      // eslint-disable-next-line react/no-multi-comp -- test-local mock component
       { Component: () => <div>Beta page</div>, path: '/beta' },
     ]);
     render(<RoutesStub />);

@@ -41,6 +41,7 @@ describe('QueueStatsChartTooltip', () => {
 
   test('should render null when tooltip is inactive', () => {
     props = { ...props, active: false };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <QueueStatsChartTooltip {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -50,6 +51,7 @@ describe('QueueStatsChartTooltip', () => {
 
   test('should render null when payload is empty', () => {
     props = { ...props, payload: [] };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <QueueStatsChartTooltip {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
@@ -69,6 +71,7 @@ describe('QueueStatsChartTooltip', () => {
         },
       ],
     };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <QueueStatsChartTooltip {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);

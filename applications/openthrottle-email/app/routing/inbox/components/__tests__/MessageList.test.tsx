@@ -62,6 +62,7 @@ describe('MessageList Component', () => {
         folderId: MAIL_FOLDER_IDS.inbox,
         messages: [],
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },
@@ -76,6 +77,7 @@ describe('MessageList Component', () => {
     test('renders table rows and message links to detail pages', () => {
       cleanup();
       const testProps: MessageListProps = { messages: mockMessages };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },
@@ -96,6 +98,7 @@ describe('MessageList Component', () => {
     test('renders skeleton rows', () => {
       cleanup();
       const testProps: MessageListProps = { loading: true };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },
@@ -115,6 +118,7 @@ describe('MessageList Component', () => {
         messages: mockMessages,
         onSelectionChange,
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },
@@ -138,6 +142,7 @@ describe('MessageList Component', () => {
         messages: mockMessages,
         onSelectionChange,
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },
@@ -162,6 +167,7 @@ describe('MessageList Component', () => {
         onSelectionChange,
         selectedIds,
       };
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const TestComponent = () => <MessageList {...testProps} />;
       const RoutesStub = createRoutesStub([
         { Component: TestComponent, path: '/' },

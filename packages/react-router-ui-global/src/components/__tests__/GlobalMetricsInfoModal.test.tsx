@@ -11,11 +11,9 @@ import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../../config';
-import {
-  GlobalMetricsInfoModal,
-  GlobalMetricsInfoTrigger,
-} from '../GlobalMetricsInfoModal';
+import { GlobalMetricsInfoModal } from '../GlobalMetricsInfoModal';
 import type { GlobalMetricsInfoModalProps } from '../GlobalMetricsInfoModal';
+import { GlobalMetricsInfoTrigger } from '../GlobalMetricsInfoTrigger';
 
 interface RenderHarnessResult {
   readonly component: RenderResult;

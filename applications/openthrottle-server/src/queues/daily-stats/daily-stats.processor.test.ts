@@ -11,6 +11,15 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import type { AggregateDailyStatsJob } from './daily-stats.types';
 import { DailyStatsProcessor } from './daily-stats.processor';
 
+/**
+ * Local mock signature for `DailyStatsService.upsertForDate`: same call args as the real
+ * service method, but a simplified `Record`-shaped resolved value (tests never inspect it)
+ * so the mock doesn't need a full `DailyStat` entity fixture.
+ */
+type MockUpsertForDate = (
+  ...args: Parameters<DailyStatsService['upsertForDate']>
+) => Promise<Record<string, unknown>>;
+
 function createRepoMocks(
   overrides: {
     plan?: {
@@ -37,7 +46,7 @@ function createRepoMocks(
 describe('DailyStatsProcessor', () => {
   let processor: DailyStatsProcessor;
   let mockJob: AggregateDailyStatsJob;
-  let mockUpsertForDate: ReturnType<typeof vi.fn>;
+  let mockUpsertForDate: ReturnType<typeof vi.fn<MockUpsertForDate>>;
   let mockEmitQueueJobCompleted: ReturnType<typeof vi.fn>;
   let mockLoggerError: ReturnType<typeof vi.fn>;
   let mockLoggerInfo: ReturnType<typeof vi.fn>;
@@ -46,7 +55,7 @@ describe('DailyStatsProcessor', () => {
   let taskRepoMocks: ReturnType<typeof createRepoMocks>['taskRepo'];
 
   beforeEach(async () => {
-    mockUpsertForDate = vi.fn().mockResolvedValue({});
+    mockUpsertForDate = vi.fn<MockUpsertForDate>().mockResolvedValue({});
     mockEmitQueueJobCompleted = vi.fn();
     mockLoggerError = vi.fn();
     mockLoggerInfo = vi.fn();
@@ -55,10 +64,10 @@ describe('DailyStatsProcessor', () => {
     planRepoMocks = repos.planRepo;
     taskRepoMocks = repos.taskRepo;
 
-    mockJob = {
+    mockJob = createMock<AggregateDailyStatsJob>({
       data: {},
       id: 'job-1',
-    } as AggregateDailyStatsJob;
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -119,10 +128,7 @@ describe('DailyStatsProcessor', () => {
     await processor.process(mockJob);
 
     expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
-    const [dateArg, payload] = mockUpsertForDate.mock.calls[0] as [
-      string,
-      Record<string, unknown>,
-    ];
+    const [dateArg, payload] = mockUpsertForDate.mock.calls[0];
 
     expect(dateArg).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(payload).toMatchObject({

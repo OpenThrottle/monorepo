@@ -1,23 +1,24 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { createMock } from '@golevelup/ts-vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
 
 const createHttpContext = (httpReq: object): ExecutionContext =>
-  ({
+  createMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('http'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
-  }) as unknown as ExecutionContext;
+  });
 
 const createGraphqlContext = (httpReq: object = {}): ExecutionContext =>
-  ({
+  createMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('graphql'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
-  }) as unknown as ExecutionContext;
+  });
 
 describe('getRequestFromExecutionContext (openthrottle-server)', () => {
   afterEach(() => {
@@ -35,9 +36,11 @@ describe('getRequestFromExecutionContext (openthrottle-server)', () => {
     const gqlReq = { user: { sub: 'gql-sub' } };
     const ctx = createGraphqlContext({});
 
-    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-      getContext: () => ({ req: gqlReq }),
-    } as GqlExecutionContext);
+    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+      createMock<GqlExecutionContext>({
+        getContext: () => ({ req: gqlReq }),
+      }),
+    );
 
     expect(getRequestFromExecutionContext(ctx)).toBe(gqlReq);
     expect(ctx.switchToHttp).not.toHaveBeenCalled();
@@ -45,14 +48,16 @@ describe('getRequestFromExecutionContext (openthrottle-server)', () => {
 
   it('detects graphql via `${getType()}` string coercion (aligned with @CurrentUser)', () => {
     const gqlReq = { user: { sub: 'gql-sub' } };
-    const ctx = {
+    const ctx = createMock<ExecutionContext>({
       getType: vi.fn().mockReturnValue('graphql'),
       switchToHttp: vi.fn(),
-    } as unknown as ExecutionContext;
+    });
 
-    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-      getContext: () => ({ req: gqlReq }),
-    } as GqlExecutionContext);
+    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+      createMock<GqlExecutionContext>({
+        getContext: () => ({ req: gqlReq }),
+      }),
+    );
 
     expect(getRequestFromExecutionContext(ctx)).toBe(gqlReq);
   });
@@ -60,9 +65,11 @@ describe('getRequestFromExecutionContext (openthrottle-server)', () => {
   it('throws when GraphQL context is missing req', () => {
     const ctx = createGraphqlContext();
 
-    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-      getContext: () => ({}),
-    } as GqlExecutionContext);
+    vi.spyOn(GqlExecutionContext, 'create').mockReturnValue(
+      createMock<GqlExecutionContext>({
+        getContext: () => ({}),
+      }),
+    );
 
     expect(() => getRequestFromExecutionContext(ctx)).toThrow(
       'GraphQL context missing req',

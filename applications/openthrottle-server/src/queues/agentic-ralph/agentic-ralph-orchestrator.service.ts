@@ -52,6 +52,7 @@ export class AgenticRalphOrchestratorService {
     readonly signal?: AbortSignal;
   }): Promise<WorkflowRunResult> {
     const { correlation, jobData, lifecycleDispatcher, signal } = params;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- AGENTIC_WORKFLOW_REGISTRY is intentionally `any`-typed (AnyAgenticWorkflow); the dispatcher narrows to the ralph orchestrator at the call site
     const orchestrator = this.workflowRegistry
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
       .createOrchestrator() as WorkflowOrchestrator;
@@ -63,14 +64,19 @@ export class AgenticRalphOrchestratorService {
     const config = loadWorkflowRalphConfig(configCwd, process.env);
     applyWorkflowRalphOtRootFromConfig(configCwd, process.env);
 
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- jobData.ralph (RalphNestedRunTuningInput) → RalphPlanRunTuningInput: structurally-compatible cross-package tuning shapes
+    const ralphTuningInput = jobData.ralph as PlanRunTuningInput | undefined;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- merge result retyped to the buildRalphFlowContextFromPlanRunTuning `ralph` param type
+    const mergedRalphTuning = mergePlanRunTuningWithWorkflowRalphConfig(
+      ralphTuningInput,
+      config,
+    ) as PlanRunTuningInput | undefined;
+
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
       executionBackend: jobData.executionBackend,
       mode: jobData.mode ?? 'plan',
       planId: jobData.planId,
-      ralph: mergePlanRunTuningWithWorkflowRalphConfig(
-        jobData.ralph as PlanRunTuningInput | undefined,
-        config,
-      ) as PlanRunTuningInput | undefined,
+      ralph: mergedRalphTuning,
       taskId: jobData.taskId,
     });
 

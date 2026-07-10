@@ -26,22 +26,26 @@ const executeMock = vi.mocked(executeSinglePlanLifecycleHook);
 
 const buildJobData = (
   overrides: Partial<PlanLifecycleHookJobData> = {},
-): PlanLifecycleHookJobData =>
-  ({
-    entry: { kind: 'prompt_profile', phase: 'beforeAll' },
-    hookIndex: 0,
-    mainRunStarted: true,
-    mainRunSucceeded: false,
-    parentJobId: 'parent-1',
-    parentQueueName: 'Plans',
+): PlanLifecycleHookJobData => ({
+  entry: {
+    kind: 'prompt_profile',
     phase: 'beforeAll',
+    prompt: 'test-prompt',
+    promptDelivery: 'named',
+  },
+  hookIndex: 0,
+  mainRunStarted: true,
+  mainRunSucceeded: false,
+  parentJobId: 'parent-1',
+  parentQueueName: 'Plans',
+  phase: 'beforeAll',
+  planId: '00000000-0000-4000-8000-000000000001',
+  planRunJobData: {
     planId: '00000000-0000-4000-8000-000000000001',
-    planRunJobData: {
-      planId: '00000000-0000-4000-8000-000000000001',
-      runKind: 'orchestrator',
-    },
-    ...overrides,
-  }) as unknown as PlanLifecycleHookJobData;
+    runKind: 'orchestrator',
+  },
+  ...overrides,
+});
 
 describe('PlanLifecycleHooksProcessor.process', () => {
   let processor: PlanLifecycleHooksProcessor;
@@ -69,9 +73,9 @@ describe('PlanLifecycleHooksProcessor.process', () => {
     executeMock.mockResolvedValueOnce(expected);
 
     const data = buildJobData();
-    const result = await processor.process({
-      data,
-    } as unknown as PlanLifecycleHookJob);
+    const result = await processor.process(
+      createMock<PlanLifecycleHookJob>({ data }),
+    );
 
     expect(result).toBe(expected);
     expect(executeMock).toHaveBeenCalledTimes(1);
@@ -97,10 +101,15 @@ describe('PlanLifecycleHooksProcessor.process', () => {
 
     const data = buildJobData({
       phase: 'afterEach',
-      task: { taskId: 'task-1' } as unknown as PlanLifecycleHookJobData['task'],
-      taskOutcome: 'succeeded' as PlanLifecycleHookJobData['taskOutcome'],
+      task: {
+        category: undefined,
+        id: 'task-1',
+        status: 'pending',
+        title: 'Task 1',
+      },
+      taskOutcome: 'completed',
     });
-    await processor.process({ data } as unknown as PlanLifecycleHookJob);
+    await processor.process(createMock<PlanLifecycleHookJob>({ data }));
 
     expect(executeMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -112,9 +121,8 @@ describe('PlanLifecycleHooksProcessor.process', () => {
   });
 
   it('fails loudly on missing job data instead of silently no-oping', async () => {
-    await expect(
-      processor.process({} as unknown as PlanLifecycleHookJob),
-    ).rejects.toBeInstanceOf(TypeError);
+    // @ts-expect-error deliberately malformed job (missing `data`) to assert the runtime guard
+    await expect(processor.process({})).rejects.toBeInstanceOf(TypeError);
     expect(executeMock).not.toHaveBeenCalled();
   });
 
@@ -123,9 +131,9 @@ describe('PlanLifecycleHooksProcessor.process', () => {
     executeMock.mockRejectedValueOnce(failure);
 
     await expect(
-      processor.process({
-        data: buildJobData(),
-      } as unknown as PlanLifecycleHookJob),
+      processor.process(
+        createMock<PlanLifecycleHookJob>({ data: buildJobData() }),
+      ),
     ).rejects.toBe(failure);
   });
 });

@@ -95,6 +95,7 @@ describe('GlobalMetrics Component', () => {
         loading: true,
         serverMetrics: null,
       });
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => (
         <GlobalProviders>
           <GlobalMetrics {...props} />
@@ -115,6 +116,7 @@ describe('GlobalMetrics Component', () => {
       loading: false,
       serverMetrics: null,
     });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalMetrics {...props} />
@@ -130,6 +132,7 @@ describe('GlobalMetrics Component', () => {
   test('should pass pollIntervalMs from props to usePollServerMetrics when provided', () => {
     cleanup();
     mockUsePollServerMetrics.mockClear();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalMetrics {...props} pollIntervalMs={15_000} />
@@ -165,6 +168,7 @@ describe('GlobalMetrics Component', () => {
 
   test('should render metrics chart when data is available', () => {
     cleanup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <GlobalProviders>
         <GlobalMetrics
@@ -286,6 +290,7 @@ describe('GlobalMetrics Component', () => {
       cleanup();
       localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY] = 'true';
 
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => (
         <GlobalProviders>
           <GlobalMetrics />
@@ -328,6 +333,7 @@ describe('GlobalMetrics Component', () => {
   describe('when the URL contains modal=ServerMetricsInfo and definitionsHref is passed', () => {
     beforeEach(() => {
       cleanup();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => (
         <GlobalProviders>
           <GlobalMetrics definitionsHref="/settings/debug#server-metrics-definitions" />
@@ -358,6 +364,7 @@ describe('GlobalMetrics Component', () => {
   describe('when the URL contains modal=ServerMetricsInfo but no definitionsHref is passed', () => {
     beforeEach(() => {
       cleanup();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
       const Component = () => (
         <GlobalProviders>
           <GlobalMetrics />
@@ -401,6 +408,7 @@ describe('GlobalMetrics Component', () => {
       mockUsePollServerMetrics.mockImplementation(actual.usePollServerMetrics);
 
       try {
+        // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
         const Component = () => (
           <GlobalProviders>
             <GlobalMetrics pollIntervalMs={1_000} />

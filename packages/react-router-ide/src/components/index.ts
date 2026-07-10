@@ -4,6 +4,7 @@ export * from './IdeRepositorySelector';
 export * from './IdeSearchForm';
 export * from './IdeSearchResultRow';
 export * from './IdeSearchResults';
+export * from './LocationTable';
 export * from './SemanticSearchForm';
 export * from './SemanticSearchResults';
 export * from './SymbolRow';

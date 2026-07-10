@@ -1,6 +1,7 @@
 import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
 import {
   TaskEmbeddingsService,
+  getDefaultPlanRunConfigStorage,
   tasksFactory,
 } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
@@ -15,9 +16,9 @@ const mockTaskEmbeddingsService = createMock<TaskEmbeddingsService>({
   getRepository: vi.fn().mockReturnValue(taskEmbeddingsRepo),
 });
 const mockTaskLoad = vi.fn().mockResolvedValue(null);
-const mockLoaders: TaskEmbeddingsLoaders = {
+const mockLoaders: TaskEmbeddingsLoaders = createMock<TaskEmbeddingsLoaders>({
   taskLoader: { load: mockTaskLoad },
-} as unknown as TaskEmbeddingsLoaders;
+});
 
 describe('TaskEmbeddingsResolver', () => {
   let resolver: TaskEmbeddingsResolver;
@@ -30,11 +31,8 @@ describe('TaskEmbeddingsResolver', () => {
     metadata: { source: 'task' },
     task: {
       assignee: 'Task assignee',
-      assignees: ['Task assignee'],
-      author: 'Task author',
       category: 'Task category',
       commitLinks: [],
-      content: 'Task content chunk for embedding',
       createdAt: new Date('2026-02-01T22:00:00.000Z'),
       description: 'Task description',
       id: 'b366d480-6a4f-498b-8755-23ade25d2b24',
@@ -46,6 +44,7 @@ describe('TaskEmbeddingsResolver', () => {
         createdAt: new Date('2026-02-01T22:00:00.000Z'),
         description: 'Plan description',
         id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+        jobRunHooks: { hooks: [] },
         planEmbeddings: [],
         planOutputChunks: [],
         project: 'Plan project',
@@ -60,6 +59,7 @@ describe('TaskEmbeddingsResolver', () => {
           tasks: [],
           updatedAt: new Date('2026-02-01T22:00:00.000Z'),
         },
+        runConfig: getDefaultPlanRunConfigStorage(),
         status: 'Plan status',
         summary: 'Plan summary',
         tasks: [],
@@ -80,6 +80,7 @@ describe('TaskEmbeddingsResolver', () => {
         updatedAt: new Date('2026-02-01T22:00:00.000Z'),
       },
       requirements: ['Task requirement 1', 'Task requirement 2'],
+      sortOrder: 1000,
       status: 'Task status',
       summary: 'Task summary',
       taskEmbeddings: [],
@@ -87,7 +88,7 @@ describe('TaskEmbeddingsResolver', () => {
       updatedAt: new Date('2026-02-01T22:00:00.000Z'),
     },
     taskId: 'b366d480-6a4f-498b-8755-23ade25d2b24',
-  } as unknown as TaskEmbedding;
+  };
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({

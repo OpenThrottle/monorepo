@@ -81,6 +81,7 @@ describe('ProjectsTable Component', () => {
 
   test('renders projects from props when provided', () => {
     const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <ProjectsTable {...propsWithProjects} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getAllByRole, getByRole, getByText } = render(<RoutesStub />);
@@ -101,6 +102,7 @@ describe('ProjectsTable Component', () => {
 
   test('renders plan and task counts and updated date', () => {
     const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <ProjectsTable {...propsWithProjects} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText, getAllByText, getAllByRole } = render(<RoutesStub />);

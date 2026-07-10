@@ -9,6 +9,7 @@ export * from './components/GlobalLayoutHeader';
 export * from './components/GlobalLogging';
 export * from './components/GlobalMetrics';
 export * from './components/GlobalMetricsInfoModal';
+export * from './components/GlobalMetricsInfoTrigger';
 export * from './components/GlobalModal';
 export * from './components/GlobalProviders';
 export * from './components/GlobalScreen';

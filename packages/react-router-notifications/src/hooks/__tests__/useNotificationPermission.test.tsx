@@ -117,6 +117,7 @@ describe('useNotificationPermission', () => {
   test('requestPermission returns unsupported when API not available', async () => {
     vi.stubGlobal('Notification', undefined);
     let result: NotificationPermissionState = 'default';
+    // eslint-disable-next-line react/no-multi-comp -- test-local mock component
     function Consumer(): React.ReactElement {
       const { requestPermission } = useNotificationPermission();
       return (
