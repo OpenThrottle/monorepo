@@ -58,9 +58,17 @@ const SORT_ORDER_UNIQUE_VIOLATION_MESSAGE =
 
 const isSortOrderUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
-  const driverError = error.driverError as { code?: string } | undefined;
-  return driverError?.code === '23505';
+  const driverError: unknown = error.driverError;
+  return (
+    typeof driverError === 'object' &&
+    driverError !== null &&
+    'code' in driverError &&
+    driverError.code === '23505'
+  );
 };
+
+/** Type guard for the {@link EmitNotification} payload mappers, whose `ret` is typed `unknown`. */
+const isTask = (ret: unknown): ret is Task => ret instanceof Task;
 
 /**
  * Defensively parse the user-supplied requirements JSON string into an array.
@@ -195,10 +203,14 @@ export class TasksResolver {
         repo.count({ where }),
       ]);
       return {
-        tasks: entities.map((t) => ({
-          ...t,
-          requirementsJson: JSON.stringify(t.requirements ?? []),
-        })) as TaskObject[],
+        tasks: entities.map(
+          (t): TaskObject => ({
+            ...t,
+            plan: null,
+            projectRelation: null,
+            requirementsJson: JSON.stringify(t.requirements ?? []),
+          }),
+        ),
         totalCount,
       };
     }
@@ -208,10 +220,14 @@ export class TasksResolver {
       where,
     });
     return {
-      tasks: entities.map((t) => ({
-        ...t,
-        requirementsJson: JSON.stringify(t.requirements ?? []),
-      })) as TaskObject[],
+      tasks: entities.map(
+        (t): TaskObject => ({
+          ...t,
+          plan: null,
+          projectRelation: null,
+          requirementsJson: JSON.stringify(t.requirements ?? []),
+        }),
+      ),
       totalCount: entities.length,
     };
   }
@@ -238,12 +254,12 @@ export class TasksResolver {
     description: `Create a task`,
   })
   @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) =>
-    ret != null && (ret as Task).planId != null
+    isTask(ret) && ret.planId != null
       ? {
-          message: `Task created: ${(ret as Task).title}`,
-          planId: (ret as Task).planId as string,
+          message: `Task created: ${ret.title}`,
+          planId: ret.planId,
           severity: 'info' as const,
-          taskId: (ret as Task).id,
+          taskId: ret.id,
         }
       : null,
   )
@@ -339,10 +355,14 @@ export class TasksResolver {
     }
 
     return {
-      tasks: saved.map((task) => ({
-        ...task,
-        requirementsJson: JSON.stringify(task.requirements ?? []),
-      })) as TaskObject[],
+      tasks: saved.map(
+        (task): TaskObject => ({
+          ...task,
+          plan: null,
+          projectRelation: null,
+          requirementsJson: JSON.stringify(task.requirements ?? []),
+        }),
+      ),
       totalCount: saved.length,
     };
   }
@@ -355,30 +375,27 @@ export class TasksResolver {
     {
       event: NOTIFICATION_EVENT_NAMES.TASK_COMPLETED,
       payload: (ret) => {
-        if (ret == null || (ret as Task).planId == null) return null;
-        const t = ret as Task;
+        if (!isTask(ret) || ret.planId == null) return null;
 
         return {
           message:
-            t.status === 'COMPLETED'
-              ? `Task completed: ${t.title}`
-              : `Task updated: ${t.title}`,
-          planId: t.planId as string,
-          severity: (t.status === 'COMPLETED' ? 'success' : 'info') as
-            | 'success'
-            | 'info',
-          taskId: t.id,
+            ret.status === 'COMPLETED'
+              ? `Task completed: ${ret.title}`
+              : `Task updated: ${ret.title}`,
+          planId: ret.planId,
+          severity: ret.status === 'COMPLETED' ? 'success' : 'info',
+          taskId: ret.id,
         };
       },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED,
       payload: (ret) =>
-        ret != null && (ret as Task).planId != null
+        isTask(ret) && ret.planId != null
           ? {
-              planId: (ret as Task).planId as string,
-              status: (ret as Task).status,
-              taskId: (ret as Task).id,
+              planId: ret.planId,
+              status: ret.status,
+              taskId: ret.id,
             }
           : null,
     },

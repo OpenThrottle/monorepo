@@ -24,6 +24,10 @@ export const PERSISTED_CONVERSATION_AUTH_ERROR =
 export const PERSISTED_CONVERSATION_NOT_FOUND_ERROR =
   'Agent conversation not found.';
 
+/** Narrows to a plain (non-array) object record. */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * @description Returns the human JWT principal when present; otherwise null.
  */
@@ -120,12 +124,8 @@ export const parseAgentsChatTurnToolMetadata = (
   try {
     const parsed: unknown = JSON.parse(toolMetadataJson);
 
-    if (
-      parsed != null &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed)
-    ) {
-      return parsed as Record<string, unknown>;
+    if (isRecord(parsed)) {
+      return parsed;
     }
 
     return { value: parsed };
