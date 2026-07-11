@@ -139,5 +139,5 @@ findings: controlled tags in frontmatter (after migrating the parser to the `yam
 per-workspace tag vocabulary and per-project rules in the OT database, a pure
 `resolveSkillAvailability` resolver in `@openthrottle/openthrottle-skills`, and a GraphQL/MCP
 effective-availability surface. v1 is informational; enforcement via the workspace-settings
-sync path is backlog. The plan description is the canonical decision record until the design
-doc (its task 1500) lands.
+sync path is backlog. The canonical decision record is
+[skill-availability-design.md](./skill-availability-design.md).
