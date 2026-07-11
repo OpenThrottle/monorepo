@@ -12,21 +12,30 @@ vi.mock('~/routing/agents/data/resolve-monorepo-root.server', () => ({
   getMonorepoRoot: vi.fn(),
 }));
 
+vi.mock('@openthrottle/react-router-graphql', () => ({
+  executeGraphqlWithAuth: vi.fn(),
+}));
+
 const { discoverRepoSkills } =
   await import('~/routing/agents/data/discover-repo-skills.server');
 const { getMonorepoRoot } =
   await import('~/routing/agents/data/resolve-monorepo-root.server');
+const { executeGraphqlWithAuth } =
+  await import('@openthrottle/react-router-graphql');
 const { loader } = await import('../skills._index');
 
 const mockDiscoverRepoSkills = vi.mocked(discoverRepoSkills);
 const mockGetMonorepoRoot = vi.mocked(getMonorepoRoot);
+const mockExecuteGraphqlWithAuth = vi.mocked(executeGraphqlWithAuth);
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
     summary: 'Explore Nx workspace structure.',
+    tags: undefined,
   },
 ];
 
@@ -39,10 +48,20 @@ const loaderArgs: Route.LoaderArgs = {
   url: new URL(loaderRequest.url),
 };
 
+const graphqlResult = (skills: unknown): unknown => ({
+  projectSkills: {
+    skills,
+    totalCount: Array.isArray(skills) ? skills.length : 0,
+  },
+});
+
 describe('routes/skills._index loader', () => {
   beforeEach(() => {
     mockDiscoverRepoSkills.mockReset();
     mockGetMonorepoRoot.mockReset();
+    mockExecuteGraphqlWithAuth.mockReset();
+    // Default: no projectSkills rows → silent fallback to disk values.
+    mockExecuteGraphqlWithAuth.mockResolvedValue(graphqlResult([]));
   });
 
   test('calls discovery with the resolved monorepo root', async () => {
@@ -65,5 +84,38 @@ describe('routes/skills._index loader', () => {
 
     expect(mockDiscoverRepoSkills).toHaveBeenCalledWith(null);
     expect(result.entries).toEqual([]);
+  });
+
+  test('overlays projectSkills flag+tags onto disk entries, keyed by slug', async () => {
+    mockGetMonorepoRoot.mockReturnValue('/workspace/openthrottle');
+    mockDiscoverRepoSkills.mockReturnValue(SAMPLE_ENTRIES);
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      graphqlResult([
+        {
+          slug: 'nx-workspace',
+          staticDisableModelInvocation: true,
+          tags: ['nx'],
+        },
+      ]),
+    );
+
+    const result = await loader(loaderArgs);
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0]).toMatchObject({
+      disableModelInvocation: true,
+      slug: 'nx-workspace',
+      tags: ['nx'],
+    });
+  });
+
+  test('falls back silently to disk values when the GraphQL query throws', async () => {
+    mockGetMonorepoRoot.mockReturnValue('/workspace/openthrottle');
+    mockDiscoverRepoSkills.mockReturnValue(SAMPLE_ENTRIES);
+    mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('DB not ingested'));
+
+    const result = await loader(loaderArgs);
+
+    expect(result.entries).toEqual(SAMPLE_ENTRIES);
   });
 });

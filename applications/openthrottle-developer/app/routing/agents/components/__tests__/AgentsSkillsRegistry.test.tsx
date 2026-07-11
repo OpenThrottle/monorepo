@@ -9,16 +9,20 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/unique-alpha/SKILL.md',
     slug: 'unique-alpha',
     summary: 'Alpha summary for registry tests.',
+    tags: undefined,
   },
   {
+    disableModelInvocation: undefined,
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/unique-beta/SKILL.md',
     slug: 'unique-beta',
     summary: 'Beta summary only in cursor tree.',
+    tags: undefined,
   },
 ];
 

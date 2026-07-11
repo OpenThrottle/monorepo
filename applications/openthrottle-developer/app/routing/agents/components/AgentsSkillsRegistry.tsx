@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -104,6 +105,15 @@ export const AgentsSkillsRegistry = (
               <p className="text-muted-foreground pt-1 font-mono text-xs break-all">
                 {entry.repoRelativePath}
               </p>
+              {entry.tags !== undefined && entry.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1 pt-2">
+                  {entry.tags.map((tag) => (
+                    <Badge color="slate" key={tag} size="xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2 pt-0">
               <Button

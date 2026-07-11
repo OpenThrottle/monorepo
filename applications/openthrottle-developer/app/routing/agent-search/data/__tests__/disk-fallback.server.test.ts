@@ -47,16 +47,20 @@ describe('diskFallbackSearch', () => {
   test('keyword-ranks matching skills and tags them source:disk', () => {
     mockSkills.mockReturnValue([
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/git-commit/SKILL.md',
         slug: 'git-commit',
         summary: 'Helps you commit changes with conventional messages.',
+        tags: undefined,
       },
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
         slug: 'nx-workspace',
         summary: 'Explore the workspace.',
+        tags: undefined,
       },
     ]);
 
@@ -74,10 +78,12 @@ describe('diskFallbackSearch', () => {
   test('only scans the requested prompt types', () => {
     mockSkills.mockReturnValue([
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/git-commit/SKILL.md',
         slug: 'git-commit',
         summary: 'commit helper',
+        tags: undefined,
       },
     ]);
 

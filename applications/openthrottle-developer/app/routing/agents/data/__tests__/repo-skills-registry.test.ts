@@ -21,25 +21,31 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('prefers agents layout when slug appears in agents and cursor', () => {
     const entries: RepoSkillEntry[] = [
       {
+        disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/shared/SKILL.md',
         slug: 'shared',
         summary: 'Cursor copy',
+        tags: undefined,
       },
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
         slug: 'shared',
         summary: 'Agents canonical',
+        tags: undefined,
       },
     ];
 
     expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual([
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
         slug: 'shared',
         summary: 'Agents canonical',
+        tags: undefined,
       },
     ]);
   });
@@ -47,10 +53,12 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('keeps cursor-only slugs', () => {
     const entries: RepoSkillEntry[] = [
       {
+        disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/cursor-only/SKILL.md',
         slug: 'cursor-only',
         summary: 'Cursor only',
+        tags: undefined,
       },
     ];
 
@@ -66,16 +74,20 @@ describe('getRepoSkillsRegistryCounts', () => {
   test('counts agents layout entries', () => {
     const entries: RepoSkillEntry[] = [
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/a/SKILL.md',
         slug: 'a',
         summary: 'A',
+        tags: undefined,
       },
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/b/SKILL.md',
         slug: 'b',
         summary: 'B',
+        tags: undefined,
       },
     ];
     expect(getRepoSkillsRegistryCounts(entries)).toEqual({
@@ -87,10 +99,12 @@ describe('getRepoSkillsRegistryCounts', () => {
   test('counts cursor layout entries', () => {
     const entries: RepoSkillEntry[] = [
       {
+        disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/x/SKILL.md',
         slug: 'x',
         summary: 'X',
+        tags: undefined,
       },
     ];
     expect(getRepoSkillsRegistryCounts(entries)).toEqual({
@@ -102,22 +116,28 @@ describe('getRepoSkillsRegistryCounts', () => {
   test('counts mixed layouts', () => {
     const entries: RepoSkillEntry[] = [
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/a/SKILL.md',
         slug: 'a',
         summary: 'A',
+        tags: undefined,
       },
       {
+        disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/a/SKILL.md',
         slug: 'a',
         summary: 'Cursor A',
+        tags: undefined,
       },
       {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/b/SKILL.md',
         slug: 'b',
         summary: 'B',
+        tags: undefined,
       },
     ];
     expect(getRepoSkillsRegistryCounts(entries)).toEqual({

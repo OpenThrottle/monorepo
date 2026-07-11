@@ -96,6 +96,45 @@ describe('discoverRepoSkills', () => {
     ]);
   });
 
+  test('threads disable-model-invocation and tags from frontmatter into the entry', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'github-commit',
+      [
+        'name: github-commit',
+        'description: Commit via a guarded skill.',
+        'disable-model-invocation: true',
+        'tags:',
+        '  - git',
+        '  - github',
+      ].join('\n'),
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.disableModelInvocation).toBe(true);
+    expect(entry?.tags).toEqual(['git', 'github']);
+  });
+
+  test('leaves disable-model-invocation and tags undefined when frontmatter omits them', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'plain-skill',
+      'name: plain-skill\ndescription: No flag, no tags.',
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.disableModelInvocation).toBeUndefined();
+    expect(entry?.tags).toBeUndefined();
+  });
+
   test('uses folder name for slug when frontmatter name is missing', () => {
     const root = makeTempDir();
 

@@ -110,6 +110,11 @@ export type AddPermissionToRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+export type AddSkillTagInput = {
+  /** Kebab-case tag slug to add (e.g. "pr-review"). */
+  tag: Scalars['String']['input'];
+};
+
 /** A ranked agent-asset match from semantic search over custom_prompt embeddings. */
 export type AgentAssetChunk = {
   __typename?: 'AgentAssetChunk';
@@ -1171,6 +1176,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Add a permission to a role */
   addPermissionToRole: Scalars['Boolean']['output'];
+  /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
+  addSkillTag: SkillTagObject;
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
@@ -1269,6 +1276,10 @@ export type Mutation = {
   removeRoleFromServiceAccount: Scalars['Boolean']['output'];
   /** Remove a role from a user */
   removeRoleFromUser: Scalars['Boolean']['output'];
+  /** Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. */
+  removeSkillTag: Scalars['Boolean']['output'];
+  /** Rename a tag in the authenticated user's skill-tag vocabulary. */
+  renameSkillTag: SkillTagObject;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
   /** Restore a soft-deleted custom prompt */
@@ -1328,6 +1339,10 @@ export type Mutation = {
 
 export type MutationAddPermissionToRoleArgs = {
   input: AddPermissionToRoleInput;
+};
+
+export type MutationAddSkillTagArgs = {
+  input: AddSkillTagInput;
 };
 
 export type MutationAgentsRunChatTurnArgs = {
@@ -1512,6 +1527,14 @@ export type MutationRemoveRoleFromServiceAccountArgs = {
 
 export type MutationRemoveRoleFromUserArgs = {
   input: RemoveRoleFromUserInput;
+};
+
+export type MutationRemoveSkillTagArgs = {
+  input: RemoveSkillTagInput;
+};
+
+export type MutationRenameSkillTagArgs = {
+  input: RenameSkillTagInput;
 };
 
 export type MutationReorderPlanTasksArgs = {
@@ -1902,6 +1925,26 @@ export type ProjectObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag. */
+export type ProjectSkillObject = {
+  __typename?: 'ProjectSkillObject';
+  /** Skill slug (the skill frontmatter `name`). */
+  slug: Scalars['String']['output'];
+  /** Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled. */
+  staticDisableModelInvocation?: Maybe<Scalars['Boolean']['output']>;
+  /** Static frontmatter tags for this skill (empty when none). */
+  tags: Array<Scalars['String']['output']>;
+};
+
+/** A project's ingested skill universe, alphabetically by slug. */
+export type ProjectSkillsResult = {
+  __typename?: 'ProjectSkillsResult';
+  /** Skills ingested for the project, alphabetically by slug. */
+  skills: Array<ProjectSkillObject>;
+  /** Number of skills in the universe. */
+  totalCount: Scalars['Int']['output'];
+};
+
 export type PrsMergedPerPeriodInput = {
   /** Repository owner (e.g. GitHub username or org) */
   owner: Scalars['String']['input'];
@@ -2062,6 +2105,8 @@ export type Query = {
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
+  /** A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability. */
+  projectSkills: ProjectSkillsResult;
   /** List all projects, ordered by createdAt descending */
   projects: Array<ProjectObject>;
   /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. Paginates merged PRs up to 1000 (10 pages); older PRs beyond the cap are excluded. */
@@ -2106,6 +2151,8 @@ export type Query = {
   serviceAccountCredentials: Array<ServiceAccountCredentialObject>;
   /** List all service accounts (admin, human only). */
   serviceAccounts: Array<ServiceAccountObject>;
+  /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
+  skillTagVocabulary: SkillTagVocabularyResult;
   /** Get a task by ID */
   task?: Maybe<TaskObject>;
   /** Get a task embedding by ID */
@@ -2278,6 +2325,10 @@ export type QueryPrTimeInStateSummaryArgs = {
 
 export type QueryProjectArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryProjectSkillsArgs = {
+  projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type QueryPrsMergedPerPeriodArgs = {
@@ -2571,6 +2622,18 @@ export type RemoveRoleFromUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type RemoveSkillTagInput = {
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+};
+
+export type RenameSkillTagInput = {
+  /** Existing tag slug to rename. */
+  from: Scalars['String']['input'];
+  /** New kebab-case tag slug. */
+  to: Scalars['String']['input'];
+};
+
 export type ReorderPlanTasksInput = {
   /** Plan id whose tasks are being reordered */
   planId: Scalars['ID']['input'];
@@ -2777,6 +2840,26 @@ export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
   success: Scalars['Boolean']['output'];
+};
+
+/** A single tag in the authenticated user's skill-tag vocabulary. */
+export type SkillTagObject = {
+  __typename?: 'SkillTagObject';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  /** Kebab-case tag slug, unique per user. */
+  tag: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+/** The authenticated user's skill-tag vocabulary, seeded from the platform default on first read. */
+export type SkillTagVocabularyResult = {
+  __typename?: 'SkillTagVocabularyResult';
+  /** Tags in the user's vocabulary, alphabetically by tag. */
+  tags: Array<SkillTagObject>;
+  /** Number of tags in the vocabulary. */
+  totalCount: Scalars['Int']['output'];
 };
 
 export type StartConversationStreamInput = {
@@ -5393,6 +5476,24 @@ export type ApplyWorkspaceEditorConfigurationMutation = {
       filesystemPath: string;
       repositoryId: string;
       warnings: Array<string>;
+    }>;
+  };
+};
+
+export type ProjectSkillsQueryVariables = Exact<{
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+export type ProjectSkillsQuery = {
+  __typename?: 'Query';
+  projectSkills: {
+    __typename?: 'ProjectSkillsResult';
+    totalCount: number;
+    skills: Array<{
+      __typename?: 'ProjectSkillObject';
+      slug: string;
+      staticDisableModelInvocation?: boolean | null;
+      tags: Array<string>;
     }>;
   };
 };
@@ -12726,6 +12827,69 @@ export const ApplyWorkspaceEditorConfigurationDocument = {
   ApplyWorkspaceEditorConfigurationMutation,
   ApplyWorkspaceEditorConfigurationMutationVariables
 >;
+export const ProjectSkillsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectSkills' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectSkills' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'staticDisableModelInvocation',
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectSkillsQuery, ProjectSkillsQueryVariables>;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',
   definitions: [

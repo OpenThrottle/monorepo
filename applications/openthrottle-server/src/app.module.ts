@@ -70,6 +70,7 @@ import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
 import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
+import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
@@ -238,6 +239,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           PlanEmbeddingsGraphqlModule,
           PlanOutputStreamGraphqlModule,
           PlansGraphqlModule,
+          ProjectSkillsGraphqlModule,
           ProjectsGraphqlModule,
           QueueJobLogsGraphqlModule,
           QueuesGraphqlModule,

@@ -34,6 +34,15 @@ export class ProjectsService {
   }
 
   /**
+   * @description Finds a project by its `nx_project_name`, or null if not found.
+   * Used to anchor the dogfood monorepo project (`nx_project_name = 'monorepo'`)
+   * when no explicit projectId is supplied.
+   */
+  async findByNxProjectName(nxProjectName: string): Promise<Project | null> {
+    return this.projectRepository.findOne({ where: { nxProjectName } });
+  }
+
+  /**
    * @description Returns projects ordered by created_at descending. Accepts an
    * optional clamped `{ limit, offset }` so the result set stays bounded.
    */

@@ -28,10 +28,19 @@ export const REQUIRED_AGENTS_SKILL_SLUGS = [
 ] as const;
 
 export interface RepoSkillEntry {
+  /**
+   * Tri-state static frontmatter `disable-model-invocation`: `true` = auto
+   * (model-initiated) invocation suppressed, `false` = explicitly enabled,
+   * `undefined` = unset (frontmatter omits the key). Sourced from disk
+   * frontmatter, overridden by the `projectSkills` GraphQL value when present.
+   */
+  readonly disableModelInvocation: boolean | undefined;
   readonly layout: SkillRegistryLayout;
   readonly repoRelativePath: string;
   readonly slug: string;
   readonly summary: string;
+  /** Static frontmatter tags; `undefined` when the frontmatter omits `tags`. */
+  readonly tags: readonly string[] | undefined;
 }
 
 /**

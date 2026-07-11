@@ -3,6 +3,7 @@ import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
   AddPermissionToRoleInput,
+  AddSkillTagInput,
   AgentAssetSearchInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
@@ -73,6 +74,8 @@ import {
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
   RemoveRoleFromUserInput,
+  RemoveSkillTagInput,
+  RenameSkillTagInput,
   ReorderPlanTasksInput,
   RepeatableJobsInput,
   RetryJobInput,
@@ -157,6 +160,14 @@ export function AddPermissionToRoleInputSchema(): z.ZodObject<
   return z.object({
     permissionId: z.string(),
     roleId: z.string(),
+  });
+}
+
+export function AddSkillTagInputSchema(): z.ZodObject<
+  Properties<AddSkillTagInput>
+> {
+  return z.object({
+    tag: z.string(),
   });
 }
 
@@ -824,6 +835,23 @@ export function RemoveRoleFromUserInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     userId: z.string(),
+  });
+}
+
+export function RemoveSkillTagInputSchema(): z.ZodObject<
+  Properties<RemoveSkillTagInput>
+> {
+  return z.object({
+    tag: z.string(),
+  });
+}
+
+export function RenameSkillTagInputSchema(): z.ZodObject<
+  Properties<RenameSkillTagInput>
+> {
+  return z.object({
+    from: z.string(),
+    to: z.string(),
   });
 }
 
