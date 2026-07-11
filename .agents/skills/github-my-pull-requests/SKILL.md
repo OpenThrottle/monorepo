@@ -1,6 +1,7 @@
 ---
 name: github-my-pull-requests
 description: 'List my pull requests in the current repository'
+tags: [github]
 disable-model-invocation: true
 ---
 

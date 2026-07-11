@@ -301,6 +301,38 @@ const KNOWN_CONTENT_DIVERGENCES: readonly KnownDivergence[] = [
 ];
 
 /**
+ * The `tags` key is a YAML flow sequence (`tags: [git, github]`), added to the
+ * `.agents/skills` corpus by the curated tagging pass. The retired regex parser
+ * had no sequence support at all: it treated the whole `[git, github]` as an
+ * opaque scalar and kept the raw bracketed string verbatim. The new
+ * `yaml`-backed parser correctly yields a `string[]`. This is a
+ * representational difference of the *same content* (like the ''→absent change
+ * below), not content loss — the intended tags are identical. To compare real
+ * content rather than this known shape change, canonicalize *only* the `tags`
+ * key to an array on both sides: the new parser's value is already an array,
+ * and the retired parser's raw `[a, b]` string is parsed into the array it
+ * denotes. Any genuine difference in tag *content* (a tag present on one side
+ * but not the other) still yields unequal arrays and fails the comparison.
+ */
+const canonicalizeTagsValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return [...value];
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const inner =
+      trimmed.startsWith('[') && trimmed.endsWith(']')
+        ? trimmed.slice(1, -1)
+        : trimmed;
+    return inner
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+  return value;
+};
+
+/**
  * The retired parser represented "no value" (a bare `key:` with nothing
  * after it) as an empty string; the new parser represents it as an absent
  * key (`undefined`), per this migration's tri-state contract (absent /
@@ -311,7 +343,8 @@ const KNOWN_CONTENT_DIVERGENCES: readonly KnownDivergence[] = [
  * before comparing so the assertion is about real content, not this known
  * shape change. Because this drops '' independently on each side, a real
  * asymmetric difference (one side '', the other side a real value) still
- * surfaces as a mismatch below.
+ * surfaces as a mismatch below. The `tags` flow-sequence divergence is folded
+ * away the same way via `canonicalizeTagsValue` (see its docstring).
  */
 const normalizeForComparison = (
   fields: Readonly<Record<string, unknown>>,
@@ -321,7 +354,7 @@ const normalizeForComparison = (
     if (value === '') {
       continue;
     }
-    normalized[key] = value;
+    normalized[key] = key === 'tags' ? canonicalizeTagsValue(value) : value;
   }
   return normalized;
 };

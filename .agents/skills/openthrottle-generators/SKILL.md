@@ -10,6 +10,7 @@ description: >-
   services. When docs say remix but Nx fails, use react-router generator
   instead. Defer graph/target exploration to nx-workspace; generic non-OT
   generator flow to nx-generate; run targets after codegen to nx-run-tasks.
+tags: [nx, openthrottle]
 ---
 
 # OpenThrottle generators and Nx conventions

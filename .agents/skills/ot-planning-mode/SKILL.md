@@ -5,6 +5,7 @@ description: >-
   openthrottle-mcp create_plan and create_task. USE WHEN the user runs
   /ot/planning-mode, has an unstructured PRD or idea, or wants documented plan
   and task ids before Ralph or manual execution—keep output concise.
+tags: [openthrottle, planning]
 disable-model-invocation: true
 ---
 

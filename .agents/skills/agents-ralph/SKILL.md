@@ -6,6 +6,7 @@ description: >-
   plan_output_stream; link_commit only after merge squash. USE WHEN running
   /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
   executing OT plan tasks with Plan-Id and Task-Id traceability.
+tags: [commit, openthrottle, planning]
 disable-model-invocation: false
 ---
 

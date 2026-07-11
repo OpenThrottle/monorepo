@@ -4,6 +4,7 @@ description: >-
   Turn a PR, branch, commit, or git diff into an interactive visual recap with
   diagrams, file maps, API/schema summaries, annotated diffs, and focused review
   notes.
+tags: [git, pr-review]
 metadata:
   visibility: exported
 ---
