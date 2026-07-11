@@ -4,8 +4,8 @@ import { Client } from 'pg';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 /**
- * @description Truncates all cortex tables (plans, tasks, embeddings, commit_links, plan_output_stream).
- * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
+ * @description Truncates all openthrottle tables (plans, tasks, embeddings, commit_links, plan_output_stream).
+ * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
  * Run before a fresh ingest to avoid duplicate plans.
  */
 

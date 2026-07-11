@@ -1,19 +1,19 @@
 # Plans queue: reproducing job interrupted by server restart
 
-This doc describes how to reproduce the issue where a BullMQ plan-run job does not pick back up after the server is restarted mid-job. It supports the Cortex plan **Plans queue: job does not pick back up after server restart** (Plan-Id: `8795692b-4531-4cff-b6d0-0a219da9fe3e`) and the follow-up tasks (stalled job handling, plan status reconciliation).
+This doc describes how to reproduce the issue where a BullMQ plan-run job does not pick back up after the server is restarted mid-job. It supports the OpenThrottle plan **Plans queue: job does not pick back up after server restart** (Plan-Id: `8795692b-4531-4cff-b6d0-0a219da9fe3e`) and the follow-up tasks (stalled job handling, plan status reconciliation).
 
 ## Prerequisites
 
-- **Cortex DB** and **Redis** running (e.g. `docker compose -f docker-compose-databases.yml up -d cortex redis` or your stack).
+- **OpenThrottle DB** and **Redis** running (e.g. `docker compose -f docker-compose-databases.yml up -d openthrottle redis` or your stack).
 - **openthrottle-server** running (e.g. `nx serve openthrottle-server` or your start command).
-- A **plan** that exists in Cortex (e.g. create one via Cortex UI or MCP, or use an existing plan ID).
+- A **plan** that exists in OpenThrottle (e.g. create one via OpenThrottle UI or MCP, or use an existing plan ID).
 - Optional: a plan with a task that runs long enough that you can restart the server while the job is **active** (e.g. a task that sleeps or does many iterations). Otherwise you can restart as soon as the job starts.
 
 ## Steps to reproduce
 
 ### 1. Enqueue a plan run
 
-**Option A – Cortex UI (developer app)**
+**Option A – OpenThrottle UI (developer app)**
 
 - Open the plan detail page for the plan you want to run.
 - Use the “Run plan” (or equivalent) action. This calls the `enqueuePlanRun` GraphQL mutation and adds a job to the `plans` queue.
@@ -64,7 +64,7 @@ While the plan is **IN_PROGRESS** and the job is being processed:
 
 ## What to observe
 
-After restart, check both **BullMQ/Redis job state** and **Cortex plan status**.
+After restart, check both **BullMQ/Redis job state** and **OpenThrottle plan status**.
 
 ### BullMQ job state (Redis / API)
 
@@ -133,7 +133,7 @@ This shows whether the job is still active, completed, or failed, and any `faile
 
 If you have Redis CLI access, you can inspect BullMQ keys for the `plans` queue (e.g. `bull:plans:*`) to see active/waiting/completed/failed sets and job data. The exact keys depend on your BullMQ version.
 
-### Cortex plan status
+### OpenThrottle plan status
 
 Query the plan to see if its status was left as **IN_PROGRESS** or was reset:
 
@@ -160,7 +160,7 @@ This section documents the behavior that is relevant to "job does not pick back 
 
 ### Processor
 
-- **Plan status on job start:** The plans processor sets the Cortex plan status to **IN_PROGRESS** at the beginning of `process(job)` (see `applications/openthrottle-server/src/queues/plans/plans.processor.ts`: `repo.update({ id: planId }, { status: 'IN_PROGRESS' })`). It then runs Ralph (either via worktree workflow when `WORKTREE_TARGETS` is set, or in process cwd). On normal completion or failure the processor returns; it does not explicitly set the plan status to completed/failed in all paths—and on server kill it never runs the completion path, so the plan is left **IN_PROGRESS**.
+- **Plan status on job start:** The plans processor sets the OpenThrottle plan status to **IN_PROGRESS** at the beginning of `process(job)` (see `applications/openthrottle-server/src/queues/plans/plans.processor.ts`: `repo.update({ id: planId }, { status: 'IN_PROGRESS' })`). It then runs Ralph (either via worktree workflow when `WORKTREE_TARGETS` is set, or in process cwd). On normal completion or failure the processor returns; it does not explicitly set the plan status to completed/failed in all paths—and on server kill it never runs the completion path, so the plan is left **IN_PROGRESS**.
 
 ### Worker
 
@@ -210,6 +210,6 @@ The plans Worker is configured with **explicit** `lockDuration`, `stalledInterva
 3. After ~60 s: Lock expires in Redis; job is still in the “active” set but the lock is gone.
 4. When the server is back up: A new Worker connects and runs the **stalled job checker** every `stalledInterval` (30 s).
 5. On the next stalled check: BullMQ moves the job back to **waiting** (or to **failed** if `maxStalledCount` is exceeded).
-6. The worker picks the job from the waiting list and processes it again. **Plan status reconciliation** (on startup and on failed/stalled events) keeps Cortex plan status in sync with job state.
+6. The worker picks the job from the waiting list and processes it again. **Plan status reconciliation** (on startup and on failed/stalled events) keeps OpenThrottle plan status in sync with job state.
 
-**Conclusion:** With the explicit plans Worker options, **active jobs become stalled and re-enter the waiting queue** after a restart within about **lockDuration + stalledInterval** (e.g. 60 s + 30 s = 90 s). Plan status reconciliation keeps Cortex in sync.
+**Conclusion:** With the explicit plans Worker options, **active jobs become stalled and re-enter the waiting queue** after a restart within about **lockDuration + stalledInterval** (e.g. 60 s + 30 s = 90 s). Plan status reconciliation keeps OpenThrottle in sync.

@@ -2,7 +2,7 @@
 
 **Dockerfile.ReactRouter.v2** is the optimization target for React Router apps (for example **openthrottle-developer**). **Dockerfile.ReactRouter** stays the working baseline used by root `docker-compose.yml` unless you point the service at the v2 file.
 
-See [docker-image-build-strategy.md](./docker-image-build-strategy.md). Plan: **Docker image optimizations for NX monorepo** (Cortex Plan-Id: `03259ada-6681-4bb0-bb04-a45d944ab223`).
+See [docker-image-build-strategy.md](./docker-image-build-strategy.md). Plan: **Docker image optimizations for NX monorepo** (OpenThrottle Plan-Id: `03259ada-6681-4bb0-bb04-a45d944ab223`).
 
 ---
 

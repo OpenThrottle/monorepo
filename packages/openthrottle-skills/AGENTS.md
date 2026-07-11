@@ -1,7 +1,7 @@
 # @openthrottle/openthrottle-skills — agent notes
 
 Parsers, Zod schemas, and validation for `.agents/` skill/rule/persona frontmatter, plus
-on-disk walking and mapping of those assets into ingest records for the Cortex knowledge
+on-disk walking and mapping of those assets into ingest records for the OpenThrottle knowledge
 base.
 
 **Consumed by:** `openthrottle-developer` only.

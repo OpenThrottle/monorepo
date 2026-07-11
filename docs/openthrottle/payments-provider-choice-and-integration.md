@@ -11,7 +11,7 @@ This document records the **narrowed provider choice** and **integration approac
 **Approach: Hybrid (Solution C).**
 
 - **Rationale:** Aligns with [payments-review-and-next-step.md](./payments-review-and-next-step.md): OpenThrottle keeps product/plan and entitlement semantics in its own API (openthrottle-server); the provider handles payment UI and (optionally) tax/compliance. Balance of control vs effort; no full “own API” lifecycle/dunning unless needed later.
-- **Flow:** NestJS creates a checkout session (or equivalent); React Router shows pricing/plan UI and “Upgrade” / “Manage” actions that call openthrottle-server; server talks to the provider and returns redirect URL or opens provider overlay; after payment, provider webhooks hit openthrottle-server; server updates entitlement/plan state and keeps mapping provider customer/subscription IDs to Cortex users.
+- **Flow:** NestJS creates a checkout session (or equivalent); React Router shows pricing/plan UI and “Upgrade” / “Manage” actions that call openthrottle-server; server talks to the provider and returns redirect URL or opens provider overlay; after payment, provider webhooks hit openthrottle-server; server updates entitlement/plan state and keeps mapping provider customer/subscription IDs to OpenThrottle users.
 
 ---
 
@@ -40,7 +40,7 @@ This document records the **narrowed provider choice** and **integration approac
 
 - **openthrottle-server (NestJS):**
   - **Checkout:** Module that creates a checkout session (Stripe Checkout Session, Paddle overlay params, or Lemon Squeezy Checkout) with the chosen provider; returns URL or client payload for redirect/overlay.
-  - **Webhooks:** Dedicated endpoint(s) (e.g. `POST /webhooks/stripe`) to receive provider events; verify signatures; update subscription/entitlement state in Cortex (or openthrottle DB); keep handlers idempotent.
+  - **Webhooks:** Dedicated endpoint(s) (e.g. `POST /webhooks/stripe`) to receive provider events; verify signatures; update subscription/entitlement state in OpenThrottle (or openthrottle DB); keep handlers idempotent.
   - **Entitlements:** Product/plan and “current subscription” are owned by your API; map provider customer/subscription IDs to your user/plan model; expose via GraphQL for admin and developer UIs.
 - **Frontend (React Router — openthrottle-admin and/or openthrottle-developer):**
   - Pricing/plan UI and “Upgrade” / “Manage” actions call openthrottle-server GraphQL (or REST); server creates session and returns redirect/overlay info; user completes payment on provider’s page/overlay; return URLs point back to your app; webhook updates state so UI reflects new plan.
@@ -57,7 +57,7 @@ Details (webhook contract, exact GraphQL shape, rollout) belong in a **detailed 
 No implementation of payments in openthrottle-server or admin UI until the provider (and any MoR preference) is confirmed. After that:
 
 1. **Detailed spec and implementation plan (recommended next step)**  
-   Create a spec for the Hybrid approach with the chosen provider: NestJS modules (checkout session, webhooks), webhook contract, React Router flows (pricing/plan UI, upgrade/manage), entitlement model, and rollout steps. This can be tracked as a dedicated Cortex task (e.g. “Payments: detailed spec and API design”) if not already covered.
+   Create a spec for the Hybrid approach with the chosen provider: NestJS modules (checkout session, webhooks), webhook contract, React Router flows (pricing/plan UI, upgrade/manage), entitlement model, and rollout steps. This can be tracked as a dedicated OpenThrottle task (e.g. “Payments: detailed spec and API design”) if not already covered.
 
 2. **API integration in openthrottle-server**  
    Implement the payments provider integration in openthrottle-server (GraphQL or internal services for subscriptions/billing) per the plan task **8eeeaba2-0f2a-4cd7-ab3c-7aee38fb028b** (“Payments: API integration in openthrottle-server (after TBD)”). Do this after (or in parallel with) the detailed spec so that webhook contract and entitlement model are agreed.

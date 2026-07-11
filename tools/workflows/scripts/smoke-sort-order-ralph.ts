@@ -14,7 +14,7 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 import {
   ensureDatabaseReachableOrExit,
-  getCortexConfigOrExit,
+  getOpenThrottleConfigOrExit,
   getTasksByPlanId,
 } from '../src/utils/openthrottle-ralph';
 
@@ -233,7 +233,7 @@ const runSmokeTest = async (): Promise<SmokeResult> => {
 };
 
 const main = async (): Promise<void> => {
-  const config = getCortexConfigOrExit();
+  const config = getOpenThrottleConfigOrExit();
   await ensureDatabaseReachableOrExit(config);
 
   const result = await runSmokeTest();

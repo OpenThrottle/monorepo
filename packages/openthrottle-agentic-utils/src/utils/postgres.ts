@@ -2,7 +2,7 @@ import pg from 'pg';
 
 /**
  * Env var set by BullMQ workers when spawning nested `workflow-ralph` so plan
- * lookup uses the same Cortex DB as the server even when `cwd` is another repo
+ * lookup uses the same OpenThrottle DB as the server even when `cwd` is another repo
  * whose tooling overwrites `POSTGRES_URL`.
  */
 export const OPENTHROTTLE_POSTGRES_URL_ENV = `OPENTHROTTLE_POSTGRES_URL`;

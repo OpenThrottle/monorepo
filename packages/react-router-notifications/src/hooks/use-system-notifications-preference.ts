@@ -2,7 +2,7 @@
  * @description Hook for reading and updating system notification preference (localStorage).
  * Used by NotificationBell footer to toggle desktop notifications and "only when background".
  *
- * ## Design: bridge integration and single source of truth (Cortex plan f63ec6d5-23f2-416c-ba62-c3adaa1dea50)
+ * ## Design: bridge integration and single source of truth (OpenThrottle plan f63ec6d5-23f2-416c-ba62-c3adaa1dea50)
  *
  * - **Authoritative storage:** {@link NOTIFICATIONS_STORAGE_KEY} in `config` — JSON
  *   `{ enabled?, onlyWhenBackground? }`. This is **not** the same key as the persisted

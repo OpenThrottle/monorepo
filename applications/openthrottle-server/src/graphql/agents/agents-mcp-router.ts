@@ -82,7 +82,7 @@ const wantsListPlansByStatus = (lower: string): boolean => {
   }
   return (
     /\b(list|show|what|fetch|get|give)\b/.test(lower) &&
-    /\b(plan|cortex|ot)\b/.test(lower)
+    /\b(plan|openthrottle|ot)\b/.test(lower)
   );
 };
 
@@ -161,7 +161,7 @@ export class AgentsMcpRouter {
       /\blist[_\s]?sources\b/.test(lower) ||
       /\bknowledge[-\s]?base\s+sources\b/.test(lower) ||
       (/\bwhat\s+plans\b/.test(lower) &&
-        /\b(in\s+)?(cortex|ot|kb)\b/.test(lower))
+        /\b(in\s+)?(openthrottle|ot|kb)\b/.test(lower))
     ) {
       return {
         args: {},
@@ -198,12 +198,12 @@ export class AgentsMcpRouter {
 
     const iso = raw.match(ISO_DATE_RE);
     const daysBack = parseDaysBack(lower);
-    /** Require activity/shipped/commits or Cortex wording so bare "last week" does not hit this tool. */
+    /** Require activity/shipped/commits or OpenThrottle wording so bare "last week" does not hit this tool. */
     const hasActivityIntent =
       /\bactivity\b/.test(lower) ||
       /\b(worked|shipped|ship)\b/.test(lower) ||
       /\bcommits?\b/.test(lower) ||
-      /\bcortex\b/.test(lower);
+      /\bopenthrottle\b/.test(lower);
 
     if (hasActivityIntent && (iso?.[1] != null || daysBack != null)) {
       if (iso?.[1] != null) {

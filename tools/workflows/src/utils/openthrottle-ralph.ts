@@ -3,7 +3,7 @@
  * Default transport is GraphQL (`executeWorkflowGraphqlV2` + codegen documents). Roll back with
  * `WORKFLOW_RALPH_TRANSPORT=postgres-direct`.
  *
- * All workflow entry points require OpenThrottle at startup; use {@link getCortexConfigOrExit} and
+ * All workflow entry points require OpenThrottle at startup; use {@link getOpenThrottleConfigOrExit} and
  * {@link ensureDatabaseReachableOrExit} for a single fail-fast flow.
  */
 
@@ -24,7 +24,7 @@ import {
 } from './openthrottle-ralph-graphql';
 import {
   appendPlanOutputPostgres,
-  ensureCortexReachablePostgres,
+  ensureOpenThrottleReachablePostgres,
   ensureProjectForNxNamePostgres,
   getPlanByIdPostgres,
   getTaskByIdPostgres,
@@ -74,7 +74,7 @@ export {
 export { WORKFLOW_RALPH_TRANSPORT_ENV } from './workflow-transport';
 export type { WorkflowRalphTransport } from './workflow-transport';
 
-/** Fatal error prefix used by getCortexConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
+/** Fatal error prefix used by getOpenThrottleConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
 export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
@@ -122,7 +122,7 @@ export const resolveWorkflowRalphConfig = (): WorkflowRalphConfig | null => {
 /**
  * @description Returns OpenThrottle config or exits with a clear fatal message.
  */
-export const getCortexConfigOrExit = (): WorkflowRalphConfig => {
+export const getOpenThrottleConfigOrExit = (): WorkflowRalphConfig => {
   const config = resolveWorkflowRalphConfig();
 
   if (!config) {
@@ -145,7 +145,7 @@ export const ensureDatabaseReachableOrExit = async (
   config: WorkflowRalphConfig,
 ): Promise<void> => {
   try {
-    await ensureCortexReachable(config);
+    await ensureOpenThrottleReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`${RALPH_FATAL_PREFIX}${msg}\n`);
@@ -156,11 +156,11 @@ export const ensureDatabaseReachableOrExit = async (
 /**
  * @description Verifies OpenThrottle is reachable before plan/task I/O.
  */
-export const ensureCortexReachable = async (
+export const ensureOpenThrottleReachable = async (
   config: WorkflowRalphConfig,
 ): Promise<void> => {
   if (isPostgresTransport(config)) {
-    await ensureCortexReachablePostgres(config);
+    await ensureOpenThrottleReachablePostgres(config);
     return;
   }
 

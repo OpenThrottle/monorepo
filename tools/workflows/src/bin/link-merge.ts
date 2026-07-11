@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * @description Links the squash commit (after PR merge) to a Cortex plan. Run after merging a PR so commit_links stores the one SHA on main. Option A: no pre-merge linking; activity-by-date reflects only landed commits.
+ * @description Links the squash commit (after PR merge) to a OpenThrottle plan. Run after merging a PR so commit_links stores the one SHA on main. Option A: no pre-merge linking; activity-by-date reflects only landed commits.
  */
 
 import {
   ensureDatabaseReachableOrExit,
-  getCortexConfigOrExit,
+  getOpenThrottleConfigOrExit,
   insertCommitLink,
 } from '../utils/openthrottle-ralph';
 
@@ -33,15 +33,15 @@ function parseArgs(): {
       console.log(`
 Usage: workflow-link-merge --plan <uuid> --sha <sha> --repo <owner/repo> [--message <msg>] [--task <uuid>]
 
-Links the squash commit (after PR merge) to a Cortex plan.
-Cortex required (POSTGRES_URL or POSTGRES_*). See tools/workflows/README.md.
+Links the squash commit (after PR merge) to a OpenThrottle plan.
+OpenThrottle required (POSTGRES_URL or POSTGRES_*). See tools/workflows/README.md.
 
 Options:
-  --plan <uuid>   Cortex plan ID (required)
+  --plan <uuid>   OpenThrottle plan ID (required)
   --sha <sha>     Squash commit SHA from the merged PR (required)
   --repo <repo>  Repo identifier, e.g. owner/repo (required)
   --message <msg> Optional message (e.g. PR title)
-  --task <uuid>  Optional Cortex task ID
+  --task <uuid>  Optional OpenThrottle task ID
 `);
       process.exit(0);
     }
@@ -86,7 +86,7 @@ Options:
 const main = async (): Promise<void> => {
   const { message, planId, repo, sha, taskId } = parseArgs();
 
-  const config = getCortexConfigOrExit();
+  const config = getOpenThrottleConfigOrExit();
   await ensureDatabaseReachableOrExit(config);
 
   try {

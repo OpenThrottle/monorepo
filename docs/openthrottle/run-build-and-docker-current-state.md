@@ -52,7 +52,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_URL`     | OpenThrottle/Postgres.                                                                                                                                                      |
 | `REDIS_HOST`, `REDIS_PORT`                                                                                | BullMQ and GraphQL cache (default Redis 6379).                                                                                                                              |
 | `GITHUB_TOKEN`                                                                                            | Optional; for GitHub API (e.g. list PRs).                                                                                                                                   |
-| `WORKSPACE_ROOT`                                                                                          | Optional; when API is not started from repo root (e.g. doc-ingestion, plans processor spawn `pnpm run cortex:import-docs` / Ralph from this path).                          |
+| `WORKSPACE_ROOT`                                                                                          | Optional; when API is not started from repo root (e.g. doc-ingestion, plans processor spawn `pnpm run openthrottle:import-docs` / Ralph from this path).                    |
 | `DOC_INGESTION_CRON`, `DOC_INGESTION_DIRECTORIES`, `DOC_INGESTION_SCOPE`                                  | Doc-ingestion queue (see docs/openthrottle/doc-ingestion-job-spec.md).                                                                                                      |
 | `DATABASE_BACKUP_CRON`, `DATABASE_BACKUP_TZ`, `DATABASE_BACKUP_ENABLED`, `DATABASE_BACKUP_JOB_TIMEOUT_MS` | Scheduled `pnpm run database:backup` (see docs/openthrottle/database-backup-scheduled-job-spec.md). Requires `pg_dump`, `zip`, and `WORKSPACE_ROOT` when not cwd’d to repo. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`                                                              | Payments.                                                                                                                                                                   |
@@ -115,7 +115,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
   - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless `nodejs24-debian12:nonroot`), pnpm, Nx; build args `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, `PNPM_VERSION`; `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`; in-image `/health` probe; `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
   - **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production + optional `production-debian` target; `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
   - The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and the `.v2` variants have been **deleted** (v3 is the single source of truth).
-  - **`Dockerfile.Cortex`**, **`Dockerfile.PostgreSQL`**, **`Dockerfile.Postgres`** — Other uses (Cortex/Postgres); `Dockerfile.Postgres` builds the compose `openthrottle-postgres` service.
+  - **`Dockerfile.OpenThrottle`**, **`Dockerfile.PostgreSQL`**, **`Dockerfile.Postgres`** — Other uses (OpenThrottle/Postgres); `Dockerfile.Postgres` builds the compose `openthrottle-postgres` service.
 
 ### 3.2 Docker Compose
 
@@ -138,8 +138,8 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 ## 5. Monorepo scripts (root) relevant to OpenThrottle
 
-- **Cortex/import (used by server at runtime):**
-  `cortex:import`, `cortex:import-docs`, `cortex:migrate`, `cortex:backup`, `cortex:reset` — see root `package.json`. The server can spawn `pnpm run cortex:import-docs` (and similar) when `WORKSPACE_ROOT` is set; container/deploy design should account for this if doc-ingestion or Ralph need the monorepo context.
+- **OpenThrottle/import (used by server at runtime):**
+  `openthrottle:import`, `openthrottle:import-docs`, `openthrottle:migrate`, `openthrottle:backup`, `openthrottle:reset` — see root `package.json`. The server can spawn `pnpm run openthrottle:import-docs` (and similar) when `WORKSPACE_ROOT` is set; container/deploy design should account for this if doc-ingestion or Ralph need the monorepo context.
 - **Sync (subtree push):**
   `sync:openthrottle:server`, `sync:openthrottle:developer` — push app subtrees to separate repos; not used for Docker build.
 

@@ -4,11 +4,11 @@ This document lists local development services and their ports so they can be ex
 
 ## Services to expose
 
-| Service                    | Port                | Description                                                                                            | Env / config                                                                                                                                             |
-| -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **openthrottle-server**    | **6021**            | NestJS API: GraphQL, REST, Socket.IO (WebSockets). Used by openthrottle-developer and tooling.         | `applications/openthrottle-server/.env.default`: `PORT="6021"`. GraphQL at `/graphql`; Socket.IO at `/socket.io`; BullMQ Board at `/queues`.             |
-| **openthrottle-developer** | **6020** (template) | React Router + Vite frontend. Connects to openthrottle-server for API and WebSocket.                   | `applications/openthrottle-developer/.env.default`: `PORT="6020"`, `API_URL_*` → `http://localhost:6021`. If `PORT` is unset, Vite defaults to **3000**. |
-| **Ollama**                 | **11434**           | Local LLM/embedding server. Used by `cortex:import`, LangChain, openthrottle-server, and other agents. | `OLLAMA_BASE_URL` default `http://localhost:11434`. See `scripts/ollama.sh`, `databases/README.md`, `.env.default`.                                      |
+| Service                    | Port                | Description                                                                                                  | Env / config                                                                                                                                             |
+| -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **openthrottle-server**    | **6021**            | NestJS API: GraphQL, REST, Socket.IO (WebSockets). Used by openthrottle-developer and tooling.               | `applications/openthrottle-server/.env.default`: `PORT="6021"`. GraphQL at `/graphql`; Socket.IO at `/socket.io`; BullMQ Board at `/queues`.             |
+| **openthrottle-developer** | **6020** (template) | React Router + Vite frontend. Connects to openthrottle-server for API and WebSocket.                         | `applications/openthrottle-developer/.env.default`: `PORT="6020"`, `API_URL_*` → `http://localhost:6021`. If `PORT` is unset, Vite defaults to **3000**. |
+| **Ollama**                 | **11434**           | Local LLM/embedding server. Used by `openthrottle:import`, LangChain, openthrottle-server, and other agents. | `OLLAMA_BASE_URL` default `http://localhost:11434`. See `scripts/ollama.sh`, `databases/README.md`, `.env.default`.                                      |
 
 > **Worktrees:** these `6010`–`6025` ports are the main checkout's. Git worktrees
 > get their own app-port block in the `7000` range (Postgres/Redis stay shared) —
@@ -16,7 +16,7 @@ This document lists local development services and their ports so they can be ex
 
 ## Optional / related services
 
-- **Postgres (OpenThrottle)** — `localhost:6010` (from `applications/openthrottle-server/.env.default`: `POSTGRES_PORT`). Typically not exposed through Caddy; used by openthrottle-server and Cortex tooling.
+- **Postgres (OpenThrottle)** — `localhost:6010` (from `applications/openthrottle-server/.env.default`: `POSTGRES_PORT`). Typically not exposed through Caddy; used by openthrottle-server and OpenThrottle tooling.
 - **Redis** — `localhost:6011` (from the same `POSTGRES_*` / Redis block in the server `.env.default`; matches root `docker-compose-databases.yml` conventions). Used by openthrottle-server (BullMQ). Not normally exposed through Caddy.
 - **GraphQL URL** — `http://localhost:6021/graphql` when using the server template on `6021`. Tools and MCP clients should use the same base URL as `openthrottle-server`. Behind Caddy, use a single API entry point (e.g. `https://api.local` or `https://localhost/api`) instead of raw port references.
 
@@ -65,7 +65,7 @@ Caddy and Caddyfile(s) live in **tools/caddy/**:
 
 ## References
 
-- Plan: _Expose local services with Caddy and host Ollama for agents_ (Cortex).
+- Plan: _Expose local services with Caddy and host Ollama for agents_ (OpenThrottle).
 - Caddyfile docs: <https://caddyserver.com/docs/caddyfile>.
 - Ollama in this repo: `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, `databases/README.md`, `AGENTS.md` (§ OLLAMA_BASE_URL).
 - openthrottle-server / developer: `applications/openthrottle-server/.env.default`, `applications/openthrottle-developer/app/global/config/settings.ts`, `docs/openthrottle/notifications-websockets-plan.md`.

@@ -152,7 +152,7 @@ export interface ChildJobInput {
    */
   readonly backend?: WorkflowConfigRunner;
   /**
-   * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
+   * When set, nested `workflow-ralph` and parent-side OpenThrottle checks use this URL (e.g. TypeORM `url`
    * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.
    */
   readonly canonicalPostgresUrl?: string;
@@ -173,7 +173,7 @@ export interface ChildJobInput {
   readonly model?: string;
   /** Optional callback invoked for each stdout/stderr chunk while the child runs. */
   readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
-  /** Cortex plan UUID to run Ralph for. */
+  /** OpenThrottle plan UUID to run Ralph for. */
   readonly planId: string;
   /** NX project name; forwarded as `--project` when set. */
   readonly project?: string;
@@ -195,13 +195,13 @@ export interface ChildJobInput {
   readonly signal?: AbortSignal;
   /** Cursor-only: `--skip-worktree-setup`. */
   readonly skipWorktreeSetup?: boolean;
-  /** Optional iteration number when streaming to Cortex (e.g. Ralph iteration); stored with each chunk. */
+  /** Optional iteration number when streaming to OpenThrottle (e.g. Ralph iteration); stored with each chunk. */
   readonly streamIteration?: number | null;
   /**
-   * When true, append each stdout/stderr chunk to Cortex plan_output_stream (same as MCP append_plan_output).
-   * Requires Cortex/openthrottle-mcp and Postgres; stream is updated in real time for API/clients that read plan output.
+   * When true, append each stdout/stderr chunk to OpenThrottle plan_output_stream (same as MCP append_plan_output).
+   * Requires openthrottle-mcp and Postgres; stream is updated in real time for API/clients that read plan output.
    */
-  readonly streamToCortex?: boolean;
+  readonly streamToOpenThrottle?: boolean;
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */
   readonly timeoutMs?: number;
   /**

@@ -31,7 +31,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
- * RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`.
+ * RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isOpenThrottleUuid`.
  */
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -61,9 +61,9 @@ export const resolveDefaultPlanRunKind = (): PlanRunKind => {
 };
 
 /**
- * Returns true when `value` is a plausible Cortex plan/task UUID.
+ * Returns true when `value` is a plausible OpenThrottle plan/task UUID.
  */
-const isCortexPlanTaskUuid = (value: string): boolean =>
+const isOpenThrottlePlanTaskUuid = (value: string): boolean =>
   UUID_REGEX.test(value.trim());
 
 /**
@@ -366,8 +366,8 @@ export const buildRunPlanOrchestratorJobData = (input: {
   readonly workingDirectory?: string | null;
 }): RunPlanOrchestratorJobData => {
   const planId = input.planId.trim();
-  if (!isCortexPlanTaskUuid(planId)) {
-    throw new Error('planId must be a valid Cortex UUID');
+  if (!isOpenThrottlePlanTaskUuid(planId)) {
+    throw new Error('planId must be a valid OpenThrottle UUID');
   }
 
   const mode = input.mode ?? null;
@@ -389,8 +389,8 @@ export const buildRunPlanOrchestratorJobData = (input: {
     if (taskRaw === '') {
       throw new Error('taskId is required when mode is task');
     }
-    if (!isCortexPlanTaskUuid(taskRaw)) {
-      throw new Error('taskId must be a valid Cortex UUID');
+    if (!isOpenThrottlePlanTaskUuid(taskRaw)) {
+      throw new Error('taskId must be a valid OpenThrottle UUID');
     }
     const ralph = parseEnqueueRalphTuning(input.ralph);
     const executionBackend = resolvePlanRunExecutionBackend(ralph);

@@ -137,20 +137,24 @@ describe('getPostgresUrl', () => {
     it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
       const conn = getPostgresUrl({
         [OPENTHROTTLE_POSTGRES_URL_ENV]:
-          'postgresql://cortex@db.example:5432/openthrottle',
+          'postgresql://openthrottle@db.example:5432/openthrottle',
         POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
       });
 
-      expect(conn).toBe('postgresql://cortex@db.example:5432/openthrottle');
+      expect(conn).toBe(
+        'postgresql://openthrottle@db.example:5432/openthrottle',
+      );
     });
 
     it('trims whitespace from OPENTHROTTLE_POSTGRES_URL', () => {
       const conn = getPostgresUrl({
         [OPENTHROTTLE_POSTGRES_URL_ENV]:
-          '  postgresql://cortex@db.example:5432/openthrottle  ',
+          '  postgresql://openthrottle@db.example:5432/openthrottle  ',
       });
 
-      expect(conn).toBe('postgresql://cortex@db.example:5432/openthrottle');
+      expect(conn).toBe(
+        'postgresql://openthrottle@db.example:5432/openthrottle',
+      );
     });
   });
 

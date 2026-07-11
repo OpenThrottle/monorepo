@@ -18,7 +18,7 @@ This note defines the architecture for the OpenThrottle admin portal: app vs rou
 
 ## 2. Auth: who can access admin
 
-- **Same identity and backend:** Admin uses the same **openthrottle-server** and same user store (Cortex `users` table). Auth is JWT-based (see [openthrottle-server-auth.md](./openthrottle-server-auth.md)). The admin app sends the same `Authorization: Bearer <accessToken>` header; users log in via the same `login` mutation (or a dedicated admin login route that calls it).
+- **Same identity and backend:** Admin uses the same **openthrottle-server** and same user store (OpenThrottle `users` table). Auth is JWT-based (see [openthrottle-server-auth.md](./openthrottle-server-auth.md)). The admin app sends the same `Authorization: Bearer <accessToken>` header; users log in via the same `login` mutation (or a dedicated admin login route that calls it).
 - **Who can access admin:** Access to admin-only GraphQL operations (and thus to the admin app’s features) is gated by **roles and permissions**. Only users with an “admin” role (or a dedicated permission such as `access_admin` / `admin:read`) may call admin resolvers. Implementation will use the existing NestJS auth stack (JWT guard) plus a **roles/permissions model** and guards (e.g. from `@openthrottle/nestjs-rbac` or custom) so that:
   - Unauthenticated requests are rejected (JWT required).
   - Authenticated users without the required role/permission are rejected (403) on admin-only resolvers.
@@ -62,14 +62,14 @@ Routes under `/dashboard`, `/plans`, `/projects`, `/roles`, `/users` are wrapped
 
 ## 6. File and doc references
 
-| Topic                                     | Reference                                                                                    |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Admin shadcn-ui integration               | [admin-shadcn-ui-integration.md](./admin-shadcn-ui-integration.md)                           |
-| Server auth (JWT, Passport, Cortex users) | [openthrottle-server-auth.md](./openthrottle-server-auth.md)                                 |
-| Wiring auth and RBAC in NestJS            | [../nestjs/wiring-auth-rbac.md](../nestjs/wiring-auth-rbac.md)                               |
-| Payments provider choice and integration  | [payments-provider-choice-and-integration.md](./payments-provider-choice-and-integration.md) |
-| Payments research (providers, models)     | [payments-research-providers-and-models.md](./payments-research-providers-and-models.md)     |
-| Admin app                                 | `applications/openthrottle-admin`                                                            |
-| Backend                                   | `applications/openthrottle-server`                                                           |
-| Shared UI                                 | `@openthrottle/react-router-shadcn` (monorepo package)                                       |
-| shadcn-ui components                      | https://ui.shadcn.com/docs/components                                                        |
+| Topic                                           | Reference                                                                                    |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Admin shadcn-ui integration                     | [admin-shadcn-ui-integration.md](./admin-shadcn-ui-integration.md)                           |
+| Server auth (JWT, Passport, OpenThrottle users) | [openthrottle-server-auth.md](./openthrottle-server-auth.md)                                 |
+| Wiring auth and RBAC in NestJS                  | [../nestjs/wiring-auth-rbac.md](../nestjs/wiring-auth-rbac.md)                               |
+| Payments provider choice and integration        | [payments-provider-choice-and-integration.md](./payments-provider-choice-and-integration.md) |
+| Payments research (providers, models)           | [payments-research-providers-and-models.md](./payments-research-providers-and-models.md)     |
+| Admin app                                       | `applications/openthrottle-admin`                                                            |
+| Backend                                         | `applications/openthrottle-server`                                                           |
+| Shared UI                                       | `@openthrottle/react-router-shadcn` (monorepo package)                                       |
+| shadcn-ui components                            | https://ui.shadcn.com/docs/components                                                        |

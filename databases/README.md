@@ -52,7 +52,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 4. **Reset the database (optional, before a fresh ingest)**
 
-   Truncates all cortex tables so a re-run of ingest does not create duplicate plans. Use when switching from test data to real data or when re-ingesting after changing source files:
+   Truncates all openthrottle tables so a re-run of ingest does not create duplicate plans. Use when switching from test data to real data or when re-ingesting after changing source files:
 
    ```bash
    pnpm run database:reset
@@ -154,7 +154,7 @@ We use **Option A:** link only the **squash commit after a PR is merged**. The r
 - **When to call `link_commit`:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. Do **not** link commits during the Ralph loop or while the PR is open.
 - **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read from `commit_links`. Because we only store the squash SHA, activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
 - **Day-to-day workflow:**
-  - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(cortex): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** call `link_commit` for these commits—they are normal branch commits. Only after the PR is merged, link the squash commit once (see below).
+  - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(openthrottle): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** call `link_commit` for these commits—they are normal branch commits. Only after the PR is merged, link the squash commit once (see below).
   - **Ralph / agent:** While executing tasks, commit and push as above; do **not** call `link_commit`. After the PR is merged, link the squash commit once (see below).
   - **After merge:** Call MCP `link_commit(planId, repo, squashSha, taskId?, message?)` with the squash SHA and optional PR message, or run:
     `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`
@@ -163,7 +163,7 @@ We use **Option A:** link only the **squash commit after a PR is merged**. The r
 
 ### Plan and task attributes (PRD mapping)
 
-When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/cortex/planning-mode`), use this mapping. Timestamps are always handled by the DB; the agent infers author (GitHub handle) when missing and always evaluates category (infer when missing, or confirm/adjust when provided so it fits the plan).
+When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/openthrottle/planning-mode`), use this mapping. Timestamps are always handled by the DB; the agent infers author (GitHub handle) when missing and always evaluates category (infer when missing, or confirm/adjust when provided so it fits the plan).
 
 #### Plans
 
@@ -191,7 +191,7 @@ The `projects` table is intentionally limited to **NX applications** (from `nx s
 Run with dry-run first, then without to apply:
 
 ```bash
-pnpm exec tsx ./scripts/cleanup-cortex-projects-apps-only.ts [--dry-run]
+pnpm exec tsx ./scripts/cleanup-openthrottle-projects-apps-only.ts [--dry-run]
 ```
 
 Asfter cleanup, run `pnpm run database:migrate` so migration `032_projects_unique_nx_project_name.sql` enforces at most one project per `nx_project_name`.
@@ -199,7 +199,7 @@ Asfter cleanup, run `pnpm run database:migrate` so migration `032_projects_uniqu
 To **link plans/tasks that have no project** to an existing project when the title clearly matches (no new projects created):
 
 ```bash
-pnpm exec tsx ./scripts/link-cortex-plans-tasks-to-existing-projects.ts [--dry-run]
+pnpm exec tsx ./scripts/link-openthrottle-plans-tasks-to-existing-projects.ts [--dry-run]
 ```
 
 #### Project association (when to set project)
@@ -249,7 +249,7 @@ Do **not** use display names, email addresses, or other formats. All write paths
 
 **Enforcing GitHub username (MCP):** When `GITHUB_USER` or `OPENTHROTTLE_GITHUB_USER` is set, the **openthrottle-mcp** MCP uses that value for **author** and **assignee** on `create_plan`, `update_plan`, `create_task`, `create_tasks`, and `update_task`, so the agent cannot store a display name (e.g. `matt`) instead of the GitHub username (e.g. `visormatt`). Set one of these env vars in the MCP run environment to enforce.
 
-For a strict, hyper-detailed PRD: provide all fields you care about. For rough ideas: use `/cortex/planning-mode` or MCP `create_plan` / `create_task`; the agent infers author (GitHub handle) when missing and always evaluates category (infer or confirm/adjust).
+For a strict, hyper-detailed PRD: provide all fields you care about. For rough ideas: use `/openthrottle/planning-mode` or MCP `create_plan` / `create_task`; the agent infers author (GitHub handle) when missing and always evaluates category (infer or confirm/adjust).
 
 ### PRD summarization (summary field)
 
@@ -346,7 +346,7 @@ SELECT id, title, author FROM plans WHERE author = 'visormatt';
 **Tasks for a plan**
 
 ```sql
-SELECT t.id, t.title, t.status FROM tasks t JOIN plans p ON t.plan_id = p.id WHERE p.title LIKE '%cortex%' ORDER BY t.title;
+SELECT t.id, t.title, t.status FROM tasks t JOIN plans p ON t.plan_id = p.id WHERE p.title LIKE '%openthrottle%' ORDER BY t.title;
 ```
 
 **Semantic search (after ingestion with embeddings)**
@@ -377,7 +377,7 @@ LIMIT 5;
 - Plan JSON files under `plans/` (in any non-`templates` subdirectory) can remain the source of truth on disk until you switch to DB-as-source.
 - The ingestion script only reads; it does not delete or modify plan files.
 - For a fresh ingest (e.g. after dumping test data or changing source fsiles), run `pnpm run database:reset` then `pnpm run database:import`. Re-running ingest without reset is additive; duplicate plans may be inserted.
-- After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/cortex/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
+- After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/openthrottle/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
 
 ## Migrations
 
@@ -410,7 +410,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 23. `030_create_doc_ingestion_state_table.sql` – doc_ingestion_state table (scope, path, content_hash, updated_at) for diff-based doc ingestion; see docs/openthrottle/doc-ingestion-job-spec.md.
 24. `026_create_users_table.sql` – users table (id, created_at, updated_at, email, github_username) for auth and assignment.
 25. `031_add_users_password_hash_and_email_unique.sql` – Add `password_hash` (TEXT, nullable) and unique index on email (WHERE email IS NOT NULL) for OpenThrottle local auth; see docs/openthrottle/openthrottle-server-auth.md.
-26. `032_projects_unique_nx_project_name.sql` – Unique partial index on `projects(nx_project_name)` WHERE nx_project_name IS NOT NULL; run after `scripts/cleanup-cortex-projects-apps-only.ts` so duplicates are merged first.
+26. `032_projects_unique_nx_project_name.sql` – Unique partial index on `projects(nx_project_name)` WHERE nx_project_name IS NOT NULL; run after `scripts/cleanup-openthrottle-projects-apps-only.ts` so duplicates are merged first.
 27. `033_add_users_disabled_at.sql` – Add `disabled_at` (TIMESTAMPTZ, nullable) to users for account suspension.
 28. `034_create_roles_and_permissions_tables.sql` – RBAC tables: permissions, roles, role_permissions, user_roles. Seeded with admin/user/viewer roles and settings/users permissions.
 29. `035_create_subscriptions_table.sql` – Subscriptions table for Stripe Hybrid payment integration (user_id FK, Stripe IDs, status, period dates).
@@ -425,7 +425,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 
 We keep **SQL files as the single source of truth** for schema. TypeORM is used only for **runtime** (connection pooling via DataSource, raw SQL in openthrottle-server and scripts; entities for type safety). We do **not** use TypeORM’s migration runner.
 
-- **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-cortex-migrations.ts` runs all `.sql` files in filename order.
+- **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-openthrottle-migrations.ts` runs all `.sql` files in filename order.
 - **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/migrations (002, 012).”
 - **Long-term rationale:** For pros/cons and a greenfield recommendation (SQL-as-source vs TypeORM migrations), see [docs/monorepo/migration-strategy-sql-vs-typeorm.md](../../docs/monorepo/migration-strategy-sql-vs-typeorm.md).
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.

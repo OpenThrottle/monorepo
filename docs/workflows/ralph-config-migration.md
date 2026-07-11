@@ -49,7 +49,7 @@ Shared loader: `loadWorkflowRalphConfig(cwd, env?)` in `@tools/workflows` (`tool
 
 Do **not** add these to `.workflow-ralph.json`:
 
-- **Postgres / Cortex:** `POSTGRES_URL`, `POSTGRES_*`, `OPENTHROTTLE_POSTGRES_URL`
+- **Postgres / OpenThrottle:** `POSTGRES_URL`, `POSTGRES_*`, `OPENTHROTTLE_POSTGRES_URL`
 - **GraphQL auth / URL:** `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, worker GraphQL tokens, `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`, `API_URL_INTERNAL`
 - **API keys:** `OPENAI_API_KEY`, Ollama secrets when used
 - **CI / deployment:** `OPENTHROTTLE_DEFAULT_RUN_KIND`, `WORKTREE_TARGETS`, `WORKSPACE_ROOT`, `NODE_ENV`

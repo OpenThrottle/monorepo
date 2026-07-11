@@ -10,7 +10,7 @@ import { vectorTransformer } from '../../common/vector.transformer';
 import type { Plan } from '../plans/plan.entity';
 
 /**
- * @description TypeORM entity for Cortex plan_embeddings table. Matches databases/migrations (004). Uses pgvector vector(1536).
+ * @description TypeORM entity for OpenThrottle plan_embeddings table. Matches databases/migrations (004). Uses pgvector vector(1536).
  */
 @Entity('plan_embeddings')
 export class PlanEmbedding {

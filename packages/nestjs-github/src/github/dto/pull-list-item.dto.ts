@@ -1,5 +1,5 @@
 /**
- * @description One PR in the list returned by GET /github/repos/:owner/:repo/pulls (Cortex UI shape).
+ * @description One PR in the list returned by GET /github/repos/:owner/:repo/pulls (OpenThrottle UI shape).
  */
 export interface PullListItemDto {
   readonly author: string;

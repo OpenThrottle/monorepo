@@ -48,7 +48,7 @@ function mapChunkToObject(chunk: SemanticSearchChunk): SearchChunk {
 @Resolver()
 export class SearchResolver {
   @Query(() => SearchResult, {
-    description: `Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).`,
+    description: `Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).`,
   })
   async search(
     @Args('input', { type: () => SearchInput }) input: SearchInput,

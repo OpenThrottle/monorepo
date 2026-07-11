@@ -1,6 +1,6 @@
 # GitHub/Primer Gray → Tailwind Scale (50–950)
 
-Research mapping for Cortex brand palette. Source: [Primer Primitives](https://github.com/primer/primitives) base color tokens (`src/tokens/base/color/light/light.json5`, `dark/dark.json5`).
+Research mapping for OpenThrottle brand palette. Source: [Primer Primitives](https://github.com/primer/primitives) base color tokens (`src/tokens/base/color/light/light.json5`, `dark/dark.json5`).
 
 ## Light mode (default)
 

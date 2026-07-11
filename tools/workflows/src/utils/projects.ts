@@ -11,7 +11,7 @@ export type { PinNxWorkspaceRootResult } from '@openthrottle/openthrottle-agenti
 const PROJECT_TAGS = ['type:application', 'type:package'] as const;
 
 /**
- * @description Returns NX project names from the project graph (applications and packages). Use for --project option or validation in workflow and Cortex API. The graph is pinned to the OpenThrottle monorepo root (see {@link pinNxWorkspaceRootToOpenThrottle}) so it resolves correctly even when `cwd` is a foreign checkout.
+ * @description Returns NX project names from the project graph (applications and packages). Use for --project option or validation in workflow and OpenThrottle API. The graph is pinned to the OpenThrottle monorepo root (see {@link pinNxWorkspaceRootToOpenThrottle}) so it resolves correctly even when `cwd` is a foreign checkout.
  */
 export const getNxProjectNames = async (): Promise<string[]> => {
   const { restore } = pinNxWorkspaceRootToOpenThrottle();

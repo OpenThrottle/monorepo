@@ -44,7 +44,7 @@ Use both: Git for version control and code review; OpenThrottle for planning, ex
 
 You can use OpenThrottle instead of (or alongside) Jira, Linear, Asana, etc.:
 
-- **Plans and tasks** replace epics and tickets: stored in your own Postgres (Cortex), queryable and linkable.
+- **Plans and tasks** replace epics and tickets: stored in your own Postgres (OpenThrottle), queryable and linkable.
 - **Commit links** tie work to code; no manual “ticket → commit” copy-paste.
 - **Activity by date** answers “what did we ship last week?” from plans, tasks, and linked commits.
 - **No separate SaaS** for core flows: run locally, own your data, keep everything in one loop with your repo.
@@ -55,6 +55,6 @@ Positioning line: _Replace traditional issue trackers with a single history of w
 
 ## References in this repo
 
-- **Cortex (plans, tasks, embeddings):** `databases/README.md` — schema, migrations, commit links, activity.
+- **OpenThrottle (plans, tasks, embeddings):** `databases/README.md` — schema, migrations, commit links, activity.
 - **Ralph / workflow CLI:** `tools/workflows/README.md` — run plans and tasks; link commits after PR merge (`workflow-link-merge`).
 - **Commit linking:** `databases/README.md` § Commit links — link the squash commit after merge; include `Plan-Id` and `Task-Id` in commit messages for traceability.

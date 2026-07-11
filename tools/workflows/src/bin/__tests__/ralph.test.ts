@@ -10,7 +10,7 @@ const PLAN_ID = '970aecc7-c647-4948-aa20-410e1bd090fc';
 const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 
 const mockConfig: WorkflowRalphConfig = {
-  connectionString: 'postgres://localhost/cortex',
+  connectionString: 'postgres://localhost/openthrottle',
   transport: 'postgres-direct',
 };
 
@@ -63,7 +63,7 @@ vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
   return {
     ...actual,
     ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
-    getCortexConfigOrExit: vi.fn(() => mockConfig),
+    getOpenThrottleConfigOrExit: vi.fn(() => mockConfig),
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue(mockTasks),
     promotePlanToInProgressIfNeeded: vi.fn().mockResolvedValue(true),
@@ -148,7 +148,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
   });
 });
 
-describe('Ralph main (Cortex before NX project graph)', () => {
+describe('Ralph main (OpenThrottle before NX project graph)', () => {
   const originalStdinIsTTY = process.stdin.isTTY;
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
@@ -167,15 +167,17 @@ describe('Ralph main (Cortex before NX project graph)', () => {
     vi.resetModules();
   });
 
-  it('resolves Cortex config before NX project validation when --project is set', async () => {
+  it('resolves OpenThrottle config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/openthrottle-ralph.js');
+    const openthrottleRalph = await import('../../utils/openthrottle-ralph.js');
     const parsers = await import('../../utils/parsers.js');
 
-    vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
-      callOrder.push('cortex');
-      return mockConfig;
-    });
+    vi.mocked(openthrottleRalph.getOpenThrottleConfigOrExit).mockImplementation(
+      () => {
+        callOrder.push('openthrottle');
+        return mockConfig;
+      },
+    );
     vi.mocked(parsers.parseRalphArgs).mockReturnValue({
       backend: 'cursor',
       iterationTimeoutMs: undefined,
@@ -201,12 +203,12 @@ describe('Ralph main (Cortex before NX project graph)', () => {
     const { main } = await import('../ralph.js');
     await main();
 
-    expect(callOrder).toEqual(['cortex', 'nx']);
+    expect(callOrder).toEqual(['openthrottle', 'nx']);
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });
 
-describe('Ralph main (Cortex before NX project graph)', () => {
+describe('Ralph main (OpenThrottle before NX project graph)', () => {
   const originalStdinIsTTY = process.stdin.isTTY;
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
@@ -225,15 +227,17 @@ describe('Ralph main (Cortex before NX project graph)', () => {
     vi.resetModules();
   });
 
-  it('resolves Cortex config before NX project validation when --project is set', async () => {
+  it('resolves OpenThrottle config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/openthrottle-ralph.js');
+    const openthrottleRalph = await import('../../utils/openthrottle-ralph.js');
     const parsers = await import('../../utils/parsers.js');
 
-    vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
-      callOrder.push('cortex');
-      return mockConfig;
-    });
+    vi.mocked(openthrottleRalph.getOpenThrottleConfigOrExit).mockImplementation(
+      () => {
+        callOrder.push('openthrottle');
+        return mockConfig;
+      },
+    );
     vi.mocked(parsers.parseRalphArgs).mockReturnValue({
       backend: 'cursor',
       iterationTimeoutMs: undefined,
@@ -259,7 +263,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
     const { main } = await import('../ralph.js');
     await main();
 
-    expect(callOrder).toEqual(['cortex', 'nx']);
+    expect(callOrder).toEqual(['openthrottle', 'nx']);
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });

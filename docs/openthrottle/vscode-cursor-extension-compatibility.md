@@ -1,6 +1,6 @@
 # VSCode and Cursor extension compatibility
 
-This document summarizes whether one extension codebase can target both **VS Code** and **Cursor**, and any differences or constraints. It supports the plan _Investigate VSCode/Cursor extension for Cortex plans and tasks_ and the `@openthrottle/vscode-openthrottle` package.
+This document summarizes whether one extension codebase can target both **VS Code** and **Cursor**, and any differences or constraints. It supports the plan _Investigate VSCode/Cursor extension for OpenThrottle plans and tasks_ and the `@openthrottle/vscode-openthrottle` package.
 
 ## One codebase for both: yes
 

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex notes table. Matches databases/migrations (009).
+ * @description TypeORM entity for OpenThrottle notes table. Matches databases/migrations (009).
  */
 
 import {

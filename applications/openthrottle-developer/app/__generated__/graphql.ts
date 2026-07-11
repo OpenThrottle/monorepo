@@ -1281,7 +1281,7 @@ export type Mutation = {
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
-  /** Assign, change, or clear the Cortex project link for a local repository. */
+  /** Assign, change, or clear the OpenThrottle project link for a local repository. */
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
@@ -2088,9 +2088,9 @@ export type Query = {
   rolesForServiceAccount: Array<RoleObject>;
   /** Get roles assigned to a user */
   rolesForUser: Array<RoleObject>;
-  /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
-  /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
   searchAgentAssets: AgentAssetSearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
@@ -2767,7 +2767,7 @@ export type SetPlanStatusInput = {
 
 export type SetWorkspaceLocalRepositoryProjectInput = {
   id: Scalars['ID']['input'];
-  /** Cortex project id, or null to clear the link. */
+  /** OpenThrottle project id, or null to clear the link. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -3212,7 +3212,7 @@ export type WorkspaceLocalRepositoryObject = {
   gitRemoteUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   project?: Maybe<ProjectObject>;
-  /** Optional Cortex project linked to this checkout. */
+  /** Optional OpenThrottle project linked to this checkout. */
   projectId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];

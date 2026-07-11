@@ -154,13 +154,13 @@ variable "developer_domain" {
 }
 
 variable "postgres_db_name" {
-  default     = "cortex"
+  default     = "openthrottle"
   description = "Cloud SQL database name (POSTGRES_DB)."
   type        = string
 }
 
 variable "postgres_user" {
-  default     = "cortex"
+  default     = "openthrottle"
   description = "Cloud SQL user (POSTGRES_USER)."
   type        = string
 }

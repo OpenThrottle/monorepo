@@ -1,6 +1,6 @@
 # @openthrottle/\* Packages: Naming Scheme and Initial Set
 
-**Plan:** OpenThrottle rebrand: naming exploration (Cortex plan `55515309-02bd-4264-8326-c5b8efd614cb`).
+**Plan:** OpenThrottle rebrand: naming exploration (OpenThrottle plan `55515309-02bd-4264-8326-c5b8efd614cb`).
 **Task:** @openthrottle/\* packages: naming scheme and initial set.
 **Criteria:** See [naming-criteria.md](./naming-criteria.md).
 **Context:** Marketing site ([marketing-website-naming.md](./marketing-website-naming.md)): `openthrottle.ai`. Developer Portal ([developer-portal-naming.md](./developer-portal-naming.md)): `developers.openthrottle.ai`. API ([developer-api-naming.md](./developer-api-naming.md)): `api.openthrottle.ai`. VSCode extension ([vscode-openthrottle-naming.md](./vscode-openthrottle-naming.md)): extension ID `openthrottle.openthrottle`, display "OpenThrottle for VS Code".
@@ -32,15 +32,15 @@ The following table lists the **initial set** of `@openthrottle/*` packages to r
 
 | Package                      | Purpose                                                                                              | Current / source                                                         | Reserve?                 |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
-| **@openthrottle/core**       | Shared types, config, or utilities used by other OpenThrottle packages. Optional minimal core layer. | New or extract from existing Cortex/OpenThrottle libs.                   | Yes                      |
-| **@openthrottle/mcp**        | Plans/tasks MCP server (Cortex knowledge base: plans, tasks, semantic search, activity).             | `@openthrottle/openthrottle-mcp` (`packages/openthrottle-mcp`).          | Yes                      |
+| **@openthrottle/core**       | Shared types, config, or utilities used by other OpenThrottle packages. Optional minimal core layer. | New or extract from existing OpenThrottle libs.                          | Yes                      |
+| **@openthrottle/mcp**        | Plans/tasks MCP server (OpenThrottle knowledge base: plans, tasks, semantic search, activity).       | `@openthrottle/openthrottle-mcp` (`packages/openthrottle-mcp`).          | Yes                      |
 | **@openthrottle/vscode**     | VS Code (and compatible hosts) extension.                                                            | `vscode-openthrottle` (`packages/vscode-openthrottle`).                  | Yes                      |
 | **@openthrottle/api-client** | Official SDK for the OpenThrottle API (api.openthrottle.ai).                                         | New; referenced in [developer-api-naming.md](./developer-api-naming.md). | Yes                      |
 | **@openthrottle/cli**        | CLI tooling (e.g. plan/task workflows, link-merge).                                                  | Potential extraction from tools/workflows or new CLI.                    | Yes (reserve for future) |
 
 ### Optional / later (do not reserve in initial set unless needed)
 
-- **@openthrottle/nestjs-repositories** — NestJS repositories for Cortex/OpenThrottle backend. Current `@openthrottle/nestjs-repositories`. Can reserve later if we publish backend packages.
+- **@openthrottle/nestjs-repositories** — NestJS repositories for OpenThrottle backend. Current `@openthrottle/nestjs-repositories`. Can reserve later if we publish backend packages.
 
 ---
 

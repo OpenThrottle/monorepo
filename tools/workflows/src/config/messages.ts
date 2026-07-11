@@ -16,12 +16,12 @@ import { WORKFLOW_RALPH_CONFIG_PRECEDENCE } from '../config/workflow-ralph-defau
 import { ARTWORK_LINE, ARTWORK_THANK_YOU, COLORS } from './index';
 
 export const MESSAGE_TOOL_USAGE = `
-Usage: ${COLORS.cyan}pnpm exec workflow-ralph --plan <cortex-plan-uuid> ${COLORS.gray}[options]${COLORS.reset}
-       ${COLORS.cyan}pnpm exec workflow-ralph --task <cortex-task-uuid> ${COLORS.gray}[options]${COLORS.reset}
+Usage: ${COLORS.cyan}pnpm exec workflow-ralph --plan <openthrottle-plan-uuid> ${COLORS.gray}[options]${COLORS.reset}
+       ${COLORS.cyan}pnpm exec workflow-ralph --task <openthrottle-task-uuid> ${COLORS.gray}[options]${COLORS.reset}
 
 Required (one of):
-  ${COLORS.cyan}--plan ${COLORS.gray}<uuid>${COLORS.reset}  Cortex plan ID (UUID)  ${COLORS.gray}ex: 77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}
-  ${COLORS.cyan}--task ${COLORS.gray}<uuid>${COLORS.reset}  Cortex task ID (UUID); task-centric mode  ${COLORS.gray}ex: 45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}
+  ${COLORS.cyan}--plan ${COLORS.gray}<uuid>${COLORS.reset}  OpenThrottle plan ID (UUID)  ${COLORS.gray}ex: 77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}
+  ${COLORS.cyan}--task ${COLORS.gray}<uuid>${COLORS.reset}  OpenThrottle task ID (UUID); task-centric mode  ${COLORS.gray}ex: 45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}
 
 Options:
   ${COLORS.cyan}--backend ${COLORS.gray}<cursor|claude>${COLORS.reset}  Execution backend (runner) for the entire plan run  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (${COLORS.gray}cursor-agent${COLORS.reset}); ${COLORS.gray}claude${COLORS.reset} uses Claude Code CLI (${COLORS.gray}claude --bare -p …${COLORS.reset})

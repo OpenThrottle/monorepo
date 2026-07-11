@@ -8,7 +8,7 @@
 import {
   ensureDatabaseReachableOrExit,
   ensureProjectForNxName,
-  getCortexConfigOrExit,
+  getOpenThrottleConfigOrExit,
   getPlanById,
   getTasksByPlanId,
   listPlansByStatus,
@@ -44,7 +44,7 @@ function inferNxProjectName(
 }
 
 async function main(): Promise<void> {
-  const config = getCortexConfigOrExit();
+  const config = getOpenThrottleConfigOrExit();
   await ensureDatabaseReachableOrExit(config);
 
   const [completedPlans, nxProjectNames] = await Promise.all([

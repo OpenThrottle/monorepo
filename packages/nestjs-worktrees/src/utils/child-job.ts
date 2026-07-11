@@ -8,14 +8,14 @@
 
 import { buildWorkflowRalphRunTuningArgv } from '@tools/workflows';
 import {
-  ensureCortexReachable,
+  ensureOpenThrottleReachable,
   getTasksByPlanId,
   updatePlanStatus,
-} from './cortex-client';
+} from './openthrottle-client';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { spawnSync } from 'child_process';
 import type { ChildJobInput, ChildJobResult } from '../types/worktree';
-import type { CortexRalphConfig } from './cortex-client';
+import type { OpenThrottleRalphConfig } from './openthrottle-client';
 
 /**
  * @description Runs git in the worktree and returns stdout trimmed, or undefined on failure.
@@ -69,10 +69,10 @@ export async function runChildJob(
     };
   }
 
-  const config: CortexRalphConfig = { connectionString };
+  const config: OpenThrottleRalphConfig = { connectionString };
 
   try {
-    await ensureCortexReachable(config);
+    await ensureOpenThrottleReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
 

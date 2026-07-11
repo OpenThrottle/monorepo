@@ -70,8 +70,8 @@ const baseTaskInput = (
   ...overrides,
 });
 
-describe('isCortexUuid', () => {
-  test('accepts plausible Cortex UUID v4 strings (trimmed)', () => {
+describe('isOpenThrottleUuid', () => {
+  test('accepts plausible OpenThrottle UUID v4 strings (trimmed)', () => {
     expect(isUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  ')).toBe(true);
     expect(isUuid('77cb14a0-5eb0-4061-87ea-d618b85e8818')).toBe(true);
   });

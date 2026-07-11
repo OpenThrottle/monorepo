@@ -1,6 +1,6 @@
 # Document upload: formats, limits, security, and canonical model
 
-This note captures **product and technical requirements** for ingesting user documents (Markdown, Excel, CSV, HTML, JSON) and decomposing them into Cortex **Plan → Tasks → Requirements**, before implementation tasks (parsers, API, UI). It aligns with existing GraphQL inputs (`CreatePlanInput`, `CreateTaskInput` with `requirements` as a JSON string array) and the shared `PlanCreationService` / MCP `create_plan` path.
+This note captures **product and technical requirements** for ingesting user documents (Markdown, Excel, CSV, HTML, JSON) and decomposing them into OpenThrottle **Plan → Tasks → Requirements**, before implementation tasks (parsers, API, UI). It aligns with existing GraphQL inputs (`CreatePlanInput`, `CreateTaskInput` with `requirements` as a JSON string array) and the shared `PlanCreationService` / MCP `create_plan` path.
 
 ## Supported formats and MIME types
 

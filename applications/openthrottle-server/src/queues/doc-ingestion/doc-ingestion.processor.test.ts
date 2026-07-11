@@ -1,7 +1,7 @@
 /**
  * @description Tests for DocIngestionProcessor. Payload validation is unit-tested here;
  * full flow (diff → deindex → ingest → persist) is covered by @tools/workflows/doc-ingestion
- * unit tests and by running the job with Cortex and docs available.
+ * unit tests and by running the job with OpenThrottle and docs available.
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';

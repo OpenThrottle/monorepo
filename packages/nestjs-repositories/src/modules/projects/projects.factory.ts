@@ -24,7 +24,7 @@ export const projectsFactory = Factory.define<ProjectData>(() => ({
   nxProjectName: faker.helpers.arrayElement([
     null,
     'openthrottle-server',
-    'cortex',
+    'openthrottle',
     'tools-workflows',
   ]),
   // plans: [],

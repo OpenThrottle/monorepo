@@ -2,7 +2,7 @@
 
 Baseline image-size audit for **Dockerfile.NestJS.v2** (optimization target). The v2 file is a behavioral copy of `Dockerfile.NestJS` at the repo root; optimizations land only in the v2 file so the original stays the working baseline.
 
-See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build strategy. Cortex plan: **Docker image optimizations for NX monorepo** (Plan-Id: `03259ada-6681-4bb0-bb04-a45d944ab223`).
+See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build strategy. OpenThrottle plan: **Docker image optimizations for NX monorepo** (Plan-Id: `03259ada-6681-4bb0-bb04-a45d944ab223`).
 
 ---
 
@@ -113,4 +113,4 @@ For an apples-to-apples baseline against the original Dockerfile, swap `-f Docke
 
 ## 6. Planned follow-ups (same plan; not yet in v2)
 
-These map to remaining Cortex tasks: further trim pruned tree, optional **`node:22-bookworm-slim`** final stage if distroless blocks debugging, explicit healthcheck strategy without in-image curl, then repeat the per-stage table after each meaningful `.v2` change.
+These map to remaining OpenThrottle tasks: further trim pruned tree, optional **`node:22-bookworm-slim`** final stage if distroless blocks debugging, explicit healthcheck strategy without in-image curl, then repeat the per-stage table after each meaningful `.v2` change.

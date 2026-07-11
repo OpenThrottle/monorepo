@@ -19,7 +19,7 @@ Primer-inspired scales and border semantics are documented for copy and UX align
 - [primer-typography-borders.md](./primer-typography-borders.md) — typography and border token research
 - [gray-mapping.md](./gray-mapping.md) — gray scale mapping
 
-Implement using **Tailwind utilities** and variables from **`react-router-shadcn`** rather than legacy path `applications/cortex/app/styles/` (removed in consolidation).
+Implement using **Tailwind utilities** and variables from **`react-router-shadcn`** rather than legacy path `applications/openthrottle/app/styles/` (removed in consolidation).
 
 ## Shadcn UI
 

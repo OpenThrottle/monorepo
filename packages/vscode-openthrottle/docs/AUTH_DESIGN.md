@@ -29,7 +29,7 @@ Recommendation: use a key that includes a hash of the configured API base URL (e
 
 ## Passing the token to GraphQL requests
 
-- **Current:** `CortexApiClient` uses `@openthrottle/nodejs-graphql`’s `executeGraphqlWithAuth('token', ...)`. The literal `'token'` is a placeholder; it does not send a real token and does not use the extension’s `baseUrl` (nodejs-graphql uses `API_URL_INTERNAL`).
+- **Current:** `OpenThrottleApiClient` uses `@openthrottle/nodejs-graphql`’s `executeGraphqlWithAuth('token', ...)`. The literal `'token'` is a placeholder; it does not send a real token and does not use the extension’s `baseUrl` (nodejs-graphql uses `API_URL_INTERNAL`).
 - **Required:**
   1. **URL:** The extension must call GraphQL at `getApiBaseUrl() + '/graphql'`. Either:
      - Extend or replace the nodejs-graphql usage so the extension can pass both `baseUrl` and `token`, or
@@ -38,7 +38,7 @@ Recommendation: use a key that includes a hash of the configured API base URL (e
 
 Concrete options:
 
-- **A. Extension-owned fetch:** In the extension, implement `executeGraphql(baseUrl, document, variables, { token })` that uses `fetch(baseUrl + '/graphql', { headers: { Authorization: token ? `Bearer ${token}` : undefined } })`. Then `CortexApiClient` takes `baseUrl` and a `getToken(): Promise<string | undefined>` (or the extension context) and passes the token on every request. No change to nodejs-graphql’s env-based URL.
+- **A. Extension-owned fetch:** In the extension, implement `executeGraphql(baseUrl, document, variables, { token })` that uses `fetch(baseUrl + '/graphql', { headers: { Authorization: token ? `Bearer ${token}` : undefined } })`. Then `OpenThrottleApiClient` takes `baseUrl` and a `getToken(): Promise<string | undefined>` (or the extension context) and passes the token on every request. No change to nodejs-graphql’s env-based URL.
 - **B. nodejs-graphql with URL + token:** Add an overload or new export in nodejs-graphql that accepts `(url, token, document, variables)` so the extension can pass both URL and token. The extension would still need to read the token from SecretStorage and pass it in.
 
 Recommendation: **A** — keep the extension’s GraphQL calls explicit with `baseUrl` from config and token from SecretStorage, and avoid relying on process env in the extension runtime.

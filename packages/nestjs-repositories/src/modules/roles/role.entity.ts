@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex roles table. Matches databases/migrations/034.
+ * @description TypeORM entity for OpenThrottle roles table. Matches databases/migrations/034.
  */
 
 import {

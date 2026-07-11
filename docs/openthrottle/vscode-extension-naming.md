@@ -1,6 +1,6 @@
 # VSCode Extension: Name and Display Name
 
-**Plan:** OpenThrottle rebrand: naming exploration (Cortex plan `55515309-02bd-4264-8326-c5b8efd614cb`).  
+**Plan:** OpenThrottle rebrand: naming exploration (OpenThrottle plan `55515309-02bd-4264-8326-c5b8efd614cb`).  
 **Task:** VSCode Extension: name and display name.  
 **Criteria:** See [naming-criteria.md](./naming-criteria.md).  
 **Context:** Marketing site ([marketing-website-naming.md](./marketing-website-naming.md)): `openthrottle.ai`. Developer Portal ([developer-portal-naming.md](./developer-portal-naming.md)): `developers.openthrottle.ai`, display name "OpenThrottle Developer Portal". API ([developer-api-naming.md](./developer-api-naming.md)): `api.openthrottle.ai`, display name "OpenThrottle API".
@@ -67,4 +67,4 @@ The VSCode extension needs:
 ## 5. Availability and next steps
 
 - **Marketplace:** Before first publish, register the publisher `openthrottle` (or confirm it is available) and ensure no existing extension uses `openthrottle.openthrottle`. Extension ID cannot be changed after publish.
-- **Codebase:** When implementing the rebrand, update the extension’s `package.json`: `name` (npm package name can stay or become `@openthrottle/vscode`), Marketplace publisher and extension identifier to `openthrottle.openthrottle`, and display name to "OpenThrottle for VS Code". Update all user-facing strings (views, commands, configuration title) from "Cortex" to "OpenThrottle" per the final naming matrix.
+- **Codebase:** When implementing the rebrand, update the extension’s `package.json`: `name` (npm package name can stay or become `@openthrottle/vscode`), Marketplace publisher and extension identifier to `openthrottle.openthrottle`, and display name to "OpenThrottle for VS Code". Update all user-facing strings (views, commands, configuration title) from "OpenThrottle" to "OpenThrottle" per the final naming matrix.

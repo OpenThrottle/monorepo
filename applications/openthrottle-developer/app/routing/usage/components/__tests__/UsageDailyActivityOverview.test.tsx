@@ -14,7 +14,7 @@ describe('UsageDailyActivityOverview Component', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/last 7 days/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Cortex plan and task activity/i),
+      screen.getByText(/OpenThrottle plan and task activity/i),
     ).toBeInTheDocument();
   });
 

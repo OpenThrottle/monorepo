@@ -1,8 +1,8 @@
 # openthrottle-developer notifications + WebSockets — kick-off plan
 
-Use this document to kick off implementation or onboard. The plan lives in Cortex (plan ID below); this file is the single reference so you don’t need to re-read Cortex.
+Use this document to kick off implementation or onboard. The plan lives in OpenThrottle (plan ID below); this file is the single reference so you don’t need to re-read OpenThrottle.
 
-**Cortex plan ID:** `4424d9fa-5b33-41ce-81a0-d55f2957637a`
+**OpenThrottle plan ID:** `4424d9fa-5b33-41ce-81a0-d55f2957637a`
 **Title:** openthrottle-developer notifications: WebSocket events from server, consume in app
 **Project:** openthrottle-developer
 
@@ -73,7 +73,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 
 ### Plan/task status-change events (UI sync)
 
-For keeping the plans detail route in sync without manual refresh (e.g. when status is updated via Cortex/openthrottle-mcp or API):
+For keeping the plans detail route in sync without manual refresh (e.g. when status is updated via openthrottle-mcp or API):
 
 - **Transport:** Same WebSocket (Socket.IO) as above. No SSE or polling.
 - **Event names:** `NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED` → `plan.status_changed`, `NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED` → `task.status_changed`.
@@ -116,7 +116,7 @@ Paths that change `plans.status` or `tasks.status`, and whether they emit `plan.
 
 ---
 
-## Cortex task IDs (for commit footers / tracking)
+## OpenThrottle task IDs (for commit footers / tracking)
 
 | Task                                               | Task ID                                |
 | -------------------------------------------------- | -------------------------------------- |
@@ -129,4 +129,4 @@ Paths that change `plans.status` or `tasks.status`, and whether they emit `plan.
 
 ---
 
-_Last updated: kick-off doc completed; current state and env/URL documented. Use this file to kick off further work without re-reading Cortex._
+_Last updated: kick-off doc completed; current state and env/URL documented. Use this file to kick off further work without re-reading OpenThrottle._

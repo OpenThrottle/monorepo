@@ -1,6 +1,6 @@
 /**
  * Prior-state storage for diff-based doc ingestion. Read/write and lookup by (scope, path).
- * State is stored in Cortex Postgres table doc_ingestion_state (scope, path, content_hash, updated_at).
+ * State is stored in OpenThrottle Postgres table doc_ingestion_state (scope, path, content_hash, updated_at).
  * See docs/openthrottle/doc-ingestion-job-spec.md and migration 030_create_doc_ingestion_state_table.sql.
  */
 

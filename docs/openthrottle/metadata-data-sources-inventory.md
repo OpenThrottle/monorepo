@@ -1,4 +1,4 @@
-# Cortex metadata: data sources inventory
+# OpenThrottle metadata: data sources inventory
 
 Inventory of embeddings, plan/task content, docs, and commit_links — gaps and overlap. See plan: "Brainstorm: metadata for Vector Search + Markdown + PRD + GitHub commits" (Plan-Id: 1240a719-e43c-4845-817f-4852e1af5c29).
 
@@ -10,7 +10,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 | Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | openthrottle-mcp `semantic_search`                  |
 | Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | openthrottle-mcp `semantic_search` / `get_document` |
 
-**Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).
+**Ingest:** `openthrottle:import` (plans); `openthrottle:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).
 
 **Gap:** `semantic_search` does not yet rank across plans + tasks + docs + commits in one query (all served by openthrottle-mcp; the former standalone `docs-mcp` is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state)).
 
@@ -24,7 +24,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 | Tasks         | `tasks`              | id, plan_id, title, description, category, status, requirements (JSONB), summary, assignee, created_at, updated_at | Same                                            |
 | Output stream | `plan_output_stream` | plan_id, iteration, content, created_at                                                                            | Agent iteration log; not embeddings             |
 
-**Ingest:** Plans/tasks created via openthrottle-mcp (`create_plan`, `create_task`) or migrated from `plans/` via `cortex:import`. No file-based PRD source anymore.
+**Ingest:** Plans/tasks created via openthrottle-mcp (`create_plan`, `create_task`) or migrated from `plans/` via `openthrottle:import`. No file-based PRD source anymore.
 
 **Gap:** No explicit "PRD" table — plan/task content _is_ the PRD. Summary field supports PRD wrap-up; requirements is JSONB for ad-hoc structure.
 
@@ -39,7 +39,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 **Metadata:** `repo`, `sha`, `pr_number`, `authors` (JSONB), `message` — mirrors commit/PR context. Idempotent per `(repo, sha, path)`.
 
-**Ingest:** `cortex:import-docs`. Chunks → `documentation_embeddings` for semantic search.
+**Ingest:** `openthrottle:import-docs`. Chunks → `documentation_embeddings` for semantic search.
 
 **Overlap:** `documentation` and `documentation_embeddings` form a doc-only vector search path; not linked to plans/tasks/commits.
 

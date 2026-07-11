@@ -2,13 +2,13 @@
 
 **Pure, well-named utilities** extracted incrementally from `@tools/workflows` and overlapping helpers in `@openthrottle/node-client`. This package is the shared **runtime helper** layer for Ralph, nested spawns, and agentic CLIs: Postgres URL resolution, monorepo root discovery, workflow transport/config cwd, subprocess PATH, debug env parsing, and wall-clock / child-process metrics.
 
-It is **not** a home for CLI bins, Cortex GraphQL/Postgres CRUD, job-run-hooks runners, or doc-ingestion — those stay in `@tools/workflows` until a later phase.
+It is **not** a home for CLI bins, OpenThrottle GraphQL/Postgres CRUD, job-run-hooks runners, or doc-ingestion — those stay in `@tools/workflows` until a later phase.
 
 ## Where this fits
 
 - **Contracts (types, orchestrator shapes):** `@openthrottle/openthrottle-agentic-workflow`
 - **GraphQL Ralph orchestrator:** `@openthrottle/openthrottle-agentic-ralph`
-- **CLI bins and Cortex wiring:** `@tools/workflows`
+- **CLI bins and OpenThrottle wiring:** `@tools/workflows`
 - **This package:** leaf utilities with minimal dependencies; consumers import functions and re-export shims from `@tools/workflows` until migration completes.
 
 OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task, feedback gate between moves).
@@ -111,7 +111,7 @@ UI (can consume `discoverLocalModels` later).
 
 - **`ensurePostgresReachable`** in `src/utils/postgres.ts` is canonical: connect + `SELECT 1`; throws when the connection string is missing or the check fails.
 - **`pg`** is a **`peerDependency`** (and devDependency for tests); unit tests mock `pg.Client`.
-- **`@tools/workflows`** `ensureCortexReachablePostgres` delegates to `ensurePostgresReachable` and maps Cortex-specific error text; re-export shim on the workflows barrel.
+- **`@tools/workflows`** `ensureOpenThrottleReachablePostgres` delegates to `ensurePostgresReachable` and maps OpenThrottle-specific error text; re-export shim on the workflows barrel.
 
 ## Overlap resolved (task 5)
 

@@ -17,7 +17,7 @@ import type {
 import type { WorkflowRalphConfig } from './openthrottle-ralph';
 import {
   appendPlanOutput,
-  ensureCortexReachable,
+  ensureOpenThrottleReachable,
   RALPH_FATAL_REQUIRED_GRAPHQL,
   RALPH_FATAL_REQUIRED_POSTGRES,
   reconcilePlanCompletionIfAllTasksTerminal,
@@ -239,7 +239,7 @@ export async function runChildJob(
     timeoutMs,
     signal,
     onChunk,
-    streamToCortex,
+    streamToOpenThrottle,
     streamIteration,
     childProcessMetrics: metricsOption,
     skipWorktreeSetup,
@@ -286,14 +286,14 @@ export async function runChildJob(
     };
   }
   try {
-    await ensureCortexReachable(config);
+    await ensureOpenThrottleReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();
     return {
       ok: false,
-      reason: `Cortex unreachable: ${msg}`,
+      reason: `OpenThrottle unreachable: ${msg}`,
       wallClockMetrics: computeWallClockMetrics(
         startTimestamp,
         endTimestamp,
@@ -330,7 +330,7 @@ export async function runChildJob(
   // failures, and track ultimate losses (see plan-output-streamer). Previously these
   // were fire-and-forget and unordered, so output could land out of order or vanish
   // silently on a transient GraphQL/network error.
-  const streamConfig = streamToCortex ? config : undefined;
+  const streamConfig = streamToOpenThrottle ? config : undefined;
   const planOutputStreamer = streamConfig
     ? createPlanOutputStreamer({
         append: (content) =>
@@ -344,7 +344,7 @@ export async function runChildJob(
     : undefined;
 
   const effectiveOnChunk: ((chunk: ChildJobStreamChunk) => void) | undefined =
-    streamToCortex || onChunk
+    streamToOpenThrottle || onChunk
       ? (chunk): void => {
           onChunk?.(chunk);
           if (planOutputStreamer) {

@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-repositories",
-  "description": "NestJS TypeORM data access for Cortex (OpenThrottle): plans, tasks, embeddings, roles, and related entities.",
+  "description": "NestJS TypeORM data access for OpenThrottle (OpenThrottle): plans, tasks, embeddings, roles, and related entities.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

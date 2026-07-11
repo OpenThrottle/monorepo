@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 /**
- * Characterization tests for the semantic-search surface of cortex-client.
+ * Characterization tests for the semantic-search surface of openthrottle-client.
  *
  * The transport (TypeORM DataSource) and the embedding call are mocked, so these
  * exercise the client's own logic — result normalization/coercion, ranking-order
@@ -29,7 +29,7 @@ const {
   runSemanticSearch,
   searchAgentAssets,
   searchPlansBySemanticQuery,
-} = await import('./cortex-client.js');
+} = await import('./openthrottle-client.js');
 
 const EMBEDDING = Array.from({ length: 1536 }, () => 0);
 

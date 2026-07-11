@@ -92,11 +92,11 @@
     "packages/react-router-ui-global/vitest.setup.ts",
     // Ambient window.env merge (consumed via TypeScript program, not import graph)
     "packages/react-router-ui-global/src/types/window-env.d.ts",
-    // Archived Cortex CLI scripts (fully commented; usage in databases/README.md and docs)
-    "scripts/get-cortex-plan.ts",
-    "scripts/get-cortex-plan-and-tasks.ts",
-    "scripts/link-cortex-plans-tasks-to-existing-projects.ts",
-    "scripts/list-cortex-plans-tasks-without-project.ts",
+    // Archived OpenThrottle CLI scripts (fully commented; usage in databases/README.md and docs)
+    "scripts/get-openthrottle-plan.ts",
+    "scripts/get-openthrottle-plan-and-tasks.ts",
+    "scripts/link-openthrottle-plans-tasks-to-existing-projects.ts",
+    "scripts/list-openthrottle-plans-tasks-without-project.ts",
     // infra/ is Terraform-only (no TS project graph)
     "infra/**",
   ],
@@ -138,8 +138,8 @@
       "entry": [
         "scripts/pnpm-package.ts",
         "scripts/parallelize-tasks.ts",
-        "scripts/update-cortex-plan-status.ts",
-        "scripts/update-cortex-task-status.ts",
+        "scripts/update-openthrottle-plan-status.ts",
+        "scripts/update-openthrottle-task-status.ts",
         "scripts/openthrottle-ingest-agent-assets.ts",
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/validate-agent-assets-frontmatter.ts",
