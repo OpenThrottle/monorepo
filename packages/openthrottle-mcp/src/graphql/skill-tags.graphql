@@ -1,0 +1,40 @@
+# MCP-only GraphQL documents: per-user skill-tag vocabulary CRUD. Mirrors the
+# skillTagVocabulary query and add/rename/remove mutations exposed by openthrottle-server.
+# See docs/monorepo/skill-availability-design.md ("Tags").
+
+query SkillTagVocabulary {
+  skillTagVocabulary {
+    tags {
+      id
+      tag
+      userId
+      createdAt
+      updatedAt
+    }
+    totalCount
+  }
+}
+
+mutation AddSkillTag($input: AddSkillTagInput!) {
+  addSkillTag(input: $input) {
+    id
+    tag
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RenameSkillTag($input: RenameSkillTagInput!) {
+  renameSkillTag(input: $input) {
+    id
+    tag
+    userId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemoveSkillTag($input: RemoveSkillTagInput!) {
+  removeSkillTag(input: $input)
+}

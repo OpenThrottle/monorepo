@@ -2710,6 +2710,9 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:^
         version: link:../openthrottle-agentic-workflow
+      '@openthrottle/openthrottle-skills':
+        specifier: workspace:^
+        version: link:../openthrottle-skills
       bcrypt:
         specifier: 'catalog:'
         version: 6.0.0

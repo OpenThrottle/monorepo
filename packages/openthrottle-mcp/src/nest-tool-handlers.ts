@@ -13,4 +13,5 @@ export * from './tools/output.ts';
 export * from './tools/plans.ts';
 export * from './tools/projects.ts';
 export * from './tools/search.ts';
+export * from './tools/skill-tags.ts';
 export * from './tools/tasks.ts';

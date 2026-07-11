@@ -122,6 +122,9 @@ export {
   TasksService,
 } from './modules/tasks/tasks.service';
 export type { CreateTaskBatchItem } from './modules/tasks/tasks.service';
+export { SkillTagsService } from './modules/skill-tags/skill-tags.service';
+export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
+export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity';
 export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,

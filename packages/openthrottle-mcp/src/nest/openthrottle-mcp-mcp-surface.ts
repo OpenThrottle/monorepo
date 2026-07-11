@@ -367,6 +367,50 @@ export class McpDeveloperMcpSurface {
     return Th.reorderPlanTasksToolHandler(args);
   }
 
+  @Tool({
+    description: Th.listSkillTagsToolDescription,
+    name: 'list_skill_tags',
+    parameters: asMcpParameters(Th.listSkillTagsToolParameters),
+  })
+  listSkillTags(
+    args: Parameters<typeof Th.listSkillTagsToolHandler>[0],
+  ): ReturnType<typeof Th.listSkillTagsToolHandler> {
+    return Th.listSkillTagsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.addSkillTagToolDescription,
+    name: 'add_skill_tag',
+    parameters: asMcpParameters(Th.addSkillTagToolParameters),
+  })
+  addSkillTag(
+    args: Parameters<typeof Th.addSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.addSkillTagToolHandler> {
+    return Th.addSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.renameSkillTagToolDescription,
+    name: 'rename_skill_tag',
+    parameters: asMcpParameters(Th.renameSkillTagToolParameters),
+  })
+  renameSkillTag(
+    args: Parameters<typeof Th.renameSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.renameSkillTagToolHandler> {
+    return Th.renameSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeSkillTagToolDescription,
+    name: 'remove_skill_tag',
+    parameters: asMcpParameters(Th.removeSkillTagToolParameters),
+  })
+  removeSkillTag(
+    args: Parameters<typeof Th.removeSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeSkillTagToolHandler> {
+    return Th.removeSkillTagToolHandler(args);
+  }
+
   @ResourceTemplate({
     description: Th.knowledgeBaseChunkResourceDescription,
     mimeType: Th.knowledgeBaseChunkMimeType,

@@ -1693,6 +1693,28 @@ type ListSourcesResultObject {
   plans: [ListPlanSourceObject!]!
 }
 
+"""A single tag in the authenticated user's skill-tag vocabulary."""
+type SkillTagObject {
+  id: ID!
+  userId: ID!
+
+  """Kebab-case tag slug, unique per user."""
+  tag: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+The authenticated user's skill-tag vocabulary, seeded from the platform default on first read.
+"""
+type SkillTagVocabularyResult {
+  """Tags in the user's vocabulary, alphabetically by tag."""
+  tags: [SkillTagObject!]!
+
+  """Number of tags in the vocabulary."""
+  totalCount: Int!
+}
+
 type TaskEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -2131,6 +2153,11 @@ type Query {
   List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.
   """
   listSources: ListSourcesResultObject!
+
+  """
+  The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.
+  """
+  skillTagVocabulary: SkillTagVocabularyResult!
 
   """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
@@ -2813,6 +2840,17 @@ type Mutation {
   """Remove a role from a service account (admin, human only)."""
   removeRoleFromServiceAccount(input: RemoveRoleFromServiceAccountInput!): Boolean!
 
+  """Add a kebab-case tag to the authenticated user's skill-tag vocabulary."""
+  addSkillTag(input: AddSkillTagInput!): SkillTagObject!
+
+  """Rename a tag in the authenticated user's skill-tag vocabulary."""
+  renameSkillTag(input: RenameSkillTagInput!): SkillTagObject!
+
+  """
+  Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present.
+  """
+  removeSkillTag(input: RemoveSkillTagInput!): Boolean!
+
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
@@ -3410,6 +3448,24 @@ input AssignRoleToServiceAccountInput {
 input RemoveRoleFromServiceAccountInput {
   roleId: ID!
   serviceAccountId: ID!
+}
+
+input AddSkillTagInput {
+  """Kebab-case tag slug to add (e.g. "pr-review")."""
+  tag: String!
+}
+
+input RenameSkillTagInput {
+  """Existing tag slug to rename."""
+  from: String!
+
+  """New kebab-case tag slug."""
+  to: String!
+}
+
+input RemoveSkillTagInput {
+  """Tag slug to remove."""
+  tag: String!
 }
 
 input CreateTaskInput {

@@ -244,6 +244,30 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.reorderPlanTasksToolHandler,
     ),
     defineTool(
+      'list_skill_tags',
+      Th.listSkillTagsToolDescription,
+      Th.listSkillTagsToolParameters,
+      Th.listSkillTagsToolHandler,
+    ),
+    defineTool(
+      'add_skill_tag',
+      Th.addSkillTagToolDescription,
+      Th.addSkillTagToolParameters,
+      Th.addSkillTagToolHandler,
+    ),
+    defineTool(
+      'rename_skill_tag',
+      Th.renameSkillTagToolDescription,
+      Th.renameSkillTagToolParameters,
+      Th.renameSkillTagToolHandler,
+    ),
+    defineTool(
+      'remove_skill_tag',
+      Th.removeSkillTagToolDescription,
+      Th.removeSkillTagToolParameters,
+      Th.removeSkillTagToolHandler,
+    ),
+    defineTool(
       'semantic_search',
       Th.semanticSearchToolDescription,
       Th.semanticSearchToolParameters,

@@ -13,6 +13,7 @@ import { PlansModule } from './modules/plans/plans.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
+import { SkillTagsModule } from './modules/skill-tags/skill-tags.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -35,6 +36,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,
@@ -60,6 +62,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,
