@@ -23,6 +23,19 @@ export const LEDGER_TABLE = 'schema_migrations';
 /** Tables whose presence proves a DB already carries the openthrottle schema. */
 export const CORE_TABLES = ['plans', 'tasks'] as const;
 
+/** A migration recorded in the ledger. `checksum` is null for bootstrap-seeded rows. */
+export interface AppliedMigration {
+  checksum: string | null;
+  filename: string;
+}
+
+/** A previously-applied migration whose file content has since changed. */
+export interface ChecksumDrift {
+  applied: string;
+  current: string;
+  filename: string;
+}
+
 /** Persistence port for the migration runner; see {@link PgMigrationStore} for the pg impl. */
 export interface MigrationStore {
   /** Apply one migration and record it, atomically. Rejects (recording nothing) on failure. */
@@ -33,8 +46,8 @@ export interface MigrationStore {
   coreTablesExist(): Promise<boolean>;
   /** Create the ledger table if it does not exist. */
   ensureLedger(): Promise<void>;
-  /** Filenames already recorded as applied. */
-  readApplied(): Promise<string[]>;
+  /** Migrations recorded as applied, with their stored checksums. */
+  readApplied(): Promise<AppliedMigration[]>;
 }
 
 /** Lists and reads migration files; abstracted so the runner is unit-testable. */
@@ -69,6 +82,26 @@ export function selectPendingMigrations(
 }
 
 /**
+ * Already-applied migrations whose current file checksum differs from the one
+ * recorded when they were applied (edited-in-place). Bootstrap-seeded rows
+ * (null checksum) and files no longer present are ignored — nothing to compare.
+ */
+export function findChecksumDrift(
+  applied: readonly AppliedMigration[],
+  currentChecksums: ReadonlyMap<string, string>,
+): ChecksumDrift[] {
+  const drifts: ChecksumDrift[] = [];
+  for (const { checksum, filename } of applied) {
+    if (checksum === null) continue;
+    const current = currentChecksums.get(filename);
+    if (current !== undefined && current !== checksum) {
+      drifts.push({ applied: checksum, current, filename });
+    }
+  }
+  return drifts;
+}
+
+/**
  * Bootstrap only when the ledger is empty AND the DB already has the core schema.
  *
  * Safe for this repo because the previous runner re-ran *every* migration on
@@ -91,6 +124,7 @@ export async function runMigrations(
   store: MigrationStore,
   source: MigrationSource,
   log: (message: string) => void = console.log,
+  warn: (message: string) => void = console.warn,
 ): Promise<MigrationRunResult> {
   await store.ensureLedger();
 
@@ -110,7 +144,12 @@ export async function runMigrations(
     return { applied: [], bootstrapped: true, skipped: [...sqlFiles] };
   }
 
-  const pending = selectPendingMigrations(sqlFiles, applied);
+  await warnOnChecksumDrift(applied, sqlFiles, source, warn);
+
+  const pending = selectPendingMigrations(
+    sqlFiles,
+    applied.map((a) => a.filename),
+  );
   const appliedNow: string[] = [];
 
   /* eslint-disable no-await-in-loop -- migrations must run in order */
@@ -135,6 +174,41 @@ export async function runMigrations(
   };
 }
 
+/**
+ * Read the current content of already-applied files and warn (never fail, never
+ * re-apply) if any no longer matches its recorded checksum. Files with no stored
+ * checksum (bootstrap-seeded) or no longer on disk are skipped.
+ */
+async function warnOnChecksumDrift(
+  applied: readonly AppliedMigration[],
+  sqlFiles: readonly string[],
+  source: MigrationSource,
+  warn: (message: string) => void,
+): Promise<void> {
+  const present = new Set(sqlFiles);
+  const hashable = applied.filter(
+    (a) => a.checksum !== null && present.has(a.filename),
+  );
+
+  const entries = await Promise.all(
+    hashable.map(
+      async (a) =>
+        [a.filename, createChecksum(await source.read(a.filename))] as const,
+    ),
+  );
+
+  for (const { applied: was, current, filename } of findChecksumDrift(
+    applied,
+    new Map(entries),
+  )) {
+    warn(
+      `⚠️  Checksum drift: ${filename} was edited after it was applied ` +
+        `(recorded ${was.slice(0, 12)}…, current ${current.slice(0, 12)}…). ` +
+        `Not re-applied — revert the edit or add a new migration.`,
+    );
+  }
+}
+
 /** pg-backed {@link MigrationStore}. Each apply() is one transaction. */
 export class PgMigrationStore implements MigrationStore {
   constructor(private readonly client: Client) {}
@@ -149,11 +223,11 @@ export class PgMigrationStore implements MigrationStore {
     `);
   }
 
-  async readApplied(): Promise<string[]> {
-    const { rows } = await this.client.query<{ filename: string }>(
-      `SELECT filename FROM ${LEDGER_TABLE}`,
+  async readApplied(): Promise<AppliedMigration[]> {
+    const { rows } = await this.client.query<AppliedMigration>(
+      `SELECT filename, checksum FROM ${LEDGER_TABLE}`,
     );
-    return rows.map((r) => r.filename);
+    return rows.map((r) => ({ checksum: r.checksum, filename: r.filename }));
   }
 
   async coreTablesExist(): Promise<boolean> {

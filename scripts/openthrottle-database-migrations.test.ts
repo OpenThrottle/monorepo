@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import {
+  type AppliedMigration,
   createChecksum,
   filterSortSqlFiles,
+  findChecksumDrift,
   type MigrationSource,
   type MigrationStore,
   runMigrations,
@@ -25,13 +27,17 @@ class FakeStore implements MigrationStore {
   ) {
     this.coreTables = opts.coreTables ?? false;
     this.failOn = opts.failOn ?? new Set();
-    for (const f of opts.seeded ?? []) this.ledger.set(f, 'seed');
+    // Seeded rows carry a null checksum, exactly like bootstrap-seeded ledger rows.
+    for (const f of opts.seeded ?? []) this.ledger.set(f, null);
   }
 
   async ensureLedger(): Promise<void> {}
 
-  async readApplied(): Promise<string[]> {
-    return [...this.ledger.keys()];
+  async readApplied(): Promise<AppliedMigration[]> {
+    return [...this.ledger].map(([filename, checksum]) => ({
+      checksum,
+      filename,
+    }));
   }
 
   async coreTablesExist(): Promise<boolean> {
@@ -144,5 +150,50 @@ describe('runMigrations', () => {
     failing.failOn = new Set();
     const retry = await runMigrations(failing, source(FILES), () => {});
     expect(retry.applied).toEqual(['002_b.sql', '003_c.sql']);
+  });
+});
+
+describe('findChecksumDrift', () => {
+  const applied: AppliedMigration[] = [
+    { checksum: 'aaa', filename: '001_a.sql' },
+    { checksum: null, filename: '002_b.sql' }, // bootstrap-seeded → never drifts
+    { checksum: 'ccc', filename: '003_c.sql' },
+  ];
+
+  test('flags only applied files whose current checksum differs', () => {
+    const current = new Map([
+      ['001_a.sql', 'aaa'], // unchanged
+      ['002_b.sql', 'anything'], // null recorded → ignored
+      ['003_c.sql', 'CHANGED'], // drift
+    ]);
+    expect(findChecksumDrift(applied, current)).toEqual([
+      { applied: 'ccc', current: 'CHANGED', filename: '003_c.sql' },
+    ]);
+  });
+
+  test('ignores files no longer present on disk', () => {
+    expect(findChecksumDrift(applied, new Map([['001_a.sql', 'aaa']]))).toEqual(
+      [],
+    );
+  });
+});
+
+describe('runMigrations checksum drift', () => {
+  test('warns (does not fail or re-apply) when an applied file was edited', async () => {
+    const store = new FakeStore({ coreTables: false });
+    store.ledger.set('001_a.sql', 'stale-hash-from-before-the-edit');
+
+    const warnings: string[] = [];
+    await runMigrations(
+      store,
+      source(FILES),
+      () => {},
+      (m) => warnings.push(m),
+    );
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('001_a.sql');
+    // Drift never re-applies; only the genuinely-pending files run.
+    expect(store.applyLog).toEqual(['002_b.sql', '003_c.sql']);
   });
 });
