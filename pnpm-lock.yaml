@@ -1083,9 +1083,6 @@ importers:
       '@nestjs/websockets':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/platform-socket.io@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@openthrottle/ai-mcp':
-        specifier: workspace:^
-        version: link:packages/ai-mcp
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:packages/graphql-codegen
@@ -2362,18 +2359,6 @@ importers:
         version: link:../../packages/react-router-testing
 
   infra: {}
-
-  packages/ai-mcp:
-    dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: 'catalog:'
-        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@openthrottle/node-client':
-        specifier: workspace:^
-        version: link:../node-client
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
 
   packages/graphql-codegen:
     dependencies:

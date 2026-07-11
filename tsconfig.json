@@ -137,9 +137,6 @@
       "path": "./packages/nestjs-rbac"
     },
     {
-      "path": "./packages/ai-mcp"
-    },
-    {
       "path": "./tools/generators"
     },
     {
