@@ -202,7 +202,7 @@ catalog:
   'dnd-core': '^16.0.1'
   'dotenv': '^17.2.3'
   'enhanced-resolve': '^5.18.4'
-  'eslint': '^9.39.2'
+  'eslint': '^10.6.0'
   'eslint-plugin-eslint-comments': '^3.2.0'
   'eslint-plugin-import': '^2.32.0'
   'eslint-plugin-import-x': '^4.16.2'
