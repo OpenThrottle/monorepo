@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex plans table. Matches databases/migrations (002, 012, 014, 022).
+ * @description TypeORM entity for OpenThrottle plans table. Matches databases/migrations (002, 012, 014, 022).
  */
 
 import {

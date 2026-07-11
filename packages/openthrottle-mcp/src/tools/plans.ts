@@ -64,15 +64,15 @@ export const getPlanToolParameters = z.object({ id: z.string().min(1) });
 export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
 export const updatePlanToolParameters = UpdatePlanInputSchema();
 
-export const createPlanToolDescription = `Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`;
+export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`;
 
-export const createPlansToolDescription = `Create multiple plans in Cortex atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status, assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
+export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status, assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
 
 export const deletePlanToolDescription = `Delete a plan by id. Returns whether a row was deleted.`;
 
 export const getPlanToolDescription = `Fetch a plan by id (UUID). Returns the plan row or not found.`;
 
-export const listPlansByStatusToolDescription = `List plans in Cortex by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /cortex/pending or list by status.`;
+export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /openthrottle/pending or list by status.`;
 
 export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.`;
 

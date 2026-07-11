@@ -8,8 +8,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   getRalphOutputMarkerFlags,
-  isCortexPlanId,
-  isCortexTaskId,
+  isOpenThrottlePlanId,
+  isOpenThrottleTaskId,
   parseRalphArgs,
   parseRalphCompleteTaskSignals,
 } from '../parsers';
@@ -170,31 +170,35 @@ describe('getRalphOutputMarkerFlags', () => {
   });
 });
 
-describe('isCortexPlanId', () => {
+describe('isOpenThrottlePlanId', () => {
   it('returns true for valid v4 UUID', () => {
-    expect(isCortexPlanId(TASK_UUID)).toBe(true);
-    expect(isCortexPlanId('6eaebb97-dfcf-474d-9630-f2c684aea45c')).toBe(true);
+    expect(isOpenThrottlePlanId(TASK_UUID)).toBe(true);
+    expect(isOpenThrottlePlanId('6eaebb97-dfcf-474d-9630-f2c684aea45c')).toBe(
+      true,
+    );
   });
 
   it('returns false for non-UUID strings', () => {
-    expect(isCortexPlanId('')).toBe(false);
-    expect(isCortexPlanId('abc')).toBe(false);
-    expect(isCortexPlanId('93fcbc19-1861-4931-9631-6393d33220a2x')).toBe(false);
+    expect(isOpenThrottlePlanId('')).toBe(false);
+    expect(isOpenThrottlePlanId('abc')).toBe(false);
+    expect(isOpenThrottlePlanId('93fcbc19-1861-4931-9631-6393d33220a2x')).toBe(
+      false,
+    );
   });
 
   it('accepts UUID with surrounding whitespace', () => {
-    expect(isCortexPlanId(`  ${TASK_UUID}  `)).toBe(true);
+    expect(isOpenThrottlePlanId(`  ${TASK_UUID}  `)).toBe(true);
   });
 });
 
-describe('isCortexTaskId', () => {
+describe('isOpenThrottleTaskId', () => {
   it('returns true for valid v4 UUID', () => {
-    expect(isCortexTaskId(TASK_UUID)).toBe(true);
+    expect(isOpenThrottleTaskId(TASK_UUID)).toBe(true);
   });
 
   it('returns false for non-UUID strings', () => {
-    expect(isCortexTaskId('')).toBe(false);
-    expect(isCortexTaskId('task-1')).toBe(false);
+    expect(isOpenThrottleTaskId('')).toBe(false);
+    expect(isOpenThrottleTaskId('task-1')).toBe(false);
   });
 });
 

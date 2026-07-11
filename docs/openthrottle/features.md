@@ -19,7 +19,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 
 ### Projects
 
-- Group and filter **plans** (and tasks) by **NX project** (e.g. openthrottle-developer, cortex). Optional `project_id` / project on create/update; leave unset for cross-cutting or docs-only work.
+- Group and filter **plans** (and tasks) by **NX project** (e.g. openthrottle-developer, openthrottle). Optional `project_id` / project on create/update; leave unset for cross-cutting or docs-only work.
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (§ Project association (when to set project)).
 
 ### Semantic search (plans and tasks)

@@ -69,7 +69,7 @@ Key properties:
 - **Customization lives primarily in OpenThrottle.** Skills/Prompts/Generators/workflows are owned by
   the install (the `lib` node) so an org shares one library. A repo **may** add or override
   repo-local skills/prompts, but the default source of truth is OpenThrottle.
-- **Projects are the join.** A Cortex `project` is the stable handle a plan carries; it resolves to a
+- **Projects are the join.** A OpenThrottle `project` is the stable handle a plan carries; it resolves to a
   repository (filesystem path) for the run. One install serves many projects across many repos.
 - **The network boundary is GraphQL.** The server is the only thing that touches OT Postgres; runs
   talk to it over GraphQL (the single health-check exception aside). This is what lets one install
@@ -88,7 +88,7 @@ with** a set of Skills, Prompts, Generators, and customizable workflows. This bu
 
 User registers a **project** and assigns it to one or many OT projects/repositories:
 
-- A Cortex `project` already exists (`projects` table, `Project` GraphQL type).
+- A OpenThrottle `project` already exists (`projects` table, `Project` GraphQL type).
 - A **local repository** is registered via `createWorkspaceLocalRepository` (table
   `workspace_local_repositories`) and linked to the project via `project_id`
   (`setWorkspaceLocalRepositoryProject`). See
@@ -271,7 +271,7 @@ or run in an unintended directory.
   only resolves their own registered repos. Plans/projects are owned in OT Postgres and only reached
   via GraphQL with a bearer token.
 - **OT DB identity (cross-repo).** When a run executes in a foreign repo whose own `.env` sets a
-  different `POSTGRES_URL`, OpenThrottle's Cortex identity is injected explicitly
+  different `POSTGRES_URL`, OpenThrottle's OpenThrottle identity is injected explicitly
   (`OPENTHROTTLE_POSTGRES_URL`, with worker/nested diagnostics
   `WORKFLOW_RALPH_OT_DIAGNOSTICS` / `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`) so plan lookup never
   desyncs to the wrong database. In the GraphQL-only target, this collapses to injecting the GraphQL

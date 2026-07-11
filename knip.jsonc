@@ -72,31 +72,21 @@
     "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
     "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
     "applications/openthrottle-email/tests/setup.ts",
-    // openthrottle-website: vitest setup + alternate home sections (commented in _index; see @deprecated)
+    // openthrottle-website: vitest setup referenced from vitest.config.ts (knip vitest: false)
     "applications/openthrottle-website/tests/setup.ts",
-    "applications/openthrottle-website/app/routing/home/components/HomeHeroV2.tsx",
-    "applications/openthrottle-website/app/routing/home/components/HomeHeroV3.tsx",
-    "applications/openthrottle-website/app/routing/home/components/HomeHeroV4.tsx",
-    "applications/openthrottle-website/app/routing/home/components/HomeHeroV5.tsx",
-    "applications/openthrottle-website/app/routing/home/components/HomeOpenSource.tsx",
     // @openthrottle/react-router-shadcn: CSS entrypoints (app @import) and vitest setup (vitest.config.ts; knip vitest: false)
     "packages/react-router-shadcn/src/theme.css",
     "packages/react-router-shadcn/src/commander.css",
     "packages/react-router-shadcn/vitest.setup.ts",
     // @openthrottle/react-router-*: vitest setup referenced from vitest.config.ts (knip vitest: false)
     "packages/react-router-chat/vitest.setup.ts",
-    "packages/react-router-ide/vitest.setup.ts",
+    "packages/react-router-ide/tests/setup.ts",
     "packages/react-router-notifications/vitest.setup.ts",
     "packages/react-router-profiling/vitest.setup.ts",
     "packages/react-router-ui/vitest.setup.ts",
     "packages/react-router-ui-global/vitest.setup.ts",
     // Ambient window.env merge (consumed via TypeScript program, not import graph)
-    "packages/react-router-ui-global/src/types/window-env.d.ts",
-    // Archived Cortex CLI scripts (fully commented; usage in databases/README.md and docs)
-    "scripts/get-cortex-plan.ts",
-    "scripts/get-cortex-plan-and-tasks.ts",
-    "scripts/link-cortex-plans-tasks-to-existing-projects.ts",
-    "scripts/list-cortex-plans-tasks-without-project.ts",
+    "packages/react-router-ui-global/src/types/global.d.ts",
     // infra/ is Terraform-only (no TS project graph)
     "infra/**",
   ],
@@ -138,8 +128,8 @@
       "entry": [
         "scripts/pnpm-package.ts",
         "scripts/parallelize-tasks.ts",
-        "scripts/update-cortex-plan-status.ts",
-        "scripts/update-cortex-task-status.ts",
+        "scripts/update-openthrottle-plan-status.ts",
+        "scripts/update-openthrottle-task-status.ts",
         "scripts/openthrottle-ingest-agent-assets.ts",
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/validate-agent-assets-frontmatter.ts",

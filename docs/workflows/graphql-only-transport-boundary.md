@@ -104,11 +104,11 @@ These are the remaining non-GraphQL paths. Each is a Phase 2 migration item with
 replacement that already exists. Until migrated, they are **flagged**: they violate the GraphQL-only
 rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 
-### `tools/workflows/src/utils/cortex-ralph.ts` (`pg.Client`)
+### `tools/workflows/src/utils/openthrottle-ralph.ts` (`pg.Client`)
 
 | Postgres-direct function                                          | Replace with GraphQL document                                          | Notes                                                             |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `ensureDatabaseReachableOrExit` / `ensureCortexReachable`         | `GetServerHealthDocument` (the exception)                              | TCP `SELECT 1` → `serverHealth` preflight. Delete `pg` connect.   |
+| `ensureDatabaseReachableOrExit` / `ensureOpenThrottleReachable`   | `GetServerHealthDocument` (the exception)                              | TCP `SELECT 1` → `serverHealth` preflight. Delete `pg` connect.   |
 | `getPlanById`                                                     | `GetPlanDocument`                                                      | Same `Plan` fragment fields.                                      |
 | `getTaskById`                                                     | `GetTaskDocument`                                                      |                                                                   |
 | `getTasksByPlanId`                                                | `GetTasksByPlanIdDocument`                                             |                                                                   |
@@ -122,16 +122,16 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 
 ### `tools/workflows/src/utils/child-job.ts`
 
-| Postgres-direct path                                           | Replace with                                                           | Notes                                                              |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `getPostgresConfig()` plan lookup + `ensureCortexReachable`    | `GetPlanDocument` + `GetServerHealthDocument`                          | Pre-spawn validation should be a GraphQL read, not a `pg` connect. |
-| `buildWorkflowRalphSpawnEnv` injecting `POSTGRES_*` into child | inject `OPENTHROTTLE_WORKFLOWS_*` (GraphQL URL + token) into child env | Eliminates the second credential path entirely.                    |
+| Postgres-direct path                                              | Replace with                                                           | Notes                                                              |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `getPostgresConfig()` plan lookup + `ensureOpenThrottleReachable` | `GetPlanDocument` + `GetServerHealthDocument`                          | Pre-spawn validation should be a GraphQL read, not a `pg` connect. |
+| `buildWorkflowRalphSpawnEnv` injecting `POSTGRES_*` into child    | inject `OPENTHROTTLE_WORKFLOWS_*` (GraphQL URL + token) into child env | Eliminates the second credential path entirely.                    |
 
 ### `tools/workflows/src/bin/ralph.ts`
 
-| Postgres-direct path                                                  | Replace with                                                     | Notes                                                               |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `getCortexConfigOrExit()` + `ensureDatabaseReachableOrExit()` startup | `executeWorkflowGraphqlV2(GetServerHealthDocument, …)` preflight | Same parity the orchestrator already has; removes startup `pg` use. |
+| Postgres-direct path                                                        | Replace with                                                     | Notes                                                               |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `getOpenThrottleConfigOrExit()` + `ensureDatabaseReachableOrExit()` startup | `executeWorkflowGraphqlV2(GetServerHealthDocument, …)` preflight | Same parity the orchestrator already has; removes startup `pg` use. |
 
 > **Net of the migration:** delete the `pg` dependency from the workflow lineage. After it, the
 > `serverHealth` preflight is the _only_ read-before-write call, and it is itself a GraphQL query —

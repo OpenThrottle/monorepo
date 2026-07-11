@@ -1,10 +1,10 @@
 # Plan QUEUED while tasks IN_PROGRESS after mid-run restart
 
-Documents the status divergence investigated in Cortex plan **Investigate parent plan stuck Queued after mid-run job restart while tasks progress** (Plan-Id: `7c8a54a7-cd0f-4a93-ab4f-d39b4d46ead5`). Related: completed plan `67feee49-8a0b-498d-b747-c56dac1a5a9e` (sync parent plan to In Progress when any task enters In Progress). See also [plans-queue-restart-reproduction.md](./plans-queue-restart-reproduction.md) for BullMQ stall/recovery mechanics.
+Documents the status divergence investigated in OpenThrottle plan **Investigate parent plan stuck Queued after mid-run job restart while tasks progress** (Plan-Id: `7c8a54a7-cd0f-4a93-ab4f-d39b4d46ead5`). Related: completed plan `67feee49-8a0b-498d-b747-c56dac1a5a9e` (sync parent plan to In Progress when any task enters In Progress). See also [plans-queue-restart-reproduction.md](./plans-queue-restart-reproduction.md) for BullMQ stall/recovery mechanics.
 
 ## Symptom
 
-After a plan-run job is interrupted and requeued (worker recycle, API restart, stalled job recovery, worktree delay), Cortex can show:
+After a plan-run job is interrupted and requeued (worker recycle, API restart, stalled job recovery, worktree delay), OpenThrottle can show:
 
 | Entity                | Status        | UI / OT impact                                                                           |
 | --------------------- | ------------- | ---------------------------------------------------------------------------------------- |
@@ -50,7 +50,7 @@ Typical timeline after abrupt worker stop:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | **Trigger**                     | GraphQL `createTask` / `updateTask` when a task **newly** becomes `IN_PROGRESS` (`previousStatus !== 'IN_PROGRESS'` on update)   | Stall/reconcile sets plan `QUEUED` only; tasks stay `IN_PROGRESS` — no transition, so sync is not invoked                      |
 | **SQL predicate**               | `WHERE id = ? AND status != 'IN_PROGRESS'` (TypeORM `Not('IN_PROGRESS')`) — **would** promote `QUEUED` → `IN_PROGRESS` if called | Predicate is fine; **call site** is missing on resume                                                                          |
-| **Ralph / direct DB**           | N/A (not in scope of `67feee49`)                                                                                                 | `updateTaskStatus` in `cortex-ralph.ts` never calls sync                                                                       |
+| **Ralph / direct DB**           | N/A (not in scope of `67feee49`)                                                                                                 | `updateTaskStatus` in `openthrottle-ralph.ts` never calls sync                                                                 |
 | **Plan promotion on job retry** | N/A                                                                                                                              | `PlansProcessor.process` sets plan `IN_PROGRESS` at job start — clears divergence only when the BullMQ job is **active** again |
 
 `TasksService.syncParentPlanToInProgressWhenTaskInProgress` promotes the parent plan when a task **newly** becomes `IN_PROGRESS` via GraphQL:
@@ -68,7 +68,7 @@ References:
 
 ### 4. Ralph direct DB bypasses parent sync entirely
 
-`workflow-ralph` uses `updateTaskStatus` in `tools/workflows/src/utils/cortex-ralph.ts` — unconditional `UPDATE tasks SET status = …` with **no** call to `syncParentPlanToInProgressWhenTaskInProgress`.
+`workflow-ralph` uses `updateTaskStatus` in `tools/workflows/src/utils/openthrottle-ralph.ts` — unconditional `UPDATE tasks SET status = …` with **no** call to `syncParentPlanToInProgressWhenTaskInProgress`.
 
 `updatePlanStatus(..., 'IN_PROGRESS')` in the same module is **stricter than GraphQL**: it only applies when `plans.status = 'PENDING'`, not when already `IN_PROGRESS` or when `QUEUED`. After reconciliation sets the plan to `QUEUED`, Ralph’s startup `updatePlanStatus(IN_PROGRESS)` is a **no-op** (`null`), while task updates still succeed.
 
@@ -84,7 +84,7 @@ If a **spawn** child (`pnpm exec workflow-ralph`) survives parent worker recycle
 
 ## Reproduction steps
 
-Prerequisites match [plans-queue-restart-reproduction.md](./plans-queue-restart-reproduction.md): Cortex Postgres, Redis, openthrottle-server, a plan with at least one long-running task (or restart quickly after job goes active).
+Prerequisites match [plans-queue-restart-reproduction.md](./plans-queue-restart-reproduction.md): OpenThrottle Postgres, Redis, openthrottle-server, a plan with at least one long-running task (or restart quickly after job goes active).
 
 ### Scenario A — Stall window (most reliable)
 
@@ -92,7 +92,7 @@ Prerequisites match [plans-queue-restart-reproduction.md](./plans-queue-restart-
 2. Wait until plan is `IN_PROGRESS` and at least one task is `IN_PROGRESS` (worker picked up job; Ralph started).
 3. Abruptly stop openthrottle-server (Ctrl+C / kill container) while the job is active.
 4. Wait for lock expiry + stalled detection (~60–90s with default plans worker constants) **without** starting the server, **or** start the server and wait for `onPlanJobStalled` / startup reconciliation before the job is processed again.
-5. Query Cortex (see below).
+5. Query OpenThrottle (see below).
 
 **Expected observation:** `plan.status === 'QUEUED'` and `tasks[].status === 'IN_PROGRESS'` for the active task(s).
 
@@ -181,14 +181,14 @@ stateDiagram-v2
 
 `TasksService.syncParentPlanToInProgressWhenTaskInProgress` already promotes `QUEUED` → `IN_PROGRESS` (`WHERE status != 'IN_PROGRESS'`). Extend **call sites**, not the SQL:
 
-| Call site                                      | Change                                                                                                                                                                                                                                                                                                                                 |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`workflow-ralph` startup** (`ralph.ts` ~142) | After `updatePlanStatus(IN_PROGRESS)` (or replace it), call sync when any task is `IN_PROGRESS` or when plan is `QUEUED`/`PENDING` and work remains. Prefer a shared helper in `cortex-ralph.ts`: `promotePlanToInProgressIfNeeded(planId)` using `UPDATE plans SET status = 'IN_PROGRESS' WHERE id = $1 AND status != 'IN_PROGRESS'`. |
-| **Ralph resume branch** (`ralph.ts` ~214–217)  | When resuming `firstInProgress`, call the same promote helper (no `updateTask` required).                                                                                                                                                                                                                                              |
-| **Orchestrator** (`orchestrator.ts` ~114–117)  | After failed/blocked `updatePlan(IN_PROGRESS)`, if plan still not `IN_PROGRESS`, call GraphQL path that uses sync (see Layer 2) or add `syncParentPlan…` via a thin mutation/service.                                                                                                                                                  |
-| **`updateTaskStatus` (direct DB)**             | Optional: after setting task `IN_PROGRESS`, call promote helper for `planId` (covers postgres-direct Ralph transport; MCP uses GraphQL and already emits status events).                                                                                                                                                               |
+| Call site                                      | Change                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`workflow-ralph` startup** (`ralph.ts` ~142) | After `updatePlanStatus(IN_PROGRESS)` (or replace it), call sync when any task is `IN_PROGRESS` or when plan is `QUEUED`/`PENDING` and work remains. Prefer a shared helper in `openthrottle-ralph.ts`: `promotePlanToInProgressIfNeeded(planId)` using `UPDATE plans SET status = 'IN_PROGRESS' WHERE id = $1 AND status != 'IN_PROGRESS'`. |
+| **Ralph resume branch** (`ralph.ts` ~214–217)  | When resuming `firstInProgress`, call the same promote helper (no `updateTask` required).                                                                                                                                                                                                                                                    |
+| **Orchestrator** (`orchestrator.ts` ~114–117)  | After failed/blocked `updatePlan(IN_PROGRESS)`, if plan still not `IN_PROGRESS`, call GraphQL path that uses sync (see Layer 2) or add `syncParentPlan…` via a thin mutation/service.                                                                                                                                                        |
+| **`updateTaskStatus` (direct DB)**             | Optional: after setting task `IN_PROGRESS`, call promote helper for `planId` (covers postgres-direct Ralph transport; MCP uses GraphQL and already emits status events).                                                                                                                                                                     |
 
-**Fix `cortex-ralph.updatePlanStatus` for `IN_PROGRESS`:** Change predicate from `WHERE status = 'PENDING'` to `WHERE status != 'IN_PROGRESS'` (match `syncParentPlanToInProgressWhenTaskInProgress`). Update JSDoc and `openthrottle-ralph-parity.ts`. Add unit tests in `tools/workflows` for promote from `QUEUED`.
+**Fix `openthrottle-ralph.updatePlanStatus` for `IN_PROGRESS`:** Change predicate from `WHERE status = 'PENDING'` to `WHERE status != 'IN_PROGRESS'` (match `syncParentPlanToInProgressWhenTaskInProgress`). Update JSDoc and `openthrottle-ralph-parity.ts`. Add unit tests in `tools/workflows` for promote from `QUEUED`.
 
 #### Layer 2 — GraphQL `IN_PROGRESS` policy includes `QUEUED`
 
@@ -200,7 +200,7 @@ return s === 'PENDING' || s === 'IN_PROGRESS' || s === 'QUEUED';
 
 This fixes orchestrator `UpdatePlanDocument` after stall without a separate mutation. Add resolver tests: `QUEUED` → `IN_PROGRESS` succeeds; `COMPLETED` → `IN_PROGRESS` still blocked.
 
-Keep parity: `cortex-ralph` and GraphQL should accept the same source statuses for `IN_PROGRESS`.
+Keep parity: `openthrottle-ralph` and GraphQL should accept the same source statuses for `IN_PROGRESS`.
 
 #### Layer 3 — Server startup / stall upward reconciliation (closes UI gap during waiting)
 
@@ -224,14 +224,14 @@ Optional: invoke the same helper at end of `resetPlanStatusToQueued` **only when
 
 ### Tests
 
-| Area                                 | Test                                                                                                                                                                  |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`tasks.service.test.ts`**          | Already covers sync SQL; add case documenting `QUEUED` source is promoted (same `Not('IN_PROGRESS')` call).                                                           |
-| **`plans.resolver.test.ts`**         | `updatePlan` / `setPlanStatus`: `QUEUED` → `IN_PROGRESS` allowed; emit notification.                                                                                  |
-| **`plans.processor.test.ts`**        | New describe `reconcilePlanStatusFromActiveTasksOnStartup`: plan `QUEUED` + task `IN_PROGRESS` → plan `IN_PROGRESS`; plan `QUEUED` + all tasks `PENDING` → unchanged. |
-| **`cortex-ralph` / `ralph.test.ts`** | `updatePlanStatus(IN_PROGRESS)` updates when plan is `QUEUED`; Ralph resume logs path calls promote helper.                                                           |
-| **`orchestrator` tests**             | After mock plan `QUEUED`, bootstrap promotes to `IN_PROGRESS` when tasks include `IN_PROGRESS`.                                                                       |
-| **Integration (manual)**             | Scenarios A–C in this doc; re-query GraphQL after stall before job active.                                                                                            |
+| Area                                       | Test                                                                                                                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`tasks.service.test.ts`**                | Already covers sync SQL; add case documenting `QUEUED` source is promoted (same `Not('IN_PROGRESS')` call).                                                           |
+| **`plans.resolver.test.ts`**               | `updatePlan` / `setPlanStatus`: `QUEUED` → `IN_PROGRESS` allowed; emit notification.                                                                                  |
+| **`plans.processor.test.ts`**              | New describe `reconcilePlanStatusFromActiveTasksOnStartup`: plan `QUEUED` + task `IN_PROGRESS` → plan `IN_PROGRESS`; plan `QUEUED` + all tasks `PENDING` → unchanged. |
+| **`openthrottle-ralph` / `ralph.test.ts`** | `updatePlanStatus(IN_PROGRESS)` updates when plan is `QUEUED`; Ralph resume logs path calls promote helper.                                                           |
+| **`orchestrator` tests**                   | After mock plan `QUEUED`, bootstrap promotes to `IN_PROGRESS` when tasks include `IN_PROGRESS`.                                                                       |
+| **Integration (manual)**                   | Scenarios A–C in this doc; re-query GraphQL after stall before job active.                                                                                            |
 
 ### Monitoring (optional, low cost)
 
@@ -242,7 +242,7 @@ Optional: invoke the same helper at end of `resetPlanStatusToQueued` **only when
 
 Create a single implementation plan (e.g. **“Fix plan QUEUED vs task IN_PROGRESS after requeue”**) with tasks:
 
-1. GraphQL + `cortex-ralph` parity for `QUEUED` → `IN_PROGRESS`.
+1. GraphQL + `openthrottle-ralph` parity for `QUEUED` → `IN_PROGRESS`.
 2. Ralph + orchestrator promote-on-resume / startup.
 3. `reconcilePlanStatusFromActiveTasksOnStartup` in `PlansProcessor`.
 4. Tests per table above.
@@ -257,7 +257,7 @@ Implementation landed in plan `f8fb7f3b`. Automated coverage maps to manual scen
 | Scenario                                     | What was verified                                                                                                        | Evidence                                                                                                                                               |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **A — Stall window**                         | Upward reconcile on server startup promotes `QUEUED` plan when any task is `IN_PROGRESS` and emits `plan.status_changed` | `plans.processor.test.ts` — “promotes QUEUED plans that have an IN_PROGRESS task…”                                                                     |
-| **B — Ralph resume without task transition** | `promotePlanToInProgressIfNeeded` at Ralph startup and on resume branch                                                  | `cortex-ralph.test.ts` — `QUEUED` → `IN_PROGRESS`; `ralph.ts` calls helper at startup (~143) and resume (~217)                                         |
+| **B — Ralph resume without task transition** | `promotePlanToInProgressIfNeeded` at Ralph startup and on resume branch                                                  | `openthrottle-ralph.test.ts` — `QUEUED` → `IN_PROGRESS`; `ralph.ts` calls helper at startup (~143) and resume (~217)                                   |
 | **C — Orchestrator after stall**             | GraphQL allows `QUEUED` → `IN_PROGRESS`; orchestrator promotes when resuming `IN_PROGRESS` task                          | `plans.resolver.test.ts`; `ralph-orchestrator.test.ts` — “promotes plan when resuming an IN_PROGRESS task while plan is QUEUED”                        |
 | **WebSocket UI sync**                        | Plan detail revalidates on `plan.status_changed` / `task.status_changed` without full reload                             | `plans.$planId._index.tsx` socket handlers call `revalidator.revalidate()`; emission inventory in `docs/openthrottle/notifications-websockets-plan.md` |
 
@@ -269,7 +269,7 @@ pnpm exec vitest run applications/openthrottle-server/src/queues/plans/plans.pro
   applications/openthrottle-server/src/graphql/tasks/tasks.resolver.test.ts \
   applications/openthrottle-server/src/notifications/emit-bulk-task-status-changes.test.ts
 
-pnpm nx run workflows:test --testPathPattern="cortex-ralph.test|ralph.test"
+pnpm nx run workflows:test --testPathPattern="openthrottle-ralph.test|ralph.test"
 pnpm nx run @openthrottle/openthrottle-workflows:test --testPathPattern=ralph-orchestrator.test
 ```
 

@@ -1,5 +1,5 @@
 /**
- * @description GraphQL object type for server health (API, Cortex DB, Redis). Used by health / serverHealth query.
+ * @description GraphQL object type for server health (API, OpenThrottle DB, Redis). Used by health / serverHealth query.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';

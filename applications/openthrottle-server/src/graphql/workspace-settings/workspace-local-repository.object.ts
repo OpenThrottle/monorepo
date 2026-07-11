@@ -35,7 +35,7 @@ export class WorkspaceLocalRepositoryObject {
   gitDefaultBranch!: string | null;
 
   @Field(() => ID, {
-    description: `Optional Cortex project linked to this checkout.`,
+    description: `Optional OpenThrottle project linked to this checkout.`,
     nullable: true,
   })
   projectId!: string | null;

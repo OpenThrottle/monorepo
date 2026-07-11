@@ -17,7 +17,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 ## 1. ralph.ts (CLI): spawning the iteration runner
 
-**Files:** `tools/workflows/src/bin/ralph.ts` (loop, Cortex), `tools/workflows/src/bin/run-iteration.ts` (single iteration)
+**Files:** `tools/workflows/src/bin/ralph.ts` (loop, OpenThrottle), `tools/workflows/src/bin/run-iteration.ts` (single iteration)
 
 - **What it spawns (one backend per run):** A shell command built from `--backend` (default `cursor`):
   - **`cursor`:** `cursor-agent --force -p "<agentPrompt>" [--model <model>]` (`cursor-agent` on PATH).
@@ -37,7 +37,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
   - **Git:** `git -C <worktreePath> ...` via `spawnSync` (no shell) for `rev-parse` (branch name, HEAD SHA). Short, fast calls.
   - **Ralph:** `pnpm exec workflow-ralph --plan <planId>` plus optional argv from `buildWorkflowRalphRunTuningArgv` (e.g. `--backend`, `--iterations`, `--worktree` defaulting to `handoff.targetId`) with `cwd: worktreePath`, via **`spawn`** + Promise (`runRalphAsync`). Each iteration inside nested Ralph may pass agent `-w/--worktree` to cursor-agent/claude when configured. Optional `onChunk` forwards stdout/stderr; optional timeout and `AbortSignal`.
 - **Blocking:** The caller awaits the Promise until `workflow-ralph` exits. Inner iteration runners (`cursor-agent` / `claude`) are spawned by the nested CLI per `--backend`.
-- **Where streaming/async would help:** Chunk forwarding and `streamToCortex` already use `onChunk`; further work could push more progress surfaces without changing the spawn model.
+- **Where streaming/async would help:** Chunk forwarding and `streamToOpenThrottle` already use `onChunk`; further work could push more progress surfaces without changing the spawn model.
 
 ---
 
@@ -77,7 +77,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 **Blocking vs non-blocking:**
 
 - The workflow function itself is async and uses `await runLoop(handoff)`, so the _caller_ can be async (e.g. BullMQ worker). Ralph in the loop uses async `spawn`; ensure-commit still uses `spawnSync` for git and nx checks unless migrated.
-- **Streaming:** `runChildJob` can forward chunks (`onChunk`) and optional Cortex `plan_output_stream` mirroring while the nested `workflow-ralph` runs. The workflow still returns a single `WorktreeWorkflowResult` when the loop finishes.
+- **Streaming:** `runChildJob` can forward chunks (`onChunk`) and optional OpenThrottle `plan_output_stream` mirroring while the nested `workflow-ralph` runs. The workflow still returns a single `WorktreeWorkflowResult` when the loop finishes.
 
 **Where more observability would help:**
 
@@ -112,7 +112,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 - **ralph.ts** and **child-job** use `spawn` + Promises when non-interactive (ralph) or for the Ralph subprocess (child-job), enabling streaming, per-iteration or per-run timeouts, and cancellation. Git and parent-job nx checks remain `spawnSync` unless optionally migrated.
 - **Streaming** progress (agent output, check output) would require either stream forwarding from child processes or writing to a shared store (e.g. plan_output_stream, job progress).
-- **Verification** (lint/test/typecheck) is part of the same process lifecycle in `parentJobEnsureCommitBeforeRelease`. How it is integrated with spawned jobs and how results are reported (job return value, optional Cortex) is documented in [verification-and-reporting.md](./verification-and-reporting.md).
+- **Verification** (lint/test/typecheck) is part of the same process lifecycle in `parentJobEnsureCommitBeforeRelease`. How it is integrated with spawned jobs and how results are reported (job return value, optional OpenThrottle) is documented in [verification-and-reporting.md](./verification-and-reporting.md).
 - **Worktree/repo registration** is via the tracker (target id + path); the spawned process is bound to a repo only by `cwd`. No HTTP server exists yet to trigger or list runs; that is the subject of the “Design local API/server” and “worktree/repo registration” tasks.
 
 A concrete **process management proposal** (spawn vs spawnSync, workers, timeouts, cancellation, streaming/persisting output) is in [process-management-proposal.md](./process-management-proposal.md).

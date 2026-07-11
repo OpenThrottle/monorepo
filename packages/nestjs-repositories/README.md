@@ -1,6 +1,6 @@
 # @openthrottle/nestjs-repositories
 
-NestJS data access layer for Cortex: plans, tasks, embeddings, and related entities.
+NestJS data access layer for OpenThrottle: plans, tasks, embeddings, and related entities.
 
 ## Installation
 

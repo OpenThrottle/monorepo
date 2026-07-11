@@ -61,7 +61,7 @@ export class SetWorkspaceLocalRepositoryProjectInput {
   id!: string;
 
   @Field(() => ID, {
-    description: `Cortex project id, or null to clear the link.`,
+    description: `OpenThrottle project id, or null to clear the link.`,
     nullable: true,
   })
   projectId?: string | null;

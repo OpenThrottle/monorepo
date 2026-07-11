@@ -158,7 +158,7 @@ export class WorkspaceLocalRepositoriesService {
   }
 
   /**
-   * @description Assigns, changes, or clears the Cortex project link for an owned repository.
+   * @description Assigns, changes, or clears the OpenThrottle project link for an owned repository.
    */
   async setProject(
     userId: string,

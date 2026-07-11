@@ -1,5 +1,5 @@
 /**
- * @description Shared TypeORM DataSource for Cortex Postgres. Cached per connection string for connection pooling.
+ * @description Shared TypeORM DataSource for OpenThrottle Postgres. Cached per connection string for connection pooling.
  */
 
 import {

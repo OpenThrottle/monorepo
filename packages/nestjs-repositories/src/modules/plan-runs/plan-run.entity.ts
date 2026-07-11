@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex plan_runs table. Matches databases/migrations/038.
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038.
  */
 
 import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';

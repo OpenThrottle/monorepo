@@ -19,20 +19,20 @@ When in doubt, leave `project_id` null.
 To regenerate the list:
 
 ```bash
-pnpm exec tsx ./scripts/list-cortex-plans-tasks-without-project.ts
+pnpm exec tsx ./scripts/list-openthrottle-plans-tasks-without-project.ts
 ```
 
 ## Candidate associations (from titles)
 
 From the plan/task titles, these are **candidates** for associating with an NX project when criteria are defined (leave unset when cross-cutting or ambiguous):
 
-| Inferred NX project / area                                | Examples (plan or task title)                                                                                               |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **openthrottle-developer**                                | Improve queue job cards in openthrottle-developer; queues index; PlansToolbar (openthrottle-developer); route page titles   |
-| **openthrottle-server**                                   | GraphQL search resolver; DataLoaders for Project.plans/tasks; ResolveField resolvers; queues GraphQL; doc-ingestion         |
-| **cortex** (app)                                          | PlansSidebar; PlansToolbar; PlansTable; PlanTasksTable; ProjectsTable; SearchCard; DashboardRecentActivity; cortex-api docs |
-| **@openthrottle/openthrottle-mcp** or **tools/workflows** | Ralph workflow; BullMQ job doc ingestion; process management; health check                                                  |
-| **packages (shared-ui, style-guide)**                     | shadcn-ui components; Tailwind migration; design tokens                                                                     |
-| **Cross-cutting / leave unset**                           | Infrastructure (Caddy, Ollama, Docker); documentation; ideas; multi-repo; marketing; content                                |
+| Inferred NX project / area                                | Examples (plan or task title)                                                                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **openthrottle-developer**                                | Improve queue job cards in openthrottle-developer; queues index; PlansToolbar (openthrottle-developer); route page titles         |
+| **openthrottle-server**                                   | GraphQL search resolver; DataLoaders for Project.plans/tasks; ResolveField resolvers; queues GraphQL; doc-ingestion               |
+| **openthrottle** (app)                                    | PlansSidebar; PlansToolbar; PlansTable; PlanTasksTable; ProjectsTable; SearchCard; DashboardRecentActivity; openthrottle-api docs |
+| **@openthrottle/openthrottle-mcp** or **tools/workflows** | Ralph workflow; BullMQ job doc ingestion; process management; health check                                                        |
+| **packages (shared-ui, style-guide)**                     | shadcn-ui components; Tailwind migration; design tokens                                                                           |
+| **Cross-cutting / leave unset**                           | Infrastructure (Caddy, Ollama, Docker); documentation; ideas; multi-repo; marketing; content                                      |
 
 Many plans are **cross-cutting** (infrastructure, workflows, documentation, ideas) and should remain without a project.

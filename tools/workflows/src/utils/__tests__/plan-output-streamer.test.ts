@@ -85,7 +85,7 @@ describe('createPlanOutputStreamer', () => {
   it('gives up after maxAttempts and records the failure without throwing', async () => {
     const append = vi
       .fn<(content: string) => Promise<void>>()
-      .mockRejectedValue(new Error('cortex down'));
+      .mockRejectedValue(new Error('openthrottle down'));
     const logger = silentLogger();
 
     const streamer = createPlanOutputStreamer({
@@ -101,7 +101,7 @@ describe('createPlanOutputStreamer', () => {
     expect(append).toHaveBeenCalledTimes(3);
     expect(summary.attempted).toBe(1);
     expect(summary.failed).toBe(1);
-    expect(summary.firstFailureMessage).toBe('cortex down');
+    expect(summary.firstFailureMessage).toBe('openthrottle down');
     expect(logger.error).toHaveBeenCalledTimes(1);
   });
 

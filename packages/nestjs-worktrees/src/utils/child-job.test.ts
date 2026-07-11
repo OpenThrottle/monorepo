@@ -26,8 +26,8 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({
   getPostgresUrl: () => 'postgres://localhost:5432/test',
 }));
 
-vi.mock('./cortex-client', () => ({
-  ensureCortexReachable: vi.fn(async () => undefined),
+vi.mock('./openthrottle-client', () => ({
+  ensureOpenThrottleReachable: vi.fn(async () => undefined),
   getTasksByPlanId: vi.fn(async () => []),
   updatePlanStatus: vi.fn(async () => null),
 }));

@@ -10,7 +10,7 @@ import {
   savePriorState,
 } from '../doc-ingestion-state';
 
-const connectionString = 'postgres://localhost/cortex';
+const connectionString = 'postgres://localhost/openthrottle';
 
 const mockQuery = vi.fn();
 

@@ -2,12 +2,12 @@
 
 /**
  * @description Mints service account bearer tokens for local bootstrap (openthrottle-mcp, workflow-ralph).
- * Requires migration 045 and a running Cortex Postgres. Skips accounts that already have an active credential.
+ * Requires migration 045 and a running OpenThrottle Postgres. Skips accounts that already have an active credential.
  */
 
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  getCortexTypeOrmOptions,
+  getOpenThrottleTypeOrmOptions,
   ServiceAccount,
   ServiceAccountCredential,
   ServiceAccountsService,
@@ -84,11 +84,16 @@ async function mintBootstrapCredential(
 }
 
 async function main(): Promise<void> {
-  const dataSource = new DataSource(getCortexTypeOrmOptions());
+  const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
 
   try {
-    const logger = { debug: () => undefined } as LoggerService;
+    const logger: LoggerService = {
+      debug: () => undefined,
+      error: () => undefined,
+      log: () => undefined,
+      warn: () => undefined,
+    };
     const serviceAccountsService = new ServiceAccountsService(
       logger,
       dataSource.getRepository(ServiceAccount),

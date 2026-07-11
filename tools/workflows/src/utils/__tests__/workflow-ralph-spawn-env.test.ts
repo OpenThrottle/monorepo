@@ -12,7 +12,7 @@ import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.ts';
 import {
   applyWorkflowRalphSpawnIdentityOverrides,
   buildWorkflowRalphSpawnEnv,
-  resolveCortexPostgresConnectionStringFromEnv,
+  resolveOpenThrottlePostgresConnectionStringFromEnv,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
 } from '../../config/workflow-ralph-spawn-env.ts';
@@ -35,15 +35,15 @@ afterAll(() => {
   fs.rmSync(otRoot, { force: true, recursive: true });
 });
 
-describe('resolveCortexPostgresConnectionStringFromEnv', () => {
+describe('resolveOpenThrottlePostgresConnectionStringFromEnv', () => {
   it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
-    const conn = resolveCortexPostgresConnectionStringFromEnv({
+    const conn = resolveOpenThrottlePostgresConnectionStringFromEnv({
       [OPENTHROTTLE_POSTGRES_URL_ENV]:
-        'postgresql://cortex@db.example:5432/openthrottle',
+        'postgresql://openthrottle@db.example:5432/openthrottle',
       POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
     });
 
-    expect(conn).toBe('postgresql://cortex@db.example:5432/openthrottle');
+    expect(conn).toBe('postgresql://openthrottle@db.example:5432/openthrottle');
   });
 });
 

@@ -1,18 +1,18 @@
 /**
- * @description Minimal Cortex client for worktree child job: reachability check, get tasks, update plan status.
+ * @description Minimal OpenThrottle client for worktree child job: reachability check, get tasks, update plan status.
  */
 
 import pg from 'pg';
 
-export interface CortexRalphConfig {
+export interface OpenThrottleRalphConfig {
   readonly connectionString: string;
 }
 
 /**
- * @description Verifies Cortex Postgres is reachable (connect + SELECT 1). Throws with a clear message if connection fails.
+ * @description Verifies OpenThrottle Postgres is reachable (connect + SELECT 1). Throws with a clear message if connection fails.
  */
-export async function ensureCortexReachable(
-  config: CortexRalphConfig,
+export async function ensureOpenThrottleReachable(
+  config: OpenThrottleRalphConfig,
 ): Promise<void> {
   const client = new pg.Client({ connectionString: config.connectionString });
 
@@ -46,7 +46,7 @@ interface TaskRow {
  * @description Fetches all tasks for a plan, ordered by sortOrder then createdAt.
  */
 export async function getTasksByPlanId(
-  config: CortexRalphConfig,
+  config: OpenThrottleRalphConfig,
   planId: string,
 ): Promise<TaskRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -103,7 +103,7 @@ interface PlanRow {
  * @description Updates a plan's status. Returns updated row or null if not found.
  */
 export async function updatePlanStatus(
-  config: CortexRalphConfig,
+  config: OpenThrottleRalphConfig,
   planId: string,
   status: string,
 ): Promise<PlanRow | null> {

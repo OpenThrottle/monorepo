@@ -11,7 +11,7 @@ import {
 import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 
-/** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client cortex-client. */
+/** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =
   /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
 
@@ -42,7 +42,7 @@ function buildPlanEmbeddingContent(
 }
 
 /**
- * @description Canonical server-side plan creation so GraphQL and MCP callers share one code path (see Cortex plan align UI vs MCP).
+ * @description Canonical server-side plan creation so GraphQL and MCP callers share one code path (see OpenThrottle plan align UI vs MCP).
  */
 @Injectable()
 export class PlanCreationService {
@@ -58,7 +58,7 @@ export class PlanCreationService {
 
   /**
    * @description Validates and normalizes a single create input into the persisted plan column set
-   * (Cortex-style assignee normalization, optional `GITHUB_USER` author default, run-config defaulting).
+   * (OpenThrottle-style assignee normalization, optional `GITHUB_USER` author default, run-config defaulting).
    * Throws {@link BadRequestException} on missing title/category/author. Shared by single and batch create.
    */
   private resolvePlanCreateFields(input: CreatePlanInput): {
@@ -111,7 +111,7 @@ export class PlanCreationService {
   }
 
   /**
-   * @description Persists a plan using the same input contract as GraphQL `createPlan` / MCP `create_plan`, with Cortex-style assignee normalization, optional `GITHUB_USER` author default, and best-effort plan embedding for semantic search.
+   * @description Persists a plan using the same input contract as GraphQL `createPlan` / MCP `create_plan`, with OpenThrottle-style assignee normalization, optional `GITHUB_USER` author default, and best-effort plan embedding for semantic search.
    */
   async createPlanFromInput(input: CreatePlanInput): Promise<Plan> {
     const repo = this.plansService.getRepository();

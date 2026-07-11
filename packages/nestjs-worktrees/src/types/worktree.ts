@@ -146,7 +146,7 @@ export interface ChildJobInput {
   readonly iterations?: number;
   /** Cursor model; forwarded when not default (`auto`). */
   readonly model?: string;
-  /** Cortex plan UUID to run Ralph for. */
+  /** OpenThrottle plan UUID to run Ralph for. */
   readonly planId: string;
   /** NX project name. */
   readonly project?: string;

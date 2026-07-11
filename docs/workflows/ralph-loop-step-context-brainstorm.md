@@ -23,10 +23,10 @@ Ralph advances work by completing tasks across iterations. Today, **git** is the
 
 ## What Plan-Id / Task-Id give today
 
-- **Branch commits:** Footers like `Plan-Id: <uuid>` and `Task-Id: <uuid>` tie a commit message to Cortex rows. Humans and scripts can **grep** history locally; the linkage is **textual**, not a first-class per-step record in Postgres until merge tooling runs.
+- **Branch commits:** Footers like `Plan-Id: <uuid>` and `Task-Id: <uuid>` tie a commit message to OpenThrottle rows. Humans and scripts can **grep** history locally; the linkage is **textual**, not a first-class per-step record in Postgres until merge tooling runs.
 - **After squash merge:** `link_commit` (or `workflow-link-merge`) stores one row in **`commit_links`** (plan, optional task, repo, squash SHA, message). **`get_activity_by_date`** and **`get_last_activity`** surface **landed** commits only—not every Ralph iteration commit on a feature branch.
 - **Tasks table:** Status transitions (`QUEUED` → `COMPLETED`, etc.) and optional **`summary`** give a **per-task** wrap-up when filled; they do not by themselves capture **each iteration’s** reasoning or intermediate state.
-- **Plan output stream:** **`append_plan_output` / `get_plan_output`** can log iteration text into **`plan_output_stream`** (ordered chunks, optional `iteration`). Workers can append metrics lines; nested Ralph with **`streamToCortex`** can mirror stdout/stderr. **Coverage is optional** and often unstructured unless prompts or orchestration enforce a shape.
+- **Plan output stream:** **`append_plan_output` / `get_plan_output`** can log iteration text into **`plan_output_stream`** (ordered chunks, optional `iteration`). Workers can append metrics lines; nested Ralph with **`streamToOpenThrottle`** can mirror stdout/stderr. **Coverage is optional** and often unstructured unless prompts or orchestration enforce a shape.
 
 ## Commits vs OT plan output (current roles)
 
@@ -85,12 +85,12 @@ flowchart LR
 
 ### MCP / developer app vs CLI-only capture
 
-| Approach                   | What it is                                                                                                      | Pros                                                                                                              | Cons                                                                                                                             |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **MCP + OT GraphQL**       | Agent or script calls `append_plan_output`, `update_task`, future `appendIteration` mutation.                   | Single remote source of truth; same data for **`get_plan_output`**, activity APIs, and (when built) developer UI. | Requires Cortex connectivity and auth; failures must be handled (many code paths already “log and continue” on append failures). |
-| **openthrottle-developer** | Humans browse plan, tasks, output stream, future iteration timeline.                                            | No GitHub; searchable in-product; RBAC matches your org.                                                          | Only as good as what was written to OT; UI work for dense streams.                                                               |
-| **CLI / local only**       | e.g. `.ralph/steps.jsonl` in the worktree, or stdout redirected to a file.                                      | Works offline; best for **Ralph engineering** (debug nested `workflow-ralph`, reproduce without DB).              | Invisible to teammates and OT activity until **uploaded** or copied into `append_plan_output`.                                   |
-| **Hybrid (typical)**       | CLI/orchestrator writes **local compact manifest** for debugging and **best-effort** sync to OT via server/MCP. | Resilient to transient OT outages; still centralizes narrative when the network is up.                            | Two sources unless you define precedence (OT wins after sync, or merge by timestamp).                                            |
+| Approach                   | What it is                                                                                                      | Pros                                                                                                              | Cons                                                                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **MCP + OT GraphQL**       | Agent or script calls `append_plan_output`, `update_task`, future `appendIteration` mutation.                   | Single remote source of truth; same data for **`get_plan_output`**, activity APIs, and (when built) developer UI. | Requires OpenThrottle connectivity and auth; failures must be handled (many code paths already “log and continue” on append failures). |
+| **openthrottle-developer** | Humans browse plan, tasks, output stream, future iteration timeline.                                            | No GitHub; searchable in-product; RBAC matches your org.                                                          | Only as good as what was written to OT; UI work for dense streams.                                                                     |
+| **CLI / local only**       | e.g. `.ralph/steps.jsonl` in the worktree, or stdout redirected to a file.                                      | Works offline; best for **Ralph engineering** (debug nested `workflow-ralph`, reproduce without DB).              | Invisible to teammates and OT activity until **uploaded** or copied into `append_plan_output`.                                         |
+| **Hybrid (typical)**       | CLI/orchestrator writes **local compact manifest** for debugging and **best-effort** sync to OT via server/MCP. | Resilient to transient OT outages; still centralizes narrative when the network is up.                            | Two sources unless you define precedence (OT wins after sync, or merge by timestamp).                                                  |
 
 **Automation tradeoff:** MCP-centric flows tie step logging to **the same credentials and process** as task completion—good for consistency. CLI-only is fastest for **tool authors** but pushes the burden to a later “ingest to OT” step if you want non-GitHub visibility for the team.
 
@@ -98,7 +98,7 @@ flowchart LR
 
 **Idea:** Treat each iteration (or each completed task) as an explicit append to the plan output stream with a short template: outcome, files touched, blockers, next step.
 
-- **Pros:** Already modeled in OT; searchable via existing Cortex flows; no new tables required for a first version.
+- **Pros:** Already modeled in OT; searchable via existing OpenThrottle flows; no new tables required for a first version.
 - **Cons:** Unstructured text unless you enforce a schema in the prompt or CLI; mixing “agent ramble” with “human summary” unless you separate channels.
 
 ### 2. Structured “iteration record” (new or extended schema)

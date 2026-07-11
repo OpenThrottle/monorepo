@@ -1,6 +1,6 @@
 # @openthrottle/nestjs-repositories — agent notes
 
-The TypeORM data-access layer for OpenThrottle (Cortex): it owns **every** TypeORM entity
+The TypeORM data-access layer for OpenThrottle (OpenThrottle): it owns **every** TypeORM entity
 (plans, tasks, users, roles, embeddings, subscriptions, …) plus thin per-entity services
 and the DataSource config. This is the package `openthrottle-server` actually wires TypeORM
 through — the sibling `nestjs-typeorm` has no consumers.

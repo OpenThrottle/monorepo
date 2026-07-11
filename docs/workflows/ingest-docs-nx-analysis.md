@@ -1,11 +1,11 @@
-# Analysis: ingest-docs-to-cortex and NX project graph
+# Analysis: ingest-docs-to-openthrottle and NX project graph
 
 **Plan:** Extend markdown ingestion to use NX project graph and include project READMEs
-**Task:** Analyze ingest-docs-to-cortex.ts and NX project graph usage
+**Task:** Analyze ingest-docs-to-openthrottle.ts and NX project graph usage
 
 ## Current script behavior (docs/ only)
 
-- **Script:** `scripts/ingest-docs-to-cortex.ts`
+- **Script:** `scripts/ingest-docs-to-openthrottle.ts`
 - **Source:** Only `docs/` — `DOCS_ROOT = join(process.cwd(), 'docs')`.
 - **Collection:** `collectMdPaths(dir, baseRelative)` recursively finds `.md` paths under `DOCS_ROOT` (relative paths).
 - **Upsert:** For each path: read file, upsert into `documentation` (path, content, repo, sha, pr_number, authors, message). Idempotent per `(repo, sha, path)`.
@@ -31,5 +31,5 @@
 
 ## Verification (task 5)
 
-- Full run: `pnpm run cortex:import-docs` ingests docs/ (e.g. 113 files) plus NX project READMEs (e.g. 75 files) for 188 documentation rows; paths for READMEs are `projects/<root>/README.md`.
+- Full run: `pnpm run openthrottle:import-docs` ingests docs/ (e.g. 113 files) plus NX project READMEs (e.g. 75 files) for 188 documentation rows; paths for READMEs are `projects/<root>/README.md`.
 - Idempotent per (repo, sha, path); re-run upserts and refreshes embeddings.

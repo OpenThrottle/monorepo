@@ -154,7 +154,7 @@ System CPU: load 4.2 (1.05/core on 4 cores), pressure: moderate, PSI some10s: 8.
 **Possible causes:**
 
 - Waiting for LLM API responses (cursor-agent → Claude/OpenAI)
-- Network latency to Cortex/Redis
+- Network latency to OpenThrottle/Redis
 - Slow disk I/O (large file reads/writes)
 
 **Actions:**
@@ -264,8 +264,8 @@ Breaking this down:
 After each task run, metrics are appended to `plan_output_stream`. Query via:
 
 ```bash
-# Using Cortex MCP
-cortex:get_plan_output(planId)
+# Using OpenThrottle MCP
+openthrottle:get_plan_output(planId)
 
 # Or in GraphQL
 query { planOutput(planId: "...") { chunks { content } } }

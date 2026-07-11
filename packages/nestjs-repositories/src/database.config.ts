@@ -1,6 +1,6 @@
 /**
  * @description Builds TypeORM DataSource options for Postgres from POSTGRES_URL or POSTGRES_* env vars.
- * Used by NestjsRepositoriesModule to register TypeORM with Cortex connection.
+ * Used by NestjsRepositoriesModule to register TypeORM with OpenThrottle connection.
  */
 
 import type { DataSourceOptions } from 'typeorm';
@@ -41,7 +41,7 @@ function parsePositiveIntEnv(raw: string | undefined): number | undefined {
 }
 
 /**
- * @description Returns TypeORM DataSource options for Cortex. Use when registering TypeOrmModule (e.g. forRootAsync).
+ * @description Returns TypeORM DataSource options for OpenThrottle. Use when registering TypeOrmModule (e.g. forRootAsync).
  *
  * Logging: full SQL logging stays gated to development. In any env, setting
  * `POSTGRES_SLOW_QUERY_MS` to a positive integer sets `maxQueryExecutionTime`,

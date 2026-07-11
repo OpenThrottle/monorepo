@@ -39,7 +39,7 @@ const requireConnectionString = (config: WorkflowRalphConfig): string => {
  * @description Verifies Postgres is reachable (connect + SELECT 1).
  * @deprecated Import {@link ensurePostgresReachable} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export async function ensureCortexReachablePostgres(
+export async function ensureOpenThrottleReachablePostgres(
   config: WorkflowRalphConfig,
 ): Promise<void> {
   const connectionString = requireConnectionString(config);
@@ -59,7 +59,7 @@ export async function ensureCortexReachablePostgres(
       message
         .replace(
           'Postgres database is unreachable.',
-          'Cortex database is unreachable.',
+          'OpenThrottle database is unreachable.',
         )
         .replace(POSTGRES_UNREACHABLE_HINT, RALPH_FATAL_UNREACHABLE_SUFFIX),
     );

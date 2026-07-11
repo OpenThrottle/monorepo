@@ -38,7 +38,7 @@ website.local {
 	reverse_proxy localhost:6025
 }
 
-# Ollama (LLM/embedding server for node-client, cortex:import, etc.). Set OLLAMA_BASE_URL to https://ollama.local when using this.
+# Ollama (LLM/embedding server for node-client, openthrottle:import, etc.). Set OLLAMA_BASE_URL to https://ollama.local when using this.
 ollama.local {
 	reverse_proxy localhost:11434
 }

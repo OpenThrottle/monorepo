@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex tasks table. Matches databases/migrations (003, 012, 015, 023, 049).
+ * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049).
  */
 
 import {

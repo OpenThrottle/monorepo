@@ -1,41 +1,41 @@
-# Cortex API GraphQL schema audit
+# OpenThrottle API GraphQL schema audit
 
-Gap analysis: cortex app data needs vs cortex-api GraphQL (and REST) as of this audit.
+Gap analysis: openthrottle app data needs vs openthrottle-api GraphQL (and REST) as of this audit.
 
 ## App data sources
 
-- **cortex-server** (`@openthrottle/node-client`): direct Cortex Postgres used in route loaders/actions for plans, tasks, notes, activity, commit links, semantic search, plan counts, categories, assignees.
-- **cortex-api**: NestJS app; REST used today for GitHub pulls and generators; GraphQL to be the single API for the cortex app.
+- **openthrottle-server** (`@openthrottle/node-client`): direct OpenThrottle Postgres used in route loaders/actions for plans, tasks, notes, activity, commit links, semantic search, plan counts, categories, assignees.
+- **openthrottle-api**: NestJS app; REST used today for GitHub pulls and generators; GraphQL to be the single API for the openthrottle app.
 
-## App needs (from cortex app routes)
+## App needs (from openthrottle app routes)
 
-| Need                                            | cortex-server usage                                                                               | cortex-api GraphQL (before audit) | cortex-api REST                               |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------- |
-| **Plans**                                       |                                                                                                   |                                   |                                               |
-| Get plan by ID                                  | `getPlanById`                                                                                     | `plan(id)` ✅                     | -                                             |
-| List plans (filtered, sorted, paginated)        | `listPlansByStatus` (status, assignee, project, sortBy, sortOrder, titleSubstring, limit, offset) | `plans()` only ❌                 | -                                             |
-| Plan counts by status                           | `listPlanCountsByStatus`                                                                          | ❌                                | -                                             |
-| Distinct categories                             | `listDistinctCategories`                                                                          | ❌                                | -                                             |
-| Distinct authors/assignees                      | `listDistinctAuthorsAndAssignees`                                                                 | ❌                                | -                                             |
-| Create / update / delete plan                   | `createPlan`, `updatePlan`, `deletePlan`                                                          | ❌                                | -                                             |
-| **Tasks**                                       |                                                                                                   |                                   |                                               |
-| Get task by ID                                  | `getTaskById`                                                                                     | `task(id)` ✅                     | -                                             |
-| List tasks by plan                              | `getTasksByPlanId`                                                                                | `tasksByPlanId(planId)` ✅        | -                                             |
-| Remaining tasks (pending, in_progress, blocked) | `getRemainingTasksByPlanId`                                                                       | ❌                                | -                                             |
-| Create / update / delete task                   | `createTask`, `updateTask`, `deleteTask`                                                          | ❌                                | -                                             |
-| **Notes**                                       |                                                                                                   |                                   |                                               |
-| Get note by ID                                  | `getNoteById`                                                                                     | `note(id)` ✅                     | -                                             |
-| List notes                                      | `listNotes`                                                                                       | `notes()` ✅                      | -                                             |
-| Create / update / delete note                   | `createNote`, `updateNote`, `deleteNote`                                                          | ❌                                | -                                             |
-| **Activity**                                    |                                                                                                   |                                   |                                               |
-| Activity by date range                          | `getActivityByDateRange(startIso, endIso)`                                                        | ❌                                | -                                             |
-| **Commit links**                                |                                                                                                   |                                   |                                               |
-| By plan ID                                      | `getCommitLinksByPlanId`                                                                          | `commitLinksByPlanId(planId)` ✅  | -                                             |
-| By task ID                                      | `getCommitLinksByTaskId`                                                                          | `commitLinksByTaskId(taskId)` ✅  | -                                             |
-| **Semantic search**                             | `searchPlansBySemanticQuery(query, limit)`                                                        | `searchPlans(query, limit)` ✅    | -                                             |
-| **GitHub pulls**                                | -                                                                                                 | ❌                                | `GET /github/repos/:owner/:repo/pulls` ✅     |
-| **Generators**                                  | -                                                                                                 | ❌                                | `GET /generators`, `GET /generators/:name` ✅ |
-| **Settings**                                    | -                                                                                                 | -                                 | App has settings routes; no backend yet       |
+| Need                                            | openthrottle-server usage                                                                         | openthrottle-api GraphQL (before audit) | openthrottle-api REST                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| **Plans**                                       |                                                                                                   |                                         |                                               |
+| Get plan by ID                                  | `getPlanById`                                                                                     | `plan(id)` ✅                           | -                                             |
+| List plans (filtered, sorted, paginated)        | `listPlansByStatus` (status, assignee, project, sortBy, sortOrder, titleSubstring, limit, offset) | `plans()` only ❌                       | -                                             |
+| Plan counts by status                           | `listPlanCountsByStatus`                                                                          | ❌                                      | -                                             |
+| Distinct categories                             | `listDistinctCategories`                                                                          | ❌                                      | -                                             |
+| Distinct authors/assignees                      | `listDistinctAuthorsAndAssignees`                                                                 | ❌                                      | -                                             |
+| Create / update / delete plan                   | `createPlan`, `updatePlan`, `deletePlan`                                                          | ❌                                      | -                                             |
+| **Tasks**                                       |                                                                                                   |                                         |                                               |
+| Get task by ID                                  | `getTaskById`                                                                                     | `task(id)` ✅                           | -                                             |
+| List tasks by plan                              | `getTasksByPlanId`                                                                                | `tasksByPlanId(planId)` ✅              | -                                             |
+| Remaining tasks (pending, in_progress, blocked) | `getRemainingTasksByPlanId`                                                                       | ❌                                      | -                                             |
+| Create / update / delete task                   | `createTask`, `updateTask`, `deleteTask`                                                          | ❌                                      | -                                             |
+| **Notes**                                       |                                                                                                   |                                         |                                               |
+| Get note by ID                                  | `getNoteById`                                                                                     | `note(id)` ✅                           | -                                             |
+| List notes                                      | `listNotes`                                                                                       | `notes()` ✅                            | -                                             |
+| Create / update / delete note                   | `createNote`, `updateNote`, `deleteNote`                                                          | ❌                                      | -                                             |
+| **Activity**                                    |                                                                                                   |                                         |                                               |
+| Activity by date range                          | `getActivityByDateRange(startIso, endIso)`                                                        | ❌                                      | -                                             |
+| **Commit links**                                |                                                                                                   |                                         |                                               |
+| By plan ID                                      | `getCommitLinksByPlanId`                                                                          | `commitLinksByPlanId(planId)` ✅        | -                                             |
+| By task ID                                      | `getCommitLinksByTaskId`                                                                          | `commitLinksByTaskId(taskId)` ✅        | -                                             |
+| **Semantic search**                             | `searchPlansBySemanticQuery(query, limit)`                                                        | `searchPlans(query, limit)` ✅          | -                                             |
+| **GitHub pulls**                                | -                                                                                                 | ❌                                      | `GET /github/repos/:owner/:repo/pulls` ✅     |
+| **Generators**                                  | -                                                                                                 | ❌                                      | `GET /generators`, `GET /generators/:name` ✅ |
+| **Settings**                                    | -                                                                                                 | -                                       | App has settings routes; no backend yet       |
 
 ## Additions made in this audit
 
@@ -48,7 +48,7 @@ Gap analysis: cortex app data needs vs cortex-api GraphQL (and REST) as of this 
 
 ## Deferred / follow-up
 
-- **(Done)** **searchPlans (semantic)**: Implemented via `searchPlans(query, limit)`; uses `@openthrottle/node-client` cortex-server (embedding via OPENAI_API_KEY or Ollama).
+- **(Done)** **searchPlans (semantic)**: Implemented via `searchPlans(query, limit)`; uses `@openthrottle/node-client` openthrottle-server (embedding via OPENAI_API_KEY or Ollama).
 
 ## Field deprecation policy
 

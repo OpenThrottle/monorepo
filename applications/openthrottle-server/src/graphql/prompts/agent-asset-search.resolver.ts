@@ -1,7 +1,7 @@
 /**
  * @description GraphQL resolver for semantic search over agent-asset (custom_prompt) embeddings.
  * Accepts a text query, optional prompt-type filter, project scope, and limit; returns ranked,
- * de-duped agent-asset matches (skills, rules, personas, …). Requires Cortex Postgres and embedding
+ * de-duped agent-asset matches (skills, rules, personas, …). Requires OpenThrottle Postgres and embedding
  * (OPENAI_API_KEY or Ollama). When embedding is unavailable the result is empty; consumers may fall
  * back to a live disk scan.
  */
@@ -56,7 +56,7 @@ function mapChunk(chunk: AgentAssetSearchChunk): AgentAssetChunk {
 @Resolver()
 export class AgentAssetSearchResolver {
   @Query(() => AgentAssetSearchResult, {
-    description: `Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).`,
+    description: `Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).`,
   })
   async searchAgentAssets(
     @Args('input', { type: () => AgentAssetSearchInput })

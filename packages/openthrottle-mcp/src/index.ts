@@ -1,5 +1,5 @@
 /**
- * @description MCP developer package: tool registrations for Cortex/OpenThrottle over GraphQL.
+ * @description MCP developer package: tool registrations for OpenThrottle over GraphQL.
  */
 
 export { registerKnowledgeBaseResource } from './resources/index.ts';

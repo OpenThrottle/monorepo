@@ -1,5 +1,5 @@
 /**
- * @description Shared constants for the Cortex node client (embedding + vector search).
+ * @description Shared constants for the OpenThrottle node client (embedding + vector search).
  */
 
 /**

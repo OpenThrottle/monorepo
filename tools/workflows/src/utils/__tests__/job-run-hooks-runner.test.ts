@@ -114,12 +114,12 @@ describe('buildJobRunHookAgentPrompt', () => {
       entry,
       layer1Suffix: 'Do preflight.',
       layer1Text: '/agents/ralph',
-      planContextBlock: '--- Cortex plan ---',
+      planContextBlock: '--- OpenThrottle plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
     });
 
     expect(prompt).toContain('/agents/ralph');
-    expect(prompt).toContain('--- Cortex plan ---');
+    expect(prompt).toContain('--- OpenThrottle plan ---');
     expect(prompt).toContain('Plan-Id: 00000000-0000-4000-8000-000000000001');
     expect(prompt).toContain('beforeAll');
     expect(prompt).toContain('Do preflight.');

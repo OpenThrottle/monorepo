@@ -12,7 +12,7 @@ import {
   expandToMarkdownPaths,
 } from '../doc-ingestion-diff';
 
-const connectionString = 'postgres://localhost/cortex';
+const connectionString = 'postgres://localhost/openthrottle';
 
 const mockGetPriorState = vi.fn();
 

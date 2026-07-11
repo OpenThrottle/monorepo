@@ -65,12 +65,12 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /** @publicApi */
-export const isCortexPlanId = (plan: string): boolean => {
+export const isOpenThrottlePlanId = (plan: string): boolean => {
   return RALPH_UUID_REGEX.test(plan.trim());
 };
 
 /** @publicApi */
-export const isCortexTaskId = (task: string): boolean => {
+export const isOpenThrottleTaskId = (task: string): boolean => {
   return RALPH_UUID_REGEX.test(task.trim());
 };
 
@@ -127,7 +127,7 @@ export interface RalphArgs {
   iterationTimeoutMs: number | undefined;
   iterations: number;
   model: string | undefined;
-  /** Cortex plan UUID. Required when not in task-centric mode; when --task is used without --plan, resolved from task.planId. */
+  /** OpenThrottle plan UUID. Required when not in task-centric mode; when --task is used without --plan, resolved from task.planId. */
   plan: string | undefined;
   /** Optional NX project name (from project graph). Validated against getNxProjectNames() when provided. */
   project: string | undefined;
@@ -258,7 +258,7 @@ export const parseRalphArgs = (): RalphArgs => {
       i++;
     } else if (arg === '--plan') {
       if (i + 1 >= args.length) {
-        const message = `🚨 ${COLORS.yellow}--plan${COLORS.reset} requires a Cortex plan UUID`;
+        const message = `🚨 ${COLORS.yellow}--plan${COLORS.reset} requires a OpenThrottle plan UUID`;
         throw new Error(message);
       }
 
@@ -266,7 +266,7 @@ export const parseRalphArgs = (): RalphArgs => {
       i++;
     } else if (arg === '--task') {
       if (i + 1 >= args.length) {
-        const message = `🚨 ${COLORS.yellow}--task${COLORS.reset} requires a Cortex task UUID`;
+        const message = `🚨 ${COLORS.yellow}--task${COLORS.reset} requires a OpenThrottle task UUID`;
         throw new Error(message);
       }
 
@@ -323,13 +323,13 @@ export const parseRalphArgs = (): RalphArgs => {
     throw new Error(message);
   }
 
-  if (parsed.plan && !isCortexPlanId(parsed.plan)) {
-    const message = `🚨 Plan must be a Cortex plan UUID (v4). Example: ${COLORS.blue}77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}`;
+  if (parsed.plan && !isOpenThrottlePlanId(parsed.plan)) {
+    const message = `🚨 Plan must be a OpenThrottle plan UUID (v4). Example: ${COLORS.blue}77cb14a0-5eb0-4061-87ea-d618b85e8818${COLORS.reset}`;
     throw new Error(message);
   }
 
-  if (parsed.task && !isCortexTaskId(parsed.task)) {
-    const message = `🚨 Task must be a Cortex task UUID (v4). Example: ${COLORS.blue}45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}`;
+  if (parsed.task && !isOpenThrottleTaskId(parsed.task)) {
+    const message = `🚨 Task must be a OpenThrottle task UUID (v4). Example: ${COLORS.blue}45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}`;
     throw new Error(message);
   }
 

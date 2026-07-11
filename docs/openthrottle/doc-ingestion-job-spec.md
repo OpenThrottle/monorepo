@@ -66,9 +66,9 @@ Only **to-add** and **to-update** are sent to the existing docs ingestion pipeli
 
 ### Where to store prior state
 
-**Decision: store prior state in the Cortex Postgres database** in a dedicated table (`doc_ingestion_state`). Read/write and lookup are implemented in `@tools/workflows/doc-ingestion` (`getPriorState`, `savePriorState`, `removePriorState`, `getPriorStateEntry`, `getDocIngestionStateConnectionString`).
+**Decision: store prior state in the OpenThrottle Postgres database** in a dedicated table (`doc_ingestion_state`). Read/write and lookup are implemented in `@tools/workflows/doc-ingestion` (`getPriorState`, `savePriorState`, `removePriorState`, `getPriorStateEntry`, `getDocIngestionStateConnectionString`).
 
-- **Why DB over manifest file:** Single source of truth with the rest of Cortex; no git noise or merge conflicts; safe for concurrent jobs if scoped by `scope`; already have `POSTGRES_*` and migrations. A manifest file under the repo would require deciding where it lives, who writes it (CI vs local), and could conflict with multiple jobs or branches.
+- **Why DB over manifest file:** Single source of truth with the rest of OpenThrottle; no git noise or merge conflicts; safe for concurrent jobs if scoped by `scope`; already have `POSTGRES_*` and migrations. A manifest file under the repo would require deciding where it lives, who writes it (CI vs local), and could conflict with multiple jobs or branches.
 - **Table shape (conceptual):** One row per `(scope, path)` with at least `path`, `content_hash`, and `updated_at`. Primary or unique key on `(scope, path)`. This allows multiple jobs (or schedules) to maintain separate state via different `scope` values.
 
 ### Hash vs mtime
@@ -86,12 +86,12 @@ When there is no prior state for the given `scope`, treat all expanded paths as 
 
 ### Summary
 
-| Aspect              | Decision                                                                |
-| ------------------- | ----------------------------------------------------------------------- |
-| Prior state storage | Cortex DB table (e.g. `doc_ingestion_state`: scope, path, content_hash) |
-| Change detection    | Content hash (e.g. SHA-256); not mtime                                  |
-| Scope               | Optional `scope` in payload to key state (default `"default"`)          |
-| Result of diff      | to-add, to-update, to-remove; only to-add and to-update are re-ingested |
+| Aspect              | Decision                                                                      |
+| ------------------- | ----------------------------------------------------------------------------- |
+| Prior state storage | OpenThrottle DB table (e.g. `doc_ingestion_state`: scope, path, content_hash) |
+| Change detection    | Content hash (e.g. SHA-256); not mtime                                        |
+| Scope               | Optional `scope` in payload to key state (default `"default"`)                |
+| Result of diff      | to-add, to-update, to-remove; only to-add and to-update are re-ingested       |
 
 This spec is the source for the implementation tasks: prior-state storage, diff logic, wiring the BullMQ job to the existing ingestion pipeline, and scheduling.
 
@@ -100,8 +100,8 @@ This spec is the source for the implementation tasks: prior-state storage, diff 
 The BullMQ job is implemented and wired as follows:
 
 - **Queue:** `doc-ingestion` (see `applications/openthrottle-server/src/queues/doc-ingestion/`).
-- **Processor:** `DocIngestionProcessor` runs for each job: validates payload (directories or files required), runs `computeDocIngestionDiff` from `@tools/workflows/doc-ingestion`, de-indexes to-remove via `deindexDocumentationByPath`, runs existing `cortex:import-docs` (with `DOCS_PATHS`, `DOCS_REPO`, `DOCS_SHA`) for to-add and to-update, then persists prior state via `savePriorState` / `removePriorState`.
-- **Ingestion script:** Root `cortex:import-docs` (e.g. `scripts/ingest-docs-to-cortex.ts`) respects `DOCS_PATHS` when set (comma-separated relative paths); the processor sets this to the union of to-add and to-update so only changed docs are re-ingested.
+- **Processor:** `DocIngestionProcessor` runs for each job: validates payload (directories or files required), runs `computeDocIngestionDiff` from `@tools/workflows/doc-ingestion`, de-indexes to-remove via `deindexDocumentationByPath`, runs existing `openthrottle:import-docs` (with `DOCS_PATHS`, `DOCS_REPO`, `DOCS_SHA`) for to-add and to-update, then persists prior state via `savePriorState` / `removePriorState`.
+- **Ingestion script:** Root `openthrottle:import-docs` (e.g. `scripts/ingest-docs-to-openthrottle.ts`) respects `DOCS_PATHS` when set (comma-separated relative paths); the processor sets this to the union of to-add and to-update so only changed docs are re-ingested.
 - **Enqueue:** The queue is registered in `QueuesService` (`getQueueByName('doc-ingestion')`). On-demand enqueue via GraphQL mutation; optional recurring schedule via env (see below).
 
 ## Scheduling and triggering

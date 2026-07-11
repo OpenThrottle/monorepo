@@ -15,7 +15,7 @@ describe('AgentsMcpRouter', () => {
   });
 
   it('routes list_sources', () => {
-    const r = router.route({ message: 'list sources in cortex' });
+    const r = router.route({ message: 'list sources in openthrottle' });
     expect(r.tool).toBe('list_sources');
     expect(r.args).toEqual({});
     expect(r.confidence).toBeGreaterThan(0.9);
@@ -94,7 +94,7 @@ describe('AgentsMcpRouter', () => {
 
   it('routes get_activity_by_date with daysBack', () => {
     const r = router.route({
-      message: 'Show cortex activity for the last 7 days',
+      message: 'Show openthrottle activity for the last 7 days',
     });
     expect(r.tool).toBe('get_activity_by_date');
     expect(r.args).toEqual({ daysBack: 7 });
@@ -137,7 +137,7 @@ describe('AgentsMcpRouter', () => {
 
     it('routes /ot/pending phrasing with plan wording', () => {
       const r = router.route({
-        message: 'Show /ot/pending plans in cortex',
+        message: 'Show /ot/pending plans in openthrottle',
       });
       expect(r.tool).toBe('list_plans_by_status');
       expect(r.args).toEqual({ statuses: ['PENDING'] });

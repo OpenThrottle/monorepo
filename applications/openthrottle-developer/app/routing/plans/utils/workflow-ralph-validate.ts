@@ -133,13 +133,13 @@ export const validateWorkflowRalphRunOptionsState = (
       if (plan === '') {
         issues.push({
           code: 'plan_required',
-          message: '--plan requires a Cortex plan UUID',
+          message: '--plan requires a OpenThrottle plan UUID',
         });
       } else if (!isUuid(plan)) {
         issues.push({
           code: 'plan_uuid',
           message:
-            'Plan must be a Cortex plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+            'Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
         });
       }
     } else {
@@ -147,13 +147,13 @@ export const validateWorkflowRalphRunOptionsState = (
       if (task === '') {
         issues.push({
           code: 'task_required',
-          message: '--task requires a Cortex task UUID',
+          message: '--task requires a OpenThrottle task UUID',
         });
       } else if (!isUuid(task)) {
         issues.push({
           code: 'task_uuid',
           message:
-            'Task must be a Cortex task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+            'Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
         });
       }
     }
@@ -164,7 +164,7 @@ export const validateWorkflowRalphRunOptionsState = (
         issues.push({
           code: 'plan_uuid',
           message:
-            'Plan must be a Cortex plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+            'Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
         });
       }
     } else {
@@ -173,7 +173,7 @@ export const validateWorkflowRalphRunOptionsState = (
         issues.push({
           code: 'task_uuid',
           message:
-            'Task must be a Cortex task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+            'Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
         });
       }
     }

@@ -31,7 +31,7 @@ function parseMergedQuery(merged?: string): boolean | undefined {
 
 /**
  * Public REST surface for listing repository pull requests, kept alongside the
- * equivalent `pulls` GraphQL query so non-GraphQL clients (e.g. the Cortex UI
+ * equivalent `pulls` GraphQL query so non-GraphQL clients (e.g. the OpenThrottle UI
  * shape documented on {@link PullListItemDto}) can read PRs. Sits behind the
  * server's global auth guard. Query params are validated here so malformed
  * input fails with a 400 rather than being coerced silently.
