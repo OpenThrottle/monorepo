@@ -151,7 +151,7 @@ catalog:
   '@types/lodash': '^4.17.23'
   '@types/markdown-it': '^14.1.2'
   '@types/morgan': '^1.9.10'
-  '@types/node': '^24.1.0'
+  '@types/node': '^26.1.0'
   '@types/passport-jwt': '^4.0.1'
   '@types/passport-local': '^1.0.38'
   '@types/pg': '^8.18.0'
