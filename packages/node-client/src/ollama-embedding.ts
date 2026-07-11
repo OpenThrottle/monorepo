@@ -72,7 +72,7 @@ export async function embedWithOllama(
 
     if (!response.ok) {
       console.error(
-        `[ai-mcp] Ollama embedding request failed (model=${resolved.model}, status=${response.status}); skipping embedding.`,
+        `[node-client] Ollama embedding request failed (model=${resolved.model}, status=${response.status}); skipping embedding.`,
       );
       return undefined;
     }
@@ -85,7 +85,7 @@ export async function embedWithOllama(
 
     if (!Array.isArray(embedding) || embedding.length === 0) {
       console.error(
-        `[ai-mcp] Ollama embedding returned empty result (model=${resolved.model}); skipping embedding.`,
+        `[node-client] Ollama embedding returned empty result (model=${resolved.model}); skipping embedding.`,
       );
       return undefined;
     }
@@ -93,7 +93,7 @@ export async function embedWithOllama(
     return embedding;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[ai-mcp] Ollama embedding request failed: ${message}`);
+    console.error(`[node-client] Ollama embedding request failed: ${message}`);
     return undefined;
   }
 }

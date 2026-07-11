@@ -27,7 +27,7 @@ When to use which server:
 
 /**
  * @description MCP server name: from MCP_SERVER_NAME, or @openthrottle/openthrottle-mcp-{WORKTREE_ID}
- * when WORKTREE_ID is set (e.g. by run-ai-mcp.sh), otherwise default. Makes
+ * when WORKTREE_ID is set (e.g. by run-openthrottle-mcp.sh), otherwise default. Makes
  * each worktree advertise a distinct identity so Cursor does not conflate instances.
  */
 export function getServerName(): string {

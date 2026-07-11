@@ -55,7 +55,7 @@ function toVectorLiteral(embedding: number[]): string {
  * {@link VectorStore} interface, persisting code-chunk vectors in the `code_embeddings` table
  * (databases/migrations 052). Every operation is scoped by `workspaceRoot`. Uses raw SQL via the
  * injected TypeORM {@link DataSource} so the pgvector `<=>` operator and the HNSW index are used
- * directly (TypeORM has no first-class pgvector API) — the same approach as ai-mcp's cortex-client.
+ * directly (TypeORM has no first-class pgvector API) — the same approach as node-client's cortex-client.
  */
 @Injectable()
 export class CodeVectorStore implements VectorStore {

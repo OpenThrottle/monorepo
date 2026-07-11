@@ -1083,9 +1083,6 @@ importers:
       '@nestjs/websockets':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/platform-socket.io@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@openthrottle/ai-mcp':
-        specifier: workspace:^
-        version: link:packages/ai-mcp
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:packages/graphql-codegen
@@ -1125,9 +1122,6 @@ importers:
       '@openthrottle/nestjs-openthrottle-mcp':
         specifier: workspace:^
         version: link:packages/nestjs-mcp-developer
-      '@openthrottle/nestjs-postgres':
-        specifier: workspace:^
-        version: link:packages/nestjs-postgres
       '@openthrottle/nestjs-profiling':
         specifier: workspace:^
         version: link:packages/nestjs-profiling
@@ -2366,18 +2360,6 @@ importers:
 
   infra: {}
 
-  packages/ai-mcp:
-    dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: 'catalog:'
-        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@openthrottle/node-client':
-        specifier: workspace:^
-        version: link:../node-client
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-
   packages/graphql-codegen:
     dependencies:
       '@graphql-codegen/cli':
@@ -2680,12 +2662,6 @@ importers:
       winston-transport:
         specifier: 'catalog:'
         version: 4.9.0
-
-  packages/nestjs-postgres:
-    dependencies:
-      '@openthrottle/nestjs-modules':
-        specifier: workspace:^
-        version: link:../nestjs-modules
 
   packages/nestjs-profiling:
     dependencies:
@@ -13680,8 +13656,8 @@ packages:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
 
-  deslop-js@0.6.0:
-    resolution: {integrity: sha512-MAFw9r+5WUNthgy6J6HtVKdk6B7orqGMOTBiBYz3YMI7WJNM5nE8cfQgp+ZoS7gnD1DQalEW5GqqA/emUSmD8w==}
+  deslop-js@0.6.3:
+    resolution: {integrity: sha512-qKpTgvmW5hVBJLgZqf/wJccZ9NOqRGYH0bSJU6/zFWVpGrDXnrUcbwHcm9n1PrDndCQ6oD7mlB6Nv9YyvEcBKw==}
 
   destroy@1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
@@ -17228,8 +17204,8 @@ packages:
   oxc-resolver@11.19.1:
     resolution: {integrity: sha512-qE/CIg/spwrTBFt5aKmwe3ifeDdLfA2NESN30E42X/lII5ClF8V7Wt6WIJhcGZjp0/Q+nQ+9vgxGk//xZNX2hg==}
 
-  oxlint-plugin-react-doctor@0.6.0:
-    resolution: {integrity: sha512-oByEUczXDnxO5ZsevbOscpFlpmya7dnH6Nne5StYy02AJtyEDAiCSKkXj21GDMjDDkD42708LRfWXRAY32IL9w==}
+  oxlint-plugin-react-doctor@0.6.3:
+    resolution: {integrity: sha512-2hx9tcSdel9kPkzimHlkCqPQlxNGgrhEGiWXa9yreL3JZ6TXcUOx6l8ajsRnScKd4iWaqSollQdkRGZf3IrCoA==}
     engines: {node: ^20.19.0 || >=22.13.0}
 
   oxlint@1.66.0:
@@ -18486,8 +18462,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-doctor@0.6.0:
-    resolution: {integrity: sha512-AqsoQqKQve8Zahxs48hXJuFgMcdY0AdV0fcO5eTdAKZQ/QICEoMCf0bTwxPKwN9Ix/4wWiAR+dNkBcm0ouFq+Q==}
+  react-doctor@0.6.3:
+    resolution: {integrity: sha512-OwX/uel17c2zRKVlj0LMkJNTQlgjr8kls10b6b2f+52K/NX60px1xw7u64ml35SixwZzHwsjTw/Pkf8SwGKKug==}
     engines: {node: ^20.19.0 || >=22.13.0}
     hasBin: true
 
@@ -32540,7 +32516,7 @@ snapshots:
 
   dequal@2.0.3: {}
 
-  deslop-js@0.6.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
+  deslop-js@0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
       '@oxc-project/types': 0.132.0
       fast-glob: 3.3.3
@@ -37210,7 +37186,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  oxlint-plugin-react-doctor@0.6.0:
+  oxlint-plugin-react-doctor@0.6.3:
     dependencies:
       '@typescript-eslint/types': 8.60.1
       eslint-scope: 9.1.2
@@ -38572,19 +38548,19 @@ snapshots:
       '@types/node': 24.12.2
       '@types/react': 19.2.7
 
-  react-doctor@0.6.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
+  react-doctor@0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@sentry/node': 10.56.0
       agent-install: 0.0.5
       conf: 15.1.0
       confbox: 0.2.4
-      deslop-js: 0.6.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      deslop-js: 0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.4(jiti@2.7.0))
       jiti: 2.7.0
       magicast: 0.5.3
       oxlint: 1.66.0
-      oxlint-plugin-react-doctor: 0.6.0
+      oxlint-plugin-react-doctor: 0.6.3
       prompts: 2.4.2
       typescript: 5.9.3
       vscode-languageserver: 9.0.1
@@ -38767,7 +38743,7 @@ snapshots:
       preact: 10.29.1
       prompts: 2.4.2
       react: 19.2.4
-      react-doctor: 0.6.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
+      react-doctor: 0.6.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint@9.39.4(jiti@2.7.0))
       react-dom: 19.2.4(react@19.2.4)
       react-grab: 0.1.47(react@19.2.4)
     optionalDependencies:
