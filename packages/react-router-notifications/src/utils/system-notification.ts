@@ -12,7 +12,7 @@ import type {
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { NOTIFICATIONS_STORAGE_KEY } from '../config/index';
 
-/** @publicApi */
+/** @public */
 export interface SystemNotificationsPreference {
   readonly enabled: boolean;
   /** When true, show system notification only when the tab is not focused. */
@@ -31,7 +31,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * @description Reads system notification preference from localStorage.
  * Defaults to disabled so we only show system notifications after the user opts in.
  *
- * @publicApi
+ * @public
  */
 export function getSystemNotificationsPreference(): SystemNotificationsPreference {
   if (!IS_BROWSER) {
@@ -59,7 +59,7 @@ export function getSystemNotificationsPreference(): SystemNotificationsPreferenc
  * @description Writes system notification preference to localStorage.
  * Use from UI (e.g. NotificationBell footer) to persist user choices.
  *
- * @publicApi
+ * @public
  */
 export function setSystemNotificationsPreference(
   pref: SystemNotificationsPreference,
@@ -94,7 +94,7 @@ function isSupportedAndGranted(): boolean {
  * (if onlyWhenBackground) tab is not visible. On click: focus window and navigate to
  * payload.link if present.
  *
- * @publicApi
+ * @public
  */
 export function showSystemNotification(
   event: NotificationEventName,

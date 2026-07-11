@@ -7,7 +7,7 @@ export interface UseNotificationsStoreOptions {}
  * @description Returns the notifications store context. Throws when used outside a
  * {@link NotificationsStoreProvider}.
  *
- * @publicApi
+ * @public
  */
 export const useNotificationsStore = (
   _options?: UseNotificationsStoreOptions,

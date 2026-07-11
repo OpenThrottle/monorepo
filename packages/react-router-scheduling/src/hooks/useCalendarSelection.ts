@@ -15,7 +15,7 @@ import type { CalendarEvent, ScheduleCallbacks } from '../types';
  * The most recent calendar selection, in engine-agnostic shape. Each field is
  * set by the corresponding click and persists until the next click or `clear`.
  *
- * @publicApi
+ * @public
  */
 export interface CalendarSelection {
   /** Last clicked month-grid day (`YYYY-MM-DD`). */
@@ -30,7 +30,7 @@ export interface CalendarSelection {
  * Options for {@link useCalendarSelection}. Each handler fires after the
  * matching click, alongside the internal selection update.
  *
- * @publicApi
+ * @public
  */
 export interface UseCalendarSelectionOptions {
   /** Fired when a month-grid day is clicked (`YYYY-MM-DD`). */
@@ -45,7 +45,7 @@ export interface UseCalendarSelectionOptions {
  * Result of {@link useCalendarSelection}: the current {@link CalendarSelection},
  * a `clear` to reset it, and the `callbacks` to spread into `useSchedule`.
  *
- * @publicApi
+ * @public
  */
 export interface UseCalendarSelectionResult {
   /** Spread into `useSchedule({ callbacks })` to wire selection. */
@@ -66,7 +66,7 @@ export interface UseCalendarSelectionResult {
  * const schedule = useSchedule({ events, callbacks: selection.callbacks });
  * ```
  *
- * @publicApi
+ * @public
  */
 export function useCalendarSelection(
   options: UseCalendarSelectionOptions = {},

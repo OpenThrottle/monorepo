@@ -52,7 +52,7 @@ function createLandingPagePlugin(): ApolloServerPlugin<BaseContext> {
 /**
  * Opt-in cache configuration for NestjsGraphqlModule.forRoot().
  *
- * @publicApi
+ * @public
  */
 export interface NestjsGraphqlCacheOptions {
   /** Enable or configure Cache-Control plugin. Default options used when true. */
@@ -64,7 +64,7 @@ export interface NestjsGraphqlCacheOptions {
 /**
  * Options for NestjsGraphqlModule.forRoot(); extends ApolloDriverConfig with optional cache plugins.
  *
- * @publicApi
+ * @public
  */
 export interface NestjsGraphqlModuleOptions extends Omit<
   ApolloDriverConfig,
@@ -160,7 +160,7 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
 /**
  * Assemble the opt-in Apollo cache plugins (Cache-Control, then response-cache)
  * in a fixed order. Exported for unit testing of the assembly/order behavior;
- * not part of the package public API (no `@publicApi`), so consume via forRoot.
+ * not part of the package public API (no `@public`), so consume via forRoot.
  */
 export function buildCachePlugins(
   cache: NestjsGraphqlCacheOptions,
@@ -255,7 +255,7 @@ function mergeSecureDefaults(
  * Merge a partial `forRoot` options object onto the secure DEFAULT_DRIVER_CONFIG,
  * preserving security-relevant defaults the caller didn't explicitly override.
  * Exported for unit testing of the default-preservation/merge behavior; not part
- * of the package public API (no `@publicApi`), so consume via forRoot.
+ * of the package public API (no `@public`), so consume via forRoot.
  */
 export function buildDriverConfig(
   options: NestjsGraphqlModuleOptions,
@@ -298,7 +298,7 @@ export function buildDriverConfig(
  * with secure defaults: error sanitization, query-depth limiting, pinned landing
  * page, CSRF prevention, ws connection auth, and opt-in Apollo cache plugins.
  *
- * @publicApi
+ * @public
  */
 @Module({
   controllers: [],

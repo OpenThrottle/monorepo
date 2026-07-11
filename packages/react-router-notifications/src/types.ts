@@ -3,7 +3,7 @@ import type {
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 
-/** @publicApi */
+/** @public */
 export interface NotificationInstance {
   /** ISO 8601 when the app received the notification. */
   readonly createdAt: string;
@@ -17,7 +17,7 @@ export interface NotificationInstance {
 /**
  * Permission state: API supported and permission result, or unsupported (no API / not secure).
  *
- * @publicApi
+ * @public
  */
 export type NotificationPermissionState =
   | 'default'

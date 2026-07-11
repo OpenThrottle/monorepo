@@ -31,7 +31,7 @@ const ruleLabelsFromPath = (filePath: string): readonly string[] => {
 
 /**
  * @description Maps a walked agent asset file to a `custom_prompts` ingest row (D2 natural key: file_path + prompt_type).
- * @publicApi
+ * @public
  */
 export const mapAgentAssetFileToIngestRecord = (
   entry: AgentAssetFileEntry,
@@ -89,7 +89,7 @@ export const mapAgentAssetFileToIngestRecord = (
 
 /**
  * @description Maps walked agent asset files to ingest records.
- * @publicApi
+ * @public
  */
 export const mapAgentAssetFilesToIngestRecords = (
   entries: readonly AgentAssetFileEntry[],

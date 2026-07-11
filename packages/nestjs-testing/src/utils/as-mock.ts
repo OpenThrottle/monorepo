@@ -18,7 +18,7 @@
  * const repo = createMock<Repository<User>>();
  * const row = asMock<User>(userFactory.build()); // factory returns DeepPartial
  *
- * @publicApi
+ * @public
  */
 export function asMock<T>(value: unknown): T;
 export function asMock(value: unknown): unknown {

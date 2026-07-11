@@ -17,7 +17,7 @@ const toOptionalString = (value: unknown): string | undefined => {
 
 /**
  * @description Parses persona frontmatter from `.agents/personas/*.md`.
- * @publicApi
+ * @public
  */
 export const parsePersonaFrontmatter = (
   fileContent: string,
@@ -32,7 +32,7 @@ export const parsePersonaFrontmatter = (
 
 /**
  * @description Returns raw frontmatter fields for Zod validation (ingest/CI).
- * @publicApi
+ * @public
  */
 export const parsePersonaFrontmatterForValidation = (
   fileContent: string,

@@ -20,7 +20,7 @@ export interface LocationTableProps {
 /**
  * A scrollable table of source locations (no ScrollArea primitive yet — see plan c94eec42).
  *
- * @publicApi
+ * @public
  */
 export const LocationTable = (
   props: LocationTableProps,

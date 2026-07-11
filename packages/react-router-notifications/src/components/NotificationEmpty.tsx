@@ -2,7 +2,7 @@ import * as React from 'react';
 
 export interface NotificationEmptyProps {}
 
-/** @publicApi */
+/** @public */
 export const NotificationEmpty = (
   _props: NotificationEmptyProps,
 ): React.ReactElement => {

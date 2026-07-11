@@ -16,7 +16,7 @@ export interface NotificationsAnnouncerProps {
  * to `assertive` so failures interrupt. Rendered once by
  * {@link NotificationsStoreProvider}; updates whenever a notification is added.
  *
- * @publicApi
+ * @public
  */
 export function NotificationsAnnouncer(
   props: NotificationsAnnouncerProps,

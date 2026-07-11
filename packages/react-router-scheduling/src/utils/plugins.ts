@@ -29,7 +29,7 @@ export type CalendarControlsPlugin = ReturnType<
  * Schedule-X's `createCalendar`, plus typed handles to the two plugins the hooks
  * depend on (present only when their flag is enabled).
  *
- * @publicApi
+ * @public
  */
 export interface SchedulingPlugins {
   calendarControls?: CalendarControlsPlugin;
@@ -43,7 +43,7 @@ export interface SchedulingPlugins {
  * `createCalendar` plus handles to the events-service and calendar-controls
  * instances.
  *
- * @publicApi
+ * @public
  */
 export function createSchedulingPlugins(
   config: SchedulePluginsConfig = {},

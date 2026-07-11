@@ -33,7 +33,7 @@ function isZonedDateTime(
  * The system's IANA timezone id (e.g. `America/Los_Angeles`), used as the
  * default zone when converting wall-clock-free `Date`/ISO values to Temporal.
  *
- * @publicApi
+ * @public
  */
 export function systemTimeZone(): string {
   return Temporal.Now.timeZoneId();
@@ -43,7 +43,7 @@ export function systemTimeZone(): string {
  * Convert a `Date` or ISO 8601 string to a `Temporal.ZonedDateTime` in the given
  * timezone (defaults to the system zone). Use for timed events.
  *
- * @publicApi
+ * @public
  */
 export function toZonedDateTime(
   value: Date | string,
@@ -68,7 +68,7 @@ export function toZonedDateTime(
  * ({@link temporalToISOString}). This is by design (an all-day date has no zone),
  * but the only way to pin a specific calendar day is to pass the date-only string.
  *
- * @publicApi
+ * @public
  */
 export function toPlainDate(value: Date | string): Temporal.PlainDate {
   if (typeof value === 'string' && DATE_ONLY_PATTERN.test(value)) {
@@ -88,7 +88,7 @@ export function toPlainDate(value: Date | string): Temporal.PlainDate {
  * Convert a `Temporal.ZonedDateTime` or `Temporal.PlainDate` to a JS `Date`.
  * A ZonedDateTime maps to its exact instant; a PlainDate maps to local midnight.
  *
- * @publicApi
+ * @public
  */
 export function temporalToDate(
   value: Temporal.PlainDate | Temporal.ZonedDateTime,
@@ -104,7 +104,7 @@ export function temporalToDate(
  * Convert a `Temporal.ZonedDateTime` (as a UTC instant) or `Temporal.PlainDate`
  * (as `YYYY-MM-DD`) to an ISO 8601 string.
  *
- * @publicApi
+ * @public
  */
 export function temporalToISOString(
   value: Temporal.PlainDate | Temporal.ZonedDateTime,

@@ -14,7 +14,7 @@ export interface UseDebouncedValueOptions<T> {
  * Return a debounced copy of `value` that only updates after `delayMs` of quiet —
  * e.g. to throttle a file-palette filter or search input before it drives a query.
  *
- * @publicApi
+ * @public
  */
 export const useDebouncedValue = <T,>(
   options: UseDebouncedValueOptions<T>,

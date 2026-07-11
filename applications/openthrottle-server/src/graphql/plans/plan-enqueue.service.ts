@@ -91,7 +91,7 @@ export interface EnqueueOutcome {
 /**
  * @description Service owning the spawn and orchestrator plan-run enqueue pipelines. Extracted from
  * PlansResolver so the resolver only validates GraphQL input and maps results. App-internal; not
- * exported from a package boundary, so no @publicApi tag is required.
+ * exported from a package boundary, so no @public tag is required.
  */
 @Injectable()
 export class PlanEnqueueService {

@@ -110,7 +110,7 @@ export interface ValidateAgentAssetFrontmatterResult {
 
 /**
  * @description Validates frontmatter for a single agent asset file per D5 enforcement.
- * @publicApi
+ * @public
  */
 export const validateAgentAssetFrontmatter = (
   input: ValidateAgentAssetFrontmatterInput,
@@ -192,7 +192,7 @@ export interface ValidateAgentAssetsResult {
 
 /**
  * @description Validates frontmatter for multiple agent asset files.
- * @publicApi
+ * @public
  */
 export const mergeValidationResults = (
   results: readonly ValidateAgentAssetFrontmatterResult[],

@@ -7,7 +7,7 @@
 ## Layout
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
-  API here and tag exported public API with `@publicApi` so Knip keeps it.
+  API here and tag exported public API with `@public` so Knip keeps it.
 
 ## Invariants & gotchas
 
@@ -19,4 +19,4 @@
 
 - [README.md](README.md) — human-facing overview and usage.
 - [../AGENTS.md](../AGENTS.md) — parent-tier conventions (package layout,
-  `@publicApi` tags, source-first pattern).
+  `@public` tags, source-first pattern).

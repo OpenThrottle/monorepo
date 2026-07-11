@@ -16,7 +16,7 @@ interface RalphOutputMarkerFlags {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Snapshot of delimiter / terminal markers in agent output (aligned with
  * `tools/workflows` {@link getRalphOutputMarkerFlags}).
  */
@@ -29,7 +29,7 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /**
- * @publicApi
+ * @public
  * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`;
  * returns unique task ids (lowercase).
  */
@@ -49,7 +49,7 @@ export const parseRalphCompleteTaskSignals = (
 };
 
 /**
- * @publicApi
+ * @public
  * @description True when output contains `<promise>COMPLETE</promise>`.
  */
 export const ralphOutputHasPromiseComplete = (result: string): boolean => {
@@ -57,7 +57,7 @@ export const ralphOutputHasPromiseComplete = (result: string): boolean => {
 };
 
 /**
- * @publicApi
+ * @public
  * @description Terminal control from promise markers (order matches
  * `parseRalphResponse` in `ralph.ts`).
  */

@@ -38,7 +38,7 @@ export interface GradientMeshProps extends React.HTMLAttributes<HTMLDivElement> 
  * the negative z-index from slipping behind an opaque ancestor background) and
  * give sibling content a higher z-index (e.g. `relative z-10`). Honors
  * `prefers-reduced-motion`.
- * @publicApi
+ * @public
  */
 export const GradientMesh = (props: GradientMeshProps): React.ReactElement => {
   const {

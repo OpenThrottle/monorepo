@@ -12,7 +12,7 @@ const INCHES_PER_FOOT = 12;
  * Format an inch measurement as a label in the given display unit.
  * `ft-in` → `2' 6"`, `cm` → `61 cm`, `m` → `0.61 m`.
  *
- * @publicApi
+ * @public
  */
 export function formatInches(inches: number, unit: DisplayUnit): string {
   switch (unit) {
@@ -32,7 +32,7 @@ export function formatInches(inches: number, unit: DisplayUnit): string {
 /**
  * Format a width × height pair as a single dimension label, e.g. `2' 0" × 2' 0"`.
  *
- * @publicApi
+ * @public
  */
 export function formatDimensions(
   width: number,

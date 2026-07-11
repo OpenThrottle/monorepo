@@ -18,7 +18,7 @@ const toOptionalString = (value: unknown): string | undefined => {
 
 /**
  * @description Parses `name`, `description`, and optional `disable-model-invocation` from SKILL.md frontmatter.
- * @publicApi
+ * @public
  */
 export const parseSkillFrontmatter = (
   fileContent: string,
@@ -37,7 +37,7 @@ export const parseSkillFrontmatter = (
 
 /**
  * @description Returns raw frontmatter fields for Zod validation (ingest/CI).
- * @publicApi
+ * @public
  */
 export const parseSkillFrontmatterForValidation = (
   fileContent: string,

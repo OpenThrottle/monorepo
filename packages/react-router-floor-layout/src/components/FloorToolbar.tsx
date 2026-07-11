@@ -4,7 +4,7 @@ import { type ReactElement } from 'react';
 /**
  * Props for {@link FloorToolbar}.
  *
- * @publicApi
+ * @public
  */
 export interface FloorToolbarProps {
   /** Whether redo is available. */
@@ -34,7 +34,7 @@ export interface FloorToolbarProps {
  * `useViewport`), undo / redo, and a grid-snap toggle. Plain shadcn buttons with
  * aria-labels.
  *
- * @publicApi
+ * @public
  */
 export function FloorToolbar(props: FloorToolbarProps): ReactElement {
   const {

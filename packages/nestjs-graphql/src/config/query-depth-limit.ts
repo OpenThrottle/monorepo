@@ -114,7 +114,7 @@ const isOperationDefinition = (
  * nesting exceeds `maxDepth`. A non-positive `maxDepth` disables the rule (it
  * reports nothing), so callers can opt out by passing `0` or a negative value.
  *
- * @publicApi
+ * @public
  * @param maxDepth Maximum allowed nesting depth (exclusive of the operation root).
  */
 export function createQueryDepthLimitRule(maxDepth: number): ValidationRule {
@@ -152,6 +152,6 @@ export function createQueryDepthLimitRule(maxDepth: number): ValidationRule {
 /**
  * Re-export of the operation-definition guard for callers building rule sets.
  *
- * @publicApi
+ * @public
  */
 export { isOperationDefinition };

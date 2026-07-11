@@ -2,11 +2,11 @@
  * @description Nest + `@rekog/mcp-nest` wiring for the developer MCP surface (GraphQL-only handlers).
  */
 
-/** @publicApi */
+/** @public */
 export { bootstrapMcpDeveloperApp } from './bootstrap-openthrottle-mcp-app.ts';
-/** @publicApi */
+/** @public */
 export { McpTransportType } from '@rekog/mcp-nest';
-/** @publicApi */
+/** @public */
 export type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 
 export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';

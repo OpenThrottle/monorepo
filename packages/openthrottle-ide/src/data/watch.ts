@@ -59,7 +59,7 @@ export const DEFAULT_WATCH_DEBOUNCE_MS = 50;
  * The returned handle's `close()` tears the watcher down completely; any
  * pending debounced batch is dropped.
  *
- * @publicApi
+ * @public
  */
 export function watchWorkspace(
   config: WorkspaceConfig,
@@ -196,7 +196,7 @@ export interface WorkspaceIndex {
  * Subscribers are notified only when a batch actually changes the snapshot, so
  * a `change` event whose content hash is unchanged emits nothing.
  *
- * @publicApi
+ * @public
  */
 export async function createWorkspaceIndex(
   config: WorkspaceConfig,

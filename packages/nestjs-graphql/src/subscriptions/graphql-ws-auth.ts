@@ -19,14 +19,14 @@ const isMutableRecord = (value: unknown): value is Record<string, unknown> =>
 /**
  * connectionParams key the browser client puts the ws token under.
  *
- * @publicApi
+ * @public
  */
 export const GRAPHQL_WS_AUTH_TOKEN_PARAM = 'authToken';
 
 /**
  * Options for {@link verifyConnectionToken} / {@link createGraphqlWsOnConnect}.
  *
- * @publicApi
+ * @public
  */
 export interface GraphqlWsAuthOptions {
   /** Expected `iss` claim. Defaults to `process.env.JWT_ISSUER` (optional). */
@@ -46,7 +46,7 @@ export interface GraphqlWsAuthOptions {
  * ways without coupling to that type. `extra` is opaque (graphql-ws owns it; we
  * narrow before reading/writing `userId`).
  *
- * @publicApi
+ * @public
  */
 export interface GraphqlWsConnectionContext {
   readonly connectionParams?: Readonly<Record<string, unknown>>;
@@ -59,7 +59,7 @@ export interface GraphqlWsConnectionContext {
  * `authToken` (preferred) or an `Authorization: Bearer <t>` style param
  * (case-insensitive), so non-browser clients can reuse their HTTP header value.
  *
- * @publicApi
+ * @public
  */
 export function extractConnectionToken(
   connectionParams: Readonly<Record<string, unknown>> | undefined,
@@ -84,7 +84,7 @@ export function extractConnectionToken(
  * if the secret is missing or the token is invalid/expired — callers decide how
  * to surface that (the onConnect handler rejects the connection).
  *
- * @publicApi
+ * @public
  */
 export function verifyConnectionToken(
   token: string,
@@ -116,7 +116,7 @@ export function verifyConnectionToken(
  * boolean (false closes the socket with 4403 Forbidden). An invalid token is
  * always rejected; a missing token is rejected only when `required` (default).
  *
- * @publicApi
+ * @public
  */
 export function createGraphqlWsOnConnect(
   options: GraphqlWsAuthOptions = {},
@@ -154,7 +154,7 @@ export function createGraphqlWsOnConnect(
  * The shared GraphQL `context` callback uses this to surface `userId` for ws
  * operations (HTTP requests carry identity on `req` instead).
  *
- * @publicApi
+ * @public
  */
 export function resolveGraphqlWsUserId(
   ctx: GraphqlWsConnectionContext | undefined,
@@ -172,7 +172,7 @@ export function resolveGraphqlWsUserId(
  * (carries `extra` and a `connectionParams` key), as opposed to an HTTP
  * `{ req }` context. Used to branch the shared GraphQL `context` callback.
  *
- * @publicApi
+ * @public
  */
 export function isGraphqlWsContext(
   value: unknown,

@@ -84,20 +84,20 @@ export const OPENTHROTTLE_THEME: Theme = {
 };
 
 /**
- * @publicApi
+ * @public
  * @description The full theme registry: the OpenThrottle reference theme plus
  * the ported Cursor themes. Consumers build the stylesheet from this and list
  * it in a switcher.
  */
 export const THEMES: readonly Theme[] = [OPENTHROTTLE_THEME, ...CURSOR_THEMES];
 
-/** @publicApi All registered theme ids, in display order. */
+/** @public All registered theme ids, in display order. */
 export const THEME_IDS: readonly string[] = THEMES.map((theme) => theme.id);
 
-/** @publicApi Looks up a theme by id. */
+/** @public Looks up a theme by id. */
 export const getTheme = (id: string): Theme | undefined =>
   THEMES.find((theme) => theme.id === id);
 
-/** @publicApi Type guard: whether `value` is a registered theme id. */
+/** @public Type guard: whether `value` is a registered theme id. */
 export const isThemeId = (value: unknown): value is string =>
   typeof value === 'string' && THEMES.some((theme) => theme.id === value);

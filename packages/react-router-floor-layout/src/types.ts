@@ -15,7 +15,7 @@ import { z } from 'zod';
 /**
  * The kinds of element that can be placed on a floor.
  *
- * @publicApi
+ * @public
  */
 export const FloorElementType = {
   STOOL: 'stool',
@@ -29,7 +29,7 @@ export const FloorElementType = {
 /**
  * A single placeable element kind.
  *
- * @publicApi
+ * @public
  */
 export type FloorElementType =
   (typeof FloorElementType)[keyof typeof FloorElementType];
@@ -38,7 +38,7 @@ export type FloorElementType =
  * Label units. The model always stores inches; this only affects how
  * dimensions are rendered to the user.
  *
- * @publicApi
+ * @public
  */
 export const DisplayUnit = {
   CM: 'cm',
@@ -49,7 +49,7 @@ export const DisplayUnit = {
 /**
  * A supported display unit for dimension labels.
  *
- * @publicApi
+ * @public
  */
 export type DisplayUnit = (typeof DisplayUnit)[keyof typeof DisplayUnit];
 
@@ -57,7 +57,7 @@ export type DisplayUnit = (typeof DisplayUnit)[keyof typeof DisplayUnit];
  * Render + hit-test z-order. Lower draws first (further back). Zones sit behind
  * everything so they never steal pointer hits from tables/stools on top.
  *
- * @publicApi
+ * @public
  */
 export const FloorLayer = {
   SEATING: 2,
@@ -68,7 +68,7 @@ export const FloorLayer = {
 /**
  * A z-order layer value.
  *
- * @publicApi
+ * @public
  */
 export type FloorLayer = (typeof FloorLayer)[keyof typeof FloorLayer];
 
@@ -76,7 +76,7 @@ export type FloorLayer = (typeof FloorLayer)[keyof typeof FloorLayer];
  * The only `schemaVersion` this build understands. Bump + branch in `fromJSON`
  * when a breaking model migration lands.
  *
- * @publicApi
+ * @public
  */
 export const FLOOR_LAYOUT_SCHEMA_VERSION = 1;
 
@@ -144,7 +144,7 @@ const zoneSchema = z.object({
  * A single element on the floor. Discriminated on `type`: tables carry `seats`,
  * zones carry a required `label`, walls/stools are minimal.
  *
- * @publicApi
+ * @public
  */
 export const floorElementSchema = z.discriminatedUnion('type', [
   stoolSchema,
@@ -159,7 +159,7 @@ export const floorElementSchema = z.discriminatedUnion('type', [
  * A whole floor layout. JSON-serializable; carries `schemaVersion` for future
  * migrations. Floor `width`/`height` and `gridSize` are in inches.
  *
- * @publicApi
+ * @public
  */
 export const floorLayoutSchema = z.object({
   displayUnit: z.enum([DisplayUnit.CM, DisplayUnit.FT_IN, DisplayUnit.M]),
@@ -182,14 +182,14 @@ export const floorLayoutSchema = z.object({
 /**
  * A single floor element.
  *
- * @publicApi
+ * @public
  */
 export type FloorElement = z.infer<typeof floorElementSchema>;
 
 /**
  * A whole serializable floor layout.
  *
- * @publicApi
+ * @public
  */
 export type FloorLayout = z.infer<typeof floorLayoutSchema>;
 
@@ -197,6 +197,6 @@ export type FloorLayout = z.infer<typeof floorLayoutSchema>;
  * A table element (any of round/square/rectangle) — the variants that carry
  * `seats`.
  *
- * @publicApi
+ * @public
  */
 export type TableElement = Extract<FloorElement, { seats: number }>;

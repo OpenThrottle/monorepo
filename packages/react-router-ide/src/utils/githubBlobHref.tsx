@@ -14,7 +14,7 @@ export interface GithubBlobHrefOptions {
  * `app/routing/search/utils/github-blob-href.ts`. Appends an `#L{line}` anchor
  * when a line is given.
  *
- * @publicApi
+ * @public
  */
 export const githubBlobHref = (options: GithubBlobHrefOptions): string => {
   const { line, path, repo, sha } = options;

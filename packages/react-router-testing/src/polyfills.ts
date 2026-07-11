@@ -218,7 +218,7 @@ const resolveResizeObserverSize = (
  * {@link InstallPolyfillsOptions.resizeObserverSize} to make it report a
  * non-zero `contentRect` for chart-geometry assertions.
  *
- * @publicApi
+ * @public
  */
 export const installPolyfills = (
   options: InstallPolyfillsOptions = {},
@@ -235,7 +235,7 @@ export const installPolyfills = (
  * file. Shims that were skipped because a real implementation already existed
  * are never touched. Idempotent — a second call is a no-op.
  *
- * @publicApi
+ * @public
  */
 export const uninstallPolyfills = (): void => {
   while (teardowns.length > 0) {

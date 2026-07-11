@@ -26,7 +26,7 @@ export interface NotificationBellProps {}
  * @description Notification bell with dropdown list. Shows unread count badge;
  * dropdown lists visible notifications with mark-as-read and dismiss actions.
  *
- * @publicApi
+ * @public
  */
 export const NotificationBell = (
   _props: NotificationBellProps,

@@ -13,7 +13,7 @@ export interface DocPageViewProps {
  * is rendered by `MarkdownRenderer`, so content is present in server-rendered
  * HTML.
  *
- * @publicApi
+ * @public
  */
 export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
   const { className, entry } = props;

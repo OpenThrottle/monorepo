@@ -15,7 +15,7 @@ import { fromEngineEvent } from '../utils/events';
  * Props passed to a {@link CalendarEventSlot}: the event being rendered, in the
  * engine-agnostic {@link CalendarEvent} shape.
  *
- * @publicApi
+ * @public
  */
 export interface CalendarEventSlotProps {
   /** The event to render, adapted to the domain shape. */
@@ -26,7 +26,7 @@ export interface CalendarEventSlotProps {
  * A custom renderer for an event in a calendar view. Receives the event as a
  * domain {@link CalendarEvent}.
  *
- * @publicApi
+ * @public
  */
 export type CalendarEventSlot = ComponentType<CalendarEventSlotProps>;
 
@@ -34,7 +34,7 @@ export type CalendarEventSlot = ComponentType<CalendarEventSlotProps>;
  * A custom renderer for a header region. Receives no props — render branding,
  * actions, etc.; the engine's internal app handle is intentionally not exposed.
  *
- * @publicApi
+ * @public
  */
 export type CalendarHeaderSlot = ComponentType;
 
@@ -44,7 +44,7 @@ export type CalendarHeaderSlot = ComponentType;
  * content. The `eventModal` slot only renders when the event-modal plugin is
  * enabled (on by default).
  *
- * @publicApi
+ * @public
  */
 export interface CalendarSlots {
   /** All-day events in the week/day grid. */

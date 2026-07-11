@@ -28,7 +28,7 @@ export interface StoredChunk {
  * stub. Every method is scoped by `workspaceRoot` so one store can serve many
  * workspaces (the `workspace_root` column).
  *
- * @publicApi
+ * @public
  */
 export interface VectorStore {
   /** Remove every stored chunk for a workspace (used by a full re-index). */
@@ -98,7 +98,7 @@ export const DEFAULT_EMBEDDING_BATCH_SIZE = 64;
  * Embeddings and storage are injected ({@link IndexWorkspaceOptions}), so this
  * runs against mocks in tests with no live model or database.
  *
- * @publicApi
+ * @public
  */
 export async function indexWorkspace(
   config: WorkspaceConfig,
@@ -236,7 +236,7 @@ export const DEFAULT_TOP_K = 10;
  * the store, and returns matches sorted by descending similarity. Returns an
  * empty array when the provider yields no embedding for the query.
  *
- * @publicApi
+ * @public
  */
 export async function semanticSearch(
   query: string,

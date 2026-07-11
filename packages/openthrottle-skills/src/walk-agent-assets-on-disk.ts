@@ -338,7 +338,7 @@ const walkRuleFiles = (
 
 /**
  * @description Walks `.agents/` SSOT trees for skills, personas, rules, and prompts. A missing root is treated as empty; other per-entry filesystem failures (TOCTOU races, EACCES, special files) are skipped and surfaced as warnings rather than thrown.
- * @publicApi
+ * @public
  */
 export const walkAgentAssetFiles = (
   options: WalkAgentAssetsOptions,

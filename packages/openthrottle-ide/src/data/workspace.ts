@@ -24,7 +24,7 @@ export interface WorkspaceFileHash {
  * Merkle-lite delta downstream layers (symbols, semantic) consume to re-process
  * only what changed instead of the whole tree.
  *
- * @publicApi
+ * @public
  */
 export interface SnapshotDiff {
   /** Paths present in `next` but not in `prev`. */
@@ -40,7 +40,7 @@ export interface SnapshotDiff {
  * deterministic — it touches no filesystem and the returned path lists are
  * sorted, so equal inputs always produce equal output.
  *
- * @publicApi
+ * @public
  */
 export function diffSnapshots(
   prev: WorkspaceFileHash[],
@@ -80,7 +80,7 @@ export function diffSnapshots(
  * paths. Backed by `rg --files`, so `.gitignore` rules and the config's
  * exclude globs are honored — the same scoping an IDE applies to a project.
  *
- * @publicApi
+ * @public
  */
 export async function listFiles(config: WorkspaceConfig): Promise<string[]> {
   const resolved = resolveWorkspaceConfig(config);
@@ -93,7 +93,7 @@ export async function listFiles(config: WorkspaceConfig): Promise<string[]> {
  * The result is the snapshot you diff against a previous scan to find which
  * files changed and need re-processing.
  *
- * @publicApi
+ * @public
  */
 export async function hashWorkspace(
   config: WorkspaceConfig,

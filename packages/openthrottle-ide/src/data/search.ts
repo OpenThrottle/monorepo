@@ -33,7 +33,7 @@ export interface SearchOptions {
  * structured matches. Honors `.gitignore`, the config's exclude globs, and the
  * provided {@link SearchOptions}.
  *
- * @publicApi
+ * @public
  */
 export async function searchText(
   query: string,

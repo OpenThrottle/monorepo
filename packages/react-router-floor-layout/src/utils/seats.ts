@@ -16,7 +16,7 @@ const DEFAULT_SEAT_OFFSET = 10;
  * evenly on a circle; square/rectangle tables walk the perimeter so longer
  * sides naturally get more chairs.
  *
- * @publicApi
+ * @public
  */
 export function seatPositions(
   table: Pick<TableElement, 'height' | 'seats' | 'type' | 'width' | 'x' | 'y'>,

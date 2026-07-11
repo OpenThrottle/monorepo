@@ -16,7 +16,7 @@ export interface SymbolRowProps {
  * A single exported symbol: its name, declaration kind, an optional default-export
  * indicator, and origin line. Presentational; activation is reported via `onSelect`.
  *
- * @publicApi
+ * @public
  */
 export const SymbolRow = (props: SymbolRowProps): React.ReactElement => {
   const { className, onSelect, selected = false, symbol } = props;

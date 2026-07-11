@@ -17,7 +17,7 @@ import {
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
- * @publicApi
+ * @public
  */
 export interface GraphqlResponseV2<TData> {
   readonly data?: TData;
@@ -29,7 +29,7 @@ export interface GraphqlResponseV2<TData> {
 
 /**
  * @description Optional options for {@link executeGraphqlV2} (URL override, auth, extra headers).
- * @publicApi
+ * @public
  */
 export interface ExecuteGraphqlOptionsV2 {
   /**
@@ -63,7 +63,7 @@ export interface ExecuteGraphqlOptionsV2 {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
- * @publicApi
+ * @public
  */
 export async function executeGraphqlV2<
   TData,

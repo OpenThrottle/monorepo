@@ -9,7 +9,7 @@ const DEFAULT_URL = 'http://localhost/';
  * {@link createActionArgs} for building React Router loader/action args in unit
  * tests.
  *
- * @publicApi
+ * @public
  */
 export type CreateRouteArgsOptions = {
   /** Headers for the built `Request` (e.g. `{ cookie: 'ot_auth=token' }`). */
@@ -24,7 +24,7 @@ export type CreateRouteArgsOptions = {
  * @description Options for {@link createActionArgs}, extending
  * {@link CreateRouteArgsOptions} with a request body and method.
  *
- * @publicApi
+ * @public
  */
 export type CreateActionArgsOptions = CreateRouteArgsOptions & {
   /**
@@ -61,7 +61,7 @@ const toFormData = (body: FormData | Record<string, string>): FormData => {
  *   }),
  * );
  *
- * @publicApi
+ * @public
  */
 export function createLoaderArgs<TArgs = LoaderFunctionArgs>(
   options?: CreateRouteArgsOptions,
@@ -95,7 +95,7 @@ export function createLoaderArgs({
  *   }),
  * );
  *
- * @publicApi
+ * @public
  */
 export function createActionArgs<TArgs = ActionFunctionArgs>(
   options?: CreateActionArgsOptions,

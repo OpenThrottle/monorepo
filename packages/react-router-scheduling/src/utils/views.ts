@@ -25,7 +25,7 @@ const ENGINE_NAME_TO_VIEW: Record<string, CalendarView> = {
 /**
  * Resolve a {@link CalendarView} to its Schedule-X view object.
  *
- * @publicApi
+ * @public
  */
 export function toEngineView(view: CalendarView): EngineView {
   return VIEW_OBJECTS[view];
@@ -35,7 +35,7 @@ export function toEngineView(view: CalendarView): EngineView {
  * The Schedule-X view name (e.g. `month-grid`) for a {@link CalendarView}, as
  * used by the calendar-controls `setView`.
  *
- * @publicApi
+ * @public
  */
 export function toEngineViewName(view: CalendarView): string {
   return VIEW_OBJECTS[view].name;
@@ -45,7 +45,7 @@ export function toEngineViewName(view: CalendarView): string {
  * Map a Schedule-X view name back to a {@link CalendarView} (falls back to the
  * default view for an unknown name).
  *
- * @publicApi
+ * @public
  */
 export function fromEngineViewName(name: string): CalendarView {
   return ENGINE_NAME_TO_VIEW[name] ?? DEFAULT_VIEW;
@@ -55,7 +55,7 @@ export function fromEngineViewName(name: string): CalendarView {
  * Resolve the enabled {@link CalendarView}s into the non-empty Schedule-X view
  * tuple `createCalendar` requires, putting `defaultView` first when provided.
  *
- * @publicApi
+ * @public
  */
 export function resolveViews(
   views: readonly CalendarView[] = DEFAULT_VIEWS,

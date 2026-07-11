@@ -5,7 +5,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 /**
  * @description Re-export of the GraphQL Codegen config type so consuming
  * `codegen.ts` files share a single import path with {@link defineCodegen}.
- * @publicApi
+ * @public
  */
 export type { CodegenConfig } from '@graphql-codegen/cli';
 
@@ -69,7 +69,7 @@ const SCHEMA_RELATIVE_PATH = `../../applications/openthrottle-server/schema.gql`
  * `typescript-validation-schema` (Zod, `zod/v3`) block, and the
  * `prettier --write` write hook. Consumers express only their per-project
  * specifics (documents globs, output dir, extra preset/plugin config).
- * @publicApi
+ * @public
  */
 export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
   const {

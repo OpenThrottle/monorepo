@@ -48,7 +48,7 @@ import { asGraphqlPayload, parseDateTimeInResponse } from './utils.ts';
 
 /**
  * @description Wire-level GraphQL response (aligned with V1 {@link GraphqlResponse}).
- * @publicApi
+ * @public
  */
 export interface GraphqlV2ResponsePayload<TData> {
   readonly data?: TData;
@@ -57,7 +57,7 @@ export interface GraphqlV2ResponsePayload<TData> {
 
 /**
  * @description Single GraphQL error object from the response body.
- * @publicApi
+ * @public
  */
 export interface GraphqlV2GraphqlErrorItem {
   readonly message: string;
@@ -67,7 +67,7 @@ export interface GraphqlV2GraphqlErrorItem {
 /**
  * @description Normalized failure for V2 (transport, GraphQL errors,
  * missing data, or unknown).
- * @publicApi
+ * @public
  */
 export type GraphqlV2FailureKind =
   | 'graphql_errors'
@@ -79,7 +79,7 @@ export type GraphqlV2FailureKind =
 
 /**
  * @description Structured error returned when `ok` is false (unless remapped by `mapFailure`).
- * @publicApi
+ * @public
  */
 export interface GraphqlV2Failure {
   readonly cause: unknown | undefined;
@@ -92,7 +92,7 @@ export interface GraphqlV2Failure {
 
 /**
  * @description Context passed to {@link GraphqlV2MapFailure} for richer mapping (workflow parity).
- * @publicApi
+ * @public
  */
 export interface GraphqlV2FailureContext {
   readonly failure: GraphqlV2Failure;
@@ -104,7 +104,7 @@ export interface GraphqlV2FailureContext {
 /**
  * @description Optional hook to map or replace the default {@link GraphqlV2Failure} (e.g. attach
  * domain codes). Return value becomes `error` on the err branch of {@link GraphqlV2Result}.
- * @publicApi
+ * @public
  */
 export type GraphqlV2MapFailure<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -112,14 +112,14 @@ export type GraphqlV2MapFailure<
 
 /**
  * @description Predicate deciding whether a {@link GraphqlV2Failure} should be retried.
- * @publicApi
+ * @public
  */
 export type GraphqlV2RetryOn = (failure: GraphqlV2Failure) => boolean;
 
 /**
  * @description Opt-in retry policy for {@link executeGraphql_v2}. Off by default so loader
  * semantics do not change silently. Not safe for non-idempotent mutations — see module docs.
- * @publicApi
+ * @public
  */
 export interface GraphqlV2RetryOptions {
   /**
@@ -144,7 +144,7 @@ export interface GraphqlV2RetryOptions {
  * @description Default retry predicate: retry only transient transport failures — `network` errors
  * and `http` failures with a 5xx status. Never retries `graphql_errors`, `missing_data`,
  * `invalid_json`, or `unknown` (deterministic / not safely retryable).
- * @publicApi
+ * @public
  */
 export const defaultRetryOn: GraphqlV2RetryOn = (failure) => {
   if (failure.kind === 'network') {
@@ -160,7 +160,7 @@ export const defaultRetryOn: GraphqlV2RetryOn = (failure) => {
 
 /**
  * @description Successful V2 execution after HTTP OK, no GraphQL errors, and non-null `data`.
- * @publicApi
+ * @public
  */
 export interface GraphqlV2OkResult<TData> {
   readonly data: TData;
@@ -169,7 +169,7 @@ export interface GraphqlV2OkResult<TData> {
 
 /**
  * @description Failed V2 execution (`ok: false`).
- * @publicApi
+ * @public
  */
 export interface GraphqlV2ErrResult<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -180,7 +180,7 @@ export interface GraphqlV2ErrResult<
 
 /**
  * @description Discriminated result of {@link executeGraphql_v2} (non-throwing).
- * @publicApi
+ * @public
  */
 export type GraphqlV2Result<
   TData,
@@ -190,7 +190,7 @@ export type GraphqlV2Result<
 /**
  * @description Options for {@link executeGraphql_v2}: explicit endpoint, auth, DateTime parsing,
  * fetch overrides, and optional failure mapping.
- * @publicApi
+ * @public
  */
 export interface GraphqlV2ExecuteOptions<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
@@ -240,7 +240,7 @@ export interface GraphqlV2ExecuteOptions<
 
 /**
  * @description Type of `executeGraphql_v2` (to be exported from this package once implemented).
- * @publicApi
+ * @public
  */
 export type ExecuteGraphqlV2 = <
   TData,
@@ -519,7 +519,7 @@ const executeGraphqlV2Once = async <
  * When `options.retry` is supplied, transient transport failures (per
  * `options.retry.retryOn`, defaulting to {@link defaultRetryOn}) are retried with exponential
  * backoff. Retry is off by default and is not safe for non-idempotent mutations (see module docs).
- * @publicApi
+ * @public
  */
 export const executeGraphql_v2: ExecuteGraphqlV2 = async <
   TData,

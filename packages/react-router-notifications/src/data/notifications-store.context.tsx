@@ -24,7 +24,7 @@ import { APP_NAME } from '@openthrottle/react-router-utils';
  * never clobber each other. Apps migrating from an older key may pass
  * {@link NotificationsStoreProviderProps.storageKey}.
  *
- * @publicApi
+ * @public
  */
 export const DEFAULT_NOTIFICATIONS_STORAGE_KEY = `${APP_NAME}:notifications`;
 
@@ -169,7 +169,7 @@ export function reducer(
   }
 }
 
-/** @publicApi */
+/** @public */
 export interface NotificationsStoreContextValue {
   /** Add a notification (e.g. from WebSocket handler). */
   readonly addNotification: (
@@ -187,14 +187,14 @@ export interface NotificationsStoreContextValue {
   readonly visibleNotifications: readonly NotificationInstance[];
 }
 
-/** @publicApi */
+/** @public */
 export const NotificationsStoreContext =
   React.createContext<NotificationsStoreContextValue | null>(null);
 
 /**
  * Maps notification severity to sonner toast method; optional action to open payload.link.
  *
- * @publicApi
+ * @public
  */
 export function toastForNotification(
   payload: NotificationPayload,

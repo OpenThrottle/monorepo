@@ -16,7 +16,7 @@ export interface CollectAgentAssetsForIngestResult {
 
 /**
  * @description Validates `.agents/` frontmatter (D5) and maps files to `custom_prompts` ingest rows.
- * @publicApi
+ * @public
  */
 export const collectAgentAssetsForIngest = (
   options: WalkAgentAssetsOptions,

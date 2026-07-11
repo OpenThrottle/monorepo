@@ -54,7 +54,7 @@ interface CancelRunOutcome {
 
 /**
  * @description Service owning plan status policy and cancellation orchestration. App-internal; not
- * exported from a package boundary, so no @publicApi tag is required.
+ * exported from a package boundary, so no @public tag is required.
  */
 @Injectable()
 export class PlanStatusService {

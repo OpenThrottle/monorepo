@@ -107,7 +107,7 @@ export interface CreateCursorAgentSessionOptions {
  * Mint a new cursor-agent chat and return its id. Run this once per OT
  * conversation, persist the id, then resume it on every turn.
  *
- * @publicApi
+ * @public
  */
 export async function createCursorAgentSession(
   options: CreateCursorAgentSessionOptions,
@@ -278,7 +278,7 @@ async function* streamCursorAgent(
 /**
  * Backend for the cursor-agent CLI.
  *
- * @publicApi
+ * @public
  */
 export const cursorAgentConversationBackend: ConversationBackend = {
   stream: streamCursorAgent,

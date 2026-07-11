@@ -18,7 +18,7 @@ const toOptionalString = (value: unknown): string | undefined => {
 
 /**
  * @description Parses Cursor rule frontmatter from `.mdc` files.
- * @publicApi
+ * @public
  */
 export const parseRuleFrontmatter = (
   fileContent: string,
@@ -35,7 +35,7 @@ export const parseRuleFrontmatter = (
 
 /**
  * @description Returns raw frontmatter fields for Zod validation (ingest/CI).
- * @publicApi
+ * @public
  */
 export const parseRuleFrontmatterForValidation = (
   fileContent: string,

@@ -53,7 +53,7 @@ function intFromEnv(
  * full `process.env`. Also exported so a consumer can compose it into a
  * top-level `ConfigModule.forRoot({ validationSchema })`.
  *
- * @publicApi
+ * @public
  */
 export const configValidationSchema = Joi.object({
   LLM_DISCOVERY_CACHE_TTL_MS: Joi.number().integer().min(0).optional(),

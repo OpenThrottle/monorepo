@@ -53,7 +53,7 @@ export function workspaceRipgrepArgs(
  * `config.root`. Treats "no matches" (exit code 1) as a successful empty
  * result rather than an error.
  *
- * @publicApi
+ * @public
  */
 export async function runRipgrep(
   args: string[],

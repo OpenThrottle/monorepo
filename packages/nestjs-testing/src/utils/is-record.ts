@@ -4,7 +4,7 @@
  * `value as Record<string, unknown>` when reading dynamic/JSON-ish shapes in
  * tests and services.
  *
- * @publicApi
+ * @public
  */
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

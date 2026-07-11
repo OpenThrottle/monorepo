@@ -26,7 +26,7 @@ const BLOCKED_HOSTNAMES: readonly string[] = [
 ];
 
 /**
- * @publicApi
+ * @public
  * @description Reason a URL was rejected, or `null` when the URL is considered
  * safe to fetch.
  */
@@ -73,7 +73,7 @@ export function getWebURLRejectionReason(url: string): string | null {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Returns true when the URL is safe to fetch (http/https scheme and
  * a non-internal host).
  */
@@ -82,7 +82,7 @@ export function isSafeWebURL(url: string): boolean {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Throws when the URL is unsafe to fetch. Use to fail loudly on
  * untrusted input before handing the URL to a network loader.
  */

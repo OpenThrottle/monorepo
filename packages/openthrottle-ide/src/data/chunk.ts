@@ -17,7 +17,7 @@ import { listFiles } from './workspace.ts';
  * — the property the incremental vector ingest relies on to avoid re-embedding
  * code that didn't move.
  *
- * @publicApi
+ * @public
  */
 export interface CodeChunk {
   /** The chunk's raw source text. */
@@ -60,7 +60,7 @@ const SCRIPT_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/;
  * line-windows. Both paths are pure: no filesystem access, deterministic for a
  * given `(path, content)`.
  *
- * @publicApi
+ * @public
  */
 export function chunkFile(
   path: string,
@@ -89,7 +89,7 @@ export function chunkFile(
  * `.gitignore` / exclude-glob scoping as {@link listFiles}. Files that cannot
  * be read as text are skipped rather than failing the whole scan.
  *
- * @publicApi
+ * @public
  */
 export async function chunkWorkspace(
   config: WorkspaceConfig,

@@ -137,7 +137,7 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
 /**
  * Map a single cursor-agent event to a chunk, or null to skip it.
  *
- * @publicApi
+ * @public
  */
 export function mapCursorEvent(event: unknown): ConversationStreamChunk | null {
   if (!isRecord(event)) {

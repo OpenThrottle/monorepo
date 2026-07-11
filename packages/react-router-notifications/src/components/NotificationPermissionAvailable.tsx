@@ -5,7 +5,7 @@ export interface NotificationPermissionAvailableProps {
   readonly className?: string;
 }
 
-/** @publicApi */
+/** @public */
 export const NotificationPermissionAvailable = (
   props: NotificationPermissionAvailableProps,
 ): React.ReactElement => {

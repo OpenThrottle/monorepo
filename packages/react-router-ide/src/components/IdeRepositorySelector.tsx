@@ -26,7 +26,7 @@ export interface IdeRepositorySelectorProps {
  * `{ id, label }` options and reacts to `onSelect` (typically by setting the
  * `?repositoryId=` search param).
  *
- * @publicApi
+ * @public
  */
 export const IdeRepositorySelector = (
   props: IdeRepositorySelectorProps,

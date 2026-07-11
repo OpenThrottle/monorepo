@@ -72,7 +72,7 @@ function resolveContextUserId(contextValue: BaseContext): string | undefined {
  * the user-id-derived key is stable across token rotation. Returns `null` for
  * anonymous requests so they share the public cache partition.
  *
- * @publicApi
+ * @public
  */
 export async function defaultResponseCacheSessionId<
   TContext extends BaseContext,
