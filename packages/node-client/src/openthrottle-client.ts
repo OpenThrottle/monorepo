@@ -6,6 +6,7 @@ import {
   PLAN_TASK_LIST_ORDER,
   Plan,
   PlanEmbedding,
+  resolveCompletedAtForStatusChange,
   Task,
   TaskEmbedding,
 } from '@openthrottle/nestjs-repositories';
@@ -24,6 +25,7 @@ interface PlanRawRow {
   assignee: string | null;
   author: string;
   category: string;
+  completed_at: string | null;
   created_at: string;
   id: string;
   project: string | null;
@@ -459,6 +461,7 @@ export async function searchPlansBySemanticQuery(
         assignee: plan.assignee,
         author: plan.author,
         category: plan.category,
+        completedAt: plan.completedAt,
         createdAt: plan.createdAt,
         id: plan.id,
         project: plan.project,
@@ -521,8 +524,9 @@ export interface PlanStatusCount {
 /** Plan row returned by listPlansByStatus (all plan columns except description). Aligns with {@link PlanData} but with string timestamps from raw query. */
 export interface ListPlansByStatusPlan extends Omit<
   PlanData,
-  'createdAt' | 'updatedAt' | 'description'
+  'completedAt' | 'createdAt' | 'updatedAt' | 'description'
 > {
+  readonly completedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -618,7 +622,7 @@ export async function listPlansByStatus(
   const limitParam = params.length + 1;
   const offsetParam = params.length + 2;
   const dataParams = [...params, limit, offset];
-  const dataQuery = `SELECT id, title, status, author, category, assignee, summary, project, project_id, created_at, updated_at
+  const dataQuery = `SELECT id, title, status, author, category, assignee, summary, project, project_id, completed_at, created_at, updated_at
          FROM plans
          ${whereClause}
          ${orderClause}
@@ -632,6 +636,7 @@ export async function listPlansByStatus(
         assignee: r.assignee,
         author: r.author,
         category: r.category,
+        completedAt: r.completed_at,
         createdAt: r.created_at,
         id: r.id,
         project: r.project,
@@ -651,13 +656,21 @@ export async function listPlansByStatus(
 // ---------------------------------------------------------------------------
 
 /** Plan row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link PlanData}. */
-export type PlanRow = Omit<PlanData, 'createdAt' | 'updatedAt'> & {
+export type PlanRow = Omit<
+  PlanData,
+  'completedAt' | 'createdAt' | 'updatedAt'
+> & {
+  readonly completedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 };
 
 /** Task row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link TaskData}. */
-export type TaskRow = Omit<TaskData, 'createdAt' | 'updatedAt'> & {
+export type TaskRow = Omit<
+  TaskData,
+  'completedAt' | 'createdAt' | 'updatedAt'
+> & {
+  readonly completedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 };
@@ -731,6 +744,7 @@ function _mapPlanRow(r: {
   assignee: string | null;
   author: string;
   category: string;
+  completed_at: string | null;
   created_at: string;
   description: string | null;
   id: string;
@@ -745,6 +759,7 @@ function _mapPlanRow(r: {
     assignee: r.assignee,
     author: r.author,
     category: r.category,
+    completedAt: r.completed_at,
     createdAt: r.created_at,
     description: r.description,
     id: r.id,
@@ -760,6 +775,7 @@ function _mapPlanRow(r: {
 function _mapTaskRow(r: {
   assignee: string | null;
   category: string | null;
+  completed_at: string | null;
   created_at: string;
   description: string | null;
   id: string;
@@ -777,6 +793,7 @@ function _mapTaskRow(r: {
   return {
     assignee: r.assignee,
     category: r.category,
+    completedAt: r.completed_at,
     createdAt: r.created_at,
     description: r.description,
     id: r.id,
@@ -790,6 +807,15 @@ function _mapTaskRow(r: {
     title: r.title,
     updatedAt: r.updated_at,
   };
+}
+
+/**
+ * @description Maps a nullable Date (or date-like) to an ISO string, or null.
+ */
+function toIsoOrNull(value: Date | string | null | undefined): string | null {
+  if (value == null) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return date.toISOString();
 }
 
 /**
@@ -808,6 +834,7 @@ function mapPlanEntityToRow(plan: Plan): PlanRow {
     assignee: plan.assignee,
     author: plan.author,
     category: plan.category,
+    completedAt: toIsoOrNull(plan.completedAt),
     createdAt: createdAt.toISOString(),
     description: plan.description,
     id: plan.id,
@@ -835,6 +862,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
   return {
     assignee: task.assignee,
     category: task.category,
+    completedAt: toIsoOrNull(task.completedAt),
     createdAt: createdAt.toISOString(),
     description: task.description,
     id: task.id,
@@ -860,6 +888,10 @@ export async function createPlan(input: CreatePlanInput): Promise<PlanRow> {
     assignee: normalizeAssignee(input.assignee),
     author: input.author,
     category: input.category,
+    completedAt:
+      (input.status ?? 'PENDING').toUpperCase() === 'COMPLETED'
+        ? new Date()
+        : null,
     description: input.description ?? null,
     project: input.project ?? null,
     projectId: input.projectId ?? null,
@@ -896,7 +928,16 @@ export async function updatePlan(
   if (input.author !== undefined) plan.author = input.author;
   if (input.category !== undefined) plan.category = input.category;
   if (input.description !== undefined) plan.description = input.description;
-  if (input.status !== undefined) plan.status = input.status.toUpperCase();
+  if (input.status !== undefined) {
+    const previousStatus = plan.status;
+    const nextStatus = input.status.toUpperCase();
+    plan.completedAt = resolveCompletedAtForStatusChange({
+      currentCompletedAt: plan.completedAt,
+      nextStatus,
+      previousStatus,
+    });
+    plan.status = nextStatus;
+  }
   if (input.assignee !== undefined) {
     plan.assignee = normalizeAssignee(input.assignee);
   }
@@ -955,6 +996,7 @@ export async function createTask(input: CreateTaskInput): Promise<TaskRow> {
   const task = taskRepo.create({
     assignee: normalizeAssignee(input.assignee),
     category,
+    completedAt: status === 'COMPLETED' ? new Date() : null,
     description: input.description ?? null,
     planId: input.planId,
     project: input.project ?? null,
@@ -1078,7 +1120,16 @@ export async function updateTask(
   if (input.title !== undefined) task.title = input.title;
   if (input.description !== undefined) task.description = input.description;
   if (input.category !== undefined) task.category = input.category;
-  if (input.status !== undefined) task.status = input.status.toUpperCase();
+  if (input.status !== undefined) {
+    const previousStatus = task.status;
+    const nextStatus = input.status.toUpperCase();
+    task.completedAt = resolveCompletedAtForStatusChange({
+      currentCompletedAt: task.completedAt,
+      nextStatus,
+      previousStatus,
+    });
+    task.status = nextStatus;
+  }
   if (input.planId !== undefined) task.planId = input.planId;
   if (input.requirements !== undefined) {
     task.requirements = Array.isArray(input.requirements)

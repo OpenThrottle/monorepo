@@ -18,6 +18,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
+  resolveCompletedAtForStatusChange,
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -274,16 +275,18 @@ export class TasksResolver {
         ? input.sortOrder
         : await this.tasksService.resolveNextSortOrder(input.planId);
 
+    const status = (input.status ?? 'PENDING').toUpperCase();
     const entity = repo.create({
       assignee: input.assignee ?? null,
       category: input.category ?? null,
+      completedAt: status === 'COMPLETED' ? new Date() : null,
       description: input.description ?? null,
       planId: input.planId,
       project: input.project ?? null,
       projectId: input.projectId ?? null,
       requirements: requirementsArr,
       sortOrder,
-      status: (input.status ?? 'PENDING').toUpperCase(),
+      status,
       summary: input.summary ?? null,
       title: input.title,
     });
@@ -414,7 +417,15 @@ export class TasksResolver {
     if (input.requirements != null) {
       entity.requirements = parseRequirements(input.requirements);
     }
-    if (input.status != null) entity.status = input.status.toUpperCase();
+    if (input.status != null) {
+      const nextStatus = input.status.toUpperCase();
+      entity.completedAt = resolveCompletedAtForStatusChange({
+        currentCompletedAt: entity.completedAt,
+        nextStatus,
+        previousStatus,
+      });
+      entity.status = nextStatus;
+    }
     if (input.title != null) entity.title = input.title;
 
     if (input.assignee !== undefined) entity.assignee = input.assignee;

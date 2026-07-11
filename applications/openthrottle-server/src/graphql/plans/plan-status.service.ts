@@ -15,6 +15,7 @@ import type { Queue } from 'bullmq';
 import {
   Plan,
   PlansService,
+  resolveCompletedAtForStatusChange,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
@@ -134,7 +135,13 @@ export class PlanStatusService {
       return entity;
     }
 
+    const previousStatus = entity.status;
     entity.status = nextStatus;
+    entity.completedAt = resolveCompletedAtForStatusChange({
+      currentCompletedAt: entity.completedAt,
+      nextStatus,
+      previousStatus,
+    });
 
     return repo.save(entity);
   }
@@ -161,7 +168,11 @@ export class PlanStatusService {
     let planStatusAfter: string | null = null;
 
     if (shouldSetPlanPending) {
-      await repo.update({ id: planId }, { status: 'PENDING' });
+      // Leaving COMPLETED (or any status) for PENDING clears completedAt; null is a no-op otherwise.
+      await repo.update(
+        { id: planId },
+        { completedAt: null, status: 'PENDING' },
+      );
 
       await updateMatchingTasksAndEmitStatusChanged({
         fromStatuses: ['QUEUED'],

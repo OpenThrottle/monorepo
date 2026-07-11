@@ -1706,6 +1706,8 @@ export type PlanObject = {
   assignee?: Maybe<Scalars['String']['output']>;
   author: Scalars['String']['output'];
   category: Scalars['String']['output'];
+  /** Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed. */
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   /** True when saved workflow run configuration differs from canonical defaults. */
@@ -2928,6 +2930,8 @@ export type TaskObject = {
   __typename?: 'TaskObject';
   assignee?: Maybe<Scalars['String']['output']>;
   category?: Maybe<Scalars['String']['output']>;
+  /** Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed. */
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];

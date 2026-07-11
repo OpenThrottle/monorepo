@@ -124,6 +124,7 @@ export class TasksService {
         return taskRepo.create({
           assignee: item.assignee,
           category: item.category,
+          completedAt: item.status === 'COMPLETED' ? new Date() : null,
           description: item.description,
           planId,
           project: item.project,
@@ -145,9 +146,10 @@ export class TasksService {
    */
   async syncParentPlanStatus(planId: string): Promise<boolean> {
     const planRepo = this.plansService.getRepository();
+    // Clear completedAt when leaving COMPLETED (e.g. re-open); null is a no-op for other statuses.
     const result = await planRepo.update(
       { id: planId, status: Not('IN_PROGRESS') },
-      { status: 'IN_PROGRESS' },
+      { completedAt: null, status: 'IN_PROGRESS' },
     );
 
     return (result.affected ?? 0) > 0;
@@ -179,7 +181,7 @@ export class TasksService {
     const planRepo = this.plansService.getRepository();
     const result = await planRepo.update(
       { id: planId, status: 'IN_PROGRESS' },
-      { status: 'COMPLETED' },
+      { completedAt: new Date(), status: 'COMPLETED' },
     );
 
     return (result.affected ?? 0) > 0;

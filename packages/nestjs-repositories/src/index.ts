@@ -12,6 +12,10 @@ export {
   type RepositoryAccessor,
 } from './common/entity-loaders';
 export {
+  resolveCompletedAtForStatusChange,
+  type ResolveCompletedAtForStatusChangeInput,
+} from './common/completed-at';
+export {
   LIST_PAGINATION_DEFAULT_LIMIT,
   LIST_PAGINATION_MAX_LIMIT,
   resolveListPagination,

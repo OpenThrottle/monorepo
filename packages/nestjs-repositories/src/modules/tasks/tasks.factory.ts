@@ -33,6 +33,7 @@ export const tasksFactory = Factory.define<Task>(() => ({
   assignee: null,
   category: faker.helpers.arrayElement(['general', 'testing']),
   commitLinks: [],
+  completedAt: null,
   createdAt: faker.date.past(),
   description: faker.lorem.paragraph(),
   id: faker.string.uuid(),

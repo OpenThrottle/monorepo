@@ -146,6 +146,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
     MetricsModule,
     NestjsAuthModule.forRoot(),
     NestjsBullmqModule,
+
     // The Bull Board dashboard exposes job payloads, queue internals, and
     // retry/remove/clean actions behind only a single static basic-auth
     // credential. Keep it out of production; mount the UI only outside prod.
@@ -294,8 +295,10 @@ export const buildAppModule = ({
   if (role === PROCESS_ROLES.api) {
     return ApiAppModule;
   }
+
   if (role === PROCESS_ROLES.worker) {
     return WorkerAppModule;
   }
+
   return AppModule;
 };

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plans table. Matches databases/migrations (002, 012, 014, 022).
+ * @description TypeORM entity for OpenThrottle plans table. Matches databases/migrations (002, 012, 014, 022, 055).
  */
 
 import {
@@ -30,6 +30,7 @@ export type PlanData = Pick<
   | 'assignee'
   | 'author'
   | 'category'
+  | 'completedAt'
   | 'createdAt'
   | 'description'
   | 'id'
@@ -87,6 +88,17 @@ export class Plan {
     type: 'jsonb',
   })
   runConfig!: PlanRunConfigStorage;
+
+  /**
+   * @description Set once on transition into COMPLETED; cleared if status leaves COMPLETED.
+   * Not maintained by DB updated_at triggers — see migration 055.
+   */
+  @Column({
+    name: 'completed_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  completedAt!: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

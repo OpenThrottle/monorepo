@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049).
+ * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049, 055).
  */
 
 import {
@@ -22,6 +22,7 @@ export type TaskData = Pick<
   Task,
   | 'assignee'
   | 'category'
+  | 'completedAt'
   | 'createdAt'
   | 'description'
   | 'id'
@@ -73,6 +74,17 @@ export class Task {
 
   @Column({ name: 'project_id', nullable: true, type: 'uuid' })
   projectId!: string | null;
+
+  /**
+   * @description Set once on transition into COMPLETED; cleared if status leaves COMPLETED.
+   * Not maintained by DB updated_at triggers — see migration 055.
+   */
+  @Column({
+    name: 'completed_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  completedAt!: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
