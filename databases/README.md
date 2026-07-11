@@ -381,7 +381,16 @@ LIMIT 5;
 
 ## Migrations
 
-SQL migrations live in `databases/migrations/` and are applied in sfilename order by `pnpm run database:migrate`.
+SQL migrations live in `databases/migrations/` and are applied in filename order by `pnpm run database:migrate`.
+
+### Run-once / idempotent (schema_migrations ledger)
+
+`pnpm run database:migrate` is **run-once and idempotent** — running it repeatedly is safe and, once the database is up to date, a no-op. Applied migrations are tracked in a `schema_migrations` ledger (`filename` PRIMARY KEY, `applied_at`, `checksum`):
+
+- **Skip / apply:** On each run the runner reads the ledger, skips any file already recorded, and applies only new files in filename order. Each migration and its ledger insert run in a **single transaction**, so a failed migration rolls back cleanly (recorded as _not_ applied) and is retried on the next run.
+- **Bootstrap (existing DBs):** The first run against a database that already has the schema (empty ledger **and** core tables like `plans`/`tasks` present) seeds the ledger with all current migration filenames as already-applied and runs nothing — historical data migrations are never re-executed against populated data. A genuinely fresh database (no core tables) applies every migration normally.
+- **No-op guarantee:** Two `database:migrate` runs in a row leave data untouched — in particular `plans`/`tasks` `updated_at`, `author`, and `assignee` are unchanged. (This closes the previous non-idempotent behavior, where re-running re-stamped `updated_at` across all rows via the `BEFORE UPDATE` triggers and skewed `daily_stats` completion dates.)
+- **Adding a migration:** Drop a new `NNN_*.sql` file into `databases/migrations/`; it is picked up and applied exactly once on the next `database:migrate`. Do **not** edit an already-applied migration in place — the runner warns (does not fail) on checksum drift; revert the edit or add a new migration instead.
 
 When using **Option A** (Ollama with a 1536-dim embedding model), no additional migration or schema change is required; existing embedding tables (`plan_embeddings`, `task_embeddings`, `documentation_embeddings`) and their `vector(1536)` columns stay as-is. See [Embedding dimension strategy (OpenAI and Ollama)](#embedding-dimension-strategy-openai-and-ollama).
 
@@ -425,7 +434,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 
 We keep **SQL files as the single source of truth** for schema. TypeORM is used only for **runtime** (connection pooling via DataSource, raw SQL in openthrottle-server and scripts; entities for type safety). We do **not** use TypeORM’s migration runner.
 
-- **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-openthrottle-migrations.ts` runs all `.sql` files in filename order.
+- **Applying schema changes:** Add a new numbered `.sql` file in `databases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/openthrottle-database-migrations.ts` applies not-yet-recorded `.sql` files in filename order and records each in the `schema_migrations` ledger (see [Run-once / idempotent](#run-once--idempotent-schema_migrations-ledger)).
 - **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/migrations (002, 012).”
 - **Long-term rationale:** For pros/cons and a greenfield recommendation (SQL-as-source vs TypeORM migrations), see [docs/monorepo/migration-strategy-sql-vs-typeorm.md](../../docs/monorepo/migration-strategy-sql-vs-typeorm.md).
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.
