@@ -30,5 +30,5 @@ folders mirror the intended surface area.
 
 ## Pointers
 
-- [../AGENTS.md](../AGENTS.md) — packages-tier conventions (`@publicApi` tags, package layout).
+- [../AGENTS.md](../AGENTS.md) — packages-tier conventions (`@public` tags, package layout).
 - [../react-router-testing/AGENTS.md](../react-router-testing/AGENTS.md) — the RR-side sibling.

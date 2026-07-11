@@ -96,37 +96,37 @@ Knip is configured in **`knip.jsonc`** to reduce false positives and to avoid st
 
 Root **`ignoreExportsUsedInFile`** treats exported `interface` and `type` symbols as used when referenced only in the same file (typical `*Props` / `*Options` next to a component). No per-file allowlist is required for that pattern.
 
-### Package and tool public APIs (`@publicApi`)
+### Package and tool public APIs (`@public`)
 
-For **non-component** exports that are part of a deliberate public surface (package `exports` subpaths, shared workflow helpers, `@tools/dotfiles` factories), tag the export with a JSDoc **`@publicApi`** tag:
+For **non-component** exports that are part of a deliberate public surface (package `exports` subpaths, shared workflow helpers, `@tools/dotfiles` factories), tag the export with a JSDoc **`@public`** tag:
 
 ```ts
 /**
  * @description Resolves auth for GraphQL-backed MCP tools.
- * @publicApi
+ * @public
  */
 export function getAuthToken(): string {
   /* ... */
 }
 ```
 
-Root config includes **`"tags": ["-publicApi"]`**, so Knip excludes tagged exports from unused-export reports and from **`--fix-type exports`**.
+`@public` is Knip's **built-in** tag, recognized natively — tagged exports are excluded from unused-export reports and from **`--fix-type exports`** without any custom `tags` configuration in `knip.jsonc`.
 
-**When to use `@publicApi`**
+**When to use `@public`**
 
 - Symbols listed in a package **`package.json` → `exports`** map (including barrel re-exports).
 - Shared utilities consumed across workspaces but not always visible to static import graphs (e.g. `@tools/workflows` parser helpers, `@tools/workflows/ralph-debug`).
 - Documented extension points in `CONTRIBUTING.md` or package READMEs.
 
-**When not to use `@publicApi`**
+**When not to use `@public`**
 
 - React component **`Props` / `Options`** types (use `ignoreExportsUsedInFile` instead).
 - Truly dead code—remove it or stop exporting it.
 - One-off suppressions for unrelated issue types; prefer fixing the graph or a narrow `ignoreIssues` entry.
 
-**Alternatives**
+**History**
 
-- Knip’s built-in **`@public`** tag behaves similarly; this repo standardizes on **`@publicApi`** to avoid confusion with TypeScript visibility or TSDoc `@public` semantics elsewhere.
+- This repo previously used a custom **`@publicApi`** tag with a `"tags": ["-publicApi"]` filter in `knip.jsonc`. That was migrated to Knip's built-in **`@public`** tag, and the custom `tags` filter was removed (the built-in tag needs no configuration).
 
 ### Manual / agent risk
 
@@ -142,5 +142,5 @@ Agents and humans should use **report-only** Knip unless a follow-up task explic
 ## See also
 
 - Plan: Knip config — preserve intentional component exports (`2d5358d0-d96c-4eca-95c9-861a94931a0d` in OpenThrottle).
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — `@publicApi` convention for package exports.
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) — `@public` convention for package exports.
 - [NX.md](./NX.md) — Husky / lint-staged on release commits.

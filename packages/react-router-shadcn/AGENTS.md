@@ -44,4 +44,4 @@ theme for all React Router apps. The base layer of the `react-router-*` UI stack
 
 - [README.md](README.md) — component list and the contribution conventions (cn/cva/ref/Badge).
 - [docs/Theming.md](docs/Theming.md) — CSS-variable / OKLCH theming system.
-- [../AGENTS.md](../AGENTS.md) — source-first pattern, no deep imports, `@publicApi`.
+- [../AGENTS.md](../AGENTS.md) — source-first pattern, no deep imports, `@public`.
