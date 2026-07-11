@@ -14,6 +14,33 @@ Knip finds unused files, dependencies, and exports across the monorepo. Configur
 
 **Agents:** Run report-only Knip. Do not run `--fix` or `--fix-type exports` unless a task explicitly scopes a safe, reviewed change.
 
+> **Status (2026-07-10):** the Nx `knip` target was temporarily stubbed out (an `echo` disabling it). It is now re-enabled as a **report-only (dry-run) target**: `knip --config knip.jsonc --no-exit-code`. It is non-blocking (`--no-exit-code`) and non-destructive — knip only mutates files when `--fix`/`--fix-type`/`--allow-remove-files` is passed, and the target carries none of those. We are working through the backlog of findings **piecemeal** (see below) rather than accepting knip's suggested removals wholesale. **Do not add `--fix` to the `knip` target.**
+
+## Piecemeal triage workflow (scoping the report)
+
+Knip's default is a full-repo report. To review and resolve findings in small, reviewable slices, scope the run by **issue type** and/or **workspace** — this is how we chip away at the baseline without a giant, risky sweep.
+
+- **By issue type** — `--include <type>` / `--exclude <type>`. Types: `files`, `dependencies`, `unlisted`, `unresolved`, `binaries`, `exports`, `types`, `duplicates`. Shortcuts: `--dependencies`, `--exports`, `--files`.
+- **By project** — `--workspace <projectRoot>` to focus one app/package at a time.
+
+```bash
+# Just the unused-exports findings for one app:
+pnpm exec knip --config knip.jsonc --no-exit-code \
+  --workspace applications/openthrottle-developer --include exports
+
+# Just dependency findings across the whole repo:
+pnpm exec knip --config knip.jsonc --no-exit-code --dependencies
+
+# A compact per-type count (good for a baseline snapshot):
+pnpm exec knip --config knip.jsonc --no-exit-code --reporter compact
+```
+
+Suggested slice order, lowest-risk → highest: `duplicates` → `binaries` (unlisted) → `dependencies` → `types` → `exports` → `files` (review each; expect false positives from codegen / React-Router typegen output and entry globs).
+
+**For each finding, decide:** genuinely dead → remove it (or stop exporting it); false positive the static graph can't see (codegen output, dynamic import, deliberate public API, entry point) → suppress it properly (see [Preserving intentional exports](#preserving-intentional-exports) and the `knip.jsonc` `ignore` / `ignoreExportsUsedInFile` / `ignoreUnresolved` lists). Land each slice as its own small PR and re-run the scoped command to confirm the count dropped.
+
+**If you use auto-fix at all**, keep it scoped and reviewed: `--fix-type <one-type> --workspace <one-project>` in a dedicated PR, read the diff, never a blanket `--fix`. Per [CLAUDE.md](../../CLAUDE.md), **never run `knip --fix` on app UI**; `--allow-remove-files` is opt-in only.
+
 ## Audit: where `--fix` runs (2026-05-19)
 
 Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type exports` found **no automated invocations**. Export stripping in the past came from **manual** `knip --fix` / `knip --fix-type exports` (local terminal or agents), not from CI, hooks, or Nx defaults.
@@ -69,37 +96,37 @@ Knip is configured in **`knip.jsonc`** to reduce false positives and to avoid st
 
 Root **`ignoreExportsUsedInFile`** treats exported `interface` and `type` symbols as used when referenced only in the same file (typical `*Props` / `*Options` next to a component). No per-file allowlist is required for that pattern.
 
-### Package and tool public APIs (`@publicApi`)
+### Package and tool public APIs (`@public`)
 
-For **non-component** exports that are part of a deliberate public surface (package `exports` subpaths, shared workflow helpers, `@tools/dotfiles` factories), tag the export with a JSDoc **`@publicApi`** tag:
+For **non-component** exports that are part of a deliberate public surface (package `exports` subpaths, shared workflow helpers, `@tools/dotfiles` factories), tag the export with a JSDoc **`@public`** tag:
 
 ```ts
 /**
  * @description Resolves auth for GraphQL-backed MCP tools.
- * @publicApi
+ * @public
  */
 export function getAuthToken(): string {
   /* ... */
 }
 ```
 
-Root config includes **`"tags": ["-publicApi"]`**, so Knip excludes tagged exports from unused-export reports and from **`--fix-type exports`**.
+`@public` is Knip's **built-in** tag, recognized natively — tagged exports are excluded from unused-export reports and from **`--fix-type exports`** without any custom `tags` configuration in `knip.jsonc`.
 
-**When to use `@publicApi`**
+**When to use `@public`**
 
 - Symbols listed in a package **`package.json` → `exports`** map (including barrel re-exports).
 - Shared utilities consumed across workspaces but not always visible to static import graphs (e.g. `@tools/workflows` parser helpers, `@tools/workflows/ralph-debug`).
 - Documented extension points in `CONTRIBUTING.md` or package READMEs.
 
-**When not to use `@publicApi`**
+**When not to use `@public`**
 
 - React component **`Props` / `Options`** types (use `ignoreExportsUsedInFile` instead).
 - Truly dead code—remove it or stop exporting it.
 - One-off suppressions for unrelated issue types; prefer fixing the graph or a narrow `ignoreIssues` entry.
 
-**Alternatives**
+**History**
 
-- Knip’s built-in **`@public`** tag behaves similarly; this repo standardizes on **`@publicApi`** to avoid confusion with TypeScript visibility or TSDoc `@public` semantics elsewhere.
+- This repo previously used a custom **`@publicApi`** tag with a `"tags": ["-publicApi"]` filter in `knip.jsonc`. That was migrated to Knip's built-in **`@public`** tag, and the custom `tags` filter was removed (the built-in tag needs no configuration).
 
 ### Manual / agent risk
 
@@ -115,5 +142,5 @@ Agents and humans should use **report-only** Knip unless a follow-up task explic
 ## See also
 
 - Plan: Knip config — preserve intentional component exports (`2d5358d0-d96c-4eca-95c9-861a94931a0d` in OpenThrottle).
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — `@publicApi` convention for package exports.
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) — `@public` convention for package exports.
 - [NX.md](./NX.md) — Husky / lint-staged on release commits.

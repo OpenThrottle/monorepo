@@ -41,4 +41,4 @@ run the consuming apps' tests, not just this package's.
 ## Pointers
 
 - [README.md](README.md) — options table, escape hatches (`installPolyfills` / `createTestEnv` / `installTestEnv`), usage pattern.
-- [../AGENTS.md](../AGENTS.md) — source-first pattern, `@publicApi` tags.
+- [../AGENTS.md](../AGENTS.md) — source-first pattern, `@public` tags.

@@ -27,7 +27,7 @@ const THINKING_LABEL = 'Thinking';
  * as escaped preformatted text (never injected as live DOM) — same XSS-safe
  * path as {@link ChatMessageBody}.
  *
- * @publicApi
+ * @public
  */
 export const ChatThinkingBlock = (
   props: ChatThinkingBlockProps,

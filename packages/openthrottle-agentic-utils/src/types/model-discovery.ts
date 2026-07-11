@@ -13,14 +13,14 @@
  * `null` when the server answers `/v1/models` but cannot be fingerprinted to a
  * known provider. We deliberately do NOT default unknown servers to `vllm`.
  *
- * @publicApi
+ * @public
  */
 export type ModelProvider = 'lmstudio' | 'ollama';
 
 /**
  * A reachable local model server endpoint and the model ids it serves.
  *
- * @publicApi
+ * @public
  */
 export interface ModelEndpoint {
   /** The OpenAI-compatible `/v1` base URL, e.g. `http://localhost:11434/v1`. */
@@ -38,7 +38,7 @@ export interface ModelEndpoint {
 /**
  * Result of a single local model discovery scan.
  *
- * @publicApi
+ * @public
  */
 export interface DiscoveryResult {
   /** De-duplicated endpoints, stably sorted by `(host, port)`. */
@@ -53,7 +53,7 @@ export interface DiscoveryResult {
  * Minimal env-like shape the core reads. The pure core never touches
  * `process.env` directly — callers pass this explicitly so it stays testable.
  *
- * @publicApi
+ * @public
  */
 export type DiscoveryEnv = Record<string, string | undefined>;
 
@@ -61,7 +61,7 @@ export type DiscoveryEnv = Record<string, string | undefined>;
  * Explicit options for {@link discoverModels}. No implicit env reads: resolve
  * hosts/ports up front with {@link resolveHosts} / {@link resolvePorts}.
  *
- * @publicApi
+ * @public
  */
 export interface DiscoverModelsOptions {
   /** Per-request timeout for the provider fingerprint probe. Default 1500ms. */

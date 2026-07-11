@@ -52,7 +52,7 @@ const DEFAULT_QUEUE_PREFIX = 'bull';
  * both read the same env (root `.env` via Nx env loading, or the container
  * environment in docker).
  *
- * @publicApi
+ * @public
  */
 export const resolveQueuePrefix = (): string => {
   const explicit = process.env.OT_QUEUE_PREFIX?.trim();

@@ -12,7 +12,7 @@ import {
 /**
  * Props for {@link SelectionHandles}.
  *
- * @publicApi
+ * @public
  */
 export interface SelectionHandlesProps {
   /** The selected element to decorate. */
@@ -38,7 +38,7 @@ export interface SelectionHandlesProps {
  * stays intuitive at any rotation. Handles are sized in world units scaled to
  * the current zoom so they stay roughly screen-constant.
  *
- * @publicApi
+ * @public
  */
 export function SelectionHandles(props: SelectionHandlesProps): ReactElement {
   const {

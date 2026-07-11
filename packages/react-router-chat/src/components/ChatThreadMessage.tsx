@@ -94,6 +94,6 @@ const ChatThreadMessageComponent = (
  * @description Memoized chat thread row keyed by message identity. Re-renders
  * only when its own `message` reference changes.
  *
- * @publicApi
+ * @public
  */
 export const ChatThreadMessage = React.memo(ChatThreadMessageComponent);

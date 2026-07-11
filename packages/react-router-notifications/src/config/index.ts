@@ -6,9 +6,9 @@
 
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
-/** @publicApi */
+/** @public */
 export const NOTIFICATIONS_MAX_STORED = 100;
-/** @publicApi */
+/** @public */
 export const NOTIFICATIONS_MAX_PERSISTED = 50;
 
 /**
@@ -17,7 +17,7 @@ export const NOTIFICATIONS_MAX_PERSISTED = 50;
  * The payload union carries no stable id, so dedup is content + time based; reconnect
  * replays commonly re-deliver the same events within a short window.
  *
- * @publicApi
+ * @public
  */
 export const NOTIFICATIONS_DEDUP_WINDOW_MS = 5000;
 
@@ -27,6 +27,6 @@ export const NOTIFICATIONS_DEDUP_WINDOW_MS = 5000;
  * (`DEFAULT_NOTIFICATIONS_STORAGE_KEY` = `${APP_NAME}:notifications`) so the two writers
  * never clobber each other.
  *
- * @publicApi
+ * @public
  */
 export const NOTIFICATIONS_STORAGE_KEY = `${APP_NAME}:notifications:prefs`;

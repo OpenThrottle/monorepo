@@ -60,7 +60,7 @@ const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
  * Tool payloads are untrusted backend output, rendered as escaped preformatted
  * text via {@link Markdown} (never injected as live DOM).
  *
- * @publicApi
+ * @public
  */
 export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const { defaultOpen, event } = props;

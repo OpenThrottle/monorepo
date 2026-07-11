@@ -23,7 +23,7 @@
  * so a batch (e.g. embedding many documents) cannot saturate the provider or
  * exhaust quota in a single burst.
  *
- * @publicApi
+ * @public
  */
 export const DEFAULT_MAX_CONCURRENCY = 5;
 
@@ -32,7 +32,7 @@ export const DEFAULT_MAX_CONCURRENCY = 5;
  * of 6 so a hung or repeatedly-failing call fails fast instead of multiplying
  * latency and token/cost spend through prolonged exponential backoff.
  *
- * @publicApi
+ * @public
  */
 export const DEFAULT_MAX_RETRIES = 2;
 
@@ -41,7 +41,7 @@ export const DEFAULT_MAX_RETRIES = 2;
  * All fields are optional so callers can opt into the defaults or override
  * them as needed.
  *
- * @publicApi
+ * @public
  */
 export interface ResilienceConfig {
   /**
@@ -61,7 +61,7 @@ export interface ResilienceConfig {
  * defaults, returning a fully-populated object safe to spread into a provider
  * constructor.
  *
- * @publicApi
+ * @public
  */
 export const resolveResilienceConfig = (
   config: ResilienceConfig = {},

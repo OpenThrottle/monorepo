@@ -15,7 +15,7 @@ import {
 /**
  * Editable fields for {@link updateElement}. `seats` applies to tables only.
  *
- * @publicApi
+ * @public
  */
 export interface ElementPatch {
   readonly height?: number;
@@ -41,7 +41,7 @@ function mapElement(
 /**
  * Append an element to the layout.
  *
- * @publicApi
+ * @public
  */
 export function addElement(
   layout: FloorLayout,
@@ -53,7 +53,7 @@ export function addElement(
 /**
  * Remove the element with the given id.
  *
- * @publicApi
+ * @public
  */
 export function removeElement(layout: FloorLayout, id: string): FloorLayout {
   return {
@@ -65,7 +65,7 @@ export function removeElement(layout: FloorLayout, id: string): FloorLayout {
 /**
  * Move an element so its center sits at `center` (world inches).
  *
- * @publicApi
+ * @public
  */
 export function moveElement(
   layout: FloorLayout,
@@ -83,7 +83,7 @@ export function moveElement(
  * Apply an edit patch to an element. Preserves the element's discriminated
  * `type`; `seats` is honored only on tables (which already carry it).
  *
- * @publicApi
+ * @public
  */
 export function updateElement(
   layout: FloorLayout,
@@ -112,7 +112,7 @@ export function updateElement(
  * Build a blank floor layout (40' × 30' floor, 1-foot grid, ft-in labels). The
  * caller supplies a stable `id`; pass overrides to tune size/name/unit.
  *
- * @publicApi
+ * @public
  */
 export function createEmptyLayout(params: {
   readonly displayUnit?: DisplayUnit;

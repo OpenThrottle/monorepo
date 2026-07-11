@@ -93,7 +93,7 @@ const normalizeMetadata = (
 /**
  * Normalize a chunk's metadata JSON string into the fields the folders need.
  *
- * @publicApi
+ * @public
  */
 export const parseChunkMetadata = (
   metadataJson: string | null | undefined,
@@ -102,7 +102,7 @@ export const parseChunkMetadata = (
 /**
  * Best-effort tool name for a one-line activity marker; falls back to 'tool'.
  *
- * @publicApi
+ * @public
  */
 export const toolLabelFromMetadataJson = (
   metadataJson: string | null | undefined,
@@ -119,7 +119,7 @@ export const toolLabelFromMetadataJson = (
 /**
  * Append a text/thinking delta, coalescing into a trailing same-kind segment.
  *
- * @publicApi
+ * @public
  */
 export const appendTurnTextEvent = (
   events: readonly ChatTurnEvent[],
@@ -144,7 +144,7 @@ export const appendTurnTextEvent = (
 /**
  * Start a tool event (status running); idempotent on a repeated callId.
  *
- * @publicApi
+ * @public
  */
 export const applyTurnToolCall = (
   events: readonly ChatTurnEvent[],
@@ -176,7 +176,7 @@ export const applyTurnToolCall = (
 /**
  * Resolve a tool event to succeeded, correlating by callId.
  *
- * @publicApi
+ * @public
  */
 export const applyTurnToolResult = (
   events: readonly ChatTurnEvent[],
@@ -217,7 +217,7 @@ export const applyTurnToolResult = (
 /**
  * Mark any still-running tool events failed when the turn errors out.
  *
- * @publicApi
+ * @public
  */
 export const failRunningTurnTools = (
   events: readonly ChatTurnEvent[],
@@ -240,7 +240,7 @@ export const failRunningTurnTools = (
  * the turn reads as complete (no running indicator). Returns `[]` when there
  * are no persisted events, so plain turns keep their flat-body rendering.
  *
- * @publicApi
+ * @public
  */
 export const foldPersistedTurnEvents = (
   toolMetadataJson: string | null | undefined,

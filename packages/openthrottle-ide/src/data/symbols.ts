@@ -66,7 +66,7 @@ export type ListExportsOptions = SymbolScopeOptions;
  * type-checking. Callers that need the whole tree can raise
  * {@link SymbolScopeOptions.maxFiles}.
  *
- * @publicApi
+ * @public
  */
 export const DEFAULT_MAX_SYMBOL_FILES = 2000;
 
@@ -79,7 +79,7 @@ const SCRIPT_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/;
  * not the file that re-exports it. Paths are workspace-relative, consistent
  * with {@link listFiles} and {@link searchText}.
  *
- * @publicApi
+ * @public
  */
 export async function listExports(
   config: WorkspaceConfig,
@@ -155,7 +155,7 @@ export interface DefinitionLocation {
  * declarations; pass {@link SymbolScopeOptions} to bound that scan (it is
  * ignored for a {@link SymbolPosition} target, which loads only the one file).
  *
- * @publicApi
+ * @public
  */
 export async function findDefinition(
   config: WorkspaceConfig,
@@ -328,7 +328,7 @@ export interface ReferenceLocation {
  * scope can miss references outside it — widen `maxFiles`/`globs` when
  * completeness matters more than latency.
  *
- * @publicApi
+ * @public
  */
 export async function findReferences(
   config: WorkspaceConfig,

@@ -1,4 +1,4 @@
-/** @publicApi */
+/** @public */
 export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
@@ -13,40 +13,40 @@ export type {
   SkillFrontmatter,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
-/** @publicApi */
+/** @public */
 export {
   extractContentAfterFrontmatter,
   extractFrontmatterBody,
 } from './frontmatter/extract-frontmatter-body.ts';
-/** @publicApi */
+/** @public */
 export { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
 export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
 } from './frontmatter/parse-yaml-frontmatter.ts';
 
-/** @publicApi */
+/** @public */
 export {
   parseSkillFrontmatter,
   parseSkillFrontmatterForValidation,
 } from './parse-skill-frontmatter.ts';
 export type { ParsedSkillFrontmatter } from './parse-skill-frontmatter.ts';
 
-/** @publicApi */
+/** @public */
 export {
   parseRuleFrontmatter,
   parseRuleFrontmatterForValidation,
 } from './parse-rule-frontmatter.ts';
 export type { ParsedRuleFrontmatter } from './parse-rule-frontmatter.ts';
 
-/** @publicApi */
+/** @public */
 export {
   parsePersonaFrontmatter,
   parsePersonaFrontmatterForValidation,
 } from './parse-persona-frontmatter.ts';
 export type { ParsedPersonaFrontmatter } from './parse-persona-frontmatter.ts';
 
-/** @publicApi */
+/** @public */
 export {
   mergeValidationResults,
   validateAgentAssetFrontmatter,
@@ -57,7 +57,7 @@ export type {
   ValidateAgentAssetsResult,
 } from './validate-agent-asset-frontmatter.ts';
 
-/** @publicApi */
+/** @public */
 export {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
   mapAgentAssetFileToIngestRecord,
@@ -68,15 +68,15 @@ export type {
   AgentAssetPromptType,
 } from './map-agent-assets-for-ingest.ts';
 
-/** @publicApi */
+/** @public */
 export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.ts';
 export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.ts';
 
-/** @publicApi */
+/** @public */
 export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';
 export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts';
 
-/** @publicApi */
+/** @public */
 export { walkAgentAssetFiles } from './walk-agent-assets-on-disk.ts';
 export type {
   AgentAssetFileEntry,

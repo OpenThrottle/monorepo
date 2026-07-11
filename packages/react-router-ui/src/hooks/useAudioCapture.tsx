@@ -93,7 +93,7 @@ const toError = (value: unknown): Error =>
  * @description Captures microphone audio as ~250ms chunks of 16kHz mono Float32 PCM via
  * getUserMedia + an AudioWorklet (raw PCM — deliberately not MediaRecorder, whose timesliced
  * container chunks are not independently decodable). Toggle-only: `start()` / `stop()`.
- * @publicApi
+ * @public
  */
 export function useAudioCapture(
   options: UseAudioCaptureOptions = {},

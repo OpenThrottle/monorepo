@@ -14,7 +14,7 @@ import type { GraphqlWsClient } from './createGraphqlWsClient';
  * and resolve with its data. Rejects on transport errors, GraphQL errors, or
  * completion without data.
  *
- * @publicApi
+ * @public
  */
 export async function executeWsMutation<
   TData,

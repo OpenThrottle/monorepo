@@ -25,7 +25,7 @@ export interface IdeSearchResultsProps {
  * query returned nothing, otherwise the list of {@link IdeSearchResultRow}s with a
  * truncation note when matches were capped. Presentational; data arrives via props.
  *
- * @publicApi
+ * @public
  */
 export const IdeSearchResults = (
   props: IdeSearchResultsProps,

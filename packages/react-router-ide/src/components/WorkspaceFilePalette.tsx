@@ -30,7 +30,7 @@ export interface WorkspaceFilePaletteProps {
  * (capped), so the DOM stays bounded regardless of repository size. Built-in cmdk
  * filtering is disabled (`shouldFilter={false}`) so the cap is authoritative.
  *
- * @publicApi
+ * @public
  */
 export const WorkspaceFilePalette = (
   props: WorkspaceFilePaletteProps,

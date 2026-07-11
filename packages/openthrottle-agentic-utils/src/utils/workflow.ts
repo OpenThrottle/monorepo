@@ -17,7 +17,7 @@ import { toContainerPath } from './workspace-paths.ts';
  * Exported so docs and call sites reference the single source of truth rather
  * than re-typing the literal (which previously drifted to `pnpm-workspace.yaml`).
  *
- * @publicApi
+ * @public
  */
 export const OPENTHROTTLE_WORKSPACE_MARKER = `.openthrottle.mjs`;
 

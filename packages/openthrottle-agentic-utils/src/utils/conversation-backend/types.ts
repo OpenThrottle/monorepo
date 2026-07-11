@@ -17,7 +17,7 @@ import type { ChatCompletionMessage } from '../chat-completions/index.ts';
  * describe richer agentic events (reasoning, tool use, token accounting, the
  * backend's session handle). Values are snake_case to match the wire payload.
  *
- * @publicApi
+ * @public
  */
 export const CONVERSATION_STREAM_CHUNK_KINDS = {
   session: 'session',
@@ -31,7 +31,7 @@ export const CONVERSATION_STREAM_CHUNK_KINDS = {
 /**
  * One of the {@link CONVERSATION_STREAM_CHUNK_KINDS} values.
  *
- * @publicApi
+ * @public
  */
 export type ConversationStreamChunkKind =
   (typeof CONVERSATION_STREAM_CHUNK_KINDS)[keyof typeof CONVERSATION_STREAM_CHUNK_KINDS];
@@ -42,7 +42,7 @@ export type ConversationStreamChunkKind =
  * for their structured payload. `done` is true exactly once, on the terminal
  * chunk. `error` is set when the stream failed.
  *
- * @publicApi
+ * @public
  */
 export interface ConversationStreamChunk {
   /** Incremental text for this chunk (empty for non-text kinds and the terminal chunk). */
@@ -63,7 +63,7 @@ export interface ConversationStreamChunk {
  * fields (working directory, session handle, system prompt). All backends honor
  * `signal` for cancellation.
  *
- * @publicApi
+ * @public
  */
 export interface ConversationBackendRun {
   /** OpenAI-compatible base URL; required by the openai backend. */
@@ -93,7 +93,7 @@ export interface ConversationBackendRun {
  * A streaming conversation source. Implementations map their native output onto
  * {@link ConversationStreamChunk}; the consumer never sees backend specifics.
  *
- * @publicApi
+ * @public
  */
 export interface ConversationBackend {
   stream(run: ConversationBackendRun): AsyncIterable<ConversationStreamChunk>;

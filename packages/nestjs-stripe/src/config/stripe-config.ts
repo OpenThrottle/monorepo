@@ -10,7 +10,7 @@ export interface StripeConfig {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Pinned Stripe API version. Decouples response shapes from the account's
  * dashboard default so a Stripe-side default bump cannot silently change payload structure.
  * Matches the version the installed `stripe` SDK types are generated against.
@@ -25,7 +25,7 @@ export const STRIPE_API_VERSION = '2026-02-25.clover' as const;
 export const STRIPE_MAX_NETWORK_RETRIES = 2 as const;
 
 /**
- * @publicApi
+ * @public
  * @description Builds a Stripe client pinned to {@link STRIPE_API_VERSION} with
  * {@link STRIPE_MAX_NETWORK_RETRIES} automatic network retries. Single place where the SDK is
  * instantiated so all call sites share one pinned version and retry policy.

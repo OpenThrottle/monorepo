@@ -1,7 +1,7 @@
-/** @publicApi */
+/** @public */
 export { NestjsSlackModule } from './modules/nestjs-slack.module';
-/** @publicApi */
+/** @public */
 export { NestjsSlackService } from './services/nestjs-slack.service';
 export type { SlackWebhookPayload } from './services/nestjs-slack.service';
-/** @publicApi */
+/** @public */
 export { NestjsSlackError } from './config/nestjs-slack.error';

@@ -14,6 +14,6 @@ import 'temporal-polyfill/global';
  * as early as possible, before constructing a Schedule-X calendar — the
  * `<Calendar>` component does this for consumers.
  *
- * @publicApi
+ * @public
  */
 export const TEMPORAL_POLYFILL_INSTALLED = true;

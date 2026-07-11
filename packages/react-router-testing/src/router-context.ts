@@ -8,7 +8,7 @@ import { RouterContextProvider } from 'react-router';
  * in place of a `{}` context literal when the loader/action under test never
  * reads from context.
  *
- * @publicApi
+ * @public
  */
 export const createTestRouterContext = (): RouterContextProvider =>
   new RouterContextProvider();

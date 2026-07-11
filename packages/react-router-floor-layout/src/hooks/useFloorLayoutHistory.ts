@@ -20,7 +20,7 @@ interface HistoryState {
 /**
  * The history controller returned by {@link useFloorLayoutHistory}.
  *
- * @publicApi
+ * @public
  */
 export interface UseFloorLayoutHistoryResult {
   /** Whether a redo is available. */
@@ -42,7 +42,7 @@ export interface UseFloorLayoutHistoryResult {
 /**
  * Manage undo/redo history for a layout.
  *
- * @publicApi
+ * @public
  */
 export function useFloorLayoutHistory(
   initial: FloorLayout,

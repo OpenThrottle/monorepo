@@ -24,7 +24,7 @@ function onStorageEvent(e: StorageEvent): void {
  * preference key. Returns unsubscribe; when the last listener removes, the window
  * listener is detached.
  *
- * @publicApi
+ * @public
  */
 export function subscribeToNotificationsPreferenceStorageEvents(
   listener: () => void,

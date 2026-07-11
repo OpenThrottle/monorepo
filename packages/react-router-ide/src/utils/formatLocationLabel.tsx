@@ -11,7 +11,7 @@ export interface FormatLocationLabelOptions {
  * Format a `path:line` or `path:line:column` location label. Omits the column
  * segment when `column` is undefined.
  *
- * @publicApi
+ * @public
  */
 export const formatLocationLabel = (
   options: FormatLocationLabelOptions,

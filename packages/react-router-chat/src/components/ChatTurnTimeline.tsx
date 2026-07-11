@@ -19,7 +19,7 @@ export interface ChatTurnTimelineProps {
  * keep markdown rendering. Use only when structured `events` are present;
  * callers fall back to the flat `body` otherwise.
  *
- * @publicApi
+ * @public
  */
 export const ChatTurnTimeline = (
   props: ChatTurnTimelineProps,

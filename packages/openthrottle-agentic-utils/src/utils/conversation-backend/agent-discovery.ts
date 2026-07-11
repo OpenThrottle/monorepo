@@ -64,7 +64,7 @@ export interface DiscoverAgentClisOptions {
  * probed or spawned. Cursor is wired in v1; claude/opencode are documented
  * compatible and can be appended here as their adapters land.
  *
- * @publicApi
+ * @public
  */
 export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] = [
   {
@@ -151,7 +151,7 @@ function probe(
 /**
  * Probe every allowlisted agent CLI for availability.
  *
- * @publicApi
+ * @public
  */
 export async function discoverAgentClis(
   options: DiscoverAgentClisOptions = {},

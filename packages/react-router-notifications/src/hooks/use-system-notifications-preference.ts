@@ -27,7 +27,7 @@ import {
   type SystemNotificationsPreference,
 } from '../utils/system-notification';
 
-/** @publicApi */
+/** @public */
 export interface UseSystemNotificationsPreferenceResult {
   readonly preference: SystemNotificationsPreference;
   readonly setPreference: (pref: SystemNotificationsPreference) => void;
@@ -36,7 +36,7 @@ export interface UseSystemNotificationsPreferenceResult {
 /**
  * @description Returns current system notification preference and a setter that persists to localStorage.
  *
- * @publicApi
+ * @public
  */
 export function useNotificationsSystemPreferences(): UseSystemNotificationsPreferenceResult {
   const [preference, setPreferenceState] =

@@ -29,7 +29,7 @@ const CSP_REPORT_PATH = '/csp-reports';
  * @description Options for {@link buildCsp}, supplied by each app's
  * `app/global/config/csp.ts`. Extension arrays exist so future origins
  * (Rollbar, analytics, ...) land as one-line config changes, not builder edits.
- * @publicApi
+ * @public
  */
 export interface BuildCspOptions {
   /** Extra `connect-src` sources appended after the API-derived origins. */
@@ -58,7 +58,7 @@ export interface BuildCspOptions {
  * @description The headers {@link buildCsp} asks the caller to set: the policy
  * itself plus, when reporting is configured, the `Reporting-Endpoints` header
  * that `report-to` resolves against.
- * @publicApi
+ * @public
  */
 export interface BuildCspResult {
   headerName: 'Content-Security-Policy' | 'Content-Security-Policy-Report-Only';
@@ -103,7 +103,7 @@ const deriveApiOrigins = (apiUrl: string | undefined): ApiOrigins => {
  * `NODE_ENV=production`), the policy value, and, when an API URL is
  * configured, the matching `Reporting-Endpoints` header value pointing at the
  * server's `/csp-reports` endpoint.
- * @publicApi
+ * @public
  */
 export const buildCsp = (
   nonce: string,
@@ -176,7 +176,7 @@ export const buildCsp = (
  * @description Generate a fresh, cryptographically-random nonce for a single
  * request. Base64 of 16 random bytes; safe for both the CSP header and the
  * `nonce` attribute on inline scripts.
- * @publicApi
+ * @public
  */
 export const generateCspNonce = (): string => {
   const bytes = new Uint8Array(16);
@@ -193,7 +193,7 @@ export const generateCspNonce = (): string => {
  * down to the inline `<script>` tags in each app's `root.tsx`. Empty string on
  * the client (no inline scripts are emitted during hydration), so consumers
  * should treat a falsy value as "no nonce attribute".
- * @publicApi
+ * @public
  */
 export const NonceContext = React.createContext<string>('');
 
@@ -201,6 +201,6 @@ export const NonceContext = React.createContext<string>('');
  * @description Read the current request's CSP nonce. Returns an empty string
  * when no nonce is in scope (client hydration), in which case no `nonce`
  * attribute should be rendered.
- * @publicApi
+ * @public
  */
 export const useNonce = (): string => React.useContext(NonceContext);

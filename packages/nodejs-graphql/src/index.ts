@@ -40,7 +40,7 @@ export {
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
- * @publicApi
+ * @public
  */
 export interface GraphqlResponse<TData> {
   readonly data?: TData;
@@ -52,7 +52,7 @@ export interface GraphqlResponse<TData> {
 
 /**
  * @description Optional options for executeGraphql (e.g. auth headers).
- * @publicApi
+ * @public
  */
 export interface ExecuteGraphqlOptions {
   readonly headers?: Record<string, string>;
@@ -75,7 +75,7 @@ export interface ExecuteGraphqlOptions {
  * @param options - Optional headers (e.g. Authorization) to send with the request.
  *
  * @returns The `data` portion of the response; throws if the response has errors or non-OK status.
- * @publicApi
+ * @public
  */
 export async function executeGraphql<
   TData,
@@ -135,7 +135,7 @@ export async function executeGraphql<
 
 /**
  * @description Options for executeGraphqlAtUrl (e.g. auth token for Bearer header).
- * @publicApi
+ * @public
  */
 export interface ExecuteGraphqlAtUrlOptions {
   /**
@@ -166,7 +166,7 @@ export interface ExecuteGraphqlAtUrlOptions {
  * @param options - Optional token for Authorization: Bearer.
  *
  * @returns The `data` portion of the response; throws if errors or non-OK status.
- * @publicApi
+ * @public
  */
 export async function executeGraphqlAtUrl<
   TData,
@@ -228,7 +228,7 @@ export async function executeGraphqlAtUrl<
 
 /**
  * @description Options for {@link executeGraphqlWithAuth}.
- * @publicApi
+ * @public
  */
 export interface ExecuteGraphqlWithAuthOptions {
   /**
@@ -241,7 +241,7 @@ export interface ExecuteGraphqlWithAuthOptions {
 
 /**
  * @description Runs executeGraphql with Authorization: Bearer <token> when the request has an auth cookie. Use in loaders/actions that have access to the request.
- * @publicApi
+ * @public
  */
 export async function executeGraphqlWithAuth<
   TData,

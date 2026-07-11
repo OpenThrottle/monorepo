@@ -13,7 +13,7 @@ import {
 /**
  * The floor rectangle (world inches) an element's center is clamped to.
  *
- * @publicApi
+ * @public
  */
 export function floorBounds(
   layout: Pick<FloorLayout, 'height' | 'width'>,
@@ -27,7 +27,7 @@ export function floorBounds(
  * Lower layers render first (further back); higher layers paint on top and so
  * receive pointer hits first.
  *
- * @publicApi
+ * @public
  */
 export function sortElementsByLayer(
   elements: readonly FloorElement[],
@@ -41,7 +41,7 @@ export function sortElementsByLayer(
  * layer. The caller supplies a stable `id`. Returns a fully-formed, schema-valid
  * element ready to commit to a layout.
  *
- * @publicApi
+ * @public
  */
 export function createFloorElement(params: {
   readonly center: Point;

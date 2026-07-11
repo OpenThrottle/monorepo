@@ -8,13 +8,13 @@ export { getDirname } from './vite-config.ts';
 
 /**
  * @description Test environment type
- * @publicApi
+ * @public
  */
 export type TestEnvironment = 'jsdom' | 'happy-dom' | 'node';
 
 /**
  * @description Options for creating vitest configuration
- * @publicApi
+ * @public
  */
 export interface CreateVitestConfigOptions {
   /**
@@ -119,7 +119,7 @@ const createBaseVitestConfig = (
 
 /**
  * @description Creates a vitest configuration for jsdom environment (React packages)
- * @publicApi
+ * @public
  */
 export const createVitestConfigJsdom = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -137,7 +137,7 @@ export const createVitestConfigJsdom = (
 
 /**
  * @description Creates a vitest configuration for happy-dom environment (React Native packages)
- * @publicApi
+ * @public
  */
 export const createVitestConfigHappyDom = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -173,7 +173,7 @@ export const createVitestConfigHappyDom = (
 
 /**
  * @description Creates a vitest configuration for node environment (NestJS/Node packages)
- * @publicApi
+ * @public
  */
 export const createVitestConfigNode = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -203,7 +203,7 @@ export const createVitestConfigNode = (
 
 /**
  * @description Factory function to create vitest config based on environment type
- * @publicApi
+ * @public
  */
 export const createVitestConfig = (
   options: CreateVitestConfigOptions,

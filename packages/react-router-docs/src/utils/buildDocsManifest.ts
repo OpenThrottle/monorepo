@@ -9,7 +9,7 @@ export const DOCS_SECTION = {
   faq: 'faq',
 } as const;
 
-/** @publicApi */
+/** @public */
 export type DocsSection = (typeof DOCS_SECTION)[keyof typeof DOCS_SECTION];
 
 /**
@@ -19,7 +19,7 @@ export type DocsSection = (typeof DOCS_SECTION)[keyof typeof DOCS_SECTION];
  * this package never globs (a package-side glob would resolve against the
  * package, not the app's content). See the delivery ADR §Architecture.
  *
- * @publicApi
+ * @public
  */
 export type DocsContentModules = Readonly<Record<string, string>>;
 
@@ -28,7 +28,7 @@ export type DocsContentModules = Readonly<Record<string, string>>;
  * parsing and path derivation. The rendering layer (routes/nav/layouts) is built
  * on top of these.
  *
- * @publicApi
+ * @public
  */
 export interface DocEntry {
   /** Markdown body with frontmatter stripped. */
@@ -51,7 +51,7 @@ export interface DocEntry {
   readonly title: string;
 }
 
-/** @publicApi */
+/** @public */
 export interface BuildDocsManifestOptions {
   /** Include `draft: true` entries (dev only). Defaults to `false`. */
   readonly includeDrafts?: boolean;
@@ -100,7 +100,7 @@ const parseFrontmatter = (
  * normalizing to the same route `path` throw — a real misconfiguration is
  * surfaced early rather than silently dropped or resolved last-wins downstream.
  *
- * @publicApi
+ * @public
  */
 export const buildDocsManifest = (
   options: BuildDocsManifestOptions,

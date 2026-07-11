@@ -40,7 +40,7 @@ export type SetupReactRouterTestOptions = {
  * {@link installTestEnv}) are exported too, for apps that need to compose their
  * own setup.
  *
- * @publicApi
+ * @public
  */
 export const setupReactRouterTest = (
   options: SetupReactRouterTestOptions = {},

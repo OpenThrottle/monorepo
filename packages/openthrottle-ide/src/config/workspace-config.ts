@@ -6,7 +6,7 @@ import { isAbsolute, resolve, sep } from 'node:path';
  * object threaded through the enumeration, hashing, and search layers so that
  * an agent only has to declare the workspace once.
  *
- * @publicApi
+ * @public
  */
 export interface WorkspaceConfig {
   /**
@@ -37,7 +37,7 @@ export interface WorkspaceConfig {
  * A {@link WorkspaceConfig} with all optional fields filled in and `root`
  * normalized to an absolute path. Produced by {@link resolveWorkspaceConfig}.
  *
- * @publicApi
+ * @public
  */
 export interface ResolvedWorkspaceConfig {
   exclude: string[];
@@ -53,7 +53,7 @@ export const DEFAULT_EXCLUDE_GLOBS: readonly string[] = ['.git'];
  * Normalize a {@link WorkspaceConfig} into a {@link ResolvedWorkspaceConfig},
  * resolving `root` to an absolute path and applying defaults.
  *
- * @publicApi
+ * @public
  */
 export function resolveWorkspaceConfig(
   config: WorkspaceConfig,

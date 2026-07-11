@@ -4,7 +4,7 @@ export interface NotificationPermissionUnsupportedProps {
   readonly className?: string;
 }
 
-/** @publicApi */
+/** @public */
 export const NotificationPermissionUnsupported = (
   _props: NotificationPermissionUnsupportedProps,
 ): React.ReactElement => {

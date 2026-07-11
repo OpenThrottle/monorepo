@@ -51,7 +51,7 @@ const groupByPath = (
  * fetcher runs, an `Empty` state when there are none, otherwise {@link SymbolRow}s
  * per file. Selecting a symbol is reported via `onSelectSymbol`.
  *
- * @publicApi
+ * @public
  */
 export const ExportsList = (props: ExportsListProps): React.ReactElement => {
   const {

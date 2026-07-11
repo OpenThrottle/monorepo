@@ -8,7 +8,7 @@ import { formatDimensions } from '../utils/units';
 /**
  * The editable fields surfaced by {@link PropertyPanel}.
  *
- * @publicApi
+ * @public
  */
 export interface ElementEditPatch {
   readonly label?: string;
@@ -19,7 +19,7 @@ export interface ElementEditPatch {
 /**
  * Props for {@link PropertyPanel}.
  *
- * @publicApi
+ * @public
  */
 export interface PropertyPanelProps {
   /** Class applied to the panel root. */
@@ -41,7 +41,7 @@ export interface PropertyPanelProps {
  * hint when nothing is selected. All edits flow up via `onChange` — nothing is
  * mutated in place.
  *
- * @publicApi
+ * @public
  */
 export function PropertyPanel(props: PropertyPanelProps): ReactElement {
   // Setup

@@ -12,7 +12,7 @@ Component and data file boundaries:
   - User-facing copy → `data.copy.ts`
   - Mock fixtures → `mock.<name>.ts` (existing convention)
   - Other static data/lists → `data.<name>.ts`
-- The component imports the data via the `~/routing/<area>/data/...` alias and renders it. Because the component imports it (a real cross-module use reachable from a route entry), Knip treats it as used — no `@publicApi` tag is needed on data exports.
+- The component imports the data via the `~/routing/<area>/data/...` alias and renders it. Because the component imports it (a real cross-module use reachable from a route entry), Knip treats it as used — no `@public` tag is needed on data exports.
 
 Testing data files:
 

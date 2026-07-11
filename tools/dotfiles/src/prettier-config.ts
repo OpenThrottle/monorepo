@@ -15,7 +15,7 @@ import type { Config } from 'prettier';
  *   re-quotes YAML when `.editorconfig` declares a `quote_type`; pinning the
  *   style here (and matching `quote_type = single` in `.editorconfig`) stops
  *   the single/double-quote churn that used to re-flip on every reformat.
- * @publicApi
+ * @public
  */
 export const prettierConfig: Config = {
   arrowParens: 'always',

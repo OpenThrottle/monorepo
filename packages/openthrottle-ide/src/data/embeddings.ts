@@ -29,7 +29,7 @@ export const MAX_EMBEDDING_CHARS = 8191;
  * on: production wires {@link createEmbeddingsProvider}; tests supply a mock so
  * no live model is ever called.
  *
- * @publicApi
+ * @public
  */
 export interface EmbeddingsProvider {
   /**
@@ -58,7 +58,7 @@ export type FetchLike = (
  * `kind` — never inferred from which field happens to be set. All precedence
  * (option vs env vs default) is resolved by the caller before this is built.
  *
- * @publicApi
+ * @public
  */
 export type EmbeddingsConfig =
   | {
@@ -84,7 +84,7 @@ export type EmbeddingsConfig =
  * applies no defaults. The returned provider is plain data + a closure, so
  * consumers can equally pass any object satisfying {@link EmbeddingsProvider}.
  *
- * @publicApi
+ * @public
  */
 export function createEmbeddingsProvider(
   config: EmbeddingsConfig,

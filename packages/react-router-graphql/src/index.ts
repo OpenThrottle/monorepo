@@ -26,7 +26,7 @@ const AUTH_HTTP_STATUSES: ReadonlyArray<number> = [401, 403];
  * errors and redirect to login. Replaces the old (never-true) string match on a
  * bare `'Unauthorized'` message that the wrapped client never throws.
  *
- * @publicApi
+ * @public
  */
 export class GraphqlAuthError extends Error {
   /** @description The HTTP status that triggered this error (e.g. 401, 403). */
@@ -47,7 +47,7 @@ export class GraphqlAuthError extends Error {
  * string-scraping that breaks when the backend rewords an error or returns the
  * status in a GraphQL-errors body rather than the HTTP status line.
  *
- * @publicApi
+ * @public
  */
 export function isAuthError(error: unknown): error is GraphqlAuthError {
   return error instanceof GraphqlAuthError;
@@ -61,7 +61,7 @@ export function isAuthError(error: unknown): error is GraphqlAuthError {
  * error. Without this, a hung openthrottle-server connection would hold the SSR
  * request open with no upper bound.
  *
- * @publicApi
+ * @public
  */
 export class GraphqlTimeoutError extends Error {
   /** @description The timeout (milliseconds) that elapsed before aborting. */
@@ -79,7 +79,7 @@ export class GraphqlTimeoutError extends Error {
  * timeout raised by {@link executeGraphqlWithAuth}. Use in loaders/actions to
  * render a distinct timeout state rather than a generic error.
  *
- * @publicApi
+ * @public
  */
 export function isTimeoutError(error: unknown): error is GraphqlTimeoutError {
   return error instanceof GraphqlTimeoutError;
@@ -91,7 +91,7 @@ export function isTimeoutError(error: unknown): error is GraphqlTimeoutError {
  * Mirrors `@openthrottle/nodejs-graphql`'s default so the loader-facing API
  * has a single sane bound (15s).
  *
- * @publicApi
+ * @public
  */
 export const DEFAULT_LOADER_TIMEOUT_MS = DEFAULT_GRAPHQL_TIMEOUT_MS;
 
@@ -141,7 +141,7 @@ function classifyError(error: unknown, timeoutMs: number): unknown {
 /**
  * @description Options for {@link executeGraphqlWithAuth}.
  *
- * @publicApi
+ * @public
  */
 export interface ExecuteGraphqlWithAuthOptions {
   /**
@@ -211,7 +211,7 @@ export async function executeGraphqlWithAuth<
  * surfaces immediately and the user retries by reloading, rather than the
  * loader silently stalling through retry/backoff during the SSR request.
  *
- * @publicApi
+ * @public
  */
 export { executeGraphql };
 

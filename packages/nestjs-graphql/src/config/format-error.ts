@@ -34,7 +34,7 @@ const GENERIC_INTERNAL_ERROR_MESSAGE = 'Internal server error';
 /**
  * Minimal logger surface this module needs (matches LoggerService.error).
  *
- * @publicApi
+ * @public
  */
 export interface FormatErrorLogger {
   error(message: unknown, ...optionalParams: unknown[]): void;
@@ -43,7 +43,7 @@ export interface FormatErrorLogger {
 /**
  * Options controlling {@link createFormatError} behavior.
  *
- * @publicApi
+ * @public
  */
 export interface CreateFormatErrorOptions {
   /**
@@ -92,7 +92,7 @@ function isInternalError(formattedError: GraphQLFormattedError): boolean {
  * Create an Apollo `formatError` that scrubs sensitive error details before they
  * reach the client, logging the original error server-side when masking.
  *
- * @publicApi
+ * @public
  * @param logger Sink for the original (unmasked) error when masking is applied.
  * @param options Override masking behavior (defaults derived from NODE_ENV).
  */

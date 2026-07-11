@@ -11,7 +11,7 @@ import {
 
 /**
  * @description Walks `.agents/` SSOT trees and validates frontmatter per D5.
- * @publicApi
+ * @public
  */
 export const validateAgentAssetsOnDisk = (
   options: WalkAgentAssetsOptions,
