@@ -5,6 +5,7 @@ import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
 
@@ -92,6 +93,7 @@ export const SettingsWorkspaceProfileForm = (
               onChange={setEnabledEditors}
               value={enabledEditors}
             />
+            <WorkspaceEditorAffiliateLinks />
           </div>
 
           {actionError ? (
