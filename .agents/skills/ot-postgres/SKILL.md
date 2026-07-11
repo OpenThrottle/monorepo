@@ -21,7 +21,7 @@ Use **openthrottle-stack** for embeddings, ingest scripts, and server/entity syn
 
 ## Table comment rules (required)
 
-1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone in `databases/migrations/038_create_plan_runs_table.sql`: short, purpose-focused prose; use **"OpenThrottle"** (not "OpenThrottle") in new comments.
+1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone in `databases/migrations/038_create_plan_runs_table.sql`: short, purpose-focused prose; use **"OpenThrottle"** in new comments.
 2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See `038_create_plan_runs_table.sql` (`execution_backend`).
 3. **Batch comment-only migrations** (e.g. `039_comment_on_*`, `050_comment_on_*`) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
 4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/TABLE_COMMENTS_AUDIT.md`).

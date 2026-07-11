@@ -1,6 +1,6 @@
 # OpenThrottle table comments audit
 
-Permanent checklist for `COMMENT ON TABLE` coverage and OpenThrottle → OpenThrottle rename debt. **SSOT for backfill batches** — do not track in plan output stream or GitHub issues.
+Permanent checklist for `COMMENT ON TABLE` coverage and the OpenThrottle rename backfill. **SSOT for backfill batches** — do not track in plan output stream or GitHub issues.
 
 | Field                      | Value                                                                                                                         |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |

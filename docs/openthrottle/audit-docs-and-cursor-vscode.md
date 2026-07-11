@@ -60,17 +60,17 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 2.3 OpenThrottle
 
-| Doc                                                              | OpenThrottle references                                                      |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `docs/openthrottle/license-key-docker-machine-identification.md` | OpenThrottle Plan-Id.                                                        |
-| `docs/openthrottle/notifications-websockets-plan.md`             | "Plan lives in OpenThrottle", OpenThrottle plan ID, OpenThrottle task IDs.   |
-| `docs/openthrottle/vscode-openthrottle-naming.md`                | OpenThrottle plan ID; rebrand: "OpenThrottle" → "OpenThrottle" in extension. |
-| `docs/openthrottle/packages-naming.md`                           | OpenThrottle plan; packages/openthrottle/_, @openthrottle/_; rebrand steps.  |
-| `docs/openthrottle/naming-matrix.md`                             | OpenThrottle plan ID.                                                        |
-| `docs/openthrottle/naming-criteria.md`                           | Rebrand from OpenThrottle; avoid "OpenThrottle" for OpenThrottle.            |
-| `docs/openthrottle/marketing-website-naming.md`                  | OpenThrottle plan ID.                                                        |
-| `docs/openthrottle/developer-portal-naming.md`                   | OpenThrottle plan ID.                                                        |
-| `docs/openthrottle/developer-api-naming.md`                      | OpenThrottle plan ID.                                                        |
+| Doc                                                              | OpenThrottle references                                                     |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `docs/openthrottle/license-key-docker-machine-identification.md` | OpenThrottle Plan-Id.                                                       |
+| `docs/openthrottle/notifications-websockets-plan.md`             | "Plan lives in OpenThrottle", OpenThrottle plan ID, OpenThrottle task IDs.  |
+| `docs/openthrottle/vscode-openthrottle-naming.md`                | OpenThrottle plan ID; rebrand: renamed to "OpenThrottle" in extension.      |
+| `docs/openthrottle/packages-naming.md`                           | OpenThrottle plan; packages/openthrottle/_, @openthrottle/_; rebrand steps. |
+| `docs/openthrottle/naming-matrix.md`                             | OpenThrottle plan ID.                                                       |
+| `docs/openthrottle/naming-criteria.md`                           | Rebrand from OpenThrottle; avoid "OpenThrottle" for OpenThrottle.           |
+| `docs/openthrottle/marketing-website-naming.md`                  | OpenThrottle plan ID.                                                       |
+| `docs/openthrottle/developer-portal-naming.md`                   | OpenThrottle plan ID.                                                       |
+| `docs/openthrottle/developer-api-naming.md`                      | OpenThrottle plan ID.                                                       |
 
 ### 2.4 Tools
 
