@@ -14,6 +14,17 @@ export type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */
+export { DEFAULT_SKILL_TAG_VOCABULARY } from './default-skill-tag-vocabulary.ts';
+export type { DefaultSkillTag } from './default-skill-tag-vocabulary.ts';
+
+/** @public */
+export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
+export type {
+  SkillTagVocabularyEntry,
+  SkillTagVocabularyViolation,
+} from './find-unknown-skill-tags.ts';
+
+/** @public */
 export {
   extractContentAfterFrontmatter,
   extractFrontmatterBody,

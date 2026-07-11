@@ -5,6 +5,7 @@ export interface ParsedSkillFrontmatter {
   readonly description: string | undefined;
   readonly disableModelInvocation: boolean | undefined;
   readonly name: string | undefined;
+  readonly tags: readonly string[] | undefined;
 }
 
 const toOptionalString = (value: unknown): string | undefined => {
@@ -16,8 +17,12 @@ const toOptionalString = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const toOptionalStringArray = (
+  value: unknown,
+): readonly string[] | undefined => (Array.isArray(value) ? value : undefined);
+
 /**
- * @description Parses `name`, `description`, and optional `disable-model-invocation` from SKILL.md frontmatter.
+ * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter.
  * @public
  */
 export const parseSkillFrontmatter = (
@@ -32,6 +37,7 @@ export const parseSkillFrontmatter = (
         ? fields['disable-model-invocation']
         : undefined,
     name: toOptionalString(fields.name),
+    tags: toOptionalStringArray(fields.tags),
   };
 };
 
@@ -53,6 +59,9 @@ export const parseSkillFrontmatterForValidation = (
   }
   if (fields['disable-model-invocation'] !== undefined) {
     result['disable-model-invocation'] = fields['disable-model-invocation'];
+  }
+  if (fields.tags !== undefined) {
+    result.tags = fields.tags;
   }
 
   return result;
