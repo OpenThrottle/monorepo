@@ -333,16 +333,7 @@
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "echo '🚨 Knip is disabled for now, do not run this or `knip-backup` for the time being"
-      }
-    },
-    "knip-backup": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only; non-blocking — run on demand with `pnpm nx run monorepo:knip`.",
+      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md.",
       "executor": "nx:run-commands",
       "options": {
         "command": "knip --config knip.jsonc --no-exit-code",
