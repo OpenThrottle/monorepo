@@ -67,7 +67,6 @@
     "@openthrottle/nestjs-model-discovery": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-openthrottle-mcp": "workspace:^",
-    "@openthrottle/nestjs-postgres": "workspace:^",
     "@openthrottle/nestjs-profiling": "workspace:^",
     "@openthrottle/nestjs-rbac": "workspace:^",
     "@openthrottle/nestjs-redis": "workspace:^",

@@ -143,9 +143,6 @@
       "path": "./tools/generators"
     },
     {
-      "path": "./packages/nestjs-postgres"
-    },
-    {
       "path": "./packages/openthrottle-workflows"
     },
     {
