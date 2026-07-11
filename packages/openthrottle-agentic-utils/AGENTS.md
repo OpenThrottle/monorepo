@@ -1,7 +1,7 @@
 # @openthrottle/openthrottle-agentic-utils — agent notes
 
 Leaf runtime utilities for the agentic stack, extracted incrementally from `@tools/workflows` and
-`@openthrottle/ai-mcp`: Postgres URL resolution, OT root discovery, workflow transport/config cwd,
+`@openthrottle/node-client`: Postgres URL resolution, OT root discovery, workflow transport/config cwd,
 subprocess PATH, debug-env parsing, wall-clock/child-process metrics, and local model-server
 discovery.
 
