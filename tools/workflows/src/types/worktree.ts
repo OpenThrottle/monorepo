@@ -286,12 +286,12 @@ export interface ParentJobEnsureCommitFailureDirty {
 }
 
 /**
- * Failure: lint, typecheck, or typecheck-tests failed.
+ * Failure: lint, or typecheck failed.
  * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
  * Retained in the union so existing consumer narrowing keeps type-checking during transition.
  */
 export interface ParentJobEnsureCommitFailureChecks {
-  readonly check: 'lint' | 'typecheck' | 'typecheck-tests';
+  readonly check: 'lint' | 'typecheck';
   readonly ok: false;
   readonly reason: 'checks_failed';
   readonly stderr?: string;

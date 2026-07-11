@@ -1,6 +1,6 @@
 # Verification (test, lint, typecheck) in the spawn lifecycle
 
-This document describes how verification (lint, typecheck, typecheck-tests) is integrated with spawned Ralph jobs, where it runs in the workflow, and how results are reported back to the API or Cortex.
+This document describes how verification (lint, typecheck) is integrated with spawned Ralph jobs, where it runs in the workflow, and how results are reported back to the API or Cortex.
 
 ---
 
@@ -8,9 +8,9 @@ This document describes how verification (lint, typecheck, typecheck-tests) is i
 
 Verification is **part of the same spawn lifecycle** as the Ralph loop; it is **not** a separate step that the API triggers with a second request.
 
-- **Single flow:** When the API (or BullMQ processor) runs a Ralph job, it calls `runWorktreeWorkflow` once. That workflow: acquire → run loop (e.g. `runChildJob` spawning `pnpm exec workflow-ralph`) → **ensure commit** (clean check + optional lint/typecheck/typecheck-tests) → release. Verification runs **inside** this flow, after the loop succeeds and before the worktree is released.
+- **Single flow:** When the API (or BullMQ processor) runs a Ralph job, it calls `runWorktreeWorkflow` once. That workflow: acquire → run loop (e.g. `runChildJob` spawning `pnpm exec workflow-ralph`) → **ensure commit** (clean check + optional lint/typecheck) → release. Verification runs **inside** this flow, after the loop succeeds and before the worktree is released.
 - **No separate API step:** The API does not "trigger verification" as a separate call. The processor passes `ensureCommit` options into `runWorktreeWorkflow`; verification runs automatically when the loop completes. Results are part of the same job’s return value.
-- **Configuration:** The caller passes `WorktreeWorkflowOptions.ensureCommit` (`ParentJobEnsureCommitOptions`): `runChecks` (default `true`) to enable or disable lint/typecheck/typecheck-tests, optional `base` for nx affected, and optionally `timeoutMs`, `signal` (AbortSignal), and `onChunk` for progress/cancel during nx checks (spawn + Promise). The spawned job is bound to one worktree; all verification runs in that worktree’s `cwd`.
+- **Configuration:** The caller passes `WorktreeWorkflowOptions.ensureCommit` (`ParentJobEnsureCommitOptions`): `runChecks` (default `true`) to enable or disable lint/typecheck, optional `base` for nx affected, and optionally `timeoutMs`, `signal` (AbortSignal), and `onChunk` for progress/cancel during nx checks (spawn + Promise). The spawned job is bound to one worktree; all verification runs in that worktree’s `cwd`.
 
 So: **verification is integrated with spawned jobs** by being a step inside `runWorktreeWorkflow`; the API exposes results by returning the workflow result (including `ensureCommit`) as the job’s return value (see §4).
 
@@ -22,7 +22,7 @@ Verification is part of the **worktree workflow** in `runWorktreeWorkflow` (`src
 
 1. **Acquire** — Lock a worktree target and create a branch.
 2. **Run loop** — Execute the child job (e.g. `pnpm exec workflow-ralph --plan <planId>` in the worktree).
-3. **Ensure commit** — Only when the loop succeeded: ensure working tree is clean and (optionally) run lint, typecheck, and typecheck-tests (same nx targets as CI).
+3. **Ensure commit** — Only when the loop succeeded: ensure working tree is clean and (optionally) run lint and typecheck (same nx targets as CI).
 4. **Release** — Always release the target if acquire succeeded.
 
 The ensure-commit step is implemented in `parentJobEnsureCommitBeforeRelease` (`src/utils/parent-job.ts`):
@@ -31,7 +31,6 @@ The ensure-commit step is implemented in `parentJobEnsureCommitBeforeRelease` (`
 - **Checks (when `runChecks: true`, default):** Run in order via `pnpm exec nx` (spawn + Promise; optional timeout and AbortSignal), aligned with `.github/workflows/continuous-integration.yml`:
   - `lint` (either `nx affected -t lint --base <base> --parallel` or `nx run-many -t lint --parallel`)
   - `typecheck`
-  - `typecheck-tests`
 - If any check fails, the step returns immediately with `reason: 'checks_failed'` and the failing `check` name. On timeout or abort (signal), the step returns `reason: 'checks_timed_out'` or `reason: 'checks_cancelled'` with optional stderr/stdout. No separate step is run for verification; it is part of the same spawn lifecycle as the Ralph loop.
 
 ---
@@ -42,7 +41,7 @@ The ensure-commit result is typed as `ParentJobEnsureCommitResult` (`src/types/w
 
 - **Success:** `{ ok: true }`
 - **Dirty worktree:** `{ ok: false, reason: 'working_tree_dirty', detail?: string }`
-- **Check failed:** `{ ok: false, reason: 'checks_failed', check: 'lint' | 'typecheck' | 'typecheck-tests', stderr?: string, stdout?: string }`
+- **Check failed:** `{ ok: false, reason: 'checks_failed', check: 'lint' | 'typecheck', stderr?: string, stdout?: string }`
 - **Checks timed out:** `{ ok: false, reason: 'checks_timed_out', stderr?: string, stdout?: string }`
 - **Checks cancelled:** `{ ok: false, reason: 'checks_cancelled', stderr?: string, stdout?: string }`
 
@@ -77,12 +76,12 @@ Verification results can optionally be written to Cortex (e.g. append to plan ou
 
 ## 5. Summary
 
-| Aspect                 | Detail                                                                                                        |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **When**               | After the Ralph loop succeeds, inside `runWorktreeWorkflow`, before release.                                  |
-| **What runs**          | Working tree clean check; then (if `runChecks: true`) lint → typecheck → typecheck-tests via nx (CI-aligned). |
-| **Result**             | `WorktreeWorkflowResult.ensureCommit` (`ParentJobEnsureCommitResult`).                                        |
-| **Reporting (API)**    | Processor returns workflow result; job `returnvalue` exposes it; client parses JSON.                          |
-| **Reporting (Cortex)** | Optional: append to plan output or store run summary.                                                         |
+| Aspect                 | Detail                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| **When**               | After the Ralph loop succeeds, inside `runWorktreeWorkflow`, before release.                |
+| **What runs**          | Working tree clean check; then (if `runChecks: true`) lint → typecheck via nx (CI-aligned). |
+| **Result**             | `WorktreeWorkflowResult.ensureCommit` (`ParentJobEnsureCommitResult`).                      |
+| **Reporting (API)**    | Processor returns workflow result; job `returnvalue` exposes it; client parses JSON.        |
+| **Reporting (Cortex)** | Optional: append to plan output or store run summary.                                       |
 
 See also: [process-model.md](./process-model.md) (lifecycle and blocking behavior), [local-api-design.md](./local-api-design.md) §7 (verification and reporting).

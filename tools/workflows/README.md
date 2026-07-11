@@ -293,7 +293,7 @@ GraphQL **`enqueuePlanRun`** now defaults to the **orchestrator** path; the **le
 
 **`enqueuePlanRalphOrchestrator`** (in-process orchestrator) also does not use `runWorktreeWorkflow`; it has no parent-job `ensureCommit` step.
 
-**Contributors and local dev:** If your environment enqueues spawn jobs without `WORKTREE_TARGETS` (typical minimal local server setup), treat queue-driven Ralph like a manual CLI run: validate before you open a PR. From the monorepo root, run **`pnpm run check:local`** (validate-tags, affected lint, affected typecheck-tests, verify, codegen, knip). That script is the contributor-facing gate aligned with CI; it is not invoked automatically on the legacy spawn path.
+**Contributors and local dev:** If your environment enqueues spawn jobs without `WORKTREE_TARGETS` (typical minimal local server setup), treat queue-driven Ralph like a manual CLI run: validate before you open a PR. From the monorepo root, run **`pnpm run check:local`** (validate-tags, affected lint, affected typecheck, verify, codegen, knip). That script is the contributor-facing gate aligned with CI; it is not invoked automatically on the legacy spawn path.
 
 **To enable automated post-run checks on the worker:** set `WORKTREE_TARGETS` to registered worktree directories (JSON array of `[id, path]` or `{ id, path }` objects). Example and allocation rules: [docs/worktree-registration-and-allocation.md](docs/worktree-registration-and-allocation.md). Worker concurrency follows target count when targets are configured (`plans.processor.ts`).
 
