@@ -1718,6 +1718,44 @@ type ListSourcesResultObject {
   plans: [ListPlanSourceObject!]!
 }
 
+"""
+A single per-project skill-availability rule: tag/slug allow-deny lists, optionally scoped to an environment.
+"""
+type SkillAvailabilityRuleObject {
+  """
+  Stable rule identifier (used in resolver provenance and as the target of updateSkillAvailabilityRule / removeSkillAvailabilityRule).
+  """
+  id: ID!
+
+  """
+  Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment.
+  """
+  environment: String
+
+  """Skill slugs this rule allows (rung 1 exceptions); empty when none."""
+  slugAllow: [String!]!
+
+  """Skill slugs this rule denies (rung 1 exceptions); empty when none."""
+  slugDeny: [String!]!
+
+  """Tags this rule allows (rung 2); empty when none."""
+  tagAllow: [String!]!
+
+  """Tags this rule denies (rung 2); empty when none."""
+  tagDeny: [String!]!
+}
+
+"""
+A project's skill-availability rule set: the single per-project posture and its rules. Absent (null query result) ⇒ passthrough.
+"""
+type SkillAvailabilityRuleSetObject {
+  """The single per-project posture (rung 3): "allow" or "deny"."""
+  posture: String!
+
+  """The rule set's rules, evaluated at precedence rungs 1-2."""
+  rules: [SkillAvailabilityRuleObject!]!
+}
+
 """A single tag in the authenticated user's skill-tag vocabulary."""
 type SkillTagObject {
   id: ID!
@@ -2183,6 +2221,11 @@ type Query {
   List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.
   """
   listSources: ListSourcesResultObject!
+
+  """
+  A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability.
+  """
+  skillAvailabilityRuleSet(projectId: ID!): SkillAvailabilityRuleSetObject
 
   """
   The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.
@@ -2870,6 +2913,29 @@ type Mutation {
   """Remove a role from a service account (admin, human only)."""
   removeRoleFromServiceAccount(input: RemoveRoleFromServiceAccountInput!): Boolean!
 
+  """
+  Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project.
+  """
+  upsertSkillAvailabilityRuleSet(projectId: ID!, posture: String!): SkillAvailabilityRuleSetObject!
+
+  """
+  Delete a project's rule set (cascading its rules). Returns false when the project had no rule set.
+  """
+  deleteSkillAvailabilityRuleSet(projectId: ID!): Boolean!
+
+  """
+  Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary.
+  """
+  addSkillAvailabilityRule(projectId: ID!, input: SkillAvailabilityRuleInput!): SkillAvailabilityRuleObject!
+
+  """
+  Replace a rule's tag/slug lists and environment by rule id. Tag references are validated against the caller's skill-tag vocabulary.
+  """
+  updateSkillAvailabilityRule(ruleId: ID!, input: SkillAvailabilityRuleInput!): SkillAvailabilityRuleObject!
+
+  """Remove a rule by id. Returns false when the rule was not present."""
+  removeSkillAvailabilityRule(ruleId: ID!): Boolean!
+
   """Add a kebab-case tag to the authenticated user's skill-tag vocabulary."""
   addSkillTag(input: AddSkillTagInput!): SkillTagObject!
 
@@ -3478,6 +3544,25 @@ input AssignRoleToServiceAccountInput {
 input RemoveRoleFromServiceAccountInput {
   roleId: ID!
   serviceAccountId: ID!
+}
+
+input SkillAvailabilityRuleInput {
+  """
+  Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule.
+  """
+  environment: String
+
+  """Skill slugs to allow (rung 1 exceptions)."""
+  slugAllow: [String!]! = []
+
+  """Skill slugs to deny (rung 1 exceptions)."""
+  slugDeny: [String!]! = []
+
+  """Tags to allow (rung 2). Must be in the caller's skill-tag vocabulary."""
+  tagAllow: [String!]! = []
+
+  """Tags to deny (rung 2). Must be in the caller's skill-tag vocabulary."""
+  tagDeny: [String!]! = []
 }
 
 input AddSkillTagInput {

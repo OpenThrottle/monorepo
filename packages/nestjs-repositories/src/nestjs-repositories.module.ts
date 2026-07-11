@@ -14,6 +14,7 @@ import { ProjectSkillsModule } from './modules/project-skills/project-skills.mod
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
+import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module';
 import { SkillTagsModule } from './modules/skill-tags/skill-tags.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
@@ -38,6 +39,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillAvailabilityModule,
     SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,
@@ -65,6 +67,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillAvailabilityModule,
     SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,

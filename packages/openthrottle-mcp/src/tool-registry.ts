@@ -268,6 +268,42 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.removeSkillTagToolHandler,
     ),
     defineTool(
+      'get_skill_availability_rule_set',
+      Th.getSkillAvailabilityRuleSetToolDescription,
+      Th.getSkillAvailabilityRuleSetToolParameters,
+      Th.getSkillAvailabilityRuleSetToolHandler,
+    ),
+    defineTool(
+      'upsert_skill_availability_rule_set',
+      Th.upsertSkillAvailabilityRuleSetToolDescription,
+      Th.upsertSkillAvailabilityRuleSetToolParameters,
+      Th.upsertSkillAvailabilityRuleSetToolHandler,
+    ),
+    defineTool(
+      'delete_skill_availability_rule_set',
+      Th.deleteSkillAvailabilityRuleSetToolDescription,
+      Th.deleteSkillAvailabilityRuleSetToolParameters,
+      Th.deleteSkillAvailabilityRuleSetToolHandler,
+    ),
+    defineTool(
+      'add_skill_availability_rule',
+      Th.addSkillAvailabilityRuleToolDescription,
+      Th.addSkillAvailabilityRuleToolParameters,
+      Th.addSkillAvailabilityRuleToolHandler,
+    ),
+    defineTool(
+      'update_skill_availability_rule',
+      Th.updateSkillAvailabilityRuleToolDescription,
+      Th.updateSkillAvailabilityRuleToolParameters,
+      Th.updateSkillAvailabilityRuleToolHandler,
+    ),
+    defineTool(
+      'remove_skill_availability_rule',
+      Th.removeSkillAvailabilityRuleToolDescription,
+      Th.removeSkillAvailabilityRuleToolParameters,
+      Th.removeSkillAvailabilityRuleToolHandler,
+    ),
+    defineTool(
       'semantic_search',
       Th.semanticSearchToolDescription,
       Th.semanticSearchToolParameters,

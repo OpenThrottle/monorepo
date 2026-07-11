@@ -1,0 +1,57 @@
+# MCP-only GraphQL documents: per-project skill-availability rule set + rules CRUD. Mirrors the
+# skillAvailabilityRuleSet query and the upsert/delete/add/update/remove mutations exposed by
+# openthrottle-server. See docs/monorepo/skill-availability-design.md ("Rules").
+
+fragment SkillAvailabilityRuleFields on SkillAvailabilityRuleObject {
+  id
+  environment
+  slugAllow
+  slugDeny
+  tagAllow
+  tagDeny
+}
+
+fragment SkillAvailabilityRuleSetFields on SkillAvailabilityRuleSetObject {
+  posture
+  rules {
+    ...SkillAvailabilityRuleFields
+  }
+}
+
+query SkillAvailabilityRuleSet($projectId: ID!) {
+  skillAvailabilityRuleSet(projectId: $projectId) {
+    ...SkillAvailabilityRuleSetFields
+  }
+}
+
+mutation UpsertSkillAvailabilityRuleSet($projectId: ID!, $posture: String!) {
+  upsertSkillAvailabilityRuleSet(projectId: $projectId, posture: $posture) {
+    ...SkillAvailabilityRuleSetFields
+  }
+}
+
+mutation DeleteSkillAvailabilityRuleSet($projectId: ID!) {
+  deleteSkillAvailabilityRuleSet(projectId: $projectId)
+}
+
+mutation AddSkillAvailabilityRule(
+  $projectId: ID!
+  $input: SkillAvailabilityRuleInput!
+) {
+  addSkillAvailabilityRule(projectId: $projectId, input: $input) {
+    ...SkillAvailabilityRuleFields
+  }
+}
+
+mutation UpdateSkillAvailabilityRule(
+  $ruleId: ID!
+  $input: SkillAvailabilityRuleInput!
+) {
+  updateSkillAvailabilityRule(ruleId: $ruleId, input: $input) {
+    ...SkillAvailabilityRuleFields
+  }
+}
+
+mutation RemoveSkillAvailabilityRule($ruleId: ID!) {
+  removeSkillAvailabilityRule(ruleId: $ruleId)
+}

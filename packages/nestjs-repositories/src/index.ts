@@ -129,6 +129,19 @@ export {
   TasksService,
 } from './modules/tasks/tasks.service';
 export type { CreateTaskBatchItem } from './modules/tasks/tasks.service';
+export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity';
+export type { SkillAvailabilityRuleSetData } from './modules/skill-availability/skill-availability-rule-set.entity';
+export { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity';
+export type { SkillAvailabilityRuleData } from './modules/skill-availability/skill-availability-rule.entity';
+export { SkillAvailabilityService } from './modules/skill-availability/skill-availability.service';
+export {
+  skillAvailabilityPostureSchema,
+  skillAvailabilityRuleInputSchema,
+} from './modules/skill-availability/skill-availability.schemas';
+export type {
+  SkillAvailabilityRuleInput,
+  SkillAvailabilityRuleInputArgs,
+} from './modules/skill-availability/skill-availability.schemas';
 export { SkillTagsService } from './modules/skill-tags/skill-tags.service';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity';

@@ -1176,6 +1176,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Add a permission to a role */
   addPermissionToRole: Scalars['Boolean']['output'];
+  /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
+  addSkillAvailabilityRule: SkillAvailabilityRuleObject;
   /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
   addSkillTag: SkillTagObject;
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
@@ -1232,6 +1234,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
+  /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
+  deleteSkillAvailabilityRuleSet: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
@@ -1276,6 +1280,8 @@ export type Mutation = {
   removeRoleFromServiceAccount: Scalars['Boolean']['output'];
   /** Remove a role from a user */
   removeRoleFromUser: Scalars['Boolean']['output'];
+  /** Remove a rule by id. Returns false when the rule was not present. */
+  removeSkillAvailabilityRule: Scalars['Boolean']['output'];
   /** Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. */
   removeSkillTag: Scalars['Boolean']['output'];
   /** Rename a tag in the authenticated user's skill-tag vocabulary. */
@@ -1320,6 +1326,8 @@ export type Mutation = {
   updateRole?: Maybe<RoleObject>;
   /** Update a service account (admin, human only). */
   updateServiceAccount?: Maybe<ServiceAccountObject>;
+  /** Replace a rule's tag/slug lists and environment by rule id. Tag references are validated against the caller's skill-tag vocabulary. */
+  updateSkillAvailabilityRule: SkillAvailabilityRuleObject;
   /** Update a task */
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
@@ -1328,6 +1336,8 @@ export type Mutation = {
   updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
   updateWorkspaceProfile: UserWorkspaceProfileObject;
+  /** Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project. */
+  upsertSkillAvailabilityRuleSet: SkillAvailabilityRuleSetObject;
   /**
    * Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
    * @deprecated Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.
@@ -1339,6 +1349,11 @@ export type Mutation = {
 
 export type MutationAddPermissionToRoleArgs = {
   input: AddPermissionToRoleInput;
+};
+
+export type MutationAddSkillAvailabilityRuleArgs = {
+  input: SkillAvailabilityRuleInput;
+  projectId: Scalars['ID']['input'];
 };
 
 export type MutationAddSkillTagArgs = {
@@ -1453,6 +1468,10 @@ export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationDeleteSkillAvailabilityRuleSetArgs = {
+  projectId: Scalars['ID']['input'];
+};
+
 export type MutationDeleteTaskArgs = {
   input: DeleteTaskInput;
 };
@@ -1529,6 +1548,10 @@ export type MutationRemoveRoleFromUserArgs = {
   input: RemoveRoleFromUserInput;
 };
 
+export type MutationRemoveSkillAvailabilityRuleArgs = {
+  ruleId: Scalars['ID']['input'];
+};
+
 export type MutationRemoveSkillTagArgs = {
   input: RemoveSkillTagInput;
 };
@@ -1603,6 +1626,11 @@ export type MutationUpdateServiceAccountArgs = {
   input: UpdateServiceAccountInput;
 };
 
+export type MutationUpdateSkillAvailabilityRuleArgs = {
+  input: SkillAvailabilityRuleInput;
+  ruleId: Scalars['ID']['input'];
+};
+
 export type MutationUpdateTaskArgs = {
   input: UpdateTaskInput;
 };
@@ -1617,6 +1645,11 @@ export type MutationUpdateWorkspaceLocalRepositoryArgs = {
 
 export type MutationUpdateWorkspaceProfileArgs = {
   input: UpdateWorkspaceProfileInput;
+};
+
+export type MutationUpsertSkillAvailabilityRuleSetArgs = {
+  posture: Scalars['String']['input'];
+  projectId: Scalars['ID']['input'];
 };
 
 export type MutationWorkflowPlanRunArgs = {
@@ -2151,6 +2184,8 @@ export type Query = {
   serviceAccountCredentials: Array<ServiceAccountCredentialObject>;
   /** List all service accounts (admin, human only). */
   serviceAccounts: Array<ServiceAccountObject>;
+  /** A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability. */
+  skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
   /** Get a task by ID */
@@ -2393,6 +2428,10 @@ export type QueryServiceAccountArgs = {
 
 export type QueryServiceAccountCredentialsArgs = {
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type QuerySkillAvailabilityRuleSetArgs = {
+  projectId: Scalars['ID']['input'];
 };
 
 export type QueryTaskArgs = {
@@ -2840,6 +2879,45 @@ export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
   success: Scalars['Boolean']['output'];
+};
+
+export type SkillAvailabilityRuleInput = {
+  /** Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule. */
+  environment?: InputMaybe<Scalars['String']['input']>;
+  /** Skill slugs to allow (rung 1 exceptions). */
+  slugAllow?: Array<Scalars['String']['input']>;
+  /** Skill slugs to deny (rung 1 exceptions). */
+  slugDeny?: Array<Scalars['String']['input']>;
+  /** Tags to allow (rung 2). Must be in the caller's skill-tag vocabulary. */
+  tagAllow?: Array<Scalars['String']['input']>;
+  /** Tags to deny (rung 2). Must be in the caller's skill-tag vocabulary. */
+  tagDeny?: Array<Scalars['String']['input']>;
+};
+
+/** A single per-project skill-availability rule: tag/slug allow-deny lists, optionally scoped to an environment. */
+export type SkillAvailabilityRuleObject = {
+  __typename?: 'SkillAvailabilityRuleObject';
+  /** Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment. */
+  environment?: Maybe<Scalars['String']['output']>;
+  /** Stable rule identifier (used in resolver provenance and as the target of updateSkillAvailabilityRule / removeSkillAvailabilityRule). */
+  id: Scalars['ID']['output'];
+  /** Skill slugs this rule allows (rung 1 exceptions); empty when none. */
+  slugAllow: Array<Scalars['String']['output']>;
+  /** Skill slugs this rule denies (rung 1 exceptions); empty when none. */
+  slugDeny: Array<Scalars['String']['output']>;
+  /** Tags this rule allows (rung 2); empty when none. */
+  tagAllow: Array<Scalars['String']['output']>;
+  /** Tags this rule denies (rung 2); empty when none. */
+  tagDeny: Array<Scalars['String']['output']>;
+};
+
+/** A project's skill-availability rule set: the single per-project posture and its rules. Absent (null query result) ⇒ passthrough. */
+export type SkillAvailabilityRuleSetObject = {
+  __typename?: 'SkillAvailabilityRuleSetObject';
+  /** The single per-project posture (rung 3): "allow" or "deny". */
+  posture: Scalars['String']['output'];
+  /** The rule set's rules, evaluated at precedence rungs 1-2. */
+  rules: Array<SkillAvailabilityRuleObject>;
 };
 
 /** A single tag in the authenticated user's skill-tag vocabulary. */

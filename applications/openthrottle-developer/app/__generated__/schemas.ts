@@ -84,6 +84,7 @@ import {
   SearchPlansInput,
   SetPlanStatusInput,
   SetWorkspaceLocalRepositoryProjectInput,
+  SkillAvailabilityRuleInput,
   StartConversationStreamInput,
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
@@ -924,6 +925,18 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   return z.object({
     id: z.string(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function SkillAvailabilityRuleInputSchema(): z.ZodObject<
+  Properties<SkillAvailabilityRuleInput>
+> {
+  return z.object({
+    environment: z.string().nullish(),
+    slugAllow: z.array(z.string()),
+    slugDeny: z.array(z.string()),
+    tagAllow: z.array(z.string()),
+    tagDeny: z.array(z.string()),
   });
 }
 

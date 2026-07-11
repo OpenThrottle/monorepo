@@ -75,6 +75,7 @@ import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.modul
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
+import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module';
 import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
@@ -246,6 +247,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           RolesGraphqlModule,
           ServiceAccountsGraphqlModule,
           SearchGraphqlModule,
+          SkillAvailabilityGraphqlModule,
           SkillTagsGraphqlModule,
           TaskEmbeddingsGraphqlModule,
           TasksGraphqlModule,
