@@ -11,6 +11,7 @@ This document defines the **canonical on-disk layout** for unified agent assets,
 | Document                                                                             | Scope                                             |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------- |
 | [agent-editor-folders.md](./agent-editor-folders.md)                                 | Current folder tree (pre-migration baseline)      |
+| [agent-skills-pipeline-findings.md](./agent-skills-pipeline-findings.md)             | Skills pipeline audit: parse → discover → sync gaps |
 | [agent-editor-folders-duplication-map.md](./agent-editor-folders-duplication-map.md) | Historical duplicates and drift                   |
 | [AGENT_INPUTS.md](../tools/templates/AGENT_INPUTS.md)                                | What agents load (paths to update post-migration) |
 | Plan output stream (tasks `9fb55eac`, `8dc63467`)                                    | Inventory matrix and symlink spike results        |
