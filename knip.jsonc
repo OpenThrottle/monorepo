@@ -5,8 +5,9 @@
     "interface": true,
     "type": true,
   },
-  // Exclude exports tagged /** @publicApi */ from unused-export reports (see docs/monorepo/Knip.md).
-  "tags": ["-publicApi"],
+  // Public API exports are marked with the JSDoc /** @public */ tag, which knip
+  // recognizes natively (excluded from unused-export reports) — no custom "tags"
+  // filter needed. See docs/monorepo/Knip.md.
   // React Router typegen: @/* → .react-router/types/* (generated at build; not on disk for report-only Knip).
   "ignoreUnresolved": ["@/app/\\+types/.*", "@/app/routes/\\+types/.*"],
   "entry": [
@@ -27,11 +28,12 @@
     "tools/**/*.{ts,tsx,js,jsx}",
   ],
   "ignore": [
+    // Note: dist/build/coverage/node_modules/.nx/.cache are gitignored, so knip skips
+    // them by default (gitignore-aware) — no need to list them here. Only NON-gitignored
+    // paths need entries (.expo/.venv are not gitignored).
     "**/__snapshots__/**",
     "**/__tests__/**",
-    "**/.cache/**",
     "**/.expo/**",
-    "**/.nx/**",
     "**/.venv/**",
     "**/*.config.{ts,js,mjs,mts}",
     "**/public/worker.js",
@@ -39,11 +41,12 @@
     "**/*.spec.{ts,tsx,js,jsx}",
     "**/*.test.{ts,tsx,js,jsx}",
     "**/*.workspace.{ts,js}",
-    "**/build/**",
+    // Vitest setup harnesses: referenced by each project's vitest.config.ts, not by the
+    // import graph. The vitest plugin is off (see the "vitest" key), so ignore by glob
+    // instead of listing each one. Covers tests/setup.ts and *.setup.ts across all workspaces.
+    "**/tests/setup.ts",
+    "**/vitest.setup.ts",
     "**/codegen.{ts,js}",
-    "**/coverage/**",
-    "**/dist/**",
-    "**/node_modules/**",
     "tools/generators/src/generators/*/files/**",
     "vitest.workspace.ts",
     // openthrottle-developer: kept for commented JSX / intentional rollback (see @deprecated)
@@ -56,7 +59,6 @@
     // Shared jump-link data for DashboardQuickNavigation (commented on dashboard; unit tests cover routes)
     "applications/openthrottle-developer/app/routing/navigation/data/workspace-jump-links.ts",
     // Vitest / route test harness (entry globs do not satisfy knip file graph yet)
-    "applications/openthrottle-developer/tests/setup.ts",
     "applications/openthrottle-developer/app/testing/route-fixtures.tsx",
     "applications/openthrottle-developer/app/testing/search-route-fixtures.ts",
     // openthrottle-server: Stripe payments / RBAC roles disabled in app.module (intentional rollback; see @deprecated)
@@ -65,26 +67,12 @@
     "applications/openthrottle-server/src/modules/payments/**",
     // Golden prompts consumed by agents-mcp-router.golden-prompts.test.ts (knip excludes *.test.ts)
     "applications/openthrottle-server/src/graphql/agents/agents-mcp-router.golden-prompts.ts",
-    // Vitest setup referenced from vitest.config.ts
-    "applications/openthrottle-admin/tests/setup.ts",
-    "applications/openthrottle-server/tests/setup.ts",
-    // openthrottle-email: commented layout chrome + vitest setup (see @deprecated / vitest.config)
+    // openthrottle-email: commented layout chrome (intentional rollback; see @deprecated)
     "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
     "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
-    "applications/openthrottle-email/tests/setup.ts",
-    // openthrottle-website: vitest setup referenced from vitest.config.ts (knip vitest: false)
-    "applications/openthrottle-website/tests/setup.ts",
-    // @openthrottle/react-router-shadcn: CSS entrypoints (app @import) and vitest setup (vitest.config.ts; knip vitest: false)
+    // @openthrottle/react-router-shadcn: CSS entrypoints (app @import)
     "packages/react-router-shadcn/src/theme.css",
     "packages/react-router-shadcn/src/commander.css",
-    "packages/react-router-shadcn/vitest.setup.ts",
-    // @openthrottle/react-router-*: vitest setup referenced from vitest.config.ts (knip vitest: false)
-    "packages/react-router-chat/vitest.setup.ts",
-    "packages/react-router-ide/tests/setup.ts",
-    "packages/react-router-notifications/vitest.setup.ts",
-    "packages/react-router-profiling/vitest.setup.ts",
-    "packages/react-router-ui/vitest.setup.ts",
-    "packages/react-router-ui-global/vitest.setup.ts",
     // Ambient window.env merge (consumed via TypeScript program, not import graph)
     "packages/react-router-ui-global/src/types/global.d.ts",
     // infra/ is Terraform-only (no TS project graph)
@@ -122,6 +110,11 @@
   "nx": {
     "config": "nx.json",
   },
+  // Vitest plugin stays OFF: every vitest.config in this repo is dynamic (a function
+  // export using loadEnv, or the createVitestConfig* factory from @tools/dotfiles), so
+  // knip can't statically read `setupFiles`. Enabling it fails to resolve setup files
+  // (they'd report as unused) AND pulls test-only imports in as "unlisted" deps. Setup
+  // files are ignored by glob below instead. (Revisit if configs become static objects.)
   "vitest": false,
   "workspaces": {
     ".": {
