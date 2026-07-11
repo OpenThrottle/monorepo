@@ -17,7 +17,7 @@ interface UsageDailyStatsSeries {
 export const USAGE_DAILY_STATS_SERIES: readonly UsageDailyStatsSeries[] = [
   {
     description:
-      'Plans moved to a completed (or equivalent terminal) state on that calendar day, as recorded in the OT rollups.',
+      'Plans whose immutable completed_at falls on that UTC calendar day. Historical days before completed_at existed are approximate (backfilled from updated_at after migrate-time re-stamps).',
     label: 'Plans completed',
     seriesKey: 'plansCompleted',
   },
@@ -35,7 +35,7 @@ export const USAGE_DAILY_STATS_SERIES: readonly UsageDailyStatsSeries[] = [
   },
   {
     description:
-      'Tasks marked completed (or equivalent) on that day, per daily aggregation.',
+      'Tasks whose immutable completed_at falls on that UTC calendar day. Same historical-attribution caveat as plans completed.',
     label: 'Tasks completed',
     seriesKey: 'tasksCompleted',
   },
@@ -52,3 +52,11 @@ export const USAGE_DAILY_STATS_SERIES: readonly UsageDailyStatsSeries[] = [
     seriesKey: 'tasksUpdated',
   },
 ];
+
+/**
+ * @description Caveat shown near daily completion charts: pre-completed_at history
+ * was backfilled from updated_at after migrate-time mass re-stamps, so day
+ * attribution for older completions is approximate.
+ */
+export const USAGE_COMPLETION_ATTRIBUTION_CAVEAT =
+  'Historical completion dates are approximate for rows completed before completed_at existed (backfilled from updated_at after migrate-time re-stamps). New completions use an immutable completed_at stamp.';

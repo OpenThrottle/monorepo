@@ -2,7 +2,10 @@ import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { UsageDailyActivityOverview } from '../UsageDailyActivityOverview';
-import { USAGE_DAILY_STATS_SERIES } from '~/routing/usage/data/daily-stats-series-glossary';
+import {
+  USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
+  USAGE_DAILY_STATS_SERIES,
+} from '~/routing/usage/data/daily-stats-series-glossary';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('UsageDailyActivityOverview Component', () => {
@@ -15,6 +18,9 @@ describe('UsageDailyActivityOverview Component', () => {
     expect(screen.getByText(/last 7 days/i)).toBeInTheDocument();
     expect(
       screen.getByText(/OpenThrottle plan and task activity/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(USAGE_COMPLETION_ATTRIBUTION_CAVEAT),
     ).toBeInTheDocument();
   });
 

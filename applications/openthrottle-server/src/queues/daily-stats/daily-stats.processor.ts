@@ -212,9 +212,10 @@ export class DailyStatsProcessor
     const updatedInRange = {
       updatedAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)),
     };
-    const completedAndUpdatedInRange = {
-      status: 'COMPLETED' as const,
-      updatedAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)),
+    // Completions are attributed by immutable completed_at (set once on
+    // transition into COMPLETED), not mutable updated_at — see migration 056.
+    const completedInRange = {
+      completedAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)),
     };
 
     const [
@@ -231,7 +232,7 @@ export class DailyStatsProcessor
     ] = await Promise.all([
       planRepo.count({ where: createdInRange }),
       planRepo.count({ where: updatedInRange }),
-      planRepo.count({ where: completedAndUpdatedInRange }),
+      planRepo.count({ where: completedInRange }),
       planRepo.find({
         select: ['id', 'status'],
         where: createdInRange,
@@ -242,7 +243,7 @@ export class DailyStatsProcessor
       }),
       taskRepo.count({ where: createdInRange }),
       taskRepo.count({ where: updatedInRange }),
-      taskRepo.count({ where: completedAndUpdatedInRange }),
+      taskRepo.count({ where: completedInRange }),
       taskRepo.find({
         select: ['id', 'status'],
         where: createdInRange,

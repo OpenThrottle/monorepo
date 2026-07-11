@@ -135,6 +135,10 @@ export const DashboardDailyStatsModal = (
             </p>
           ) : null}
 
+          <p className="text-muted-foreground text-xs">
+            {DAILY_STATS_MODAL_COPY.completionAttributionCaveat}
+          </p>
+
           <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
             {DAILY_STATS_METRICS.map((metric) => (
               <div className="flex items-center gap-2" key={metric.key}>

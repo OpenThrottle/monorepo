@@ -146,6 +146,71 @@ describe('DailyStatsProcessor', () => {
     expect(planRepoMocks.count).toHaveBeenCalled();
   });
 
+  it('counts completions by completedAt day range, not status+updatedAt', async () => {
+    const planCount = vi
+      .fn()
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(5);
+    const taskCount = vi
+      .fn()
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(2);
+    const repos = createRepoMocks({
+      plan: { count: planCount },
+      task: { count: taskCount },
+    });
+    planRepoMocks = repos.planRepo;
+    taskRepoMocks = repos.taskRepo;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DailyStatsProcessor,
+        {
+          provide: DailyStatsService,
+          useValue: createMock<DailyStatsService>(),
+        },
+        {
+          provide: LoggerService,
+          useValue: createMock<LoggerService>(),
+        },
+        {
+          provide: NotificationsService,
+          useValue: createMock<NotificationsService>(),
+        },
+        {
+          provide: PlansService,
+          useValue: { getRepository: () => planRepoMocks },
+        },
+        {
+          provide: TasksService,
+          useValue: { getRepository: () => taskRepoMocks },
+        },
+      ],
+    }).compile();
+
+    const p = module.get(DailyStatsProcessor);
+    const result = await p.aggregateDailyStats('2026-07-09');
+
+    expect(result.plansCompleted).toBe(5);
+    expect(result.tasksCompleted).toBe(2);
+
+    const planCompletedWhere = planCount.mock.calls[2]?.[0]?.where;
+    expect(planCompletedWhere).toEqual(
+      expect.objectContaining({ completedAt: expect.anything() }),
+    );
+    expect(planCompletedWhere).not.toHaveProperty('status');
+    expect(planCompletedWhere).not.toHaveProperty('updatedAt');
+
+    const taskCompletedWhere = taskCount.mock.calls[2]?.[0]?.where;
+    expect(taskCompletedWhere).toEqual(
+      expect.objectContaining({ completedAt: expect.anything() }),
+    );
+    expect(taskCompletedWhere).not.toHaveProperty('status');
+    expect(taskCompletedWhere).not.toHaveProperty('updatedAt');
+  });
+
   it('upserts a zero-count row for a quiet day so the chart stays continuous', async () => {
     await processor.process(mockJob);
 
