@@ -8,7 +8,7 @@ This doc lists **direct Postgres touch points** (raw SQL, pg client, connection 
 
 ## 1. openthrottle-server
 
-**Summary:** openthrottle-server is the intended single gateway to OpenThrottle Postgres. It currently accesses Postgres in two ways: (1) **TypeORM** via `@openthrottle/nestjs-repositories` (PlansService, TasksService, etc.), and (2) **cortex-server** (`@openthrottle/ai-mcp/src/cortex-server`) for config, semantic search, and doc-ingestion state. All of these are “direct” in the sense that the server opens connections and runs SQL; there is no other app in between.
+**Summary:** openthrottle-server is the intended single gateway to OpenThrottle Postgres. It currently accesses Postgres in two ways: (1) **TypeORM** via `@openthrottle/nestjs-repositories` (PlansService, TasksService, etc.), and (2) **cortex-server** (`@openthrottle/node-client`) for config, semantic search, and doc-ingestion state. All of these are “direct” in the sense that the server opens connections and runs SQL; there is no other app in between.
 
 ### 1.1 Connection / config
 
@@ -17,7 +17,7 @@ This doc lists **direct Postgres touch points** (raw SQL, pg client, connection 
 | `applications/openthrottle-server/.env`, `.env.default` | `POSTGRES_*` and `POSTGRES_URL` (and doc-ingestion uses `POSTGRES_*` via `@tools/workflows/doc-ingestion`) — connection config only, no code.                                       |
 | `applications/openthrottle-server/src/app.module.ts`    | Imports `NestjsRepositoriesModule` from `@openthrottle/nestjs-repositories`; that module provides TypeORM DataSource to Cortex Postgres (connection is created inside the package). |
 
-### 1.2 cortex-server (`@openthrottle/ai-mcp/src/cortex-server`)
+### 1.2 cortex-server (`@openthrottle/node-client`)
 
 Used for **config**, **semantic search**, and **embedding**. Each of these uses `getPostgresConfig()` and then runs queries or uses a connection internally.
 

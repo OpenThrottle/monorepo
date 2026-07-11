@@ -39,7 +39,7 @@ async function embedQueryWithOpenAI(
     const embedding = response.data[0]?.embedding;
     if (!embedding || embedding.length !== EMBEDDING_DIM) {
       console.error(
-        `[ai-mcp] OpenAI embedding returned unexpected shape (model=${EMBEDDING_MODEL}, expected dim=${EMBEDDING_DIM}); skipping embedding.`,
+        `[node-client] OpenAI embedding returned unexpected shape (model=${EMBEDDING_MODEL}, expected dim=${EMBEDDING_DIM}); skipping embedding.`,
       );
       return undefined;
     }
@@ -47,7 +47,7 @@ async function embedQueryWithOpenAI(
     return embedding;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[ai-mcp] OpenAI embedding request failed: ${message}`);
+    console.error(`[node-client] OpenAI embedding request failed: ${message}`);
     return undefined;
   }
 }

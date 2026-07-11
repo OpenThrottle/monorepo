@@ -5,7 +5,7 @@ Leaf runtime utilities for the agentic stack, extracted incrementally from `@too
 subprocess PATH, debug-env parsing, wall-clock/child-process metrics, and local model-server
 discovery.
 
-**Consumed by:** `openthrottle-server`, `openthrottle-developer`, `@openthrottle/ai-mcp`,
+**Consumed by:** `openthrottle-server`, `openthrottle-developer`,
 `@openthrottle/openthrottle-workflows`, `@openthrottle/openthrottle-agentic-ralph`,
 `@openthrottle/nestjs-model-discovery`, `@openthrottle/nestjs-worktrees`, `@tools/workflows`.
 
