@@ -4,7 +4,7 @@ Gap analysis: cortex app data needs vs cortex-api GraphQL (and REST) as of this 
 
 ## App data sources
 
-- **cortex-server** (`@openthrottle/ai-mcp/src/cortex-server`): direct Cortex Postgres used in route loaders/actions for plans, tasks, notes, activity, commit links, semantic search, plan counts, categories, assignees.
+- **cortex-server** (`@openthrottle/node-client`): direct Cortex Postgres used in route loaders/actions for plans, tasks, notes, activity, commit links, semantic search, plan counts, categories, assignees.
 - **cortex-api**: NestJS app; REST used today for GitHub pulls and generators; GraphQL to be the single API for the cortex app.
 
 ## App needs (from cortex app routes)
@@ -48,7 +48,7 @@ Gap analysis: cortex app data needs vs cortex-api GraphQL (and REST) as of this 
 
 ## Deferred / follow-up
 
-- **(Done)** **searchPlans (semantic)**: Implemented via `searchPlans(query, limit)`; uses `@openthrottle/ai-mcp` cortex-server (embedding via OPENAI_API_KEY or Ollama).
+- **(Done)** **searchPlans (semantic)**: Implemented via `searchPlans(query, limit)`; uses `@openthrottle/node-client` cortex-server (embedding via OPENAI_API_KEY or Ollama).
 
 ## Field deprecation policy
 

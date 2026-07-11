@@ -5,7 +5,7 @@ The TypeORM data-access layer for OpenThrottle (Cortex): it owns **every** TypeO
 and the DataSource config. This is the package `openthrottle-server` actually wires TypeORM
 through — the sibling `nestjs-typeorm` has no consumers.
 
-**Consumed by:** `openthrottle-server` and `packages/ai-mcp`.
+**Consumed by:** `openthrottle-server`.
 
 ## Layout
 

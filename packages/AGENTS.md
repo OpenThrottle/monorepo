@@ -7,7 +7,7 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 - `nestjs-*` — NestJS server modules (auth, bullmq, graphql, typeorm, redis, repositories, …) consumed by `openthrottle-server`; typically `forRoot`/`forRootAsync`-style modules with a real `build` target shipping `dist/`.
 - `react-router-*` — shared UI/client libraries (shadcn, ui, testing, utils, graphql, chat, ide, …) consumed **source-first** by the React Router apps; no `build` target by design.
 - `openthrottle-*` — agentic/product libraries (agentic-ralph, workflows, mcp, ide, skills, notifications, developer-codegen, …); mixed build story — check each package, don't assume.
-- A few one-offs sit outside those prefixes: `ai-mcp`, `graphql-codegen`, `nodejs-graphql`, `vscode-openthrottle`.
+- A few one-offs sit outside those prefixes: `graphql-codegen`, `node-client`, `nodejs-graphql`, `vscode-openthrottle`.
 
 ## Source-first vs built — how to tell
 

@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-agentic-utils",
-  "description": "Pure utilities for agentic workflows (Postgres env, OT root discovery, metrics). Extracted from @tools/workflows and ai-mcp.",
+  "description": "Pure utilities for agentic workflows (Postgres env, OT root discovery, metrics). Extracted from @tools/workflows and @openthrottle/node-client.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

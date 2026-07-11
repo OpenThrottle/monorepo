@@ -1,6 +1,6 @@
 # @openthrottle/openthrottle-agentic-utils
 
-**Pure, well-named utilities** extracted incrementally from `@tools/workflows` and overlapping helpers in `@openthrottle/ai-mcp`. This package is the shared **runtime helper** layer for Ralph, nested spawns, and agentic CLIs: Postgres URL resolution, monorepo root discovery, workflow transport/config cwd, subprocess PATH, debug env parsing, and wall-clock / child-process metrics.
+**Pure, well-named utilities** extracted incrementally from `@tools/workflows` and overlapping helpers in `@openthrottle/node-client`. This package is the shared **runtime helper** layer for Ralph, nested spawns, and agentic CLIs: Postgres URL resolution, monorepo root discovery, workflow transport/config cwd, subprocess PATH, debug env parsing, and wall-clock / child-process metrics.
 
 It is **not** a home for CLI bins, Cortex GraphQL/Postgres CRUD, job-run-hooks runners, or doc-ingestion — those stay in `@tools/workflows` until a later phase.
 
@@ -9,7 +9,7 @@ It is **not** a home for CLI bins, Cortex GraphQL/Postgres CRUD, job-run-hooks r
 - **Contracts (types, orchestrator shapes):** `@openthrottle/openthrottle-agentic-workflow`
 - **GraphQL Ralph orchestrator:** `@openthrottle/openthrottle-agentic-ralph`
 - **CLI bins and Cortex wiring:** `@tools/workflows`
-- **This package:** leaf utilities with minimal dependencies; consumers import functions and re-export shims from workflows/ai-mcp until migration completes.
+- **This package:** leaf utilities with minimal dependencies; consumers import functions and re-export shims from `@tools/workflows` until migration completes.
 
 OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task, feedback gate between moves).
 
@@ -93,19 +93,17 @@ UI (can consume `discoverLocalModels` later).
 | `pg` (reachability check)                  | **`peerDependencies`** + devDependency for tests; mock in unit tests                                            |
 | `pidusage` (child metrics)                 | **`peerDependencies`** when `createChildProcessMetricsCollector` lands                                          |
 | `@nx/devkit` / `nx` (`pinNxWorkspaceRoot`) | **`peerDependencies`**; optional peer group — consider keeping Nx pinning in workflows if coupling is too heavy |
-| `@openthrottle/ai-mcp`                     | **Do not depend** — utilities move **out of** ai-mcp; ai-mcp/workflows re-export shims during migration         |
 
 ## Migration rules (per function)
 
 1. Implement + test in `@openthrottle/openthrottle-agentic-utils`.
-2. Re-export shim from `@tools/workflows` (or `@openthrottle/ai-mcp`) until all call sites switch.
+2. Re-export shim from `@tools/workflows` until all call sites switch.
 3. One function (or tight type+function pair) per OpenThrottle task.
 4. **Feedback gate** after each task before the next move.
 
 ## Overlap resolved (task 2)
 
 - **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; **throws** when incomplete (`POSTGRES_URL_MISSING_ERROR`).
-- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveCortexPostgresConnectionStringFromEnv` shim (returns `undefined` on missing env for optional spawn paths); `getPostgresConfig()` delegates to `getPostgresUrl()`.
 - **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_POSTGRES_URL_ENV` from this package.
 - **`@openthrottle/openthrottle-postgres`** duplicate remains; deprecate in a later task.
 
@@ -130,8 +128,7 @@ UI (can consume `discoverLocalModels` later).
 ## Overlap resolved (task 8)
 
 - **`resolveOpenThrottleBinDir`** and **`prependOpenThrottleBinToPath`** in `src/utils/nodejs.ts` are canonical: resolve `<OT root>/node_modules/.bin` via `getOpenThrottleRoot`, prepend to PATH idempotently.
-- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveWorkflowRalphBinDir` and `applyWorkflowRalphBinPath` shims; `buildWorkflowRalphSpawnEnv` calls `prependOpenThrottleBinToPath` internally.
-- **`@tools/workflows`** re-exports `resolveOpenThrottleBinDir` and `prependOpenThrottleBinToPath` from this package.
+- **`@tools/workflows`** re-exports `resolveOpenThrottleBinDir` and `prependOpenThrottleBinToPath` from this package; `buildWorkflowRalphSpawnEnv` calls `prependOpenThrottleBinToPath` internally.
 
 ## Overlap resolved (task 9)
 

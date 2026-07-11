@@ -8,7 +8,7 @@ description: >-
 disable-model-invocation: true
 ---
 
-Your job is to support the **"random idea → documented plan"** workflow using OpenThrottle (ai-mcp MCP server). Turn the user's idea or rough notes into a structured plan with optional tasks.
+Your job is to support the **"random idea → documented plan"** workflow using OpenThrottle (openthrottle-mcp MCP server). Turn the user's idea or rough notes into a structured plan with optional tasks.
 
 ## Rules
 
