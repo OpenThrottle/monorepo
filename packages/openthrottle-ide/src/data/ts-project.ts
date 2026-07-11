@@ -43,7 +43,7 @@ const projectCache = new Map<string, Project>();
  * eagerly reading the whole tree. Projects are cached per resolved workspace
  * root; pass `{ fresh: true }` to rebuild.
  *
- * @publicApi
+ * @public
  */
 export function loadProject(
   config: WorkspaceConfig,
@@ -74,7 +74,7 @@ export function loadProject(
  * Drop every cached {@link Project}. Primarily useful in tests that reuse a
  * workspace root across cases, or to release memory after a batch of analysis.
  *
- * @publicApi
+ * @public
  */
 export function resetProjectCache(): void {
   projectCache.clear();

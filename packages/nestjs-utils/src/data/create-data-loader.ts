@@ -24,7 +24,7 @@ export type CreateDataLoaderOptions<K, V, C = K> = Omit<
  * Creates a DataLoader that batches loads and caches results per instance.
  * Create one instance per GraphQL request (e.g. request-scoped Nest provider) to avoid cross-request cache leakage.
  *
- * @publicApi
+ * @public
  * @param batchLoadFn - Given an array of keys, returns a promise of values in the same order; use null for missing keys.
  * @param options - Optional DataLoader options (e.g. maxBatchSize, cacheKeyFn).
  * @returns A DataLoader instance.
@@ -82,7 +82,7 @@ export interface CreateLoaderFromFindByIdsOptions<TId, TEntity> {
  * omitted and the id is read from `entity.id`. For any other key shape, pass
  * `options.keyFn` so the key is resolved with a compile-time guarantee.
  *
- * @publicApi
+ * @public
  * @param findByIds - Given an array of ids, returns entities (any order); missing ids can be omitted or returned as null in a parallel array.
  * @param options - Optional keyFn to extract id from entity (required when the entity is not `{ id: TId }`).
  * @returns A DataLoader that loads by id and returns TEntity | null.

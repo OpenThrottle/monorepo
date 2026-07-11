@@ -63,7 +63,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 /**
  * Props for {@link FloorLayoutEditor}.
  *
- * @publicApi
+ * @public
  */
 export interface FloorLayoutEditorProps {
   /** Class applied to the editor root. */
@@ -99,7 +99,7 @@ export interface FloorLayoutEditorProps {
  * the whole layout — live drags update an internal overlay only, never per
  * frame. Snapshot undo/redo via Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z. Single-select.
  *
- * @publicApi
+ * @public
  */
 export function FloorLayoutEditor(props: FloorLayoutEditorProps): ReactElement {
   const {

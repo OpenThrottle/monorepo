@@ -20,7 +20,7 @@ export interface SemanticSearchFormProps {
  * query via `onSearch`; when `onIndex` is provided, also renders an Index action so
  * the app can build/refresh the code index. The app owns the wiring (server-side).
  *
- * @publicApi
+ * @public
  */
 export const SemanticSearchForm = (
   props: SemanticSearchFormProps,

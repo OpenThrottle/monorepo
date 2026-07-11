@@ -9,7 +9,7 @@ export const requestAuthTokenStorage = new AsyncLocalStorage<string>();
 
 /**
  * @description Runs fn with a request-scoped JWT for MCP tool handlers that call {@link getAuthToken}. Use when embedding tools in openthrottle-server so concurrent GraphQL requests do not share a global override. When token is empty, falls through to env.
- * @publicApi
+ * @public
  */
 export function withMcpDeveloperAuthToken<T>(
   token: string | undefined,
@@ -25,7 +25,7 @@ export function withMcpDeveloperAuthToken<T>(
 
 /**
  * @description Async variant of {@link withMcpDeveloperAuthToken}.
- * @publicApi
+ * @public
  */
 export async function withMcpDeveloperAuthTokenAsync<T>(
   token: string | undefined,
@@ -43,7 +43,7 @@ export async function withMcpDeveloperAuthTokenAsync<T>(
  * @description Reads auth token from per-request store (if any), then env OPENTHROTTLE_MCP_AUTH_TOKEN. Throws if missing so callers do not send an empty Bearer header.
  * @returns The token to pass to executeGraphqlWithAuth.
  * @throws Error when no token is configured (message instructs setting env var).
- * @publicApi
+ * @public
  */
 export function getAuthToken(): string {
   const fromRequest = requestAuthTokenStorage.getStore();

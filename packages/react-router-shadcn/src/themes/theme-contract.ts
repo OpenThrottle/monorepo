@@ -52,7 +52,7 @@ export type ThemeTokenName = (typeof THEME_TOKEN_NAMES)[number];
 export type ThemeTokens = Readonly<Record<ThemeTokenName, string>>;
 
 /**
- * @publicApi
+ * @public
  * A named theme: a light + dark pair, each a full {@link ThemeTokens} map. `id`
  * is the value written to `<html data-theme>`; `label` is the switcher display
  * name.

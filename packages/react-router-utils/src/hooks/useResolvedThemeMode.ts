@@ -14,7 +14,7 @@ const prefersColorSchemeDark = (): boolean =>
   window.matchMedia(PREFERS_DARK_QUERY).matches;
 
 /**
- * @publicApi
+ * @public
  * @description Resolve a stored {@link ThemeMode} to a concrete `light`/`dark`
  * value on the client and apply it as the `.dark` class on
  * `document.documentElement` (which both the base theme and custom palettes

@@ -20,7 +20,7 @@ export type ScheduleInstance = ReturnType<typeof createCalendar>;
  * (all values in {@link CalendarEvent} shape, adapters applied internally). The
  * `instance` is the source of truth handed to `useCalendar` and `<Calendar>`.
  *
- * @publicApi
+ * @public
  */
 export interface UseScheduleResult {
   /** Add a single event. */
@@ -101,7 +101,7 @@ function createSchedule(config: ScheduleConfig): UseScheduleResult {
  * `set` instead. `<CalendarLayout>` adds a prop-diffing effect on top so its
  * `events` prop can be replaced after mount.
  *
- * @publicApi
+ * @public
  */
 export function useSchedule(config: ScheduleConfig = {}): UseScheduleResult {
   // const {} = config;

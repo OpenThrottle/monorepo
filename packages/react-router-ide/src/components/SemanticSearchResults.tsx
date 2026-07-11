@@ -30,7 +30,7 @@ export interface SemanticSearchResultsProps {
  * or the ranked matches (similarity score, `path:startLine` location, snippet).
  * Presentational; data arrives via props.
  *
- * @publicApi
+ * @public
  */
 export const SemanticSearchResults = (
   props: SemanticSearchResultsProps,

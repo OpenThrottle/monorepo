@@ -27,7 +27,7 @@ export interface DefinitionReferencesPanelProps {
  * split across `Definition` / `References` tabs. A `Skeleton` while the fetcher
  * runs, an `Empty` prompt when no symbol is selected. Presentational.
  *
- * @publicApi
+ * @public
  */
 export const DefinitionReferencesPanel = (
   props: DefinitionReferencesPanelProps,

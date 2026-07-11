@@ -9,7 +9,7 @@ const HASH_ALGORITHM = 'sha256';
  * file's contents have changed between scans (the foundation for incremental,
  * Merkle-style re-indexing).
  *
- * @publicApi
+ * @public
  */
 export function hashContent(content: string): string {
   return createHash(HASH_ALGORITHM).update(content).digest('hex');
@@ -19,7 +19,7 @@ export function hashContent(content: string): string {
  * Compute a content fingerprint for a file by streaming it, so large files do
  * not have to be held in memory.
  *
- * @publicApi
+ * @public
  */
 export async function hashFile(absolutePath: string): Promise<string> {
   const hash = createHash(HASH_ALGORITHM);

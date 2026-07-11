@@ -14,7 +14,7 @@ import { IS_PRODUCTION } from '../config/environment';
  * deliberately out of scope here; route error reporting through the dedicated
  * Rollbar integration rather than expanding this facade.
  *
- * @publicApi
+ * @public
  */
 const noop = (): void => {};
 

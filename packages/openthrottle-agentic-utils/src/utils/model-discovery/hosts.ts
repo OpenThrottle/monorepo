@@ -15,14 +15,14 @@ import {
  * register an extra source via {@link ResolveHostsOptions.extraSources} without
  * touching the core. No Tailscale code ships today.
  *
- * @publicApi
+ * @public
  */
 export type HostSource = (env: DiscoveryEnv) => readonly string[];
 
 /**
  * Options for {@link resolveHosts}.
  *
- * @publicApi
+ * @public
  */
 export interface ResolveHostsOptions {
   /**
@@ -128,7 +128,7 @@ function uniqueInOrder<T>(values: readonly T[]): T[] {
  * {@link ResolveHostsOptions.extraSources} are merged in. The result is
  * de-duplicated in first-seen order. The core never reads `process.env`.
  *
- * @publicApi
+ * @public
  */
 export function resolveHosts(
   env: DiscoveryEnv,
@@ -152,7 +152,7 @@ export function resolveHosts(
  * default set is used. Ports parsed from the provider URL env vars are always
  * merged in. The result is de-duplicated and sorted ascending.
  *
- * @publicApi
+ * @public
  */
 export function resolvePorts(env: DiscoveryEnv): number[] {
   const override = splitList(env[LLM_PORTS_ENV])

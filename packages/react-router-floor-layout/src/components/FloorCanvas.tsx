@@ -22,7 +22,7 @@ import { FloorGrid } from './FloorGrid';
 /**
  * Props for {@link FloorCanvas}.
  *
- * @publicApi
+ * @public
  */
 export interface FloorCanvasProps {
   /** Optional overlay drawn above elements (e.g. selection handles). */
@@ -66,7 +66,7 @@ interface ActiveMove {
  * element state: drags are reported up via callbacks so the parent stays the
  * single source of truth.
  *
- * @publicApi
+ * @public
  */
 export function FloorCanvas(props: FloorCanvasProps): ReactElement {
   const {

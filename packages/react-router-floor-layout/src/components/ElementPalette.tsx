@@ -13,7 +13,7 @@ import { type Point, type Rect } from '../utils/geometry';
 /**
  * Props for {@link ElementPalette}.
  *
- * @publicApi
+ * @public
  */
 export interface ElementPaletteProps {
   /** Floor bounds (inches) to clamp the create point into. */
@@ -44,7 +44,7 @@ export interface ElementPaletteProps {
  * `onCreatePreview` (the editor draws the ghost), and on pointerup it commits a
  * new element at the snapped, in-bounds drop point via `onCreateCommit`.
  *
- * @publicApi
+ * @public
  */
 export const ElementPalette = (props: ElementPaletteProps): ReactElement => {
   const {

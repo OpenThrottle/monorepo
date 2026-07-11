@@ -22,7 +22,7 @@ export interface UseSymbolDetailsResult {
  * GET with the symbol's `path`/`line`/`name` as search params. This is the only
  * fetcher in the package — text search is a GET `?q=` → loader round-trip instead.
  *
- * @publicApi
+ * @public
  */
 export const useSymbolDetails = (
   options: UseSymbolDetailsOptions,

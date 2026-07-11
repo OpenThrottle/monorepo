@@ -21,7 +21,7 @@ function toEngineDateTime(
  * events use `Temporal.PlainDate`; timed events use `Temporal.ZonedDateTime` in
  * the system timezone.
  *
- * @publicApi
+ * @public
  */
 export function toEngineEvent(event: CalendarEvent): CalendarEventExternal {
   const allDay = event.allDay ?? false;
@@ -55,7 +55,7 @@ export function toEngineEvent(event: CalendarEvent): CalendarEventExternal {
  * is inferred from a `Temporal.PlainDate` start. The engine's numeric-or-string
  * id is normalized to a string.
  *
- * @publicApi
+ * @public
  */
 export function fromEngineEvent(event: CalendarEventExternal): CalendarEvent {
   const allDay = !('epochMilliseconds' in event.start);

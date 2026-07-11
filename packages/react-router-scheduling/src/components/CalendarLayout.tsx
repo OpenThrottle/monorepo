@@ -52,7 +52,7 @@ const NO_EVENTS: CalendarEvent[] = [];
  * the `<Calendar>` primitive. Drop in with just `events`. For custom layouts, use
  * `<Calendar>` and the hooks directly.
  *
- * @publicApi
+ * @public
  */
 export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
   const {

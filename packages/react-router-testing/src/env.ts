@@ -49,7 +49,7 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
  * Build the full {@link OpenThrottleEnv} test fixture, merging `overrides` over
  * the realistic localhost defaults. All keys are guaranteed present/non-empty.
  *
- * @publicApi
+ * @public
  */
 export const createTestEnv = (
   overrides: Partial<OpenThrottleEnv> = {},
@@ -67,7 +67,7 @@ export const createTestEnv = (
  * warning. Without it the caller gets an empty `window.env` and a confusing
  * downstream `getEnvironment()` failure instead of an actionable hint.
  *
- * @publicApi
+ * @public
  */
 export const installTestEnv = (
   overrides: Partial<OpenThrottleEnv> = {},

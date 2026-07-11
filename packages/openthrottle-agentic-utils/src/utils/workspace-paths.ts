@@ -14,21 +14,21 @@
 /**
  * Env var holding the workspace root path as the host knows it.
  *
- * @publicApi
+ * @public
  */
 export const HOST_WORKSPACES_DIR_ENV = `OPENTHROTTLE_HOST_WORKSPACES_DIR`;
 
 /**
  * Env var holding the path the same directory is mounted at inside the container.
  *
- * @publicApi
+ * @public
  */
 export const CONTAINER_WORKSPACES_DIR_ENV = `OPENTHROTTLE_CONTAINER_WORKSPACES_DIR`;
 
 /**
  * Active host↔container workspace mapping (both prefixes, no trailing slashes).
  *
- * @publicApi
+ * @public
  */
 export interface WorkspacePathMapping {
   readonly containerDir: string;
@@ -51,7 +51,7 @@ const swapPrefix = (path: string, from: string, to: string): string => {
  * BOTH {@link HOST_WORKSPACES_DIR_ENV} and {@link CONTAINER_WORKSPACES_DIR_ENV}
  * are set and non-blank (i.e. outside the container bridge this is inert).
  *
- * @publicApi
+ * @public
  */
 export const getWorkspacePathMapping = (
   env: NodeJS.ProcessEnv = process.env,
@@ -78,7 +78,7 @@ export const getWorkspacePathMapping = (
  * Translates a host-recorded absolute path to its in-container equivalent.
  * Identity when no mapping is configured or the path is outside the mapped root.
  *
- * @publicApi
+ * @public
  */
 export const toContainerPath = (
   path: string,
@@ -93,7 +93,7 @@ export const toContainerPath = (
  * Translates an in-container path back to the host view (for display and for
  * anything handed to host-side tooling). Inverse of {@link toContainerPath}.
  *
- * @publicApi
+ * @public
  */
 export const toHostPath = (
   path: string,

@@ -37,7 +37,7 @@ const THEME_TOGGLE_OPTIONS: readonly ThemeToggleOption[] = [
 ];
 
 /**
- * @publicApi
+ * @public
  * @description Controlled light / dark / system color-mode toggle shared across
  * OpenThrottle React Router apps. Built on the shadcn {@link ToggleGroup}; emits
  * only valid {@link ThemeMode} values (Radix single-toggle deselect sends an

@@ -35,7 +35,7 @@ export interface CalendarProps {
  * app's light/dark mode. Pair with `useCalendar` (or use `CalendarLayout`) for
  * view/navigation controls.
  *
- * @publicApi
+ * @public
  */
 export function Calendar(props: CalendarProps): ReactElement | null {
   const {

@@ -13,7 +13,7 @@ export interface EditorHrefOptions {
  * Build an "open in editor" deep link for an absolute filesystem path, e.g.
  * `vscode://file/abs/path:line:column`.
  *
- * @publicApi
+ * @public
  */
 export const editorHref = (options: EditorHrefOptions): string => {
   const { absolutePath, column, line, scheme = 'vscode' } = options;

@@ -16,7 +16,7 @@ import type { RecurrenceRule } from '../types';
  * Supported recurrence frequencies (RRULE `FREQ`). Modeled as an `as const`
  * object rather than a TypeScript enum.
  *
- * @publicApi
+ * @public
  */
 export const RecurrenceFrequency = {
   Daily: 'DAILY',
@@ -28,7 +28,7 @@ export const RecurrenceFrequency = {
 /**
  * Union of the supported {@link RecurrenceFrequency} values.
  *
- * @publicApi
+ * @public
  */
 export type RecurrenceFrequency =
   (typeof RecurrenceFrequency)[keyof typeof RecurrenceFrequency];
@@ -36,7 +36,7 @@ export type RecurrenceFrequency =
 /**
  * Two-letter weekday codes used by RRULE `BYDAY` / `WKST`.
  *
- * @publicApi
+ * @public
  */
 export const RecurrenceWeekday = {
   Friday: 'FR',
@@ -51,7 +51,7 @@ export const RecurrenceWeekday = {
 /**
  * Union of the supported {@link RecurrenceWeekday} values.
  *
- * @publicApi
+ * @public
  */
 export type RecurrenceWeekday =
   (typeof RecurrenceWeekday)[keyof typeof RecurrenceWeekday];
@@ -61,7 +61,7 @@ export type RecurrenceWeekday =
  * subset. {@link buildRRule} turns it into a {@link RecurrenceRule}; the only
  * required field is {@link RecurrenceSpec.frequency}.
  *
- * @publicApi
+ * @public
  */
 export interface RecurrenceSpec {
   /** Days of the week the event recurs on (RRULE `BYDAY`). */
@@ -117,7 +117,7 @@ function parseIntegers(value: string): number[] {
  * Parts are emitted in a stable order (`FREQ` first), and empty list fields are
  * omitted.
  *
- * @publicApi
+ * @public
  */
 export function buildRRule(spec: RecurrenceSpec): RecurrenceRule {
   const parts: string[] = [`FREQ=${spec.frequency}`];
@@ -143,7 +143,7 @@ export function buildRRule(spec: RecurrenceSpec): RecurrenceRule {
  * structured {@link RecurrenceSpec}. Throws on a missing/invalid `FREQ` or an
  * unsupported `BYDAY`/`WKST` weekday; unknown parts are ignored.
  *
- * @publicApi
+ * @public
  */
 export function parseRRule(rule: RecurrenceRule | string): RecurrenceSpec {
   const raw = typeof rule === 'string' ? rule : rule.rule;

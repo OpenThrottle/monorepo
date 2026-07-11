@@ -15,7 +15,7 @@ import {
 /**
  * An SVG `viewBox` expressed in world units (inches).
  *
- * @publicApi
+ * @public
  */
 export interface ViewBox {
   readonly height: number;
@@ -28,7 +28,7 @@ export interface ViewBox {
  * The on-screen pixel rectangle of the `<svg>` element (a subset of
  * `DOMRect`), used to map client pixels to world coordinates.
  *
- * @publicApi
+ * @public
  */
 export interface ViewportRect {
   readonly height: number;
@@ -41,7 +41,7 @@ export interface ViewportRect {
  * Lower/upper bounds for the viewBox width (world inches). Smaller width = more
  * zoomed in. Used to clamp every zoom operation.
  *
- * @publicApi
+ * @public
  */
 export interface ZoomLimits {
   readonly maxWidth: number;
@@ -59,7 +59,7 @@ export function viewBoxToString(viewBox: ViewBox): string {
  * Map a client (screen-pixel) point to world coordinates (inches) given the
  * SVG's on-screen rect and current viewBox.
  *
- * @publicApi
+ * @public
  */
 export function clientToWorld(
   client: Point,
@@ -79,7 +79,7 @@ export function clientToWorld(
  * Pan the viewBox by a client-pixel delta (e.g. a drag on empty canvas).
  * Dragging right moves content right, so the viewBox origin moves left.
  *
- * @publicApi
+ * @public
  */
 export function panViewBoxByClient(
   viewBox: ViewBox,
@@ -100,7 +100,7 @@ export function panViewBoxByClient(
  * on screen). `factor > 1` zooms in. Width is clamped to `limits`; height
  * follows the same applied scale so aspect ratio is preserved.
  *
- * @publicApi
+ * @public
  */
 export function zoomViewBoxAt(
   viewBox: ViewBox,
@@ -128,7 +128,7 @@ export function zoomViewBoxAt(
  * centered inside a viewport of the given pixel size, matching the viewport's
  * aspect ratio so the floor is never distorted.
  *
- * @publicApi
+ * @public
  */
 export function fitViewBox(floor: Size, viewport: Size, padding = 0): ViewBox {
   const contentWidth = floor.width + padding * 2;
@@ -161,7 +161,7 @@ export function fitViewBox(floor: Size, viewport: Size, padding = 0): ViewBox {
  * keep the gesture midpoint anchored in world space. `prev`/`next` are the two
  * pointers' client positions before and after this step.
  *
- * @publicApi
+ * @public
  */
 export function pinchViewBox(
   viewBox: ViewBox,

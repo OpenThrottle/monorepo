@@ -23,7 +23,7 @@ export interface HighlightSegments {
  * back to the first occurrence of `matchText` when the column doesn't line up.
  * Returns the whole line as `pre` (empty `mid`) when nothing matches.
  *
- * @publicApi
+ * @public
  */
 export const splitMatchHighlight = (
   options: SplitMatchHighlightOptions,

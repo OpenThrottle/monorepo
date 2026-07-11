@@ -24,7 +24,7 @@ import {
 /**
  * The layout controller returned by {@link useFloorLayout}.
  *
- * @publicApi
+ * @public
  */
 export interface UseFloorLayoutResult {
   /** Append an element. */
@@ -44,7 +44,7 @@ export interface UseFloorLayoutResult {
 /**
  * Manage a single floor layout with immutable mutators.
  *
- * @publicApi
+ * @public
  */
 export function useFloorLayout(initial: FloorLayout): UseFloorLayoutResult {
   const [layout, setLayout] = useState<FloorLayout>(initial);

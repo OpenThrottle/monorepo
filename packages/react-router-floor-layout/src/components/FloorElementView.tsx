@@ -12,7 +12,7 @@ import { seatPositions } from '../utils/seats';
 /**
  * Props for {@link FloorElementView}.
  *
- * @publicApi
+ * @public
  */
 export interface FloorElementViewProps {
   /** The element to render. */
@@ -36,7 +36,7 @@ function describe(element: FloorElement): string {
  * glyphs for tables are layered on in the element-shapes task. Stateless: all
  * interaction is reported via `onPointerDown`.
  *
- * @publicApi
+ * @public
  */
 function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
   // const {} = props;
@@ -146,6 +146,6 @@ function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
  * props actually changed: during a move only the dragged element's geometry
  * changes, so the other 50–150 elements skip re-render entirely.
  *
- * @publicApi
+ * @public
  */
 export const FloorElementView = memo(FloorElementViewComponent);

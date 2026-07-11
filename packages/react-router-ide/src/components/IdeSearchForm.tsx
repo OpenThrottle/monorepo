@@ -14,7 +14,7 @@ export interface IdeSearchFormProps {
  * developer app owns the actual GET-form/loader wiring (text search is a GET `?q=`
  * round-trip, not a fetcher). Controlled input seeded from `defaultQuery`.
  *
- * @publicApi
+ * @public
  */
 export const IdeSearchForm = (
   props: IdeSearchFormProps,

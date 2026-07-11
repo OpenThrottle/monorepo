@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 /**
  * Configuration for {@link useSelectionKeyboard}.
  *
- * @publicApi
+ * @public
  */
 export interface UseSelectionKeyboardOptions {
   /** Disable all handling (e.g. when nothing is selected). Default true. */
@@ -47,7 +47,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 /**
  * Attach window keydown handling for the current selection.
  *
- * @publicApi
+ * @public
  */
 export function useSelectionKeyboard(
   options: UseSelectionKeyboardOptions,

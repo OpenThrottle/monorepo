@@ -8,7 +8,7 @@ const renderTokenBlock = (tokens: ThemeTokens): string =>
   THEME_TOKEN_NAMES.map((name) => `  --${name}: ${tokens[name]};`).join('\n');
 
 /**
- * @publicApi
+ * @public
  * @description Builds the CSS for a set of {@link Theme}s as scoped token
  * overrides. Each theme emits an `html[data-theme="id"]` block (light) and an
  * `html[data-theme="id"].dark` block (dark), whose selector specificity beats

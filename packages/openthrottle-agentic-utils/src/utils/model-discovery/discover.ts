@@ -26,7 +26,7 @@ function endpointKey(endpoint: ModelEndpoint): string {
  * others, ties broken by host string). The result is stably sorted by
  * `(host, port)`.
  *
- * @publicApi
+ * @public
  */
 export function dedupeEndpoints(
   endpoints: readonly ModelEndpoint[],
@@ -67,7 +67,7 @@ export function dedupeEndpoints(
  * options when provided (the caller stamps it — e.g. the cached Nest wrapper);
  * otherwise it defaults to the current time.
  *
- * @publicApi
+ * @public
  */
 export async function discoverModels(
   options: DiscoverModelsOptions,

@@ -19,7 +19,7 @@
  * with `MONTHLY`/`YEARLY` renders correctly but such events cannot be rescheduled
  * by drag-and-drop.
  *
- * @publicApi
+ * @public
  */
 export interface RecurrenceRule {
   /** Raw RFC 5545 RRULE string, e.g. `FREQ=WEEKLY;BYDAY=MO`. */
@@ -31,7 +31,7 @@ export interface RecurrenceRule {
  * accept a `Date` or an ISO 8601 string; the event adapters normalize them to
  * the engine's datetime representation.
  *
- * @publicApi
+ * @public
  */
 export interface CalendarEvent {
   /** Marks an all-day event (date-only, no time component). */
@@ -66,7 +66,7 @@ export interface CalendarEvent {
  * concrete Schedule-X views in the view/plugin factory. Modeled as an
  * `as const` object rather than a TypeScript enum.
  *
- * @publicApi
+ * @public
  */
 export const CalendarView = {
   Day: 'day',
@@ -77,7 +77,7 @@ export const CalendarView = {
 /**
  * Union of the supported {@link CalendarView} values.
  *
- * @publicApi
+ * @public
  */
 export type CalendarView = (typeof CalendarView)[keyof typeof CalendarView];
 
@@ -85,7 +85,7 @@ export type CalendarView = (typeof CalendarView)[keyof typeof CalendarView];
  * Feature toggles for the Schedule-X plugin set the wrapper wires up. Each flag
  * maps to exactly one plugin in the plugin factory.
  *
- * @publicApi
+ * @public
  */
 export interface SchedulePluginsConfig {
   /** Programmatic view/date navigation (calendar-controls); backs `useCalendar`. */
@@ -113,7 +113,7 @@ export interface SchedulePluginsConfig {
  * premium `@sx-premium/drag-to-create` plugin and is out of scope; these
  * open-source click/double-click callbacks back the `useCalendarSelection` hook.
  *
- * @publicApi
+ * @public
  */
 export interface ScheduleCallbacks {
   /** Clicking a day cell in the month grid (date as `YYYY-MM-DD`). */
@@ -131,7 +131,7 @@ export interface ScheduleCallbacks {
 /**
  * Configuration for a schedule — the list of events plus how it may be viewed.
  *
- * @publicApi
+ * @public
  */
 export interface ScheduleConfig {
   /** Interaction callbacks (clicks on events, empty time slots, or dates). */

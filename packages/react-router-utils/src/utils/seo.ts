@@ -2,7 +2,7 @@ import type { MetaDescriptor } from 'react-router';
 import { APP_URL } from '../config/application';
 
 /**
- * @publicApi
+ * @public
  * @description Builds the absolute canonical URL for a route from its pathname,
  * using the current app's `APP_URL`. Search params and hash fragments are
  * dropped and trailing slashes normalized away (except root), so duplicate
@@ -17,7 +17,7 @@ export function buildCanonicalUrl(pathname: string): string {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Per-route canonical `<link>` meta descriptor for the given
  * pathname. Use inside a route `meta()` so every page advertises its own
  * canonical URL rather than inheriting a single static one.
@@ -48,7 +48,7 @@ export interface SeoMetaOptions {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds the OpenGraph + Twitter meta descriptor array for a route
  * `meta()`, parameterized per app. Emits `<title>`, `description`, the
  * `og:*` set, and the `twitter:*` set; image tags are included only when
@@ -104,7 +104,7 @@ export interface OrganizationJsonLdOptions {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds a schema.org `Organization` JSON-LD object. Combine with
  * {@link serializeJsonLd} and render in a `<script type="application/ld+json">`.
  */
@@ -132,7 +132,7 @@ export interface WebsiteJsonLdOptions {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds a schema.org `WebSite` JSON-LD object.
  */
 export function buildWebsiteJsonLd(
@@ -148,7 +148,7 @@ export function buildWebsiteJsonLd(
 }
 
 /**
- * @publicApi
+ * @public
  * @description Serializes JSON-LD entries for a `<script type="application/ld+json">`
  * (drops `undefined` keys).
  */
@@ -157,7 +157,7 @@ export function serializeJsonLd(entries: readonly unknown[]): string {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds an XML sitemap body from a list of route paths. Paths are
  * deduped, sorted, and rendered as absolute canonical URLs.
  */
@@ -173,7 +173,7 @@ export function buildSitemapXml(paths: readonly string[]): string {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds a `GET /sitemap.xml` {@link Response} from a list of route
  * paths, with an `application/xml` content type and a cache header.
  */
@@ -197,7 +197,7 @@ export interface RobotsOptions {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds a `robots.txt` body. `disallowAll` yields a noindex policy
  * for internal apps; otherwise allows all and (optionally) advertises the
  * sitemap as an absolute canonical URL.
@@ -216,7 +216,7 @@ export function buildRobotsTxt(options: RobotsOptions = {}): string {
 }
 
 /**
- * @publicApi
+ * @public
  * @description Builds a `GET /robots.txt` {@link Response} with a `text/plain`
  * content type and a cache header.
  */

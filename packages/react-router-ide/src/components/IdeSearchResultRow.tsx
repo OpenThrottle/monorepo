@@ -16,7 +16,7 @@ export interface IdeSearchResultRowProps {
  * with the matched substring highlighted. Presentational; activation is reported
  * via `onSelect`.
  *
- * @publicApi
+ * @public
  */
 export const IdeSearchResultRow = (
   props: IdeSearchResultRowProps,

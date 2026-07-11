@@ -39,7 +39,7 @@ const groupFaqEntries = (entries: readonly DocEntry[]): readonly FaqGroup[] => {
  * (trigger) and its Markdown body is the answer. Items carry `id={slug}` so they
  * are deep-linkable via `#<slug>`.
  *
- * @publicApi
+ * @public
  */
 export const FaqView = (props: FaqViewProps): React.ReactElement => {
   const { className, entries } = props;

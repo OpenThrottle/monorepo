@@ -13,7 +13,7 @@ import { PUB_SUB } from './pubsub.constants';
  * (`asyncIterator(topics)` / `publish(topic, payload)`), so resolvers injecting
  * {@link PUB_SUB} need no change.
  *
- * @publicApi
+ * @public
  */
 export function createPubSub(): PubSubEngine {
   return new PubSub();
@@ -25,7 +25,7 @@ export function createPubSub(): PubSubEngine {
  * singleton without re-importing — publishers and subscribers must share one
  * instance for the in-memory backend to deliver events.
  *
- * @publicApi
+ * @public
  */
 @Global()
 @Module({

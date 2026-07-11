@@ -9,7 +9,7 @@ import type {
  * @description Reads and validates the public environment tier — values that are
  * safe to serialize into the client (`window.env`). Use this when building the
  * payload roots inject into the browser; never serialize {@link getServerEnv}.
- * @publicApi
+ * @public
  */
 export const getPublicEnv = (): OpenThrottlePublicEnv => {
   const apiUrlExternal = ENV_SOURCE['API_URL_EXTERNAL'];
@@ -66,7 +66,7 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
  * values describe internal topology and MUST NOT be serialized into the client.
  * Only call this from server-side code (loaders, actions, server entry points);
  * these keys are never present on the browser `window.env`.
- * @publicApi
+ * @public
  */
 export const getServerEnv = (): OpenThrottleServerEnv => {
   // ENV_SOURCE is the public tier in the browser; the server-only keys live on
@@ -84,7 +84,7 @@ export const getServerEnv = (): OpenThrottleServerEnv => {
  * @description Reads and validates the full environment (public + server-only
  * tiers). Server-side only — do not serialize the result into the client; use
  * {@link getPublicEnv} for the browser payload.
- * @publicApi
+ * @public
  */
 export const getEnvironment = (): OpenThrottleEnv => ({
   ...getPublicEnv(),

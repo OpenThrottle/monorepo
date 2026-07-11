@@ -15,7 +15,7 @@ const isUpdaterFn = <T>(value: T | ((prev: T) => T)): value is (prev: T) => T =>
 export type PersistentSettingSetter<T> = (next: T | ((prev: T) => T)) => void;
 
 /**
- * @publicApi
+ * @public
  * @description Typed, SSR-safe persisted UI setting backed by localStorage.
  * `usePersistentSetting('plans.tasksView', 'list')` returns a `[value, setValue]`
  * tuple whose value survives reloads, navigation, and cross-tab writes.

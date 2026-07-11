@@ -20,7 +20,7 @@ import {
  * carry: the `notifications` node with its `event` discriminator. Generated
  * subscription types satisfy this structurally.
  *
- * @publicApi
+ * @public
  */
 export interface NotificationsSubscriptionData {
   readonly notifications: {
@@ -66,7 +66,7 @@ function toStorePayload(
  * system-notification pipeline. Mount once inside {@link NotificationsStoreProvider};
  * apps supply their graphql-ws client and generated subscription document.
  *
- * @publicApi
+ * @public
  */
 export function NotificationsSubscriptionBridge<
   TData extends NotificationsSubscriptionData,

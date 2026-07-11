@@ -6,7 +6,7 @@ export type ChatMessageRole = 'assistant' | 'system' | 'user';
  * `tool_call` and `tool_result` separately; the client correlates them into a
  * single `tool` event, so the rendered kinds collapse those two into one.
  *
- * @publicApi
+ * @public
  */
 export const ChatTurnEventKind = {
   session: 'session',
@@ -16,7 +16,7 @@ export const ChatTurnEventKind = {
   usage: 'usage',
 } as const;
 
-/** Union of {@link ChatTurnEventKind} values. @publicApi */
+/** Union of {@link ChatTurnEventKind} values. @public */
 export type ChatTurnEventKind =
   (typeof ChatTurnEventKind)[keyof typeof ChatTurnEventKind];
 
@@ -25,7 +25,7 @@ export type ChatTurnEventKind =
  * `succeeded` once its tool_result arrives, `failed` if the turn errors while
  * the call is still outstanding.
  *
- * @publicApi
+ * @public
  */
 export const ChatToolStatus = {
   failed: 'failed',
@@ -33,11 +33,11 @@ export const ChatToolStatus = {
   succeeded: 'succeeded',
 } as const;
 
-/** Union of {@link ChatToolStatus} values. @publicApi */
+/** Union of {@link ChatToolStatus} values. @public */
 export type ChatToolStatus =
   (typeof ChatToolStatus)[keyof typeof ChatToolStatus];
 
-/** Streamed assistant text segment (coalesced consecutive deltas). @publicApi */
+/** Streamed assistant text segment (coalesced consecutive deltas). @public */
 export interface ChatTurnTextEvent {
   readonly kind: 'text';
   /** sortOrder of the first chunk in this segment; orders the event in the turn. */
@@ -45,14 +45,14 @@ export interface ChatTurnTextEvent {
   readonly text: string;
 }
 
-/** Streamed reasoning segment (coalesced consecutive deltas). @publicApi */
+/** Streamed reasoning segment (coalesced consecutive deltas). @public */
 export interface ChatTurnThinkingEvent {
   readonly kind: 'thinking';
   readonly sortOrder: number;
   readonly text: string;
 }
 
-/** A correlated tool_call/tool_result pair as one logical invocation. @publicApi */
+/** A correlated tool_call/tool_result pair as one logical invocation. @public */
 export interface ChatTurnToolEvent {
   /** Raw tool arguments payload as JSON (from the tool_call), when present. */
   readonly argsJson: string | null;
@@ -69,7 +69,7 @@ export interface ChatTurnToolEvent {
   readonly status: ChatToolStatus;
 }
 
-/** Terminal token-accounting / result summary for the turn. @publicApi */
+/** Terminal token-accounting / result summary for the turn. @public */
 export interface ChatTurnUsageEvent {
   readonly error: string | null;
   readonly kind: 'usage';
@@ -80,7 +80,7 @@ export interface ChatTurnUsageEvent {
   readonly usageJson: string | null;
 }
 
-/** Backend session handle confirmation (e.g. a resumed cursor chat id). @publicApi */
+/** Backend session handle confirmation (e.g. a resumed cursor chat id). @public */
 export interface ChatTurnSessionEvent {
   readonly kind: 'session';
   readonly sessionId: string | null;
@@ -91,7 +91,7 @@ export interface ChatTurnSessionEvent {
  * One structured event within an assistant turn, ordered by `sortOrder`.
  * Discriminated on `kind`.
  *
- * @publicApi
+ * @public
  */
 export type ChatTurnEvent =
   | ChatTurnSessionEvent
@@ -139,7 +139,7 @@ export interface ChatTurnResult {
  * A selectable model in the composer toolbar's model control. Presentational
  * only — consumers supply the list; the package hardcodes no models.
  *
- * @publicApi
+ * @public
  */
 export interface ChatModelOption {
   readonly description?: string;
@@ -151,7 +151,7 @@ export interface ChatModelOption {
  * A selectable agent/persona in the composer toolbar's persona control. Shaped
  * close to the OpenThrottle personas registry so consumer wiring stays cheap.
  *
- * @publicApi
+ * @public
  */
 export interface ChatPersonaOption {
   readonly description?: string;
@@ -163,7 +163,7 @@ export interface ChatPersonaOption {
  * A context source surfaced by the composer toolbar's attach control (a file,
  * project, etc.). Presentational — the package never resolves or uploads it.
  *
- * @publicApi
+ * @public
  */
 export interface ChatContextSource {
   readonly description?: string;
@@ -175,7 +175,7 @@ export interface ChatContextSource {
  * Agent interaction mode for the composer. `plan` = describe intent to get a
  * decomposed plan; `build` = agentic execution. As-const object (no enum).
  *
- * @publicApi
+ * @public
  */
 export const ChatComposerMode = {
   build: 'build',
@@ -193,7 +193,7 @@ export type ChatComposerMode =
  * input unavailable. As-const object (no enum). Presentational — capture and
  * transcription logic live in the consumer.
  *
- * @publicApi
+ * @public
  */
 export const ChatComposerMicState = {
   disabled: 'disabled',
@@ -202,6 +202,6 @@ export const ChatComposerMicState = {
   recording: 'recording',
 } as const;
 
-/** Union of {@link ChatComposerMicState} values. @publicApi */
+/** Union of {@link ChatComposerMicState} values. @public */
 export type ChatComposerMicState =
   (typeof ChatComposerMicState)[keyof typeof ChatComposerMicState];

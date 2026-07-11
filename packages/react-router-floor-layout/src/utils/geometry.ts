@@ -6,7 +6,7 @@
 /**
  * A world-space point in inches.
  *
- * @publicApi
+ * @public
  */
 export interface Point {
   readonly x: number;
@@ -16,7 +16,7 @@ export interface Point {
 /**
  * A world-space size in inches.
  *
- * @publicApi
+ * @public
  */
 export interface Size {
   readonly height: number;
@@ -26,7 +26,7 @@ export interface Size {
 /**
  * An axis-aligned world-space rectangle in inches.
  *
- * @publicApi
+ * @public
  */
 export interface Rect {
   readonly height: number;
@@ -39,7 +39,7 @@ export interface Rect {
  * Snap a scalar to the nearest multiple of `grid`. A non-positive grid is a
  * no-op (snapping disabled).
  *
- * @publicApi
+ * @public
  */
 export function snapValueToGrid(value: number, grid: number): number {
   if (grid <= 0) return value;
@@ -50,7 +50,7 @@ export function snapValueToGrid(value: number, grid: number): number {
  * Snap a point to the nearest grid intersection. A non-positive grid is a
  * no-op.
  *
- * @publicApi
+ * @public
  */
 export function snapPointToGrid(point: Point, grid: number): Point {
   return {
@@ -63,7 +63,7 @@ export function snapPointToGrid(point: Point, grid: number): Point {
  * Clamp a scalar into `[min, max]`. If `min > max` (degenerate range), returns
  * `min`.
  *
- * @publicApi
+ * @public
  */
 export function clampValue(value: number, min: number, max: number): number {
   if (min > max) return min;
@@ -74,7 +74,7 @@ export function clampValue(value: number, min: number, max: number): number {
  * Soft bounds-clamp: keep a point (an element's center/anchor) inside the floor
  * rectangle so nothing can be dragged off-canvas and lost.
  *
- * @publicApi
+ * @public
  */
 export function clampPointToRect(point: Point, bounds: Rect): Point {
   return {
@@ -93,7 +93,7 @@ export function distance(a: Point, b: Point): number {
 /**
  * Midpoint of two points.
  *
- * @publicApi
+ * @public
  */
 export function midpoint(a: Point, b: Point): Point {
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
@@ -104,7 +104,7 @@ export function midpoint(a: Point, b: Point): Point {
  * y-down space). Pass a negative angle to un-rotate into an element's local
  * frame.
  *
- * @publicApi
+ * @public
  */
 export function rotatePoint(point: Point, degrees: number): Point {
   const radians = (degrees * Math.PI) / 180;
@@ -119,7 +119,7 @@ export function rotatePoint(point: Point, degrees: number): Point {
 /**
  * Angle in degrees (clockwise, y-down) from `from` to `to`. 0° points along +x.
  *
- * @publicApi
+ * @public
  */
 export function angleBetween(from: Point, to: Point): number {
   return (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;

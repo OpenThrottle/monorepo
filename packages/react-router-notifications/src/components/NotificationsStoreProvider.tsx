@@ -25,7 +25,7 @@ export interface NotificationsStoreProviderProps {
  * Transport-agnostic: pair it with a realtime bridge (e.g. a graphql-ws subscription
  * bridge) that calls `addNotification` as events arrive.
  *
- * @publicApi
+ * @public
  */
 export function NotificationsStoreProvider(
   props: NotificationsStoreProviderProps,

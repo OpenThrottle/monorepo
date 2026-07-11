@@ -30,7 +30,7 @@ let configurePromise: Promise<void> | undefined;
  * (see this package's README for the `MonacoEnvironment` snippet) so worker
  * scripts are bundled locally rather than fetched from the CDN.
  *
- * @publicApi
+ * @public
  */
 export const configureEditorLoader = async (): Promise<void> => {
   if (typeof window === 'undefined') {

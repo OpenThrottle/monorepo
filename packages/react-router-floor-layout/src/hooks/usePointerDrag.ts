@@ -27,7 +27,7 @@ import {
 /**
  * The live state passed to every drag callback.
  *
- * @publicApi
+ * @public
  */
 export interface PointerDragContext {
   /** `world - startWorld`, in inches (snapped/clamped). */
@@ -45,7 +45,7 @@ export interface PointerDragContext {
 /**
  * Configuration for {@link usePointerDrag}.
  *
- * @publicApi
+ * @public
  */
 export interface UsePointerDragOptions {
   /** Optional soft clamp keeping `world` inside this rectangle. */
@@ -65,7 +65,7 @@ export interface UsePointerDragOptions {
 /**
  * The handle returned by {@link usePointerDrag}.
  *
- * @publicApi
+ * @public
  */
 export interface UsePointerDragResult {
   /** True while a gesture is in flight. */
@@ -84,7 +84,7 @@ interface ActiveGesture {
  * `onPointerDown`; the hook then tracks the gesture globally until pointerup so
  * it keeps firing even if the pointer leaves the element.
  *
- * @publicApi
+ * @public
  */
 export function usePointerDrag(
   options: UsePointerDragOptions,

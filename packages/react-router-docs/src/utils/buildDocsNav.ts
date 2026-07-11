@@ -1,7 +1,7 @@
 import type { DocEntry, DocsSection } from './buildDocsManifest';
 
 /**
- * A single navigable link within a nav group. @publicApi
+ * A single navigable link within a nav group. @public
  */
 export interface DocsNavItem {
   readonly path: string;
@@ -9,7 +9,7 @@ export interface DocsNavItem {
 }
 
 /**
- * A labeled group of nav items (a sidebar section). @publicApi
+ * A labeled group of nav items (a sidebar section). @public
  */
 export interface DocsNavGroup {
   readonly items: readonly DocsNavItem[];
@@ -22,7 +22,7 @@ export interface DocsNavGroup {
  * listed alphabetically by label (see the content convention §5). The manifest
  * is already sorted, so this only partitions and labels it.
  *
- * @publicApi
+ * @public
  */
 export const buildDocsNav = (
   manifest: readonly DocEntry[],

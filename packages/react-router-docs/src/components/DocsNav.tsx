@@ -13,7 +13,7 @@ export interface DocsNavProps {
  * manifest via {@link buildDocsNav}. Uses react-router `NavLink` so the active
  * page is marked with `aria-current` and `data-active`.
  *
- * @publicApi
+ * @public
  */
 export const DocsNav = (props: DocsNavProps): React.ReactElement => {
   const { className, groups } = props;

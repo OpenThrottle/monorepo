@@ -56,7 +56,7 @@ export interface ChatComposerToolbarProps {
  * supply its props to render it. The package hardcodes no model/persona data;
  * consumers own state and content (including all capture/transcription logic).
  *
- * @publicApi
+ * @public
  */
 export const ChatComposerToolbar = (
   props: ChatComposerToolbarProps,

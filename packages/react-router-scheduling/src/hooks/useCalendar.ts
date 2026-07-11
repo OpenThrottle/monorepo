@@ -24,7 +24,7 @@ export interface UseCalendarOptions {
  * A calendar view onto a schedule: the active view and selected date plus the
  * controls to change them.
  *
- * @publicApi
+ * @public
  */
 export interface UseCalendarResult {
   /** Currently selected date. */
@@ -69,7 +69,7 @@ function normalizeDate(value: Date | string | undefined): Date {
  * selected date, plus `setView`/`setDate`/`next`/`prev`/`today` driven through
  * the schedule's calendar-controls plugin.
  *
- * @publicApi
+ * @public
  */
 export function useCalendar(
   schedule: UseScheduleResult,

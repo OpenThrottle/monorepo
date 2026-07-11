@@ -17,7 +17,7 @@ export type ChatRole = 'assistant' | 'system' | 'user';
 /**
  * A single chat message handed to {@link streamChatCompletion}.
  *
- * @publicApi
+ * @public
  */
 export interface ChatCompletionMessage {
   /** Plain-text message body. */
@@ -29,7 +29,7 @@ export interface ChatCompletionMessage {
 /**
  * Options for {@link streamChatCompletion}.
  *
- * @publicApi
+ * @public
  */
 export interface StreamChatCompletionOptions {
   /** OpenAI-compatible base URL of the discovered endpoint, e.g. `http://localhost:11434/v1`. */
@@ -45,7 +45,7 @@ export interface StreamChatCompletionOptions {
 /**
  * One emitted piece of a streamed completion.
  *
- * @publicApi
+ * @public
  */
 export interface ChatCompletionChunk {
   /** Incremental text for this chunk (empty on the terminal `done` chunk). */
@@ -73,7 +73,7 @@ function toMessageParam(
  * incremental text deltas followed by a single terminal `{ delta: '', done:
  * true }`. Errors from the SDK (including abort) propagate to the consumer.
  *
- * @publicApi
+ * @public
  */
 export async function* streamChatCompletion(
   options: StreamChatCompletionOptions,

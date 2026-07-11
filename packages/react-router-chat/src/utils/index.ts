@@ -2,7 +2,7 @@
  * Pretty-print a JSON payload string for display: re-indented when it parses,
  * the raw string when it doesn't, and null when empty/whitespace.
  *
- * @publicApi
+ * @public
  */
 export const formatJsonPayload = (raw: string | null): string | null => {
   if (raw === null || raw.trim() === '') {

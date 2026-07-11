@@ -23,7 +23,7 @@ import {
  * `forFeature` that outlives a disabled root throws Nest's
  * `UnknownDependenciesException` at boot.
  *
- * @publicApi
+ * @public
  */
 export const isBullBoardEnabled = (): boolean =>
   process.env.NODE_ENV !== 'production';
@@ -48,7 +48,7 @@ export class NestjsBullmqBoardModule {
    * to skip mounting the dashboard UI entirely — only the static `forFeature`
    * queue registrations remain, which have no effect without a mounted root.
    *
-   * @publicApi
+   * @public
    */
   static forRoot(options: NestjsBullmqBoardModuleOptions = {}): DynamicModule {
     const enabled = options.enabled ?? false;
@@ -94,7 +94,7 @@ export class NestjsBullmqBoardModule {
    * the `bull_board_instance` provided only by an enabled root, so skipping it
    * keeps queue modules importable without a mounted dashboard.
    *
-   * @publicApi
+   * @public
    */
   static forFeature(feature: string): DynamicModule {
     if (!isBullBoardEnabled()) {

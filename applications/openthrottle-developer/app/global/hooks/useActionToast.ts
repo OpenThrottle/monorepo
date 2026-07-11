@@ -59,7 +59,7 @@ const resolveMessage = <TResult>(
 };
 
 /**
- * @publicApi
+ * @public
  * @description Fires a single success or error Sonner toast on the transition
  * from in-flight to idle for a React Router `useFetcher` or `<Form>`
  * submission. Encapsulates the busy-edge detection so callers don't repeat the

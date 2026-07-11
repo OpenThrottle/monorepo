@@ -3,7 +3,7 @@
  * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
  * Bounds a request so a stalled openthrottle-server connection cannot hold the
  * request open indefinitely.
- * @publicApi
+ * @public
  */
 export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
 
@@ -11,7 +11,7 @@ export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
  * @description Marker prefix on the message of the `Error` thrown when a
  * request exceeds its timeout. Consumers match on this to classify the failure
  * as a distinct timeout kind rather than a generic network error.
- * @publicApi
+ * @public
  */
 export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
   'openthrottle-server GraphQL request timed out';
@@ -74,7 +74,7 @@ export function rethrowAsTimeoutIfAborted(
  * @description Base URL for openthrottle-server. Use in loaders/actions (server).
  * Reads `API_URL_INTERNAL` from the environment (base URL without a trailing
  * `/graphql`; this helper appends `/graphql`) and throws when it is unset.
- * @publicApi
+ * @public
  */
 export function getGraphQLUrl(): string {
   const url = process.env.API_URL_INTERNAL;
@@ -108,7 +108,7 @@ export function getGraphQLToken(): string | undefined {
  * strings become `Date`), so callers on the trusted success path get their
  * `TData` back without an assertion. See the executors in `index.ts` /
  * `index-v2.ts` / `graphql-v2.ts`.
- * @publicApi
+ * @public
  */
 export function parseDateTimeInResponse<T>(value: T): T;
 export function parseDateTimeInResponse(value: unknown): unknown {

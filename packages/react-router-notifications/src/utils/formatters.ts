@@ -3,7 +3,7 @@ import type { NotificationSeverity } from '@openthrottle/openthrottle-notificati
 /**
  * @description Formats an ISO timestamp as a short relative label for notification UI.
  *
- * @publicApi
+ * @public
  */
 export function formatRelativeTime(iso: string): string {
   const d = new Date(iso);
@@ -26,7 +26,7 @@ export function formatRelativeTime(iso: string): string {
 /**
  * @description Maps notification severity to a Tailwind background class for the item dot.
  *
- * @publicApi
+ * @public
  */
 export function formatSeverityToColor(severity: NotificationSeverity): string {
   switch (severity) {

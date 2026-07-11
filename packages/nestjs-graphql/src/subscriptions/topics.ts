@@ -11,7 +11,7 @@
 /**
  * Build an instance-scoped topic name: `<entity>:<id>:<facet>`.
  *
- * @publicApi
+ * @public
  */
 export function instanceTopic(
   entity: string,
@@ -24,7 +24,7 @@ export function instanceTopic(
 /**
  * Build a global-scoped topic name: `<entity>:<facet>`.
  *
- * @publicApi
+ * @public
  */
 export function globalTopic(entity: string, facet: string): string {
   return `${entity}:${facet}`;
@@ -33,7 +33,7 @@ export function globalTopic(entity: string, facet: string): string {
 /**
  * Topic carrying appended output chunks for a single plan: `plan:<planId>:output`.
  *
- * @publicApi
+ * @public
  */
 export function planOutputTopic(planId: string): string {
   return instanceTopic('plan', planId, 'output');
@@ -42,7 +42,7 @@ export function planOutputTopic(planId: string): string {
 /**
  * Lifecycle notifications for a single plan (status/task changes): `plan:<planId>:lifecycle`.
  *
- * @publicApi
+ * @public
  */
 export function planLifecycleTopic(planId: string): string {
   return instanceTopic('plan', planId, 'lifecycle');
@@ -51,7 +51,7 @@ export function planLifecycleTopic(planId: string): string {
 /**
  * Token deltas streamed for a single agent conversation: `conversation:<conversationId>:stream`.
  *
- * @publicApi
+ * @public
  */
 export function conversationStreamTopic(conversationId: string): string {
   return instanceTopic('conversation', conversationId, 'stream');
@@ -61,7 +61,7 @@ export function conversationStreamTopic(conversationId: string): string {
  * Live transcript snapshots for a single transcription session:
  * `transcription:<sessionId>:stream`.
  *
- * @publicApi
+ * @public
  */
 export function transcriptionStreamTopic(sessionId: string): string {
   return instanceTopic('transcription', sessionId, 'stream');
@@ -70,7 +70,7 @@ export function transcriptionStreamTopic(sessionId: string): string {
 /**
  * A user's personal notification feed: `user:<userId>:notifications`.
  *
- * @publicApi
+ * @public
  */
 export function userNotificationsTopic(userId: string): string {
   return instanceTopic('user', userId, 'notifications');
@@ -79,7 +79,7 @@ export function userNotificationsTopic(userId: string): string {
 /**
  * Global notification firehose (every notification event): `notifications:all`.
  *
- * @publicApi
+ * @public
  */
 export function notificationsFirehoseTopic(): string {
   return globalTopic('notifications', 'all');
@@ -88,7 +88,7 @@ export function notificationsFirehoseTopic(): string {
 /**
  * Global system alerts: `system:alert`.
  *
- * @publicApi
+ * @public
  */
 export function systemAlertTopic(): string {
   return globalTopic('system', 'alert');

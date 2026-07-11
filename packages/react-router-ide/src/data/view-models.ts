@@ -25,7 +25,7 @@ import type {
 
 /**
  * Engine leaf result types, re-exported verbatim as the canonical leaf view-models.
- * @publicApi
+ * @public
  */
 export type {
   DefinitionLocation,
@@ -38,7 +38,7 @@ export type {
 /**
  * Identity of the workspace/repository a view-model was produced for. Carried by
  * every envelope so the UI can label the active repo and stay project-aware.
- * @publicApi
+ * @public
  */
 export interface IdeRepositoryRef {
   /** Human-readable repository name (e.g. the registered checkout's displayName). */
@@ -52,7 +52,7 @@ export interface IdeRepositoryRef {
 /**
  * Workspace file listing produced by the loader's cheap (ripgrep) tier. `paths` is
  * the full workspace-relative set; the client filters/caps it (cmdk palette).
- * @publicApi
+ * @public
  */
 export interface IdeWorkspaceListing {
   /** Every tracked file, as workspace-relative POSIX paths. */
@@ -66,7 +66,7 @@ export interface IdeWorkspaceListing {
 /**
  * Text-search result envelope (ripgrep tier). Echoes the query back and flags when
  * matches were capped at the engine's `maxResults`.
- * @publicApi
+ * @public
  */
 export interface IdeSearchResult {
   /** The matched lines (engine leaf type, passed through). */
@@ -82,7 +82,7 @@ export interface IdeSearchResult {
 /**
  * Exported-symbols envelope (lazy ts-morph tier). Returned by the symbols resource
  * route when the Symbols tab is opened.
- * @publicApi
+ * @public
  */
 export interface IdeExportsResult {
   /** The repository whose exports were enumerated. */
@@ -96,7 +96,7 @@ export interface IdeExportsResult {
 /**
  * Definition + references resolved for a single selected symbol (click-driven
  * fetcher). `symbol` echoes the resolved target for labeling.
- * @publicApi
+ * @public
  */
 export interface IdeSymbolDetails {
   /** Resolved declaration site(s). */
@@ -111,7 +111,7 @@ export interface IdeSymbolDetails {
 
 /**
  * A minimal reference to a resolved symbol, for labeling the def/references panel.
- * @publicApi
+ * @public
  */
 export interface IdeSymbolRef {
   /** 1-based line of the symbol's declaration. */
@@ -129,7 +129,7 @@ export interface IdeSymbolRef {
  * - `notIndexed`: provider configured, nothing indexed yet (offer the Index action)
  * - `indexing`: a code-index job is running (in-progress affordance)
  * - `ready`: the repository is indexed and searchable
- * @publicApi
+ * @public
  */
 export const IDE_SEMANTIC_STATUS = {
   indexing: 'indexing',
@@ -138,14 +138,14 @@ export const IDE_SEMANTIC_STATUS = {
   unavailable: 'unavailable',
 } as const;
 
-/** A semantic index status value. @publicApi */
+/** A semantic index status value. @public */
 export type IdeSemanticStatus =
   (typeof IDE_SEMANTIC_STATUS)[keyof typeof IDE_SEMANTIC_STATUS];
 
 /**
  * Semantic-search result envelope. `status` selects the rendered state; `available` is
  * retained for back-compat and is false exactly when `status` is `unavailable`.
- * @publicApi
+ * @public
  */
 export interface IdeSemanticResult {
   /** False when the semantic index/provider is unavailable (render the gated state). Equivalent to `status === 'unavailable'`. */

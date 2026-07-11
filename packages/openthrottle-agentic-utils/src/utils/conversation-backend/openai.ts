@@ -38,7 +38,7 @@ async function* streamOpenAi(
 /**
  * Backend for OpenAI-compatible local endpoints (Ollama, LM Studio, vLLM, …).
  *
- * @publicApi
+ * @public
  */
 export const openAiConversationBackend: ConversationBackend = {
   stream: streamOpenAi,

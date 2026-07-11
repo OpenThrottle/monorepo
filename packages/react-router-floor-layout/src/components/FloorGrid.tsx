@@ -3,7 +3,7 @@ import { type ReactElement, useId } from 'react';
 /**
  * Props for {@link FloorGrid}.
  *
- * @publicApi
+ * @public
  */
 export interface FloorGridProps {
   /** Grid spacing in world inches (default 12 = one foot). */
@@ -20,7 +20,7 @@ export interface FloorGridProps {
  * outline. Strokes use `non-scaling-stroke` so grid lines stay crisp at any
  * zoom level. Purely presentational — no interaction.
  *
- * @publicApi
+ * @public
  */
 export function FloorGrid(props: FloorGridProps): ReactElement {
   const { gridSize, height, width } = props;

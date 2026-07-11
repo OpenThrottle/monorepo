@@ -20,7 +20,7 @@ export const RALPH_DEBUG_ENV_LEGACY = WORKFLOW_RALPH_DEBUG_LEGACY_ENV;
 /** @deprecated Import {@link WORKFLOW_RALPH_VERBOSE_ENV} from `@openthrottle/openthrottle-agentic-utils` instead. */
 export const RALPH_VERBOSE_ENV = WORKFLOW_RALPH_VERBOSE_ENV;
 
-/** Prefix on every stderr debug line for grep-friendly logs. @publicApi */
+/** Prefix on every stderr debug line for grep-friendly logs. @public */
 export const RALPH_DEBUG_LOG_PREFIX = '[workflow-ralph:debug]' as const;
 
 export const VERBOSE_LABEL = '[verbose]' as const;
@@ -43,14 +43,14 @@ export interface RalphDebugLogger {
 
 /**
  * @description No-op used when debug is off; safe to pass where a `void`-returning callback is expected.
- * @publicApi
+ * @public
  */
 export const noop = (): void => {};
 
 /**
  * @description Reads debug level from `env` (defaults to `process.env`). Pure for tests.
  * @deprecated Import {@link readWorkflowDebugLevelFromEnv} from `@openthrottle/openthrottle-agentic-utils` instead.
- * @publicApi
+ * @public
  */
 export function readRalphDebugConfigFromEnv(
   env: NodeJS.ProcessEnv = process.env,
@@ -75,7 +75,7 @@ export function writeVerboseLine(parts: readonly unknown[]): void {
 
 /**
  * @description Builds a logger for the given level (does not mutate global {@link ralphDebugLogger}). Useful in tests or isolated subprocess helpers.
- * @publicApi
+ * @public
  */
 export function createRalphDebugLogger(
   level: RalphDebugLevel,
@@ -117,7 +117,7 @@ applyRalphDebugLevel(readRalphDebugConfigFromEnv());
 
 /**
  * @description Global shim: call `debug` / `verbose` from instrumentation; no cost when disabled.
- * @publicApi
+ * @public
  */
 export const ralphDebugLogger: RalphDebugLogger = {
   debug: (...args: readonly unknown[]) => {
@@ -136,7 +136,7 @@ export const ralphDebugLogger: RalphDebugLogger = {
 
 /**
  * @description Overrides level after env (e.g. CLI `--debug`). Prefer setting env before process start when possible.
- * @publicApi
+ * @public
  */
 export function setRalphDebugLevel(level: RalphDebugLevel): void {
   applyRalphDebugLevel(level);
@@ -144,7 +144,7 @@ export function setRalphDebugLevel(level: RalphDebugLevel): void {
 
 /**
  * @description Turns debug off until {@link setRalphDebugLevel}, {@link syncRalphDebugFromEnv}, or env on next process.
- * @publicApi
+ * @public
  */
 export function disableRalphDebug(): void {
   applyRalphDebugLevel('off');
@@ -152,7 +152,7 @@ export function disableRalphDebug(): void {
 
 /**
  * @description Re-reads {@link readRalphDebugConfigFromEnv} and applies it to the global {@link ralphDebugLogger} (e.g. after env vars change in tests).
- * @publicApi
+ * @public
  */
 export function syncRalphDebugFromEnv(
   env: NodeJS.ProcessEnv = process.env,

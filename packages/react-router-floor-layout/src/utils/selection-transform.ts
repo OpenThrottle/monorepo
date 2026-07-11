@@ -21,7 +21,7 @@ export const ROTATE_SNAP_DEGREES = 15;
 /**
  * A patch produced by dragging a selection handle.
  *
- * @publicApi
+ * @public
  */
 export type SelectionTransform = Partial<{
   readonly height: number;
@@ -33,7 +33,7 @@ export type SelectionTransform = Partial<{
  * The element geometry the resize/rotate math needs: center (`x`, `y`) plus the
  * current `rotation` (degrees, clockwise in SVG's y-down space).
  *
- * @publicApi
+ * @public
  */
 export interface SelectionAnchor {
   readonly rotation: number;
@@ -48,7 +48,7 @@ export interface SelectionAnchor {
  * intuitive at any rotation, then the half-extent on each axis is doubled to a
  * full size, optionally grid-snapped, and floored at {@link MIN_SIZE}.
  *
- * @publicApi
+ * @public
  */
 export function computeSize(
   anchor: SelectionAnchor,
@@ -77,7 +77,7 @@ export function computeSize(
  * rotate handle sits above the top edge), normalized into `[0, 360)`, and
  * optionally snapped to {@link ROTATE_SNAP_DEGREES}.
  *
- * @publicApi
+ * @public
  */
 export function computeRotation(
   anchor: SelectionAnchor,

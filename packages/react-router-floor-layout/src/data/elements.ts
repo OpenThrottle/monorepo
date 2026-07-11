@@ -9,7 +9,7 @@ import { FloorElementType, FloorLayer } from '../types';
 /**
  * Default geometry + seat count for a freshly created element of a given type.
  *
- * @publicApi
+ * @public
  */
 export interface ElementDefaults {
   readonly height: number;
@@ -21,7 +21,7 @@ export interface ElementDefaults {
  * Z-order layer for each element type. Zones sit behind walls, which sit behind
  * tables/stools, so background regions never steal pointer hits.
  *
- * @publicApi
+ * @public
  */
 export const ELEMENT_LAYER: Readonly<Record<FloorElementType, FloorLayer>> = {
   [FloorElementType.STOOL]: FloorLayer.SEATING,
@@ -36,7 +36,7 @@ export const ELEMENT_LAYER: Readonly<Record<FloorElementType, FloorLayer>> = {
  * Default real-world dimensions (inches) and seat counts per element type.
  * Real restaurant defaults: a 2-top square is 24x24in; stools/chairs are 18in.
  *
- * @publicApi
+ * @public
  */
 export const ELEMENT_DEFAULTS: Readonly<
   Record<FloorElementType, ElementDefaults>
@@ -52,7 +52,7 @@ export const ELEMENT_DEFAULTS: Readonly<
 /**
  * A palette entry: a placeable element type plus its display copy.
  *
- * @publicApi
+ * @public
  */
 export interface PaletteItem {
   readonly label: string;
@@ -63,7 +63,7 @@ export interface PaletteItem {
  * Ordered palette catalog (labels + copy) shown to the user. Tables first, then
  * stool, then structural zone/wall.
  *
- * @publicApi
+ * @public
  */
 export const PALETTE_ITEMS: readonly PaletteItem[] = [
   { label: 'Round table', type: FloorElementType.TABLE_ROUND },

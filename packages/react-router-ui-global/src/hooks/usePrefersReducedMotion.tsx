@@ -6,7 +6,7 @@ const QUERY = '(prefers-reduced-motion: reduce)';
  * @description Returns true when the user has requested reduced motion via the
  * OS/browser `prefers-reduced-motion` setting. SSR-safe (defaults to false on
  * the server, resolves on mount).
- * @publicApi
+ * @public
  */
 export const usePrefersReducedMotion = (): boolean => {
   // Hooks

@@ -42,7 +42,7 @@ const DEFAULT_PADDING = 24;
 /**
  * Configuration for {@link useViewport}.
  *
- * @publicApi
+ * @public
  */
 export interface UseViewportOptions {
   /** Floor dimensions in inches; drives the initial fit and zoom limits. */
@@ -58,7 +58,7 @@ export interface UseViewportOptions {
 /**
  * The viewport controller returned by {@link useViewport}.
  *
- * @publicApi
+ * @public
  */
 export interface UseViewportResult {
   /** Map a client (screen) point to world inches under the current viewBox. */
@@ -98,7 +98,7 @@ function pointerCenter(rect: ViewportRect): Point {
 /**
  * Manage the SVG viewBox and pan/zoom interaction for the floor canvas.
  *
- * @publicApi
+ * @public
  */
 export function useViewport(options: UseViewportOptions): UseViewportResult {
   const {
