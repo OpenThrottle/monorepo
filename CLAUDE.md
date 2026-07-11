@@ -17,7 +17,7 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ```bash
 ./scripts/setup.sh                                  # full environment setup/reset
 pnpm run database:start                             # Postgres + Redis via docker compose
-pnpm run database:migrate                           # run migrations (does NOT back up; run database:backup first)
+pnpm run database:migrate                           # apply pending migrations (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
 pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
 
