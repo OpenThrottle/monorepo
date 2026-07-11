@@ -1,6 +1,6 @@
 ---
 name: github-squash
-description: Squash branch commits into one conventional commit via soft reset to main (retain issue refs like Closes #123). USE WHEN the user runs /github/squash, wants a clean single commit before merge, or needs to consolidate multiple task commits. Prompts for force-push confirmation per github.mdc.
+description: 'Squash branch commits into one conventional commit via soft reset to main (retain issue refs like Closes #123). USE WHEN the user runs /github/squash, wants a clean single commit before merge, or needs to consolidate multiple task commits. Prompts for force-push confirmation per github.mdc.'
 disable-model-invocation: true
 ---
 
