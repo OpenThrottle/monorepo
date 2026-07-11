@@ -33,7 +33,6 @@
       "lint": {},
       "test": {},
       "typecheck": {},
-      "typecheck-tests": {},
       "verify-graphql-codegen": {
         "cache": false,
         "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the committed src/__generated__ output drifts.",

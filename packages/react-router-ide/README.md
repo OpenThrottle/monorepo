@@ -81,7 +81,6 @@ Source-first package — no `build` target; `main`/`types` point at `./src/index
 ```bash
 pnpm nx run react-router-ide:lint
 pnpm nx run react-router-ide:typecheck
-pnpm nx run react-router-ide:typecheck-tests
 pnpm nx run react-router-ide:test
 ```
 

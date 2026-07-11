@@ -40,8 +40,7 @@
       "__build-package": {},
       "lint": {},
       "test": {},
-      "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck": {}
     }
   },
   "private": true,

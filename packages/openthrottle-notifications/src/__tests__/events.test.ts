@@ -50,7 +50,7 @@ describe('events', () => {
   describe('NotificationEventMap', () => {
     // The map is the type-safe emit/on contract; its keys must stay in lockstep
     // with the event-name values. These are type-level assertions — they fail at
-    // typecheck (typecheck-tests) if a new event name is added without a map entry
+    // typecheck if a new event name is added without a map entry
     // (or vice versa), catching the drift the audit flagged.
     it('has a payload entry for every event name (and no extras)', () => {
       expectTypeOf<

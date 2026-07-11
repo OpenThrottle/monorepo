@@ -68,8 +68,7 @@
           "parallel": false
         }
       },
-      "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck": {}
     }
   },
   "private": true,

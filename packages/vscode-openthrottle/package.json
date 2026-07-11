@@ -172,8 +172,7 @@
         "description": "Compile the VS Code extension TypeScript with @nx/js:tsc."
       },
       "test": {},
-      "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck": {}
     }
   },
   "private": true,

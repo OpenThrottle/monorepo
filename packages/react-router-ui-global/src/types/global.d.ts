@@ -6,7 +6,7 @@ import type { OpenThrottleClientEnv } from '@openthrottle/react-router-utils';
  * code can read `window.env` without a cast. Declaration-merges with the
  * consuming app's identical augmentation. Lives in `src/types` because that is
  * the only ambient `*.d.ts` location `tsconfig.test.json` includes, so the
- * `typecheck-tests` program also sees it.
+ * `typecheck` program also sees it.
  */
 declare global {
   interface Window {

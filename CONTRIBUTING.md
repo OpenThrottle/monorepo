@@ -248,7 +248,7 @@ When you add or keep an export that is part of a **package public API** (see `pa
 
 ## Nx targets: projects without `build`
 
-As of the current workspace graph, **16 of 59** Nx projects do **not** expose a `build` target. That is intentional—not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`**, **`typecheck-tests`**, and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
+As of the current workspace graph, **16 of 59** Nx projects do **not** expose a `build` target. That is intentional—not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which now covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
 
 ### Why React Router workspace libraries skip `build`
 
@@ -291,15 +291,14 @@ The **13** projects tagged `technology:react-router` in this list are the shared
 
    ```bash
    pnpm nx run <project>:lint
-   pnpm nx run <project>:typecheck
-   pnpm nx run <project>:typecheck-tests
+   pnpm nx run <project>:typecheck   # covers source AND test files
    # When the project defines test:
    pnpm nx run <project>:test
    ```
 
 2. **Integration check** — run **`build`** or **`dev`** on a **consumer** React Router application (for example `openthrottle-developer`, `openthrottle-admin`) so Vite compiles your library changes end-to-end.
 
-3. **Affected workflows** — `pnpm nx affected --target=build` will **not** schedule these 16 projects. Use **`lint`**, **`typecheck`**, and **`typecheck-tests`** on affected projects instead (as in [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)).
+3. **Affected workflows** — `pnpm nx affected --target=build` will **not** schedule these 16 projects. Use **`lint`** and **`typecheck`** on affected projects instead (as in [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)).
 
 ### Auditing the graph locally
 
@@ -410,18 +409,18 @@ git diff --exit-code
 - [applications/openthrottle-server/README.md](applications/openthrottle-server/README.md) — running the API
 - [.agents/skills/openthrottle-stack/SKILL.md](.agents/skills/openthrottle-stack/SKILL.md) — server GraphQL conventions
 
-## Testing: `typecheck-tests` versus `test`
+## Testing: `typecheck` versus `test`
 
 Nx exposes two different targets for test-related work. They are **not** interchangeable.
 
-| Target                | What it does                                                                              | Executes test bodies?                                                                                |
-| --------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **`typecheck-tests`** | `tsc --noEmit -p tsconfig.test.json` in the project root (see `nx.json` `targetDefaults`) | **No** — only type-checks `*.test.ts`, `*.spec.ts`, and other files included by `tsconfig.test.json` |
-| **`test`**            | Vitest via `@nx/vitest:test` and each project’s `vitest.config.ts`                        | **Yes** — runs `describe` / `it` / `expect` and reports pass or fail                                 |
+| Target          | What it does                                                                                                                                            | Executes test bodies?                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **`typecheck`** | `tsc` over **source and test files** — a `tsc --build … --emitDeclarationOnly` pass plus `tsc --noEmit -p tsconfig.test.json` when a test config exists | **No** — only type-checks `*.ts`/`*.tsx` (including `*.test.ts`, `*.spec.ts`) |
+| **`test`**      | Vitest via `@nx/vitest:test` and each project’s `vitest.config.ts`                                                                                      | **Yes** — runs `describe` / `it` / `expect` and reports pass or fail          |
 
-**`typecheck-tests` does not run Vitest and does not execute test bodies.** A green `typecheck-tests` result only means test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution.
+**`typecheck` does not run Vitest and does not execute test bodies.** A green `typecheck` result only means source and test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution. (`typecheck` is a single target — it replaced the former `typecheck` + `typecheck-tests` split; the test-file coverage that used to live in `typecheck-tests` is now folded into `typecheck`.)
 
-CI runs both at different priorities: P0 affected **`lint`**, **`typecheck`**, and **`typecheck-tests`** on every PR; P2 runs **`test`** for **all affected projects** (no per-project exclude — see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck-tests` and affected `test` (via `check:local:affected-test`, `nx affected --target=test --parallel --nxBail`) as separate steps, mirroring the same affected test set CI runs.
+CI runs both at different priorities: P0 affected **`lint`** and **`typecheck`** on every PR; P2 runs **`test`** for **all affected projects** (no per-project exclude — see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck` and affected `test` (via `check:local:affected-test`, `nx affected --target=test --parallel --nxBail`) as separate steps, mirroring the same affected test set CI runs.
 
 ### Shared React Router test setup
 

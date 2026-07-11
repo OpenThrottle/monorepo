@@ -281,14 +281,14 @@ pnpm nx run <project-name>:test --changed
 pnpm nx run <project-name>:test --watch
 ```
 
-### `typecheck-tests` versus `test`
+### `typecheck` versus `test`
 
 Do not confuse these Nx targets:
 
-- **`typecheck-tests`** — TypeScript only (`tsc --noEmit -p tsconfig.test.json`). Confirms test files type-check; **does not execute test bodies** (no Vitest, no assertions run).
+- **`typecheck`** — TypeScript only. Type-checks **source and test files** (`tsc --build … --emitDeclarationOnly` plus `tsc --noEmit -p tsconfig.test.json` when a test config exists); **does not execute test bodies** (no Vitest, no assertions run). It is a single target — it replaced the former `typecheck` + `typecheck-tests` split.
 - **`test`** — Vitest (`@nx/vitest:test`). **Executes** unit and integration tests.
 
-CI P0 runs affected `typecheck-tests` on every PR; phased Vitest runs use the `test` target (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Contributor summary: [CONTRIBUTING.md](./CONTRIBUTING.md#testing-typecheck-tests-versus-test).
+CI P0 runs affected `typecheck` on every PR; phased Vitest runs use the `test` target (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Contributor summary: [CONTRIBUTING.md](./CONTRIBUTING.md#testing-typecheck-versus-test).
 
 ### Test Coverage Expectations
 

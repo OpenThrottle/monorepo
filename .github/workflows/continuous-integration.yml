@@ -73,7 +73,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2204
 
     # ⚠️ SCALING RISK (deferred by design — DO NOT silently "fix"):
-    #   The whole suite (`lint,typecheck,typecheck-tests,test`) runs on ONE box
+    #   The whole suite (`lint,typecheck,test`) runs on ONE box
     #   (`jobCount: 1`, `jobIndex: [1]`, single `target` string) with a 15-minute
     #   `timeout-minutes` ceiling below. `scripts/parallelize-tasks.ts` sharding
     #   and the `merge_group` trigger are already wired but currently NO-OPs — the
@@ -94,7 +94,7 @@ jobs:
         jobIndex: [1] # must be in sync with "jobCount"
         # 💰 No merge queue on this plan, so the ready PR is the gate: drafts run
         # nothing (see job `if` above); every ready-PR push runs the full suite.
-        target: ['lint,typecheck,typecheck-tests,test'] # One box per target
+        target: ['lint,typecheck,test'] # One box per target
 
     # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
     # because forks re-imported the full module graph per file, which forced the
