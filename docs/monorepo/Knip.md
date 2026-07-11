@@ -14,6 +14,33 @@ Knip finds unused files, dependencies, and exports across the monorepo. Configur
 
 **Agents:** Run report-only Knip. Do not run `--fix` or `--fix-type exports` unless a task explicitly scopes a safe, reviewed change.
 
+> **Status (2026-07-10):** the Nx `knip` target was temporarily stubbed out (an `echo` disabling it). It is now re-enabled as a **report-only (dry-run) target**: `knip --config knip.jsonc --no-exit-code`. It is non-blocking (`--no-exit-code`) and non-destructive — knip only mutates files when `--fix`/`--fix-type`/`--allow-remove-files` is passed, and the target carries none of those. We are working through the backlog of findings **piecemeal** (see below) rather than accepting knip's suggested removals wholesale. **Do not add `--fix` to the `knip` target.**
+
+## Piecemeal triage workflow (scoping the report)
+
+Knip's default is a full-repo report. To review and resolve findings in small, reviewable slices, scope the run by **issue type** and/or **workspace** — this is how we chip away at the baseline without a giant, risky sweep.
+
+- **By issue type** — `--include <type>` / `--exclude <type>`. Types: `files`, `dependencies`, `unlisted`, `unresolved`, `binaries`, `exports`, `types`, `duplicates`. Shortcuts: `--dependencies`, `--exports`, `--files`.
+- **By project** — `--workspace <projectRoot>` to focus one app/package at a time.
+
+```bash
+# Just the unused-exports findings for one app:
+pnpm exec knip --config knip.jsonc --no-exit-code \
+  --workspace applications/openthrottle-developer --include exports
+
+# Just dependency findings across the whole repo:
+pnpm exec knip --config knip.jsonc --no-exit-code --dependencies
+
+# A compact per-type count (good for a baseline snapshot):
+pnpm exec knip --config knip.jsonc --no-exit-code --reporter compact
+```
+
+Suggested slice order, lowest-risk → highest: `duplicates` → `binaries` (unlisted) → `dependencies` → `types` → `exports` → `files` (review each; expect false positives from codegen / React-Router typegen output and entry globs).
+
+**For each finding, decide:** genuinely dead → remove it (or stop exporting it); false positive the static graph can't see (codegen output, dynamic import, deliberate public API, entry point) → suppress it properly (see [Preserving intentional exports](#preserving-intentional-exports) and the `knip.jsonc` `ignore` / `ignoreExportsUsedInFile` / `ignoreUnresolved` lists). Land each slice as its own small PR and re-run the scoped command to confirm the count dropped.
+
+**If you use auto-fix at all**, keep it scoped and reviewed: `--fix-type <one-type> --workspace <one-project>` in a dedicated PR, read the diff, never a blanket `--fix`. Per [CLAUDE.md](../../CLAUDE.md), **never run `knip --fix` on app UI**; `--allow-remove-files` is opt-in only.
+
 ## Audit: where `--fix` runs (2026-05-19)
 
 Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type exports` found **no automated invocations**. Export stripping in the past came from **manual** `knip --fix` / `knip --fix-type exports` (local terminal or agents), not from CI, hooks, or Nx defaults.
