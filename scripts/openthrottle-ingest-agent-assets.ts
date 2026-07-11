@@ -9,6 +9,7 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
   collectAgentAssetsForIngest,
+  toProjectSkillInputs,
 } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
@@ -18,6 +19,15 @@ import {
 } from '@openthrottle/node-client';
 
 const EMBEDDING_DIM = 1536;
+
+/**
+ * nx_project_name of the dogfood project the monorepo's own skills reconcile
+ * into. `project_skills` rows for this project are the skill universe the
+ * availability surface answers for this repo. Connected workspace repos use the
+ * same reconcile shape against the project their checkout links to (see the
+ * stub note in `reconcileProjectSkills`).
+ */
+const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
 
 /** ~3 chars/token; text-embedding-3-small max is 8192 tokens. */
 const MAX_EMBEDDING_CHARS = 24_000;
@@ -88,6 +98,88 @@ const formatIssue = (issue: {
 
 const hasEmbeddingProvider = (): boolean =>
   Boolean(process.env.OPENAI_API_KEY?.trim()) || isOllamaEmbeddingConfigured();
+
+/**
+ * @description Resolves (find-or-create) the dogfood project keyed by
+ * `DOGFOOD_NX_PROJECT_NAME` and returns its id.
+ */
+const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
+  const existing = await client.query<{ id: string }>(
+    'SELECT id FROM projects WHERE nx_project_name = $1 LIMIT 1',
+    [DOGFOOD_NX_PROJECT_NAME],
+  );
+  const existingId = existing.rows[0]?.id;
+  if (existingId) {
+    return existingId;
+  }
+
+  const created = await client.query<{ id: string }>(
+    'INSERT INTO projects (name, nx_project_name) VALUES ($1, $2) RETURNING id',
+    [DOGFOOD_NX_PROJECT_NAME, DOGFOOD_NX_PROJECT_NAME],
+  );
+  const createdId = created.rows[0]?.id;
+  if (!createdId) {
+    throw new Error('failed to create dogfood project row');
+  }
+  return createdId;
+};
+
+/**
+ * @description Refreshes `project_skills` for the dogfood project from the
+ * ingest records: upserts every skill on (project_id, slug) and deletes rows for
+ * skills that no longer exist. Idempotent; a re-run converges the project's rows
+ * to exactly the ingested skill set. Returns the upsert/delete counts.
+ *
+ * This is the trigger (a) — the monorepo's own skills (dogfood). Trigger (b), a
+ * connected workspace repo, is not yet wired: it would `walkAgentAssetFiles`
+ * over that checkout, map + `toProjectSkillInputs`, and run this same reconcile
+ * against the project its `workspace_local_repositories` row links to. The
+ * server-side interface for that is `ProjectSkillsService.reconcileProjectSkills`
+ * in `@openthrottle/nestjs-repositories`.
+ */
+const reconcileDogfoodProjectSkills = async (
+  client: Client,
+  records: Parameters<typeof toProjectSkillInputs>[0],
+): Promise<{ deleted: number; upserted: number }> => {
+  const projectId = await resolveDogfoodProjectId(client);
+  const inputs = toProjectSkillInputs(records);
+
+  for (const input of inputs) {
+    await client.query(
+      `INSERT INTO project_skills (
+         project_id, slug, tags, disable_model_invocation, source_path, ingested_at
+       )
+       VALUES ($1, $2, $3::text[], $4, $5, NOW())
+       ON CONFLICT (project_id, slug)
+       DO UPDATE SET
+         tags = EXCLUDED.tags,
+         disable_model_invocation = EXCLUDED.disable_model_invocation,
+         source_path = EXCLUDED.source_path,
+         ingested_at = EXCLUDED.ingested_at,
+         updated_at = NOW()`,
+      [
+        projectId,
+        input.slug,
+        input.tags,
+        input.disableModelInvocation ?? null,
+        input.sourcePath,
+      ],
+    );
+  }
+
+  const keepSlugs = inputs.map((input) => input.slug);
+  const deleteResult =
+    keepSlugs.length > 0
+      ? await client.query(
+          'DELETE FROM project_skills WHERE project_id = $1 AND slug <> ALL($2::text[])',
+          [projectId, keepSlugs],
+        )
+      : await client.query('DELETE FROM project_skills WHERE project_id = $1', [
+          projectId,
+        ]);
+
+  return { deleted: deleteResult.rowCount ?? 0, upserted: inputs.length };
+};
 
 const main = async (): Promise<void> => {
   const monorepoRoot = process.cwd();
@@ -245,6 +337,20 @@ const main = async (): Promise<void> => {
         [stalePaths],
       );
       console.log(`  Soft-deleted ${stalePaths.length} stale path(s)`);
+    }
+
+    try {
+      const projectSkills = await reconcileDogfoodProjectSkills(
+        client,
+        records,
+      );
+      console.log(
+        `  project_skills reconciled: ${projectSkills.upserted} upserted, ${projectSkills.deleted} removed`,
+      );
+    } catch (error) {
+      const message = `project_skills reconcile: ${String(error)}`;
+      errors.push(message);
+      console.error(`  Error: ${message}`);
     }
 
     console.log('\nDone.');

@@ -19,6 +19,7 @@ import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
 import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Project } from './modules/projects/project.entity';
+import { ProjectSkill } from './modules/project-skills/project-skill.entity';
 import { Role } from './modules/roles/role.entity';
 import { ServiceAccount } from './modules/service-accounts/service-account.entity';
 import { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
@@ -68,6 +69,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       PlanOutputStreamChunk,
       PlanRun,
       Project,
+      ProjectSkill,
       Role,
       ServiceAccount,
       ServiceAccountCredential,

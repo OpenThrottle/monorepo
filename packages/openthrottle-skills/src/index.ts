@@ -84,6 +84,10 @@ export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.t
 export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.ts';
 
 /** @public */
+export { toProjectSkillInputs } from './project-skill-inputs.ts';
+export type { ProjectSkillInput } from './project-skill-inputs.ts';
+
+/** @public */
 export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';
 export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts';
 

@@ -110,6 +110,13 @@ export { SubscriptionsService } from './modules/subscriptions/subscriptions.serv
 export { projectsFactory } from './modules/projects/projects.factory';
 export { ProjectsLoaders } from './projects-loaders';
 export { ProjectsService } from './modules/projects/projects.service';
+export { ProjectSkill } from './modules/project-skills/project-skill.entity';
+export type { ProjectSkillData } from './modules/project-skills/project-skill.entity';
+export { ProjectSkillsService } from './modules/project-skills/project-skills.service';
+export type {
+  ProjectSkillReconciliation,
+  ProjectSkillView,
+} from './modules/project-skills/project-skills.service';
 export { Task } from './modules/tasks/task.entity';
 export { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 export { taskEmbeddingsFactory } from './modules/task-embeddings/task-embeddings.factory';
