@@ -67,6 +67,7 @@ describe('TasksResolver', () => {
     assignee: null,
     category: 'testing',
     commitLinks: [],
+    completedAt: null,
     createdAt: new Date('2026-02-01T21:33:51.891Z'),
     description: 'Create TaskData type if needed',
     id: 'b366d480-6a4f-498b-8755-23ade25d2b24',
@@ -312,6 +313,7 @@ describe('TasksResolver', () => {
       const parent = {
         assignee: null,
         category: mockTask.category,
+        completedAt: null,
         createdAt: mockTask.createdAt,
         description: mockTask.description,
         id: mockTask.id,
@@ -380,6 +382,7 @@ describe('TasksResolver', () => {
       const parent = {
         assignee: null,
         category: mockTask.category,
+        completedAt: null,
         createdAt: mockTask.createdAt,
         description: mockTask.description,
         id: mockTask.id,
@@ -436,6 +439,7 @@ describe('TasksResolver', () => {
       const parent = {
         assignee: null,
         category: mockTask.category,
+        completedAt: null,
         createdAt: mockTask.createdAt,
         description: mockTask.description,
         id: mockTask.id,
@@ -586,6 +590,110 @@ describe('TasksResolver', () => {
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateTask — completedAt write path', () => {
+    test('stamps completedAt when transitioning into COMPLETED', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        completedAt: null,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve(entity),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'COMPLETED',
+        summary: undefined,
+        title: undefined,
+      });
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          completedAt: expect.any(Date),
+          status: 'COMPLETED',
+        }),
+      );
+    });
+
+    test('does not overwrite completedAt when already COMPLETED and status stays COMPLETED', async () => {
+      const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        completedAt: existingCompletedAt,
+        status: 'COMPLETED',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve(entity),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'COMPLETED',
+        summary: undefined,
+        title: 'Edited title',
+      });
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          completedAt: existingCompletedAt,
+          status: 'COMPLETED',
+          title: 'Edited title',
+        }),
+      );
+    });
+
+    test('clears completedAt when leaving COMPLETED', async () => {
+      const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        completedAt: existingCompletedAt,
+        status: 'COMPLETED',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve(entity),
+      );
+
+      await resolver.updateTask({
+        assignee: undefined,
+        category: undefined,
+        description: undefined,
+        id: mockTask.id,
+        planId: undefined,
+        project: undefined,
+        projectId: undefined,
+        requirements: undefined,
+        sortOrder: undefined,
+        status: 'IN_PROGRESS',
+        summary: undefined,
+        title: undefined,
+      });
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          completedAt: null,
+          status: 'IN_PROGRESS',
+        }),
+      );
     });
   });
 

@@ -512,6 +512,7 @@ describe('PlansResolver', () => {
             assignee: null,
             author: 'visormatt',
             category: 'openthrottle',
+            completedAt: null,
             createdAt: '2026-02-01T19:57:37.738Z',
             id: '80864bba-630a-451d-bfd2-4b25ec202381',
             project: null,
@@ -1209,6 +1210,92 @@ describe('PlansResolver', () => {
         );
         expect(result?.status).toBe('COMPLETED');
         expect(result?.title).toBe('New title');
+      });
+    });
+
+    describe('completedAt write path', () => {
+      test('stamps completedAt when transitioning into COMPLETED', async () => {
+        const repo = plansService.getRepository();
+        const pending: Plan = {
+          ...mockPlan,
+          completedAt: null,
+          status: 'IN_PROGRESS',
+        };
+        const saved: Plan = {
+          ...pending,
+          completedAt: new Date('2026-07-10T12:00:00.000Z'),
+          status: 'COMPLETED',
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(pending);
+        vi.mocked(repo.save).mockResolvedValue(saved);
+
+        await resolver.updatePlan({
+          id: mockPlan.id,
+          status: 'COMPLETED',
+        });
+
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            completedAt: expect.any(Date),
+            status: 'COMPLETED',
+          }),
+        );
+      });
+
+      test('does not overwrite completedAt when editing a COMPLETED plan without status change', async () => {
+        const repo = plansService.getRepository();
+        const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+        const completed: Plan = {
+          ...mockPlan,
+          completedAt: existingCompletedAt,
+          status: 'COMPLETED',
+          title: 'Old',
+        };
+        const saved: Plan = { ...completed, title: 'New title' };
+        vi.mocked(repo.findOne).mockResolvedValue(completed);
+        vi.mocked(repo.save).mockResolvedValue(saved);
+
+        await resolver.updatePlan({
+          id: mockPlan.id,
+          title: 'New title',
+        });
+
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            completedAt: existingCompletedAt,
+            status: 'COMPLETED',
+            title: 'New title',
+          }),
+        );
+      });
+
+      test('clears completedAt when leaving COMPLETED', async () => {
+        const repo = plansService.getRepository();
+        const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+        const completed: Plan = {
+          ...mockPlan,
+          completedAt: existingCompletedAt,
+          status: 'COMPLETED',
+        };
+        const saved: Plan = {
+          ...completed,
+          completedAt: null,
+          status: 'PENDING',
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(completed);
+        vi.mocked(repo.save).mockResolvedValue(saved);
+
+        await resolver.updatePlan({
+          id: mockPlan.id,
+          status: 'PENDING',
+        });
+
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            completedAt: null,
+            status: 'PENDING',
+          }),
+        );
       });
     });
   });
