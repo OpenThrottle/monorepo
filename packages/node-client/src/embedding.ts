@@ -1,7 +1,7 @@
 /**
- * @description Embedder abstraction for Cortex vector search. Provider choice is env-driven:
+ * @description Embedder abstraction for OpenThrottle vector search. Provider choice is env-driven:
  * when OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL is set, uses Ollama; otherwise uses OpenAI (OPENAI_API_KEY).
- * Single API {@link embedQuery} used by semantic_search, plan/task create/update, and cortex:import.
+ * Single API {@link embedQuery} used by semantic_search, plan/task create/update, and openthrottle:import.
  */
 
 import OpenAI from 'openai';
@@ -11,7 +11,7 @@ import {
   isOllamaEmbeddingConfigured as isOllamaConfigured,
 } from './ollama-embedding.ts';
 
-/** Re-export for callers that need to check if an embedding provider is available (e.g. cortex:import). */
+/** Re-export for callers that need to check if an embedding provider is available (e.g. openthrottle:import). */
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const EMBEDDING_DIM = 1536;
 
@@ -53,8 +53,8 @@ async function embedQueryWithOpenAI(
 }
 
 /**
- * @description Embeds a single text using the env-configured provider (Ollama if OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL set; otherwise OpenAI). Used by semantic search, plan/task embeddings, and cortex:import.
- * @returns Embedding array (dimension is provider- and model-specific; use 1536-dim model with Ollama for Cortex schema), or undefined if provider unavailable or request fails.
+ * @description Embeds a single text using the env-configured provider (Ollama if OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL set; otherwise OpenAI). Used by semantic search, plan/task embeddings, and openthrottle:import.
+ * @returns Embedding array (dimension is provider- and model-specific; use 1536-dim model with Ollama for OpenThrottle schema), or undefined if provider unavailable or request fails.
  */
 export async function embedQuery(text: string): Promise<number[] | undefined> {
   if (isOllamaConfigured()) {

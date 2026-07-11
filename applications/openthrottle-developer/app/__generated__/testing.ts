@@ -746,7 +746,7 @@ export type Mutation = {
   enableUser?: Maybe<UserObject>;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
-  /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
+  /** Enqueue a plan-run job for the given plan. Used by OpenThrottle UI "Run plan" action. Returns job id, plan id, and queue position. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
@@ -1208,8 +1208,8 @@ export type Query = {
   commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
-  /** Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page. */
-  cortexHealth: Scalars['String']['output'];
+  /** OpenThrottle DB health: ok | unconfigured | unreachable. Used by openthrottle app status page. */
+  openthrottleHealth: Scalars['String']['output'];
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
   /** List custom prompts with optional filters */
@@ -1304,11 +1304,11 @@ export type Query = {
   roles: Array<RoleObject>;
   /** Get roles assigned to a user */
   rolesForUser: Array<RoleObject>;
-  /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
+  /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
-  /** Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
+  /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
@@ -1749,7 +1749,7 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
-  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic. */
+  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing openthrottleHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];

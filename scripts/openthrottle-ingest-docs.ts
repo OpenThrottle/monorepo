@@ -10,7 +10,7 @@
 // /* eslint-disable no-await-in-loop */
 
 // /**
-//  * @description Ingests docs/ markdown and NX project READMEs into Cortex documentation + documentation_embeddings.
+//  * @description Ingests docs/ markdown and NX project READMEs into OpenThrottle documentation + documentation_embeddings.
 //  * Idempotent per (repo, sha, path). Uses POSTGRES_* and OPENAI_API_KEY for embeddings.
 //  * Set DOCS_REPO and DOCS_SHA for source metadata (e.g. from workflow); defaults to local/repo and local.
 //  * Optional DOCS_PATHS: comma-separated relative paths to ingest only those files (used by BullMQ doc-ingestion job).

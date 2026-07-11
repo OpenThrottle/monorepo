@@ -31,9 +31,9 @@ export const UsageDailyActivityOverview = (
       <GlobalHeading className="mb-4" title="What this chart includes" />
       <p className="text-muted-foreground mb-4 text-sm md:mb-8">
         Daily counts are aggregated in OpenThrottle for each calendar day over
-        the last {rangeDays} days. They reflect Cortex plan and task activity
-        surfaced through the developer portal and automation—not IDE-only runs
-        or model billing.
+        the last {rangeDays} days. They reflect OpenThrottle plan and task
+        activity surfaced through the developer portal and automation—not
+        IDE-only runs or model billing.
       </p>
 
       <dl className="grid gap-4 text-sm md:grid-cols-2 md:gap-8 lg:grid-cols-3">

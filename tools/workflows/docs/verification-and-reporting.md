@@ -1,6 +1,6 @@
 # Verification (test, lint, typecheck) in the spawn lifecycle
 
-This document describes how verification (lint, typecheck) is integrated with spawned Ralph jobs, where it runs in the workflow, and how results are reported back to the API or Cortex.
+This document describes how verification (lint, typecheck) is integrated with spawned Ralph jobs, where it runs in the workflow, and how results are reported back to the API or OpenThrottle.
 
 ---
 
@@ -68,20 +68,20 @@ When the BullMQ processor (e.g. `PlansProcessor` in openthrottle-server) runs `r
 
 No new endpoint is required; the same job query returns verification outcome when the processor sets the job return value to the workflow result (or a summary that includes `ensureCommit`). For spawned jobs, this is the **primary** channel: the processor returns `WorktreeWorkflowResult` from the job handler so the API can expose verification status via the existing job query.
 
-### 4.2 Via Cortex (optional)
+### 4.2 Via OpenThrottle (optional)
 
-Verification results can optionally be written to Cortex (e.g. append to plan output or a dedicated field) so that “last run verification” is queryable from the plans knowledge base. That would require the processor (or a post-job hook) to call Cortex (e.g. `append_plan_output` or an update to a plan/run summary). This is optional; the primary recommendation is to report via the job return value and existing job query.
+Verification results can optionally be written to OpenThrottle (e.g. append to plan output or a dedicated field) so that “last run verification” is queryable from the plans knowledge base. That would require the processor (or a post-job hook) to call OpenThrottle (e.g. `append_plan_output` or an update to a plan/run summary). This is optional; the primary recommendation is to report via the job return value and existing job query.
 
 ---
 
 ## 5. Summary
 
-| Aspect                 | Detail                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------- |
-| **When**               | After the Ralph loop succeeds, inside `runWorktreeWorkflow`, before release.                |
-| **What runs**          | Working tree clean check; then (if `runChecks: true`) lint → typecheck via nx (CI-aligned). |
-| **Result**             | `WorktreeWorkflowResult.ensureCommit` (`ParentJobEnsureCommitResult`).                      |
-| **Reporting (API)**    | Processor returns workflow result; job `returnvalue` exposes it; client parses JSON.        |
-| **Reporting (Cortex)** | Optional: append to plan output or store run summary.                                       |
+| Aspect                       | Detail                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| **When**                     | After the Ralph loop succeeds, inside `runWorktreeWorkflow`, before release.                |
+| **What runs**                | Working tree clean check; then (if `runChecks: true`) lint → typecheck via nx (CI-aligned). |
+| **Result**                   | `WorktreeWorkflowResult.ensureCommit` (`ParentJobEnsureCommitResult`).                      |
+| **Reporting (API)**          | Processor returns workflow result; job `returnvalue` exposes it; client parses JSON.        |
+| **Reporting (OpenThrottle)** | Optional: append to plan output or store run summary.                                       |
 
 See also: [process-model.md](./process-model.md) (lifecycle and blocking behavior), [local-api-design.md](./local-api-design.md) §7 (verification and reporting).

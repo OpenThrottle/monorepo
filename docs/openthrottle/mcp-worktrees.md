@@ -30,7 +30,7 @@ Using this repo's custom `openthrottle-mcp` MCP across git worktrees can cause C
 | **docker-git**       | Optional      | Bind mount is currently hardcoded (`/Users/matt/Development/monorepo`). For multiple worktrees, either use a different config per worktree or a shared parent path. |
 | **memory**           | No            | Stateless in-process; no identity.                                                                                                                                  |
 
-**Cortex/Postgres per worktree:** If you want a separate Cortex DB per worktree, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree’s `.env` (e.g. different ports or DB names). openthrottle-server reads those env vars at runtime. openthrottle-mcp talks to Cortex via GraphQL (openthrottle-server), so point it at the correct API URL per worktree if needed.
+**OpenThrottle/Postgres per worktree:** If you want a separate OpenThrottle DB per worktree, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree’s `.env` (e.g. different ports or DB names). openthrottle-server reads those env vars at runtime. openthrottle-mcp talks to OpenThrottle via GraphQL (openthrottle-server), so point it at the correct API URL per worktree if needed.
 
 ## Resolving a live server URL ("fetch failed" in worktrees)
 

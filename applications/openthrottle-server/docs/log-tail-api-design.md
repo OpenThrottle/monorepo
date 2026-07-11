@@ -1,7 +1,7 @@
 # Phase 1 Log Tail API — GraphQL contract (design)
 
 **Plan:** OT `3c397432-dc7d-47a5-a87e-36ec0682891e` — _feat(openthrottle-server): Phase 1 log tail API for openthrottle-developer_.
-**Parent product plan (Cortex):** `a72b208c-1f39-4092-b69b-abdb8b82bb91` — Settings > Logs.
+**Parent product plan (OpenThrottle):** `a72b208c-1f39-4092-b69b-abdb8b82bb91` — Settings > Logs.
 
 This document is the task‑2 deliverable: the documented API contract. Tasks 3–6
 implement it; **the code‑first GraphQL types below must be added together with a

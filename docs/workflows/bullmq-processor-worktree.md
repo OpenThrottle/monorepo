@@ -150,4 +150,4 @@ See [tools/workflows/README.md → Legacy spawn skips ensureCommit](../../tools/
 
 - [`@openthrottle/nestjs-worktrees` README](../../packages/nestjs-worktrees/README.md) — installation, injection, import split, canonical example links
 - [Worktree registration and allocation](../../tools/workflows/docs/worktree-registration-and-allocation.md)
-- [Plans queue: reproducing job interrupted by server restart](./plans-queue-restart-reproduction.md) — steps to reproduce and observe BullMQ job state and Cortex plan status when the server restarts mid-job
+- [Plans queue: reproducing job interrupted by server restart](./plans-queue-restart-reproduction.md) — steps to reproduce and observe BullMQ job state and OpenThrottle plan status when the server restarts mid-job

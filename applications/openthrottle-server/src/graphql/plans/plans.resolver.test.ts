@@ -484,11 +484,11 @@ describe('PlansResolver', () => {
   });
 
   describe('searchPlans', () => {
-    test('returns empty result when Cortex config is not set', async () => {
+    test('returns empty result when OpenThrottle config is not set', async () => {
       const { getPostgresConfig } = await import('@openthrottle/node-client');
 
       vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
+        connectionString: 'postgresql://localhost/openthrottle',
       });
 
       const result = await resolver.searchPlans({
@@ -504,14 +504,14 @@ describe('PlansResolver', () => {
       const { getPostgresConfig, searchPlansBySemanticQuery } =
         await import('@openthrottle/node-client');
       vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
+        connectionString: 'postgresql://localhost/openthrottle',
       });
       vi.mocked(searchPlansBySemanticQuery).mockResolvedValue({
         plans: [
           {
             assignee: null,
             author: 'visormatt',
-            category: 'cortex',
+            category: 'openthrottle',
             createdAt: '2026-02-01T19:57:37.738Z',
             id: '80864bba-630a-451d-bfd2-4b25ec202381',
             project: null,

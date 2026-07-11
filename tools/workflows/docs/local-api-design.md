@@ -13,7 +13,7 @@ This document designs an API (REST or internal) that accepts “run Ralph for pl
 - **Job payload:** `RunPlanJobData = { planId: string }`. No `taskId` or `worktreeId` in the API or job data today.
 - **Status:** No polling endpoint that returns “run status” for a given job. The UI relies on:
   - Notifications (WebSocket) for “plan updated” / “queue job completed”;
-  - Cortex plan status (IN_PROGRESS, COMPLETED, etc.).
+  - OpenThrottle plan status (IN_PROGRESS, COMPLETED, etc.).
 - **Auth:** Handled at the GraphQL/HTTP layer (e.g. API key or session); not specific to plan-run.
 - **Idempotency:** None. Each `enqueuePlanRun` creates a new job; duplicate calls create duplicate jobs.
 - **Concurrency:** Processor concurrency is 1 (single Ralph run at a time). Queue depth can grow unbounded.
@@ -92,9 +92,9 @@ REST is optional; the same behavior can be exposed only via GraphQL.
 ## 7. Verification (test, lint, typecheck) and reporting
 
 - Verification is already part of the spawn lifecycle: `runWorktreeWorkflow` calls `parentJobEnsureCommitBeforeRelease` after the loop, which runs lint/test/typecheck (when `runChecks: true`). No change needed for “when” verification runs.
-- **Reporting:** The processor (PlansProcessor) returns the `WorktreeWorkflowResult` from the worktree path so BullMQ stores it as the job's `returnvalue`. The existing `job(queueName, jobId)` query exposes `returnvalue` as a JSON string; clients can parse it to show `acquire`, `loop`, `ensureCommit` (e.g. `ensureCommit.ok`, `ensureCommit.reason`, `ensureCommit.check` when checks failed), and `released`. See [verification-and-reporting.md](./verification-and-reporting.md). Optional: write a short summary to Cortex for "last run verification"; the primary channel is the job return value. (e.g. “Plan run finished” / “checks failed”). To expose verification results to the API:
+- **Reporting:** The processor (PlansProcessor) returns the `WorktreeWorkflowResult` from the worktree path so BullMQ stores it as the job's `returnvalue`. The existing `job(queueName, jobId)` query exposes `returnvalue` as a JSON string; clients can parse it to show `acquire`, `loop`, `ensureCommit` (e.g. `ensureCommit.ok`, `ensureCommit.reason`, `ensureCommit.check` when checks failed), and `released`. See [verification-and-reporting.md](./verification-and-reporting.md). Optional: write a short summary to OpenThrottle for "last run verification"; the primary channel is the job return value. (e.g. “Plan run finished” / “checks failed”). To expose verification results to the API:
   - **Option A:** Store the last `WorktreeWorkflowResult` (or a summary) in the BullMQ job’s return value when the job completes. Then `job(queueName, jobId)` can expose `result: { ensureCommit: { ok, reason?, check? } }` so the client can show “lint failed” or “all checks passed.”
-  - **Option B:** Write a short summary to Cortex (e.g. append to plan_output or a dedicated field). Option A is simpler and keeps the API as the source of truth for “run status and outcome.”
+  - **Option B:** Write a short summary to OpenThrottle (e.g. append to plan_output or a dedicated field). Option A is simpler and keeps the API as the source of truth for “run status and outcome.”
 
 Recommendation: have the processor set the job’s return value (or progress) to a small result object that includes `acquire`, `loop`, `ensureCommit`, `released` (or a summary), and expose that via the existing job query so the API can report verification results without a new endpoint.
 

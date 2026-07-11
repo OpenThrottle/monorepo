@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Ralph: agentic plan/task runner. Single flow (Cortex required); see main() for steps.
+ * Ralph: agentic plan/task runner. Single flow (OpenThrottle required); see main() for steps.
  */
 
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
@@ -9,7 +9,7 @@ import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
 import {
   ensureDatabaseReachableOrExit,
   formatPlanAndTasksForPrompt,
-  getCortexConfigOrExit,
+  getOpenThrottleConfigOrExit,
   getPlanById,
   getTaskById,
   getTasksByPlanId,
@@ -36,7 +36,7 @@ export type { CursorAgentChunk, RunIterationConfig } from './run-iteration';
 /**
  * @description Main entry point. Single flow:
  *
- * 1. Cortex required (getCortexConfigOrExit → ensureDatabaseReachableOrExit)
+ * 1. OpenThrottle required (getOpenThrottleConfigOrExit → ensureDatabaseReachableOrExit)
  * 2. Resolve plan/task (--plan or from task.planId when --task only)
  * 3. Fetch plan and tasks from Postgres; inject into prompt
  * 4. Set plan and current task to IN_PROGRESS
@@ -67,12 +67,12 @@ export const main = async (): Promise<void> => {
   const { iterations, plan, prompt, task } = parsedArgs;
 
   /**
-   * Resolve Cortex from env before any NX project-graph work: `createProjectGraphAsync()` runs with
+   * Resolve OpenThrottle from env before any NX project-graph work: `createProjectGraphAsync()` runs with
    * `cwd` (e.g. foreign `workingDirectory`) and may load that repo's `.env`, overwriting `POSTGRES_URL`
    * and causing false "Plan not found" against the wrong database.
    */
-  const cortexConfig = getCortexConfigOrExit();
-  await ensureDatabaseReachableOrExit(cortexConfig);
+  const openthrottleConfig = getOpenThrottleConfigOrExit();
+  await ensureDatabaseReachableOrExit(openthrottleConfig);
 
   if (parsedArgs.project) {
     const allowed = await getNxProjectNames();
@@ -86,7 +86,7 @@ export const main = async (): Promise<void> => {
 
   let effectivePlanId: string = plan ?? '';
   if (task && !plan) {
-    const taskRow = await getTaskById(cortexConfig, task);
+    const taskRow = await getTaskById(openthrottleConfig, task);
     if (!taskRow) {
       console.error(`${RALPH_WORKFLOW_FATAL_PREFIX}Task not found: ${task}`);
       process.exit(1);
@@ -95,13 +95,13 @@ export const main = async (): Promise<void> => {
   }
 
   logWorkflowRalphOtDiagnostics({
-    connectionString: cortexConfig.connectionString,
+    connectionString: openthrottleConfig.connectionString,
     planId: effectivePlanId,
   });
 
   const [planRow, tasksRows] = await Promise.all([
-    getPlanById(cortexConfig, effectivePlanId),
-    getTasksByPlanId(cortexConfig, effectivePlanId),
+    getPlanById(openthrottleConfig, effectivePlanId),
+    getTasksByPlanId(openthrottleConfig, effectivePlanId),
   ]);
 
   if (!planRow) {
@@ -116,7 +116,7 @@ export const main = async (): Promise<void> => {
     `${prompt}\n\n${injectedContext}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (task ? ` Task-Id: ${task}.` : '') +
-    ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
+    ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
 
   /** Label for parseRalphResponse exit messages (e.g. "Plan <id> is complete"). */
   const contextLabel = effectivePlanId;
@@ -136,10 +136,10 @@ export const main = async (): Promise<void> => {
     process.exit(0);
   }
 
-  await updatePlanStatus(cortexConfig, effectivePlanId, 'IN_PROGRESS');
+  await updatePlanStatus(openthrottleConfig, effectivePlanId, 'IN_PROGRESS');
 
   if (task) {
-    await updateTaskStatus(cortexConfig, task, 'IN_PROGRESS');
+    await updateTaskStatus(openthrottleConfig, task, 'IN_PROGRESS');
   }
 
   /**
@@ -170,14 +170,21 @@ export const main = async (): Promise<void> => {
     // Plan-centric: resume IN_PROGRESS task or pick first QUEUED/PENDING; set to IN_PROGRESS only when QUEUED or PENDING; include in prompt so agent outputs complete-task signal.
     if (!task) {
       // eslint-disable-next-line no-await-in-loop
-      const planTasks = await getTasksByPlanId(cortexConfig, effectivePlanId);
+      const planTasks = await getTasksByPlanId(
+        openthrottleConfig,
+        effectivePlanId,
+      );
       const remaining = planTasks.filter((t) =>
         ['PENDING', 'QUEUED', 'IN_PROGRESS', 'BLOCKED'].includes(t.status),
       );
 
       if (remaining.length === 0) {
         // eslint-disable-next-line no-await-in-loop
-        await updatePlanStatus(cortexConfig, effectivePlanId, 'COMPLETED');
+        await updatePlanStatus(
+          openthrottleConfig,
+          effectivePlanId,
+          'COMPLETED',
+        );
         console.log(
           ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has no remaining tasks; Ralph is exiting.`,
         );
@@ -199,7 +206,7 @@ export const main = async (): Promise<void> => {
           try {
             // eslint-disable-next-line no-await-in-loop
             await updateTaskStatus(
-              cortexConfig,
+              openthrottleConfig,
               taskForIteration.id,
               'IN_PROGRESS',
             );
@@ -305,7 +312,7 @@ export const main = async (): Promise<void> => {
       try {
         // eslint-disable-next-line no-await-in-loop
         const updated = await updateTaskStatus(
-          cortexConfig,
+          openthrottleConfig,
           taskId,
           'COMPLETED',
         );
@@ -336,7 +343,11 @@ export const main = async (): Promise<void> => {
 
   if (lastIterationTaskId && !lastIterationTaskCompleted) {
     try {
-      await updateTaskStatus(cortexConfig, lastIterationTaskId, 'PENDING');
+      await updateTaskStatus(
+        openthrottleConfig,
+        lastIterationTaskId,
+        'PENDING',
+      );
       console.log(
         ` - 📋 Max iterations reached; task ${COLORS.green}${lastIterationTaskId}${COLORS.reset} was reset to PENDING so a future run can resume it.`,
       );
@@ -358,7 +369,7 @@ export const main = async (): Promise<void> => {
   if (!task) {
     try {
       const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
-        cortexConfig,
+        openthrottleConfig,
         effectivePlanId,
       );
       if (reconciled) {

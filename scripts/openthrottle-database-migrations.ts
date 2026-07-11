@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 
 /**
- * @description Runs cortex database migrations from databases/migrations/ in order.
- * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
+ * @description Runs openthrottle database migrations from databases/migrations/ in order.
+ * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
  */
 
 const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'migrations');

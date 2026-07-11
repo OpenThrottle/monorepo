@@ -1,6 +1,6 @@
 # OpenThrottle table comments audit
 
-Permanent checklist for `COMMENT ON TABLE` coverage and Cortex → OpenThrottle rename debt. **SSOT for backfill batches** — do not track in plan output stream or GitHub issues.
+Permanent checklist for `COMMENT ON TABLE` coverage and the OpenThrottle rename backfill. **SSOT for backfill batches** — do not track in plan output stream or GitHub issues.
 
 | Field                      | Value                                                                                                                         |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -10,12 +10,12 @@ Permanent checklist for `COMMENT ON TABLE` coverage and Cortex → OpenThrottle 
 
 ## Summary
 
-| Metric                                      | Count |
-| ------------------------------------------- | ----- |
-| Public base tables                          | 28    |
-| With `COMMENT ON TABLE`                     | 28    |
-| Missing `COMMENT ON TABLE`                  | 0     |
-| Cortex prose in existing comments (039–041) | 4     |
+| Metric                                            | Count |
+| ------------------------------------------------- | ----- |
+| Public base tables                                | 28    |
+| With `COMMENT ON TABLE`                           | 28    |
+| Missing `COMMENT ON TABLE`                        | 0     |
+| OpenThrottle prose in existing comments (039–041) | 4     |
 
 ---
 
@@ -39,16 +39,16 @@ Proposed file: `050_comment_on_openthrottle_tables_batch_a.sql` (applied)
 
 ---
 
-## 2. Cortex rename backlog
+## 2. OpenThrottle rename backlog
 
-Tables that already have `COMMENT ON TABLE` from `039`–`041` but prose still says **"Cortex"**. Re-`COMMENT` with **OpenThrottle** wording in a **follow-up plan** (out of scope for task 3 backfill).
+Tables that already have `COMMENT ON TABLE` from `039`–`041` but prose still says **"OpenThrottle"**. Re-`COMMENT` with **OpenThrottle** wording in a **follow-up plan** (out of scope for task 3 backfill).
 
-| Table          | Migration                                  | Current comment (excerpt)               | Renamed |
-| -------------- | ------------------------------------------ | --------------------------------------- | ------- |
-| `commit_links` | `039_comment_on_cortex_tables_batch_a.sql` | …to **Cortex** plans and optionally…    | - [ ]   |
-| `daily_stats`  | `039_comment_on_cortex_tables_batch_a.sql` | …aggregated **Cortex** activity counts… | - [ ]   |
-| `notes`        | `039_comment_on_cortex_tables_batch_a.sql` | …from the **Cortex MCP** for capture…   | - [ ]   |
-| `plans`        | `040_comment_on_cortex_tables_batch_b.sql` | **Cortex** plan records with title…     | - [ ]   |
+| Table          | Migration                                        | Current comment (excerpt)                     | Renamed |
+| -------------- | ------------------------------------------------ | --------------------------------------------- | ------- |
+| `commit_links` | `039_comment_on_openthrottle_tables_batch_a.sql` | …to **OpenThrottle** plans and optionally…    | - [ ]   |
+| `daily_stats`  | `039_comment_on_openthrottle_tables_batch_a.sql` | …aggregated **OpenThrottle** activity counts… | - [ ]   |
+| `notes`        | `039_comment_on_openthrottle_tables_batch_a.sql` | …from the **OpenThrottle MCP** for capture…   | - [ ]   |
+| `plans`        | `040_comment_on_openthrottle_tables_batch_b.sql` | **OpenThrottle** plan records with title…     | - [ ]   |
 
 **Rename batch status:** - [ ] Complete (follow-up plan)
 
@@ -58,31 +58,31 @@ Tables that already have `COMMENT ON TABLE` from `039`–`041` but prose still s
 
 Tables with comments today (no action for task 3 unless listed above).
 
-| Table                          | Comment source                    | Has comment        |
-| ------------------------------ | --------------------------------- | ------------------ |
-| `commit_links`                 | 039                               | yes (Cortex prose) |
-| `custom_prompt_embeddings`     | 039                               | yes                |
-| `custom_prompts`               | 039                               | yes                |
-| `daily_stats`                  | 039                               | yes (Cortex prose) |
-| `doc_ingestion_state`          | 039                               | yes                |
-| `documentation`                | 039                               | yes                |
-| `documentation_embeddings`     | 039                               | yes                |
-| `notes`                        | 039                               | yes (Cortex prose) |
-| `permissions`                  | 039                               | yes                |
-| `plan_embeddings`              | 039                               | yes                |
-| `plan_output_stream`           | 040                               | yes                |
-| `plan_runs`                    | 038 (same file as `CREATE TABLE`) | yes                |
-| `plans`                        | 040                               | yes (Cortex prose) |
-| `projects`                     | 040                               | yes                |
-| `role_permissions`             | 040                               | yes                |
-| `roles`                        | 040                               | yes                |
-| `service_account_credentials`  | 050                               | yes                |
-| `service_account_roles`        | 050                               | yes                |
-| `service_accounts`             | 050                               | yes                |
-| `subscriptions`                | 040                               | yes                |
-| `task_embeddings`              | 040                               | yes                |
-| `tasks`                        | 040                               | yes                |
-| `user_roles`                   | 040                               | yes                |
-| `user_workspace_settings`      | 050                               | yes                |
-| `users`                        | 041                               | yes                |
-| `workspace_local_repositories` | 050                               | yes                |
+| Table                          | Comment source                    | Has comment              |
+| ------------------------------ | --------------------------------- | ------------------------ |
+| `commit_links`                 | 039                               | yes (OpenThrottle prose) |
+| `custom_prompt_embeddings`     | 039                               | yes                      |
+| `custom_prompts`               | 039                               | yes                      |
+| `daily_stats`                  | 039                               | yes (OpenThrottle prose) |
+| `doc_ingestion_state`          | 039                               | yes                      |
+| `documentation`                | 039                               | yes                      |
+| `documentation_embeddings`     | 039                               | yes                      |
+| `notes`                        | 039                               | yes (OpenThrottle prose) |
+| `permissions`                  | 039                               | yes                      |
+| `plan_embeddings`              | 039                               | yes                      |
+| `plan_output_stream`           | 040                               | yes                      |
+| `plan_runs`                    | 038 (same file as `CREATE TABLE`) | yes                      |
+| `plans`                        | 040                               | yes (OpenThrottle prose) |
+| `projects`                     | 040                               | yes                      |
+| `role_permissions`             | 040                               | yes                      |
+| `roles`                        | 040                               | yes                      |
+| `service_account_credentials`  | 050                               | yes                      |
+| `service_account_roles`        | 050                               | yes                      |
+| `service_accounts`             | 050                               | yes                      |
+| `subscriptions`                | 040                               | yes                      |
+| `task_embeddings`              | 040                               | yes                      |
+| `tasks`                        | 040                               | yes                      |
+| `user_roles`                   | 040                               | yes                      |
+| `user_workspace_settings`      | 050                               | yes                      |
+| `users`                        | 041                               | yes                      |
+| `workspace_local_repositories` | 050                               | yes                      |

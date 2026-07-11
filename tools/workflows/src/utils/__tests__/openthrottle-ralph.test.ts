@@ -1,11 +1,11 @@
 /**
- * @description Tests for Cortex Ralph client (connectivity check and plan status updates).
+ * @description Tests for OpenThrottle Ralph client (connectivity check and plan status updates).
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockConfig = {
-  connectionString: 'postgres://localhost/cortex',
+  connectionString: 'postgres://localhost/openthrottle',
   transport: 'postgres-direct' as const,
 };
 
@@ -112,7 +112,7 @@ vi.mock('pg', () => ({
   },
 }));
 
-describe('ensureCortexReachable (postgres-direct)', () => {
+describe('ensureOpenThrottleReachable (postgres-direct)', () => {
   beforeEach(() => {
     vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
   });
@@ -124,20 +124,24 @@ describe('ensureCortexReachable (postgres-direct)', () => {
 
   it('throws with clear message when connection fails', async () => {
     mockState.connectReject = new Error('Connection refused');
-    const { ensureCortexReachable } = await import('../openthrottle-ralph.js');
+    const { ensureOpenThrottleReachable } =
+      await import('../openthrottle-ralph.js');
 
-    await expect(ensureCortexReachable(mockConfig)).rejects.toThrow(
-      /Cortex database is unreachable/,
+    await expect(ensureOpenThrottleReachable(mockConfig)).rejects.toThrow(
+      /OpenThrottle database is unreachable/,
     );
-    await expect(ensureCortexReachable(mockConfig)).rejects.toThrow(
+    await expect(ensureOpenThrottleReachable(mockConfig)).rejects.toThrow(
       /Connection refused/,
     );
   });
 
   it('resolves when connection and SELECT 1 succeed', async () => {
-    const { ensureCortexReachable } = await import('../openthrottle-ralph.js');
+    const { ensureOpenThrottleReachable } =
+      await import('../openthrottle-ralph.js');
 
-    await expect(ensureCortexReachable(mockConfig)).resolves.toBeUndefined();
+    await expect(
+      ensureOpenThrottleReachable(mockConfig),
+    ).resolves.toBeUndefined();
   });
 });
 

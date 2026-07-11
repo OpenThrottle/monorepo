@@ -9,7 +9,7 @@
 
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  getCortexTypeOrmOptions,
+  getOpenThrottleTypeOrmOptions,
   Role,
   RolesService,
   ServiceAccount,
@@ -77,11 +77,16 @@ async function ensureAllRoles(
 }
 
 async function main(): Promise<void> {
-  const dataSource = new DataSource(getCortexTypeOrmOptions());
+  const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
 
   try {
-    const logger = { debug: () => undefined } as unknown as LoggerService;
+    const logger: LoggerService = {
+      debug: () => undefined,
+      error: () => undefined,
+      log: () => undefined,
+      warn: () => undefined,
+    };
 
     const userRepository = dataSource.getRepository(User);
     const roleRepository = dataSource.getRepository(Role);

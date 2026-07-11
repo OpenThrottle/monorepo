@@ -11,7 +11,7 @@
     "pg": "catalog:",
     "typeorm": "catalog:"
   },
-  "description": "Node-only Cortex data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
+  "description": "Node-only OpenThrottle data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
   "devDependencies": {},
   "exports": {
     ".": {

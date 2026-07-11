@@ -1781,7 +1781,7 @@ type WorkspaceLocalRepositoryObject {
   gitRemoteUrl: String
   gitDefaultBranch: String
 
-  """Optional Cortex project linked to this checkout."""
+  """Optional OpenThrottle project linked to this checkout."""
   projectId: ID
   project: ProjectObject
   createdAt: DateTime!
@@ -1893,7 +1893,7 @@ type Query {
   commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]!
 
   """
-  Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
+  Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).
   """
   searchAgentAssets(input: AgentAssetSearchInput!): AgentAssetSearchResult!
 
@@ -2108,7 +2108,7 @@ type Query {
   permissionsForServiceAccount(serviceAccountId: ID!): [String!]!
 
   """
-  Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
+  Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).
   """
   search(input: SearchInput!): SearchResult!
 
@@ -2871,7 +2871,7 @@ type Mutation {
   updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
 
   """
-  Assign, change, or clear the Cortex project link for a local repository.
+  Assign, change, or clear the OpenThrottle project link for a local repository.
   """
   setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject!
 
@@ -3546,7 +3546,7 @@ input UpdateWorkspaceLocalRepositoryInput {
 input SetWorkspaceLocalRepositoryProjectInput {
   id: ID!
 
-  """Cortex project id, or null to clear the link."""
+  """OpenThrottle project id, or null to clear the link."""
   projectId: ID
 }
 

@@ -293,7 +293,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
   test('throws when planId is not a valid UUID', () => {
     expect(() =>
       buildRunPlanOrchestratorJobData({ planId: 'nope', ralph: null }),
-    ).toThrow(/planId must be a valid Cortex UUID/);
+    ).toThrow(/planId must be a valid OpenThrottle UUID/);
   });
 
   test('throws when mode is task but taskId is missing', () => {

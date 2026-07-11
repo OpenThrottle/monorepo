@@ -108,7 +108,7 @@ The Developer app stores up to 10 recently used workspace paths in `localStorage
 
 - **Local-only:** The path is resolved on the machine running `openthrottle-server`. Containerized deployments need bind mounts or volume mapping to expose host directories (tracked under plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`).
 - **Spawn path only (no worktrees):** When `WORKTREE_TARGETS` is configured, the worktree workflow manages its own cwd; `workingDirectory` applies to the legacy spawn path (`processInProcessCwd`) and the orchestrator path.
-- **Cortex required:** Plans and tasks still live in the Cortex database regardless of which directory the agent operates in.
+- **OpenThrottle required:** Plans and tasks still live in the OpenThrottle database regardless of which directory the agent operates in.
 
 For implementation details, validation rules, and GraphQL examples, see [Multi-workspace plans (`workingDirectory`)](../../tools/workflows/README.md#multi-workspace-plans-workingdirectory) in the workflows README.
 
@@ -122,4 +122,4 @@ For implementation details, validation rules, and GraphQL examples, see [Multi-w
 | **DB / Redis**                 | **`pnpm run database:start`** (Compose **only** for Postgres + Redis) | Same Compose file; often all services together                                                      |
 | **POSTGRES_HOST / REDIS_HOST** | **`localhost`** when apps run on host                                 | **`openthrottle-postgres`** / **`openthrottle-redis`** or bridge networking docs in app README      |
 
-**Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in Cortex plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps. The **phase-1 compose topology** (API + Postgres + Redis only, with explicit non-goals and host MCP env contract) is documented in [compose-topology-phase-1.md](./compose-topology-phase-1.md).
+**Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps. The **phase-1 compose topology** (API + Postgres + Redis only, with explicit non-goals and host MCP env contract) is documented in [compose-topology-phase-1.md](./compose-topology-phase-1.md).

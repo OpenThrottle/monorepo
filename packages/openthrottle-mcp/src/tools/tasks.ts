@@ -116,7 +116,7 @@ export const listTasksByCategoryToolParameters = z.object({
   status: z.string().min(1).optional(),
 });
 
-export const createTaskToolDescription = `Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted).`;
+export const createTaskToolDescription = `Create a new task in OpenThrottle. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted).`;
 
 export const createTasksToolDescription = `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId, sortOrder). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. Returns created task ids and titles.`;
 

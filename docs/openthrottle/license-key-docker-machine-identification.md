@@ -1,6 +1,6 @@
 # License-key validation and machine identification for Docker distribution
 
-**Cortex:** Plan-Id `d762148d-3528-4d01-b75f-86fcee6fb030` · Tasks: machine fingerprinting (§1), validation API (§2), edge cases (§3).
+**OpenThrottle:** Plan-Id `d762148d-3528-4d01-b75f-86fcee6fb030` · Tasks: machine fingerprinting (§1), validation API (§2), edge cases (§3).
 
 Investigation for dockerized **openthrottle-server** and **openthrottle-developer**: run images with a license key that must validate against our API. Goal: one licensed user may run multiple worktrees (same machine); multiple users sharing one key must be prevented.
 

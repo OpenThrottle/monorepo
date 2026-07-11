@@ -29,7 +29,7 @@ The architecture consists of three core layers:
 - Plans 4, 5, 6 can run in `worktree-two`
 - Plans 7, 8, 9 can run in `worktree-three`
 
-All worktrees share the same Cortex database (Postgres) and Redis, but execute in isolated file system contexts.
+All worktrees share the same OpenThrottle database (Postgres) and Redis, but execute in isolated file system contexts.
 
 ---
 
@@ -43,8 +43,8 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
 | **OpenThrottle Developer** | `applications/openthrottle-developer/` | UI for plans, tasks, queues, monitoring                                      |
 | **BullMQ Plans Queue**     | `queues/plans/` in server              | Queue and process plan execution jobs                                        |
 | **NestjsWorktreesModule**  | `packages/nestjs-worktrees/`           | Provides mutex-wrapped `IWorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
-| **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates Cortex                          |
-| **Cortex**                 | `databases/`                           | Plans, tasks, embeddings, output stream (Postgres + pgvector)                |
+| **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates OpenThrottle                    |
+| **OpenThrottle**           | `databases/`                           | Plans, tasks, embeddings, output stream (Postgres + pgvector)                |
 
 ### Execution Modes
 
@@ -55,7 +55,7 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
    ```
 
    - Runs in current working directory
-   - Connects to Cortex, fetches plan/tasks, spawns cursor-agent
+   - Connects to OpenThrottle, fetches plan/tasks, spawns cursor-agent
 
 2. **BullMQ Mode** (Automated via Server)
    - Job enqueued via GraphQL mutation or internal trigger
@@ -88,7 +88,7 @@ Each worktree operates independently:
 
 - Has its own git branch
 - Has its own `.cursor/` folder (MCP servers, rules, commands)
-- Uses the same Cortex database (shared plans/tasks)
+- Uses the same OpenThrottle database (shared plans/tasks)
 - Can be opened in a separate Cursor window for manual work
 
 ---
@@ -161,7 +161,7 @@ for (let i = 0; i < iterations; i++) {
   // 2. Parse signals from output:
   //    - <ralph:task-complete>UUID</ralph:task-complete>
   //    - <promise>COMPLETE</promise>
-  // 3. Update task status in Cortex
+  // 3. Update task status in OpenThrottle
   // 4. Exit on COMPLETE, ERROR, INPUT_REQUIRED, or max iterations
 }
 ```
@@ -217,8 +217,8 @@ flowchart TB
         end
     end
 
-    subgraph Cortex["Cortex Knowledge Base"]
-        CortexDB[(plans, tasks, embeddings)]
+    subgraph OpenThrottle["OpenThrottle Knowledge Base"]
+        OpenThrottleDB[(plans, tasks, embeddings)]
         Output[(plan_output_stream)]
         Commits[(commit_links)]
     end
@@ -240,9 +240,9 @@ flowchart TB
     Ralph2 -->|spawn| Cursor2
     Ralph3 -->|spawn| Cursor3
 
-    Ralph1 -->|update status| CortexDB
-    Ralph2 -->|update status| CortexDB
-    Ralph3 -->|update status| CortexDB
+    Ralph1 -->|update status| OpenThrottleDB
+    Ralph2 -->|update status| OpenThrottleDB
+    Ralph3 -->|update status| OpenThrottleDB
 
     Ralph1 -->|append output| Output
     Ralph2 -->|append output| Output
@@ -250,7 +250,7 @@ flowchart TB
 
     Server -->|read/write| Postgres
     Server -->|jobs/cache| Redis
-    CortexDB -.->|same DB| Postgres
+    OpenThrottleDB -.->|same DB| Postgres
 ```
 
 ---
@@ -266,7 +266,7 @@ sequenceDiagram
     participant WT as Worktree (e.g. worktree-one)
     participant Ralph as workflow-ralph
     participant Agent as cursor-agent
-    participant Cortex as Cortex DB
+    participant OpenThrottle as OpenThrottle DB
 
     UI->>Server: GraphQL mutation (enqueue plan)
     Server->>BullMQ: Add job (planId)
@@ -276,16 +276,16 @@ sequenceDiagram
     BullMQ->>WT: git checkout -b feat/plan-xxx
     BullMQ->>Ralph: spawn with cwd=worktreePath
 
-    Ralph->>Cortex: getPlanById, getTasksByPlanId
-    Ralph->>Cortex: updatePlanStatus(IN_PROGRESS)
+    Ralph->>OpenThrottle: getPlanById, getTasksByPlanId
+    Ralph->>OpenThrottle: updatePlanStatus(IN_PROGRESS)
 
     loop For each iteration
         Ralph->>Agent: spawn cursor-agent with prompt
         Agent->>Agent: Execute tasks, make changes
         Agent-->>Ralph: Output with signals
         Ralph->>Ralph: Parse <ralph:task-complete>
-        Ralph->>Cortex: updateTaskStatus(COMPLETED)
-        Ralph->>Cortex: appendPlanOutput(iteration log)
+        Ralph->>OpenThrottle: updateTaskStatus(COMPLETED)
+        Ralph->>OpenThrottle: appendPlanOutput(iteration log)
     end
 
     Ralph-->>BullMQ: Exit (COMPLETE)

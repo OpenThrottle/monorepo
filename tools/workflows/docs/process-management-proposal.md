@@ -45,25 +45,25 @@ This document proposes how to evolve Ralph workflow process management so a loca
 
 ## 5. Streaming and persisting output
 
-Goals: API (or Cortex) can show progress without waiting for the child to exit; final result still available as today (workflow result, job return value).
+Goals: API (or OpenThrottle) can show progress without waiting for the child to exit; final result still available as today (workflow result, job return value).
 
 **Option A – Stream forwarding + plan_output_stream (recommended):**
 
 - In **child-job**, use `spawn` and pipe the child’s stdout/stderr (or a single combined stream) to a callback or async iterator.
-- For each chunk (or line), optionally call Cortex MCP `append_plan_output(planId, content, iteration?)` so the plan’s output stream is updated in real time. The API can then expose “plan output” via existing Cortex/GraphQL (e.g. `get_plan_output` or activity) so clients see progress.
+- For each chunk (or line), optionally call OpenThrottle MCP `append_plan_output(planId, content, iteration?)` so the plan’s output stream is updated in real time. The API can then expose “plan output” via existing OpenThrottle/GraphQL (e.g. `get_plan_output` or activity) so clients see progress.
 - The worker still collects stdout/stderr for the final `ChildJobResult` (e.g. on failure, include last N lines or full stderr). No change to the existing return shape for success/failure.
-- **Streaming dependency:** When `streamToCortex` is enabled on `ChildJobInput`, the worker writes to Cortex Postgres (`plan_output_stream` table) via the same schema as MCP `append_plan_output`. Cortex (and thus ai-mcp Postgres config) must be reachable; if append fails, the worker logs and continues without failing the job. Clients that read plan output (e.g. `get_plan_output`, activity-by-date) see chunks in real time.
+- **Streaming dependency:** When `streamToOpenThrottle` is enabled on `ChildJobInput`, the worker writes to OpenThrottle Postgres (`plan_output_stream` table) via the same schema as MCP `append_plan_output`. OpenThrottle (and thus ai-mcp Postgres config) must be reachable; if append fails, the worker logs and continues without failing the job. Clients that read plan output (e.g. `get_plan_output`, activity-by-date) see chunks in real time.
 
 **Option B – Job progress (BullMQ):**
 
 - The worker calls `job.updateProgress(percent, { phase, lastLine? })` periodically (e.g. on each chunk or every N seconds). The API can poll job progress to show “Ralph running… 45%” or “ensureCommit running lint…”.
-- This does not persist to Cortex; it’s ephemeral job progress. Can be used together with Option A.
+- This does not persist to OpenThrottle; it’s ephemeral job progress. Can be used together with Option A.
 
 **Option C – Hybrid:**
 
-- Stream to both: append important chunks to `plan_output_stream` (for Cortex and history) and call `job.updateProgress` for API polling. Gives API a simple progress API and Cortex a durable log.
+- Stream to both: append important chunks to `plan_output_stream` (for OpenThrottle and history) and call `job.updateProgress` for API polling. Gives API a simple progress API and OpenThrottle a durable log.
 
-**Recommendation:** Implement Option A (stream + optional `append_plan_output`) first so progress is visible in Cortex and any client that reads plan output. Add Option B if the API needs a lightweight progress endpoint without querying Cortex.
+**Recommendation:** Implement Option A (stream + optional `append_plan_output`) first so progress is visible in OpenThrottle and any client that reads plan output. Add Option B if the API needs a lightweight progress endpoint without querying OpenThrottle.
 
 ---
 
@@ -94,4 +94,4 @@ Goals: API (or Cortex) can show progress without waiting for the child to exit; 
 | parent-job.ts       | git, pnpm nx           | spawnSync (git); optional spawn (nx) | No for nx if spawn                      | Optional stream for nx                 |
 | runWorktreeWorkflow | (orchestrates above)   | N/A                                  | Loop async, steps async when spawn used | Result + optional live stream          |
 
-This proposal enables the local API to trigger runs, stream progress (via Cortex or job progress), enforce timeouts, and cancel runs without introducing new worker processes.
+This proposal enables the local API to trigger runs, stream progress (via OpenThrottle or job progress), enforce timeouts, and cancel runs without introducing new worker processes.

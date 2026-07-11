@@ -40,14 +40,14 @@ export const AGENTS_MCP_ROUTER_GOLDEN_PROMPTS: readonly AgentsMcpRouterGoldenPro
       expectedTool: 'list_sources',
       id: 'sources_kb',
       intent: 'plans_inventory',
-      message: 'What plans are in the cortex kb?',
+      message: 'What plans are in the openthrottle kb?',
     },
     {
       expectedArgs: { statuses: ['BLOCKED'] },
       expectedTool: 'list_plans_by_status',
       id: 'plans_blocked',
       intent: 'plans_by_status',
-      message: 'Get blocked plan list from cortex',
+      message: 'Get blocked plan list from openthrottle',
     },
     {
       expectedArgs: { statuses: ['COMPLETED'] },
@@ -61,7 +61,7 @@ export const AGENTS_MCP_ROUTER_GOLDEN_PROMPTS: readonly AgentsMcpRouterGoldenPro
       expectedTool: 'list_plans_by_status',
       id: 'plans_in_progress',
       intent: 'plans_by_status',
-      message: 'Show in progress cortex plans',
+      message: 'Show in progress openthrottle plans',
     },
     {
       expectedArgs: { statuses: ['PENDING'] },
@@ -73,9 +73,9 @@ export const AGENTS_MCP_ROUTER_GOLDEN_PROMPTS: readonly AgentsMcpRouterGoldenPro
     {
       expectedArgs: { daysBack: 7 },
       expectedTool: 'get_activity_by_date',
-      id: 'activity_days_cortex',
+      id: 'activity_days_openthrottle',
       intent: 'activity',
-      message: 'Show cortex activity for the last 7 days',
+      message: 'Show openthrottle activity for the last 7 days',
     },
     {
       expectedArgs: { date: '2026-05-15' },
@@ -89,7 +89,7 @@ export const AGENTS_MCP_ROUTER_GOLDEN_PROMPTS: readonly AgentsMcpRouterGoldenPro
       expectedTool: 'get_activity_by_date',
       id: 'activity_yesterday_shipped',
       intent: 'activity',
-      message: 'What shipped yesterday in cortex?',
+      message: 'What shipped yesterday in openthrottle?',
     },
     {
       expectedArgs: { planId: PLAN },

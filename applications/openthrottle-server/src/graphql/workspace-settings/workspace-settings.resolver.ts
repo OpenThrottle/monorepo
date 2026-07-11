@@ -120,7 +120,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @ResolveField(() => ProjectObject, {
-    description: `Cortex project linked to this checkout.`,
+    description: `OpenThrottle project linked to this checkout.`,
     nullable: true,
   })
   async project(
@@ -207,7 +207,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @Mutation(() => WorkspaceLocalRepositoryObject, {
-    description: `Assign, change, or clear the Cortex project link for a local repository.`,
+    description: `Assign, change, or clear the OpenThrottle project link for a local repository.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async setWorkspaceLocalRepositoryProject(

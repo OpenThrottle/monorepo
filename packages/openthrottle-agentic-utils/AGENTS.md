@@ -28,7 +28,7 @@ discovery.
 
 ## Don't
 
-- Not a home for CLI bins, Cortex GraphQL/Postgres CRUD, job-run-hook runners, or doc-ingestion —
+- Not a home for CLI bins, OpenThrottle GraphQL/Postgres CRUD, job-run-hook runners, or doc-ingestion —
   those stay in `@tools/workflows` until their own migration phase.
 - The cached NestJS wrapper over model discovery is `@openthrottle/nestjs-model-discovery`; don't
   add ConfigService/caching here.

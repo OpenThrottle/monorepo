@@ -1,19 +1,19 @@
 // #!/usr/bin/env node
 
 // /**
-//  * @description Updates a plan's status in Cortex by plan ID. Uses POSTGRES_* or POSTGRES_URL.
-//  * Usage: pnpm exec tsx ./scripts/update-cortex-plan-status.ts <plan-id> <status>
-//  * Example: pnpm exec tsx ./scripts/update-cortex-plan-status.ts 6d3893b9-26f2-4a89-9b6f-207aaed0554a IN_PROGRESS
+//  * @description Updates a task's status in OpenThrottle by task ID. Uses POSTGRES_* or POSTGRES_URL.
+//  * Usage: pnpm exec tsx ./scripts/update-openthrottle-task-status.ts <task-id> <status>
+//  * Example: pnpm exec tsx ./scripts/update-openthrottle-task-status.ts e918fc4e-7f58-495e-84fe-f14837ae5718 completed
 //  */
 
 // import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 // import { Client } from 'pg';
 
-// const planId = process.argv[2];
+// const taskId = process.argv[2];
 // const status = process.argv[3];
-// if (!planId || !status) {
+// if (!taskId || !status) {
 //   console.error(
-//     'Usage: tsx ./scripts/update-cortex-plan-status.ts <plan-id> <status>',
+//     'Usage: tsx ./scripts/update-openthrottle-task-status.ts <task-id> <status>',
 //   );
 //   process.exit(1);
 // }
@@ -25,14 +25,14 @@
 
 //   try {
 //     const res = await client.query(
-//       `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, status`,
-//       [status, planId],
+//       `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, status`,
+//       [status, taskId],
 //     );
 
 //     const row = res.rows[0];
 
 //     if (!row) {
-//       console.error(`No plan found for id: ${planId}`);
+//       console.error(`No task found for id: ${taskId}`);
 //       process.exit(1);
 //     }
 

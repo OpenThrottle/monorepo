@@ -1,15 +1,15 @@
-# Cortex integration: cortex-api GraphQL
+# OpenThrottle integration: openthrottle-api GraphQL
 
-The extension talks to Cortex via the **cortex-api** GraphQL API (NestJS backend). This keeps one backend for the Cortex web app and the extension; no MCP client runs inside the extension.
+The extension talks to OpenThrottle via the **openthrottle-api** GraphQL API (NestJS backend). This keeps one backend for the OpenThrottle web app and the extension; no MCP client runs inside the extension.
 
 ## Decision
 
-- **Chosen:** Direct HTTP to **cortex-api** GraphQL endpoint (`POST /graphql`).
+- **Chosen:** Direct HTTP to **openthrottle-api** GraphQL endpoint (`POST /graphql`).
 - **Not chosen:** MCP client in the extension would require the IDE to host or proxy MCP; HTTP to the existing API is simpler and works the same in VS Code and Cursor.
 
 ## Configuration
 
-- **Base URL:** VS Code setting `cortex.apiBaseUrl` (default `http://localhost:6010`). Same base URL as the Cortex web app; the extension appends `/graphql` for operations.
+- **Base URL:** VS Code setting `openthrottle.apiBaseUrl` (default `http://localhost:6010`). Same base URL as the OpenThrottle web app; the extension appends `/graphql` for operations.
 - **Auth:** openthrottle-server requires JWT auth on protected routes. The extension signs in via the `login` mutation (email/password), stores the JWT in `vscode.SecretStorage`, and sends `Authorization: Bearer <token>` on GraphQL requests. See [AUTH_DESIGN.md](./AUTH_DESIGN.md) for the full login flow and token storage design.
 
 ## Read path
@@ -23,5 +23,5 @@ The extension talks to Cortex via the **cortex-api** GraphQL API (NestJS backend
 
 ## Write path (create plan from text)
 
-- **Command:** `Cortex: Create plan from text`. Prompts for a title (natural text), optional category quick pick, then calls `createPlan` with `cortex.defaultAuthor` as author and `pending` status.
+- **Command:** `OpenThrottle: Create plan from text`. Prompts for a title (natural text), optional category quick pick, then calls `createPlan` with `openthrottle.defaultAuthor` as author and `pending` status.
 - **Mutation:** `createPlan(input: CreatePlanInput!)`. Required: `title`, `author`, `category`. Optional: `description`, `assignee`, `status`, etc.

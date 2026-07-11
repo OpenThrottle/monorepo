@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex task_embeddings table. Matches databases/migrations (005). Uses pgvector vector(1536).
+ * @description TypeORM entity for OpenThrottle task_embeddings table. Matches databases/migrations (005). Uses pgvector vector(1536).
  */
 
 import {

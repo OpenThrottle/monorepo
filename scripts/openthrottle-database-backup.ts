@@ -8,9 +8,9 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 /**
- * @description Backs up the Cortex Postgres database to a timestamped zip file.
- * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
- * Writes to databases/backups/cortex-YYYYMMDD-HHMMSS.zip (plain SQL inside).
+ * @description Backs up the OpenThrottle Postgres database to a timestamped zip file.
+ * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
+ * Writes to databases/backups/openthrottle-YYYYMMDD-HHMMSS.zip (plain SQL inside).
  *
  * When the docker-compose `postgres` container is running, pg_dump executes
  * inside the container so the client version always matches the server

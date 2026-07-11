@@ -1,5 +1,5 @@
 /**
- * @description Runs vector similarity search against Cortex Postgres (plan_embeddings + task_embeddings + documentation_embeddings).
+ * @description Runs vector similarity search against OpenThrottle Postgres (plan_embeddings + task_embeddings + documentation_embeddings).
  */
 
 import {
@@ -484,7 +484,7 @@ interface ListSourcesResult {
 }
 
 /**
- * @description Lists knowledge-base sources (plan, task, documentation) and plan titles from Cortex.
+ * @description Lists knowledge-base sources (plan, task, documentation) and plan titles from OpenThrottle.
  */
 export async function listSources(): Promise<ListSourcesResult> {
   const ds = await getOrCreateDataSource();
@@ -541,7 +541,7 @@ export type ListPlansByStatusSortOrder = 'asc' | 'desc';
 export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
- * @description Lists plans in Cortex filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
+ * @description Lists plans in OpenThrottle filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
  * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
  * @param assignee Optional: filter plans where author or assignee equals this value (e.g. GitHub username).
  * @param project Optional: filter plans whose project equals this value (NX project name).
@@ -647,16 +647,16 @@ export async function listPlansByStatus(
 }
 
 // ---------------------------------------------------------------------------
-// Plan and Task CRUD (schema: plans, tasks in Cortex Postgres)
+// Plan and Task CRUD (schema: plans, tasks in OpenThrottle Postgres)
 // ---------------------------------------------------------------------------
 
-/** Plan row with ISO string dates (e.g. from cortex-client CRUD). Derived from {@link PlanData}. */
+/** Plan row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link PlanData}. */
 export type PlanRow = Omit<PlanData, 'createdAt' | 'updatedAt'> & {
   readonly createdAt: string;
   readonly updatedAt: string;
 };
 
-/** Task row with ISO string dates (e.g. from cortex-client CRUD). Derived from {@link TaskData}. */
+/** Task row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link TaskData}. */
 export type TaskRow = Omit<TaskData, 'createdAt' | 'updatedAt'> & {
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -667,7 +667,7 @@ const GITHUB_USERNAME_REGEX =
   /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
 
 /**
- * @description Normalizes assignee to a valid GitHub username or null per Cortex assignee rule.
+ * @description Normalizes assignee to a valid GitHub username or null per OpenThrottle assignee rule.
  * Empty, whitespace, and invalid formats (e.g. display names, emails) become null.
  */
 function normalizeAssignee(value: string | null | undefined): string | null {
@@ -851,7 +851,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
 }
 
 /**
- * @description Creates a plan in Cortex and returns the inserted row.
+ * @description Creates a plan in OpenThrottle and returns the inserted row.
  */
 export async function createPlan(input: CreatePlanInput): Promise<PlanRow> {
   const ds = await getOrCreateDataSource();
@@ -942,7 +942,7 @@ function inferTaskCategory(title: string, description?: string | null): string {
 }
 
 /**
- * @description Creates a task in Cortex and returns the inserted row.
+ * @description Creates a task in OpenThrottle and returns the inserted row.
  */
 export async function createTask(input: CreateTaskInput): Promise<TaskRow> {
   const ds = await getOrCreateDataSource();
@@ -1699,7 +1699,7 @@ function mapNoteRow(r: {
 }
 
 /**
- * @description Creates a note in Cortex and returns the inserted row.
+ * @description Creates a note in OpenThrottle and returns the inserted row.
  */
 export async function createNote(input: CreateNoteInput): Promise<NoteRow> {
   const ds = await getOrCreateDataSource();

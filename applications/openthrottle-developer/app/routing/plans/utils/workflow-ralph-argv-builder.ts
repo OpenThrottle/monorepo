@@ -138,7 +138,7 @@ export const buildWorkflowRalphOptionArgs = (
 };
 
 /**
- * @description Minimal POSIX-ish quoting for display; safe for typical Cortex UUIDs and paths.
+ * @description Minimal POSIX-ish quoting for display; safe for typical OpenThrottle UUIDs and paths.
  */
 const quoteShellArg = (arg: string): string => {
   if (arg === '') {

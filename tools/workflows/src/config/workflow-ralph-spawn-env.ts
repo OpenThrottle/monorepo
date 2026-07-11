@@ -39,11 +39,11 @@ const isDirectory = (dir: string): boolean => {
 };
 
 /**
- * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
+ * @description Resolves OpenThrottle Postgres URL from env. Prefer {@link OPENTHROTTLE_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
  * @returns Connection string or `undefined` when required vars are missing.
  * @deprecated Import {@link getPostgresUrl} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export function resolveCortexPostgresConnectionStringFromEnv(
+export function resolveOpenThrottlePostgresConnectionStringFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined {
   try {
@@ -244,7 +244,7 @@ export function buildWorkflowRalphSpawnEnv(
     const conn =
       trimmed !== undefined && trimmed !== ''
         ? trimmed
-        : resolveCortexPostgresConnectionStringFromEnv(workerEnv);
+        : resolveOpenThrottlePostgresConnectionStringFromEnv(workerEnv);
 
     if (conn !== undefined) {
       env = {

@@ -1,6 +1,6 @@
 # Server and task run performance metrics (CPU and memory)
 
-This document defines what to capture for CPU and memory visibility on the box running **openthrottle-server** and for **task runs** (Ralph/workflow loops). The existing health module covers API, Cortex DB, Redis, and WebSocket—not process or host resource metrics. This design covers metrics definition, units, and sampling strategy.
+This document defines what to capture for CPU and memory visibility on the box running **openthrottle-server** and for **task runs** (Ralph/workflow loops). The existing health module covers API, OpenThrottle DB, Redis, and WebSocket—not process or host resource metrics. This design covers metrics definition, units, and sampling strategy.
 
 ---
 
@@ -96,9 +96,9 @@ Per-job CPU and memory are captured at job start and end. They are exposed in th
 - **GraphQL:** Query `job(jobId, queueName: "plans")` returns a `JobObject` whose `returnvalue` is a JSON string. When the job has completed, parse `returnvalue`; it contains `taskRunMetrics: { atStart, atEnd }`, each with `rssMb`, `heapUsedMb`, `heapTotalMb`, `externalMb`, `cpuUserMs`, `cpuSystemMs`.
 - **Use case:** UI or scripts that fetch a specific plan run job and want full numeric metrics.
 
-### 6.2 Plan output stream (Cortex)
+### 6.2 Plan output stream (OpenThrottle)
 
-- After each plan run finishes, a one-line summary is appended to the plan's output stream (Cortex `plan_output_stream`). Example:  
+- After each plan run finishes, a one-line summary is appended to the plan's output stream (OpenThrottle `plan_output_stream`). Example:  
   `Task run metrics: RSS 45.2→52.1 MB, heap 22.1→28.3 MB, CPU user 120→450 ms, system 10→80 ms`
 - **Use case:** `get_plan_output` (MCP or GraphQL) and activity-by-date include this chunk so "last thing that happened" for a plan can show CPU/memory at a glance without querying the job.
 

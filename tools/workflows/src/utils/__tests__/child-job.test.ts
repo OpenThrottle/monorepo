@@ -53,7 +53,7 @@ function isStringArray(value: unknown): value is readonly string[] {
 }
 
 const mockConfig = {
-  connectionString: 'postgres://localhost/cortex',
+  connectionString: 'postgres://localhost/openthrottle',
   transport: 'postgres-direct' as const,
 };
 
@@ -77,7 +77,7 @@ vi.mock('../../config/load-workflow-ralph-config', () => ({
   resolveWorkflowRalphTransport: vi.fn(() => 'postgres-direct'),
 }));
 
-const mockCortexState: {
+const mockOpenThrottleState: {
   tasks: { status: string }[];
   updatePlanStatusCalls: string[];
 } = {
@@ -89,19 +89,19 @@ vi.mock('../openthrottle-ralph', () => ({
   RALPH_FATAL_REQUIRED_GRAPHQL: 'graphql-required',
   RALPH_FATAL_REQUIRED_POSTGRES: 'postgres-required',
   appendPlanOutput: vi.fn().mockResolvedValue(undefined),
-  ensureCortexReachable: vi.fn().mockResolvedValue(undefined),
+  ensureOpenThrottleReachable: vi.fn().mockResolvedValue(undefined),
   getTasksByPlanId: vi
     .fn()
-    .mockImplementation(async () => mockCortexState.tasks),
+    .mockImplementation(async () => mockOpenThrottleState.tasks),
   reconcilePlanCompletionIfAllTasksTerminal: vi
     .fn()
     .mockImplementation(async (_config: unknown, planId: string) => {
-      const tasks = mockCortexState.tasks;
+      const tasks = mockOpenThrottleState.tasks;
       const allDone =
         tasks.length > 0 &&
         tasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
       if (allDone) {
-        mockCortexState.updatePlanStatusCalls.push(planId);
+        mockOpenThrottleState.updatePlanStatusCalls.push(planId);
       }
       return allDone;
     }),
@@ -109,7 +109,7 @@ vi.mock('../openthrottle-ralph', () => ({
   updatePlanStatus: vi
     .fn()
     .mockImplementation(async (_config: unknown, planId: string) => {
-      mockCortexState.updatePlanStatusCalls.push(planId);
+      mockOpenThrottleState.updatePlanStatusCalls.push(planId);
       return {};
     }),
 }));
@@ -299,13 +299,15 @@ describe('runChildJob', () => {
     vi.mocked(spawn).mockReset();
     vi.mocked(spawnSync).mockReset();
     buildNestedWorkflowRalphSpawnEnvMock.mockClear();
-    mockCortexState.tasks = [];
-    mockCortexState.updatePlanStatusCalls = [];
+    mockOpenThrottleState.tasks = [];
+    mockOpenThrottleState.updatePlanStatusCalls = [];
   });
 
-  it('returns ok: false when Cortex config is missing', async () => {
-    const cortexRalph = await import('../openthrottle-ralph.js');
-    vi.mocked(cortexRalph.resolveWorkflowRalphConfig).mockReturnValueOnce(null);
+  it('returns ok: false when OpenThrottle config is missing', async () => {
+    const openthrottleRalph = await import('../openthrottle-ralph.js');
+    vi.mocked(openthrottleRalph.resolveWorkflowRalphConfig).mockReturnValueOnce(
+      null,
+    );
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -366,7 +368,10 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet(branchName))
       .mockReturnValueOnce(spawnSyncRet(commitSha));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }, { status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [
+      { status: 'COMPLETED' },
+      { status: 'COMPLETED' },
+    ];
 
     const input: ChildJobInput = {
       handoff: handoff(dir),
@@ -408,7 +413,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -453,7 +458,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -481,9 +486,9 @@ describe('runChildJob', () => {
     }
   });
 
-  it('injects canonical Cortex Postgres URL into nested spawn env when cwd is foreign (regression: Plan not found)', async () => {
+  it('injects canonical OpenThrottle Postgres URL into nested spawn env when cwd is foreign (regression: Plan not found)', async () => {
     const canonicalUrl =
-      'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+      'postgresql://worker:secret@db.example:5432/openthrottle';
     const foreignCwd = createTempDir();
 
     vi.mocked(spawn).mockReturnValue(
@@ -502,7 +507,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const input: ChildJobInput = {
       canonicalPostgresUrl: canonicalUrl,
@@ -551,7 +556,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -609,7 +614,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -646,7 +651,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -686,7 +691,7 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -758,7 +763,7 @@ describe('runChildJob', () => {
     }
   });
 
-  it('when aborted mid-stream with streamToCortex, partial stdout was appended and run ends cancelled', async () => {
+  it('when aborted mid-stream with streamToOpenThrottle, partial stdout was appended and run ends cancelled', async () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChildStreamingPartialThenCloseOnKill(),
     );
@@ -772,7 +777,7 @@ describe('runChildJob', () => {
       planId,
       signal: controller.signal,
       streamIteration: 4,
-      streamToCortex: true,
+      streamToOpenThrottle: true,
     };
     const { appendPlanOutput } = await import('../openthrottle-ralph.js');
     vi.mocked(appendPlanOutput).mockClear();
@@ -841,7 +846,7 @@ describe('runChildJob', () => {
     vi.mocked(spawnSync)
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const chunks: Array<{ data: string; stream: 'stdout' | 'stderr' }> = [];
     const dir = createTempDir();
@@ -860,7 +865,7 @@ describe('runChildJob', () => {
     }
   });
 
-  it('calls appendPlanOutput for each chunk when streamToCortex is true', async () => {
+  it('calls appendPlanOutput for each chunk when streamToOpenThrottle is true', async () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stderr: 'err\n', stdout: 'out\n' }),
     );
@@ -876,7 +881,7 @@ describe('runChildJob', () => {
     vi.mocked(spawnSync)
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet('abc123def456'));
-    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+    mockOpenThrottleState.tasks = [{ status: 'COMPLETED' }];
 
     const planId = '2f94f33c-562d-4a70-8c08-c6d9510317e5';
     const dir = createTempDir();
@@ -884,7 +889,7 @@ describe('runChildJob', () => {
       handoff: handoff(dir),
       planId,
       streamIteration: 3,
-      streamToCortex: true,
+      streamToOpenThrottle: true,
     };
     const { appendPlanOutput } = await import('../openthrottle-ralph.js');
     vi.mocked(appendPlanOutput).mockClear();
@@ -932,20 +937,23 @@ describe('runChildJob', () => {
       .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
       .mockReturnValueOnce(spawnSyncRet(commitSha));
 
-    mockCortexState.tasks = [{ status: 'COMPLETED' }, { status: 'PENDING' }];
+    mockOpenThrottleState.tasks = [
+      { status: 'COMPLETED' },
+      { status: 'PENDING' },
+    ];
 
     const input: ChildJobInput = {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
     };
-    mockCortexState.updatePlanStatusCalls = [];
+    mockOpenThrottleState.updatePlanStatusCalls = [];
     try {
       const result = await runChildJob(input);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.planCompleted).toBe(false);
       }
-      expect(mockCortexState.updatePlanStatusCalls).toEqual([]);
+      expect(mockOpenThrottleState.updatePlanStatusCalls).toEqual([]);
     } finally {
       rmSync(dir, { force: true, recursive: true });
     }

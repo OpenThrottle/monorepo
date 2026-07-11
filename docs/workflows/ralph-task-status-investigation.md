@@ -26,14 +26,14 @@ Traced the flow from agent output → parsing → DB update. The implementation 
 
 ## (3) Does `updateTaskStatus` get called and succeed?
 
-- **Call site:** In `ralph.ts`, after parsing: `for (const taskId of completeTaskIds) { await updateTaskStatus(cortexConfig, taskId, 'COMPLETED'); ... }`. Also used for IN_PROGRESS at start of iteration and in task-centric mode for COMPLETED.
-- **Implementation:** `tools/workflows/src/utils/cortex-ralph.ts`. Runs `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING ...` with `[status, id]`. Postgres `id` is UUID; comparison is case-insensitive, so lowercased task IDs from the parser are fine.
+- **Call site:** In `ralph.ts`, after parsing: `for (const taskId of completeTaskIds) { await updateTaskStatus(openthrottleConfig, taskId, 'COMPLETED'); ... }`. Also used for IN_PROGRESS at start of iteration and in task-centric mode for COMPLETED.
+- **Implementation:** `tools/workflows/src/utils/openthrottle-ralph.ts`. Runs `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING ...` with `[status, id]`. Postgres `id` is UUID; comparison is case-insensitive, so lowercased task IDs from the parser are fine.
 - **Observability:** On success, Ralph logs “Marked task &lt;id&gt; completed.” On failure (task not found or throw), it logs a warning. If tasks were not updating, either this loop was never entered (no IDs parsed) or the update failed (would see warning).
 - **Conclusion:** When `completeTaskIds` is non-empty, `updateTaskStatus` is invoked. Success/failure is visible from CLI logs.
 
 ---
 
-## (4) Does Cortex DB expect different status casing or enum?
+## (4) Does OpenThrottle DB expect different status casing or enum?
 
 - **Schema:** `databases/migrations/028_plan_task_status_enum.sql`. Column type is `plan_task_status` with values `'BACKLOG'`, `'BLOCKED'`, `'CANCELED'`, `'COMPLETED'`, `'IN_PROGRESS'`, `'PENDING'`, `'SKIPPED'` (uppercase).
 - **Ralph:** Passes `'COMPLETED'` and `'IN_PROGRESS'` (uppercase) to `updateTaskStatus` → Postgres. No casing mismatch.
@@ -46,7 +46,7 @@ Traced the flow from agent output → parsing → DB update. The implementation 
 - **Yes.** In `ralph.ts` (plan-centric branch, ~lines 151–187):
   - Each iteration fetches tasks for the plan and filters to `PENDING`, `IN_PROGRESS`, `BLOCKED`.
   - It picks the first IN_PROGRESS (resume) or else the first PENDING.
-  - If the chosen task is PENDING, it calls `updateTaskStatus(cortexConfig, taskForIteration.id, 'IN_PROGRESS')` before running the agent.
+  - If the chosen task is PENDING, it calls `updateTaskStatus(openthrottleConfig, taskForIteration.id, 'IN_PROGRESS')` before running the agent.
   - The prompt is then set to include: “Current task for this iteration: &lt;taskForIteration.id&gt;. When you complete it output &lt;ralph:task-complete&gt;&lt;id&gt;&lt;/ralph:task-complete&gt; …”
 - **Conclusion:** Plan-centric mode does set the first pending (or in-progress) task to IN_PROGRESS and passes its UUID in the prompt. No dependency on the agent having MCP for this step.
 
@@ -89,7 +89,7 @@ So even without the tag, if the agent signals COMPLETE, the task can be marked C
 
 - `tools/workflows/src/bin/ralph.ts` — main loop, prompt building, parsing, updateTaskStatus calls
 - `tools/workflows/src/utils/parsers.ts` — `parseRalphCompleteTaskSignals`, `isComplete`
-- `tools/workflows/src/utils/cortex-ralph.ts` — `updateTaskStatus`, `updatePlanStatus`
+- `tools/workflows/src/utils/openthrottle-ralph.ts` — `updateTaskStatus`, `updatePlanStatus`
 - `databases/migrations/028_plan_task_status_enum.sql` — status enum
 - `docs/workflows/ralph-design.md` — Plan-centric task status section
 - `tools/workflows/src/bin/run-iteration.ts` — stdout/stderr combine for both backends

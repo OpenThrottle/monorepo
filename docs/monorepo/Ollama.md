@@ -20,7 +20,7 @@ The monorepo uses [Caddy](https://caddyserver.com/) to expose local services wit
 | **Option B** (local domains) | `https://ollama.local`     | You use `api.local`, `developer.local`, `ollama.local` (add to `/etc/hosts`). |
 | **Option A** (path-based)    | `https://localhost/ollama` | You use a single origin with no `/etc/hosts` changes.                         |
 
-- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `cortex:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/README.md`.
+- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `openthrottle:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/README.md`.
 - Caddy config: `tools/caddy/Caddyfile` (Option B) and `tools/caddy/Caddyfile.path-based` (Option A). Run Caddy from repo root per `tools/caddy/README.md`.
 - **Trusting Caddy's certificate:** For HTTPS without certificate errors in browsers and Node/fetch, install Caddy's local CA: run **`caddy trust`** once (see [tools/caddy/README.md](../../tools/caddy/README.md) § Local HTTPS and trust store).
 
@@ -29,7 +29,7 @@ The monorepo uses [Caddy](https://caddyserver.com/) to expose local services wit
 When Ollama is behind Caddy, the browser or agent sends requests to the Caddy URL; Caddy forwards them to Ollama. Ollama sees the request and may enforce CORS via **`OLLAMA_ORIGINS`**. For requests to succeed:
 
 - **From browsers:** The `Origin` header is typically `https://ollama.local` (Option B) or `https://localhost` (Option A). Allow those in `OLLAMA_ORIGINS`.
-- **From Node/CLI agents** (cortex:import, LangChain, openthrottle-server): They often do not send `Origin`, but some runtimes do. Allowing the Caddy origins and the direct Ollama origin covers all cases.
+- **From Node/CLI agents** (openthrottle:import, LangChain, openthrottle-server): They often do not send `Origin`, but some runtimes do. Allowing the Caddy origins and the direct Ollama origin covers all cases.
 
 **Recommended for local dev:** set `OLLAMA_ORIGINS=*` (e.g. in `.zshrc` or `.env`) so Caddy and all agent origins are allowed. Restart `ollama serve` after changing.
 

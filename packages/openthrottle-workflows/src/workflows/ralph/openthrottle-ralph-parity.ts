@@ -5,7 +5,7 @@
  *
  * ## Not represented in GraphQL (transport / env)
  *
- * - `getCortexConfigOrExit`, `ensureCortexReachable`, `ensureDatabaseReachableOrExit` — connection
+ * - `getOpenThrottleConfigOrExit`, `ensureOpenThrottleReachable`, `ensureDatabaseReachableOrExit` — connection
  *   string and TCP health checks; the HTTP client uses server URL + auth instead.
  *
  * ## Optional GraphQL preflight (`getServerHealth`)

@@ -83,7 +83,7 @@ export class HealthService {
   }
 
   /**
-   * @description Returns server health: API (ok when invoked), Cortex DB, Redis, and WebSocket. Same shape as GraphQL serverHealth and REST GET /health.
+   * @description Returns server health: API (ok when invoked), OpenThrottle DB, Redis, and WebSocket. Same shape as GraphQL serverHealth and REST GET /health.
    */
   async getServerHealth(): Promise<ServerHealthResponse> {
     const [database, redis, websocket] = await Promise.all([

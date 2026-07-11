@@ -14,14 +14,14 @@ Use this doc for README, website, or pitch copy.
 
 ## What runs locally (OSS)
 
-| Component                      | Role                                                          | OSS / local                                  |
-| ------------------------------ | ------------------------------------------------------------- | -------------------------------------------- |
-| **Postgres** (with pgvector)   | OpenThrottle app DB + OpenThrottle (plans, tasks, embeddings) | OSS, runs locally (Docker or native)         |
-| **Redis**                      | Queues, caching                                               | OSS, runs locally                            |
-| **OpenThrottle server**        | API, GraphQL, queues, notifications                           | OSS (NestJS), runs locally                   |
-| **OpenThrottle developer app** | Dashboard for plans, queues, PRs                              | OSS (React Router), runs locally             |
-| **Cortex / openthrottle-mcp**  | Plans knowledge base, semantic search, MCP tools              | OSS, runs locally; connects to same Postgres |
-| **Ollama**                     | Local LLM and embedding models                                | OSS, runs locally; optional for embeddings   |
+| Component                           | Role                                                          | OSS / local                                  |
+| ----------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| **Postgres** (with pgvector)        | OpenThrottle app DB + OpenThrottle (plans, tasks, embeddings) | OSS, runs locally (Docker or native)         |
+| **Redis**                           | Queues, caching                                               | OSS, runs locally                            |
+| **OpenThrottle server**             | API, GraphQL, queues, notifications                           | OSS (NestJS), runs locally                   |
+| **OpenThrottle developer app**      | Dashboard for plans, queues, PRs                              | OSS (React Router), runs locally             |
+| **OpenThrottle / openthrottle-mcp** | Plans knowledge base, semantic search, MCP tools              | OSS, runs locally; connects to same Postgres |
+| **Ollama**                          | Local LLM and embedding models                                | OSS, runs locally; optional for embeddings   |
 
 All of the above are Open Source and can run on your machine or your own infrastructure. No vendor lock-in for core workflows.
 
@@ -31,9 +31,9 @@ All of the above are Open Source and can run on your machine or your own infrast
 
 ### Required for local-only
 
-- **Postgres** (OpenThrottle + Cortex).
+- **Postgres** (OpenThrottle + OpenThrottle).
 - **Redis** (queues).
-- **Ollama** (if you want semantic search / embeddings without any cloud API): set `OLLAMA_BASE_URL` (default `http://localhost:11434`) and optionally `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). The MCP server and Cortex ingest then use Ollama for embeddings; no API key needed. Note: Cortex currently stores 1536-dim vectors; if the Ollama model returns a different dimension, embeddings are skipped (see `databases/README.md` § Embedding dimension strategy). See also `docs/monorepo/Ollama.md`.
+- **Ollama** (if you want semantic search / embeddings without any cloud API): set `OLLAMA_BASE_URL` (default `http://localhost:11434`) and optionally `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). The MCP server and OpenThrottle ingest then use Ollama for embeddings; no API key needed. Note: OpenThrottle currently stores 1536-dim vectors; if the Ollama model returns a different dimension, embeddings are skipped (see `databases/README.md` § Embedding dimension strategy). See also `docs/monorepo/Ollama.md`.
 
 ### Optional (not required for local-only)
 
@@ -61,8 +61,8 @@ Smoke check: `API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrott
 ## References in this repo
 
 - **Run server + developer (minimal native path):** `docs/openthrottle/run-openthrottle-server-developer.md` — env, ports, `pnpm nx` targets, Postgres/Redis via `pnpm run database:start`.
-- **Cortex (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
-- **openthrottle-mcp (MCP server):** `packages/openthrottle-mcp/README.md` — Cortex via GraphQL; auth token and API URL.
+- **OpenThrottle (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
+- **openthrottle-mcp (MCP server):** `packages/openthrottle-mcp/README.md` — OpenThrottle via GraphQL; auth token and API URL.
 - **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, root `.env.default`.
 - **Local services and ports:** `docs/monorepo/local-services-and-ports.md`.
 - **Server / DB env:** Root `.env.default` (copy to `.env` for `pnpm run database:*`) and `applications/openthrottle-server/.env.default` (copy to `applications/openthrottle-server/.env` when running the API on the host).
