@@ -412,6 +412,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.getSkillAvailabilityToolDescription,
+    name: 'get_skill_availability',
+    parameters: asMcpParameters(Th.getSkillAvailabilityToolParameters),
+  })
+  getSkillAvailability(
+    args: Parameters<typeof Th.getSkillAvailabilityToolHandler>[0],
+  ): ReturnType<typeof Th.getSkillAvailabilityToolHandler> {
+    return Th.getSkillAvailabilityToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getSkillAvailabilityRuleSetToolDescription,
     name: 'get_skill_availability_rule_set',
     parameters: asMcpParameters(Th.getSkillAvailabilityRuleSetToolParameters),

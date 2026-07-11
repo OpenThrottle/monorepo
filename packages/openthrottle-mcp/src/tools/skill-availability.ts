@@ -18,6 +18,7 @@ import {
   AddSkillAvailabilityRuleDocument,
   DeleteSkillAvailabilityRuleSetDocument,
   RemoveSkillAvailabilityRuleDocument,
+  SkillAvailabilityDocument,
   SkillAvailabilityRuleSetDocument,
   UpdateSkillAvailabilityRuleDocument,
   UpsertSkillAvailabilityRuleSetDocument,
@@ -103,6 +104,73 @@ export async function getSkillAvailabilityRuleSetToolHandler(
       return {
         structuredContent: { ruleSet },
         text: `Skill-availability rule set: ${describeRuleSet(ruleSet)}`,
+      };
+    },
+  );
+}
+
+// ── get_skill_availability ───────────────────────────────────────────────────
+
+type ResolvedSkillAvailability = {
+  effectiveDisableModelInvocation: boolean;
+  provenance: string;
+  slug: string;
+  staticDisableModelInvocation: boolean | null;
+};
+
+type SkillAvailabilityResolution = {
+  skills: ResolvedSkillAvailability[];
+  totalCount: number;
+  warnings: string[];
+};
+
+export const getSkillAvailabilityToolParameters = z.object({
+  environment: z.enum(['ci', 'interactive', 'ralph']).optional(),
+  projectId: z.string().optional(),
+});
+
+export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
+
+export async function getSkillAvailabilityToolHandler(
+  args: z.infer<typeof getSkillAvailabilityToolParameters>,
+): Promise<GenericResult<SkillAvailabilityResolution>> {
+  const parsed = getSkillAvailabilityToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<SkillAvailabilityResolution>(
+    'get_skill_availability',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(
+        token,
+        SkillAvailabilityDocument,
+        {
+          environment: parsed.data.environment ?? null,
+          projectId: parsed.data.projectId ?? null,
+        },
+      );
+      const found = result?.skillAvailability;
+      if (!found) {
+        return null;
+      }
+
+      const resolution: SkillAvailabilityResolution = {
+        skills: found.skills.map((skill) => ({
+          effectiveDisableModelInvocation:
+            skill.effectiveDisableModelInvocation,
+          provenance: skill.provenance,
+          slug: skill.slug,
+          staticDisableModelInvocation:
+            skill.staticDisableModelInvocation ?? null,
+        })),
+        totalCount: found.totalCount,
+        warnings: found.warnings,
+      };
+      return {
+        structuredContent: resolution,
+        text: `Resolved ${resolution.totalCount} skill(s); ${resolution.warnings.length} warning(s).`,
       };
     },
   );

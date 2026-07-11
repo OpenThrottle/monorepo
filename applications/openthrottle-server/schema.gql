@@ -1719,6 +1719,47 @@ type ListSourcesResultObject {
 }
 
 """
+A single skill's resolved, per-context availability: its static frontmatter flag, the effective flag, and the decisive rung's provenance.
+"""
+type SkillAvailabilityResolvedSkillObject {
+  """
+  Resolved per-context flag: true ⇒ model auto-invocation suppressed. Human /skill invocation is never gated.
+  """
+  effectiveDisableModelInvocation: Boolean!
+
+  """
+  Decisive rung's provenance (closed grammar), e.g. frontmatter:true|false|unset, posture:deny, slug-allow:<slug>@<ruleId>, tag-deny:<tag>@<ruleId>.
+  """
+  provenance: String!
+
+  """Skill slug (the skill frontmatter `name`)."""
+  slug: String!
+
+  """
+  Static frontmatter `disable-model-invocation`. Tri-state: null = unset, true = suppressed, false = explicitly enabled.
+  """
+  staticDisableModelInvocation: Boolean
+}
+
+"""
+A project's resolved skill-availability universe for a given context (environment), plus resolve-time warnings.
+"""
+type SkillAvailabilityResolutionResult {
+  """
+  Resolved skills, in the project's ingested order (alphabetical by slug).
+  """
+  skills: [SkillAvailabilityResolvedSkillObject!]!
+
+  """Number of skills in the resolved universe."""
+  totalCount: Int!
+
+  """
+  Resolve-time warnings (e.g. unknown-tag:<tag>@<slug>), deduped. Empty for pure passthrough.
+  """
+  warnings: [String!]!
+}
+
+"""
 A single per-project skill-availability rule: tag/slug allow-deny lists, optionally scoped to an environment.
 """
 type SkillAvailabilityRuleObject {
@@ -2221,6 +2262,11 @@ type Query {
   List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.
   """
   listSources: ListSourcesResultObject!
+
+  """
+  Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated.
+  """
+  skillAvailability(projectId: ID, environment: String): SkillAvailabilityResolutionResult!
 
   """
   A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability.

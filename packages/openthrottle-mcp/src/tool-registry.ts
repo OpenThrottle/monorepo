@@ -268,6 +268,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.removeSkillTagToolHandler,
     ),
     defineTool(
+      'get_skill_availability',
+      Th.getSkillAvailabilityToolDescription,
+      Th.getSkillAvailabilityToolParameters,
+      Th.getSkillAvailabilityToolHandler,
+    ),
+    defineTool(
       'get_skill_availability_rule_set',
       Th.getSkillAvailabilityRuleSetToolDescription,
       Th.getSkillAvailabilityRuleSetToolParameters,

@@ -24,6 +24,19 @@ query SkillAvailabilityRuleSet($projectId: ID!) {
   }
 }
 
+query SkillAvailability($projectId: ID, $environment: String) {
+  skillAvailability(projectId: $projectId, environment: $environment) {
+    totalCount
+    warnings
+    skills {
+      slug
+      staticDisableModelInvocation
+      effectiveDisableModelInvocation
+      provenance
+    }
+  }
+}
+
 mutation UpsertSkillAvailabilityRuleSet($projectId: ID!, $posture: String!) {
   upsertSkillAvailabilityRuleSet(projectId: $projectId, posture: $posture) {
     ...SkillAvailabilityRuleSetFields
