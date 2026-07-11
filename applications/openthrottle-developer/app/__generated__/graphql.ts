@@ -5628,6 +5628,138 @@ export type SkillAvailabilityQuery = {
   };
 };
 
+export type SkillAvailabilityProjectsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SkillAvailabilityProjectsQuery = {
+  __typename?: 'Query';
+  projects: Array<{
+    __typename?: 'ProjectObject';
+    id: string;
+    name: string;
+    nxProjectName?: string | null;
+  }>;
+};
+
+export type SkillAvailabilityAuthoringRuleSetQueryVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+}>;
+
+export type SkillAvailabilityAuthoringRuleSetQuery = {
+  __typename?: 'Query';
+  skillAvailabilityRuleSet?: {
+    __typename?: 'SkillAvailabilityRuleSetObject';
+    posture: string;
+    rules: Array<{
+      __typename?: 'SkillAvailabilityRuleObject';
+      id: string;
+      environment?: string | null;
+      slugAllow: Array<string>;
+      slugDeny: Array<string>;
+      tagAllow: Array<string>;
+      tagDeny: Array<string>;
+    }>;
+  } | null;
+};
+
+export type SkillAvailabilityAuthoringVocabularyQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SkillAvailabilityAuthoringVocabularyQuery = {
+  __typename?: 'Query';
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{ __typename?: 'SkillTagObject'; id: string; tag: string }>;
+  };
+};
+
+export type UpsertSkillAvailabilityRuleSetMutationVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+  posture: Scalars['String']['input'];
+}>;
+
+export type UpsertSkillAvailabilityRuleSetMutation = {
+  __typename?: 'Mutation';
+  upsertSkillAvailabilityRuleSet: {
+    __typename?: 'SkillAvailabilityRuleSetObject';
+    posture: string;
+  };
+};
+
+export type DeleteSkillAvailabilityRuleSetMutationVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+}>;
+
+export type DeleteSkillAvailabilityRuleSetMutation = {
+  __typename?: 'Mutation';
+  deleteSkillAvailabilityRuleSet: boolean;
+};
+
+export type AddSkillAvailabilityRuleMutationVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+  input: SkillAvailabilityRuleInput;
+}>;
+
+export type AddSkillAvailabilityRuleMutation = {
+  __typename?: 'Mutation';
+  addSkillAvailabilityRule: {
+    __typename?: 'SkillAvailabilityRuleObject';
+    id: string;
+  };
+};
+
+export type UpdateSkillAvailabilityRuleMutationVariables = Exact<{
+  ruleId: Scalars['ID']['input'];
+  input: SkillAvailabilityRuleInput;
+}>;
+
+export type UpdateSkillAvailabilityRuleMutation = {
+  __typename?: 'Mutation';
+  updateSkillAvailabilityRule: {
+    __typename?: 'SkillAvailabilityRuleObject';
+    id: string;
+  };
+};
+
+export type RemoveSkillAvailabilityRuleMutationVariables = Exact<{
+  ruleId: Scalars['ID']['input'];
+}>;
+
+export type RemoveSkillAvailabilityRuleMutation = {
+  __typename?: 'Mutation';
+  removeSkillAvailabilityRule: boolean;
+};
+
+export type AddSkillTagMutationVariables = Exact<{
+  input: AddSkillTagInput;
+}>;
+
+export type AddSkillTagMutation = {
+  __typename?: 'Mutation';
+  addSkillTag: { __typename?: 'SkillTagObject'; id: string; tag: string };
+};
+
+export type RenameSkillTagMutationVariables = Exact<{
+  input: RenameSkillTagInput;
+}>;
+
+export type RenameSkillTagMutation = {
+  __typename?: 'Mutation';
+  renameSkillTag: { __typename?: 'SkillTagObject'; id: string; tag: string };
+};
+
+export type RemoveSkillTagMutationVariables = Exact<{
+  input: RemoveSkillTagInput;
+}>;
+
+export type RemoveSkillTagMutation = {
+  __typename?: 'Mutation';
+  removeSkillTag: boolean;
+};
+
 export type UsageDailyStatsRowFragment = {
   __typename?: 'DailyStatsObject';
   date: string;
@@ -13112,6 +13244,623 @@ export const SkillAvailabilityDocument = {
 } as unknown as DocumentNode<
   SkillAvailabilityQuery,
   SkillAvailabilityQueryVariables
+>;
+export const SkillAvailabilityProjectsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SkillAvailabilityProjects' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nxProjectName' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SkillAvailabilityProjectsQuery,
+  SkillAvailabilityProjectsQueryVariables
+>;
+export const SkillAvailabilityAuthoringRuleSetDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SkillAvailabilityAuthoringRuleSet' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillAvailabilityRuleSet' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'posture' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'rules' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'environment' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'slugAllow' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'slugDeny' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'tagAllow' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'tagDeny' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SkillAvailabilityAuthoringRuleSetQuery,
+  SkillAvailabilityAuthoringRuleSetQueryVariables
+>;
+export const SkillAvailabilityAuthoringVocabularyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SkillAvailabilityAuthoringVocabulary' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SkillAvailabilityAuthoringVocabularyQuery,
+  SkillAvailabilityAuthoringVocabularyQueryVariables
+>;
+export const UpsertSkillAvailabilityRuleSetDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpsertSkillAvailabilityRuleSet' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'posture' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'upsertSkillAvailabilityRuleSet' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'posture' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'posture' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'posture' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpsertSkillAvailabilityRuleSetMutation,
+  UpsertSkillAvailabilityRuleSetMutationVariables
+>;
+export const DeleteSkillAvailabilityRuleSetDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteSkillAvailabilityRuleSet' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteSkillAvailabilityRuleSet' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteSkillAvailabilityRuleSetMutation,
+  DeleteSkillAvailabilityRuleSetMutationVariables
+>;
+export const AddSkillAvailabilityRuleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddSkillAvailabilityRule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SkillAvailabilityRuleInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addSkillAvailabilityRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddSkillAvailabilityRuleMutation,
+  AddSkillAvailabilityRuleMutationVariables
+>;
+export const UpdateSkillAvailabilityRuleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateSkillAvailabilityRule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'ruleId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SkillAvailabilityRuleInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateSkillAvailabilityRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'ruleId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'ruleId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateSkillAvailabilityRuleMutation,
+  UpdateSkillAvailabilityRuleMutationVariables
+>;
+export const RemoveSkillAvailabilityRuleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveSkillAvailabilityRule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'ruleId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeSkillAvailabilityRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'ruleId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'ruleId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveSkillAvailabilityRuleMutation,
+  RemoveSkillAvailabilityRuleMutationVariables
+>;
+export const AddSkillTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddSkillTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddSkillTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addSkillTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AddSkillTagMutation, AddSkillTagMutationVariables>;
+export const RenameSkillTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RenameSkillTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RenameSkillTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'renameSkillTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RenameSkillTagMutation,
+  RenameSkillTagMutationVariables
+>;
+export const RemoveSkillTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveSkillTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveSkillTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeSkillTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveSkillTagMutation,
+  RemoveSkillTagMutationVariables
 >;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',
