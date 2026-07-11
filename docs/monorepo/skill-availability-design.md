@@ -16,7 +16,7 @@ or "under Ralph, use a different cut than interactive editing."
 
 ## Scope
 
-- **In**: computing, displaying, and exposing a per-context *effective*
+- **In**: computing, displaying, and exposing a per-context _effective_
   `disable-model-invocation` for every skill — tags, per-project rules, a pure resolver, a
   GraphQL/MCP surface, and developer-app display + authoring UI.
 - **Out (follow-on plan)**: a suggestion/task-injection engine that reads a plan's tasks and
@@ -24,12 +24,12 @@ or "under Ralph, use a different cut than interactive editing."
   plan's resolved candidate set.
 - **v1 is informational.** Nothing in v1 changes what an agent runtime auto-invokes.
   Enforcement — materializing resolved frontmatter into synced repos — is the plan's backlog
-  task and depends on the yaml *writer* this plan introduces.
+  task and depends on the yaml _writer_ this plan introduces.
 
 ## Invariants
 
 1. **Resolve-at-read.** The SSOT frontmatter under `.agents/skills/` is never rewritten by
-   resolution. (The backlog enforcement task writes only to synced *target* repos.)
+   resolution. (The backlog enforcement task writes only to synced _target_ repos.)
 2. **Human invocation is never gated.** All of this concerns model auto-invocation only.
 3. **No config ⇒ passthrough.** A project with no rules resolves every skill to its static
    frontmatter value. Zero-cost, zero-surprise; the common case.
@@ -39,12 +39,12 @@ or "under Ralph, use a different cut than interactive editing."
 
 ## Attribute model
 
-| Axis | v1 | Source |
-|------|----|--------|
-| `project` | **wired** | the OT project the caller asks about (`projectId`) |
-| `environment` | **wired** | caller-supplied `interactive \| ralph \| ci` (`as const`; default `interactive`). The server cannot sniff the caller's process env — each caller declares its own (Ralph passes `ralph`, the developer app `interactive`). |
-| `editor` | reserved-inert | nullable column exists; resolver ignores it |
-| `role` (persona) | reserved-inert | nullable column exists; resolver ignores it |
+| Axis             | v1             | Source                                                                                                                                                                                                                     |
+| ---------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project`        | **wired**      | the OT project the caller asks about (`projectId`)                                                                                                                                                                         |
+| `environment`    | **wired**      | caller-supplied `interactive \| ralph \| ci` (`as const`; default `interactive`). The server cannot sniff the caller's process env — each caller declares its own (Ralph passes `ralph`, the developer app `interactive`). |
+| `editor`         | reserved-inert | nullable column exists; resolver ignores it                                                                                                                                                                                |
+| `role` (persona) | reserved-inert | nullable column exists; resolver ignores it                                                                                                                                                                                |
 
 Rules reference skills by **tag** (primary) and **slug** (exceptions). Adding editor/role
 later is additive — no migration, no signature change.
@@ -57,17 +57,17 @@ later is additive — no migration, no signature change.
   hand-rolled parser cannot parse lists, and its docstring already recommends the migration.
   **Corpus-verified, not generically behavior-preserving**: the `yaml` package differs on
   edge cases the old parser documents (YAML 1.1 `yes/no/on/off` coercion, trailing comments,
-  quote escapes), so the regression test asserts identical parse output across the *actual
-  current corpus* (all skills, rules, personas) rather than claiming general equivalence.
+  quote escapes), so the regression test asserts identical parse output across the _actual
+  current corpus_ (all skills, rules, personas) rather than claiming general equivalence.
   This also buys the frontmatter writer the backlog enforcement task needs.
 - **Committed platform-default vocabulary**: an `as const` array in
   `@openthrottle/openthrottle-skills` (~17 seeds: github, git, terraform, infra, ci, nx,
   openthrottle, database, ui, frontend, backend, testing, docs, commit, pr-review, planning —
-  finalized during the tagging pass). This is the **offline CI SSOT** for *this monorepo's
-  own corpus*.
+  finalized during the tagging pass). This is the **offline CI SSOT** for _this monorepo's
+  own corpus_.
 - **Two validation layers, deliberately split.** The shared `skillFrontmatterSchema` models
   `tags` **permissively** (array of kebab-case strings) — it runs at ingest for external
-  workspace repos too, where a strict enum over *this* repo's const would hard-fail repos we
+  workspace repos too, where a strict enum over _this_ repo's const would hard-fail repos we
   don't control, violating invariant 4. The **committed-const enum check is a separate,
   CI-only validation** (wired into `monorepo:check-agent-assets-ssot`) applied only to
   `.agents/skills/` in this monorepo. Ingest never enum-validates tags; resolve-time
@@ -169,18 +169,22 @@ repository (the monorepo project covers this repo's 46 — the dogfood path). Th
     provenance: string                                   // grammar below
   }>
   warnings: string[]   // e.g. 'unknown-tag:<tag>@<slug>' — invariant 4's surfacing channel,
-                       // emitted at resolve time
+                       // emitted at resolve time, deduped. Emitted only when the tag rung is
+                       // actually evaluated (a rule set exists and the slug rung was not
+                       // decisive) — pure passthrough emits zero warnings, keeping the
+                       // no-config path zero-cost per invariant 3. Rule-side references to
+                       // unknown tags simply never match and produce no warning.
 }
 ```
 
 **Provenance grammar** (closed set; unit tests assert exact strings):
 
-| decisive rung | provenance |
-|---|---|
-| frontmatter (rung 4) | `frontmatter:true` \| `frontmatter:false` \| `frontmatter:unset` |
-| posture deny (rung 3) | `posture:deny` (allow-posture falls through, never decides) |
-| slug (rung 1) | `slug-allow:<slug>@<ruleId>` \| `slug-deny:<slug>@<ruleId>` |
-| tag (rung 2) | `tag-allow:<tag>@<ruleId>` \| `tag-deny:<tag>@<ruleId>` |
+| decisive rung         | provenance                                                       |
+| --------------------- | ---------------------------------------------------------------- |
+| frontmatter (rung 4)  | `frontmatter:true` \| `frontmatter:false` \| `frontmatter:unset` |
+| posture deny (rung 3) | `posture:deny` (allow-posture falls through, never decides)      |
+| slug (rung 1)         | `slug-allow:<slug>@<ruleId>` \| `slug-deny:<slug>@<ruleId>`      |
+| tag (rung 2)          | `tag-allow:<tag>@<ruleId>` \| `tag-deny:<tag>@<ruleId>`          |
 
 When several tags/rules survive conflict resolution at a rung, the named tag (and its rule)
 is the **alphabetically first** among the winning-polarity matches — deterministic and
@@ -195,7 +199,7 @@ test asserts. The same shape is what the follow-on suggestion engine consumes.
 ## Surfacing (developer app, via GraphQL)
 
 - **Read view**: effective value prominent in the Skills table; static value + provenance as
-  secondary detail. Quick win lands first: the *static* flag as a GraphQL field + table
+  secondary detail. Quick win lands first: the _static_ flag as a GraphQL field + table
   column (tri-state), independent of rules/vocab.
 - **Authoring UI**: per-project rules editor (posture, tag allow/deny, slug exceptions,
   environment qualifier) and a workspace vocabulary manager, both over the GraphQL

@@ -88,6 +88,22 @@ export { toProjectSkillInputs } from './project-skill-inputs.ts';
 export type { ProjectSkillInput } from './project-skill-inputs.ts';
 
 /** @public */
+export {
+  resolveSkillAvailability,
+  SKILL_AVAILABILITY_ENVIRONMENTS,
+} from './resolve-skill-availability.ts';
+export type {
+  ResolvedSkillAvailability,
+  SkillAvailabilityContext,
+  SkillAvailabilityEnvironment,
+  SkillAvailabilityInput,
+  SkillAvailabilityPosture,
+  SkillAvailabilityResult,
+  SkillAvailabilityRule,
+  SkillAvailabilityRuleSet,
+} from './resolve-skill-availability.ts';
+
+/** @public */
 export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';
 export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.ts';
 
