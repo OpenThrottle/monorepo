@@ -11,7 +11,8 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
 import { formatPromptType } from '~/routing/prompts/utils/formatters';
-import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
+import { SKILLS_MODEL_INVOCATION_COPY } from '~/routing/skills/data/data.copy';
+import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']
@@ -67,22 +68,42 @@ export const skillsTableColumns: ColumnDef<
   {
     accessorKey: 'modelInvocation',
     cell: ({ row }) => {
-      const badge = getModelInvocationBadge(
-        row.original.disableModelInvocation,
+      const { badge, isOverridden } = getResolvedModelInvocationDisplay(
+        row.original,
       );
 
       return (
         <div className="p-2">
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <Badge color={badge.color} size="xs">
-                {badge.label}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs" side="top">
-              {badge.tooltip}
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild={true}>
+                <Badge color={badge.color} size="xs">
+                  {badge.label}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs" side="top">
+                {badge.tooltip}
+              </TooltipContent>
+            </Tooltip>
+            {isOverridden ? (
+              <Tooltip>
+                <TooltipTrigger asChild={true}>
+                  <span
+                    aria-label={
+                      SKILLS_MODEL_INVOCATION_COPY.overrideIndicatorLabel
+                    }
+                    className="cursor-help text-xs leading-none font-bold text-amber-500"
+                    data-testid="model-invocation-override"
+                  >
+                    *
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs" side="top">
+                  {SKILLS_MODEL_INVOCATION_COPY.overrideTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
         </div>
       );
     },

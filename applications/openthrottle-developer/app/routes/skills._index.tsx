@@ -6,7 +6,10 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { ProjectSkillsDocument } from '~/__generated__/graphql';
+import {
+  ProjectSkillsDocument,
+  SkillAvailabilityDocument,
+} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import { SkillsTable } from '~/routing/skills/components/SkillsTable';
@@ -15,6 +18,10 @@ import {
   mergeRepoSkillsWithProjectSkills,
   type ProjectSkillFlagRow,
 } from '~/routing/skills/utils/merge-project-skills';
+import {
+  mergeRepoSkillsWithSkillAvailability,
+  type SkillAvailabilityRow,
+} from '~/routing/skills/utils/merge-skill-availability';
 import type { Route } from '@/app/routes/+types/skills._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -44,6 +51,38 @@ const loadProjectSkillFlags = async (
   }
 };
 
+/**
+ * @description Fetches the per-context resolved availability (effective flag +
+ * provenance) from the `skillAvailability` surface (`environment: interactive`,
+ * the developer-app context). Resolve-time `warnings` are logged server-side
+ * and dropped from the UI: there is no plain shadcn `Alert`/callout primitive
+ * (only the `AlertDialog` modal), so a dismissable in-page callout is not
+ * trivially available — log-and-drop per the design's surfacing guidance.
+ * Resilient by contract: any failure yields empty resolved rows so the loader
+ * silently falls back to the static-only view. Never throws.
+ */
+const loadSkillAvailability = async (
+  request: Request,
+): Promise<readonly SkillAvailabilityRow[]> => {
+  try {
+    const { skillAvailability } = await executeGraphqlWithAuth(
+      request,
+      SkillAvailabilityDocument,
+      { environment: 'interactive' },
+    );
+
+    if (skillAvailability.warnings.length > 0) {
+      console.warn(
+        `[skills] skillAvailability resolve warnings: ${skillAvailability.warnings.join(', ')}`,
+      );
+    }
+
+    return skillAvailability.skills;
+  } catch {
+    return [];
+  }
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const { discoverRepoSkills } =
     await import('~/routing/agents/data/discover-repo-skills.server');
@@ -53,8 +92,19 @@ export const loader = async (args: Route.LoaderArgs) => {
   const monorepoRoot = getMonorepoRoot();
   const diskEntries = discoverRepoSkills(monorepoRoot);
 
-  const projectSkills = await loadProjectSkillFlags(args.request);
-  const entries = mergeRepoSkillsWithProjectSkills(diskEntries, projectSkills);
+  const [projectSkills, availability] = await Promise.all([
+    loadProjectSkillFlags(args.request),
+    loadSkillAvailability(args.request),
+  ]);
+
+  const withStatic = mergeRepoSkillsWithProjectSkills(
+    diskEntries,
+    projectSkills,
+  );
+  const entries = mergeRepoSkillsWithSkillAvailability(
+    withStatic,
+    availability,
+  );
 
   return { entries };
 };

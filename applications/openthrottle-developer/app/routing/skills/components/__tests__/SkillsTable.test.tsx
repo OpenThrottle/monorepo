@@ -145,4 +145,104 @@ describe('SkillsTable Component', () => {
       expect(component.getByText('Manual only')).toBeInTheDocument();
     });
   });
+
+  describe('Model invocation column (effective-first, resolved)', () => {
+    test('shows the effective state and an override indicator when effective diverges from static', () => {
+      const component = renderRoutesStub(
+        <SkillsTable
+          entries={[
+            {
+              disableModelInvocation: true,
+              effectiveDisableModelInvocation: false,
+              layout: 'agents',
+              provenance: 'tag-allow:github@rule-1',
+              repoRelativePath: '.agents/skills/git-commit/SKILL.md',
+              slug: 'git-commit',
+              summary: 'Commit skill re-enabled by a tag rule.',
+              tags: ['git'],
+            },
+          ]}
+        />,
+      );
+
+      // Effective (false → "Auto enabled") wins over the static "Manual only".
+      expect(component.getByText('Auto enabled')).toBeInTheDocument();
+      expect(component.queryByText('Manual only')).not.toBeInTheDocument();
+      expect(
+        component.getByTestId('model-invocation-override'),
+      ).toBeInTheDocument();
+    });
+
+    test('shows no override indicator when effective matches the normalized static value', () => {
+      const component = renderRoutesStub(
+        <SkillsTable
+          entries={[
+            {
+              disableModelInvocation: undefined,
+              effectiveDisableModelInvocation: false,
+              layout: 'agents',
+              provenance: 'frontmatter:unset',
+              repoRelativePath: '.agents/skills/planner/SKILL.md',
+              slug: 'planner',
+              summary: 'Planner.',
+              tags: undefined,
+            },
+          ]}
+        />,
+      );
+
+      expect(component.getByText('Auto enabled')).toBeInTheDocument();
+      expect(
+        component.queryByTestId('model-invocation-override'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('no-config invariant: frontmatter provenance renders the same state as the static-only path (no indicator)', () => {
+      // Passthrough result: effective === (static ?? false) for every skill.
+      const component = renderRoutesStub(
+        <SkillsTable
+          entries={[
+            {
+              disableModelInvocation: true,
+              effectiveDisableModelInvocation: true,
+              layout: 'agents',
+              provenance: 'frontmatter:true',
+              repoRelativePath: '.agents/skills/guarded/SKILL.md',
+              slug: 'guarded',
+              summary: 'Statically guarded, no rules.',
+              tags: undefined,
+            },
+          ]}
+        />,
+      );
+
+      // Same badge the static path would show, and crucially no override mark.
+      expect(component.getByText('Manual only')).toBeInTheDocument();
+      expect(
+        component.queryByTestId('model-invocation-override'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('falls back to the static tri-state badge when no resolved value is present', () => {
+      const component = renderRoutesStub(
+        <SkillsTable
+          entries={[
+            {
+              disableModelInvocation: true,
+              layout: 'agents',
+              repoRelativePath: '.agents/skills/legacy/SKILL.md',
+              slug: 'legacy',
+              summary: 'No availability resolved.',
+              tags: undefined,
+            },
+          ]}
+        />,
+      );
+
+      expect(component.getByText('Manual only')).toBeInTheDocument();
+      expect(
+        component.queryByTestId('model-invocation-override'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

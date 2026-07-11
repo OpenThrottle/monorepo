@@ -45,3 +45,37 @@ export const getModelInvocationBadge = (
       'disable-model-invocation is unset — defaults to model-invocable (automatic invocation allowed).',
   };
 };
+
+/**
+ * @description Effective-first display for the "Model invocation" table column.
+ * When the entry carries a resolved `effectiveDisableModelInvocation` (the
+ * `skillAvailability` surface returned a row), the badge reflects the EFFECTIVE
+ * state and `isOverridden` flags when it diverges from the static frontmatter
+ * value (normalized `unset → false`). When no resolved value is present the
+ * badge falls back to the tri-state static value — exactly today's behavior.
+ * DISPLAY ONLY — no filtering or gating.
+ */
+export interface ResolvedModelInvocationDisplay {
+  readonly badge: ModelInvocationBadge;
+  readonly hasResolved: boolean;
+  readonly isOverridden: boolean;
+}
+
+export const getResolvedModelInvocationDisplay = (
+  entry: Pick<
+    RepoSkillEntry,
+    'disableModelInvocation' | 'effectiveDisableModelInvocation'
+  >,
+): ResolvedModelInvocationDisplay => {
+  const hasResolved = entry.effectiveDisableModelInvocation !== undefined;
+  const staticNormalized = entry.disableModelInvocation ?? false;
+  const effective = entry.effectiveDisableModelInvocation ?? staticNormalized;
+
+  return {
+    badge: getModelInvocationBadge(
+      hasResolved ? effective : entry.disableModelInvocation,
+    ),
+    hasResolved,
+    isOverridden: hasResolved && effective !== staticNormalized,
+  };
+};

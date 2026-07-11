@@ -2184,6 +2184,8 @@ export type Query = {
   serviceAccountCredentials: Array<ServiceAccountCredentialObject>;
   /** List all service accounts (admin, human only). */
   serviceAccounts: Array<ServiceAccountObject>;
+  /** Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated. */
+  skillAvailability: SkillAvailabilityResolutionResult;
   /** A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability. */
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
@@ -2428,6 +2430,11 @@ export type QueryServiceAccountArgs = {
 
 export type QueryServiceAccountCredentialsArgs = {
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type QuerySkillAvailabilityArgs = {
+  environment?: InputMaybe<Scalars['String']['input']>;
+  projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type QuerySkillAvailabilityRuleSetArgs = {
@@ -2879,6 +2886,30 @@ export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
   success: Scalars['Boolean']['output'];
+};
+
+/** A project's resolved skill-availability universe for a given context (environment), plus resolve-time warnings. */
+export type SkillAvailabilityResolutionResult = {
+  __typename?: 'SkillAvailabilityResolutionResult';
+  /** Resolved skills, in the project's ingested order (alphabetical by slug). */
+  skills: Array<SkillAvailabilityResolvedSkillObject>;
+  /** Number of skills in the resolved universe. */
+  totalCount: Scalars['Int']['output'];
+  /** Resolve-time warnings (e.g. unknown-tag:<tag>@<slug>), deduped. Empty for pure passthrough. */
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** A single skill's resolved, per-context availability: its static frontmatter flag, the effective flag, and the decisive rung's provenance. */
+export type SkillAvailabilityResolvedSkillObject = {
+  __typename?: 'SkillAvailabilityResolvedSkillObject';
+  /** Resolved per-context flag: true ⇒ model auto-invocation suppressed. Human /skill invocation is never gated. */
+  effectiveDisableModelInvocation: Scalars['Boolean']['output'];
+  /** Decisive rung's provenance (closed grammar), e.g. frontmatter:true|false|unset, posture:deny, slug-allow:<slug>@<ruleId>, tag-deny:<tag>@<ruleId>. */
+  provenance: Scalars['String']['output'];
+  /** Skill slug (the skill frontmatter `name`). */
+  slug: Scalars['String']['output'];
+  /** Static frontmatter `disable-model-invocation`. Tri-state: null = unset, true = suppressed, false = explicitly enabled. */
+  staticDisableModelInvocation?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type SkillAvailabilityRuleInput = {
@@ -5572,6 +5603,27 @@ export type ProjectSkillsQuery = {
       slug: string;
       staticDisableModelInvocation?: boolean | null;
       tags: Array<string>;
+    }>;
+  };
+};
+
+export type SkillAvailabilityQueryVariables = Exact<{
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type SkillAvailabilityQuery = {
+  __typename?: 'Query';
+  skillAvailability: {
+    __typename?: 'SkillAvailabilityResolutionResult';
+    warnings: Array<string>;
+    totalCount: number;
+    skills: Array<{
+      __typename?: 'SkillAvailabilityResolvedSkillObject';
+      slug: string;
+      staticDisableModelInvocation?: boolean | null;
+      effectiveDisableModelInvocation: boolean;
+      provenance: string;
     }>;
   };
 };
@@ -12968,6 +13020,99 @@ export const ProjectSkillsDocument = {
     },
   ],
 } as unknown as DocumentNode<ProjectSkillsQuery, ProjectSkillsQueryVariables>;
+export const SkillAvailabilityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SkillAvailability' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'environment' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillAvailability' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'environment' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'environment' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'staticDisableModelInvocation',
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'effectiveDisableModelInvocation',
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'provenance' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SkillAvailabilityQuery,
+  SkillAvailabilityQueryVariables
+>;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',
   definitions: [
