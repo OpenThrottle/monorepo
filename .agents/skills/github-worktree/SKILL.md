@@ -1,7 +1,6 @@
 ---
 name: github-worktree
 description: Create a branch in a reserved monorepo worktree and open it in Cursor for parallel development. USE WHEN the user runs /github/worktree, needs to work on multiple branches simultaneously, or wants an isolated hotfix or feature worktree (monorepo, monorepo-hotfix, monorepo-worktree-one/two/three).
-tags: [git]
 disable-model-invocation: true
 ---
 

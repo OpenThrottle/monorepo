@@ -1,4 +1,8 @@
 import type { AgentAssetIngestRecord } from './map-agent-assets-for-ingest.ts';
+import {
+  mergeSkillTags,
+  type SkillTagOverlayMap,
+} from './skill-tag-overlays.ts';
 
 /**
  * A single skill's server-queryable projection, derived from an ingest record.
@@ -28,12 +32,19 @@ const slugFromLabels = (record: AgentAssetIngestRecord): string | undefined => {
 /**
  * @description Projects skill ingest records to the per-project skill rows the
  * availability surface queries. Filters to `skills` records that carry a slug,
- * defaults absent `tags` to an empty list, and preserves the tri-state
- * `disableModelInvocation` flag. Non-skill records are dropped.
+ * merges each skill's frontmatter `tags` with its overlay `tags` (order-preserving
+ * union), and preserves the tri-state `disableModelInvocation` flag. Non-skill
+ * records are dropped.
+ *
+ * `overlays` is the monorepo-local per-slug attachment map (from the repo-root
+ * skill-tag overlay file). Omit it for external workspace repos, whose tags come
+ * from frontmatter alone — behaviour then reduces to the prior frontmatter-only
+ * projection.
  * @public
  */
 export const toProjectSkillInputs = (
   records: readonly AgentAssetIngestRecord[],
+  overlays?: SkillTagOverlayMap,
 ): readonly ProjectSkillInput[] => {
   const inputs: ProjectSkillInput[] = [];
 
@@ -51,7 +62,7 @@ export const toProjectSkillInputs = (
       disableModelInvocation: record.disableModelInvocation,
       slug,
       sourcePath: record.filePath,
-      tags: record.tags ?? [],
+      tags: mergeSkillTags(record.tags, overlays?.[slug]?.tags),
     });
   }
 

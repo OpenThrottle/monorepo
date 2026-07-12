@@ -1,7 +1,6 @@
 ---
 name: nx-run-tasks
 description: Helps with running tasks in an Nx workspace. USE WHEN the user wants to execute build, test, lint, serve, or run any other tasks defined in the workspace.
-tags: [nx]
 ---
 
 You can run tasks with Nx in the following way.

@@ -5,12 +5,18 @@
 
 /* eslint-disable no-await-in-loop -- sequential per-file upsert + embedding refresh is intentional */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
   collectAgentAssetsForIngest,
+  parseSkillTagOverlayFile,
+  SKILL_TAG_OVERLAYS_FILENAME,
   toProjectSkillInputs,
 } from '@openthrottle/openthrottle-skills';
+import type { SkillTagOverlayMap } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
 import {
@@ -140,9 +146,10 @@ const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
 const reconcileDogfoodProjectSkills = async (
   client: Client,
   records: Parameters<typeof toProjectSkillInputs>[0],
+  overlays: SkillTagOverlayMap,
 ): Promise<{ deleted: number; upserted: number }> => {
   const projectId = await resolveDogfoodProjectId(client);
-  const inputs = toProjectSkillInputs(records);
+  const inputs = toProjectSkillInputs(records, overlays);
 
   for (const input of inputs) {
     await client.query(
@@ -183,6 +190,9 @@ const reconcileDogfoodProjectSkills = async (
 
 const main = async (): Promise<void> => {
   const monorepoRoot = process.cwd();
+  const overlayFile = parseSkillTagOverlayFile(
+    readFileSync(join(monorepoRoot, SKILL_TAG_OVERLAYS_FILENAME), 'utf8'),
+  );
   const { records, validation } = collectAgentAssetsForIngest({
     monorepoRoot,
   });
@@ -343,6 +353,7 @@ const main = async (): Promise<void> => {
       const projectSkills = await reconcileDogfoodProjectSkills(
         client,
         records,
+        overlayFile.overlays,
       );
       console.log(
         `  project_skills reconciled: ${projectSkills.upserted} upserted, ${projectSkills.deleted} removed`,
