@@ -14,8 +14,19 @@ export type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */
-export { DEFAULT_SKILL_TAG_VOCABULARY } from './default-skill-tag-vocabulary.ts';
-export type { DefaultSkillTag } from './default-skill-tag-vocabulary.ts';
+export {
+  DEFAULT_DOMAIN_TAG_VOCABULARY,
+  DEFAULT_PHASE_TAG_VOCABULARY,
+  DEFAULT_SKILL_TAG_VOCABULARY,
+  DEFAULT_TAG_VOCABULARY_SEED,
+} from './default-skill-tag-vocabulary.ts';
+export type {
+  DefaultDomainTag,
+  DefaultPhaseTag,
+  DefaultSkillTag,
+  DefaultTagVocabularyEntry,
+  SkillTagDimension,
+} from './default-skill-tag-vocabulary.ts';
 
 /** @public */
 export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
