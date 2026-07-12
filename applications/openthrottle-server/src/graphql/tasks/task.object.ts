@@ -14,6 +14,12 @@ export class TaskObject {
   @Field(() => String, { nullable: true })
   category!: string | null;
 
+  @Field(() => Date, {
+    description: `Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed.`,
+    nullable: true,
+  })
+  completedAt!: Date | null;
+
   @Field(() => Date)
   createdAt!: Date;
 

@@ -235,7 +235,7 @@ describe('TasksService', () => {
       expect(promoted).toBe(true);
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
         { id: planId, status: Not('IN_PROGRESS') },
-        { status: 'IN_PROGRESS' },
+        { completedAt: null, status: 'IN_PROGRESS' },
       );
     });
 
@@ -252,7 +252,7 @@ describe('TasksService', () => {
       expect(promoted).toBe(false);
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
         { id: planId, status: Not('IN_PROGRESS') },
-        { status: 'IN_PROGRESS' },
+        { completedAt: null, status: 'IN_PROGRESS' },
       );
     });
 
@@ -292,7 +292,7 @@ describe('TasksService', () => {
       });
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
         { id: planId, status: 'IN_PROGRESS' },
-        { status: 'COMPLETED' },
+        { completedAt: expect.any(Date), status: 'COMPLETED' },
       );
     });
 

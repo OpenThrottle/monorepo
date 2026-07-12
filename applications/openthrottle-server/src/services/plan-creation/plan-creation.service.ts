@@ -65,6 +65,7 @@ export class PlanCreationService {
     assignee: string | null;
     author: string;
     category: string;
+    completedAt: Date | null;
     description: string | null;
     project: string | null;
     projectId: string | null;
@@ -95,16 +96,18 @@ export class PlanCreationService {
     }
 
     const parsedRunConfig = parsePlanRunConfigJson(input.runConfigJson);
+    const status = (input.status ?? 'PENDING').toUpperCase();
 
     return {
       assignee: normalizeAssignee(input.assignee ?? null),
       author,
       category,
+      completedAt: status === 'COMPLETED' ? new Date() : null,
       description: input.description ?? null,
       project: input.project ?? null,
       projectId: input.projectId ?? null,
       runConfig: parsedRunConfig ?? getDefaultPlanRunConfigStorage(),
-      status: (input.status ?? 'PENDING').toUpperCase(),
+      status,
       summary: input.summary ?? null,
       title,
     };

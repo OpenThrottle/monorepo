@@ -292,6 +292,14 @@ export async function updatePlanStatusPostgres(
   const client = new pg.Client({ connectionString });
   await client.connect();
   try {
+    // Stamp completed_at only on transition into COMPLETED; clear when leaving; never overwrite.
+    const completedAtSql = `
+      completed_at = CASE
+        WHEN UPPER($1::text) = 'COMPLETED' AND UPPER(status) <> 'COMPLETED' THEN NOW()
+        WHEN UPPER($1::text) <> 'COMPLETED' AND UPPER(status) = 'COMPLETED' THEN NULL
+        ELSE completed_at
+      END`;
+
     if (status === 'IN_PROGRESS') {
       const res = await client.query<{
         author: string;
@@ -304,7 +312,7 @@ export async function updatePlanStatusPostgres(
         title: string;
         updated_at: string;
       }>(
-        `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 AND status != 'IN_PROGRESS' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
+        `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 AND status != 'IN_PROGRESS' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
         [status, planId],
       );
       const row = res.rows[0];
@@ -332,7 +340,7 @@ export async function updatePlanStatusPostgres(
       title: string;
       updated_at: string;
     }>(
-      `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
+      `UPDATE plans SET status = $1, ${completedAtSql}, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
       [status, planId],
     );
     const row = res.rows[0];
@@ -362,6 +370,7 @@ export async function updateTaskStatusPostgres(
   const client = new pg.Client({ connectionString });
   await client.connect();
   try {
+    // Stamp completed_at only on transition into COMPLETED; clear when leaving; never overwrite.
     const res = await client.query<{
       category: string | null;
       created_at: string;
@@ -374,7 +383,15 @@ export async function updateTaskStatusPostgres(
       title: string;
       updated_at: string;
     }>(
-      `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at`,
+      `UPDATE tasks SET status = $1,
+        completed_at = CASE
+          WHEN UPPER($1::text) = 'COMPLETED' AND UPPER(status) <> 'COMPLETED' THEN NOW()
+          WHEN UPPER($1::text) <> 'COMPLETED' AND UPPER(status) = 'COMPLETED' THEN NULL
+          ELSE completed_at
+        END,
+        updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at`,
       [status, id],
     );
     const row = res.rows[0];

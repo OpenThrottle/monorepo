@@ -107,6 +107,12 @@ describe('DashboardDailyStatsModal Component', () => {
         component.queryByText(DAILY_STATS_MODAL_COPY.mostRecentHint),
       ).not.toBeInTheDocument();
     });
+
+    test('renders the completion attribution caveat', () => {
+      expect(
+        component.getByText(DAILY_STATS_MODAL_COPY.completionAttributionCaveat),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('when no date param is supplied (Expand chart details entry)', () => {

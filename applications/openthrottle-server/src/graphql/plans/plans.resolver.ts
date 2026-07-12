@@ -31,6 +31,7 @@ import {
   PlansService,
   PlanRunsService,
   planRunConfigFromPlanStorage,
+  resolveCompletedAtForStatusChange,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   TasksService,
@@ -581,7 +582,13 @@ export class PlansResolver {
         input.status,
       );
       if (change) {
+        const previousStatus = entity.status;
         entity.status = change.nextStatus;
+        entity.completedAt = resolveCompletedAtForStatusChange({
+          currentCompletedAt: entity.completedAt,
+          nextStatus: change.nextStatus,
+          previousStatus,
+        });
         touched = true;
       }
     }

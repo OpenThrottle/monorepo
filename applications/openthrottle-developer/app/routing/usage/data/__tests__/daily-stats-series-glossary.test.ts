@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { USAGE_DAILY_STATS_SERIES } from '../daily-stats-series-glossary';
+import {
+  USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
+  USAGE_DAILY_STATS_SERIES,
+} from '../daily-stats-series-glossary';
 
 describe('daily-stats-series-glossary', () => {
   test('lists all six series keys used in daily stats chart', () => {
@@ -19,5 +22,9 @@ describe('daily-stats-series-glossary', () => {
       expect(row.label.length).toBeGreaterThan(0);
       expect(row.description.length).toBeGreaterThan(0);
     }
+  });
+
+  test('completion attribution caveat is non-empty', () => {
+    expect(USAGE_COMPLETION_ATTRIBUTION_CAVEAT.length).toBeGreaterThan(0);
   });
 });

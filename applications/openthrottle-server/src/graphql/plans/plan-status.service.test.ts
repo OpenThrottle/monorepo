@@ -133,8 +133,16 @@ describe('PlanStatusService', () => {
 
   describe('setStatus', () => {
     test('persists and returns the updated plan', async () => {
-      const planToUpdate = { ...mockPlan, status: 'PENDING' };
-      const saved = { ...planToUpdate, status: 'COMPLETED' };
+      const planToUpdate = {
+        ...mockPlan,
+        completedAt: null,
+        status: 'PENDING',
+      };
+      const saved = {
+        ...planToUpdate,
+        completedAt: new Date('2026-07-10T12:00:00.000Z'),
+        status: 'COMPLETED',
+      };
       repo.findOne.mockResolvedValue(planToUpdate);
       repo.save.mockResolvedValue(saved);
 
@@ -142,7 +150,65 @@ describe('PlanStatusService', () => {
 
       expect(result?.status).toBe('COMPLETED');
       expect(repo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: mockPlan.id, status: 'COMPLETED' }),
+        expect.objectContaining({
+          completedAt: expect.any(Date),
+          id: mockPlan.id,
+          status: 'COMPLETED',
+        }),
+      );
+    });
+
+    test('stamps completedAt when transitioning into COMPLETED', async () => {
+      const planToUpdate = {
+        ...mockPlan,
+        completedAt: null,
+        status: 'IN_PROGRESS',
+      };
+      repo.findOne.mockResolvedValue(planToUpdate);
+      repo.save.mockImplementation(async (e) => e);
+
+      await service.setStatus(mockPlan.id, 'COMPLETED');
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          completedAt: expect.any(Date),
+          status: 'COMPLETED',
+        }),
+      );
+    });
+
+    test('does not overwrite completedAt on idempotent COMPLETED status', async () => {
+      const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+      repo.findOne.mockResolvedValue({
+        ...mockPlan,
+        completedAt: existingCompletedAt,
+        status: 'COMPLETED',
+      });
+
+      const result = await service.setStatus(mockPlan.id, 'completed');
+
+      expect(result?.completedAt).toBe(existingCompletedAt);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    test('clears completedAt when leaving COMPLETED', async () => {
+      const existingCompletedAt = new Date('2026-06-01T08:00:00.000Z');
+      const planToUpdate = {
+        ...mockPlan,
+        completedAt: existingCompletedAt,
+        status: 'COMPLETED',
+      };
+      repo.findOne.mockResolvedValue(planToUpdate);
+      repo.save.mockImplementation(async (e) => e);
+
+      // PENDING is allowed from COMPLETED via setStatus (IN_PROGRESS is not).
+      await service.setStatus(mockPlan.id, 'PENDING');
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          completedAt: null,
+          status: 'PENDING',
+        }),
       );
     });
 
@@ -244,7 +310,7 @@ describe('PlanStatusService', () => {
       expect(result.planStatusAfter).toBe('PENDING');
       expect(repo.update).toHaveBeenCalledWith(
         { id: mockPlan.id },
-        { status: 'PENDING' },
+        { completedAt: null, status: 'PENDING' },
       );
       expect(mockTaskUpdateQueryBuilder.set).toHaveBeenCalledWith({
         status: 'PENDING',
@@ -306,7 +372,7 @@ describe('PlanStatusService', () => {
       expect(result.planStatusAfter).toBe('PENDING');
       expect(repo.update).toHaveBeenCalledWith(
         { id: mockPlan.id },
-        { status: 'PENDING' },
+        { completedAt: null, status: 'PENDING' },
       );
     });
   });

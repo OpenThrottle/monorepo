@@ -6,6 +6,7 @@
  */
 
 export const DAILY_STATS_MODAL_COPY = {
+  completionAttributionCaveat: `Historical completion dates are approximate for rows completed before completed_at existed (backfilled from updated_at after migrate-time re-stamps). New completions use an immutable completed_at stamp.`,
   emptyDescription: `No daily stats available for the selected range.`,
   mostRecentHint: `Showing the most recent day. Click a bar in the chart to inspect another day.`,
   title: `Daily activity`,

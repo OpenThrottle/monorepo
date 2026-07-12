@@ -173,6 +173,11 @@ type PlanObject {
   assignee: String
   author: String!
   category: String!
+
+  """
+  Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed.
+  """
+  completedAt: DateTime
   createdAt: DateTime!
   description: String
 
@@ -298,6 +303,11 @@ type CancelPlanRunResultObject {
 type TaskObject {
   assignee: String
   category: String
+
+  """
+  Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed.
+  """
+  completedAt: DateTime
   createdAt: DateTime!
   description: String
   id: String!
