@@ -3018,8 +3018,6 @@ export type Subscription = {
   planNotifications: NotificationEvent;
   /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
   planOutputChunkAdded: PlanOutputStreamChunkObject;
-  /** Live tail of new keyed run-output lines for a (queueName, jobId) — topic bullmq:<queueName>:<jobId>:logs. */
-  queueJobLogTail: QueueJobLogEventObject;
   /** Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session. */
   transcriptionStreamChunkAdded: TranscriptionStreamChunkObject;
 };
@@ -3034,11 +3032,6 @@ export type SubscriptionPlanNotificationsArgs = {
 
 export type SubscriptionPlanOutputChunkAddedArgs = {
   planId: Scalars['ID']['input'];
-};
-
-export type SubscriptionQueueJobLogTailArgs = {
-  jobId: Scalars['String']['input'];
-  queueName: Scalars['String']['input'];
 };
 
 export type SubscriptionTranscriptionStreamChunkAddedArgs = {
