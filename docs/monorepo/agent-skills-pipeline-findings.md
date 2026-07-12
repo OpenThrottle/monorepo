@@ -69,11 +69,11 @@ Package: `packages/openthrottle-skills`.
 
 ### Baseline `disable-model-invocation` inventory (verified 2026-07-11)
 
-| value | count | slugs |
-|-------|-------|-------|
-| `true` | 18 | agents-code-review, github-branch, github-commit, github-create-issue, github-my-pull-requests, github-pull-request, github-squash, github-summarize, github-untracked, github-worktree, grill-me, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-list-sources, ot-pending, ot-planning-mode |
-| `false` | 1 | agents-ralph |
-| unset | 27 | the remaining skills (unset behaves as model-invocable) |
+| value   | count | slugs                                                                                                                                                                                                                                                                                                     |
+| ------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`  | 18    | agents-code-review, github-branch, github-commit, github-create-issue, github-my-pull-requests, github-pull-request, github-squash, github-summarize, github-untracked, github-worktree, grill-me, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-list-sources, ot-pending, ot-planning-mode |
+| `false` | 1     | agents-ralph                                                                                                                                                                                                                                                                                              |
+| unset   | 27    | the remaining skills (unset behaves as model-invocable)                                                                                                                                                                                                                                                   |
 
 > Earlier plan notes said "19 true / 26 unset"; grep of the SSOT gives **18 / 1 / 27** of 46.
 
