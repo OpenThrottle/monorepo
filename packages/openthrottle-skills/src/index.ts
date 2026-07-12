@@ -89,6 +89,19 @@ export type { ProjectSkillInput } from './project-skill-inputs.ts';
 
 /** @public */
 export {
+  mergeSkillTags,
+  parseSkillTagOverlayFile,
+  SKILL_TAG_OVERLAYS_FILENAME,
+  skillTagOverlayFileSchema,
+} from './skill-tag-overlays.ts';
+export type {
+  SkillTagOverlayEntry,
+  SkillTagOverlayFile,
+  SkillTagOverlayMap,
+} from './skill-tag-overlays.ts';
+
+/** @public */
+export {
   resolveSkillAvailability,
   SKILL_AVAILABILITY_ENVIRONMENTS,
 } from './resolve-skill-availability.ts';

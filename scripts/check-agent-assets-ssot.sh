@@ -85,9 +85,11 @@ for skill_md in .opencode/skills/*/SKILL.md; do
   fi
 done
 
-# --- Skill tags: enum-validate against the committed default vocabulary
-# (CI-only for this monorepo's own corpus; external repos ingest permissively
-# — see docs/monorepo/skill-availability-design.md, "Tags" section) ---
+# --- Skill tags: validate the repo-root skill-tag-overlays.json — every skill
+# has an overlay entry (complete coverage; zero tags is fine), no stale entries,
+# and every effective tag is in the committed default vocabulary. CI-only for
+# this monorepo's own corpus; external repos ingest permissively — see
+# docs/monorepo/skill-availability-design.md, "Tags" section. ---
 if ! pnpm exec tsx ./scripts/check-skill-tag-vocabulary.ts; then
   fail "skill tag vocabulary check failed (see output above)"
 fi

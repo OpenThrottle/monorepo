@@ -12,7 +12,6 @@ description: >
   "I forgot to log my work", "summarize my work", "track my wins",
   "what should I highlight", "end of half", "career growth", "work journal",
   or any request to document, summarize, or organize work accomplishments.
-tags: [docs, git, github]
 license: MIT
 compatibility: 'Cross-platform (Windows, macOS, Linux). Works with any GitHub Copilot CLI session. Optional: git, gh CLI.'
 metadata:

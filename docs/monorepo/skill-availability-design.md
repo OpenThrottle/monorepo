@@ -52,7 +52,29 @@ later is additive — no migration, no signature change.
 ## Tags
 
 - Skill frontmatter gains `tags: string[]` (`skillFrontmatterSchema` stays `.strict()`).
-  Zero tags is legal. Assignments live in the SSOT frontmatter.
+  Zero tags is legal. Frontmatter tags remain the attachment mechanism for **external
+  workspace repos** OT ingests (they own their `SKILL.md`).
+- **Attachment source split (this monorepo): a repo-root overlay, not inline frontmatter.**
+  OT's own 46 skills carry **no** `tags` in their `SKILL.md`; their default tags live in a
+  single committed `skill-tag-overlays.json` at the repo root (`{ version, overlays: { <slug>:
+{ tags } } }`, parsed by `parseSkillTagOverlayFile` in `@openthrottle/openthrottle-skills`).
+  Rationale: ~14 skills are vendored from upstream via skills.sh (tracked in `skills-lock.json`,
+  whose `computedHash` is the _upstream_ fingerprint, not a hash of our copy). Inline tags on a
+  vendored `SKILL.md` are locally-owned metadata inside an upstream-owned file — clobbered on the
+  next `skills add`, and (because `project_skills.tags` is a projection of frontmatter) the loss
+  propagates into the DB on re-ingest. The overlay keeps vendored bodies pristine and their tags
+  durable. Applied **uniformly** to all 46 (OT's skills are not privileged); the file is a
+  repo-root sibling of `skills-lock.json`, deliberately **not** under `.agents/` and **not**
+  mirrored into `.cursor`/`.claude`/`.opencode` (editor runtimes read frontmatter for
+  `disable-model-invocation`; tags are an OT-availability concept they never consume).
+- **Effective tags = frontmatter ∪ overlay** (order-preserving union, `mergeSkillTags`), applied
+  at the ingest boundary in `toProjectSkillInputs(records, overlays?)`. For this monorepo
+  frontmatter is empty, so effective tags are the overlay's; external repos pass no overlay and
+  reduce to frontmatter-only. The overlay is **authoring/defaults only** — it feeds
+  `project_skills`; consumer availability _decisions_ stay the DB layer (per-project
+  `skill_availability_rules` + per-workspace `skill_tags` vocabulary). Overlay coverage is a
+  correctness property: `check-skill-tag-vocabulary.ts` fails CI unless every skill has an
+  overlay entry (zero tags is fine, but explicit) and no entry is stale.
 - **Prerequisite**: migrate `parse-yaml-frontmatter.ts` to the `yaml` package — the
   hand-rolled parser cannot parse lists, and its docstring already recommends the migration.
   **Corpus-verified, not generically behavior-preserving**: the `yaml` package differs on
