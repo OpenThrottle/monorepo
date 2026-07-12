@@ -3,6 +3,7 @@ import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
   AddPermissionToRoleInput,
+  AddSkillTagInput,
   AgentAssetSearchInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
@@ -73,6 +74,8 @@ import {
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
   RemoveRoleFromUserInput,
+  RemoveSkillTagInput,
+  RenameSkillTagInput,
   ReorderPlanTasksInput,
   RepeatableJobsInput,
   RetryJobInput,
@@ -81,6 +84,7 @@ import {
   SearchPlansInput,
   SetPlanStatusInput,
   SetWorkspaceLocalRepositoryProjectInput,
+  SkillAvailabilityRuleInput,
   StartConversationStreamInput,
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
@@ -157,6 +161,14 @@ export function AddPermissionToRoleInputSchema(): z.ZodObject<
   return z.object({
     permissionId: z.string(),
     roleId: z.string(),
+  });
+}
+
+export function AddSkillTagInputSchema(): z.ZodObject<
+  Properties<AddSkillTagInput>
+> {
+  return z.object({
+    tag: z.string(),
   });
 }
 
@@ -827,6 +839,23 @@ export function RemoveRoleFromUserInputSchema(): z.ZodObject<
   });
 }
 
+export function RemoveSkillTagInputSchema(): z.ZodObject<
+  Properties<RemoveSkillTagInput>
+> {
+  return z.object({
+    tag: z.string(),
+  });
+}
+
+export function RenameSkillTagInputSchema(): z.ZodObject<
+  Properties<RenameSkillTagInput>
+> {
+  return z.object({
+    from: z.string(),
+    to: z.string(),
+  });
+}
+
 export function ReorderPlanTasksInputSchema(): z.ZodObject<
   Properties<ReorderPlanTasksInput>
 > {
@@ -896,6 +925,18 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   return z.object({
     id: z.string(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function SkillAvailabilityRuleInputSchema(): z.ZodObject<
+  Properties<SkillAvailabilityRuleInput>
+> {
+  return z.object({
+    environment: z.string().nullish(),
+    slugAllow: z.array(z.string()),
+    slugDeny: z.array(z.string()),
+    tagAllow: z.array(z.string()),
+    tagDeny: z.array(z.string()),
   });
 }
 

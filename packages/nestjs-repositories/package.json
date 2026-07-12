@@ -12,6 +12,7 @@
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "@openthrottle/openthrottle-skills": "workspace:^",
     "bcrypt": "catalog:",
     "dataloader": "catalog:",
     "fishery": "catalog:",

@@ -6,6 +6,7 @@ description: >-
   patterns. USE WHEN adding or editing SQL migrations, schema changes, table
   comments, or Postgres work under databases/ — not for routine OT plan CRUD
   (see ot-plans) or NestJS entity wiring alone (see openthrottle-stack).
+tags: [database, openthrottle]
 ---
 
 # OpenThrottle Postgres (migrations and table comments)

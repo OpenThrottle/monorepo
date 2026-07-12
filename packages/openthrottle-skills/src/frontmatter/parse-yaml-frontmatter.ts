@@ -1,122 +1,100 @@
+import { parse as parseYamlDocument } from 'yaml';
+
 import { extractFrontmatterBody } from './extract-frontmatter-body.ts';
 
-export type FrontmatterScalar = string | boolean | undefined;
+/**
+ * @description A single frontmatter value: an absent/`null`-ish key normalizes
+ * to `undefined`, a real YAML boolean stays a `boolean`, every other scalar
+ * (strings, and numbers coerced via `String()`) stays a `string`, and a
+ * sequence of scalars becomes a `readonly string[]`.
+ */
+export type FrontmatterScalar =
+  | string
+  | boolean
+  | readonly string[]
+  | undefined;
 
 export interface ParsedYamlFrontmatter {
   readonly fields: Readonly<Record<string, FrontmatterScalar>>;
 }
 
-const parseScalarValue = (rest: string): string | undefined => {
-  const trimmed = rest.trim();
-  if (!trimmed) {
-    return undefined;
-  }
+/**
+ * Placeholder for constructs outside this dialect (nested maps, sequences
+ * containing a map/sequence element, …). Mirrors the retired hand-rolled
+ * parser's behavior for the same inputs: a non-throwing but semantically
+ * meaningless empty string, rather than the real (unsupported) shape.
+ */
+const UNSUPPORTED_CONSTRUCT_PLACEHOLDER = '';
 
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1).trim();
-  }
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
-  return trimmed;
-};
+const toFrontmatterArray = (
+  items: readonly unknown[],
+): readonly string[] | string => {
+  const values: string[] = [];
 
-const parseBooleanScalar = (value: string | undefined): boolean | undefined => {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (normalized === 'true') {
-    return true;
-  }
-  if (normalized === 'false') {
-    return false;
-  }
-
-  return undefined;
-};
-
-const isBlockContinuationLine = (line: string): boolean =>
-  line.trim() === '' || /^\s{2,}/.test(line);
-
-const stripBlockIndent = (line: string): string => line.replace(/^\s{2,}/, '');
-
-const parseIndentedBlock = (
-  lines: readonly string[],
-  startIndex: number,
-  joinWith: 'space' | 'newline',
-): { readonly nextIndex: number; readonly value: string } => {
-  const parts: string[] = [];
-  let index = startIndex;
-
-  while (index < lines.length && isBlockContinuationLine(lines[index] ?? '')) {
-    const line = lines[index] ?? '';
-    if (line.trim() === '') {
-      parts.push('');
+  for (const item of items) {
+    if (typeof item === 'string') {
+      values.push(item);
+    } else if (typeof item === 'number' || typeof item === 'boolean') {
+      values.push(String(item));
     } else {
-      parts.push(stripBlockIndent(line));
-    }
-    index += 1;
-  }
-
-  if (joinWith === 'newline') {
-    return { nextIndex: index, value: parts.join('\n').trim() };
-  }
-
-  let result = '';
-  for (const part of parts) {
-    if (part === '') {
-      result = `${result.trimEnd()}\n\n`;
-    } else if (result === '') {
-      result = part;
-    } else {
-      result = `${result.trimEnd()} ${part}`;
+      return UNSUPPORTED_CONSTRUCT_PLACEHOLDER;
     }
   }
 
-  return { nextIndex: index, value: result.trim() };
+  return values;
 };
 
-const parseKeyLine = (
-  line: string,
-): { readonly key: string; readonly rest: string } | null => {
-  const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-  if (!match) {
-    return null;
+const toFrontmatterScalar = (value: unknown): FrontmatterScalar => {
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return value;
   }
 
-  return {
-    key: match[1] ?? '',
-    rest: match[2] ?? '',
-  };
+  if (typeof value === 'number') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return toFrontmatterArray(value);
+  }
+
+  return UNSUPPORTED_CONSTRUCT_PLACEHOLDER;
 };
 
 /**
  * @description Parses supported YAML frontmatter keys from markdown/mdc content.
  *
- * This is a deliberately minimal parser for the constrained agent-asset
- * frontmatter dialect — NOT a general-purpose YAML implementation. Only the
- * following subset is understood:
+ * Backed by the `yaml` package (YAML 1.2 core schema) rather than a hand-rolled
+ * regex parser. Supported shapes, per top-level `key: value` mapping entry:
  *
- * - Top-level `key: scalar` pairs (no nesting; keys match `[A-Za-z0-9_-]+`).
- * - Single- or double-quoted scalars (the surrounding quotes are stripped, but
- *   escapes and embedded same-quote characters are not interpreted).
- * - `true` / `false` literals, coerced to booleans (case-insensitive).
- * - Folded block scalars introduced by `>` or `>-` (joined with spaces).
- * - Literal block scalars introduced by `|` or `|-` (joined with newlines).
- *   Continuation lines are any blank line or any line indented by >= 2 spaces.
+ * - Scalars: strings and `true`/`false` booleans keep their type; any other
+ *   bare scalar (e.g. an unquoted number) is coerced with `String()` so every
+ *   non-boolean value stays a `string`, matching the historical contract.
+ * - Sequences: block (`- a`) and flow (`[a, b]`) sequences of scalars become a
+ *   `readonly string[]` (non-string scalar items are stringified the same way
+ *   as a top-level scalar). A sequence containing a nested map or sequence is
+ *   treated as an unsupported construct (see below).
+ * - Folded (`>`, `>-`) and literal (`|`, `|-`) block scalars are handled
+ *   natively by the `yaml` package.
+ * - Duplicate top-level keys use last-value-wins (`uniqueKeys: false`) instead
+ *   of the strict-YAML default of raising an error.
+ * - A key with no value (`key:` alone, or an explicit `null`/`~`) is omitted
+ *   from `fields` entirely — absent, not an empty string.
  *
- * Anything outside this subset is mishandled rather than rejected, producing a
- * wrong-but-non-failing value. Known unsupported constructs include: flow
- * scalars and inline lists/maps (`[a, b]`, `{a: 1}`), explicit chomping or
- * indentation indicators on block scalars (`>2`, `|+`), trailing comments after
- * a value (`name: foo # bar` keeps `# bar`), and YAML truthy/falsy aliases
- * other than `true`/`false` (`yes`, `no`, `on`, `off`) — those stay strings.
+ * Unsupported constructs — nested maps, and sequences containing a non-scalar
+ * element — are normalized to an empty string rather than rejected outright,
+ * mirroring how the retired parser silently mishandled the same shapes.
+ * Malformed YAML (a genuine parse error) yields `{ fields: {} }`, the same as
+ * an unterminated frontmatter block.
  *
- * If asset authors hit these surprises, migrate to the `yaml` package behind
- * this same interface rather than extending the hand-rolled parser.
+ * This *does* change behavior at a few real-YAML edges the old regex parser
+ * got wrong (see the corpus regression test for the exhaustive comparison):
+ * a ` #comment` after a plain scalar is now stripped as a real YAML comment
+ * instead of being kept as literal text, and a doubled `''` inside a
+ * single-quoted scalar is now unescaped to a literal `'` instead of being
+ * kept doubled.
  */
 export const parseYamlFrontmatter = (
   fileContent: string,
@@ -126,38 +104,24 @@ export const parseYamlFrontmatter = (
     return { fields: {} };
   }
 
-  const lines = body.split(/\r?\n/);
+  let document: unknown;
+  try {
+    document = parseYamlDocument(body, { uniqueKeys: false });
+  } catch {
+    return { fields: {} };
+  }
+
+  if (!isPlainRecord(document)) {
+    return { fields: {} };
+  }
+
   const fields: Record<string, FrontmatterScalar> = {};
-  let index = 0;
-
-  while (index < lines.length) {
-    const line = lines[index] ?? '';
-    const parsedKey = parseKeyLine(line);
-    if (!parsedKey) {
-      index += 1;
+  for (const [key, value] of Object.entries(document)) {
+    if (value === null || value === undefined) {
       continue;
     }
 
-    const { key, rest } = parsedKey;
-
-    if (/^>-?\s*$/.test(rest)) {
-      const block = parseIndentedBlock(lines, index + 1, 'space');
-      fields[key] = block.value;
-      index = block.nextIndex;
-      continue;
-    }
-
-    if (/^\|-?\s*$/.test(rest)) {
-      const block = parseIndentedBlock(lines, index + 1, 'newline');
-      fields[key] = block.value;
-      index = block.nextIndex;
-      continue;
-    }
-
-    const scalar = parseScalarValue(rest);
-    const booleanValue = parseBooleanScalar(scalar);
-    fields[key] = booleanValue ?? scalar ?? '';
-    index += 1;
+    fields[key] = toFrontmatterScalar(value);
   }
 
   return { fields };

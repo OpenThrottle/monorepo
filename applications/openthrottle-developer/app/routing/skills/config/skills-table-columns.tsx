@@ -1,16 +1,26 @@
 import * as React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import {
+  Badge,
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
 import { formatPromptType } from '~/routing/prompts/utils/formatters';
+import { SKILLS_MODEL_INVOCATION_COPY } from '~/routing/skills/data/data.copy';
+import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export type SkillsTableColumnValue =
+  | RepoSkillEntry['disableModelInvocation']
   | RepoSkillEntry['layout']
   | RepoSkillEntry['repoRelativePath']
   | RepoSkillEntry['slug']
-  | RepoSkillEntry['summary'];
+  | RepoSkillEntry['summary']
+  | RepoSkillEntry['tags'];
 
 /**
  * @description Stable table row id for repository skills entries.
@@ -54,6 +64,50 @@ export const skillsTableColumns: ColumnDef<
       </div>
     ),
     header: () => <div className="p-2">Summary</div>,
+  },
+  {
+    accessorKey: 'modelInvocation',
+    cell: ({ row }) => {
+      const { badge, isOverridden } = getResolvedModelInvocationDisplay(
+        row.original,
+      );
+
+      return (
+        <div className="p-2">
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild={true}>
+                <Badge color={badge.color} size="xs">
+                  {badge.label}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs" side="top">
+                {badge.tooltip}
+              </TooltipContent>
+            </Tooltip>
+            {isOverridden ? (
+              <Tooltip>
+                <TooltipTrigger asChild={true}>
+                  <span
+                    aria-label={
+                      SKILLS_MODEL_INVOCATION_COPY.overrideIndicatorLabel
+                    }
+                    className="cursor-help text-xs leading-none font-bold text-amber-500"
+                    data-testid="model-invocation-override"
+                  >
+                    *
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs" side="top">
+                  {SKILLS_MODEL_INVOCATION_COPY.overrideTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
+        </div>
+      );
+    },
+    header: () => <div className="p-2">Model invocation</div>,
   },
   {
     accessorKey: 'actions',

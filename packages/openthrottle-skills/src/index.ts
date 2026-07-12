@@ -14,6 +14,17 @@ export type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */
+export { DEFAULT_SKILL_TAG_VOCABULARY } from './default-skill-tag-vocabulary.ts';
+export type { DefaultSkillTag } from './default-skill-tag-vocabulary.ts';
+
+/** @public */
+export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
+export type {
+  SkillTagVocabularyEntry,
+  SkillTagVocabularyViolation,
+} from './find-unknown-skill-tags.ts';
+
+/** @public */
 export {
   extractContentAfterFrontmatter,
   extractFrontmatterBody,
@@ -71,6 +82,26 @@ export type {
 /** @public */
 export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.ts';
 export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.ts';
+
+/** @public */
+export { toProjectSkillInputs } from './project-skill-inputs.ts';
+export type { ProjectSkillInput } from './project-skill-inputs.ts';
+
+/** @public */
+export {
+  resolveSkillAvailability,
+  SKILL_AVAILABILITY_ENVIRONMENTS,
+} from './resolve-skill-availability.ts';
+export type {
+  ResolvedSkillAvailability,
+  SkillAvailabilityContext,
+  SkillAvailabilityEnvironment,
+  SkillAvailabilityInput,
+  SkillAvailabilityPosture,
+  SkillAvailabilityResult,
+  SkillAvailabilityRule,
+  SkillAvailabilityRuleSet,
+} from './resolve-skill-availability.ts';
 
 /** @public */
 export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';

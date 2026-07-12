@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { Link } from 'react-router';
 import {
   Button,
   Input,
@@ -7,7 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { FilePlusIcon } from 'lucide-react';
+import { FilePlusIcon, SlidersHorizontalIcon } from 'lucide-react';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsToolbarProps {
   className?: string;
@@ -40,6 +42,13 @@ export const SkillsToolbar = (
       </div>
 
       <div className="flex-1" />
+
+      <Button asChild={true} variant="outline">
+        <Link to="/skills/availability">
+          <SlidersHorizontalIcon className="size-4" />
+          {SKILL_AVAILABILITY_COPY.manageLink}
+        </Link>
+      </Button>
 
       <Tooltip delayDuration={1_000}>
         <TooltipTrigger asChild={true}>

@@ -34,6 +34,73 @@ description: OpenThrottle plans via MCP.
       expect(record.filePath).toBe('.agents/skills/ot-plans/SKILL.md');
       expect(record.labels).toEqual(['ot-plans']);
     });
+
+    test('carries tags and disable-model-invocation when present', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: github-commit
+description: Commit helper.
+disable-model-invocation: true
+tags:
+  - github
+  - git
+  - commit
+---
+
+# GitHub commit
+`,
+        kind: 'skill',
+        path: '.agents/skills/github-commit/SKILL.md',
+        slug: 'github-commit',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.tags).toEqual(['github', 'git', 'commit']);
+      expect(record.disableModelInvocation).toBe(true);
+    });
+
+    test('leaves tags and flag undefined when frontmatter omits them', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: untagged-skill
+description: No tags, no flag.
+---
+
+# Untagged
+`,
+        kind: 'skill',
+        path: '.agents/skills/untagged-skill/SKILL.md',
+        slug: 'untagged-skill',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.tags).toBeUndefined();
+      expect(record.disableModelInvocation).toBeUndefined();
+    });
+
+    test('preserves disable-model-invocation false as a distinct value', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: agents-ralph
+description: Ralph loop.
+disable-model-invocation: false
+tags: []
+---
+
+# Ralph
+`,
+        kind: 'skill',
+        path: '.agents/skills/agents-ralph/SKILL.md',
+        slug: 'agents-ralph',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.disableModelInvocation).toBe(false);
+      expect(record.tags).toEqual([]);
+    });
   });
 
   describe('when kind is persona', () => {
@@ -56,6 +123,8 @@ description: Architecture lens. USE WHEN designing modules.
       expect(record.promptType).toBe('personas');
       expect(record.title).toBe('architect');
       expect(record.labels).toEqual(['persona', 'architect']);
+      expect(record.tags).toBeUndefined();
+      expect(record.disableModelInvocation).toBeUndefined();
     });
   });
 

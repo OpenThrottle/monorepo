@@ -19,13 +19,17 @@ import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
 import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Project } from './modules/projects/project.entity';
+import { ProjectSkill } from './modules/project-skills/project-skill.entity';
 import { Role } from './modules/roles/role.entity';
 import { ServiceAccount } from './modules/service-accounts/service-account.entity';
 import { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
+import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity';
+import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity';
 import { Subscription } from './modules/subscriptions/subscription.entity';
 import { Task } from './modules/tasks/task.entity';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 import { User } from './modules/users/user.entity';
+import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
 import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
@@ -68,13 +72,17 @@ export function getTypeOrmOptions(): DataSourceOptions {
       PlanOutputStreamChunk,
       PlanRun,
       Project,
+      ProjectSkill,
       Role,
       ServiceAccount,
       ServiceAccountCredential,
+      SkillAvailabilityRule,
+      SkillAvailabilityRuleSet,
       Subscription,
       Task,
       TaskEmbedding,
       User,
+      UserSkillTag,
       UserWorkspaceSettings,
       WorkspaceLocalRepository,
     ],

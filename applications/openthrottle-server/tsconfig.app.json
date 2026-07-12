@@ -30,6 +30,9 @@
       "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/openthrottle-skills/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nodejs-graphql/tsconfig.lib.json"
     },
     {

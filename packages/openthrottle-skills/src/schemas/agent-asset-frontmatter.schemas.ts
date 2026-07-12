@@ -17,6 +17,19 @@ export const skillFrontmatterSchema = z
       AGENT_ASSET_SLUG_PATTERN,
       'name must be a kebab-case slug',
     ),
+    // Permissive on purpose: this schema runs at ingest for external workspace
+    // repos, which must not hard-fail on a tag outside this monorepo's
+    // committed default vocabulary. The committed-vocabulary enum check is a
+    // separate, CI-only validation — see DEFAULT_SKILL_TAG_VOCABULARY and
+    // docs/monorepo/skill-availability-design.md ("Tags" section).
+    tags: z
+      .array(
+        nonEmptyTrimmedString.regex(
+          AGENT_ASSET_SLUG_PATTERN,
+          'tags must be kebab-case slugs',
+        ),
+      )
+      .optional(),
   })
   .strict();
 

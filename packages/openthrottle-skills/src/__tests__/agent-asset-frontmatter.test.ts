@@ -7,6 +7,7 @@ import {
   parsePersonaFrontmatter,
   parseRuleFrontmatter,
   parseSkillFrontmatter,
+  parseSkillFrontmatterForValidation,
   validateAgentAssetFrontmatter,
   validateAgentAssetsOnDisk,
   walkAgentAssetFiles,
@@ -22,6 +23,7 @@ describe('parseSkillFrontmatter', () => {
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
+      tags: undefined,
     });
   });
 
@@ -37,6 +39,7 @@ disable-model-invocation: true
       description: 'Short one-line summary.',
       disableModelInvocation: true,
       name: 'my-skill',
+      tags: undefined,
     });
   });
 
@@ -53,7 +56,65 @@ description: >-
       description: 'First line of the summary. Second line of the summary.',
       disableModelInvocation: undefined,
       name: 'folded-skill',
+      tags: undefined,
     });
+  });
+
+  test('threads a flow-sequence tags array into ParsedSkillFrontmatter', () => {
+    const result = parseSkillFrontmatter(`---
+name: tagged-skill
+description: Has tags.
+tags: [github, git, pr-review]
+---
+`);
+
+    expect(result.tags).toEqual(['github', 'git', 'pr-review']);
+  });
+
+  test('threads a block-sequence tags array into ParsedSkillFrontmatter', () => {
+    const result = parseSkillFrontmatter(`---
+name: tagged-skill
+description: Has tags.
+tags:
+  - github
+  - git
+  - pr-review
+---
+`);
+
+    expect(result.tags).toEqual(['github', 'git', 'pr-review']);
+  });
+
+  test('threads an empty tags array into ParsedSkillFrontmatter', () => {
+    const result = parseSkillFrontmatter(`---
+name: tagged-skill
+description: Has tags.
+tags: []
+---
+`);
+
+    expect(result.tags).toEqual([]);
+  });
+
+  test('yields undefined tags when the frontmatter key is absent', () => {
+    const result = parseSkillFrontmatter(`---
+name: untagged-skill
+description: No tags key.
+---
+`);
+
+    expect(result.tags).toBeUndefined();
+  });
+
+  test('yields undefined tags when the frontmatter value is a scalar, not a sequence', () => {
+    const result = parseSkillFrontmatter(`---
+name: scalar-tags-skill
+description: tags is a scalar, not a list.
+tags: github
+---
+`);
+
+    expect(result.tags).toBeUndefined();
   });
 
   test('parses real openthrottle-generators SKILL.md frontmatter', () => {
@@ -66,6 +127,40 @@ description: >-
 
     expect(result.name).toBe('openthrottle-generators');
     expect(result.description).toContain('@tools/generators');
+  });
+});
+
+describe('parseSkillFrontmatterForValidation tags pass-through', () => {
+  test('passes a tags array through raw for Zod to validate', () => {
+    const result = parseSkillFrontmatterForValidation(`---
+name: tagged-skill
+description: Has tags.
+tags: [github, git]
+---
+`);
+
+    expect(result.tags).toEqual(['github', 'git']);
+  });
+
+  test('omits tags entirely when the frontmatter key is absent', () => {
+    const result = parseSkillFrontmatterForValidation(`---
+name: untagged-skill
+description: No tags key.
+---
+`);
+
+    expect('tags' in result).toBe(false);
+  });
+
+  test('passes a scalar tags value through raw so Zod rejects the wrong shape', () => {
+    const result = parseSkillFrontmatterForValidation(`---
+name: scalar-tags-skill
+description: tags is a scalar, not a list.
+tags: github
+---
+`);
+
+    expect(result.tags).toBe('github');
   });
 });
 

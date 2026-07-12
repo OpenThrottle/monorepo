@@ -85,6 +85,13 @@ for skill_md in .opencode/skills/*/SKILL.md; do
   fi
 done
 
+# --- Skill tags: enum-validate against the committed default vocabulary
+# (CI-only for this monorepo's own corpus; external repos ingest permissively
+# — see docs/monorepo/skill-availability-design.md, "Tags" section) ---
+if ! pnpm exec tsx ./scripts/check-skill-tag-vocabulary.ts; then
+  fail "skill tag vocabulary check failed (see output above)"
+fi
+
 if [[ "$errors" -gt 0 ]]; then
   echo "check-agent-assets-ssot: $errors violation(s). Edit .agents/skills/ and .agents/rules/ only; recreate editor symlinks." >&2
   exit 1

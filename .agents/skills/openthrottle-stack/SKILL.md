@@ -10,6 +10,7 @@ description: >-
   openthrottle-developer, databases or database:import, embeddings (Ollama vs
   hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or OpenThrottle
   schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
+tags: [backend, database, frontend, openthrottle]
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)

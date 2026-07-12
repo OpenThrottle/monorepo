@@ -10,9 +10,12 @@ import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module';
 import { PlanRunsModule } from './modules/plan-runs/plan-runs.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { ProjectSkillsModule } from './modules/project-skills/project-skills.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
+import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module';
+import { SkillTagsModule } from './modules/skill-tags/skill-tags.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -32,9 +35,12 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     PlanOutputStreamModule,
     PlanRunsModule,
     PlansModule,
+    ProjectSkillsModule,
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillAvailabilityModule,
+    SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,
@@ -57,9 +63,12 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     PlanOutputStreamModule,
     PlanRunsModule,
     PlansModule,
+    ProjectSkillsModule,
     ProjectsModule,
     RolesModule,
     ServiceAccountsModule,
+    SkillAvailabilityModule,
+    SkillTagsModule,
     SubscriptionsModule,
     TaskEmbeddingsModule,
     TasksModule,

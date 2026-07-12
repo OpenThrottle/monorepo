@@ -14,37 +14,43 @@ describe('routing/skills config skills-table-columns', () => {
   describe('getSkillsTableRowId', () => {
     test('prefers slug over path and index', () => {
       const entry: RepoSkillEntry = {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/foo/SKILL.md',
         slug: 'foo',
         summary: 'Foo skill',
+        tags: undefined,
       };
       expect(getSkillsTableRowId(entry, 0)).toBe('foo');
     });
 
     test('falls back to repoRelativePath when slug is empty', () => {
       const entry: RepoSkillEntry = {
+        disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/bar/SKILL.md',
         slug: '',
         summary: 'Bar skill',
+        tags: undefined,
       };
       expect(getSkillsTableRowId(entry, 2)).toBe('.cursor/skills/bar/SKILL.md');
     });
 
     test('falls back to index-based id when slug and path are empty', () => {
       const entry: RepoSkillEntry = {
+        disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '',
         slug: '',
         summary: 'No path',
+        tags: undefined,
       };
       expect(getSkillsTableRowId(entry, 4)).toBe('skill-4');
     });
   });
 
   describe('skillsTableColumns', () => {
-    test('defines Owner, Summary, and Actions columns', () => {
+    test('defines Owner, Summary, Model invocation, and Actions columns', () => {
       const headers = skillsTableColumns.map((column) => {
         const header = column.header;
         if (typeof header === 'function') {
@@ -53,7 +59,7 @@ describe('routing/skills config skills-table-columns', () => {
         return header;
       });
 
-      expect(headers).toHaveLength(3);
+      expect(headers).toHaveLength(4);
     });
   });
 });

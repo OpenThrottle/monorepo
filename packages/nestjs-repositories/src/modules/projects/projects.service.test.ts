@@ -67,6 +67,17 @@ describe('ProjectsService', () => {
     });
   });
 
+  describe('findByNxProjectName', () => {
+    it('looks up a project by its nx_project_name', async () => {
+      const project = await service.findByNxProjectName('monorepo');
+
+      expect(project).toBeDefined();
+      expect(mockRepo.findOne).toHaveBeenCalledWith({
+        where: { nxProjectName: 'monorepo' },
+      });
+    });
+  });
+
   describe('findAll', () => {
     it('returns factory-built data from find', async () => {
       const projects = await service.findAll();

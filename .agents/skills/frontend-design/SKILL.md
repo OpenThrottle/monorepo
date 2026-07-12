@@ -1,6 +1,7 @@
 ---
 name: frontend-design
 description: 'Frontend UI: pages, apps, components, polished non-generic design.'
+tags: [frontend, ui]
 license: Complete terms in LICENSE.txt
 ---
 

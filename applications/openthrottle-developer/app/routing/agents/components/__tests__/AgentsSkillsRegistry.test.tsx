@@ -9,16 +9,20 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/unique-alpha/SKILL.md',
     slug: 'unique-alpha',
     summary: 'Alpha summary for registry tests.',
+    tags: undefined,
   },
   {
+    disableModelInvocation: undefined,
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/unique-beta/SKILL.md',
     slug: 'unique-beta',
     summary: 'Beta summary only in cursor tree.',
+    tags: undefined,
   },
 ];
 
@@ -120,5 +124,60 @@ describe('AgentsSkillsRegistry', () => {
 
     const copyButtons = screen.getAllByRole('button', { name: /^Copy path$/i });
     expect(copyButtons).toHaveLength(2);
+  });
+
+  describe('resolved availability detail', () => {
+    const RESOLVED_ENTRY: RepoSkillEntry = {
+      disableModelInvocation: true,
+      effectiveDisableModelInvocation: false,
+      layout: 'agents',
+      provenance: 'tag-allow:github@rule-1',
+      repoRelativePath: '.agents/skills/git-commit/SKILL.md',
+      slug: 'git-commit',
+      summary: 'Commit skill re-enabled by a tag rule.',
+      tags: ['git', 'github'],
+    };
+
+    test('shows static, effective, and both the raw + human provenance', () => {
+      const RoutesStub = createRoutesStub([
+        {
+          // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+          Component: () => <AgentsSkillsRegistry entries={[RESOLVED_ENTRY]} />,
+          path: '/',
+        },
+      ]);
+
+      const component = render(<RoutesStub />);
+
+      // Static (true → Manual only) and effective (false → Auto enabled) both shown.
+      expect(component.getByText('Static')).toBeInTheDocument();
+      expect(component.getByText('Manual only')).toBeInTheDocument();
+      expect(component.getByText('Effective')).toBeInTheDocument();
+      expect(component.getByText('Auto enabled')).toBeInTheDocument();
+      // Raw grammar value kept visible, plus a human gloss.
+      expect(
+        component.getByText('tag-allow:github@rule-1'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(/Allowed by a tag rule \(github\)/i),
+      ).toBeInTheDocument();
+    });
+
+    test('omits the effective/provenance lines when availability is unresolved', () => {
+      const RoutesStub = createRoutesStub([
+        {
+          // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+          Component: () => <AgentsSkillsRegistry entries={SAMPLE_ENTRIES} />,
+          path: '/',
+        },
+      ]);
+
+      const component = render(<RoutesStub />);
+
+      // Static row always present; effective/provenance only when resolved.
+      expect(component.getAllByText('Static').length).toBeGreaterThan(0);
+      expect(component.queryByText('Effective')).not.toBeInTheDocument();
+      expect(component.queryByText('Provenance:')).not.toBeInTheDocument();
+    });
   });
 });
