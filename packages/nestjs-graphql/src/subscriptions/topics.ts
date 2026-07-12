@@ -93,3 +93,16 @@ export function notificationsFirehoseTopic(): string {
 export function systemAlertTopic(): string {
   return globalTopic('system', 'alert');
 }
+
+/**
+ * Live tail of a single BullMQ job's keyed run-output lines:
+ * `bullmq:<queueName>:<jobId>:logs`. Keyed by both the queue and the job id (a
+ * job id is only unique within its queue), so this is not a plain
+ * {@link instanceTopic}. Publisher and subscriber must build the name here so
+ * they agree on the exact string (the in-memory PubSub matches literally).
+ *
+ * @public
+ */
+export function queueJobLogTopic(queueName: string, jobId: string): string {
+  return `bullmq:${queueName}:${jobId}:logs`;
+}
