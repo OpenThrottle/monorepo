@@ -28,10 +28,34 @@ export const REQUIRED_AGENTS_SKILL_SLUGS = [
 ] as const;
 
 export interface RepoSkillEntry {
+  /**
+   * Tri-state static frontmatter `disable-model-invocation`: `true` = auto
+   * (model-initiated) invocation suppressed, `false` = explicitly enabled,
+   * `undefined` = unset (frontmatter omits the key). Sourced from disk
+   * frontmatter, overridden by the `projectSkills` GraphQL value when present.
+   */
+  readonly disableModelInvocation: boolean | undefined;
+  /**
+   * Resolved per-context effective `disable-model-invocation` from the
+   * `skillAvailability` GraphQL surface (`environment: interactive`): `true` =
+   * model auto-invocation suppressed for this context. Optional — absent when
+   * the query failed/returned empty, in which case the UI falls back to the
+   * static-only view (exactly today's behavior). Human `/skill` invocation is
+   * never gated. See docs/monorepo/skill-availability-design.md ("Surfacing").
+   */
+  readonly effectiveDisableModelInvocation?: boolean;
   readonly layout: SkillRegistryLayout;
+  /**
+   * Decisive rung's provenance string from `skillAvailability` (closed grammar,
+   * e.g. `frontmatter:true`, `posture:deny`, `tag-deny:<tag>@<ruleId>`).
+   * Optional — present only alongside {@link effectiveDisableModelInvocation}.
+   */
+  readonly provenance?: string;
   readonly repoRelativePath: string;
   readonly slug: string;
   readonly summary: string;
+  /** Static frontmatter tags; `undefined` when the frontmatter omits `tags`. */
+  readonly tags: readonly string[] | undefined;
 }
 
 /**

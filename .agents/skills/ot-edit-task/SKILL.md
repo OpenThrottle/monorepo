@@ -5,6 +5,7 @@ description: >-
   update_task (title, description, status, category, requirements, planId). USE
   WHEN the user runs /ot/edit-task, names a task UUID, or wants to change task
   status or fields in OT—report what was updated.
+tags: [openthrottle]
 disable-model-invocation: true
 ---
 

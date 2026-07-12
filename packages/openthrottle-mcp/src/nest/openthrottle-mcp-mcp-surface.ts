@@ -367,6 +367,131 @@ export class McpDeveloperMcpSurface {
     return Th.reorderPlanTasksToolHandler(args);
   }
 
+  @Tool({
+    description: Th.listSkillTagsToolDescription,
+    name: 'list_skill_tags',
+    parameters: asMcpParameters(Th.listSkillTagsToolParameters),
+  })
+  listSkillTags(
+    args: Parameters<typeof Th.listSkillTagsToolHandler>[0],
+  ): ReturnType<typeof Th.listSkillTagsToolHandler> {
+    return Th.listSkillTagsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.addSkillTagToolDescription,
+    name: 'add_skill_tag',
+    parameters: asMcpParameters(Th.addSkillTagToolParameters),
+  })
+  addSkillTag(
+    args: Parameters<typeof Th.addSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.addSkillTagToolHandler> {
+    return Th.addSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.renameSkillTagToolDescription,
+    name: 'rename_skill_tag',
+    parameters: asMcpParameters(Th.renameSkillTagToolParameters),
+  })
+  renameSkillTag(
+    args: Parameters<typeof Th.renameSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.renameSkillTagToolHandler> {
+    return Th.renameSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeSkillTagToolDescription,
+    name: 'remove_skill_tag',
+    parameters: asMcpParameters(Th.removeSkillTagToolParameters),
+  })
+  removeSkillTag(
+    args: Parameters<typeof Th.removeSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeSkillTagToolHandler> {
+    return Th.removeSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getSkillAvailabilityToolDescription,
+    name: 'get_skill_availability',
+    parameters: asMcpParameters(Th.getSkillAvailabilityToolParameters),
+  })
+  getSkillAvailability(
+    args: Parameters<typeof Th.getSkillAvailabilityToolHandler>[0],
+  ): ReturnType<typeof Th.getSkillAvailabilityToolHandler> {
+    return Th.getSkillAvailabilityToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getSkillAvailabilityRuleSetToolDescription,
+    name: 'get_skill_availability_rule_set',
+    parameters: asMcpParameters(Th.getSkillAvailabilityRuleSetToolParameters),
+  })
+  getSkillAvailabilityRuleSet(
+    args: Parameters<typeof Th.getSkillAvailabilityRuleSetToolHandler>[0],
+  ): ReturnType<typeof Th.getSkillAvailabilityRuleSetToolHandler> {
+    return Th.getSkillAvailabilityRuleSetToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.upsertSkillAvailabilityRuleSetToolDescription,
+    name: 'upsert_skill_availability_rule_set',
+    parameters: asMcpParameters(
+      Th.upsertSkillAvailabilityRuleSetToolParameters,
+    ),
+  })
+  upsertSkillAvailabilityRuleSet(
+    args: Parameters<typeof Th.upsertSkillAvailabilityRuleSetToolHandler>[0],
+  ): ReturnType<typeof Th.upsertSkillAvailabilityRuleSetToolHandler> {
+    return Th.upsertSkillAvailabilityRuleSetToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.deleteSkillAvailabilityRuleSetToolDescription,
+    name: 'delete_skill_availability_rule_set',
+    parameters: asMcpParameters(
+      Th.deleteSkillAvailabilityRuleSetToolParameters,
+    ),
+  })
+  deleteSkillAvailabilityRuleSet(
+    args: Parameters<typeof Th.deleteSkillAvailabilityRuleSetToolHandler>[0],
+  ): ReturnType<typeof Th.deleteSkillAvailabilityRuleSetToolHandler> {
+    return Th.deleteSkillAvailabilityRuleSetToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.addSkillAvailabilityRuleToolDescription,
+    name: 'add_skill_availability_rule',
+    parameters: asMcpParameters(Th.addSkillAvailabilityRuleToolParameters),
+  })
+  addSkillAvailabilityRule(
+    args: Parameters<typeof Th.addSkillAvailabilityRuleToolHandler>[0],
+  ): ReturnType<typeof Th.addSkillAvailabilityRuleToolHandler> {
+    return Th.addSkillAvailabilityRuleToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.updateSkillAvailabilityRuleToolDescription,
+    name: 'update_skill_availability_rule',
+    parameters: asMcpParameters(Th.updateSkillAvailabilityRuleToolParameters),
+  })
+  updateSkillAvailabilityRule(
+    args: Parameters<typeof Th.updateSkillAvailabilityRuleToolHandler>[0],
+  ): ReturnType<typeof Th.updateSkillAvailabilityRuleToolHandler> {
+    return Th.updateSkillAvailabilityRuleToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeSkillAvailabilityRuleToolDescription,
+    name: 'remove_skill_availability_rule',
+    parameters: asMcpParameters(Th.removeSkillAvailabilityRuleToolParameters),
+  })
+  removeSkillAvailabilityRule(
+    args: Parameters<typeof Th.removeSkillAvailabilityRuleToolHandler>[0],
+  ): ReturnType<typeof Th.removeSkillAvailabilityRuleToolHandler> {
+    return Th.removeSkillAvailabilityRuleToolHandler(args);
+  }
+
   @ResourceTemplate({
     description: Th.knowledgeBaseChunkResourceDescription,
     mimeType: Th.knowledgeBaseChunkMimeType,

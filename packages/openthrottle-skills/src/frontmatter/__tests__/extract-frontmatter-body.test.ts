@@ -133,15 +133,15 @@ description: Never closed.
     });
   });
 
-  test('keeps a trailing comment as part of the scalar value (documented limitation)', () => {
+  test('strips a trailing comment from a plain scalar (real YAML semantics)', () => {
+    // Unlike the retired regex parser, a real YAML comment (` #...`) after a
+    // plain scalar is now stripped rather than kept as literal text.
     const content = `---
-name: commented # inline comment kept verbatim
+name: commented # inline comment is now a real comment
 ---
 `;
 
-    expect(parseYamlFrontmatter(content).fields.name).toBe(
-      'commented # inline comment kept verbatim',
-    );
+    expect(parseYamlFrontmatter(content).fields.name).toBe('commented');
   });
 
   test('uses last-wins for duplicate keys', () => {
@@ -154,12 +154,15 @@ name: second
     expect(parseYamlFrontmatter(content).fields.name).toBe('second');
   });
 
-  test('does not parse tab-indented continuation lines as a block scalar', () => {
-    // Block continuation requires >= 2 spaces; a leading tab is not matched, so
-    // the folded block collects nothing and the value is an empty string.
+  test('treats a tab-indented block scalar continuation as malformed YAML', () => {
+    // Real YAML forbids tabs for indentation inside a block scalar; the `yaml`
+    // package throws on this input, and a genuine parse error yields no
+    // fields at all (the same "malformed, do not trust this file" outcome as
+    // an unterminated frontmatter block), rather than the retired parser's
+    // narrower per-field empty-string mishandling.
     const content = '---\ndescription: >-\n\tTab indented line.\n---\n';
 
-    expect(parseYamlFrontmatter(content).fields.description).toBe('');
+    expect(parseYamlFrontmatter(content).fields).toEqual({});
   });
 
   test('tolerates a leading BOM before the opening delimiter', () => {

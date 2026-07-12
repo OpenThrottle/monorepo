@@ -4,6 +4,7 @@ description: >-
   Turn ordinary text plans into rich interactive visual plans with diagrams,
   file maps, annotated code, open questions, and UI/prototype review when
   useful.
+tags: [planning]
 metadata:
   visibility: exported
 ---

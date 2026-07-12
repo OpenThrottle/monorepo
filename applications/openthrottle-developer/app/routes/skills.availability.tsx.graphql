@@ -1,0 +1,81 @@
+query SkillAvailabilityProjects {
+  projects {
+    id
+    name
+    nxProjectName
+  }
+}
+
+query SkillAvailabilityAuthoringRuleSet($projectId: ID!) {
+  skillAvailabilityRuleSet(projectId: $projectId) {
+    posture
+    rules {
+      id
+      environment
+      slugAllow
+      slugDeny
+      tagAllow
+      tagDeny
+    }
+  }
+}
+
+query SkillAvailabilityAuthoringVocabulary {
+  skillTagVocabulary {
+    tags {
+      id
+      tag
+    }
+    totalCount
+  }
+}
+
+mutation UpsertSkillAvailabilityRuleSet($projectId: ID!, $posture: String!) {
+  upsertSkillAvailabilityRuleSet(projectId: $projectId, posture: $posture) {
+    posture
+  }
+}
+
+mutation DeleteSkillAvailabilityRuleSet($projectId: ID!) {
+  deleteSkillAvailabilityRuleSet(projectId: $projectId)
+}
+
+mutation AddSkillAvailabilityRule(
+  $projectId: ID!
+  $input: SkillAvailabilityRuleInput!
+) {
+  addSkillAvailabilityRule(projectId: $projectId, input: $input) {
+    id
+  }
+}
+
+mutation UpdateSkillAvailabilityRule(
+  $ruleId: ID!
+  $input: SkillAvailabilityRuleInput!
+) {
+  updateSkillAvailabilityRule(ruleId: $ruleId, input: $input) {
+    id
+  }
+}
+
+mutation RemoveSkillAvailabilityRule($ruleId: ID!) {
+  removeSkillAvailabilityRule(ruleId: $ruleId)
+}
+
+mutation AddSkillTag($input: AddSkillTagInput!) {
+  addSkillTag(input: $input) {
+    id
+    tag
+  }
+}
+
+mutation RenameSkillTag($input: RenameSkillTagInput!) {
+  renameSkillTag(input: $input) {
+    id
+    tag
+  }
+}
+
+mutation RemoveSkillTag($input: RemoveSkillTagInput!) {
+  removeSkillTag(input: $input)
+}

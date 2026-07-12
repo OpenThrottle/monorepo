@@ -58,14 +58,17 @@ const readSkillEntry = (
     fileContent = readFileSync(skillFilePath, 'utf8');
   } catch {
     return {
+      disableModelInvocation: undefined,
       layout,
       repoRelativePath,
       slug: folderName,
       summary: MISSING_SUMMARY_PLACEHOLDER,
+      tags: undefined,
     };
   }
 
-  const { name, description } = parseSkillFrontmatter(fileContent);
+  const { description, disableModelInvocation, name, tags } =
+    parseSkillFrontmatter(fileContent);
   const slug = name && name.trim().length > 0 ? name.trim() : folderName;
   const summary =
     description && description.trim().length > 0
@@ -73,10 +76,12 @@ const readSkillEntry = (
       : MISSING_SUMMARY_PLACEHOLDER;
 
   return {
+    disableModelInvocation,
     layout,
     repoRelativePath,
     slug,
     summary,
+    tags,
   };
 };
 

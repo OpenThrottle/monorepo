@@ -10,9 +10,20 @@ export type AgentAssetPromptType = 'personas' | 'prompts' | 'rules' | 'skills';
 export interface AgentAssetIngestRecord {
   readonly content: string;
   readonly description: string | null;
+  /**
+   * Skill-only: the static `disable-model-invocation` frontmatter flag, tri-state
+   * (`true` | `false` | `undefined`). `undefined` for non-skill assets and for
+   * skills that omit the key.
+   */
+  readonly disableModelInvocation: boolean | undefined;
   readonly filePath: string;
   readonly labels: readonly string[];
   readonly promptType: AgentAssetPromptType;
+  /**
+   * Skill-only: the static `tags` frontmatter list. `undefined` for non-skill
+   * assets and for skills that omit the key (distinct from an explicit empty list).
+   */
+  readonly tags: readonly string[] | undefined;
   readonly title: string;
 }
 
@@ -43,9 +54,11 @@ export const mapAgentAssetFileToIngestRecord = (
     return {
       content,
       description: frontmatter.description ?? null,
+      disableModelInvocation: frontmatter.disableModelInvocation,
       filePath: path,
       labels: slug ? [slug] : [],
       promptType: 'skills',
+      tags: frontmatter.tags,
       title: frontmatter.name ?? slug ?? basename(path, '/SKILL.md'),
     };
   }
@@ -55,9 +68,11 @@ export const mapAgentAssetFileToIngestRecord = (
     return {
       content,
       description: frontmatter.description ?? null,
+      disableModelInvocation: undefined,
       filePath: path,
       labels: ['persona', ...(slug ? [slug] : [])],
       promptType: 'personas',
+      tags: undefined,
       title: frontmatter.name ?? slug ?? basename(path, '.md'),
     };
   }
@@ -67,9 +82,11 @@ export const mapAgentAssetFileToIngestRecord = (
     return {
       content,
       description: null,
+      disableModelInvocation: undefined,
       filePath: path,
       labels: slug ? [slug] : [],
       promptType: 'prompts',
+      tags: undefined,
       title,
     };
   }
@@ -80,9 +97,11 @@ export const mapAgentAssetFileToIngestRecord = (
   return {
     content,
     description: frontmatter.description ?? null,
+    disableModelInvocation: undefined,
     filePath: path,
     labels: ruleLabelsFromPath(path),
     promptType: 'rules',
+    tags: undefined,
     title,
   };
 };

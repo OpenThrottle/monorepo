@@ -70,10 +70,13 @@ import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
 import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
+import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
+import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module';
+import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
@@ -237,12 +240,15 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           PlanEmbeddingsGraphqlModule,
           PlanOutputStreamGraphqlModule,
           PlansGraphqlModule,
+          ProjectSkillsGraphqlModule,
           ProjectsGraphqlModule,
           QueueJobLogsGraphqlModule,
           QueuesGraphqlModule,
           RolesGraphqlModule,
           ServiceAccountsGraphqlModule,
           SearchGraphqlModule,
+          SkillAvailabilityGraphqlModule,
+          SkillTagsGraphqlModule,
           TaskEmbeddingsGraphqlModule,
           TasksGraphqlModule,
           TranscriptionStreamGraphqlModule,

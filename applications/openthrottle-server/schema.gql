@@ -1568,6 +1568,31 @@ type QueueJobLogPageObject {
   nextCursor: String
 }
 
+"""
+A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag.
+"""
+type ProjectSkillObject {
+  """Skill slug (the skill frontmatter `name`)."""
+  slug: String!
+
+  """Static frontmatter tags for this skill (empty when none)."""
+  tags: [String!]!
+
+  """
+  Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled.
+  """
+  staticDisableModelInvocation: Boolean
+}
+
+"""A project's ingested skill universe, alphabetically by slug."""
+type ProjectSkillsResult {
+  """Skills ingested for the project, alphabetically by slug."""
+  skills: [ProjectSkillObject!]!
+
+  """Number of skills in the universe."""
+  totalCount: Int!
+}
+
 type ServiceAccountCredentialObject {
   createdAt: DateTime!
   expiresAt: DateTime
@@ -1691,6 +1716,107 @@ type ListSourcesResultObject {
 
   """All plans (id, title) for discovery."""
   plans: [ListPlanSourceObject!]!
+}
+
+"""
+A single skill's resolved, per-context availability: its static frontmatter flag, the effective flag, and the decisive rung's provenance.
+"""
+type SkillAvailabilityResolvedSkillObject {
+  """
+  Resolved per-context flag: true ⇒ model auto-invocation suppressed. Human /skill invocation is never gated.
+  """
+  effectiveDisableModelInvocation: Boolean!
+
+  """
+  Decisive rung's provenance (closed grammar), e.g. frontmatter:true|false|unset, posture:deny, slug-allow:<slug>@<ruleId>, tag-deny:<tag>@<ruleId>.
+  """
+  provenance: String!
+
+  """Skill slug (the skill frontmatter `name`)."""
+  slug: String!
+
+  """
+  Static frontmatter `disable-model-invocation`. Tri-state: null = unset, true = suppressed, false = explicitly enabled.
+  """
+  staticDisableModelInvocation: Boolean
+}
+
+"""
+A project's resolved skill-availability universe for a given context (environment), plus resolve-time warnings.
+"""
+type SkillAvailabilityResolutionResult {
+  """
+  Resolved skills, in the project's ingested order (alphabetical by slug).
+  """
+  skills: [SkillAvailabilityResolvedSkillObject!]!
+
+  """Number of skills in the resolved universe."""
+  totalCount: Int!
+
+  """
+  Resolve-time warnings (e.g. unknown-tag:<tag>@<slug>), deduped. Empty for pure passthrough.
+  """
+  warnings: [String!]!
+}
+
+"""
+A single per-project skill-availability rule: tag/slug allow-deny lists, optionally scoped to an environment.
+"""
+type SkillAvailabilityRuleObject {
+  """
+  Stable rule identifier (used in resolver provenance and as the target of updateSkillAvailabilityRule / removeSkillAvailabilityRule).
+  """
+  id: ID!
+
+  """
+  Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment.
+  """
+  environment: String
+
+  """Skill slugs this rule allows (rung 1 exceptions); empty when none."""
+  slugAllow: [String!]!
+
+  """Skill slugs this rule denies (rung 1 exceptions); empty when none."""
+  slugDeny: [String!]!
+
+  """Tags this rule allows (rung 2); empty when none."""
+  tagAllow: [String!]!
+
+  """Tags this rule denies (rung 2); empty when none."""
+  tagDeny: [String!]!
+}
+
+"""
+A project's skill-availability rule set: the single per-project posture and its rules. Absent (null query result) ⇒ passthrough.
+"""
+type SkillAvailabilityRuleSetObject {
+  """The single per-project posture (rung 3): "allow" or "deny"."""
+  posture: String!
+
+  """The rule set's rules, evaluated at precedence rungs 1-2."""
+  rules: [SkillAvailabilityRuleObject!]!
+}
+
+"""A single tag in the authenticated user's skill-tag vocabulary."""
+type SkillTagObject {
+  id: ID!
+  userId: ID!
+
+  """Kebab-case tag slug, unique per user."""
+  tag: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+The authenticated user's skill-tag vocabulary, seeded from the platform default on first read.
+"""
+type SkillTagVocabularyResult {
+  """Tags in the user's vocabulary, alphabetically by tag."""
+  tags: [SkillTagObject!]!
+
+  """Number of tags in the vocabulary."""
+  totalCount: Int!
 }
 
 type TaskEmbeddingObject {
@@ -2069,6 +2195,11 @@ type Query {
   """Distinct author and assignee values from plans and tasks for filters"""
   listDistinctAuthorsAndAssignees: [String!]!
 
+  """
+  A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability.
+  """
+  projectSkills(projectId: ID): ProjectSkillsResult!
+
   """Get a project by ID"""
   project(id: ID!): ProjectObject
 
@@ -2131,6 +2262,21 @@ type Query {
   List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.
   """
   listSources: ListSourcesResultObject!
+
+  """
+  Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated.
+  """
+  skillAvailability(projectId: ID, environment: String): SkillAvailabilityResolutionResult!
+
+  """
+  A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability.
+  """
+  skillAvailabilityRuleSet(projectId: ID!): SkillAvailabilityRuleSetObject
+
+  """
+  The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.
+  """
+  skillTagVocabulary: SkillTagVocabularyResult!
 
   """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
@@ -2813,6 +2959,40 @@ type Mutation {
   """Remove a role from a service account (admin, human only)."""
   removeRoleFromServiceAccount(input: RemoveRoleFromServiceAccountInput!): Boolean!
 
+  """
+  Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project.
+  """
+  upsertSkillAvailabilityRuleSet(projectId: ID!, posture: String!): SkillAvailabilityRuleSetObject!
+
+  """
+  Delete a project's rule set (cascading its rules). Returns false when the project had no rule set.
+  """
+  deleteSkillAvailabilityRuleSet(projectId: ID!): Boolean!
+
+  """
+  Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary.
+  """
+  addSkillAvailabilityRule(projectId: ID!, input: SkillAvailabilityRuleInput!): SkillAvailabilityRuleObject!
+
+  """
+  Replace a rule's tag/slug lists and environment by rule id. Tag references are validated against the caller's skill-tag vocabulary.
+  """
+  updateSkillAvailabilityRule(ruleId: ID!, input: SkillAvailabilityRuleInput!): SkillAvailabilityRuleObject!
+
+  """Remove a rule by id. Returns false when the rule was not present."""
+  removeSkillAvailabilityRule(ruleId: ID!): Boolean!
+
+  """Add a kebab-case tag to the authenticated user's skill-tag vocabulary."""
+  addSkillTag(input: AddSkillTagInput!): SkillTagObject!
+
+  """Rename a tag in the authenticated user's skill-tag vocabulary."""
+  renameSkillTag(input: RenameSkillTagInput!): SkillTagObject!
+
+  """
+  Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present.
+  """
+  removeSkillTag(input: RemoveSkillTagInput!): Boolean!
+
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
@@ -3410,6 +3590,43 @@ input AssignRoleToServiceAccountInput {
 input RemoveRoleFromServiceAccountInput {
   roleId: ID!
   serviceAccountId: ID!
+}
+
+input SkillAvailabilityRuleInput {
+  """
+  Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule.
+  """
+  environment: String
+
+  """Skill slugs to allow (rung 1 exceptions)."""
+  slugAllow: [String!]! = []
+
+  """Skill slugs to deny (rung 1 exceptions)."""
+  slugDeny: [String!]! = []
+
+  """Tags to allow (rung 2). Must be in the caller's skill-tag vocabulary."""
+  tagAllow: [String!]! = []
+
+  """Tags to deny (rung 2). Must be in the caller's skill-tag vocabulary."""
+  tagDeny: [String!]! = []
+}
+
+input AddSkillTagInput {
+  """Kebab-case tag slug to add (e.g. "pr-review")."""
+  tag: String!
+}
+
+input RenameSkillTagInput {
+  """Existing tag slug to rename."""
+  from: String!
+
+  """New kebab-case tag slug."""
+  to: String!
+}
+
+input RemoveSkillTagInput {
+  """Tag slug to remove."""
+  tag: String!
 }
 
 input CreateTaskInput {

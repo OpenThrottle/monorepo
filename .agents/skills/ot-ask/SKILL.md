@@ -6,6 +6,7 @@ description: >-
   get_activity_by_date). USE WHEN the user runs /ot/ask, says "ask OT" or "ask
   OpenThrottle", or wants semantic search over plans, status listings, or
   activity by date—answer only from retrieved chunks.
+tags: [openthrottle]
 disable-model-invocation: true
 ---
 

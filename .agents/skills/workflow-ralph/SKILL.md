@@ -9,6 +9,7 @@ description: >-
   debugging iterations, or the user mentions workflow-ralph, Ralph, plan
   queue, nested workflow-ralph, Cursor backend, workflow-link-merge, or
   tools/workflows README.
+tags: [openthrottle]
 ---
 
 # Workflow Ralph (CLI and queue)

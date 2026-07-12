@@ -1,6 +1,7 @@
 ---
 name: 'github-project-triage'
 description: 'GitHub issue/PR triage: queues, CI, blockers, risk, proof, next actions.'
+tags: [ci, github, pr-review]
 ---
 
 # GitHub Project Triage

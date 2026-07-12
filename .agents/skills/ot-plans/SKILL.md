@@ -8,6 +8,7 @@ description: >-
   workflow-link-merge after merge, or the user mentions OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
   over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
   databases/README and plan/task lifecycle.
+tags: [openthrottle]
 ---
 
 # OpenThrottle plans and MCP traceability

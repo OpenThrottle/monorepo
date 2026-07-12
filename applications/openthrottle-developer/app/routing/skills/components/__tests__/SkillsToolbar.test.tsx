@@ -14,4 +14,11 @@ describe('SkillsToolbar Component', () => {
     expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
     expect(screen.getByTestId('SkillsToolbar')).toBeInTheDocument();
   });
+
+  test('links to the availability authoring surface', () => {
+    renderRoutesStub(<SkillsToolbar />);
+
+    const link = screen.getByRole('link', { name: /Manage availability/i });
+    expect(link).toHaveAttribute('href', '/skills/availability');
+  });
 });

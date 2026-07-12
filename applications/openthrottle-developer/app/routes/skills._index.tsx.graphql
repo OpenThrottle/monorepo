@@ -1,0 +1,23 @@
+query ProjectSkills($projectId: ID) {
+  projectSkills(projectId: $projectId) {
+    skills {
+      slug
+      staticDisableModelInvocation
+      tags
+    }
+    totalCount
+  }
+}
+
+query SkillAvailability($projectId: ID, $environment: String) {
+  skillAvailability(projectId: $projectId, environment: $environment) {
+    skills {
+      slug
+      staticDisableModelInvocation
+      effectiveDisableModelInvocation
+      provenance
+    }
+    warnings
+    totalCount
+  }
+}

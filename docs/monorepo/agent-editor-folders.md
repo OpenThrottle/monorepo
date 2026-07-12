@@ -13,6 +13,7 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 | [agent-editor-folders-inventory.md](./agent-editor-folders-inventory.md)             | Full tree, per-path purpose, audiences, git tracking         |
 | [agent-editor-folders-duplication-map.md](./agent-editor-folders-duplication-map.md) | Historical duplicates (pre-SSOT); drift watch list           |
 | [agent-editor-folders-ownership.md](./agent-editor-folders-ownership.md)             | Canonical source of truth per concern, editor-unique content |
+| [agent-skills-pipeline-findings.md](./agent-skills-pipeline-findings.md)             | Skills pipeline audit: SSOT → parse → discover → sync, gaps  |
 
 **Related entry points (different concerns — link, don’t fork):**
 
