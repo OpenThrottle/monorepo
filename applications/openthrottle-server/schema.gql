@@ -3807,6 +3807,11 @@ type Subscription {
   planOutputChunkAdded(planId: ID!): PlanOutputStreamChunkObject!
 
   """
+  Live tail of new keyed run-output lines for a (queueName, jobId) — topic bullmq:<queueName>:<jobId>:logs.
+  """
+  queueJobLogTail(queueName: String!, jobId: String!): QueueJobLogEventObject!
+
+  """
   Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session.
   """
   transcriptionStreamChunkAdded(sessionId: ID!): TranscriptionStreamChunkObject!

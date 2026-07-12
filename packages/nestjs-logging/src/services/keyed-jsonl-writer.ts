@@ -57,6 +57,29 @@ export interface KeyedJsonlWriterOptions {
    */
   readonly lineFormat?: 'jsonl' | 'raw';
   readonly maxOpenFiles?: number;
+  /**
+   * @description Optional observer invoked synchronously for every structured
+   * record appended in `'jsonl'` mode, after the record is built (with its
+   * resolved `timestamp`) and before the write is chained to disk. Intended for
+   * best-effort live fan-out (e.g. a GraphQL subscription publish) without
+   * coupling this dep-free writer to any transport. The callback MUST NOT throw
+   * and MUST NOT block — it is wrapped in a try/catch so a faulty observer can
+   * never break the durable write path, and any async work should be
+   * fire-and-forget by the callback itself. Never called in `'raw'` mode (raw
+   * output has no structured record). Receives a frozen record and the 0-based
+   * physical `lineIndex` of the record within the `(queueName, jobId)` file —
+   * the same index a reader assigns (see `readKeyedJsonlRun`), so an observer can
+   * build a cursor that lines up with the historical read path. The index tracks
+   * append order within this writer instance; it can drift from the on-disk line
+   * for a job whose file is resumed by a second process (an unsupported topology
+   * for the live tail — see the log-tail API design doc).
+   */
+  readonly onAppend?: (
+    queueName: string,
+    jobId: string,
+    record: KeyedJsonlRunRecord,
+    lineIndex: number,
+  ) => void;
   readonly runOutputBaseDirectory: string;
   /**
    * @description Opt-in hardening for `lineFormat: 'raw'` (ignored in `'jsonl'`
@@ -107,6 +130,17 @@ export class KeyedJsonlWriter {
   private readonly lineFormat: 'jsonl' | 'raw';
   private readonly sanitizeRaw: boolean;
   private readonly durability: JsonlDurabilityLevel;
+  private readonly onAppend:
+    | ((
+        queueName: string,
+        jobId: string,
+        record: KeyedJsonlRunRecord,
+        lineIndex: number,
+      ) => void)
+    | undefined;
+  /** @description Per-key count of jsonl records appended by this instance; the
+   * next value is the 0-based physical `lineIndex` handed to {@link onAppend}. */
+  private readonly appendedJsonlLineCount = new Map<string, number>();
   private baseDirEnsured = false;
   private readonly tailByCompound = new Map<string, Promise<void>>();
   private readonly openByCompound = new Map<string, OpenEntry>();
@@ -120,6 +154,7 @@ export class KeyedJsonlWriter {
     this.lineFormat = options.lineFormat ?? 'jsonl';
     this.sanitizeRaw = options.sanitizeRaw ?? false;
     this.durability = options.durability ?? 'sync';
+    this.onAppend = options.onAppend;
   }
 
   /**
@@ -154,6 +189,10 @@ export class KeyedJsonlWriter {
         type: chunk.type,
       };
 
+      const lineIndex = this.appendedJsonlLineCount.get(k) ?? 0;
+      this.appendedJsonlLineCount.set(k, lineIndex + 1);
+      this.notifyOnAppend(queueName, jobId, record, lineIndex);
+
       this.chain(k, () =>
         this.appendJsonlInternal(k, queueName, jobId, record),
       );
@@ -166,6 +205,28 @@ export class KeyedJsonlWriter {
       }
 
       this.chain(k, () => this.appendRawInternal(k, queueName, jobId, chunk));
+    }
+  }
+
+  /**
+   * @description Fire the optional {@link KeyedJsonlWriterOptions.onAppend}
+   * observer with a frozen copy of the just-built record. Never throws: a faulty
+   * observer must not break the durable write path, so any error is swallowed.
+   */
+  private notifyOnAppend(
+    queueName: string,
+    jobId: string,
+    record: KeyedJsonlRunRecord,
+    lineIndex: number,
+  ): void {
+    if (this.onAppend === undefined) {
+      return;
+    }
+
+    try {
+      this.onAppend(queueName, jobId, Object.freeze({ ...record }), lineIndex);
+    } catch {
+      // Best-effort fan-out only; swallow to protect the durable write.
     }
   }
 

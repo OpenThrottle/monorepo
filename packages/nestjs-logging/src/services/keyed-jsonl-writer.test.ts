@@ -3,6 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { KeyedJsonlWriter } from './keyed-jsonl-writer';
+import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer';
 import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error';
 
 describe('KeyedJsonlWriter', () => {
@@ -235,5 +236,84 @@ describe('KeyedJsonlWriter', () => {
     const buf = await readFile(path.join(baseDir, 'q/1.log'));
 
     expect(buf.toString('utf8')).toContain('\uFFFD');
+  });
+
+  it('invokes onAppend per jsonl append with the built record and a monotonic per-key lineIndex', async () => {
+    const calls: Array<{
+      jobId: string;
+      lineIndex: number;
+      queueName: string;
+      record: KeyedJsonlRunRecord;
+    }> = [];
+
+    const w = new KeyedJsonlWriter({
+      onAppend: (queueName, jobId, record, lineIndex): void => {
+        calls.push({ jobId, lineIndex, queueName, record });
+      },
+      runOutputBaseDirectory: await mkBase(),
+    });
+
+    w.appendRunChunk('q', '1', {
+      data: 'first',
+      timestamp: '2026-05-02T12:00:00.000Z',
+      type: 'stdout',
+    });
+    w.appendRunChunk('q', '1', { data: 'second', type: 'stderr' });
+    // A different key restarts the lineIndex at 0.
+    w.appendRunChunk('q', '2', { data: 'other', type: 'stdout' });
+    await w.closeAll();
+
+    expect(calls).toHaveLength(3);
+    expect(calls[0].lineIndex).toBe(0);
+    expect(calls[0].record.data).toBe('first');
+    expect(calls[0].record.timestamp).toBe('2026-05-02T12:00:00.000Z');
+    // Per-key monotonic increment.
+    expect(calls[1]).toMatchObject({
+      jobId: '1',
+      lineIndex: 1,
+      queueName: 'q',
+    });
+    expect(calls[2]).toMatchObject({
+      jobId: '2',
+      lineIndex: 0,
+      queueName: 'q',
+    });
+    // The record handed to the observer is frozen.
+    expect(Object.isFrozen(calls[0].record)).toBe(true);
+  });
+
+  it('never invokes onAppend in raw mode (no structured record)', async () => {
+    let called = false;
+
+    const w = new KeyedJsonlWriter({
+      lineFormat: 'raw',
+      onAppend: (): void => {
+        called = true;
+      },
+      runOutputBaseDirectory: await mkBase(),
+    });
+
+    w.appendRunChunk('q', '1', 'raw line\n');
+    await w.close('q', '1');
+
+    expect(called).toBe(false);
+  });
+
+  it('swallows an onAppend that throws and still writes the durable line', async () => {
+    const w = new KeyedJsonlWriter({
+      onAppend: (): void => {
+        throw new Error('observer boom');
+      },
+      runOutputBaseDirectory: await mkBase(),
+    });
+
+    expect(() =>
+      w.appendRunChunk('q', '1', { data: 'durable', type: 'stdout' }),
+    ).not.toThrow();
+    await w.close('q', '1');
+
+    const text = await readFile(path.join(baseDir, 'q/1.jsonl'), 'utf8');
+
+    expect(text).toContain('durable');
   });
 });
