@@ -51,6 +51,7 @@ import {
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
+import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
@@ -87,6 +88,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   if (!planId) {
     return {
+      linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
       planRunAuditRows: [],
@@ -104,6 +106,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   return {
+    linkedArtifacts: page.workArtifactsByPlan.artifacts ?? [],
     plan: page.plan ?? null,
     planOutputChunks: page.planOutputStreamChunks ?? [],
     planRunAuditRows: page.planRunsByPlanId ?? [],
@@ -131,7 +134,8 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, ruleApplications, tagVocabulary, tasks } = loaderData;
+  const { linkedArtifacts, plan, ruleApplications, tagVocabulary, tasks } =
+    loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -313,6 +317,7 @@ export default function Component(
             vocabulary={tagVocabulary}
           />
           <PlanRuleApplications applications={ruleApplications} />
+          <LinkedArtifactsPanel artifacts={linkedArtifacts} />
         </div>
 
         <div className="">

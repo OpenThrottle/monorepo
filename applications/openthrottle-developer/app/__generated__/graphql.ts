@@ -2323,7 +2323,9 @@ export type Query = {
   user?: Maybe<UserObject>;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
+  workArtifactsByPlan: WorkArtifactListResult;
   workArtifactsBySession: WorkArtifactListResult;
+  workArtifactsByTask: WorkArtifactListResult;
   workSession?: Maybe<WorkSessionObject>;
   workSessionsByPlan: WorkSessionListResult;
   /** List local repositories for the authenticated user. */
@@ -2600,8 +2602,16 @@ export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type QueryWorkArtifactsByPlanArgs = {
+  input: WorkArtifactsByPlanInput;
+};
+
 export type QueryWorkArtifactsBySessionArgs = {
   input: WorkArtifactsBySessionInput;
+};
+
+export type QueryWorkArtifactsByTaskArgs = {
+  input: WorkArtifactsByTaskInput;
 };
 
 export type QueryWorkSessionArgs = {
@@ -3682,9 +3692,19 @@ export type WorkArtifactObject = {
   verifiedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
+export type WorkArtifactsByPlanInput = {
+  /** Plan id to list linked artifacts for */
+  planId: Scalars['ID']['input'];
+};
+
 export type WorkArtifactsBySessionInput = {
   /** Session id to list artifacts for */
   sessionId: Scalars['ID']['input'];
+};
+
+export type WorkArtifactsByTaskInput = {
+  /** Task id to list linked artifacts for */
+  taskId: Scalars['ID']['input'];
 };
 
 export type WorkSessionListResult = {
@@ -4956,6 +4976,31 @@ export type PlanDetailIndexLoaderQuery = {
     runKind: string;
     status: string;
   }>;
+  workArtifactsByPlan: {
+    __typename?: 'WorkArtifactListResult';
+    totalCount: number;
+    artifacts: Array<{
+      __typename?: 'WorkArtifactObject';
+      externalKey: string;
+      id: string;
+      lifecycle?: string | null;
+      producedAt: any;
+      source: string;
+      type: string;
+      verification: string;
+    }>;
+  };
+};
+
+export type LinkedArtifactFragment = {
+  __typename?: 'WorkArtifactObject';
+  externalKey: string;
+  id: string;
+  lifecycle?: string | null;
+  producedAt: any;
+  source: string;
+  type: string;
+  verification: string;
 };
 
 export type PlanOutputChunkAddedSubscriptionVariables = Exact<{
@@ -5076,6 +5121,28 @@ export type GetTaskByIdQuery = {
       name: string;
     } | null;
   } | null;
+};
+
+export type TaskLinkedArtifactsQueryVariables = Exact<{
+  taskId: Scalars['ID']['input'];
+}>;
+
+export type TaskLinkedArtifactsQuery = {
+  __typename?: 'Query';
+  workArtifactsByTask: {
+    __typename?: 'WorkArtifactListResult';
+    totalCount: number;
+    artifacts: Array<{
+      __typename?: 'WorkArtifactObject';
+      externalKey: string;
+      id: string;
+      lifecycle?: string | null;
+      producedAt: any;
+      source: string;
+      type: string;
+      verification: string;
+    }>;
+  };
 };
 
 export type GetTaskForEditByIdQueryVariables = Exact<{
@@ -6867,6 +6934,31 @@ export const PlanDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanDetailsFragment, unknown>;
+export const LinkedArtifactFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LinkedArtifact' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkArtifactObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LinkedArtifactFragment, unknown>;
 export const PlanCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -10599,6 +10691,48 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workArtifactsByPlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'artifacts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'LinkedArtifact' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
         ],
       },
     },
@@ -10721,6 +10855,26 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LinkedArtifact' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkArtifactObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
         ],
       },
     },
@@ -11153,6 +11307,99 @@ export const GetTaskByIdDocument = {
     },
   ],
 } as unknown as DocumentNode<GetTaskByIdQuery, GetTaskByIdQueryVariables>;
+export const TaskLinkedArtifactsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TaskLinkedArtifacts' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workArtifactsByTask' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'taskId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'taskId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'artifacts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'LinkedArtifact' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LinkedArtifact' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkArtifactObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskLinkedArtifactsQuery,
+  TaskLinkedArtifactsQueryVariables
+>;
 export const GetTaskForEditByIdDocument = {
   kind: 'Document',
   definitions: [

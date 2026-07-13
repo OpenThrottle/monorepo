@@ -106,6 +106,7 @@ describe('routes/plans.$planId.tsx', () => {
   test('should render plan detail with tasks', async () => {
     const user = userEvent.setup();
     const loaderData = {
+      linkedArtifacts: [],
       plan: mockPlan,
       planOutputChunks: [],
       planRunAuditRows: [],
@@ -151,6 +152,7 @@ describe('routes/plans.$planId.tsx', () => {
   test('should render plan detail with no tasks', async () => {
     const user = userEvent.setup();
     const loaderData = {
+      linkedArtifacts: [],
       plan: mockPlan,
       planOutputChunks: [],
       planRunAuditRows: [],
@@ -188,6 +190,7 @@ describe('routes/plans.$planId.tsx', () => {
         <PlanDetail
           actionData={undefined}
           loaderData={{
+            linkedArtifacts: [],
             plan: null,
             planOutputChunks: [],
             planRunAuditRows: [],
@@ -197,6 +200,7 @@ describe('routes/plans.$planId.tsx', () => {
             tasks: [],
           }}
           matches={buildPlanDetailMatches({
+            linkedArtifacts: [],
             plan: null,
             planOutputChunks: [],
             planRunAuditRows: [],
@@ -219,6 +223,7 @@ describe('routes/plans.$planId.tsx', () => {
   test('opens Tasks tab from URL and drops param when switching back to Details', async () => {
     const user = userEvent.setup();
     const loaderData = {
+      linkedArtifacts: [],
       plan: mockPlan,
       planOutputChunks: [],
       planRunAuditRows: [],
@@ -264,6 +269,7 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('invalid plansDetailTab falls back to Details', () => {
     const loaderData = {
+      linkedArtifacts: [],
       plan: mockPlan,
       planOutputChunks: [],
       planRunAuditRows: [],

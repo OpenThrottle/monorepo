@@ -2383,6 +2383,8 @@ type Query {
   workSession(id: String!): WorkSessionObject
   workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
   workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
+  workArtifactsByPlan(input: WorkArtifactsByPlanInput!): WorkArtifactListResult!
+  workArtifactsByTask(input: WorkArtifactsByTaskInput!): WorkArtifactListResult!
   unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
 
   """
@@ -2897,6 +2899,16 @@ input WorkSessionsByPlanInput {
 input WorkArtifactsBySessionInput {
   """Session id to list artifacts for"""
   sessionId: ID!
+}
+
+input WorkArtifactsByPlanInput {
+  """Plan id to list linked artifacts for"""
+  planId: ID!
+}
+
+input WorkArtifactsByTaskInput {
+  """Task id to list linked artifacts for"""
+  taskId: ID!
 }
 
 input UnverifiedWorkArtifactsInput {

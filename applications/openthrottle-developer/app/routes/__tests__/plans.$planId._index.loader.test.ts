@@ -28,6 +28,7 @@ describe('routes/plans.$planId._index loader', () => {
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     expect(result).toEqual({
+      linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
       planRunAuditRows: [],
@@ -50,6 +51,7 @@ describe('routes/plans.$planId._index loader', () => {
       { __typename: 'RuleApplicationObject', id: 'app-1' },
     ];
     const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
+    const linkedArtifacts = [{ __typename: 'WorkArtifactObject', id: 'art-1' }];
 
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       metrics: { recentPlanRunsMetrics: recentRuns },
@@ -59,6 +61,7 @@ describe('routes/plans.$planId._index loader', () => {
       ruleApplications,
       skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 },
       tasksByPlanId: tasks,
+      workArtifactsByPlan: { artifacts: linkedArtifacts, totalCount: 1 },
     });
 
     const request = new Request(`http://localhost/plans/${planId}`);
@@ -76,6 +79,7 @@ describe('routes/plans.$planId._index loader', () => {
       { planId },
     );
     expect(result).toEqual({
+      linkedArtifacts,
       plan,
       planOutputChunks: outputChunks,
       planRunAuditRows: auditRows,
@@ -95,6 +99,7 @@ describe('routes/plans.$planId._index loader', () => {
       ruleApplications: null,
       skillTagVocabulary: { tags: null, totalCount: 0 },
       tasksByPlanId: null,
+      workArtifactsByPlan: { artifacts: null, totalCount: 0 },
     });
 
     const request = new Request(`http://localhost/plans/${planId}`);
@@ -107,6 +112,7 @@ describe('routes/plans.$planId._index loader', () => {
     } satisfies Route.LoaderArgs);
 
     expect(result).toEqual({
+      linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
       planRunAuditRows: [],

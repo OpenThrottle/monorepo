@@ -112,7 +112,9 @@ import {
   UpdateWorkspaceProfileInput,
   UpsertTagActionRuleInput,
   WallClockInterpretation,
+  WorkArtifactsByPlanInput,
   WorkArtifactsBySessionInput,
+  WorkArtifactsByTaskInput,
   WorkSessionsByPlanInput,
   WorkspaceEditorId,
 } from './graphql.js';
@@ -1246,11 +1248,27 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
   });
 }
 
+export function WorkArtifactsByPlanInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsByPlanInput>
+> {
+  return z.object({
+    planId: z.string(),
+  });
+}
+
 export function WorkArtifactsBySessionInputSchema(): z.ZodObject<
   Properties<WorkArtifactsBySessionInput>
 > {
   return z.object({
     sessionId: z.string(),
+  });
+}
+
+export function WorkArtifactsByTaskInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsByTaskInput>
+> {
+  return z.object({
+    taskId: z.string(),
   });
 }
 

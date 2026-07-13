@@ -98,6 +98,7 @@ describe('routes/plans.$planId._index run config hydration', () => {
   test('hydrates Configuration tab from plan.runConfigJson', async () => {
     const user = userEvent.setup();
     const loaderData = {
+      linkedArtifacts: [],
       plan: mockPlan,
       planOutputChunks: [],
       planRunAuditRows: [],

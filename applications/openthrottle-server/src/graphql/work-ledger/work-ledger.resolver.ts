@@ -39,7 +39,9 @@ import {
   RecordWorkArtifactInput,
   StartWorkSessionInput,
   UnverifiedWorkArtifactsInput,
+  WorkArtifactsByPlanInput,
   WorkArtifactsBySessionInput,
+  WorkArtifactsByTaskInput,
   WorkSessionsByPlanInput,
 } from './work-ledger.input';
 import {
@@ -246,6 +248,42 @@ export class WorkLedgerResolver {
         order: { producedAt: 'ASC' },
         where: { sessionId: input.sessionId },
       });
+
+    return { artifacts, totalCount: artifacts.length };
+  }
+
+  @Query(() => WorkArtifactListResult)
+  async workArtifactsByPlan(
+    @Args('input') input: WorkArtifactsByPlanInput,
+  ): Promise<{ artifacts: WorkArtifact[]; totalCount: number }> {
+    const subjects = await this.workLedgerService
+      .getSubjectRepository()
+      .find({ where: { planId: input.planId } });
+
+    return this.artifactsForSessions(subjects.map((s) => s.sessionId));
+  }
+
+  @Query(() => WorkArtifactListResult)
+  async workArtifactsByTask(
+    @Args('input') input: WorkArtifactsByTaskInput,
+  ): Promise<{ artifacts: WorkArtifact[]; totalCount: number }> {
+    const subjects = await this.workLedgerService
+      .getSubjectRepository()
+      .find({ where: { taskId: input.taskId } });
+
+    return this.artifactsForSessions(subjects.map((s) => s.sessionId));
+  }
+
+  /** Fetch artifacts for a set of session ids (deduped); newest first. Empty set → empty result. */
+  private async artifactsForSessions(
+    sessionIds: readonly string[],
+  ): Promise<{ artifacts: WorkArtifact[]; totalCount: number }> {
+    const ids = [...new Set(sessionIds)];
+    if (ids.length === 0) return { artifacts: [], totalCount: 0 };
+
+    const artifacts = await this.workLedgerService
+      .getArtifactRepository()
+      .find({ order: { producedAt: 'DESC' }, where: { sessionId: In(ids) } });
 
     return { artifacts, totalCount: artifacts.length };
   }
