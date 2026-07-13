@@ -21,6 +21,11 @@ export class SkillTagObject {
   })
   tag!: string;
 
+  @Field(() => String, {
+    description: `Vocabulary axis: "domain" (subject area; the only dimension skills may carry) or "phase" (plan/task lifecycle stage).`,
+  })
+  dimension!: string;
+
   @Field(() => Date)
   createdAt!: Date;
 

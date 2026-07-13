@@ -145,6 +145,19 @@ export type {
 export { SkillTagsService } from './modules/skill-tags/skill-tags.service';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity';
+export { PlanTag } from './modules/tags/plan-tag.entity';
+export type { PlanTagData } from './modules/tags/plan-tag.entity';
+export { TaskTag } from './modules/tags/task-tag.entity';
+export type { TaskTagData } from './modules/tags/task-tag.entity';
+export {
+  deriveTagSource,
+  TAG_SOURCE_RANK,
+  TAG_SOURCES,
+  TAGGING_SERVICE_ACCOUNT_NAME,
+} from './modules/tags/tag-provenance';
+export type { TagCaller, TagSource } from './modules/tags/tag-provenance';
+export { TagsService } from './modules/tags/tags.service';
+export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.service';
 export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,

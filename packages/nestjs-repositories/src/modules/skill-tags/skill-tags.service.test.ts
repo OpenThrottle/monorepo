@@ -7,7 +7,10 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { DEFAULT_SKILL_TAG_VOCABULARY } from '@openthrottle/openthrottle-skills';
+import {
+  DEFAULT_SKILL_TAG_VOCABULARY,
+  DEFAULT_TAG_VOCABULARY_SEED,
+} from '@openthrottle/openthrottle-skills';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -95,7 +98,11 @@ describe('SkillTagsService', () => {
 
       expect(mockRepository.createQueryBuilder).toHaveBeenCalledTimes(1);
       expect(insertBuilder.values).toHaveBeenCalledWith(
-        DEFAULT_SKILL_TAG_VOCABULARY.map((tag) => ({ tag, userId })),
+        DEFAULT_TAG_VOCABULARY_SEED.map(({ dimension, tag }) => ({
+          dimension,
+          tag,
+          userId,
+        })),
       );
       expect(insertBuilder.orIgnore).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(DEFAULT_SKILL_TAG_VOCABULARY.length);
@@ -112,6 +119,7 @@ describe('SkillTagsService', () => {
 
       expect(result).toBe(saved);
       expect(mockRepository.create).toHaveBeenCalledWith({
+        dimension: 'domain',
         tag: 'pr-review',
         userId,
       });

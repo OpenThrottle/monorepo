@@ -268,6 +268,30 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.removeSkillTagToolHandler,
     ),
     defineTool(
+      'add_plan_tag',
+      Th.addPlanTagToolDescription,
+      Th.addPlanTagToolParameters,
+      Th.addPlanTagToolHandler,
+    ),
+    defineTool(
+      'remove_plan_tag',
+      Th.removePlanTagToolDescription,
+      Th.removePlanTagToolParameters,
+      Th.removePlanTagToolHandler,
+    ),
+    defineTool(
+      'add_task_tag',
+      Th.addTaskTagToolDescription,
+      Th.addTaskTagToolParameters,
+      Th.addTaskTagToolHandler,
+    ),
+    defineTool(
+      'remove_task_tag',
+      Th.removeTaskTagToolDescription,
+      Th.removeTaskTagToolParameters,
+      Th.removeTaskTagToolHandler,
+    ),
+    defineTool(
       'get_skill_availability',
       Th.getSkillAvailabilityToolDescription,
       Th.getSkillAvailabilityToolParameters,

@@ -30,6 +30,8 @@ import { Task } from './modules/tasks/task.entity';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 import { User } from './modules/users/user.entity';
 import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
+import { PlanTag } from './modules/tags/plan-tag.entity';
+import { TaskTag } from './modules/tags/task-tag.entity';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
 import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
@@ -71,6 +73,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       PlanEmbedding,
       PlanOutputStreamChunk,
       PlanRun,
+      PlanTag,
       Project,
       ProjectSkill,
       Role,
@@ -81,6 +84,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Subscription,
       Task,
       TaskEmbedding,
+      TaskTag,
       User,
       UserSkillTag,
       UserWorkspaceSettings,

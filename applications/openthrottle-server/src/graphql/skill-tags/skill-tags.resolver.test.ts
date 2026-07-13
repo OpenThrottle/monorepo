@@ -11,6 +11,7 @@ describe('SkillTagsResolver', () => {
 
   const makeTag = (tag: string): UserSkillTag => ({
     createdAt: new Date('2026-05-18T12:00:00.000Z'),
+    dimension: 'domain',
     id: `id-${tag}`,
     tag,
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
@@ -60,6 +61,7 @@ describe('SkillTagsResolver', () => {
     expect(mockSkillTagsService.addTag).toHaveBeenCalledWith(
       userId,
       'pr-review',
+      'domain',
     );
   });
 

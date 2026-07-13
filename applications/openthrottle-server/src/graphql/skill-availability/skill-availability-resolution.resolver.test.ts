@@ -37,6 +37,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
   const makeTag = (tag: string): UserSkillTag => ({
     createdAt: new Date('2026-07-11T12:00:00.000Z'),
+    dimension: 'domain',
     id: `id-${tag}`,
     tag,
     updatedAt: new Date('2026-07-11T12:00:00.000Z'),

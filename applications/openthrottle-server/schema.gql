@@ -212,6 +212,9 @@ type PlanObject {
   Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).
   """
   runConfigJson: String!
+
+  """Tags attached to this plan, alphabetically by tag."""
+  tags: [PlanTagObject!]!
 }
 
 type PlanStatusCountObject {
@@ -334,6 +337,9 @@ type TaskObject {
   summary: String
   title: String!
   updatedAt: DateTime!
+
+  """Tags attached to this task, alphabetically by tag."""
+  tags: [TaskTagObject!]!
 }
 
 type TasksByProjectIdResultObject {
@@ -1804,6 +1810,11 @@ type SkillTagObject {
 
   """Kebab-case tag slug, unique per user."""
   tag: String!
+
+  """
+  Vocabulary axis: "domain" (subject area; the only dimension skills may carry) or "phase" (plan/task lifecycle stage).
+  """
+  dimension: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -1817,6 +1828,56 @@ type SkillTagVocabularyResult {
 
   """Number of tags in the vocabulary."""
   totalCount: Int!
+}
+
+"""
+A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
+"""
+type PlanTagObject {
+  id: ID!
+  planId: ID!
+
+  """Kebab-case tag slug, unique per plan."""
+  tag: String!
+
+  """
+  Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan).
+  """
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a task. Same shape and provenance semantics as plan tags.
+"""
+type TaskTagObject {
+  id: ID!
+  taskId: ID!
+
+  """Kebab-case tag slug, unique per task."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type TaskEmbeddingObject {
@@ -2993,6 +3054,26 @@ type Mutation {
   """
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
 
+  """
+  Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects).
+  """
+  addPlanTag(input: AddPlanTagInput!): PlanTagObject!
+
+  """
+  Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present.
+  """
+  removePlanTag(input: RemovePlanTagInput!): Boolean!
+
+  """
+  Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity.
+  """
+  addTaskTag(input: AddTaskTagInput!): TaskTagObject!
+
+  """
+  Remove a tag from a task under the provenance ladder. Returns false when the tag was not present.
+  """
+  removeTaskTag(input: RemoveTaskTagInput!): Boolean!
+
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
@@ -3614,6 +3695,9 @@ input SkillAvailabilityRuleInput {
 input AddSkillTagInput {
   """Kebab-case tag slug to add (e.g. "pr-review")."""
   tag: String!
+
+  """Vocabulary axis for the tag: "domain" (default) or "phase"."""
+  dimension: String = "domain"
 }
 
 input RenameSkillTagInput {
@@ -3625,6 +3709,38 @@ input RenameSkillTagInput {
 }
 
 input RemoveSkillTagInput {
+  """Tag slug to remove."""
+  tag: String!
+}
+
+input AddPlanTagInput {
+  """Plan to tag."""
+  planId: ID!
+
+  """Kebab-case tag slug from the caller's skill-tag vocabulary."""
+  tag: String!
+}
+
+input RemovePlanTagInput {
+  """Plan to remove the tag from."""
+  planId: ID!
+
+  """Tag slug to remove."""
+  tag: String!
+}
+
+input AddTaskTagInput {
+  """Task to tag."""
+  taskId: ID!
+
+  """Kebab-case tag slug from the caller's skill-tag vocabulary."""
+  tag: String!
+}
+
+input RemoveTaskTagInput {
+  """Task to remove the tag from."""
+  taskId: ID!
+
   """Tag slug to remove."""
   tag: String!
 }

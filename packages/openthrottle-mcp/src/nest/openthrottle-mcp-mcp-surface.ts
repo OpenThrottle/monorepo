@@ -412,6 +412,50 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.addPlanTagToolDescription,
+    name: 'add_plan_tag',
+    parameters: asMcpParameters(Th.addPlanTagToolParameters),
+  })
+  addPlanTag(
+    args: Parameters<typeof Th.addPlanTagToolHandler>[0],
+  ): ReturnType<typeof Th.addPlanTagToolHandler> {
+    return Th.addPlanTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removePlanTagToolDescription,
+    name: 'remove_plan_tag',
+    parameters: asMcpParameters(Th.removePlanTagToolParameters),
+  })
+  removePlanTag(
+    args: Parameters<typeof Th.removePlanTagToolHandler>[0],
+  ): ReturnType<typeof Th.removePlanTagToolHandler> {
+    return Th.removePlanTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.addTaskTagToolDescription,
+    name: 'add_task_tag',
+    parameters: asMcpParameters(Th.addTaskTagToolParameters),
+  })
+  addTaskTag(
+    args: Parameters<typeof Th.addTaskTagToolHandler>[0],
+  ): ReturnType<typeof Th.addTaskTagToolHandler> {
+    return Th.addTaskTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeTaskTagToolDescription,
+    name: 'remove_task_tag',
+    parameters: asMcpParameters(Th.removeTaskTagToolParameters),
+  })
+  removeTaskTag(
+    args: Parameters<typeof Th.removeTaskTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeTaskTagToolHandler> {
+    return Th.removeTaskTagToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getSkillAvailabilityToolDescription,
     name: 'get_skill_availability',
     parameters: asMcpParameters(Th.getSkillAvailabilityToolParameters),

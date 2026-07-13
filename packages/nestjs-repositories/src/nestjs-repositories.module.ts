@@ -17,6 +17,7 @@ import { ServiceAccountsModule } from './modules/service-accounts/service-accoun
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module';
 import { SkillTagsModule } from './modules/skill-tags/skill-tags.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { TagsModule } from './modules/tags/tags.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -42,6 +43,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     SkillAvailabilityModule,
     SkillTagsModule,
     SubscriptionsModule,
+    TagsModule,
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
@@ -70,6 +72,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     SkillAvailabilityModule,
     SkillTagsModule,
     SubscriptionsModule,
+    TagsModule,
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
