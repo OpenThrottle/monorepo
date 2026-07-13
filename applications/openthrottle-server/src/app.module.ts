@@ -85,6 +85,9 @@ import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embe
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
+import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger-graphql.module';
+import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledger-sweep-queue.module';
+import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 
@@ -224,6 +227,8 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           PlanRulesQueueModule,
           PlansQueueModule,
           TaggingQueueModule,
+          WorkLedgerSweepQueueModule,
+          WorkLedgerVerifyQueueModule,
         ]
       : []),
 
@@ -266,6 +271,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           TasksGraphqlModule,
           TranscriptionStreamGraphqlModule,
           UsersGraphqlModule,
+          WorkLedgerGraphqlModule,
           WorkspaceSettingsGraphqlModule,
         ]
       : []),

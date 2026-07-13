@@ -18,6 +18,9 @@ import {
  * non-empty value. Extracted from the {@link ClsModule.forRoot} config so it can
  * be unit-tested directly.
  */
+/** Request header carrying an active work-ledger session id for ambient attribution (G11). */
+const HEADER_OT_SESSION_ID = 'x-ot-session-id';
+
 export const setupGlobalCls = (
   cls: ClsService,
   req: { headers: Record<string, string | undefined> },
@@ -31,6 +34,16 @@ export const setupGlobalCls = (
   };
 
   cls.set('app', app);
+
+  // Unvalidated claim — the work-ledger capture path verifies the session's actor
+  // against the request principal before trusting it (G11).
+  const headerSessionId = req.headers[HEADER_OT_SESSION_ID];
+  cls.set(
+    'sessionId',
+    headerSessionId != null && headerSessionId !== ''
+      ? headerSessionId
+      : undefined,
+  );
 };
 
 /**

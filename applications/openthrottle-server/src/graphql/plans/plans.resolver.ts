@@ -54,6 +54,7 @@ import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-e
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
@@ -160,6 +161,7 @@ export class PlansResolver {
     private readonly plansService: PlansService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   private toEnqueueResult(outcome: EnqueueOutcome): EnqueuePlanRunResultObject {
@@ -586,6 +588,8 @@ export class PlansResolver {
   ])
   async updatePlan(
     @Args('input', { type: () => UpdatePlanInput }) input: UpdatePlanInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanObject | null> {
     const repo = this.plansService.getRepository();
     const entity = await repo.findOne({ where: { id: input.id } });
@@ -598,6 +602,7 @@ export class PlansResolver {
     );
 
     let statusChanged = false;
+    let statusChangeFrom: string | null = null;
     let touched = false;
 
     if (input.author != null && input.author !== entity.author) {
@@ -622,6 +627,7 @@ export class PlansResolver {
           previousStatus,
         });
         statusChanged = true;
+        statusChangeFrom = previousStatus;
         touched = true;
       }
     }
@@ -701,7 +707,27 @@ export class PlansResolver {
       return entity;
     }
 
-    const saved = await repo.save(entity);
+    // Status fact + completed_at commit together with the status_change ledger row (G12).
+    const saved = await repo.manager.transaction(async (manager) => {
+      const persisted = await manager.save(entity);
+
+      if (statusChanged) {
+        await this.workLedgerCapture.recordStatusChange(manager, {
+          actorKind,
+          actorSub,
+          entity: 'plan',
+          from: statusChangeFrom,
+          id: persisted.id,
+          planId: persisted.id,
+          taskId: null,
+          to: persisted.status,
+        });
+      }
+
+      return persisted;
+    });
+
+    // Downstream reaction stays outside the transaction (fire-and-forget, as before).
     if (statusChanged) {
       await this.planRulesEvaluationService.enqueueEvaluation(
         saved.id,

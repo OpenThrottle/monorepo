@@ -297,6 +297,15 @@ export type AssignRoleToUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type AttachWorkSessionSubjectInput = {
+  /** Subject plan */
+  planId: Scalars['ID']['input'];
+  /** Session to attach the subject to */
+  sessionId: Scalars['ID']['input'];
+  /** Subject task (task-level subject); omit for plan-level */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -743,6 +752,13 @@ export type DuplicateJobResultObject = {
   jobId?: Maybe<Scalars['String']['output']>;
   /** Whether the duplicate was accepted. */
   success: Scalars['Boolean']['output'];
+};
+
+export type EndWorkSessionInput = {
+  /** Session to close */
+  sessionId: Scalars['ID']['input'];
+  /** Summary set at close (legibility for unpromoted sessions) */
+  summary?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueueAgenticTestResultObject = {
@@ -1217,6 +1233,7 @@ export type Mutation = {
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
+  attachWorkSessionSubject: WorkSessionSubjectObject;
   /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
@@ -1277,6 +1294,7 @@ export type Mutation = {
   enableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Re-enable a disabled user. */
   enableUser?: Maybe<UserObject>;
+  endWorkSession?: Maybe<WorkSessionObject>;
   /** Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error. */
   enqueueAgenticTest: EnqueueAgenticTestResultObject;
   /** Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error. */
@@ -1297,6 +1315,7 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
+  recordWorkArtifact: WorkArtifactObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
   /** Remove a permission from a role */
@@ -1337,6 +1356,7 @@ export type Mutation = {
   startConversationStream: StartConversationStreamResult;
   /** Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable). */
   startTranscriptionStream: StartTranscriptionStreamResult;
+  startWorkSession: WorkSessionObject;
   /** Flush and finalize an owned transcription session: sends END_OF_AUDIO upstream, waits a short flush window for the last revising segments, then emits the terminal done:true snapshot. Returns false (no throw) for unauthenticated, unknown, or foreign sessions. */
   stopTranscriptionStream: Scalars['Boolean']['output'];
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
@@ -1423,6 +1443,10 @@ export type MutationAssignRoleToServiceAccountArgs = {
 
 export type MutationAssignRoleToUserArgs = {
   input: AssignRoleToUserInput;
+};
+
+export type MutationAttachWorkSessionSubjectArgs = {
+  input: AttachWorkSessionSubjectInput;
 };
 
 export type MutationCancelConversationStreamArgs = {
@@ -1545,6 +1569,10 @@ export type MutationEnableUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationEndWorkSessionArgs = {
+  input: EndWorkSessionInput;
+};
+
 export type MutationEnqueueDocIngestionArgs = {
   input: EnqueueDocIngestionInput;
 };
@@ -1571,6 +1599,10 @@ export type MutationLinkCommitArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+export type MutationRecordWorkArtifactArgs = {
+  input: RecordWorkArtifactInput;
 };
 
 export type MutationRegisterArgs = {
@@ -1645,6 +1677,10 @@ export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
 
 export type MutationStartConversationStreamArgs = {
   input: StartConversationStreamInput;
+};
+
+export type MutationStartWorkSessionArgs = {
+  input: StartWorkSessionInput;
 };
 
 export type MutationStopTranscriptionStreamArgs = {
@@ -2282,10 +2318,14 @@ export type Query = {
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
+  unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
   user?: Maybe<UserObject>;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
+  workArtifactsBySession: WorkArtifactListResult;
+  workSession?: Maybe<WorkSessionObject>;
+  workSessionsByPlan: WorkSessionListResult;
   /** List local repositories for the authenticated user. */
   workspaceLocalRepositories: Array<WorkspaceLocalRepositoryObject>;
   /** Get a local repository by id for the authenticated user. */
@@ -2552,8 +2592,24 @@ export type QueryTasksByProjectIdArgs = {
   input: TasksByProjectIdInput;
 };
 
+export type QueryUnverifiedWorkArtifactsArgs = {
+  input: UnverifiedWorkArtifactsInput;
+};
+
 export type QueryUserArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryWorkArtifactsBySessionArgs = {
+  input: WorkArtifactsBySessionInput;
+};
+
+export type QueryWorkSessionArgs = {
+  id: Scalars['String']['input'];
+};
+
+export type QueryWorkSessionsByPlanArgs = {
+  input: WorkSessionsByPlanInput;
 };
 
 export type QueryWorkspaceLocalRepositoryArgs = {
@@ -2695,6 +2751,17 @@ export type RalphPlanRunTuningInput = {
   worktree?: InputMaybe<Scalars['String']['input']>;
   /** Cursor-only: branch/ref for --worktree-base. */
   worktreeBase?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordWorkArtifactInput = {
+  /** Optional human-readable note (e.g. commit message) */
+  message?: InputMaybe<Scalars['String']['input']>;
+  /** JSON-serialized payload; validated server-side against the type's schema */
+  payloadJson: Scalars['String']['input'];
+  /** Session that produced the artifact */
+  sessionId: Scalars['ID']['input'];
+  /** Artifact type: git_commit | pull_request | document | deployment | status_change */
+  type: Scalars['String']['input'];
 };
 
 export type RegisterInput = {
@@ -3131,6 +3198,23 @@ export type StartTranscriptionStreamResult = {
   sessionId?: Maybe<Scalars['String']['output']>;
 };
 
+export type StartWorkSessionInput = {
+  /** Chat conversation id when this session is a chat thread */
+  conversationId?: InputMaybe<Scalars['String']['input']>;
+  /** External correlation id (BullMQ job id, worktree+pid, agent session id) */
+  externalRef?: InputMaybe<Scalars['String']['input']>;
+  /** Model identifier when an agent did the work (e.g. claude-fable-5) */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Unverified hint: the human this machine work is on behalf of (users.id) */
+  onBehalfOfUserId?: InputMaybe<Scalars['ID']['input']>;
+  /** plan_runs.id when this session is a Ralph run */
+  planRunId?: InputMaybe<Scalars['ID']['input']>;
+  /** Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name */
+  toolName: Scalars['String']['input'];
+  /** Tool/client version */
+  toolVersion?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
   /** Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation. */
@@ -3380,6 +3464,13 @@ export type TranscriptionStreamChunkObject = {
   transcript: Scalars['String']['output'];
 };
 
+export type UnverifiedWorkArtifactsInput = {
+  /** Max rows (verifier feed); clamped server-side */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Restrict to a single artifact type (e.g. git_commit) */
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateAgentConversationTitleInput = {
   conversationId: Scalars['ID']['input'];
   title: Scalars['String']['input'];
@@ -3565,6 +3656,76 @@ export type WallClockMetrics = {
   wallClockMs: Scalars['Float']['output'];
   /** Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound. */
   wallClockToCpuRatio: Scalars['Float']['output'];
+};
+
+export type WorkArtifactListResult = {
+  __typename?: 'WorkArtifactListResult';
+  artifacts: Array<WorkArtifactObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type WorkArtifactObject = {
+  __typename?: 'WorkArtifactObject';
+  createdAt: Scalars['DateTime']['output'];
+  externalKey: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  lifecycle?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** JSON-serialized per-type payload (parse client-side) */
+  payloadJson: Scalars['String']['output'];
+  producedAt: Scalars['DateTime']['output'];
+  sessionId: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  /** Claims-vs-facts state: unverified | verified | orphaned */
+  verification: Scalars['String']['output'];
+  verifiedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type WorkArtifactsBySessionInput = {
+  /** Session id to list artifacts for */
+  sessionId: Scalars['ID']['input'];
+};
+
+export type WorkSessionListResult = {
+  __typename?: 'WorkSessionListResult';
+  sessions: Array<WorkSessionObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type WorkSessionObject = {
+  __typename?: 'WorkSessionObject';
+  actorServiceAccountId?: Maybe<Scalars['String']['output']>;
+  actorUserId?: Maybe<Scalars['String']['output']>;
+  /** How the session closed: explicit | sweeper; null while open */
+  closedBy?: Maybe<Scalars['String']['output']>;
+  conversationId?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  endedAt?: Maybe<Scalars['DateTime']['output']>;
+  externalRef?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  model?: Maybe<Scalars['String']['output']>;
+  onBehalfOfUserId?: Maybe<Scalars['String']['output']>;
+  onBehalfOfVerified: Scalars['Boolean']['output'];
+  planRunId?: Maybe<Scalars['String']['output']>;
+  startedAt: Scalars['DateTime']['output'];
+  summary?: Maybe<Scalars['String']['output']>;
+  toolName: Scalars['String']['output'];
+  toolVersion?: Maybe<Scalars['String']['output']>;
+};
+
+export type WorkSessionSubjectObject = {
+  __typename?: 'WorkSessionSubjectObject';
+  attachedAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  planId: Scalars['String']['output'];
+  sessionId: Scalars['String']['output'];
+  taskId?: Maybe<Scalars['String']['output']>;
+};
+
+export type WorkSessionsByPlanInput = {
+  /** Plan id to list sessions for */
+  planId: Scalars['ID']['input'];
 };
 
 /** Result of applying editor configuration for one linked repository and editor. */

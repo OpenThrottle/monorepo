@@ -26,6 +26,28 @@ export { CommitLink } from './modules/commit-links/commit-link.entity';
 export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
 export { CommitLinksService } from './modules/commit-links/commit-links.service';
+export { WorkArtifact } from './modules/work-ledger/work-artifact.entity';
+export type { WorkArtifactData } from './modules/work-ledger/work-artifact.entity';
+export { WorkSession } from './modules/work-ledger/work-session.entity';
+export type { WorkSessionData } from './modules/work-ledger/work-session.entity';
+export { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity';
+export type { WorkSessionSubjectData } from './modules/work-ledger/work-session-subject.entity';
+export {
+  WORK_ARTIFACT_SOURCE,
+  WORK_ARTIFACT_VERIFICATION,
+  WORK_SESSION_CLOSED_BY,
+} from './modules/work-ledger/work-ledger.constants';
+export type {
+  WorkArtifactSource,
+  WorkArtifactVerification,
+  WorkSessionClosedBy,
+} from './modules/work-ledger/work-ledger.constants';
+export {
+  workArtifactsFactory,
+  workSessionSubjectsFactory,
+  workSessionsFactory,
+} from './modules/work-ledger/work-ledger.factory';
+export { WorkLedgerService } from './modules/work-ledger/work-ledger.service';
 export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
 export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
 export {

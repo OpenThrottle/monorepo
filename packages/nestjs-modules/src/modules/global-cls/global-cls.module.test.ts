@@ -24,6 +24,13 @@ describe('setupGlobalCls', () => {
       return cls.get('app');
     });
 
+  const runSetupSessionId = (headers: Record<string, string | undefined>) =>
+    cls.runWith(asStore<GlobalClsStore>({}), () => {
+      setupGlobalCls(cls, { headers });
+
+      return cls.get('sessionId');
+    });
+
   it('stores app name and version from present headers', () => {
     const app = runSetup({
       'x-app-name': 'openthrottle-server',
@@ -64,5 +71,16 @@ describe('setupGlobalCls', () => {
       name: 'openthrottle-admin',
       version: 'x-app-version - unknown',
     });
+  });
+
+  it('captures x-ot-session-id when present', () => {
+    expect(runSetupSessionId({ 'x-ot-session-id': 'session-123' })).toBe(
+      'session-123',
+    );
+  });
+
+  it('leaves sessionId undefined when the header is absent or empty', () => {
+    expect(runSetupSessionId({})).toBeUndefined();
+    expect(runSetupSessionId({ 'x-ot-session-id': '' })).toBeUndefined();
   });
 });

@@ -14,6 +14,13 @@ export interface GlobalClsStore extends ClsStore {
   };
 
   /**
+   * @description Raw `x-ot-session-id` request header, if present. An UNVALIDATED
+   * client claim — consumers must verify the session's actor matches the request
+   * principal before attributing work to it (work-ledger ambient attribution, G11).
+   */
+  sessionId?: string;
+
+  /**
    * @description Present after auth populates it (see {@link applyGlobalClsUser});
    * omitted on public or pre-auth requests.
    */

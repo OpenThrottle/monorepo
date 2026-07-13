@@ -13,6 +13,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
@@ -51,6 +52,7 @@ import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-e
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import { TasksLoaders } from './tasks-loaders';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
@@ -108,6 +110,7 @@ export class TasksResolver {
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -433,6 +436,8 @@ export class TasksResolver {
   ])
   async updateTask(
     @Args('input', { type: () => UpdateTaskInput }) input: UpdateTaskInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<Task | null> {
     const repo = this.tasksService.getRepository();
     const entity = await repo.findOne({ where: { id: input.id } });
@@ -466,9 +471,31 @@ export class TasksResolver {
       entity.sortOrder = input.sortOrder;
     }
 
+    // A real status transition (not a no-op re-assert). The status_change ledger fact and the
+    // row's completed_at must commit together (G12) — so save + capture run in one transaction.
+    const statusChanged =
+      input.status != null && entity.status !== previousStatus;
+
     let saved: Task;
     try {
-      saved = await repo.save(entity);
+      saved = await repo.manager.transaction(async (manager) => {
+        const persisted = await manager.save(entity);
+
+        if (statusChanged) {
+          await this.workLedgerCapture.recordStatusChange(manager, {
+            actorKind,
+            actorSub,
+            entity: 'task',
+            from: previousStatus,
+            id: persisted.id,
+            planId: persisted.planId,
+            taskId: persisted.id,
+            to: persisted.status,
+          });
+        }
+
+        return persisted;
+      });
     } catch (error) {
       if (isSortOrderUniqueViolation(error)) {
         throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);

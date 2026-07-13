@@ -13,6 +13,7 @@ import {
   ArchiveAgentConversationInput,
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
+  AttachWorkSessionSubjectInput,
   CancelPlanRunInput,
   CodeSemanticSearchInput,
   CommitLinksByPlanIdInput,
@@ -39,6 +40,7 @@ import {
   DeleteTagActionRuleInput,
   DeleteTaskInput,
   DuplicateJobInput,
+  EndWorkSessionInput,
   EnqueueDocIngestionInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
@@ -71,6 +73,7 @@ import {
   QueueJobLogsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
+  RecordWorkArtifactInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
@@ -91,9 +94,11 @@ import {
   SetWorkspaceLocalRepositoryProjectInput,
   SkillAvailabilityRuleInput,
   StartConversationStreamInput,
+  StartWorkSessionInput,
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
+  UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
   UpdateCustomPromptInput,
   UpdateNoteInput,
@@ -107,6 +112,8 @@ import {
   UpdateWorkspaceProfileInput,
   UpsertTagActionRuleInput,
   WallClockInterpretation,
+  WorkArtifactsBySessionInput,
+  WorkSessionsByPlanInput,
   WorkspaceEditorId,
 } from './graphql.js';
 
@@ -259,6 +266,16 @@ export function AssignRoleToUserInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     userId: z.string(),
+  });
+}
+
+export function AttachWorkSessionSubjectInputSchema(): z.ZodObject<
+  Properties<AttachWorkSessionSubjectInput>
+> {
+  return z.object({
+    planId: z.string(),
+    sessionId: z.string(),
+    taskId: z.string().nullish(),
   });
 }
 
@@ -517,6 +534,15 @@ export function DuplicateJobInputSchema(): z.ZodObject<
   return z.object({
     jobId: z.string(),
     queueName: z.string(),
+  });
+}
+
+export function EndWorkSessionInputSchema(): z.ZodObject<
+  Properties<EndWorkSessionInput>
+> {
+  return z.object({
+    sessionId: z.string(),
+    summary: z.string().nullish(),
   });
 }
 
@@ -820,6 +846,17 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
   });
 }
 
+export function RecordWorkArtifactInputSchema(): z.ZodObject<
+  Properties<RecordWorkArtifactInput>
+> {
+  return z.object({
+    message: z.string().nullish(),
+    payloadJson: z.string(),
+    sessionId: z.string(),
+    type: z.string(),
+  });
+}
+
 export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
   return z.object({
     email: z.string(),
@@ -1005,6 +1042,20 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
   });
 }
 
+export function StartWorkSessionInputSchema(): z.ZodObject<
+  Properties<StartWorkSessionInput>
+> {
+  return z.object({
+    conversationId: z.string().nullish(),
+    externalRef: z.string().nullish(),
+    model: z.string().nullish(),
+    onBehalfOfUserId: z.string().nullish(),
+    planRunId: z.string().nullish(),
+    toolName: z.string(),
+    toolVersion: z.string().nullish(),
+  });
+}
+
 export function TaskEmbeddingsByTaskInputSchema(): z.ZodObject<
   Properties<TaskEmbeddingsByTaskInput>
 > {
@@ -1030,6 +1081,15 @@ export function TasksByProjectIdInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     projectId: z.string(),
+  });
+}
+
+export function UnverifiedWorkArtifactsInputSchema(): z.ZodObject<
+  Properties<UnverifiedWorkArtifactsInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    type: z.string().nullish(),
   });
 }
 
@@ -1183,5 +1243,21 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     projectId: z.string().nullish(),
     status: z.string().nullish(),
     tagAll: z.array(z.string()),
+  });
+}
+
+export function WorkArtifactsBySessionInputSchema(): z.ZodObject<
+  Properties<WorkArtifactsBySessionInput>
+> {
+  return z.object({
+    sessionId: z.string(),
+  });
+}
+
+export function WorkSessionsByPlanInputSchema(): z.ZodObject<
+  Properties<WorkSessionsByPlanInput>
+> {
+  return z.object({
+    planId: z.string(),
   });
 }

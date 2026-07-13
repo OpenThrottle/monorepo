@@ -37,6 +37,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         children: 'Chats',
         disabled: false, // 🔴 🟠 🟡 🟢
+        end: true,
         icon: MessageCircleCode,
         to: '/',
       },
@@ -57,6 +58,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         children: 'Plans',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: NotebookTextIcon,
+        end: false,
         to: '/plans',
       },
       {
@@ -126,6 +128,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         children: 'Chats',
         disabled: false, // 🔴 🟠 🟡 🟢
+        end: true,
         icon: MessageCircleCode,
         to: '/',
       },

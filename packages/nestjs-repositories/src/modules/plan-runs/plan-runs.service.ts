@@ -76,6 +76,19 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Finds the plan run for a (queueName, bullmqJobId) pair — the unique key a worker
+   * knows at run time — so it can resolve plan_run_id + actor_user_id (for the work-ledger session).
+   */
+  async findByQueueNameAndBullmqJobId(
+    queueName: string,
+    bullmqJobId: string,
+  ): Promise<PlanRun | null> {
+    return this.getRepository().findOne({
+      where: { bullmqJobId, queueName },
+    });
+  }
+
+  /**
    * @description Returns recent plan runs newest first for GraphQL/UI audit views.
    */
   async findRecentByPlanId(planId: string, limit: number): Promise<PlanRun[]> {

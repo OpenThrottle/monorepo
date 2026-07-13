@@ -30,6 +30,7 @@ import {
   PLANS_WORKER_STALLED_INTERVAL_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { WorkLedgerRunService } from './work-ledger-run.service';
 import { PlansProcessor } from './plans.processor';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
 
@@ -281,6 +282,13 @@ describe('PlansProcessor', () => {
           provide: WorkflowLifecycleDispatcherFactory,
           useValue: createMock<WorkflowLifecycleDispatcherFactory>({
             create: vi.fn(),
+          }),
+        },
+        {
+          provide: WorkLedgerRunService,
+          useValue: createMock<WorkLedgerRunService>({
+            closeRalphSession: vi.fn().mockResolvedValue(undefined),
+            openRalphSession: vi.fn().mockResolvedValue(null),
           }),
         },
       ],

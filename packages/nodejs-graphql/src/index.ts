@@ -232,6 +232,13 @@ export async function executeGraphqlAtUrl<
  */
 export interface ExecuteGraphqlWithAuthOptions {
   /**
+   * @description Extra request headers merged alongside the Authorization header
+   * (e.g. `X-OT-Session-Id` for work-ledger ambient attribution). The
+   * Authorization header takes precedence over any same-named entry here.
+   */
+  readonly headers?: Record<string, string> | undefined;
+
+  /**
    * @description Per-request timeout in milliseconds, forwarded to
    * {@link executeGraphql}. Defaults to {@link DEFAULT_GRAPHQL_TIMEOUT_MS}.
    * Pass `0` or a negative value to disable the timeout.
@@ -254,8 +261,11 @@ export async function executeGraphqlWithAuth<
 ): Promise<TData> {
   const isTokenNull = !token || token == null;
   const executeOptions: ExecuteGraphqlOptions = {
+    headers: {
+      ...options?.headers,
+      ...(isTokenNull ? {} : { Authorization: `Bearer ${token}` }),
+    },
     timeoutMs: options?.timeoutMs,
-    ...(isTokenNull ? {} : { headers: { Authorization: `Bearer ${token}` } }),
   };
 
   return executeGraphql(document, variables, executeOptions);
