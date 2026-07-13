@@ -15,5 +15,6 @@ export * from './tools/projects.ts';
 export * from './tools/search.ts';
 export * from './tools/plan-task-tags.ts';
 export * from './tools/skill-availability.ts';
+export * from './tools/tag-action-rules.ts';
 export * from './tools/skill-tags.ts';
 export * from './tools/tasks.ts';

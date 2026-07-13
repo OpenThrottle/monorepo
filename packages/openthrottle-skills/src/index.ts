@@ -29,6 +29,28 @@ export type {
 } from './default-skill-tag-vocabulary.ts';
 
 /** @public */
+export { evaluateTagActionRules } from './evaluate-tag-action-rules.ts';
+export type {
+  MatchedTagAction,
+  TagActionEvaluationContext,
+  TagActionRuleInput,
+} from './evaluate-tag-action-rules.ts';
+
+/** @public */
+export {
+  availabilityExceptionActionPayloadSchema,
+  injectTaskActionPayloadSchema,
+  isTagActionType,
+  parseTagActionPayload,
+  TAG_ACTION_TYPES,
+} from './tag-action-payloads.ts';
+export type {
+  AvailabilityExceptionActionPayload,
+  InjectTaskActionPayload,
+  TagActionType,
+} from './tag-action-payloads.ts';
+
+/** @public */
 export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';
 export type {
   SkillTagVocabularyEntry,

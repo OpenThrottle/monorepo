@@ -50,6 +50,8 @@ import {
   PlanEnqueueService,
 } from './plan-enqueue.service';
 import { PlanStatusService } from './plan-status.service';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
@@ -150,6 +152,7 @@ export class PlansResolver {
     private readonly loaders: PlansLoaders,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
+    private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly planRunsService: PlanRunsService,
     private readonly planStatusService: PlanStatusService,
     private readonly plansService: PlansService,
@@ -509,7 +512,12 @@ export class PlansResolver {
   async createPlan(
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
   ): Promise<PlanObject> {
-    return this.planCreationService.createPlanFromInput(input);
+    const plan = await this.planCreationService.createPlanFromInput(input);
+    await this.planRulesEvaluationService.enqueueEvaluation(
+      plan.id,
+      PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
+    );
+    return plan;
   }
 
   @Mutation(() => CreatePlansResultObject, {
@@ -520,6 +528,14 @@ export class PlansResolver {
   ): Promise<CreatePlansResultObject> {
     const plans = await this.planCreationService.createPlansFromInput(
       input.plans,
+    );
+    await Promise.all(
+      plans.map((plan) =>
+        this.planRulesEvaluationService.enqueueEvaluation(
+          plan.id,
+          PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
+        ),
+      ),
     );
 
     return { plans, totalCount: plans.length };
@@ -566,6 +582,7 @@ export class PlansResolver {
       input.status,
     );
 
+    let statusChanged = false;
     let touched = false;
 
     if (input.author != null && input.author !== entity.author) {
@@ -589,6 +606,7 @@ export class PlansResolver {
           nextStatus: change.nextStatus,
           previousStatus,
         });
+        statusChanged = true;
         touched = true;
       }
     }
@@ -668,7 +686,14 @@ export class PlansResolver {
       return entity;
     }
 
-    return repo.save(entity);
+    const saved = await repo.save(entity);
+    if (statusChanged) {
+      await this.planRulesEvaluationService.enqueueEvaluation(
+        saved.id,
+        PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
+      );
+    }
+    return saved;
   }
 
   // @ProfileResponseTime('PlansResolver.setPlanStatus')
@@ -703,7 +728,17 @@ export class PlansResolver {
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
   ): Promise<PlanObject | null> {
-    return this.planStatusService.setStatus(input.planId, input.status);
+    const plan = await this.planStatusService.setStatus(
+      input.planId,
+      input.status,
+    );
+    if (plan != null) {
+      await this.planRulesEvaluationService.enqueueEvaluation(
+        plan.id,
+        PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
+      );
+    }
+    return plan;
   }
 
   // @ProfileResponseTime('PlansResolver.deletePlan')

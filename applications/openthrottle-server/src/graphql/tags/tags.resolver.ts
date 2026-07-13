@@ -17,6 +17,7 @@ import {
   ServiceAccountsService,
   type TagCaller,
   TagsService,
+  TasksService,
   type TaskTag,
 } from '@openthrottle/nestjs-repositories';
 import { UseGuards } from '@nestjs/common';
@@ -29,6 +30,8 @@ import {
 } from '@nestjs/graphql';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
 import {
@@ -45,6 +48,7 @@ import { TagsLoaders } from './tags-loaders';
 export class PlanTagsResolver {
   constructor(
     private readonly loaders: TagsLoaders,
+    private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly tagsService: TagsService,
   ) {}
@@ -68,7 +72,16 @@ export class PlanTagsResolver {
       principal,
       this.serviceAccountsService,
     );
-    return this.tagsService.addPlanTag(caller, input.planId, input.tag);
+    const tag = await this.tagsService.addPlanTag(
+      caller,
+      input.planId,
+      input.tag,
+    );
+    await this.planRulesEvaluationService.enqueueEvaluation(
+      input.planId,
+      PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+    );
+    return tag;
   }
 
   @Mutation(() => Boolean, {
@@ -84,7 +97,18 @@ export class PlanTagsResolver {
       principal,
       this.serviceAccountsService,
     );
-    return this.tagsService.removePlanTag(caller, input.planId, input.tag);
+    const removed = await this.tagsService.removePlanTag(
+      caller,
+      input.planId,
+      input.tag,
+    );
+    if (removed) {
+      await this.planRulesEvaluationService.enqueueEvaluation(
+        input.planId,
+        PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+      );
+    }
+    return removed;
   }
 }
 
@@ -93,9 +117,23 @@ export class PlanTagsResolver {
 export class TaskTagsResolver {
   constructor(
     private readonly loaders: TagsLoaders,
+    private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly tagsService: TagsService,
+    private readonly tasksService: TasksService,
   ) {}
+
+  private async enqueueTaskPlanEvaluation(taskId: string): Promise<void> {
+    const task = await this.tasksService
+      .getRepository()
+      .findOne({ where: { id: taskId } });
+    if (task?.planId != null) {
+      await this.planRulesEvaluationService.enqueueEvaluation(
+        task.planId,
+        PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+      );
+    }
+  }
 
   @ResolveField(() => [TaskTagObject], {
     description: `Tags attached to this task, alphabetically by tag.`,
@@ -116,7 +154,13 @@ export class TaskTagsResolver {
       principal,
       this.serviceAccountsService,
     );
-    return this.tagsService.addTaskTag(caller, input.taskId, input.tag);
+    const tag = await this.tagsService.addTaskTag(
+      caller,
+      input.taskId,
+      input.tag,
+    );
+    await this.enqueueTaskPlanEvaluation(input.taskId);
+    return tag;
   }
 
   @Mutation(() => Boolean, {
@@ -132,7 +176,15 @@ export class TaskTagsResolver {
       principal,
       this.serviceAccountsService,
     );
-    return this.tagsService.removeTaskTag(caller, input.taskId, input.tag);
+    const removed = await this.tagsService.removeTaskTag(
+      caller,
+      input.taskId,
+      input.tag,
+    );
+    if (removed) {
+      await this.enqueueTaskPlanEvaluation(input.taskId);
+    }
+    return removed;
   }
 }
 

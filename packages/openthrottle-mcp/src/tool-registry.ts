@@ -292,6 +292,30 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.removeTaskTagToolHandler,
     ),
     defineTool(
+      'list_tag_action_rules',
+      Th.listTagActionRulesToolDescription,
+      Th.listTagActionRulesToolParameters,
+      Th.listTagActionRulesToolHandler,
+    ),
+    defineTool(
+      'list_rule_applications',
+      Th.listRuleApplicationsToolDescription,
+      Th.listRuleApplicationsToolParameters,
+      Th.listRuleApplicationsToolHandler,
+    ),
+    defineTool(
+      'upsert_tag_action_rule',
+      Th.upsertTagActionRuleToolDescription,
+      Th.upsertTagActionRuleToolParameters,
+      Th.upsertTagActionRuleToolHandler,
+    ),
+    defineTool(
+      'delete_tag_action_rule',
+      Th.deleteTagActionRuleToolDescription,
+      Th.deleteTagActionRuleToolParameters,
+      Th.deleteTagActionRuleToolHandler,
+    ),
+    defineTool(
       'get_skill_availability',
       Th.getSkillAvailabilityToolDescription,
       Th.getSkillAvailabilityToolParameters,

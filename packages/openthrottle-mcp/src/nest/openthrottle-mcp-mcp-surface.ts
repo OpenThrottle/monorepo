@@ -456,6 +456,50 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.listTagActionRulesToolDescription,
+    name: 'list_tag_action_rules',
+    parameters: asMcpParameters(Th.listTagActionRulesToolParameters),
+  })
+  listTagActionRules(
+    args: Parameters<typeof Th.listTagActionRulesToolHandler>[0],
+  ): ReturnType<typeof Th.listTagActionRulesToolHandler> {
+    return Th.listTagActionRulesToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listRuleApplicationsToolDescription,
+    name: 'list_rule_applications',
+    parameters: asMcpParameters(Th.listRuleApplicationsToolParameters),
+  })
+  listRuleApplications(
+    args: Parameters<typeof Th.listRuleApplicationsToolHandler>[0],
+  ): ReturnType<typeof Th.listRuleApplicationsToolHandler> {
+    return Th.listRuleApplicationsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.upsertTagActionRuleToolDescription,
+    name: 'upsert_tag_action_rule',
+    parameters: asMcpParameters(Th.upsertTagActionRuleToolParameters),
+  })
+  upsertTagActionRule(
+    args: Parameters<typeof Th.upsertTagActionRuleToolHandler>[0],
+  ): ReturnType<typeof Th.upsertTagActionRuleToolHandler> {
+    return Th.upsertTagActionRuleToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.deleteTagActionRuleToolDescription,
+    name: 'delete_tag_action_rule',
+    parameters: asMcpParameters(Th.deleteTagActionRuleToolParameters),
+  })
+  deleteTagActionRule(
+    args: Parameters<typeof Th.deleteTagActionRuleToolHandler>[0],
+  ): ReturnType<typeof Th.deleteTagActionRuleToolHandler> {
+    return Th.deleteTagActionRuleToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getSkillAvailabilityToolDescription,
     name: 'get_skill_availability',
     parameters: asMcpParameters(Th.getSkillAvailabilityToolParameters),

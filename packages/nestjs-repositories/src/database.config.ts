@@ -31,6 +31,8 @@ import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 import { User } from './modules/users/user.entity';
 import { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 import { PlanTag } from './modules/tags/plan-tag.entity';
+import { RuleApplication } from './modules/tag-action-rules/rule-application.entity';
+import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity';
 import { TaskTag } from './modules/tags/task-tag.entity';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
 import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
@@ -77,11 +79,13 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Project,
       ProjectSkill,
       Role,
+      RuleApplication,
       ServiceAccount,
       ServiceAccountCredential,
       SkillAvailabilityRule,
       SkillAvailabilityRuleSet,
       Subscription,
+      TagActionRule,
       Task,
       TaskEmbedding,
       TaskTag,

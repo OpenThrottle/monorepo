@@ -1831,6 +1831,63 @@ type SkillTagVocabularyResult {
 }
 
 """
+A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user.
+"""
+type TagActionRuleObject {
+  id: ID!
+  userId: ID!
+
+  """Optional project scope; null matches every project."""
+  projectId: ID
+
+  """
+  Tags that must ALL be present in the plan's effective tag set; empty matches every plan.
+  """
+  tagAll: [String!]!
+
+  """Optional plan-status qualifier; null matches any status."""
+  status: String
+
+  """
+  Optional environment qualifier (ci | interactive | ralph); null applies everywhere.
+  """
+  environment: String
+
+  """Action type: "inject-task" or "availability-exception"."""
+  actionType: String!
+
+  """JSON-encoded action payload, validated per action type at write time."""
+  actionPayloadJson: String!
+  enabled: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+One apply-once ledger row for a (rule, plan) pair. States: applied | pre-satisfied | flagged | orphaned.
+"""
+type RuleApplicationObject {
+  id: ID!
+  ruleId: ID!
+  planId: ID!
+
+  """
+  The injected (or pre-satisfying) task; null when not applicable or after a human deleted the task.
+  """
+  taskId: ID
+
+  """applied | pre-satisfied | flagged | orphaned."""
+  state: String!
+
+  """
+  JSON-encoded executor context for the state (e.g. {"reason":"skill-unavailable"}).
+  """
+  detailsJson: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
 A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
 """
 type PlanTagObject {
@@ -2338,6 +2395,14 @@ type Query {
   The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read.
   """
   skillTagVocabulary: SkillTagVocabularyResult!
+
+  """The authenticated user's tag→action rules, oldest first."""
+  tagActionRules: [TagActionRuleObject!]!
+
+  """
+  The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications.
+  """
+  ruleApplications(planId: String!): [RuleApplicationObject!]!
 
   """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
@@ -3055,6 +3120,16 @@ type Mutation {
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
 
   """
+  Create or update a tag→action rule. The JSON payload is validated against the action type's schema.
+  """
+  upsertTagActionRule(input: UpsertTagActionRuleInput!): TagActionRuleObject!
+
+  """
+  Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent.
+  """
+  deleteTagActionRule(input: DeleteTagActionRuleInput!): Boolean!
+
+  """
   Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects).
   """
   addPlanTag(input: AddPlanTagInput!): PlanTagObject!
@@ -3711,6 +3786,35 @@ input RenameSkillTagInput {
 input RemoveSkillTagInput {
   """Tag slug to remove."""
   tag: String!
+}
+
+input UpsertTagActionRuleInput {
+  """When present, updates the existing rule (must belong to the caller)."""
+  id: ID
+
+  """Optional project scope; null matches every project."""
+  projectId: ID
+
+  """Tags that must ALL be present (AND); empty matches every plan."""
+  tagAll: [String!]! = []
+
+  """Optional plan-status qualifier (e.g. PENDING)."""
+  status: String
+
+  """Optional environment qualifier: ci | interactive | ralph."""
+  environment: String
+
+  """Action type: "inject-task" or "availability-exception"."""
+  actionType: String!
+
+  """JSON-encoded action payload (validated per action type)."""
+  actionPayloadJson: String!
+  enabled: Boolean = true
+}
+
+input DeleteTagActionRuleInput {
+  """Rule to delete (ledger rows CASCADE)."""
+  id: ID!
 }
 
 input AddPlanTagInput {

@@ -65,6 +65,7 @@ import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-e
 import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
+import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
@@ -77,6 +78,7 @@ import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module';
 import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags-graphql.module';
+import { TagActionRulesGraphqlModule } from './graphql/tag-action-rules/tag-action-rules-graphql.module';
 import { TagsGraphqlModule } from './graphql/tags/tags-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
@@ -215,7 +217,9 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
     ...(isApiLike ? [DevelopmentModule] : []),
     ...(isWorkerLike ? [DocIngestionQueueModule] : []),
     ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
-    ...(isWorkerLike ? [PlanLifecycleHooksQueueModule, PlansQueueModule] : []),
+    ...(isWorkerLike
+      ? [PlanLifecycleHooksQueueModule, PlanRulesQueueModule, PlansQueueModule]
+      : []),
 
     // 🧩 GraphQL Modules
     ...(isApiLike
@@ -250,6 +254,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           SearchGraphqlModule,
           SkillAvailabilityGraphqlModule,
           SkillTagsGraphqlModule,
+          TagActionRulesGraphqlModule,
           TagsGraphqlModule,
           TaskEmbeddingsGraphqlModule,
           TasksGraphqlModule,

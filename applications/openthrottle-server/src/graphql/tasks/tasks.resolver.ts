@@ -47,6 +47,8 @@ import {
   TaskObject,
   TasksByProjectIdResultObject,
 } from './task.object';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { TasksLoaders } from './tasks-loaders';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
@@ -101,6 +103,7 @@ export class TasksResolver {
   constructor(
     private readonly loaders: TasksLoaders,
     private readonly notificationsService: NotificationsService,
+    private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly tasksService: TasksService,
   ) {}
 
@@ -313,6 +316,11 @@ export class TasksResolver {
       }
     }
 
+    await this.planRulesEvaluationService.enqueueEvaluation(
+      saved.planId,
+      PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
+    );
+
     return saved;
   }
 
@@ -356,6 +364,11 @@ export class TasksResolver {
         });
       }
     }
+
+    await this.planRulesEvaluationService.enqueueEvaluation(
+      input.planId,
+      PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
+    );
 
     return {
       tasks: saved.map(
@@ -473,6 +486,13 @@ export class TasksResolver {
           status: 'COMPLETED',
         });
       }
+    }
+
+    if (input.status != null && saved.status !== previousStatus) {
+      await this.planRulesEvaluationService.enqueueEvaluation(
+        saved.planId,
+        PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
+      );
     }
 
     return saved;

@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NotificationsModule } from '../../notifications/notifications.module';
+import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
 import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
@@ -18,6 +19,7 @@ import { PlansResolver } from './plans.resolver';
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanCreationModule,
+    PlanRulesQueueProducerModule,
     PlansQueueProducerModule,
     QueuesGraphqlModule,
   ],

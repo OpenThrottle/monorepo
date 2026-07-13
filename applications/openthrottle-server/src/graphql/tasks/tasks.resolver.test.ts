@@ -11,6 +11,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { TasksLoaders } from './tasks-loaders';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { TasksResolver } from './tasks.resolver';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -107,6 +108,10 @@ describe('TasksResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         TasksResolver,
+        {
+          provide: PlanRulesEvaluationService,
+          useValue: createMock<PlanRulesEvaluationService>(),
+        },
         { provide: TasksLoaders, useValue: mockLoaders },
         {
           provide: NotificationsService,
@@ -356,6 +361,10 @@ describe('TasksResolver', () => {
         providers: [
           TasksResolver,
           {
+            provide: PlanRulesEvaluationService,
+            useValue: createMock<PlanRulesEvaluationService>(),
+          },
+          {
             provide: TasksLoaders,
             useValue: createMock<TasksLoaders>({
               planLoader,
@@ -412,6 +421,10 @@ describe('TasksResolver', () => {
       const app = await Test.createTestingModule({
         providers: [
           TasksResolver,
+          {
+            provide: PlanRulesEvaluationService,
+            useValue: createMock<PlanRulesEvaluationService>(),
+          },
           {
             provide: TasksLoaders,
             useValue: createMock<TasksLoaders>({
