@@ -127,4 +127,35 @@ describe('WorkLedgerCaptureService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(artifactRepo.create).not.toHaveBeenCalled();
   });
+
+  it('recordGitCommitLink writes a landed git_commit artifact (source by principal kind)', async () => {
+    vi.mocked(artifactRepo.findOne).mockResolvedValue(null);
+
+    await service.recordGitCommitLink(manager, {
+      actorKind: USER_KIND,
+      actorSub: USER_SUB,
+      message: 'feat: thing',
+      planId: 'plan-1',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'deadbeef',
+      taskId: 'task-1',
+    });
+
+    expect(artifactRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalKey: 'github:OpenThrottle/monorepo@deadbeef',
+        lifecycle: 'landed',
+        payload: expect.objectContaining({ landedSha: 'deadbeef' }),
+        sessionId: 'instant-session',
+        source: 'human',
+        type: 'git_commit',
+        verification: 'unverified',
+      }),
+    );
+    // Instant session opened (no ambient) + subject ensured for the plan/task.
+    expect(sessionRepo.create).toHaveBeenCalled();
+    expect(subjectRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ planId: 'plan-1', taskId: 'task-1' }),
+    );
+  });
 });

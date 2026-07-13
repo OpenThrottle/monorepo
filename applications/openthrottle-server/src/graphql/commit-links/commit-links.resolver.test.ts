@@ -9,6 +9,7 @@ import { describe, expect, beforeAll, beforeEach, test, vi } from 'vitest';
 import { CommitLinksLoaders } from './commit-links-loaders';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { CommitLinksResolver } from './commit-links.resolver';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 
 describe('CommitLinksResolver', () => {
   let resolver: CommitLinksResolver;
@@ -38,6 +39,17 @@ describe('CommitLinksResolver', () => {
     create: vi.fn().mockReturnValue(createdEntity),
     find: vi.fn(),
     findOne: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        async (
+          work: (manager: {
+            save: (entity: unknown) => Promise<unknown>;
+          }) => unknown,
+        ) =>
+          // Delegate to repo.save so existing `expect(commitLinksRepo.save)` assertions hold.
+          work({ save: (entity: unknown) => commitLinksRepo.save(entity) }),
+      ),
+    },
     save: vi.fn().mockResolvedValue(createdEntity),
   };
 
@@ -67,6 +79,10 @@ describe('CommitLinksResolver', () => {
         },
         { provide: CommitLinksService, useValue: mockCommitLinksService },
         { provide: CommitLinksLoaders, useValue: mockLoaders },
+        {
+          provide: WorkLedgerCaptureService,
+          useValue: createMock<WorkLedgerCaptureService>(),
+        },
       ],
     }).compile();
 

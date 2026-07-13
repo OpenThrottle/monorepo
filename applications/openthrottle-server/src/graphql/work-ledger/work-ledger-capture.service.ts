@@ -21,6 +21,7 @@ import {
   WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import type { WorkArtifactSource } from '@openthrottle/nestjs-repositories';
 import { EntityManager, IsNull } from 'typeorm';
 import { resolveArtifactForWrite } from './artifact-type-registry';
 
@@ -42,6 +43,16 @@ export interface RecordStatusChangeParams {
   readonly to: string;
 }
 
+export interface RecordGitCommitLinkParams {
+  readonly actorKind: string | undefined;
+  readonly actorSub: string | undefined;
+  readonly message: string | null;
+  readonly planId: string;
+  readonly repo: string;
+  readonly sha: string;
+  readonly taskId: string | null;
+}
+
 function resolveActorColumns(
   sub: string | undefined,
   kind: string | undefined,
@@ -57,6 +68,13 @@ function resolveActorColumns(
   throw new BadRequestException(
     'Cannot record work-ledger status change: unresolved authentication principal.',
   );
+}
+
+/** Artifact source for a self-reported/linked output, by principal kind: humans vs machines. */
+function artifactSourceForKind(kind: string | undefined): WorkArtifactSource {
+  return kind === AUTH_PRINCIPAL_KIND_USER
+    ? WORK_ARTIFACT_SOURCE.HUMAN
+    : WORK_ARTIFACT_SOURCE.AGENT;
 }
 
 /** True when the session's actor matches the request principal (G11 ambient-attribution guard). */
@@ -111,6 +129,54 @@ export class WorkLedgerCaptureService {
         // First-party, server-witnessed event: born verified, not a claim (design §3.3).
         verification: WORK_ARTIFACT_VERIFICATION.VERIFIED,
         verifiedAt: now,
+      }),
+    );
+  }
+
+  /**
+   * @description Records a git_commit artifact for an explicit post-merge link (linkCommit),
+   * using the caller's transactional manager. Resolves an ambient-or-instant session, ensures the
+   * (plan, task) subject, and writes a landed git_commit artifact (verification 'unverified' — the
+   * git verifier confirms existence; the link asserts it merged, hence lifecycle 'landed' +
+   * payload.landedSha). Idempotent within a session. Throws only on an unresolved principal.
+   */
+  async recordGitCommitLink(
+    manager: EntityManager,
+    params: RecordGitCommitLinkParams,
+  ): Promise<void> {
+    const actor = resolveActorColumns(params.actorSub, params.actorKind);
+    const now = new Date();
+    const session = await this.resolveSession(manager, actor, now);
+
+    await this.ensureSubject(manager, session.id, params.planId, params.taskId);
+
+    const resolved = resolveArtifactForWrite('git_commit', {
+      repo: params.repo,
+      sha: params.sha,
+    });
+    const artifactRepo = manager.getRepository(WorkArtifact);
+    const existing = await artifactRepo.findOne({
+      where: {
+        externalKey: resolved.externalKey,
+        sessionId: session.id,
+        type: 'git_commit',
+      },
+    });
+
+    if (existing) return;
+
+    await artifactRepo.save(
+      artifactRepo.create({
+        externalKey: resolved.externalKey,
+        // A commit_link is a post-merge link, so it is landed by definition.
+        lifecycle: 'landed',
+        message: params.message,
+        payload: { ...resolved.payload, landedSha: params.sha },
+        producedAt: now,
+        sessionId: session.id,
+        source: artifactSourceForKind(params.actorKind),
+        type: 'git_commit',
+        verification: WORK_ARTIFACT_VERIFICATION.UNVERIFIED,
       }),
     );
   }
