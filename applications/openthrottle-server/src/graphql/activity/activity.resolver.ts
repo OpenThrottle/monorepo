@@ -205,7 +205,12 @@ export class ActivityResolver {
           sha: string;
         }[]
       >(
-        `SELECT created_at, repo, sha, message FROM commit_links WHERE task_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        `SELECT wa.produced_at AS created_at, wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha, wa.message
+         FROM work_artifacts wa
+         JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+         WHERE wa.type = 'git_commit' AND wss.task_id = $1
+         ORDER BY wa.produced_at DESC LIMIT 1`,
         [taskId],
       );
       const row = commitRows[0];
@@ -230,7 +235,12 @@ export class ActivityResolver {
           sha: string;
         }[]
       >(
-        `SELECT created_at, repo, sha, message FROM commit_links WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        `SELECT wa.produced_at AS created_at, wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha, wa.message
+         FROM work_artifacts wa
+         JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+         WHERE wa.type = 'git_commit' AND wss.plan_id = $1
+         ORDER BY wa.produced_at DESC LIMIT 1`,
         [planId],
       );
       const row = commitRows[0];
@@ -356,13 +366,27 @@ export class ActivityResolver {
           task_title: string | null;
         }[]
       >(
-        `SELECT cl.id, cl.plan_id, cl.task_id, cl.repo, cl.sha, cl.message, cl.created_at,
-                p.title AS plan_title, t.title AS task_title
-         FROM commit_links cl
-         JOIN plans p ON cl.plan_id = p.id
-         LEFT JOIN tasks t ON cl.task_id = t.id
-         WHERE cl.created_at >= $1::timestamptz AND cl.created_at < $2::timestamptz
-         ORDER BY cl.created_at DESC`,
+        // Commits leg re-keyed onto the work ledger (slice 7c): git_commit artifacts, attributed
+        // to the most-specific subject of their session (prefer a task subject over plan-level).
+        // DISTINCT ON (wa.id) yields exactly one activity row per commit artifact (no fan-out when
+        // a session has several subjects). The JS merge below re-sorts by timestamp.
+        `SELECT DISTINCT ON (wa.id)
+                wa.id,
+                wss.plan_id,
+                wss.task_id,
+                wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha,
+                wa.message,
+                wa.produced_at AS created_at,
+                p.title AS plan_title,
+                t.title AS task_title
+         FROM work_artifacts wa
+         JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+         JOIN plans p ON p.id = wss.plan_id
+         LEFT JOIN tasks t ON t.id = wss.task_id
+         WHERE wa.type = 'git_commit'
+           AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
+         ORDER BY wa.id, (wss.task_id IS NULL)`,
         [startIso, endIso],
       ),
       q<
