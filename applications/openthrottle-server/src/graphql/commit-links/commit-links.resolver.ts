@@ -1,6 +1,7 @@
 /**
  * @description Resolver for CommitLink queries. Injects CommitLinksService from @openthrottle/nestjs-repositories and maps entities to CommitLinkObject.
  */
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 
 import type { CommitLink, Plan, Task } from '@openthrottle/nestjs-repositories';
 import { CommitLinksService } from '@openthrottle/nestjs-repositories';
@@ -35,6 +36,7 @@ export class CommitLinksResolver {
   constructor(
     private readonly commitLinksService: CommitLinksService,
     private readonly loaders: CommitLinksLoaders,
+    private readonly taggingEnqueueService: TaggingEnqueueService,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -136,6 +138,14 @@ export class CommitLinksResolver {
       taskId: input.taskId ?? null,
     });
 
-    return this.commitLinksService.getRepository().save(entity);
+    const saved = await this.commitLinksService.getRepository().save(entity);
+    // Fire-and-forget refine-tagging on the landed squash (never blocks
+    // link_commit; the enqueue service swallows Redis failures).
+    await this.taggingEnqueueService.enqueueRefine(
+      saved.planId,
+      saved.repo,
+      saved.sha,
+    );
+    return saved;
   }
 }

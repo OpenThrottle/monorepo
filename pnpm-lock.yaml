@@ -2299,6 +2299,9 @@ importers:
       '@openthrottle/openthrottle-notifications':
         specifier: workspace:^
         version: link:../../packages/openthrottle-notifications
+      '@openthrottle/openthrottle-skills':
+        specifier: workspace:^
+        version: link:../../packages/openthrottle-skills
       '@openthrottle/openthrottle-workflows':
         specifier: workspace:^
         version: link:../../packages/openthrottle-workflows
@@ -2341,6 +2344,10 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@openthrottle/nestjs-testing':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-testing
 
   applications/openthrottle-website:
     dependencies:

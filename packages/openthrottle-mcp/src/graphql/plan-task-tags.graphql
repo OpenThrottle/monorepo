@@ -1,0 +1,39 @@
+# MCP-only GraphQL documents: plan/task tag attachments. Mirrors the
+# addPlanTag/removePlanTag/addTaskTag/removeTaskTag mutations exposed by
+# openthrottle-server. Source is identity-derived server-side (this MCP's
+# service account writes as "agent"); there is deliberately no source input.
+# See docs/monorepo/plan-task-tags-rules-design.md ("Provenance ladder").
+
+mutation AddPlanTag($input: AddPlanTagInput!) {
+  addPlanTag(input: $input) {
+    id
+    planId
+    tag
+    dimension
+    source
+    confidence
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemovePlanTag($input: RemovePlanTagInput!) {
+  removePlanTag(input: $input)
+}
+
+mutation AddTaskTag($input: AddTaskTagInput!) {
+  addTaskTag(input: $input) {
+    id
+    taskId
+    tag
+    dimension
+    source
+    confidence
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemoveTaskTag($input: RemoveTaskTagInput!) {
+  removeTaskTag(input: $input)
+}

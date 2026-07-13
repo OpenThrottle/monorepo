@@ -374,6 +374,32 @@ export class GitHubService {
   }
 
   /**
+   * @description Fetches one commit by SHA: per-file status/stats plus a patch
+   * when GitHub inlines one (large diffs omit it). Used by the refine-tagging
+   * job to classify a plan's landed squash diff. Returns null on 404/422
+   * (unknown sha) so callers can skip gracefully.
+   */
+  async getCommitDetail(
+    owner: string,
+    repo: string,
+    sha: string,
+  ): Promise<CommitDetailDto | null> {
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}`;
+
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
+    if (res.status === 404 || res.status === 422) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data: unknown = await res.json();
+    return parseCommitDetail(data);
+  }
+
+  /**
    * @description Fetches a single PR by number; includes additions, deletions, changed_files (not on list endpoint).
    */
   async getPullDetail(
@@ -770,4 +796,60 @@ function toPullListItemDto(p: GitHubPullItem): PullListItemDto {
     title: p.title,
     updatedAt: p.updated_at,
   };
+}
+
+/** One changed file of a commit (patch present only when GitHub inlines it). */
+export interface CommitFileDto {
+  readonly additions: number;
+  readonly deletions: number;
+  readonly filename: string;
+  readonly patch: string | null;
+  readonly status: string;
+}
+
+/** Commit detail for diff-driven classification (refine-tagging). */
+export interface CommitDetailDto {
+  readonly additions: number;
+  readonly deletions: number;
+  readonly files: CommitFileDto[];
+  readonly message: string;
+  readonly sha: string;
+}
+
+function parseCommitDetail(data: unknown): CommitDetailDto | null {
+  if (typeof data !== 'object' || data === null) return null;
+  const record: Record<string, unknown> = { ...data };
+  const sha = record.sha;
+  if (typeof sha !== 'string') return null;
+
+  const commit: Record<string, unknown> =
+    typeof record.commit === 'object' && record.commit !== null
+      ? { ...record.commit }
+      : {};
+  const message = typeof commit.message === 'string' ? commit.message : '';
+
+  const stats: Record<string, unknown> =
+    typeof record.stats === 'object' && record.stats !== null
+      ? { ...record.stats }
+      : {};
+  const additions = typeof stats.additions === 'number' ? stats.additions : 0;
+  const deletions = typeof stats.deletions === 'number' ? stats.deletions : 0;
+
+  const files: CommitFileDto[] = [];
+  if (Array.isArray(record.files)) {
+    for (const entry of record.files) {
+      if (typeof entry !== 'object' || entry === null) continue;
+      const file: Record<string, unknown> = { ...entry };
+      if (typeof file.filename !== 'string') continue;
+      files.push({
+        additions: typeof file.additions === 'number' ? file.additions : 0,
+        deletions: typeof file.deletions === 'number' ? file.deletions : 0,
+        filename: file.filename,
+        patch: typeof file.patch === 'string' ? file.patch : null,
+        status: typeof file.status === 'string' ? file.status : 'modified',
+      });
+    }
+  }
+
+  return { additions, deletions, files, message, sha };
 }

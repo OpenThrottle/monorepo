@@ -10,6 +10,13 @@ export class AddSkillTagInput {
     description: `Kebab-case tag slug to add (e.g. "pr-review").`,
   })
   tag!: string;
+
+  @Field(() => String, {
+    defaultValue: 'domain',
+    description: `Vocabulary axis for the tag: "domain" (default) or "phase".`,
+    nullable: true,
+  })
+  dimension?: string;
 }
 
 @InputType()

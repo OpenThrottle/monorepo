@@ -227,6 +227,25 @@ test asserts. The same shape is what the follow-on suggestion engine consumes.
   environment qualifier) and a workspace vocabulary manager, both over the GraphQL
   mutations. `@openthrottle/react-router-shadcn` components; mutations server-side.
 
+## Plan-aware reads (cross-reference)
+
+Shipped after this design by the plan/task tags & rules engine
+([plan-task-tags-rules-design.md](./plan-task-tags-rules-design.md)): the
+`skillAvailability` query (and the `get_skill_availability` MCP tool) accepts
+optional `planId` / `taskId` (the task must belong to the plan). When present,
+the server assembles the plan's effective **domain** tag set (plan tags ∪ task
+tags), runs `resolveSkillAvailability` exactly as specified here — plan context
+never alters `effectiveDisableModelInvocation` on its own — and annotates each
+skill with `matchedPlanTags` (skill tags ∩ effective domain set) and
+`planRelevant`, plus a `plan-context: …` provenance suffix; `relevantOnly`
+filters to plan-relevant skills. Matched `availability-exception` tag→action
+rules are materialized as **ephemeral** rule inputs appended to the project's
+stored rules for that evaluation only (provenance id
+`rule:<tag_action_rule_id> (plan-context)`) — they are never persisted into
+`skill_availability_rules`, and this ladder arbitrates them unchanged
+(deny-wins). The inject-task executor's candidate-set gating consumes the same
+read path.
+
 ## Backlog: enforcement
 
 Materialize the resolved flag into synced target-repo skill copies via the yaml writer

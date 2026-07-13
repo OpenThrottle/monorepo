@@ -1,0 +1,53 @@
+# MCP-only GraphQL documents: tag→action rule CRUD + the rule_applications
+# apply-once ledger read. Rules are user-owned; v1 rule mutations require a
+# user identity (a service-account token gets an explanatory error).
+# See docs/monorepo/plan-task-tags-rules-design.md ("Rules engine").
+
+query TagActionRules {
+  tagActionRules {
+    id
+    userId
+    projectId
+    tagAll
+    status
+    environment
+    actionType
+    actionPayloadJson
+    enabled
+    createdAt
+    updatedAt
+  }
+}
+
+query RuleApplications($planId: ID!) {
+  ruleApplications(planId: $planId) {
+    id
+    ruleId
+    planId
+    taskId
+    state
+    detailsJson
+    createdAt
+    updatedAt
+  }
+}
+
+mutation UpsertTagActionRule($input: UpsertTagActionRuleInput!) {
+  upsertTagActionRule(input: $input) {
+    id
+    userId
+    projectId
+    tagAll
+    status
+    environment
+    actionType
+    actionPayloadJson
+    enabled
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteTagActionRule($input: DeleteTagActionRuleInput!) {
+  deleteTagActionRule(input: $input)
+}

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for user_skill_tags. Matches databases/migrations/060.
+ * @description TypeORM entity for user_skill_tags. Matches databases/migrations/060 + 063.
  */
 
 import {
@@ -14,6 +14,7 @@ import {
 import { User } from '../users/user.entity';
 
 export interface UserSkillTagData {
+  readonly dimension: string;
   readonly id: string;
   readonly tag: string;
   readonly userId: string;
@@ -33,6 +34,9 @@ export class UserSkillTag {
 
   @Column({ name: 'tag', type: 'text' })
   tag!: string;
+
+  @Column({ default: 'domain', name: 'dimension', type: 'text' })
+  dimension!: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

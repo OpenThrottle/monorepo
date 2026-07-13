@@ -412,6 +412,94 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.addPlanTagToolDescription,
+    name: 'add_plan_tag',
+    parameters: asMcpParameters(Th.addPlanTagToolParameters),
+  })
+  addPlanTag(
+    args: Parameters<typeof Th.addPlanTagToolHandler>[0],
+  ): ReturnType<typeof Th.addPlanTagToolHandler> {
+    return Th.addPlanTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removePlanTagToolDescription,
+    name: 'remove_plan_tag',
+    parameters: asMcpParameters(Th.removePlanTagToolParameters),
+  })
+  removePlanTag(
+    args: Parameters<typeof Th.removePlanTagToolHandler>[0],
+  ): ReturnType<typeof Th.removePlanTagToolHandler> {
+    return Th.removePlanTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.addTaskTagToolDescription,
+    name: 'add_task_tag',
+    parameters: asMcpParameters(Th.addTaskTagToolParameters),
+  })
+  addTaskTag(
+    args: Parameters<typeof Th.addTaskTagToolHandler>[0],
+  ): ReturnType<typeof Th.addTaskTagToolHandler> {
+    return Th.addTaskTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeTaskTagToolDescription,
+    name: 'remove_task_tag',
+    parameters: asMcpParameters(Th.removeTaskTagToolParameters),
+  })
+  removeTaskTag(
+    args: Parameters<typeof Th.removeTaskTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeTaskTagToolHandler> {
+    return Th.removeTaskTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listTagActionRulesToolDescription,
+    name: 'list_tag_action_rules',
+    parameters: asMcpParameters(Th.listTagActionRulesToolParameters),
+  })
+  listTagActionRules(
+    args: Parameters<typeof Th.listTagActionRulesToolHandler>[0],
+  ): ReturnType<typeof Th.listTagActionRulesToolHandler> {
+    return Th.listTagActionRulesToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listRuleApplicationsToolDescription,
+    name: 'list_rule_applications',
+    parameters: asMcpParameters(Th.listRuleApplicationsToolParameters),
+  })
+  listRuleApplications(
+    args: Parameters<typeof Th.listRuleApplicationsToolHandler>[0],
+  ): ReturnType<typeof Th.listRuleApplicationsToolHandler> {
+    return Th.listRuleApplicationsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.upsertTagActionRuleToolDescription,
+    name: 'upsert_tag_action_rule',
+    parameters: asMcpParameters(Th.upsertTagActionRuleToolParameters),
+  })
+  upsertTagActionRule(
+    args: Parameters<typeof Th.upsertTagActionRuleToolHandler>[0],
+  ): ReturnType<typeof Th.upsertTagActionRuleToolHandler> {
+    return Th.upsertTagActionRuleToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.deleteTagActionRuleToolDescription,
+    name: 'delete_tag_action_rule',
+    parameters: asMcpParameters(Th.deleteTagActionRuleToolParameters),
+  })
+  deleteTagActionRule(
+    args: Parameters<typeof Th.deleteTagActionRuleToolHandler>[0],
+  ): ReturnType<typeof Th.deleteTagActionRuleToolHandler> {
+    return Th.deleteTagActionRuleToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getSkillAvailabilityToolDescription,
     name: 'get_skill_availability',
     parameters: asMcpParameters(Th.getSkillAvailabilityToolParameters),
