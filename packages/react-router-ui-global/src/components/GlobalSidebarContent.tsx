@@ -70,7 +70,11 @@ export const GlobalSidebarContent = (
 
     const toPath = getPathFromTo(to);
     const key = `${toPath}-${index}`;
-    const isActive = location.pathname === toPath;
+
+    const isExact = item.end === true;
+    const isActive = isExact
+      ? location.pathname === toPath
+      : location.pathname.startsWith(toPath);
 
     if (item.beta && !isBetaEnabled) {
       return null;

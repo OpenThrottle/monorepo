@@ -137,6 +137,7 @@ export const buildCsp = (
     `'self'`,
     `'nonce-${nonce}'`,
     `'strict-dynamic'`,
+    `'unsafe-eval'`, // FIXME: remove this once we have a proper eval policy
     ...(options.additionalScriptSrc ?? []),
   ];
 
