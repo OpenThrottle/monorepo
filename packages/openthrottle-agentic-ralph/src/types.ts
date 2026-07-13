@@ -52,6 +52,13 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
   /**
+   * @description Work-ledger run session id (opened by the plans worker for this run). When set, the
+   * orchestrator sends it as an `X-OT-Session-Id` header on its status-mutating GraphQL calls so the
+   * server-side capture (design §4.3, G11) attaches the run's task/plan status_change artifacts to
+   * this session instead of spawning per-mutation instant sessions. Omitted for CLI/dev paths.
+   */
+  readonly workSessionId?: string;
+  /**
    * @description Absolute path to the target repository cwd for agent iterations (foreign checkout).
    * When omitted, the host process cwd is used (typically the OpenThrottle monorepo root).
    */

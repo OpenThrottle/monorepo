@@ -19,10 +19,19 @@ export const createAgenticRalphOrchestratorDeps = (
     document: TypedDocumentNode<TData, TVariables>,
     variables?: TVariables,
     overrideOptions?: ExecuteGraphqlOptionsV2,
-  ): Promise<TData> =>
-    executeGraphqlV2(document, variables, {
+  ): Promise<TData> => {
+    // Deep-merge headers so a per-call header (e.g. X-OT-Session-Id) is added on top of any baked
+    // worker headers rather than clobbering them under the shallow spread below.
+    const mergedHeaders =
+      workerGraphqlAuth.headers != null || overrideOptions?.headers != null
+        ? { ...workerGraphqlAuth.headers, ...overrideOptions?.headers }
+        : undefined;
+
+    return executeGraphqlV2(document, variables, {
       ...workerGraphqlAuth,
       ...overrideOptions,
-    }),
+      ...(mergedHeaders != null ? { headers: mergedHeaders } : {}),
+    });
+  },
   iterationRunner: createCursorWorkflowRalphIterationRunner(),
 });

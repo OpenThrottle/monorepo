@@ -1,9 +1,16 @@
 /**
  * @description In-process work-ledger capture for the Ralph plan worker (design §4.1, G5).
  * The plans worker is server-side code, so it opens/closes its run session directly via the
- * repositories (no GraphQL round-trip to itself). The session's actor is the workflow-ralph
- * service account; on_behalf_of is inherited VERIFIED from plan_runs.actor_user_id (which was
- * stamped from an authenticated principal at enqueue time).
+ * repositories (no GraphQL round-trip to itself). on_behalf_of is inherited VERIFIED from
+ * plan_runs.actor_user_id (which was stamped from an authenticated principal at enqueue time).
+ *
+ * The session's actor is resolved from the worker's OWN GraphQL bearer token (the same token the
+ * in-process orchestrator authenticates with for its status mutations), so the session actor equals
+ * the request principal the server sees. That makes the run session pass the capture guard's
+ * actor-match check (G11) when the orchestrator sends X-OT-Session-Id, attaching status_change
+ * artifacts to this run session instead of per-mutation instant sessions. Falls back to the seeded
+ * `workflow-ralph` service account by name when the token can't be resolved (e.g. no worker token
+ * configured) — the pre-follow-up behavior.
  *
  * Every method is best-effort and NEVER throws: ledger bookkeeping must not break a plan run.
  * git_commit / pull_request artifacts are NOT captured here — no commit SHA surfaces to the
@@ -18,6 +25,7 @@ import {
   ServiceAccountsService,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
+import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../agentic-ralph/agentic-ralph-worker-graphql-auth';
 
 /** Seeded service account that owns Ralph runs (databases/migrations/045). */
 const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
@@ -50,13 +58,11 @@ export class WorkLedgerRunService {
         input.queueName,
         input.bullmqJobId,
       );
-      const ralphAccount = await this.serviceAccountsService.findByName(
-        WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
-      );
+      const actorServiceAccountId = await this.resolveActorServiceAccountId();
 
-      if (!ralphAccount) {
+      if (actorServiceAccountId == null) {
         this.logger.warn(
-          `Work-ledger: no '${WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME}' service account; skipping run session for plan ${input.planId}.`,
+          `Work-ledger: could not resolve a service account for the Ralph worker; skipping run session for plan ${input.planId}.`,
           WorkLedgerRunService.name,
         );
         return null;
@@ -66,7 +72,7 @@ export class WorkLedgerRunService {
       const sessionRepo = this.workLedgerService.getSessionRepository();
       const session = await sessionRepo.save(
         sessionRepo.create({
-          actorServiceAccountId: ralphAccount.id,
+          actorServiceAccountId,
           actorUserId: null,
           externalRef: input.bullmqJobId,
           model: input.model ?? null,
@@ -96,6 +102,39 @@ export class WorkLedgerRunService {
       );
       return null;
     }
+  }
+
+  /**
+   * @description Resolves the service account the run session should be actored to. Prefers the
+   * worker's OWN bearer-token principal (same token the orchestrator uses for GraphQL), so the
+   * session actor equals the request principal and the capture guard's actor-match (G11) attaches
+   * status changes to this session. Falls back to the seeded `workflow-ralph` account by name when
+   * no worker token is configured or the token does not verify. Returns null when neither resolves.
+   */
+  private async resolveActorServiceAccountId(): Promise<string | null> {
+    const token = resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token;
+
+    if (token != null && token !== '') {
+      try {
+        const verified =
+          await this.serviceAccountsService.verifyBearerToken(token);
+
+        if (verified != null) {
+          return verified.serviceAccountId;
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Work-ledger: failed to resolve the Ralph worker principal from its token; falling back to '${WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME}': ${String(error)}`,
+          WorkLedgerRunService.name,
+        );
+      }
+    }
+
+    const ralphAccount = await this.serviceAccountsService.findByName(
+      WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
+    );
+
+    return ralphAccount?.id ?? null;
   }
 
   /**

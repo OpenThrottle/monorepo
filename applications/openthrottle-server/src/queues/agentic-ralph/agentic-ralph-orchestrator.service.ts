@@ -50,8 +50,14 @@ export class AgenticRalphOrchestratorService {
     readonly jobData: RunPlanOrchestratorJobData;
     readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
     readonly signal?: AbortSignal;
+    /**
+     * Work-ledger run session id opened by the plans worker. Forwarded into the orchestrator
+     * context so its status mutations carry X-OT-Session-Id (ambient attribution, G11).
+     */
+    readonly workSessionId?: string | null;
   }): Promise<WorkflowRunResult> {
-    const { correlation, jobData, lifecycleDispatcher, signal } = params;
+    const { correlation, jobData, lifecycleDispatcher, signal, workSessionId } =
+      params;
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- AGENTIC_WORKFLOW_REGISTRY is intentionally `any`-typed (AnyAgenticWorkflow); the dispatcher narrows to the ralph orchestrator at the call site
     const orchestrator = this.workflowRegistry
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
@@ -91,6 +97,9 @@ export class AgenticRalphOrchestratorService {
       ...(lifecycleDispatcher !== undefined ? { lifecycleDispatcher } : {}),
       ...(workingDirectory !== undefined && workingDirectory !== ''
         ? { workingDirectory }
+        : {}),
+      ...(workSessionId != null && workSessionId !== ''
+        ? { workSessionId }
         : {}),
     };
 
