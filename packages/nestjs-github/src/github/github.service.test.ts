@@ -868,13 +868,11 @@ describe('GitHubService', () => {
 
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({
-          ok: false,
-          status: 404,
-          text: () => Promise.resolve(''),
-        }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve(''),
+      }),
     );
     const service404 = new GitHubService(mockConfig);
     expect(await service404.getDefaultBranch('owner', 'repo')).toBeNull();
@@ -910,13 +908,11 @@ describe('GitHubService', () => {
 
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({
-          ok: false,
-          status: 404,
-          text: () => Promise.resolve(''),
-        }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve(''),
+      }),
     );
     const service404 = new GitHubService(mockConfig);
     expect(
