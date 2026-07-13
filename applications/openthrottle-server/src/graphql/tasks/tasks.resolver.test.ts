@@ -12,6 +12,7 @@ import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { TasksLoaders } from './tasks-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TasksResolver } from './tasks.resolver';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -111,6 +112,10 @@ describe('TasksResolver', () => {
         {
           provide: PlanRulesEvaluationService,
           useValue: createMock<PlanRulesEvaluationService>(),
+        },
+        {
+          provide: TaggingEnqueueService,
+          useValue: createMock<TaggingEnqueueService>(),
         },
         { provide: TasksLoaders, useValue: mockLoaders },
         {
@@ -365,6 +370,10 @@ describe('TasksResolver', () => {
             useValue: createMock<PlanRulesEvaluationService>(),
           },
           {
+            provide: TaggingEnqueueService,
+            useValue: createMock<TaggingEnqueueService>(),
+          },
+          {
             provide: TasksLoaders,
             useValue: createMock<TasksLoaders>({
               planLoader,
@@ -424,6 +433,10 @@ describe('TasksResolver', () => {
           {
             provide: PlanRulesEvaluationService,
             useValue: createMock<PlanRulesEvaluationService>(),
+          },
+          {
+            provide: TaggingEnqueueService,
+            useValue: createMock<TaggingEnqueueService>(),
           },
           {
             provide: TasksLoaders,

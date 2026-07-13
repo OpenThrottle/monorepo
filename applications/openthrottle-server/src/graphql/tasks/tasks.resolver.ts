@@ -48,6 +48,8 @@ import {
   TasksByProjectIdResultObject,
 } from './task.object';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { TasksLoaders } from './tasks-loaders';
 
@@ -104,6 +106,7 @@ export class TasksResolver {
     private readonly loaders: TasksLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
+    private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
   ) {}
 
@@ -320,6 +323,10 @@ export class TasksResolver {
       saved.planId,
       PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
     );
+    await this.taggingEnqueueService.enqueuePredict(
+      TAGGING_ENTITY_TYPES.TASK,
+      saved.id,
+    );
 
     return saved;
   }
@@ -368,6 +375,14 @@ export class TasksResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       input.planId,
       PLAN_RULES_TRIGGER_KINDS.TASK_CREATED,
+    );
+    await Promise.all(
+      saved.map((task) =>
+        this.taggingEnqueueService.enqueuePredict(
+          TAGGING_ENTITY_TYPES.TASK,
+          task.id,
+        ),
+      ),
     );
 
     return {

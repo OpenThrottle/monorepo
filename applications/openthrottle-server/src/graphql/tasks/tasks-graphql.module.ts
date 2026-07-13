@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
+import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
 
@@ -14,6 +15,7 @@ import { TasksResolver } from './tasks.resolver';
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanRulesQueueProducerModule,
+    TaggingQueueProducerModule,
   ],
   providers: [TasksLoaders, TasksResolver],
 })

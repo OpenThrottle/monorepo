@@ -51,6 +51,8 @@ import {
 } from './plan-enqueue.service';
 import { PlanStatusService } from './plan-status.service';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { PlansLoaders } from './plans-loaders';
 import {
@@ -156,6 +158,7 @@ export class PlansResolver {
     private readonly planRunsService: PlanRunsService,
     private readonly planStatusService: PlanStatusService,
     private readonly plansService: PlansService,
+    private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
   ) {}
 
@@ -517,6 +520,10 @@ export class PlansResolver {
       plan.id,
       PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
     );
+    await this.taggingEnqueueService.enqueuePredict(
+      TAGGING_ENTITY_TYPES.PLAN,
+      plan.id,
+    );
     return plan;
   }
 
@@ -534,6 +541,14 @@ export class PlansResolver {
         this.planRulesEvaluationService.enqueueEvaluation(
           plan.id,
           PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
+        ),
+      ),
+    );
+    await Promise.all(
+      plans.map((plan) =>
+        this.taggingEnqueueService.enqueuePredict(
+          TAGGING_ENTITY_TYPES.PLAN,
+          plan.id,
         ),
       ),
     );

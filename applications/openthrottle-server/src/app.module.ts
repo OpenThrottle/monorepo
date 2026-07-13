@@ -66,6 +66,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
 import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module';
+import { TaggingQueueModule } from './queues/tagging/tagging-queue.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
@@ -218,7 +219,12 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
     ...(isWorkerLike ? [DocIngestionQueueModule] : []),
     ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
     ...(isWorkerLike
-      ? [PlanLifecycleHooksQueueModule, PlanRulesQueueModule, PlansQueueModule]
+      ? [
+          PlanLifecycleHooksQueueModule,
+          PlanRulesQueueModule,
+          PlansQueueModule,
+          TaggingQueueModule,
+        ]
       : []),
 
     // 🧩 GraphQL Modules
