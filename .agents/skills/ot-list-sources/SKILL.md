@@ -5,7 +5,6 @@ description: >-
   list_sources. USE WHEN the user runs /ot/list-sources, asks what plans are in
   the knowledge base, or wants to discover available OT collections before
   searching.
-tags: [openthrottle]
 disable-model-invocation: true
 ---
 

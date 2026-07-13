@@ -2,7 +2,6 @@
 # allowed-tools: Bash(git:*) Bash(jq:*) Read
 # compatibility: Requires Python 3.14+ and uv
 description: Clear cut rules for where to write new code, where it goes, how to name things and how to maintain it.
-tags: [openthrottle]
 name: openthrottle-folders
 metadata:
   author: OpenThrottle

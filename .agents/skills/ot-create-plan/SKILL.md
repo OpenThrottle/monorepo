@@ -5,7 +5,6 @@ description: >-
   openthrottle-mcp create_plan and create_task. USE WHEN the user runs
   /ot/create-plan, asks to add a plan to OpenThrottle/OT, or wants a structured plan
   record without starting execution—report created plan and task ids.
-tags: [openthrottle, planning]
 disable-model-invocation: true
 ---
 

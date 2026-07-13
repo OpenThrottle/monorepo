@@ -5,7 +5,6 @@ description: >-
   list_plans_by_status (pending, in_progress, completed, blocked, etc.). USE
   WHEN the user runs /ot/list-by-status, asks for plans in a given status, or
   did not specify status and wants pending/in-progress/completed listings.
-tags: [openthrottle]
 disable-model-invocation: true
 ---
 

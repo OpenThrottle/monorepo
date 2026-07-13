@@ -1,7 +1,6 @@
 ---
 name: github-deep-review
 description: 'GitHub deep review: bugs, PRs, best fix, stale-or-real, read code first.'
-tags: [github, pr-review]
 ---
 
 # GitHub Deep Review

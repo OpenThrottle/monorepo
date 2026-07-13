@@ -38,6 +38,33 @@ describe('toProjectSkillInputs', () => {
     ]);
   });
 
+  test('merges overlay tags (order-preserving union) when overlays are supplied', () => {
+    const [input] = toProjectSkillInputs(
+      [skillRecord({ labels: ['brag-sheet'], tags: undefined })],
+      { 'brag-sheet': { tags: ['docs', 'git', 'github'] } },
+    );
+
+    expect(input?.tags).toEqual(['docs', 'git', 'github']);
+  });
+
+  test('overlay union dedupes against frontmatter tags', () => {
+    const [input] = toProjectSkillInputs(
+      [skillRecord({ labels: ['github-commit'], tags: ['git'] })],
+      { 'github-commit': { tags: ['git', 'github'] } },
+    );
+
+    expect(input?.tags).toEqual(['git', 'github']);
+  });
+
+  test('a skill absent from the overlay map keeps its frontmatter tags', () => {
+    const [input] = toProjectSkillInputs(
+      [skillRecord({ labels: ['loner'], tags: ['nx'] })],
+      { 'other-skill': { tags: ['docs'] } },
+    );
+
+    expect(input?.tags).toEqual(['nx']);
+  });
+
   test('defaults absent tags to an empty list and preserves unset flag', () => {
     const [input] = toProjectSkillInputs([
       skillRecord({ labels: ['untagged'], tags: undefined }),
