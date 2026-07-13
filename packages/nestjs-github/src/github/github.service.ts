@@ -124,6 +124,23 @@ const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([
   429, 500, 502, 503, 504,
 ]);
 
+/** GitHub compare status of `head` relative to `base` (GET .../compare/{base}...{head}). */
+export type GitHubCompareStatus = 'ahead' | 'behind' | 'diverged' | 'identical';
+
+const GITHUB_COMPARE_STATUSES: readonly GitHubCompareStatus[] = [
+  'ahead',
+  'behind',
+  'diverged',
+  'identical',
+];
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isCompareStatus = (value: unknown): value is GitHubCompareStatus =>
+  typeof value === 'string' &&
+  GITHUB_COMPARE_STATUSES.some((status) => status === value);
+
 @Injectable()
 export class GitHubService {
   constructor(private readonly config: ConfigService) {}
@@ -397,6 +414,94 @@ export class GitHubService {
 
     const data: unknown = await res.json();
     return parseCommitDetail(data);
+  }
+
+  /**
+   * @description Returns the repo's default branch (e.g. 'main'), or null if the repo
+   * can't be read (404). Used by the work-ledger verifier to test commit reachability.
+   */
+  async getDefaultBranch(owner: string, repo: string): Promise<string | null> {
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data: unknown = await res.json();
+    return isRecord(data) && typeof data.default_branch === 'string'
+      ? data.default_branch
+      : null;
+  }
+
+  /**
+   * @description Compares `head` against `base` (GET .../compare/{base}...{head}) and returns the
+   * status of head relative to base: 'behind'/'identical' means head is reachable from base (landed);
+   * 'ahead'/'diverged' means it is not. null on 404 (unknown base or head).
+   */
+  async compareCommitStatus(
+    owner: string,
+    repo: string,
+    base: string,
+    head: string,
+  ): Promise<GitHubCompareStatus | null> {
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/compare/${encodeURIComponent(base)}...${encodeURIComponent(head)}`;
+
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data: unknown = await res.json();
+    const status = isRecord(data) ? data.status : undefined;
+    return isCompareStatus(status) ? status : null;
+  }
+
+  /**
+   * @description Returns the merge_commit_sha of the merged PR associated with `sha`
+   * (GET .../commits/{sha}/pulls), or null when no merged PR is associated. Lets the verifier
+   * map a squash-merged branch sha to the squash commit that actually landed on the default branch.
+   */
+  async getMergeCommitShaForCommit(
+    owner: string,
+    repo: string,
+    sha: string,
+  ): Promise<string | null> {
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}/pulls`;
+
+    const res = await this.fetchWithTimeout(url, this.buildHeaders());
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) {
+      return null;
+    }
+
+    for (const pull of data) {
+      if (
+        isRecord(pull) &&
+        pull.merged_at != null &&
+        typeof pull.merge_commit_sha === 'string'
+      ) {
+        return pull.merge_commit_sha;
+      }
+    }
+
+    return null;
   }
 
   /**
