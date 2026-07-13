@@ -264,6 +264,36 @@ Principle: **the tool doing the work writes the ledger** — it's the only party
 
 Mutations `startWorkSession`, `recordWorkArtifact`, `attachWorkSessionSubject`, `endWorkSession`; queries follow §3.4 (sessions/artifacts by plan, task, actor, date; unverified-claims feed for adapters). Result/ListResult conventions per openthrottle-stack; details belong to the implementation plan.
 
-## 5. Adapter/verifier contract (TBD — task `6b3958cc`)
+## 5. Adapter/verifier contract
+
+An ecosystem plugs into the ledger with exactly two things — and the second is optional:
+
+1. **Artifact type definition** (required): type name, payload schema (zod), `external_key` derivation rule, lifecycle vocabulary + which transitions trigger downstream jobs. Registered in a server-side code registry in v1 (no DB-driven type registration).
+2. **Verifier** (optional): a worker that consumes the unverified-claims feed (§3.3 partial index) for its types and returns `{verification, lifecycle?, payloadPatch?}` per artifact — upgrading claims to facts (`verified`), driving lifecycle from external reality, or flagging `orphaned`. Runs on the established BullMQ pattern with deterministic jobIds; keeps a cursor in its own state row.
+
+If the contract is this thin, "project doesn't use git" stops being an edge case: types like `document` or `deployment` can ship with **no verifier at all** — their artifacts remain visible, attributed claims, which is acceptable and honest.
+
+**Lifecycle promotions are the new trigger boundary.** `git_commit → landed` enqueues refine-tagging (re-keying the #182 trigger; jobId stays `tag-refine:<planId>:<sha>`, planId derived from the session's subjects — enqueue once per subject plan). Other types can declare their own trigger transitions later.
+
+### 5.1 Git adapter (reference implementation — absorbs plan 03dbeb22)
+
+Local-first, two modes; webhooks remain a hosted-mode future:
+
+- **Local scan** (default, zero tokens): walk registered checkouts' default branch incrementally from a stored cursor SHA (03dbeb22 task 2, minus the trailer dependency).
+- **GitHub poller** (optional, user token): resolves squash merges via PR data (merge_commit_sha, head branch), richer but rate-limited.
+
+Behaviors:
+
+| Behavior           | Detail                                                                                                                                                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verify existence   | Claimed `git_commit` sha found → `unverified → verified`                                                                                                                                                                                                                   |
+| Landed detection   | Sha reachable from default branch → `lifecycle → 'landed'` (fires triggers)                                                                                                                                                                                                |
+| **Squash mapping** | Claimed branch sha ≠ squash sha. Resolve via PR merge_commit_sha (poller) or message/trailer match (scan); **promote the same artifact** — `payload.landed_sha` added, `lifecycle='landed'`. Identity stays stable; a branch sha that landed via squash is _not_ orphaned. |
+| Orphan detection   | Sha unreachable and unmapped after a grace window (branch deleted, rebase drift) → `orphaned` (03dbeb22 task 5)                                                                                                                                                            |
+| Trailer harvesting | A commit on main with `Plan-Id:`/`Task-Id:` trailers but no ledger claim → adapter creates an adapter-sourced session + artifact (`source='adapter'`). Trailers finally get parsed — as one optional signal, not the front door.                                           |
+
+### 5.2 The non-git path needs nothing
+
+Confirmed against §4.3: a human flipping a task to COMPLETED yields an instant session (who: actor from principal; when: `produced_at`; what: subjects) with a born-verified `status_change` artifact. Zero adapters, zero git, zero ceremony — and it's a _richer_ record than today's `commit_links` row, which has no actor at all.
 
 ## 6. Chat → plan promotion (TBD — task `6af9fb8d`)
