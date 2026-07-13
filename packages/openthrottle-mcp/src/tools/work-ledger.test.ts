@@ -37,8 +37,9 @@ describe('work-ledger tools', () => {
       type: 'git_commit',
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.structuredContent?.artifact).toMatchObject({ id: 'art-1' });
+    expect(result).toMatchObject({
+      structuredContent: { artifact: expect.objectContaining({ id: 'art-1' }) },
+    });
     // First call opened the session; second recorded with the session header.
     expect(mockExecute).toHaveBeenCalledTimes(2);
     expect(mockExecute).toHaveBeenLastCalledWith(
@@ -78,7 +79,7 @@ describe('work-ledger tools', () => {
       type: 'git_commit',
     });
 
-    expect(result.isError).toBe(true);
+    expect(result).toMatchObject({ isError: true });
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
@@ -93,15 +94,15 @@ describe('work-ledger tools', () => {
       planId: '11111111-1111-4111-8111-111111111111',
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.structuredContent?.subject).toMatchObject({ id: 'subj-1' });
+    expect(result).toMatchObject({
+      structuredContent: { subject: expect.objectContaining({ id: 'subj-1' }) },
+    });
   });
 
   it('end_session is a no-op when no session is active', async () => {
     const result = await endSessionToolHandler({});
 
-    expect(result.isError).toBeFalsy();
-    expect(result.structuredContent?.session).toBeNull();
+    expect(result).toMatchObject({ structuredContent: { session: null } });
     expect(mockExecute).not.toHaveBeenCalled();
   });
 });
