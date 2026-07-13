@@ -86,6 +86,7 @@ import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
 import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger-graphql.module';
+import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 
@@ -225,6 +226,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           PlanRulesQueueModule,
           PlansQueueModule,
           TaggingQueueModule,
+          WorkLedgerVerifyQueueModule,
         ]
       : []),
 
