@@ -20,8 +20,8 @@ import {
   decodeQueueJobLogCursor,
   encodeQueueJobLogCursor,
 } from './queue-job-log-cursor';
+import { mapRecordToQueueJobLogEvent } from './queue-job-log-event.mapper';
 import { deriveQueueJobLogLevel } from './queue-job-log-mapping';
-import { buildRedactedQueueJobLogMessage } from './queue-job-log-redaction';
 import type { QueueJobLogEventObject } from './queue-job-log-event.object';
 import type { QueueJobLogPageObject } from './queue-job-log-page.object';
 import type { QueueJobLogsInput } from './queue-job-logs.input';
@@ -83,20 +83,21 @@ export class QueueJobLogsService {
 
     const events: QueueJobLogEventObject[] = [];
     for (const { lineNumber, record } of result.lines) {
-      const level = deriveQueueJobLogLevel(record);
-      if (levelFilter !== undefined && !levelFilter.has(level)) {
+      if (
+        levelFilter !== undefined &&
+        !levelFilter.has(deriveQueueJobLogLevel(record))
+      ) {
         continue;
       }
 
-      events.push({
-        cursor: encodeQueueJobLogCursor(lineNumber + 1),
-        jobId: input.jobId,
-        level,
-        message: buildRedactedQueueJobLogMessage(record.data),
-        queueName: input.queueName,
-        source: record.source ?? input.queueName,
-        timestamp: new Date(record.timestamp),
-      });
+      events.push(
+        mapRecordToQueueJobLogEvent({
+          cursor: encodeQueueJobLogCursor(lineNumber + 1),
+          jobId: input.jobId,
+          queueName: input.queueName,
+          record,
+        }),
+      );
     }
 
     return {

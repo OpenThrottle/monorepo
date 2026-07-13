@@ -131,12 +131,37 @@ error if both set).
 ## Live tail (subscription)
 
 Topic convention mirrors `plan:<id>:output`: **`bullmq:<queueName>:<jobId>:logs`**
-(instance‑scoped). In task 3 the publish is wired alongside
-`KeyedJsonlWriter.appendRunChunk(...)` in `PlansProcessor` / `WorkflowProcessor`,
-so each appended chunk is also `pubSub.publish`ed as a mapped+redacted
-`QueueJobLogEvent`. The subscription resolver filters by topic (server‑side, like
-the plan‑output precedent); clients first call `queueJobLogs` for catch‑up, then
-subscribe for new lines (dedupe by cursor).
+(built by `queueJobLogTopic(queueName, jobId)` in `@openthrottle/nestjs-graphql`).
+
+**Publish point (as implemented).** Rather than editing each processor, the
+publish is wired at the **writer boundary**: `KeyedJsonlWriter` takes an optional
+dep‑free `onAppend(queueName, jobId, record, lineIndex)` observer (invoked
+synchronously per `jsonl` append, never in `raw` mode). The
+`BULLMQ_RUN_OUTPUT_WRITER` factory (`queues/bullmq-run-output.module.ts`) injects
+`PUB_SUB` and passes `createQueueJobLogTailPublisher(pubSub)`
+(`graphql/queue-job-logs/queue-job-log-publisher.ts`), which maps + redacts the
+record through the **same** `mapRecordToQueueJobLogEvent` the query uses and
+fire‑and‑forget `pubSub.publish`es a `QueueJobLogEvent`. This gives every keyed
+producer (`PlansProcessor`, `WorkflowProcessor`, doc‑ingestion, …) live tail for
+free with zero processor changes, and guarantees the two surfaces never drift in
+shape or redaction. Publish never blocks or breaks the durable write (the writer
+wraps the observer in try/catch; the publish promise is intentionally not awaited).
+
+**Cursor / dedupe.** The observer receives the writer's 0‑based per‑key append
+index and stamps `cursor = encode(lineIndex + 1)` — the same encoding the query
+uses for a physical line — so a client that called `queueJobLogs` for catch‑up can
+dedupe live events by cursor. Caveat: the index tracks append order within one
+writer instance; a job whose keyed file is resumed by a **second process** would
+see the live index drift from the on‑disk line. That is the same single‑process
+constraint as below, not a supported topology.
+
+**Delivery is single‑process.** `PUB_SUB` is the in‑memory `graphql-subscriptions`
+`PubSub`, so a `queueJobLogTail` subscriber only receives events when it is served
+by the **same process** that runs the BullMQ processor doing the append (identical
+to `planOutputChunkAdded`). In a split web/worker deployment the historical
+`queueJobLogs` query still works (reads the shared on‑disk file); only the live
+push is process‑local. Cross‑process fan‑out (Redis `PubSub`) is a documented
+follow‑up, not in v1 — swapping the `PUB_SUB` provider is the only change needed.
 
 ## Auth (task 4)
 
@@ -149,11 +174,25 @@ subscribe for new lines (dedupe by cursor).
 
 ## Rate limiting (task 5)
 
-- **Query**: `@Throttle({ default: { limit, ttl } })` on the resolver (proposed
-  default 30 requests / 60s per subject; final number documented in the impl PR).
-- **Subscription**: cap concurrent connections per subject at `onConnect`
-  (proposed max 5); `limit` hard‑cap (1000) already bounds per‑response size.
-- Production policy: same caps enabled in prod; documented in task 5.
+- **Query (implemented)**: `@Throttle({ default: { limit: 30, ttl: 60_000 } })` on
+  `queueJobLogs` — 30 requests / 60s per subject, well under the global default of
+  1000/60s (`nestjs-throttler` `DEFAULT_THROTTLER_LIMIT`). Enforced by the global
+  `GqlThrottlerGuard` (`APP_GUARD`), keyed per authenticated subject. The `limit`
+  argument is additionally hard‑capped server‑side (default 200, max 1000), so a
+  single response can never be unbounded.
+- **Subscription (policy — documented, not a resolver decorator)**: `@Throttle`
+  does **not** fire for a graphql‑ws subscription (the throttler guard runs on the
+  GraphQL HTTP request context, not the persistent ws connection). The correct
+  control is a **per‑subject concurrent‑connection cap at the graphql‑ws
+  `onConnect` handshake** (proposed max 5 connections/subject), which lives in the
+  shared `nestjs-graphql` subscription transport and governs **all** subscriptions,
+  not just this one. It is therefore scoped as a shared‑infra follow‑up rather than
+  landed here to avoid changing the auth handshake for every existing subscription.
+  Until then, live tail is bounded by: auth (rejects anonymous), the single‑process
+  delivery constraint, and the per‑subject query throttle for catch‑up.
+- **Production policy**: the same 30/60s query throttle applies in prod (env‑agnostic
+  decorator). When the `onConnect` connection cap lands it should be enabled in all
+  environments; production additionally sits behind the standard ingress limits.
 
 ## Sanitization (task 6)
 
@@ -190,6 +229,10 @@ plan) renders events with that link.
 ## Acceptance‑criteria mapping
 
 - [x] Documented API matches the query/response sketch — this file.
-- [ ] Auth required; anonymous rejected — task 4.
-- [ ] Rate limits in non‑prod + prod policy documented — task 5.
+- [x] Auth required; anonymous rejected — task 4. Query: global `GlobalAuthGuard`
+      (not `@Public`). Subscription: `context.userId` check (authed at `onConnect`).
+      Covered by `queue-job-logs.resolver.test.ts`.
+- [x] Rate limits applied + prod policy documented — task 5. Query `@Throttle`
+      30/60s (applied); subscription connection‑cap documented as a shared‑infra
+      follow‑up (see Rate limiting).
 - [x] Deep‑link integration note — task 7 (this section).
