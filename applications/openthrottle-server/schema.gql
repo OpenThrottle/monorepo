@@ -1738,6 +1738,16 @@ type SkillAvailabilityResolvedSkillObject {
   """
   provenance: String!
 
+  """
+  Plan-context annotation: this skill's tags ∩ the plan's effective DOMAIN tag set. Empty when the query has no planId.
+  """
+  matchedPlanTags: [String!]!
+
+  """
+  Plan-context annotation: true when matchedPlanTags is non-empty. Always false when the query has no planId.
+  """
+  planRelevant: Boolean!
+
   """Skill slug (the skill frontmatter `name`)."""
   slug: String!
 
@@ -2384,7 +2394,23 @@ type Query {
   """
   Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated.
   """
-  skillAvailability(projectId: ID, environment: String): SkillAvailabilityResolutionResult!
+  skillAvailability(
+    projectId: ID
+    environment: String
+
+    """
+    Plan context: annotate skills with matchedPlanTags/planRelevant and apply matched availability-exception rules ephemerally.
+    """
+    planId: ID
+
+    """
+    Task context (requires planId; must belong to it): the effective tag set becomes task tags ∪ plan tags.
+    """
+    taskId: ID
+
+    """Filter to planRelevant skills. Requires planId."""
+    relevantOnly: Boolean = false
+  ): SkillAvailabilityResolutionResult!
 
   """
   A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability.

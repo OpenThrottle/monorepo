@@ -9,8 +9,6 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Plan,
-  ProjectSkill,
-  ProjectSkillsService,
   RuleApplication,
   RuleApplicationsService,
   TagActionRule,
@@ -20,13 +18,15 @@ import type {
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import { ActionExecutorRegistry } from './action-executor';
 import { InjectTaskExecutor } from './inject-task.executor';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const ruleId = '00000000-0000-4000-8000-000000000002';
 const taskId = '00000000-0000-4000-8000-000000000003';
+const ownerUserId = '00000000-0000-4000-8000-000000000004';
 
 const buildPlan = (overrides: Partial<Plan> = {}): Plan =>
   asMock<Plan>({
@@ -58,7 +58,9 @@ const sortOrderViolation = (): QueryFailedError =>
 describe('InjectTaskExecutor', () => {
   let executor: InjectTaskExecutor;
   let ruleApplicationsService: RuleApplicationsService;
-  let projectSkillFindOne: ReturnType<typeof vi.fn>;
+  let isSkillUnavailableForPlan: Mock<
+    PlanContextAvailabilityService['isSkillUnavailableForPlan']
+  >;
   let preSatisfiedGetOne: ReturnType<typeof vi.fn>;
   let aggregateGetRawOne: ReturnType<typeof vi.fn>;
   let taskSave: ReturnType<typeof vi.fn>;
@@ -99,10 +101,11 @@ describe('InjectTaskExecutor', () => {
       ),
     });
 
-    projectSkillFindOne = vi.fn().mockResolvedValue(null);
-    const projectSkillsService = createMock<ProjectSkillsService>({
-      getRepository: vi.fn(() => asMock({ findOne: projectSkillFindOne })),
-    });
+    isSkillUnavailableForPlan = vi.fn().mockResolvedValue(false);
+    const planContextAvailabilityService =
+      createMock<PlanContextAvailabilityService>({
+        isSkillUnavailableForPlan,
+      });
 
     ruleApplicationsService = createMock<RuleApplicationsService>({
       record: vi.fn((input) =>
@@ -120,7 +123,7 @@ describe('InjectTaskExecutor', () => {
     executor = new InjectTaskExecutor(
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
-      projectSkillsService,
+      planContextAvailabilityService,
       ruleApplicationsService,
       tasksService,
     );
@@ -133,6 +136,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -146,11 +150,12 @@ describe('InjectTaskExecutor', () => {
     expect(taskSave).not.toHaveBeenCalled();
   });
 
-  it('ledgers flagged {reason: skill-unavailable} when the plan project lacks the skill', async () => {
-    projectSkillFindOne.mockResolvedValue(null);
+  it('ledgers flagged {reason: skill-unavailable} when plan-context availability gates the slug', async () => {
+    isSkillUnavailableForPlan.mockResolvedValue(true);
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan({ projectId: 'project-1' }),
       rule: buildRule(),
     });
@@ -164,19 +169,18 @@ describe('InjectTaskExecutor', () => {
     expect(taskSave).not.toHaveBeenCalled();
   });
 
-  it('ledgers flagged when the project skill is disable_model_invocation', async () => {
-    projectSkillFindOne.mockResolvedValue(
-      asMock<ProjectSkill>({ disableModelInvocation: true, slug: 'grilling' }),
-    );
-
+  it('consults the gate with the plan id, slug, and owner vocabulary', async () => {
     await executor.execute({
       action: buildAction(),
-      plan: buildPlan({ projectId: 'project-1' }),
+      ownerUserId,
+      plan: buildPlan(),
       rule: buildRule(),
     });
 
-    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
-      expect.objectContaining({ state: 'flagged' }),
+    expect(isSkillUnavailableForPlan).toHaveBeenCalledWith(
+      planId,
+      'grilling',
+      ownerUserId,
     );
   });
 
@@ -185,6 +189,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -217,6 +222,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction({ placement: 'last', skillSlug: 'grilling' }),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -231,6 +237,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -252,6 +259,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -272,6 +280,7 @@ describe('InjectTaskExecutor', () => {
         skillSlug: 'grilling',
         titleTemplate: 'Grill {{plan.title}}',
       }),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });
@@ -293,6 +302,7 @@ describe('InjectTaskExecutor', () => {
 
     await executor.execute({
       action: buildAction(),
+      ownerUserId,
       plan: buildPlan(),
       rule: buildRule(),
     });

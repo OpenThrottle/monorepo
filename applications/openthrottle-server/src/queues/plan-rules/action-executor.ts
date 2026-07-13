@@ -21,6 +21,8 @@ import type {
 
 export interface ActionExecutorContext {
   readonly action: MatchedTagAction;
+  /** The plan owner (rule owner) — users.id resolved from plan.author. */
+  readonly ownerUserId: string;
   readonly plan: Plan;
   readonly rule: TagActionRule;
 }

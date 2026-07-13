@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module';
 import { ActionExecutorRegistry } from './action-executor';
 import { InjectTaskExecutor } from './inject-task.executor';
 import { PlanRulesQueueProducerModule } from './plan-rules-queue-producer.module';
@@ -18,6 +19,7 @@ import { PlanRulesProcessor } from './plan-rules.processor';
   imports: [
     LoggerModule,
     NestjsRepositoriesModule,
+    PlanContextAvailabilityModule,
     PlanRulesQueueProducerModule,
   ],
   providers: [ActionExecutorRegistry, InjectTaskExecutor, PlanRulesProcessor],

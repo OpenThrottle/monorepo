@@ -144,7 +144,7 @@ export class PlanRulesProcessor
 
     await Promise.all(
       dispatchable.map(({ action, executor, rule }) =>
-        executor.execute({ action, plan, rule }),
+        executor.execute({ action, ownerUserId: owner.id, plan, rule }),
       ),
     );
     const dispatched = dispatchable.length;

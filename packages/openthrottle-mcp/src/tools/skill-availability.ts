@@ -113,6 +113,8 @@ export async function getSkillAvailabilityRuleSetToolHandler(
 
 type ResolvedSkillAvailability = {
   effectiveDisableModelInvocation: boolean;
+  matchedPlanTags: string[];
+  planRelevant: boolean;
   provenance: string;
   slug: string;
   staticDisableModelInvocation: boolean | null;
@@ -126,10 +128,13 @@ type SkillAvailabilityResolution = {
 
 export const getSkillAvailabilityToolParameters = z.object({
   environment: z.enum(['ci', 'interactive', 'ralph']).optional(),
+  planId: z.string().optional(),
   projectId: z.string().optional(),
+  relevantOnly: z.boolean().optional(),
+  taskId: z.string().optional(),
 });
 
-export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
+export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
 
 export async function getSkillAvailabilityToolHandler(
   args: z.infer<typeof getSkillAvailabilityToolParameters>,
@@ -148,7 +153,10 @@ export async function getSkillAvailabilityToolHandler(
         SkillAvailabilityDocument,
         {
           environment: parsed.data.environment ?? null,
+          planId: parsed.data.planId ?? null,
           projectId: parsed.data.projectId ?? null,
+          relevantOnly: parsed.data.relevantOnly ?? null,
+          taskId: parsed.data.taskId ?? null,
         },
       );
       const found = result?.skillAvailability;
@@ -160,6 +168,8 @@ export async function getSkillAvailabilityToolHandler(
         skills: found.skills.map((skill) => ({
           effectiveDisableModelInvocation:
             skill.effectiveDisableModelInvocation,
+          matchedPlanTags: skill.matchedPlanTags,
+          planRelevant: skill.planRelevant,
           provenance: skill.provenance,
           slug: skill.slug,
           staticDisableModelInvocation:

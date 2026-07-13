@@ -6,11 +6,12 @@
  * 1. pre-satisfied — an existing task referencing /<skillSlug> in its title or
  *    description (ANY status, including COMPLETED) ledgers 'pre-satisfied'
  *    with that task's id; nothing is injected.
- * 2. candidate-set gating — interim check until the plan-aware availability
- *    read lands: a plan linked to a project requires a project_skills row for
- *    the slug that is not disable_model_invocation; failure ledgers 'flagged'
- *    {reason: 'skill-unavailable'}. Projectless plans skip the gate (no
- *    availability context to consult).
+ * 2. candidate-set gating — the plan-aware availability read (owner
+ *    vocabulary + ephemeral availability-exception rules): the slug must
+ *    exist in the resolved plan-context universe with model invocation not
+ *    effectively disabled; failure ledgers 'flagged'
+ *    {reason: 'skill-unavailable'}. An unresolvable project universe skips
+ *    the gate.
  * 3. inject — placement 'first' = MIN(sort_order) − 1000, 'last' =
  *    MAX(sort_order) + 1000 (empty plan starts at 1000), one recompute retry
  *    on a UNIQUE (plan_id, sort_order) collision; the description carries a
@@ -28,7 +29,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type Plan,
-  ProjectSkillsService,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
   Task,
@@ -42,6 +42,7 @@ import {
   type MatchedTagAction,
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
+import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import {
   ActionExecutorRegistry,
   type ActionExecutor,
@@ -79,7 +80,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   constructor(
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
-    private readonly projectSkillsService: ProjectSkillsService,
+    private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly ruleApplicationsService: RuleApplicationsService,
     private readonly tasksService: TasksService,
   ) {}
@@ -89,7 +90,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   }
 
   async execute(context: ActionExecutorContext): Promise<void> {
-    const { action, plan, rule } = context;
+    const { action, ownerUserId, plan, rule } = context;
     const payload = injectTaskActionPayloadSchema.parse(action.actionPayload);
     const slugReference = `/${payload.skillSlug}`;
 
@@ -115,9 +116,14 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       return;
     }
 
-    // 2. Interim candidate-set gating (swapped for the plan-aware
-    //    availability read when that slice lands).
-    const gated = await this.isSkillUnavailable(plan, payload.skillSlug);
+    // 2. Candidate-set gating via the plan-aware availability read (the
+    //    plan owner's vocabulary and exception rules apply).
+    const gated =
+      await this.planContextAvailabilityService.isSkillUnavailableForPlan(
+        plan.id,
+        payload.skillSlug,
+        ownerUserId,
+      );
     if (gated) {
       await this.ruleApplicationsService.record({
         details: {
@@ -155,24 +161,6 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         InjectTaskExecutor.name,
       );
     }
-  }
-
-  /**
-   * @description Interim gate: a plan linked to a project requires a
-   * project_skills row for the slug with model invocation not disabled.
-   */
-  private async isSkillUnavailable(
-    plan: Plan,
-    skillSlug: string,
-  ): Promise<boolean> {
-    if (plan.projectId == null) {
-      return false;
-    }
-
-    const skill = await this.projectSkillsService
-      .getRepository()
-      .findOne({ where: { projectId: plan.projectId, slug: skillSlug } });
-    return skill == null || skill.disableModelInvocation === true;
   }
 
   private async insertInjectedTask(

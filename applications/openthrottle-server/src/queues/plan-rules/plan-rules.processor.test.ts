@@ -118,6 +118,7 @@ describe('PlanRulesProcessor.process', () => {
     expect(executor.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         action: expect.objectContaining({ ruleId: 'rule-1' }),
+        ownerUserId: userId,
         rule: expect.objectContaining({ id: 'rule-1' }),
       }),
     );
