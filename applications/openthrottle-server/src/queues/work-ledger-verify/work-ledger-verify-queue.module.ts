@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { GitHubModule } from '@openthrottle/nestjs-github';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { TaggingQueueProducerModule } from '../tagging/tagging-queue-producer.module';
 import { WorkLedgerVerifyQueueProducerModule } from './work-ledger-verify-queue-producer.module';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor';
 import { WorkLedgerVerifyRepeatableService } from './work-ledger-verify-repeatable.service';
@@ -18,6 +19,7 @@ import { WorkLedgerVerifyRepeatableService } from './work-ledger-verify-repeatab
     GitHubModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    TaggingQueueProducerModule,
     WorkLedgerVerifyQueueProducerModule,
   ],
   providers: [WorkLedgerVerifyProcessor, WorkLedgerVerifyRepeatableService],

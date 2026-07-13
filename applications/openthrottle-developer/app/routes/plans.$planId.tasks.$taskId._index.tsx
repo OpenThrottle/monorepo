@@ -8,7 +8,9 @@ import {
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
+  TaskLinkedArtifactsDocument,
 } from '~/__generated__/graphql';
+import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { ListOrderedIcon } from 'lucide-react';
@@ -47,7 +49,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
 
   if (taskId == null || taskId === '') {
-    return { plan: null, task: null };
+    return { linkedArtifacts: [], plan: null, task: null };
   }
 
   const taskResult = await executeGraphqlWithAuth(
@@ -71,7 +73,18 @@ export const loader = async (args: Route.LoaderArgs) => {
         ).plan ?? null)
       : null;
 
-  return { plan, task };
+  const linkedArtifacts =
+    task != null
+      ? ((
+          await executeGraphqlWithAuth(
+            args.request,
+            TaskLinkedArtifactsDocument,
+            { taskId },
+          )
+        ).workArtifactsByTask.artifacts ?? [])
+      : [];
+
+  return { linkedArtifacts, plan, task };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -91,7 +104,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { task } = loaderData;
+  const { linkedArtifacts, task } = loaderData;
 
   // Hooks
 
@@ -130,6 +143,7 @@ export default function Component(
         </div>
       </div>
       <TaskDetails planId={effectivePlanId} task={task} />
+      <LinkedArtifactsPanel artifacts={linkedArtifacts} />
     </GlobalScreen>
   );
 }

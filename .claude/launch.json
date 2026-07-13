@@ -2,6 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "developer",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "set -a; source .env; set +a; export NODE_ENV=development PORT=6020 API_URL_EXTERNAL=http://localhost:6021 API_URL_INTERNAL=http://localhost:6021 APP_ENV=development APP_NAME=\"$OPENTHROTTLE_DEVELOPER_APP_NAME\" APP_NAME_SHORT=\"$OPENTHROTTLE_DEVELOPER_APP_NAME_SHORT\" APP_URL=http://localhost:6020 APP_URL_ADMIN=\"$OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN\" APP_URL_CMS=\"$OPENTHROTTLE_DEVELOPER_APP_URL_CMS\" APP_URL_DEVELOPER=http://localhost:6020 APP_URL_EMAIL=\"$OPENTHROTTLE_DEVELOPER_APP_URL_EMAIL\" APP_URL_SERVER=http://localhost:6021 APP_URL_WEBSITE=\"$OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE\" APP_VERSION=\"$APP_VERSION\" JWT_SECRET=\"$OPENTHROTTLE_DEVELOPER_JWT_SECRET\"; pnpm nx run openthrottle-developer:dev",
+        "developer"
+      ],
+      "port": 6020
+    },
+    {
       "name": "developer-prod",
       "runtimeExecutable": "bash",
       "runtimeArgs": [

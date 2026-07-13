@@ -845,3 +845,85 @@ describe('createWorkflowRalphOrchestrator lifecycle beforeEach blocking', () => 
     );
   });
 });
+
+describe('createWorkflowRalphOrchestrator X-OT-Session-Id propagation', () => {
+  const collectMutationOptions = (
+    sink: Array<{ header: string | undefined; status: string }>,
+  ): WorkflowExecuteGraphqlV2 =>
+    asExecuteGraphqlV2(
+      async (
+        document,
+        variables,
+        options?: { headers?: Record<string, string> },
+      ) => {
+        if (document === GetServerHealthDocument) {
+          return { serverHealth: serverHealthOk };
+        }
+        if (document === GetPlanDocument) {
+          return { plan: basePlan() };
+        }
+        if (document === GetTasksByPlanIdDocument) {
+          return { tasksByPlanId: [baseTask(TASK_A, 'PENDING')] };
+        }
+        if (
+          document === UpdatePlanDocument ||
+          document === UpdateTaskDocument
+        ) {
+          const input = readUpdateInput(variables);
+          sink.push({
+            header: options?.headers?.['X-OT-Session-Id'],
+            status: input.status,
+          });
+          return document === UpdatePlanDocument
+            ? { updatePlan: basePlan({ status: input.status }) }
+            : { updateTask: baseTask(TASK_A, input.status) };
+        }
+        throw new Error('unmocked GraphQL document in test');
+      },
+    );
+
+  it('sends the run session id on every status mutation when workSessionId is set', async () => {
+    const mutations: Array<{ header: string | undefined; status: string }> = [];
+    const iterationRunner: WorkflowRalphIterationRunner = {
+      run: vi.fn(async () => '<promise>COMPLETE</promise>'),
+    };
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2: collectMutationOptions(mutations),
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, workSessionId: 'sess-123' },
+    });
+
+    expect(result.status).toBe('finished');
+    expect(mutations.length).toBeGreaterThan(0);
+    // Every plan/task status mutation carried the run session header.
+    for (const mutation of mutations) {
+      expect(mutation.header).toBe('sess-123');
+    }
+  });
+
+  it('omits the header (instant-session fallback) when no workSessionId is set', async () => {
+    const mutations: Array<{ header: string | undefined; status: string }> = [];
+    const iterationRunner: WorkflowRalphIterationRunner = {
+      run: vi.fn(async () => '<promise>COMPLETE</promise>'),
+    };
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2: collectMutationOptions(mutations),
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext },
+    });
+
+    expect(result.status).toBe('finished');
+    expect(mutations.length).toBeGreaterThan(0);
+    for (const mutation of mutations) {
+      expect(mutation.header).toBeUndefined();
+    }
+  });
+});

@@ -9,6 +9,7 @@
 //     hooks in a non-deterministic order against a shared dispatcher.
 /* eslint-disable no-await-in-loop */
 
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type {
   WorkflowRunResult,
   WorkflowLifecycleTaskContext,
@@ -190,16 +191,32 @@ const emitDiagnostic = async (
 };
 
 /**
+ * @description Builds the per-call GraphQL options carrying the run's `X-OT-Session-Id` header so
+ * the server attributes status_change artifacts to the run session (design §4.3, G11). Returns
+ * `undefined` when no run session is set (CLI/dev paths) so the server opens instant sessions as
+ * before. Only status-mutating calls need it; read queries are unaffected.
+ */
+const buildSessionOptions = (
+  workSessionId: string | undefined,
+): ExecuteGraphqlOptionsV2 | undefined =>
+  workSessionId != null && workSessionId !== ''
+    ? { headers: { 'X-OT-Session-Id': workSessionId } }
+    : undefined;
+
+/**
  * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
  * `openthrottle-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
  */
 const promotePlanToInProgressIfNeeded = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
   planId: string,
+  sessionOptions: ExecuteGraphqlOptionsV2 | undefined,
 ): Promise<void> => {
-  await executeGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, status: 'IN_PROGRESS' },
-  });
+  await executeGraphqlV2(
+    UpdatePlanDocument,
+    { input: { id: planId, status: 'IN_PROGRESS' } },
+    sessionOptions,
+  );
 };
 
 /**
@@ -212,6 +229,7 @@ const promotePlanToInProgressIfNeeded = async (
 const reconcilePlanIfTasksExhausted = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
   planId: string,
+  sessionOptions: ExecuteGraphqlOptionsV2 | undefined,
 ): Promise<boolean> => {
   const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
     input: { planId },
@@ -225,9 +243,11 @@ const reconcilePlanIfTasksExhausted = async (
     return false;
   }
 
-  await executeGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, status: 'COMPLETED' },
-  });
+  await executeGraphqlV2(
+    UpdatePlanDocument,
+    { input: { id: planId, status: 'COMPLETED' } },
+    sessionOptions,
+  );
 
   return true;
 };
@@ -243,6 +263,7 @@ export const createWorkflowRalphOrchestrator = (
 ): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
     const { executeGraphqlV2, iterationRunner, onChunk } = deps;
+    const sessionOptions = buildSessionOptions(context.workSessionId);
 
     try {
       // bootstrap — context must identify a plan or a task
@@ -316,13 +337,19 @@ export const createWorkflowRalphOrchestrator = (
       }
 
       // plan.mark_in_progress
-      await promotePlanToInProgressIfNeeded(executeGraphqlV2, effectivePlanId);
+      await promotePlanToInProgressIfNeeded(
+        executeGraphqlV2,
+        effectivePlanId,
+        sessionOptions,
+      );
 
       // task.mark_in_progress
       if (taskIdTrim) {
-        await executeGraphqlV2(UpdateTaskDocument, {
-          input: { id: taskIdTrim, status: 'IN_PROGRESS' },
-        });
+        await executeGraphqlV2(
+          UpdateTaskDocument,
+          { input: { id: taskIdTrim, status: 'IN_PROGRESS' } },
+          sessionOptions,
+        );
       }
 
       const { abortSignal, iterationTimeout, timeout } = context;
@@ -397,9 +424,11 @@ export const createWorkflowRalphOrchestrator = (
           );
 
           if (remaining.length === 0) {
-            await executeGraphqlV2(UpdatePlanDocument, {
-              input: { id: effectivePlanId, status: 'COMPLETED' },
-            });
+            await executeGraphqlV2(
+              UpdatePlanDocument,
+              { input: { id: effectivePlanId, status: 'COMPLETED' } },
+              sessionOptions,
+            );
 
             // 🟢 If we've exhausted the tasks, we return a finished outcome
             return onFinished('workflow_tasks_exhausted');
@@ -414,9 +443,11 @@ export const createWorkflowRalphOrchestrator = (
             const isQueued = taskForIteration.status === 'QUEUED';
 
             if (isPending || isQueued) {
-              await executeGraphqlV2(UpdateTaskDocument, {
-                input: { id: taskForIteration.id, status: 'IN_PROGRESS' },
-              });
+              await executeGraphqlV2(
+                UpdateTaskDocument,
+                { input: { id: taskForIteration.id, status: 'IN_PROGRESS' } },
+                sessionOptions,
+              );
 
               if (lifecycleDispatcher) {
                 const beforeEachResult = await lifecycleDispatcher.runTask({
@@ -428,9 +459,11 @@ export const createWorkflowRalphOrchestrator = (
                 });
 
                 if (beforeEachResult.blocked) {
-                  await executeGraphqlV2(UpdateTaskDocument, {
-                    input: { id: taskForIteration.id, status: 'BLOCKED' },
-                  });
+                  await executeGraphqlV2(
+                    UpdateTaskDocument,
+                    { input: { id: taskForIteration.id, status: 'BLOCKED' } },
+                    sessionOptions,
+                  );
 
                   await lifecycleDispatcher.runTask({
                     phase: 'afterEach',
@@ -448,6 +481,7 @@ export const createWorkflowRalphOrchestrator = (
               await promotePlanToInProgressIfNeeded(
                 executeGraphqlV2,
                 effectivePlanId,
+                sessionOptions,
               );
             }
 
@@ -523,9 +557,11 @@ export const createWorkflowRalphOrchestrator = (
         // tasks.apply_completions
         for (const taskId of completeTaskIds) {
           try {
-            await executeGraphqlV2(UpdateTaskDocument, {
-              input: { id: taskId, status: 'COMPLETED' },
-            });
+            await executeGraphqlV2(
+              UpdateTaskDocument,
+              { input: { id: taskId, status: 'COMPLETED' } },
+              sessionOptions,
+            );
 
             if (lifecycleDispatcher && !isTaskCentric) {
               const tasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
@@ -575,6 +611,7 @@ export const createWorkflowRalphOrchestrator = (
             const reconciled = await reconcilePlanIfTasksExhausted(
               executeGraphqlV2,
               effectivePlanId,
+              sessionOptions,
             );
 
             if (reconciled) {
@@ -610,9 +647,11 @@ export const createWorkflowRalphOrchestrator = (
       // 4. 🟡 If we have a task id and it's not completed, we mark it as pending
       if (lastIterationTaskId && !lastIterationTaskCompleted) {
         try {
-          await executeGraphqlV2(UpdateTaskDocument, {
-            input: { id: lastIterationTaskId, status: 'PENDING' },
-          });
+          await executeGraphqlV2(
+            UpdateTaskDocument,
+            { input: { id: lastIterationTaskId, status: 'PENDING' } },
+            sessionOptions,
+          );
         } catch (error) {
           // Best-effort reset (ralph.ts warns on failure).
           await emitDiagnostic(onChunk, {

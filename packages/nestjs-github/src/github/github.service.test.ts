@@ -853,4 +853,110 @@ describe('GitHubService', () => {
 
     vi.unstubAllGlobals();
   });
+
+  test('getDefaultBranch returns the default_branch, or null on 404', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ default_branch: 'main' }),
+        ok: true,
+      }),
+    );
+    const service = new GitHubService(mockConfig);
+    expect(await service.getDefaultBranch('owner', 'repo')).toBe('main');
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve(''),
+      }),
+    );
+    const service404 = new GitHubService(mockConfig);
+    expect(await service404.getDefaultBranch('owner', 'repo')).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  test('compareCommitStatus returns a known status, null on unknown or 404', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ status: 'behind' }),
+        ok: true,
+      }),
+    );
+    const service = new GitHubService(mockConfig);
+    expect(await service.compareCommitStatus('o', 'r', 'main', 'abc')).toBe(
+      'behind',
+    );
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ status: 'weird' }),
+        ok: true,
+      }),
+    );
+    const serviceUnknown = new GitHubService(mockConfig);
+    expect(
+      await serviceUnknown.compareCommitStatus('o', 'r', 'main', 'abc'),
+    ).toBeNull();
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve(''),
+      }),
+    );
+    const service404 = new GitHubService(mockConfig);
+    expect(
+      await service404.compareCommitStatus('o', 'r', 'main', 'abc'),
+    ).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  test('getMergeCommitShaForCommit returns the merged PR merge_commit_sha, else null', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () =>
+          Promise.resolve([
+            {
+              merge_commit_sha: 'squash-sha',
+              merged_at: '2026-01-01T00:00:00Z',
+              number: 5,
+            },
+          ]),
+        ok: true,
+      }),
+    );
+    const service = new GitHubService(mockConfig);
+    expect(await service.getMergeCommitShaForCommit('o', 'r', 'abc')).toBe(
+      'squash-sha',
+    );
+    vi.unstubAllGlobals();
+
+    // An associated but unmerged PR does not count.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () =>
+          Promise.resolve([
+            { merge_commit_sha: 'x', merged_at: null, number: 6 },
+          ]),
+        ok: true,
+      }),
+    );
+    const serviceOpen = new GitHubService(mockConfig);
+    expect(
+      await serviceOpen.getMergeCommitShaForCommit('o', 'r', 'abc'),
+    ).toBeNull();
+    vi.unstubAllGlobals();
+  });
 });
