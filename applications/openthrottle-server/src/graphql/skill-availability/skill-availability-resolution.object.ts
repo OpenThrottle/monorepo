@@ -25,6 +25,16 @@ export class SkillAvailabilityResolvedSkillObject {
   })
   provenance!: string;
 
+  @Field(() => [String], {
+    description: `Plan-context annotation: this skill's tags ∩ the plan's effective DOMAIN tag set. Empty when the query has no planId.`,
+  })
+  matchedPlanTags!: string[];
+
+  @Field(() => Boolean, {
+    description: `Plan-context annotation: true when matchedPlanTags is non-empty. Always false when the query has no planId.`,
+  })
+  planRelevant!: boolean;
+
   @Field(() => String, {
     description: `Skill slug (the skill frontmatter \`name\`).`,
   })

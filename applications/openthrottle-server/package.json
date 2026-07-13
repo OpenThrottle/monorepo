@@ -42,6 +42,7 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/openthrottle-workflows": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
@@ -180,5 +181,8 @@
   },
   "sideEffects": false,
   "type": "commonjs",
-  "version": "1.3.0"
+  "version": "1.3.0",
+  "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^"
+  }
 }

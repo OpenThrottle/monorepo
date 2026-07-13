@@ -31,6 +31,7 @@ const mockPlan: PlanDetailsFragment = {
   runConfigJson: '{}',
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
+  tags: [],
   title: 'Test Plan',
   updatedAt: '2025-01-02T00:00:00Z',
 };

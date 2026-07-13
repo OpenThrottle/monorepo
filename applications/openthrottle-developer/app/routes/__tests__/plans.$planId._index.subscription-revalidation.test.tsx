@@ -105,6 +105,7 @@ const mockPlan = {
   runConfigJson: JSON.stringify({ version: 1 }),
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
+  tags: [],
   title: 'Test Plan',
   updatedAt: '2025-01-02T00:00:00Z',
 };
@@ -115,6 +116,8 @@ function renderPlanDetail(planId: string): ReturnType<typeof render> {
     planOutputChunks: [],
     planRunAuditRows: [],
     recentPlanRuns: [],
+    ruleApplications: [],
+    tagVocabulary: [],
     tasks: [],
   };
   return renderWithPlanDetailRouteData(

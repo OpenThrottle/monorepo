@@ -89,6 +89,7 @@ const mockPlan = {
   runConfigJson: storedRunConfigJson,
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
+  tags: [],
   title: 'Test Plan',
   updatedAt: '2025-01-02T00:00:00Z',
 };
@@ -101,6 +102,8 @@ describe('routes/plans.$planId._index run config hydration', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     };
     renderWithPlanDetailRouteData(

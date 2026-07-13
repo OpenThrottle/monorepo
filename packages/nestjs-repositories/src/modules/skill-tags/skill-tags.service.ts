@@ -18,7 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_ASSET_SLUG_PATTERN,
-  DEFAULT_SKILL_TAG_VOCABULARY,
+  DEFAULT_TAG_VOCABULARY_SEED,
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 import { UserSkillTag } from './user-skill-tag.entity';
@@ -40,6 +40,14 @@ const assertKebabCaseTag = (tag: string): void => {
   if (!AGENT_ASSET_SLUG_PATTERN.test(tag)) {
     throw new BadRequestException(
       `Invalid tag "${tag}": tags must be kebab-case slugs (lowercase letters, digits, single hyphens; e.g. "pr-review").`,
+    );
+  }
+};
+
+const assertKnownDimension = (dimension: string): void => {
+  if (dimension !== 'domain' && dimension !== 'phase') {
+    throw new BadRequestException(
+      `Invalid dimension "${dimension}": must be "domain" or "phase".`,
     );
   }
 };
@@ -84,13 +92,23 @@ export class SkillTagsService {
 
   /**
    * @description Adds a tag to the user's vocabulary. Validates kebab-case and
-   * rejects duplicates with actionable errors.
+   * rejects duplicates with actionable errors. `dimension` defaults to
+   * `domain`; pass `phase` for lifecycle-stage tags (plans/tasks only).
    */
-  async addTag(userId: string, tag: string): Promise<UserSkillTag> {
+  async addTag(
+    userId: string,
+    tag: string,
+    dimension: string = 'domain',
+  ): Promise<UserSkillTag> {
     const normalized = normalizeTag(tag);
     assertKebabCaseTag(normalized);
+    assertKnownDimension(dimension);
 
-    const entity = this.repository.create({ tag: normalized, userId });
+    const entity = this.repository.create({
+      dimension,
+      tag: normalized,
+      userId,
+    });
     try {
       return await this.repository.save(entity);
     } catch (error) {
@@ -155,7 +173,11 @@ export class SkillTagsService {
    * (ON CONFLICT DO NOTHING semantics), skipping any tags the user already has.
    */
   private async seedDefaults(userId: string): Promise<void> {
-    const rows = DEFAULT_SKILL_TAG_VOCABULARY.map((tag) => ({ tag, userId }));
+    const rows = DEFAULT_TAG_VOCABULARY_SEED.map(({ dimension, tag }) => ({
+      dimension,
+      tag,
+      userId,
+    }));
     await this.repository
       .createQueryBuilder()
       .insert()

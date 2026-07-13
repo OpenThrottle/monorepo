@@ -27,6 +27,8 @@ import {
   UpdatePlanInput,
 } from './plan.input';
 import { PlansLoaders } from './plans-loaders';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { PlansResolver } from './plans.resolver';
 
 vi.mock('@openthrottle/node-client', () => ({
@@ -201,6 +203,14 @@ describe('PlansResolver', () => {
       providers: [
         PlansResolver,
         { provide: PlansLoaders, useValue: mockPlansLoaders },
+        {
+          provide: PlanRulesEvaluationService,
+          useValue: createMock<PlanRulesEvaluationService>(),
+        },
+        {
+          provide: TaggingEnqueueService,
+          useValue: createMock<TaggingEnqueueService>(),
+        },
         {
           provide: PlanCreationService,
           useValue: mockPlanCreationService,

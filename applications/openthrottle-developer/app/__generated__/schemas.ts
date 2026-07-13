@@ -3,7 +3,9 @@ import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
   AddPermissionToRoleInput,
+  AddPlanTagInput,
   AddSkillTagInput,
+  AddTaskTagInput,
   AgentAssetSearchInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
@@ -34,6 +36,7 @@ import {
   CustomPromptType,
   DeletePlanInput,
   DeleteProjectInput,
+  DeleteTagActionRuleInput,
   DeleteTaskInput,
   DuplicateJobInput,
   EnqueueDocIngestionInput,
@@ -71,10 +74,12 @@ import {
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
+  RemovePlanTagInput,
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
   RemoveRoleFromUserInput,
   RemoveSkillTagInput,
+  RemoveTaskTagInput,
   RenameSkillTagInput,
   ReorderPlanTasksInput,
   RepeatableJobsInput,
@@ -100,6 +105,7 @@ import {
   UpdateUserInput,
   UpdateWorkspaceLocalRepositoryInput,
   UpdateWorkspaceProfileInput,
+  UpsertTagActionRuleInput,
   WallClockInterpretation,
   WorkspaceEditorId,
 } from './graphql.js';
@@ -164,11 +170,30 @@ export function AddPermissionToRoleInputSchema(): z.ZodObject<
   });
 }
 
+export function AddPlanTagInputSchema(): z.ZodObject<
+  Properties<AddPlanTagInput>
+> {
+  return z.object({
+    planId: z.string(),
+    tag: z.string(),
+  });
+}
+
 export function AddSkillTagInputSchema(): z.ZodObject<
   Properties<AddSkillTagInput>
 > {
   return z.object({
+    dimension: z.string().default('domain').nullish(),
     tag: z.string(),
+  });
+}
+
+export function AddTaskTagInputSchema(): z.ZodObject<
+  Properties<AddTaskTagInput>
+> {
+  return z.object({
+    tag: z.string(),
+    taskId: z.string(),
   });
 }
 
@@ -464,6 +489,14 @@ export function DeletePlanInputSchema(): z.ZodObject<
 
 export function DeleteProjectInputSchema(): z.ZodObject<
   Properties<DeleteProjectInput>
+> {
+  return z.object({
+    id: z.string(),
+  });
+}
+
+export function DeleteTagActionRuleInputSchema(): z.ZodObject<
+  Properties<DeleteTagActionRuleInput>
 > {
   return z.object({
     id: z.string(),
@@ -812,6 +845,15 @@ export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
   });
 }
 
+export function RemovePlanTagInputSchema(): z.ZodObject<
+  Properties<RemovePlanTagInput>
+> {
+  return z.object({
+    planId: z.string(),
+    tag: z.string(),
+  });
+}
+
 export function RemoveRepeatableJobInputSchema(): z.ZodObject<
   Properties<RemoveRepeatableJobInput>
 > {
@@ -844,6 +886,15 @@ export function RemoveSkillTagInputSchema(): z.ZodObject<
 > {
   return z.object({
     tag: z.string(),
+  });
+}
+
+export function RemoveTaskTagInputSchema(): z.ZodObject<
+  Properties<RemoveTaskTagInput>
+> {
+  return z.object({
+    tag: z.string(),
+    taskId: z.string(),
   });
 }
 
@@ -1117,5 +1168,20 @@ export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
     contactDisplayName: z.string().nullish(),
     contactEmail: z.string().nullish(),
     enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
+  });
+}
+
+export function UpsertTagActionRuleInputSchema(): z.ZodObject<
+  Properties<UpsertTagActionRuleInput>
+> {
+  return z.object({
+    actionPayloadJson: z.string(),
+    actionType: z.string(),
+    enabled: z.boolean().default(true).nullish(),
+    environment: z.string().nullish(),
+    id: z.string().nullish(),
+    projectId: z.string().nullish(),
+    status: z.string().nullish(),
+    tagAll: z.array(z.string()),
   });
 }

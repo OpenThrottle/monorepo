@@ -146,6 +146,33 @@ export { SkillTagsService } from './modules/skill-tags/skill-tags.service';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity';
 export {
+  RULE_APPLICATION_STATES,
+  RuleApplication,
+} from './modules/tag-action-rules/rule-application.entity';
+export type {
+  RuleApplicationData,
+  RuleApplicationState,
+} from './modules/tag-action-rules/rule-application.entity';
+export { RuleApplicationsService } from './modules/tag-action-rules/rule-applications.service';
+export type { RecordRuleApplicationInput } from './modules/tag-action-rules/rule-applications.service';
+export { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity';
+export type { TagActionRuleData } from './modules/tag-action-rules/tag-action-rule.entity';
+export { TagActionRulesService } from './modules/tag-action-rules/tag-action-rules.service';
+export type { UpsertTagActionRuleInput } from './modules/tag-action-rules/tag-action-rules.service';
+export { PlanTag } from './modules/tags/plan-tag.entity';
+export type { PlanTagData } from './modules/tags/plan-tag.entity';
+export { TaskTag } from './modules/tags/task-tag.entity';
+export type { TaskTagData } from './modules/tags/task-tag.entity';
+export {
+  deriveTagSource,
+  TAG_SOURCE_RANK,
+  TAG_SOURCES,
+  TAGGING_SERVICE_ACCOUNT_NAME,
+} from './modules/tags/tag-provenance';
+export type { TagCaller, TagSource } from './modules/tags/tag-provenance';
+export { TagsService } from './modules/tags/tags.service';
+export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.service';
+export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,
 } from './modules/workspace-settings/workspace-editor-id';

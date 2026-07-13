@@ -22,7 +22,18 @@ fragment ProjectDetails on ProjectObject {
   name
 }
 
+fragment PlanTagChip on PlanTagObject {
+  confidence
+  dimension
+  id
+  source
+  tag
+}
+
 fragment PlanDetails on PlanObject {
+  tags {
+    ...PlanTagChip
+  }
   assignee
   author
   category
@@ -110,6 +121,23 @@ query PlanDetailIndexLoader($planId: ID!) {
   plan(id: $planId) {
     ...PlanDetails
   }
+  ruleApplications(planId: $planId) {
+    createdAt
+    detailsJson
+    id
+    planId
+    ruleId
+    state
+    taskId
+  }
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
   tasksByPlanId(input: { planId: $planId }) {
     ...PlanTaskRow
   }
@@ -166,4 +194,14 @@ subscription PlanLifecycleNotifications($planId: ID!) {
       taskId
     }
   }
+}
+
+mutation PlanDetailAddPlanTag($input: AddPlanTagInput!) {
+  addPlanTag(input: $input) {
+    ...PlanTagChip
+  }
+}
+
+mutation PlanDetailRemovePlanTag($input: RemovePlanTagInput!) {
+  removePlanTag(input: $input)
 }

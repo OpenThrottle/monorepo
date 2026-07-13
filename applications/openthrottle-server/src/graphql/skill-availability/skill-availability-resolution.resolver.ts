@@ -32,6 +32,7 @@ import {
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { BadRequestException } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import {
   SkillAvailabilityResolutionResult,
   SkillAvailabilityResolvedSkillObject,
@@ -51,6 +52,7 @@ function isKnownEnvironment(
 @Resolver(() => SkillAvailabilityResolutionResult)
 export class SkillAvailabilityResolutionResolver {
   constructor(
+    private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsService: ProjectsService,
     private readonly skillAvailabilityService: SkillAvailabilityService,
@@ -66,8 +68,53 @@ export class SkillAvailabilityResolutionResolver {
     projectId?: string,
     @Args('environment', { nullable: true, type: () => String })
     environment?: string,
+    @Args('planId', {
+      description: `Plan context: annotate skills with matchedPlanTags/planRelevant and apply matched availability-exception rules ephemerally.`,
+      nullable: true,
+      type: () => ID,
+    })
+    planId?: string,
+    @Args('taskId', {
+      description: `Task context (requires planId; must belong to it): the effective tag set becomes task tags ∪ plan tags.`,
+      nullable: true,
+      type: () => ID,
+    })
+    taskId?: string,
+    @Args('relevantOnly', {
+      defaultValue: false,
+      description: `Filter to planRelevant skills. Requires planId.`,
+      nullable: true,
+      type: () => Boolean,
+    })
+    relevantOnly?: boolean,
   ): Promise<SkillAvailabilityResolutionResult> {
     const resolvedEnvironment = this.validateEnvironment(environment);
+
+    if (taskId != null && planId == null) {
+      throw new BadRequestException('taskId requires planId.');
+    }
+    if (relevantOnly === true && planId == null) {
+      throw new BadRequestException('relevantOnly requires planId.');
+    }
+
+    if (planId != null) {
+      const availability =
+        await this.planContextAvailabilityService.resolveForPlan({
+          environment: resolvedEnvironment,
+          planId,
+          projectId: projectId ?? null,
+          taskId: taskId ?? null,
+          vocabularyUserId: userId,
+        });
+      const skills = availability.skills.filter(
+        (skill) => relevantOnly !== true || skill.planRelevant,
+      );
+      return {
+        skills,
+        totalCount: skills.length,
+        warnings: availability.warnings,
+      };
+    }
 
     const resolvedProjectId =
       projectId ?? (await this.resolveDogfoodProjectId());
@@ -97,6 +144,8 @@ export class SkillAvailabilityResolutionResolver {
     const skills: SkillAvailabilityResolvedSkillObject[] = result.skills.map(
       (skill) => ({
         effectiveDisableModelInvocation: skill.effectiveDisableModelInvocation,
+        matchedPlanTags: [],
+        planRelevant: false,
         provenance: skill.provenance,
         slug: skill.slug,
         staticDisableModelInvocation:

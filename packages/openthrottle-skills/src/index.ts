@@ -14,8 +14,41 @@ export type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */
-export { DEFAULT_SKILL_TAG_VOCABULARY } from './default-skill-tag-vocabulary.ts';
-export type { DefaultSkillTag } from './default-skill-tag-vocabulary.ts';
+export {
+  DEFAULT_DOMAIN_TAG_VOCABULARY,
+  DEFAULT_PHASE_TAG_VOCABULARY,
+  DEFAULT_SKILL_TAG_VOCABULARY,
+  DEFAULT_TAG_VOCABULARY_SEED,
+} from './default-skill-tag-vocabulary.ts';
+export type {
+  DefaultDomainTag,
+  DefaultPhaseTag,
+  DefaultSkillTag,
+  DefaultTagVocabularyEntry,
+  SkillTagDimension,
+} from './default-skill-tag-vocabulary.ts';
+
+/** @public */
+export { evaluateTagActionRules } from './evaluate-tag-action-rules.ts';
+export type {
+  MatchedTagAction,
+  TagActionEvaluationContext,
+  TagActionRuleInput,
+} from './evaluate-tag-action-rules.ts';
+
+/** @public */
+export {
+  availabilityExceptionActionPayloadSchema,
+  injectTaskActionPayloadSchema,
+  isTagActionType,
+  parseTagActionPayload,
+  TAG_ACTION_TYPES,
+} from './tag-action-payloads.ts';
+export type {
+  AvailabilityExceptionActionPayload,
+  InjectTaskActionPayload,
+  TagActionType,
+} from './tag-action-payloads.ts';
 
 /** @public */
 export { findUnknownSkillTags } from './find-unknown-skill-tags.ts';

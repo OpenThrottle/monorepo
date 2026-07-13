@@ -42,7 +42,11 @@ export class SkillTagsResolver {
     @CurrentUser('sub') userId: string,
     @Args('input', { type: () => AddSkillTagInput }) input: AddSkillTagInput,
   ): Promise<UserSkillTag> {
-    return this.skillTagsService.addTag(userId, input.tag);
+    return this.skillTagsService.addTag(
+      userId,
+      input.tag,
+      input.dimension ?? 'domain',
+    );
   }
 
   @Mutation(() => SkillTagObject, {

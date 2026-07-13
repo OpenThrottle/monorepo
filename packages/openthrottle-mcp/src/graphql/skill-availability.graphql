@@ -24,8 +24,20 @@ query SkillAvailabilityRuleSet($projectId: ID!) {
   }
 }
 
-query SkillAvailability($projectId: ID, $environment: String) {
-  skillAvailability(projectId: $projectId, environment: $environment) {
+query SkillAvailability(
+  $projectId: ID
+  $environment: String
+  $planId: ID
+  $taskId: ID
+  $relevantOnly: Boolean
+) {
+  skillAvailability(
+    projectId: $projectId
+    environment: $environment
+    planId: $planId
+    taskId: $taskId
+    relevantOnly: $relevantOnly
+  ) {
     totalCount
     warnings
     skills {
@@ -33,6 +45,8 @@ query SkillAvailability($projectId: ID, $environment: String) {
       staticDisableModelInvocation
       effectiveDisableModelInvocation
       provenance
+      matchedPlanTags
+      planRelevant
     }
   }
 }

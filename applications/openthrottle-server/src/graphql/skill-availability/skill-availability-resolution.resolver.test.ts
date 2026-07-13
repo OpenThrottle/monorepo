@@ -14,6 +14,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver';
 
 describe('SkillAvailabilityResolutionResolver', () => {
@@ -37,6 +38,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
   const makeTag = (tag: string): UserSkillTag => ({
     createdAt: new Date('2026-07-11T12:00:00.000Z'),
+    dimension: 'domain',
     id: `id-${tag}`,
     tag,
     updatedAt: new Date('2026-07-11T12:00:00.000Z'),
@@ -64,6 +66,10 @@ describe('SkillAvailabilityResolutionResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         SkillAvailabilityResolutionResolver,
+        {
+          provide: PlanContextAvailabilityService,
+          useValue: createMock<PlanContextAvailabilityService>(),
+        },
         { provide: ProjectSkillsService, useValue: mockProjectSkillsService },
         { provide: ProjectsService, useValue: mockProjectsService },
         {
@@ -97,18 +103,24 @@ describe('SkillAvailabilityResolutionResolver', () => {
     expect(result.skills).toEqual([
       {
         effectiveDisableModelInvocation: false,
+        matchedPlanTags: [],
+        planRelevant: false,
         provenance: 'frontmatter:false',
         slug: 'agents-ralph',
         staticDisableModelInvocation: false,
       },
       {
         effectiveDisableModelInvocation: false,
+        matchedPlanTags: [],
+        planRelevant: false,
         provenance: 'frontmatter:unset',
         slug: 'git-commit',
         staticDisableModelInvocation: null,
       },
       {
         effectiveDisableModelInvocation: true,
+        matchedPlanTags: [],
+        planRelevant: false,
         provenance: 'frontmatter:true',
         slug: 'github-deep-review',
         staticDisableModelInvocation: true,

@@ -7,6 +7,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, beforeEach, test, vi } from 'vitest';
 import { CommitLinksLoaders } from './commit-links-loaders';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { CommitLinksResolver } from './commit-links.resolver';
 
 describe('CommitLinksResolver', () => {
@@ -60,6 +61,10 @@ describe('CommitLinksResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         CommitLinksResolver,
+        {
+          provide: TaggingEnqueueService,
+          useValue: createMock<TaggingEnqueueService>(),
+        },
         { provide: CommitLinksService, useValue: mockCommitLinksService },
         { provide: CommitLinksLoaders, useValue: mockLoaders },
       ],
