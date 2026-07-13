@@ -92,7 +92,47 @@ Plan `03dbeb22-2952-4246-98a3-450766db59cd` (PENDING, 6 tasks) is the git-centri
 
 ---
 
-## 2. Actor model (TBD — task `28dcb5eb`)
+## 2. Actor model
+
+### 2.1 Columns, not polymorphism
+
+Ledger attribution rides on the existing `AuthPrincipal` discriminated union (`user` | `service_account`) and uses **real foreign keys** rather than a `(kind, id)` polymorphic pair — precedent: `plan_runs.actor_user_id` (053):
+
+```sql
+actor_user_id            UUID NULL REFERENCES users(id)            ON DELETE SET NULL,
+actor_service_account_id UUID NULL REFERENCES service_accounts(id) ON DELETE SET NULL,
+on_behalf_of_user_id     UUID NULL REFERENCES users(id)            ON DELETE SET NULL,
+CHECK (num_nonnulls(actor_user_id, actor_service_account_id) = 1)
+```
+
+- `actor_*` is **who authenticated** — stamped server-side from the request principal (`sub`), never client-supplied.
+- `on_behalf_of_user_id` is **who the work is for** — only meaningful when the actor is a service account. It is a _claim_ in v1 (see §2.3), consistent with the ledger's claims-vs-facts stance.
+
+### 2.2 Resolution per write path (verified)
+
+| Write path                             | Principal today                                                                                                                                                        | Ledger stamping                                                                                                                                                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Developer app                          | JWT, `sub` = `users.id` (per-user ✓)                                                                                                                                   | `actor_user_id = sub`; `on_behalf_of` null                                                                                                                                                                                         |
+| openthrottle-mcp                       | SA bearer `ot_sa_…` → the single seeded `openthrottle-mcp` account                                                                                                     | `actor_service_account_id` = that SA; `on_behalf_of_user_id` from the session-open claim (§2.3)                                                                                                                                    |
+| Ralph workers                          | Token order `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` → `WORKFLOWS` → `MCP` (`agentic-ralph-worker-graphql-auth.ts`); should present the `workflow-ralph` SA credential | `actor_service_account_id` = worker SA; `on_behalf_of_user_id` **inherited from `plan_runs.actor_user_id`** — this one is a _verified_ claim, because the run row was stamped from an authenticated user principal at enqueue time |
+| In-process jobs (tagging pattern, 067) | Named SA without credentials                                                                                                                                           | `actor_service_account_id` = job SA; no `on_behalf_of`                                                                                                                                                                             |
+
+### 2.3 The attribution gap and how to close it
+
+**Gap:** every MCP client on every machine authenticates as the _same_ `openthrottle-mcp` service account, so machine-side work is indistinguishable per human. `GITHUB_USER` reaches the server only as a free-text author default (`plan-creation.service.ts`), not as an identity. No user-scoped API-key concept exists.
+
+Ladder, mirroring artifact verification:
+
+1. **v1 — declared claim:** when the MCP opens a session (§4), it resolves a local user hint (`GITHUB_USER` → `users.github_username`, unique index) and sends `on_behalf_of_user_id` as an unverified claim. Cheap, honest, immediately useful.
+2. **Cheap hardening (recommended follow-up):** mint per-machine/per-human `service_account_credentials` rows — the credentials table (prefix, label, expiry, revocation) already supports many credentials per account and many accounts; only a minting flow is missing. Attribution granularity becomes per-credential without new auth concepts.
+3. **Future — user-scoped machine tokens (PAT-like):** a credential that authenticates _as_ `user` kind from a machine. Makes `on_behalf_of` unnecessary for that path (the actor _is_ the user). New auth surface; out of scope here.
+
+### 2.4 Relationship to free-text `author` / `assignee`
+
+Keep `plans.author`, `plans.assignee`, `tasks.assignee` exactly as they are in v1 — they answer "who is _responsible_," a workflow concern. The ledger answers "who _did_ it," an attribution concern; conflating them is how the current model lost attribution in the first place.
+
+- Sanctioned mapping where text→user resolution is needed: `users.github_username` (unique), as the rules engine already does for `ownerUserId`.
+- Backlog (not v1): FK-ify author/assignee onto `users` once ledger adoption proves the mapping's coverage.
 
 ## 3. Ledger schema (TBD — task `26be5118`)
 
