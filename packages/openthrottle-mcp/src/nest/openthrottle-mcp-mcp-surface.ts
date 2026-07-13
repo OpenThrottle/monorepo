@@ -313,6 +313,39 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.attachSessionSubjectToolDescription,
+    name: 'attach_session_subject',
+    parameters: asMcpParameters(Th.attachSessionSubjectToolParameters),
+  })
+  attachSessionSubject(
+    args: Parameters<typeof Th.attachSessionSubjectToolHandler>[0],
+  ): ReturnType<typeof Th.attachSessionSubjectToolHandler> {
+    return Th.attachSessionSubjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.endSessionToolDescription,
+    name: 'end_session',
+    parameters: asMcpParameters(Th.endSessionToolParameters),
+  })
+  endSession(
+    args: Parameters<typeof Th.endSessionToolHandler>[0],
+  ): ReturnType<typeof Th.endSessionToolHandler> {
+    return Th.endSessionToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.recordArtifactToolDescription,
+    name: 'record_artifact',
+    parameters: asMcpParameters(Th.recordArtifactToolParameters),
+  })
+  recordArtifact(
+    args: Parameters<typeof Th.recordArtifactToolHandler>[0],
+  ): ReturnType<typeof Th.recordArtifactToolHandler> {
+    return Th.recordArtifactToolHandler(args);
+  }
+
+  @Tool({
     description: Th.listNotesToolDescription,
     name: 'list_notes',
     parameters: asMcpParameters(Th.listNotesToolParameters),

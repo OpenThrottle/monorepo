@@ -214,6 +214,24 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.linkCommitToolHandler,
     ),
     defineTool(
+      'attach_session_subject',
+      Th.attachSessionSubjectToolDescription,
+      Th.attachSessionSubjectToolParameters,
+      Th.attachSessionSubjectToolHandler,
+    ),
+    defineTool(
+      'end_session',
+      Th.endSessionToolDescription,
+      Th.endSessionToolParameters,
+      Th.endSessionToolHandler,
+    ),
+    defineTool(
+      'record_artifact',
+      Th.recordArtifactToolDescription,
+      Th.recordArtifactToolParameters,
+      Th.recordArtifactToolHandler,
+    ),
+    defineTool(
       'list_notes',
       Th.listNotesToolDescription,
       Th.listNotesToolParameters,

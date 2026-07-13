@@ -1,0 +1,36 @@
+mutation startWorkSession($input: StartWorkSessionInput!) {
+  startWorkSession(input: $input) {
+    id
+    toolName
+    onBehalfOfUserId
+    onBehalfOfVerified
+  }
+}
+
+mutation recordWorkArtifact($input: RecordWorkArtifactInput!) {
+  recordWorkArtifact(input: $input) {
+    id
+    type
+    externalKey
+    lifecycle
+    verification
+    sessionId
+  }
+}
+
+mutation attachWorkSessionSubject($input: AttachWorkSessionSubjectInput!) {
+  attachWorkSessionSubject(input: $input) {
+    id
+    planId
+    taskId
+    sessionId
+  }
+}
+
+mutation endWorkSession($input: EndWorkSessionInput!) {
+  endWorkSession(input: $input) {
+    id
+    endedAt
+    closedBy
+  }
+}
