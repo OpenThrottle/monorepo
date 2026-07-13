@@ -1,6 +1,6 @@
 # Work ledger design: sessions + typed artifacts as the source of truth
 
-**Status:** design in progress (audit complete; remaining sections land per-task).
+**Status:** draft complete — pending grilling (§7 lists the open questions).
 **OT plan:** `6464971b-11f6-4c92-bcb9-7fb8b934e05f` (category `traceability`).
 **Pattern:** design doc → grill → merge → separate sliced implementation plan (precedent: [plan-task-tags-rules-design.md](./plan-task-tags-rules-design.md), PR #182).
 
@@ -322,3 +322,29 @@ Promotion creates the plan through the standard `createPlan` path, so `tag-predi
 ### 6.4 Unpromoted sessions
 
 Kept forever — the ledger is append-only and unplanned work is _the point_: today that work is invisible; under the ledger it appears in activity as attributed, unplanned work. A digest surface ("this week's unplanned sessions") becomes the natural promotion funnel — backlog, not v1.
+
+---
+
+## 7. Decided vs. open
+
+### Decided (locked during iteration, 2026-07-12/13)
+
+1. Claims and facts both stored; `verification` on artifacts; first-party server-witnessed events born `verified`.
+2. Subjectless sessions first-class; retroactive attach; chat→plan promotion built on them.
+3. Actor model in scope: real FKs from `AuthPrincipal`, `on_behalf_of` claim ladder (§2.3), author/assignee stay free-text.
+4. Two levels only (session → artifacts); `status_change` is an artifact type, not a third table; `plan_output_stream` untouched.
+5. Non-git minimal path = status change; no adapter required.
+6. Subjects are plan/task only; JSONB payload + `external_key`; per-session artifact dedupe.
+7. `plan_runs` / `agent_conversations` bridged, not absorbed; `commit_links` → legacy backfill → dual-write → compat view → drop.
+
+### Open questions (for the grilling session)
+
+1. **Where does the git adapter's local scan run?** The server needs filesystem access to checkouts — this couples to the projects/WorkspaceLocalRepository vision (projects scoped to on-disk checkouts). Is checkout registration a v1 prerequisite, or does the scan mode wait for that work and the poller goes first?
+2. **Instant-session volume**: one row per human status change is honest but chatty. Acceptable, or batch same-actor-same-plan mutations within a window?
+3. **Transactional guarantees**: status_change writes are same-transaction; lifecycle-promotion _triggers_ stay fire-and-forget BullMQ (established pattern). Is inline-enqueue good enough for tag-refine re-key, or does the promotion→trigger edge deserve an outbox?
+4. **Dual-write window**: how long does `linkCommit` write both stores — time-boxed, or until the activity resolver re-key ships in the same implementation plan?
+5. **on_behalf_of hardening priority**: is the per-machine credential minting flow (§2.3 step 2) part of the implementation plan or deferred until multi-user actually materializes?
+6. **Sweeper TTL** for abandoned sessions (proposal: 24h).
+7. **Activity resolver**: rewrite onto the ledger inside the implementation plan (it simplifies to one query), or keep the three-query merge reading the compat view initially?
+8. **03dbeb22**: confirm cancel-and-fold (audit recommendation, §1.6) vs rescope-as-adapter-plan.
+9. **v1 read surface**: is a sessions/artifacts feed in the developer app in scope, or GraphQL/MCP-only first (skill-availability "v1 informational" precedent)?
