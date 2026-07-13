@@ -228,7 +228,41 @@ Decisions:
 
 All DDL follows ot-postgres conventions: idempotent (`IF NOT EXISTS`), `COMMENT ON TABLE/COLUMN` for every object.
 
-## 4. Capture points (TBD — task `ee54a136`)
+## 4. Capture points
+
+Principle: **the tool doing the work writes the ledger** — it's the only party holding actor, subject, timestamps, and outputs at the moment they exist. Three first-party paths, ordered by leverage. All machine paths write via GraphQL (the transport boundary stands).
+
+### 4.1 Ralph / orchestrator (`workflow-ralph`, agentic-ralph)
+
+- **Session open** when the worker starts processing a run: `tool_name='workflow-ralph'`, `plan_run_id` set, `external_ref` = BullMQ job id, `model`/backend from the run-config snapshot, `on_behalf_of_user_id` inherited from `plan_runs.actor_user_id` with `on_behalf_of_verified=TRUE` (§2.2).
+- **Subjects**: the plan at open; a task subject appended as each task enters IN_PROGRESS.
+- **Artifacts**: `git_commit` recorded at commit time (Ralph knows the sha it just created — `lifecycle='created'`, `verification='unverified'`); `pull_request` when it opens one. `status_change` artifacts come for free via §4.3 since Ralph mutates tasks through the same GraphQL mutations.
+- **Session close** in the worker's finally-block on any exit (workflow_complete, max_iterations, cancel, crash-rethrow) — do **not** rely on the orchestrator loop, which is exactly the path that already strands plan statuses today.
+
+### 4.2 MCP boundary (openthrottle-mcp)
+
+- **Implicit session**: opened lazily on the first _mutating_ tool call per server process (stdio = one process per client session). `tool_name` derived from the MCP `initialize` `clientInfo.name` (e.g. `claude-code`, `cursor`), falling back to `openthrottle-mcp`; `tool_version` from `clientInfo.version`; `external_ref` = `WORKTREE_ID` + process id; `on_behalf_of_user_id` resolved from `GITHUB_USER` → `users.github_username`, `on_behalf_of_verified=FALSE` (§2.3).
+- **New tools**: `record_artifact` (type, external identity, payload, optional subject), `attach_session_subject` (plan/task), `end_session` (optional — abandoned sessions are swept, §4.4). Tool descriptions instruct agents to self-report outputs; agents are the party that reliably performs ceremony.
+- **Ambient attribution**: once a session exists, the MCP sends `X-OT-Session-Id` on its GraphQL requests; the server's CLS picks it up so side-effect ledger rows (e.g. a `status_change` from `update_task`) attach to the _agent's_ session instead of spawning an instant one.
+
+### 4.3 Server mutations (the zero-ceremony human path)
+
+- `updateTask`/`updatePlan` status transitions write a `status_change` artifact **in the same transaction** as the row update (alongside `resolveCompletedAtForStatusChange`), attributed to the request principal. No ambient session (no `X-OT-Session-Id`) → an **instant session** (`started_at = ended_at`, `tool_name='developer-app'`). This single hook fixes the audit's two structural holes at once: task events become real events (no more inferring from mutable `updated_at`), and completions finally carry an actor.
+- Unlike BullMQ enqueues (fire-and-forget), this is a same-database write: transactional, not best-effort.
+- Manual artifact attach on plan/task detail pages creates an artifact (`source='human'`) in an instant session.
+
+### 4.4 Idempotency / dedupe
+
+| Concern                                | Rule                                                                                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Retried Ralph job (same BullMQ job id) | Create-or-reuse the open session by `plan_run_id`; a retry continues the same ledger session                                        |
+| Re-reported artifact                   | `UNIQUE (session_id, type, external_key)` makes `record_artifact` an upsert (payload/lifecycle may promote, never regress)          |
+| Reconnecting MCP client                | New process = new session — honest; cross-session grouping is by `external_key`                                                     |
+| Abandoned sessions (crash, kill)       | Sweeper job stamps `ended_at` = last artifact `produced_at` (or `started_at`) after a TTL; open-ended sessions never block anything |
+
+### 4.5 GraphQL surface (sketch)
+
+Mutations `startWorkSession`, `recordWorkArtifact`, `attachWorkSessionSubject`, `endWorkSession`; queries follow §3.4 (sessions/artifacts by plan, task, actor, date; unverified-claims feed for adapters). Result/ListResult conventions per openthrottle-stack; details belong to the implementation plan.
 
 ## 5. Adapter/verifier contract (TBD — task `6b3958cc`)
 
