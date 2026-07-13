@@ -134,7 +134,99 @@ Keep `plans.author`, `plans.assignee`, `tasks.assignee` exactly as they are in v
 - Sanctioned mapping where text→user resolution is needed: `users.github_username` (unique), as the rules engine already does for `ownerUserId`.
 - Backlog (not v1): FK-ify author/assignee onto `users` once ledger adoption proves the mapping's coverage.
 
-## 3. Ledger schema (TBD — task `26be5118`)
+## 3. Ledger schema
+
+Three tables: `work_sessions`, `work_session_subjects`, `work_artifacts`. Append-only by convention (service layer permits only `ended_at` closure on sessions and lifecycle/verification promotion on artifacts; no deletes) — no enforcement triggers in v1.
+
+### 3.1 `work_sessions`
+
+```sql
+CREATE TABLE work_sessions (
+    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_user_id            UUID REFERENCES users(id),
+    actor_service_account_id UUID REFERENCES service_accounts(id),
+    on_behalf_of_user_id     UUID REFERENCES users(id),
+    on_behalf_of_verified    BOOLEAN NOT NULL DEFAULT FALSE,
+    tool_name                TEXT NOT NULL,     -- 'developer-app' | 'openthrottle-mcp' | 'workflow-ralph' | client-declared
+    tool_version             TEXT,
+    model                    TEXT,              -- e.g. 'claude-fable-5'; NULL for humans
+    external_ref             TEXT,              -- BullMQ job id, agent session id, worktree id…
+    plan_run_id              UUID REFERENCES plan_runs(id) ON DELETE SET NULL,
+    conversation_id          UUID REFERENCES agent_conversations(id) ON DELETE SET NULL,
+    started_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ended_at                 TIMESTAMPTZ,
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT work_sessions_one_actor CHECK (num_nonnulls(actor_user_id, actor_service_account_id) = 1)
+);
+```
+
+Decisions:
+
+- **Actor FKs default to `ON DELETE NO ACTION` (restrict), not `SET NULL`** — `SET NULL` would violate the one-actor CHECK, and both `users` and `service_accounts` are soft-delete-only (`disabled_at`) anyway. History must not lose its actor.
+- `on_behalf_of_verified` distinguishes the claim tiers from §2.3 (Ralph-run inheritance = `TRUE`; MCP `GITHUB_USER` hint = `FALSE`).
+- `plan_run_id` / `conversation_id` tie sessions to the two existing proto-session tables instead of absorbing them: `plan_runs` stays the queue-audit record, `agent_conversations` stays the chat transcript; a `work_session` is the _ledger view_ of either. `plan_output_stream` is reachable via `plan_run_id`→plan + `iteration`; no schema change to it.
+- Instant sessions (`started_at = ended_at`) are legal and cheap — needed for the status-change path (§4).
+
+### 3.2 `work_session_subjects`
+
+```sql
+CREATE TABLE work_session_subjects (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id  UUID NOT NULL REFERENCES work_sessions(id) ON DELETE CASCADE,
+    plan_id     UUID NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+    task_id     UUID REFERENCES tasks(id) ON DELETE CASCADE,
+    attached_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX ON work_session_subjects
+    (session_id, plan_id, COALESCE(task_id, '00000000-0000-0000-0000-000000000000'::uuid));
+```
+
+- Every task belongs to a plan, so `plan_id` is always populated (task-level subject = both set; plan-level = `task_id` NULL). Dedupe mirrors the `commit_links` sentinel pattern.
+- Subjectless session = zero rows here. Retroactive attach (incl. chat→plan promotion, §6) is an INSERT — the session row never mutates.
+
+### 3.3 `work_artifacts`
+
+```sql
+CREATE TABLE work_artifacts (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id   UUID NOT NULL REFERENCES work_sessions(id) ON DELETE CASCADE,
+    type         TEXT NOT NULL,               -- 'git_commit' | 'pull_request' | 'document' | 'deployment' | 'status_change' | …
+    external_key TEXT NOT NULL,               -- canonical identity, e.g. 'github:OpenThrottle/monorepo@<sha>'
+    payload      JSONB NOT NULL,              -- per-type shape, app-validated (zod), see §5
+    lifecycle    TEXT,                        -- per-type vocabulary: git_commit 'created'→'landed'; document 'draft'→'published'; NULL = no lifecycle
+    verification TEXT NOT NULL DEFAULT 'unverified',  -- 'unverified' | 'verified' | 'orphaned'
+    verified_at  TIMESTAMPTZ,
+    source       TEXT NOT NULL,               -- 'agent' | 'human' | 'adapter' | 'server' | 'legacy'
+    message      TEXT,
+    produced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT work_artifacts_session_type_key_unique UNIQUE (session_id, type, external_key)
+);
+CREATE INDEX ON work_artifacts (type, external_key);
+CREATE INDEX ON work_artifacts (verification) WHERE verification = 'unverified';
+```
+
+Decisions:
+
+- **JSONB payload + canonical `external_key` column**, not per-type columns. The type set is open by design (adapter contract, §5) — columns can't anticipate it. Identity, dedupe, and hot lookups ride the indexed `(type, external_key)`; payload shapes are validated in app code per type (the `tool_metadata` JSONB-with-app-validation precedent from 051).
+- **Dedupe is per-session** (`session_id, type, external_key`), not global. Two sessions may legitimately claim the same commit; cross-session grouping happens at query time by `external_key`. The old (plan, task, repo, sha) semantics collapse naturally: one Ralph session carries several task subjects and _one_ landed-commit artifact, where today that's N `commit_links` rows.
+- **First-party events are born `verified`**: a `status_change` artifact written by the server witnessing the mutation is a fact, not a claim. `verified` is not adapter-exclusive; adapters _upgrade_ third-party claims (§5).
+- **`status_change` is an artifact type**, payload `{entity: 'task'|'plan', id, from, to}` — this keeps the locked two-level model (no third "events" table) while making the zero-ceremony human path (§4) a real ledger row with an actor.
+
+### 3.4 Query shapes the schema must serve
+
+1. "Commits for plan X" — subjects → sessions → artifacts (`type='git_commit'`).
+2. "Who did what on date D" — sessions by `started_at` + artifacts by `produced_at` (replaces the activity resolver's three-query merge).
+3. "What produced sha Y" — artifacts by `(type, external_key)` → session → subjects + actor.
+4. "Unverified claims for the verifier" — partial index on `verification='unverified'`.
+
+### 3.5 Migration of `commit_links`
+
+1. **Backfill**: synthesize one legacy session _per plan_ that has links (actor = a new credential-less `ledger-migration` service account, 067-style; `tool_name='ledger-migration'`; `started_at` = earliest link `created_at`). Subjects = the distinct (plan, task) pairs of its links; artifacts = distinct SHAs as `git_commit`, `source='legacy'`, `lifecycle='landed'`, **`verification='unverified'`** — the git verifier's first run upgrades them honestly rather than the migration asserting facts it didn't check.
+2. **Dual-write**: `linkCommit` mutation writes both `commit_links` and a ledger create-or-promote until consumers re-key.
+3. **Re-key consumers** (activity, refine-tagging trigger — §1.4), then replace `commit_links` with a compatibility VIEW over `work_artifacts` + subjects; drop the view in a later cleanup migration.
+
+All DDL follows ot-postgres conventions: idempotent (`IF NOT EXISTS`), `COMMENT ON TABLE/COLUMN` for every object.
 
 ## 4. Capture points (TBD — task `ee54a136`)
 
