@@ -153,6 +153,7 @@ CREATE TABLE work_sessions (
     external_ref             TEXT,              -- BullMQ job id, agent session id, worktree id…
     plan_run_id              UUID REFERENCES plan_runs(id) ON DELETE SET NULL,
     conversation_id          UUID REFERENCES agent_conversations(id) ON DELETE SET NULL,
+    summary                  TEXT,              -- set at end_session/promotion; legibility for unpromoted sessions (§6.2)
     started_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ended_at                 TIMESTAMPTZ,
     created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -284,16 +285,40 @@ Local-first, two modes; webhooks remain a hosted-mode future:
 
 Behaviors:
 
-| Behavior           | Detail                                                                                                                                                                                                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Verify existence   | Claimed `git_commit` sha found → `unverified → verified`                                                                                                                                                                                                                   |
-| Landed detection   | Sha reachable from default branch → `lifecycle → 'landed'` (fires triggers)                                                                                                                                                                                                |
-| **Squash mapping** | Claimed branch sha ≠ squash sha. Resolve via PR merge_commit_sha (poller) or message/trailer match (scan); **promote the same artifact** — `payload.landed_sha` added, `lifecycle='landed'`. Identity stays stable; a branch sha that landed via squash is _not_ orphaned. |
-| Orphan detection   | Sha unreachable and unmapped after a grace window (branch deleted, rebase drift) → `orphaned` (03dbeb22 task 5)                                                                                                                                                            |
-| Trailer harvesting | A commit on main with `Plan-Id:`/`Task-Id:` trailers but no ledger claim → adapter creates an adapter-sourced session + artifact (`source='adapter'`). Trailers finally get parsed — as one optional signal, not the front door.                                           |
+| Behavior           | Detail                                                                                                                                                                                                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verify existence   | Claimed `git_commit` sha found → `unverified → verified`                                                                                                                                                                                                                    |
+| Landed detection   | Sha reachable from default branch → `lifecycle → 'landed'` (fires triggers)                                                                                                                                                                                                 |
+| **Squash mapping** | Claimed branch sha ≠ squash sha. Resolve via PR merge*commit_sha (poller) or message/trailer match (scan); **promote the same artifact** — `payload.landed_sha` added, `lifecycle='landed'`. Identity stays stable; a branch sha that landed via squash is \_not* orphaned. |
+| Orphan detection   | Sha unreachable and unmapped after a grace window (branch deleted, rebase drift) → `orphaned` (03dbeb22 task 5)                                                                                                                                                             |
+| Trailer harvesting | A commit on main with `Plan-Id:`/`Task-Id:` trailers but no ledger claim → adapter creates an adapter-sourced session + artifact (`source='adapter'`). Trailers finally get parsed — as one optional signal, not the front door.                                            |
 
 ### 5.2 The non-git path needs nothing
 
 Confirmed against §4.3: a human flipping a task to COMPLETED yields an instant session (who: actor from principal; when: `produced_at`; what: subjects) with a born-verified `status_change` artifact. Zero adapters, zero git, zero ceremony — and it's a _richer_ record than today's `commit_links` row, which has no actor at all.
 
-## 6. Chat → plan promotion (TBD — task `6af9fb8d`)
+## 6. Chat → plan promotion (subjectless sessions)
+
+The inversion pays off here: work exists first, planning is attached later. A chat with an agent that produces real outputs is a `work_session` (`conversation_id` set, §3.1) accumulating artifacts with no subject — already fully attributed and timestamped. Promotion turns it into planned work retroactively.
+
+### 6.1 Mechanics
+
+One mutation, `promoteSessionToPlan`, wrapped by both an MCP tool (`promote_session_to_plan`) and a developer-app action. Atomically:
+
+1. Create the plan (+ tasks) from the caller-supplied draft — in v1 the _agent_ drafts the plan from its own conversation (agents are good at this); a server-side LLM auto-draft (plan-creation service exists) is a follow-up.
+2. INSERT subject rows onto the session (plan-level, plus task-level where the draft maps artifacts to tasks).
+3. Set `agent_conversations.plan_id` when the session has a conversation.
+
+The session row never mutates; artifacts inherit the subject through the session; promotion is pure INSERT + plan creation. The lighter variant — `attach_session_subject` to an _existing_ plan — covers "this chat was actually about plan X" without creating anything.
+
+### 6.2 Metadata for good plans
+
+Add one column to §3.1: `summary TEXT NULL` on `work_sessions`, set at `end_session` or promotion time. Everything else a good plan draft needs already exists on the session (tool fingerprint, artifact list, conversation messages via `conversation_id`). Keep the schema lean; the draft's narrative travels in the promotion input, not the ledger.
+
+### 6.3 Tags/rules interplay
+
+Promotion creates the plan through the standard `createPlan` path, so `tag-predict` enqueues automatically (shipped, #183). Seeding the prediction with session artifacts/summary as extra context is a follow-up, not v1.
+
+### 6.4 Unpromoted sessions
+
+Kept forever — the ledger is append-only and unplanned work is _the point_: today that work is invisible; under the ledger it appears in activity as attributed, unplanned work. A digest surface ("this week's unplanned sessions") becomes the natural promotion funnel — backlog, not v1.
