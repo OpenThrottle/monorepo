@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { ActionExecutorRegistry } from './action-executor';
+import { InjectTaskExecutor } from './inject-task.executor';
 import { PlanRulesQueueProducerModule } from './plan-rules-queue-producer.module';
 import { PlanRulesProcessor } from './plan-rules.processor';
 
@@ -19,6 +20,6 @@ import { PlanRulesProcessor } from './plan-rules.processor';
     NestjsRepositoriesModule,
     PlanRulesQueueProducerModule,
   ],
-  providers: [ActionExecutorRegistry, PlanRulesProcessor],
+  providers: [ActionExecutorRegistry, InjectTaskExecutor, PlanRulesProcessor],
 })
 export class PlanRulesQueueModule {}
