@@ -35,13 +35,24 @@ describe('LinkedArtifactsPanel Component', () => {
     beforeEach(() => {
       component = renderPanel({
         artifacts: [
-          artifact({ id: 'a1', type: 'git_commit', verification: 'verified' }),
-          artifact({ id: 'a2', type: 'document', verification: 'orphaned' }),
+          // Mixed Date-scalar shapes: epoch-millis number and ISO string (the scalar arrives as either).
+          artifact({
+            id: 'a1',
+            producedAt: 1_752_000_000_000,
+            type: 'git_commit',
+            verification: 'verified',
+          }),
+          artifact({
+            id: 'a2',
+            producedAt: '2026-07-13T00:00:00.000Z',
+            type: 'document',
+            verification: 'orphaned',
+          }),
         ],
       });
     });
 
-    test('renders the panel with a row per artifact', () => {
+    test('renders the panel with a row per artifact (mixed date scalar shapes)', () => {
       expect(component.getByTestId('LinkedArtifactsPanel')).toBeInTheDocument();
       expect(component.getByText('verified')).toBeInTheDocument();
       expect(component.getByText('orphaned')).toBeInTheDocument();

@@ -5,7 +5,8 @@ export interface LinkedArtifactRow {
   externalKey: string;
   id: string;
   lifecycle?: string | null;
-  producedAt: string;
+  // The GraphQL Date scalar arrives as epoch millis (number) or an ISO string.
+  producedAt: number | string;
   source: string;
   type: string;
   verification: string;
@@ -22,9 +23,18 @@ const VERIFICATION_STYLES: Record<string, string> = {
   verified: 'border-emerald-500/60 bg-emerald-500/10',
 };
 
-const formatProducedAt = (iso: string): string => {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
+/** Coerce the Date scalar (number epoch millis | string) to a Date; matches the TaskDetails pattern. */
+const toDate = (value: number | string): Date =>
+  typeof value === 'number' ? new Date(value) : new Date(String(value));
+
+const toMillis = (value: number | string): number => {
+  const time = toDate(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const formatProducedAt = (value: number | string): string => {
+  const date = toDate(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 };
 
 export const LinkedArtifactsPanel = (
@@ -35,8 +45,8 @@ export const LinkedArtifactsPanel = (
   // Hooks
 
   // Setup — newest first (the query already orders by producedAt DESC; keep it stable here too).
-  const ordered = [...artifacts].sort((a, b) =>
-    b.producedAt.localeCompare(a.producedAt),
+  const ordered = [...artifacts].sort(
+    (a, b) => toMillis(b.producedAt) - toMillis(a.producedAt),
   );
 
   // Handlers
