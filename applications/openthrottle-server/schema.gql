@@ -1543,6 +1543,64 @@ type PlanOutputStreamChunkObject {
   planId: String!
 }
 
+type WorkSessionObject {
+  actorServiceAccountId: String
+  actorUserId: String
+
+  """How the session closed: explicit | sweeper; null while open"""
+  closedBy: String
+  conversationId: String
+  createdAt: DateTime!
+  endedAt: DateTime
+  externalRef: String
+  id: String!
+  model: String
+  onBehalfOfUserId: String
+  onBehalfOfVerified: Boolean!
+  planRunId: String
+  startedAt: DateTime!
+  summary: String
+  toolName: String!
+  toolVersion: String
+}
+
+type WorkSessionSubjectObject {
+  attachedAt: DateTime!
+  id: String!
+  planId: String!
+  sessionId: String!
+  taskId: String
+}
+
+type WorkArtifactObject {
+  createdAt: DateTime!
+  externalKey: String!
+  id: String!
+  lifecycle: String
+  message: String
+
+  """JSON-serialized per-type payload (parse client-side)"""
+  payloadJson: String!
+  producedAt: DateTime!
+  sessionId: String!
+  source: String!
+  type: String!
+
+  """Claims-vs-facts state: unverified | verified | orphaned"""
+  verification: String!
+  verifiedAt: DateTime
+}
+
+type WorkSessionListResult {
+  sessions: [WorkSessionObject!]!
+  totalCount: Int!
+}
+
+type WorkArtifactListResult {
+  artifacts: [WorkArtifactObject!]!
+  totalCount: Int!
+}
+
 type QueueJobLogEventObject {
   """Opaque cursor positioned AFTER this event; pass as `after` to resume."""
   cursor: String!
@@ -2004,64 +2062,6 @@ type UserObject {
   updatedAt: DateTime!
 }
 
-type WorkSessionObject {
-  actorServiceAccountId: String
-  actorUserId: String
-
-  """How the session closed: explicit | sweeper; null while open"""
-  closedBy: String
-  conversationId: String
-  createdAt: DateTime!
-  endedAt: DateTime
-  externalRef: String
-  id: String!
-  model: String
-  onBehalfOfUserId: String
-  onBehalfOfVerified: Boolean!
-  planRunId: String
-  startedAt: DateTime!
-  summary: String
-  toolName: String!
-  toolVersion: String
-}
-
-type WorkSessionSubjectObject {
-  attachedAt: DateTime!
-  id: String!
-  planId: String!
-  sessionId: String!
-  taskId: String
-}
-
-type WorkArtifactObject {
-  createdAt: DateTime!
-  externalKey: String!
-  id: String!
-  lifecycle: String
-  message: String
-
-  """JSON-serialized per-type payload (parse client-side)"""
-  payloadJson: String!
-  producedAt: DateTime!
-  sessionId: String!
-  source: String!
-  type: String!
-
-  """Claims-vs-facts state: unverified | verified | orphaned"""
-  verification: String!
-  verifiedAt: DateTime
-}
-
-type WorkSessionListResult {
-  sessions: [WorkSessionObject!]!
-  totalCount: Int!
-}
-
-type WorkArtifactListResult {
-  artifacts: [WorkArtifactObject!]!
-  totalCount: Int!
-}
-
 """Per-user workspace profile: contact fields and enabled editors."""
 type UserWorkspaceProfileObject {
   """Display name for notifications and workspace attribution."""
@@ -2380,6 +2380,10 @@ type Query {
 
   """Distinct author and assignee values from plans and tasks for filters"""
   listDistinctAuthorsAndAssignees: [String!]!
+  workSession(id: String!): WorkSessionObject
+  workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
+  workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
+  unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
 
   """
   A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability.
@@ -2525,10 +2529,6 @@ type Query {
 
   """List all users, ordered by createdAt descending"""
   users: [UserObject!]!
-  workSession(id: String!): WorkSessionObject
-  workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
-  workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
-  unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
 
   """
   Workspace settings for the authenticated user (profile and local repositories).
@@ -2889,6 +2889,24 @@ input SearchPlansInput {
   query: String!
 }
 
+input WorkSessionsByPlanInput {
+  """Plan id to list sessions for"""
+  planId: ID!
+}
+
+input WorkArtifactsBySessionInput {
+  """Session id to list artifacts for"""
+  sessionId: ID!
+}
+
+input UnverifiedWorkArtifactsInput {
+  """Max rows (verifier feed); clamped server-side"""
+  limit: Int
+
+  """Restrict to a single artifact type (e.g. git_commit)"""
+  type: String
+}
+
 input QueueJobLogsInput {
   """Opaque cursor from a prior page. Mutually exclusive with `since`."""
   after: String
@@ -2948,24 +2966,6 @@ input TasksByProjectIdInput {
 input RemainingTasksByPlanIdInput {
   """Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED"""
   planId: ID!
-}
-
-input WorkSessionsByPlanInput {
-  """Plan id to list sessions for"""
-  planId: ID!
-}
-
-input WorkArtifactsBySessionInput {
-  """Session id to list artifacts for"""
-  sessionId: ID!
-}
-
-input UnverifiedWorkArtifactsInput {
-  """Max rows (verifier feed); clamped server-side"""
-  limit: Int
-
-  """Restrict to a single artifact type (e.g. git_commit)"""
-  type: String
 }
 
 type Mutation {
@@ -3134,6 +3134,10 @@ type Mutation {
   Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
+  startWorkSession(input: StartWorkSessionInput!): WorkSessionObject!
+  recordWorkArtifact(input: RecordWorkArtifactInput!): WorkArtifactObject!
+  attachWorkSessionSubject(input: AttachWorkSessionSubjectInput!): WorkSessionSubjectObject!
+  endWorkSession(input: EndWorkSessionInput!): WorkSessionObject
 
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
@@ -3308,10 +3312,6 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
-  startWorkSession(input: StartWorkSessionInput!): WorkSessionObject!
-  recordWorkArtifact(input: RecordWorkArtifactInput!): WorkArtifactObject!
-  attachWorkSessionSubject(input: AttachWorkSessionSubjectInput!): WorkSessionSubjectObject!
-  endWorkSession(input: EndWorkSessionInput!): WorkSessionObject
 
   """
   Update contact fields and/or enabled editors on the authenticated user's workspace profile.
@@ -3754,6 +3754,72 @@ input CancelPlanRunInput {
   planId: ID!
 }
 
+input StartWorkSessionInput {
+  """Chat conversation id when this session is a chat thread"""
+  conversationId: String
+
+  """
+  External correlation id (BullMQ job id, worktree+pid, agent session id)
+  """
+  externalRef: String
+
+  """Model identifier when an agent did the work (e.g. claude-fable-5)"""
+  model: String
+
+  """
+  Unverified hint: the human this machine work is on behalf of (users.id)
+  """
+  onBehalfOfUserId: ID
+
+  """plan_runs.id when this session is a Ralph run"""
+  planRunId: ID
+
+  """
+  Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name
+  """
+  toolName: String!
+
+  """Tool/client version"""
+  toolVersion: String
+}
+
+input RecordWorkArtifactInput {
+  """Optional human-readable note (e.g. commit message)"""
+  message: String
+
+  """
+  JSON-serialized payload; validated server-side against the type's schema
+  """
+  payloadJson: String!
+
+  """Session that produced the artifact"""
+  sessionId: ID!
+
+  """
+  Artifact type: git_commit | pull_request | document | deployment | status_change
+  """
+  type: String!
+}
+
+input AttachWorkSessionSubjectInput {
+  """Subject plan"""
+  planId: ID!
+
+  """Session to attach the subject to"""
+  sessionId: ID!
+
+  """Subject task (task-level subject); omit for plan-level"""
+  taskId: ID
+}
+
+input EndWorkSessionInput {
+  """Session to close"""
+  sessionId: ID!
+
+  """Summary set at close (legibility for unpromoted sessions)"""
+  summary: String
+}
+
 input CreateProjectInput {
   description: String
   name: String!
@@ -4075,72 +4141,6 @@ input UpdateUserInput {
 
   """User id to update"""
   id: ID!
-}
-
-input StartWorkSessionInput {
-  """Chat conversation id when this session is a chat thread"""
-  conversationId: String
-
-  """
-  External correlation id (BullMQ job id, worktree+pid, agent session id)
-  """
-  externalRef: String
-
-  """Model identifier when an agent did the work (e.g. claude-fable-5)"""
-  model: String
-
-  """
-  Unverified hint: the human this machine work is on behalf of (users.id)
-  """
-  onBehalfOfUserId: ID
-
-  """plan_runs.id when this session is a Ralph run"""
-  planRunId: ID
-
-  """
-  Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name
-  """
-  toolName: String!
-
-  """Tool/client version"""
-  toolVersion: String
-}
-
-input RecordWorkArtifactInput {
-  """Optional human-readable note (e.g. commit message)"""
-  message: String
-
-  """
-  JSON-serialized payload; validated server-side against the type's schema
-  """
-  payloadJson: String!
-
-  """Session that produced the artifact"""
-  sessionId: ID!
-
-  """
-  Artifact type: git_commit | pull_request | document | deployment | status_change
-  """
-  type: String!
-}
-
-input AttachWorkSessionSubjectInput {
-  """Subject plan"""
-  planId: ID!
-
-  """Session to attach the subject to"""
-  sessionId: ID!
-
-  """Subject task (task-level subject); omit for plan-level"""
-  taskId: ID
-}
-
-input EndWorkSessionInput {
-  """Session to close"""
-  sessionId: ID!
-
-  """Summary set at close (legibility for unpromoted sessions)"""
-  summary: String
 }
 
 input UpdateWorkspaceProfileInput {

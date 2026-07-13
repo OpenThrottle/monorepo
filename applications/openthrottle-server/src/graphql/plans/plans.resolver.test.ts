@@ -30,6 +30,7 @@ import { PlansLoaders } from './plans-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { PlansResolver } from './plans.resolver';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 
 vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),
@@ -100,11 +101,14 @@ describe('PlansResolver', () => {
         async (
           cb: (manager: {
             getRepository: (entity: unknown) => unknown;
+            save: <T>(entity: T) => Promise<T>;
           }) => unknown,
         ) =>
           cb({
             getRepository: (entity: unknown) =>
               entity === Task ? taskRepo : repo,
+            // Delegate to repo.save so existing `expect(repo.save)` assertions still hold.
+            save: <T>(entity: T): Promise<T> => repo.save(entity),
           }),
       ),
     },
@@ -232,6 +236,10 @@ describe('PlansResolver', () => {
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
         { provide: TasksService, useValue: mockTasksService },
+        {
+          provide: WorkLedgerCaptureService,
+          useValue: createMock<WorkLedgerCaptureService>(),
+        },
         {
           provide: getQueueToken(PLANS_QUEUE_NAME),
           useValue: mockPlansQueue,
