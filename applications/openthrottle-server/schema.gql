@@ -2428,7 +2428,7 @@ type Query {
   """
   The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications.
   """
-  ruleApplications(planId: String!): [RuleApplicationObject!]!
+  ruleApplications(planId: ID!): [RuleApplicationObject!]!
 
   """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject

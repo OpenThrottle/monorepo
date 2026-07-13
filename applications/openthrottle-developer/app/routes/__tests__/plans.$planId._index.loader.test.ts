@@ -32,6 +32,8 @@ describe('routes/plans.$planId._index loader', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     });
   });
@@ -44,12 +46,18 @@ describe('routes/plans.$planId._index loader', () => {
     const auditRows = [{ __typename: 'PlanRunObject', id: 'run-1' }];
     const recentRuns = [{ __typename: 'PlanRunMetricObject', id: 'm-1' }];
     const tasks = [{ __typename: 'TaskObject', id: 'task-1' }];
+    const ruleApplications = [
+      { __typename: 'RuleApplicationObject', id: 'app-1' },
+    ];
+    const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
 
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       metrics: { recentPlanRunsMetrics: recentRuns },
       plan,
       planOutputStreamChunks: outputChunks,
       planRunsByPlanId: auditRows,
+      ruleApplications,
+      skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 },
       tasksByPlanId: tasks,
     });
 
@@ -72,6 +80,8 @@ describe('routes/plans.$planId._index loader', () => {
       planOutputChunks: outputChunks,
       planRunAuditRows: auditRows,
       recentPlanRuns: recentRuns,
+      ruleApplications,
+      tagVocabulary: vocabularyTags,
       tasks,
     });
   });
@@ -82,6 +92,8 @@ describe('routes/plans.$planId._index loader', () => {
       plan: null,
       planOutputStreamChunks: null,
       planRunsByPlanId: null,
+      ruleApplications: null,
+      skillTagVocabulary: { tags: null, totalCount: 0 },
       tasksByPlanId: null,
     });
 
@@ -99,6 +111,8 @@ describe('routes/plans.$planId._index loader', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     });
   });

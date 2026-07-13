@@ -1,0 +1,45 @@
+fragment TagActionRuleRow on TagActionRuleObject {
+  actionPayloadJson
+  actionType
+  createdAt
+  enabled
+  environment
+  id
+  projectId
+  status
+  tagAll
+  updatedAt
+  userId
+}
+
+query RulesIndexLoader {
+  tagActionRules {
+    ...TagActionRuleRow
+  }
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
+  skillAvailability {
+    skills {
+      effectiveDisableModelInvocation
+      slug
+    }
+    totalCount
+    warnings
+  }
+}
+
+mutation RulesUpsertTagActionRule($input: UpsertTagActionRuleInput!) {
+  upsertTagActionRule(input: $input) {
+    ...TagActionRuleRow
+  }
+}
+
+mutation RulesDeleteTagActionRule($input: DeleteTagActionRuleInput!) {
+  deleteTagActionRule(input: $input)
+}

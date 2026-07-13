@@ -110,9 +110,25 @@ export type AddPermissionToRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+export type AddPlanTagInput = {
+  /** Plan to tag. */
+  planId: Scalars['ID']['input'];
+  /** Kebab-case tag slug from the caller's skill-tag vocabulary. */
+  tag: Scalars['String']['input'];
+};
+
 export type AddSkillTagInput = {
+  /** Vocabulary axis for the tag: "domain" (default) or "phase". */
+  dimension?: InputMaybe<Scalars['String']['input']>;
   /** Kebab-case tag slug to add (e.g. "pr-review"). */
   tag: Scalars['String']['input'];
+};
+
+export type AddTaskTagInput = {
+  /** Kebab-case tag slug from the caller's skill-tag vocabulary. */
+  tag: Scalars['String']['input'];
+  /** Task to tag. */
+  taskId: Scalars['ID']['input'];
 };
 
 /** A ranked agent-asset match from semantic search over custom_prompt embeddings. */
@@ -680,6 +696,11 @@ export type DeleteProjectInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DeleteTagActionRuleInput = {
+  /** Rule to delete (ledger rows CASCADE). */
+  id: Scalars['ID']['input'];
+};
+
 export type DeleteTaskInput = {
   /** Task id to delete */
   id: Scalars['ID']['input'];
@@ -1176,10 +1197,14 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Add a permission to a role */
   addPermissionToRole: Scalars['Boolean']['output'];
+  /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
+  addPlanTag: PlanTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
   addSkillAvailabilityRule: SkillAvailabilityRuleObject;
   /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
   addSkillTag: SkillTagObject;
+  /** Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. */
+  addTaskTag: TaskTagObject;
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
@@ -1236,6 +1261,8 @@ export type Mutation = {
   deleteRole: Scalars['Boolean']['output'];
   /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
   deleteSkillAvailabilityRuleSet: Scalars['Boolean']['output'];
+  /** Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent. */
+  deleteTagActionRule: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
@@ -1274,6 +1301,8 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
+  /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
+  removePlanTag: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
   /** Remove a role from a service account (admin, human only). */
@@ -1284,6 +1313,8 @@ export type Mutation = {
   removeSkillAvailabilityRule: Scalars['Boolean']['output'];
   /** Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present. */
   removeSkillTag: Scalars['Boolean']['output'];
+  /** Remove a tag from a task under the provenance ladder. Returns false when the tag was not present. */
+  removeTaskTag: Scalars['Boolean']['output'];
   /** Rename a tag in the authenticated user's skill-tag vocabulary. */
   renameSkillTag: SkillTagObject;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
@@ -1338,6 +1369,8 @@ export type Mutation = {
   updateWorkspaceProfile: UserWorkspaceProfileObject;
   /** Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project. */
   upsertSkillAvailabilityRuleSet: SkillAvailabilityRuleSetObject;
+  /** Create or update a tag→action rule. The JSON payload is validated against the action type's schema. */
+  upsertTagActionRule: TagActionRuleObject;
   /**
    * Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
    * @deprecated Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.
@@ -1351,6 +1384,10 @@ export type MutationAddPermissionToRoleArgs = {
   input: AddPermissionToRoleInput;
 };
 
+export type MutationAddPlanTagArgs = {
+  input: AddPlanTagInput;
+};
+
 export type MutationAddSkillAvailabilityRuleArgs = {
   input: SkillAvailabilityRuleInput;
   projectId: Scalars['ID']['input'];
@@ -1358,6 +1395,10 @@ export type MutationAddSkillAvailabilityRuleArgs = {
 
 export type MutationAddSkillTagArgs = {
   input: AddSkillTagInput;
+};
+
+export type MutationAddTaskTagArgs = {
+  input: AddTaskTagInput;
 };
 
 export type MutationAgentsRunChatTurnArgs = {
@@ -1472,6 +1513,10 @@ export type MutationDeleteSkillAvailabilityRuleSetArgs = {
   projectId: Scalars['ID']['input'];
 };
 
+export type MutationDeleteTagActionRuleArgs = {
+  input: DeleteTagActionRuleInput;
+};
+
 export type MutationDeleteTaskArgs = {
   input: DeleteTaskInput;
 };
@@ -1536,6 +1581,10 @@ export type MutationRemovePermissionFromRoleArgs = {
   input: RemovePermissionFromRoleInput;
 };
 
+export type MutationRemovePlanTagArgs = {
+  input: RemovePlanTagInput;
+};
+
 export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
 };
@@ -1554,6 +1603,10 @@ export type MutationRemoveSkillAvailabilityRuleArgs = {
 
 export type MutationRemoveSkillTagArgs = {
   input: RemoveSkillTagInput;
+};
+
+export type MutationRemoveTaskTagArgs = {
+  input: RemoveTaskTagInput;
 };
 
 export type MutationRenameSkillTagArgs = {
@@ -1650,6 +1703,10 @@ export type MutationUpdateWorkspaceProfileArgs = {
 export type MutationUpsertSkillAvailabilityRuleSetArgs = {
   posture: Scalars['String']['input'];
   projectId: Scalars['ID']['input'];
+};
+
+export type MutationUpsertTagActionRuleArgs = {
+  input: UpsertTagActionRuleInput;
 };
 
 export type MutationWorkflowPlanRunArgs = {
@@ -1780,6 +1837,8 @@ export type PlanObject = {
   runConfigJson: Scalars['String']['output'];
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
+  /** Tags attached to this plan, alphabetically by tag. */
+  tags: Array<PlanTagObject>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
   taskCount: Scalars['Int']['output'];
   title: Scalars['String']['output'];
@@ -1861,6 +1920,23 @@ export type PlanStatusCountObject = {
   __typename?: 'PlanStatusCountObject';
   count: Scalars['Int']['output'];
   status: Scalars['String']['output'];
+};
+
+/** A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied. */
+export type PlanTagObject = {
+  __typename?: 'PlanTagObject';
+  /** Model confidence (0-1) for server-llm rows; null otherwise. */
+  confidence?: Maybe<Scalars['Float']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan). */
+  dimension: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  planId: Scalars['ID']['output'];
+  /** Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration. */
+  source: Scalars['String']['output'];
+  /** Kebab-case tag slug, unique per plan. */
+  tag: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PlanUpdatedNotification = NotificationEvent & {
@@ -2168,6 +2244,8 @@ export type Query = {
   rolesForServiceAccount: Array<RoleObject>;
   /** Get roles assigned to a user */
   rolesForUser: Array<RoleObject>;
+  /** The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications. */
+  ruleApplications: Array<RuleApplicationObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
@@ -2190,6 +2268,8 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
+  /** The authenticated user's tag→action rules, oldest first. */
+  tagActionRules: Array<TagActionRuleObject>;
   /** Get a task by ID */
   task?: Maybe<TaskObject>;
   /** Get a task embedding by ID */
@@ -2412,6 +2492,10 @@ export type QueryRolesForUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
+export type QueryRuleApplicationsArgs = {
+  planId: Scalars['ID']['input'];
+};
+
 export type QuerySearchArgs = {
   input: SearchInput;
 };
@@ -2434,7 +2518,10 @@ export type QueryServiceAccountCredentialsArgs = {
 
 export type QuerySkillAvailabilityArgs = {
   environment?: InputMaybe<Scalars['String']['input']>;
+  planId?: InputMaybe<Scalars['ID']['input']>;
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  relevantOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type QuerySkillAvailabilityRuleSetArgs = {
@@ -2641,6 +2728,13 @@ export type RemovePermissionFromRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+export type RemovePlanTagInput = {
+  /** Plan to remove the tag from. */
+  planId: Scalars['ID']['input'];
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+};
+
 export type RemoveRepeatableJobInput = {
   /** Repeatable job key (from repeatableJobs query). Required to remove a repeatable job. */
   key: Scalars['String']['input'];
@@ -2671,6 +2765,13 @@ export type RemoveRoleFromUserInput = {
 export type RemoveSkillTagInput = {
   /** Tag slug to remove. */
   tag: Scalars['String']['input'];
+};
+
+export type RemoveTaskTagInput = {
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+  /** Task to remove the tag from. */
+  taskId: Scalars['ID']['input'];
 };
 
 export type RenameSkillTagInput = {
@@ -2767,6 +2868,22 @@ export type RoleObject = {
   name: Scalars['String']['output'];
   /** Permissions assigned to this role */
   permissions: Array<PermissionObject>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** One apply-once ledger row for a (rule, plan) pair. States: applied | pre-satisfied | flagged | orphaned. */
+export type RuleApplicationObject = {
+  __typename?: 'RuleApplicationObject';
+  createdAt: Scalars['DateTime']['output'];
+  /** JSON-encoded executor context for the state (e.g. {"reason":"skill-unavailable"}). */
+  detailsJson?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  planId: Scalars['ID']['output'];
+  ruleId: Scalars['ID']['output'];
+  /** applied | pre-satisfied | flagged | orphaned. */
+  state: Scalars['String']['output'];
+  /** The injected (or pre-satisfying) task; null when not applicable or after a human deleted the task. */
+  taskId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -2904,6 +3021,10 @@ export type SkillAvailabilityResolvedSkillObject = {
   __typename?: 'SkillAvailabilityResolvedSkillObject';
   /** Resolved per-context flag: true ⇒ model auto-invocation suppressed. Human /skill invocation is never gated. */
   effectiveDisableModelInvocation: Scalars['Boolean']['output'];
+  /** Plan-context annotation: this skill's tags ∩ the plan's effective DOMAIN tag set. Empty when the query has no planId. */
+  matchedPlanTags: Array<Scalars['String']['output']>;
+  /** Plan-context annotation: true when matchedPlanTags is non-empty. Always false when the query has no planId. */
+  planRelevant: Scalars['Boolean']['output'];
   /** Decisive rung's provenance (closed grammar), e.g. frontmatter:true|false|unset, posture:deny, slug-allow:<slug>@<ruleId>, tag-deny:<tag>@<ruleId>. */
   provenance: Scalars['String']['output'];
   /** Skill slug (the skill frontmatter `name`). */
@@ -2955,6 +3076,8 @@ export type SkillAvailabilityRuleSetObject = {
 export type SkillTagObject = {
   __typename?: 'SkillTagObject';
   createdAt: Scalars['DateTime']['output'];
+  /** Vocabulary axis: "domain" (subject area; the only dimension skills may carry) or "phase" (plan/task lifecycle stage). */
+  dimension: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   /** Kebab-case tag slug, unique per user. */
   tag: Scalars['String']['output'];
@@ -3018,6 +3141,8 @@ export type Subscription = {
   planNotifications: NotificationEvent;
   /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
   planOutputChunkAdded: PlanOutputStreamChunkObject;
+  /** Live tail of new keyed run-output lines for a (queueName, jobId) — topic bullmq:<queueName>:<jobId>:logs. */
+  queueJobLogTail: QueueJobLogEventObject;
   /** Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session. */
   transcriptionStreamChunkAdded: TranscriptionStreamChunkObject;
 };
@@ -3032,6 +3157,11 @@ export type SubscriptionPlanNotificationsArgs = {
 
 export type SubscriptionPlanOutputChunkAddedArgs = {
   planId: Scalars['ID']['input'];
+};
+
+export type SubscriptionQueueJobLogTailArgs = {
+  jobId: Scalars['String']['input'];
+  queueName: Scalars['String']['input'];
 };
 
 export type SubscriptionTranscriptionStreamChunkAddedArgs = {
@@ -3080,6 +3210,28 @@ export type SystemCpuSnapshot = {
   psi: PsiCpuMetrics;
   /** Timestamp when snapshot was taken (Unix ms). */
   timestamp: Scalars['Float']['output'];
+};
+
+/** A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user. */
+export type TagActionRuleObject = {
+  __typename?: 'TagActionRuleObject';
+  /** JSON-encoded action payload, validated per action type at write time. */
+  actionPayloadJson: Scalars['String']['output'];
+  /** Action type: "inject-task" or "availability-exception". */
+  actionType: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /** Optional environment qualifier (ci | interactive | ralph); null applies everywhere. */
+  environment?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Optional project scope; null matches every project. */
+  projectId?: Maybe<Scalars['ID']['output']>;
+  /** Optional plan-status qualifier; null matches any status. */
+  status?: Maybe<Scalars['String']['output']>;
+  /** Tags that must ALL be present in the plan's effective tag set; empty matches every plan. */
+  tagAll: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type TaskCompletedNotification = NotificationEvent & {
@@ -3141,6 +3293,8 @@ export type TaskObject = {
   sortOrder: Scalars['Int']['output'];
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
+  /** Tags attached to this task, alphabetically by tag. */
+  tags: Array<TaskTagObject>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -3174,6 +3328,23 @@ export type TaskStatusChangedNotification = NotificationEvent & {
   taskId?: Maybe<Scalars['ID']['output']>;
   /** ISO 8601 timestamp when the event occurred. */
   timestamp: Scalars['String']['output'];
+};
+
+/** A tag attached to a task. Same shape and provenance semantics as plan tags. */
+export type TaskTagObject = {
+  __typename?: 'TaskTagObject';
+  /** Model confidence (0-1) for server-llm rows; null otherwise. */
+  confidence?: Maybe<Scalars['Float']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage). */
+  dimension: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration. */
+  source: Scalars['String']['output'];
+  /** Kebab-case tag slug, unique per task. */
+  tag: Scalars['String']['output'];
+  taskId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type TasksByPlanIdInput = {
@@ -3321,6 +3492,24 @@ export type UpdateWorkspaceProfileInput = {
   contactDisplayName?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+};
+
+export type UpsertTagActionRuleInput = {
+  /** JSON-encoded action payload (validated per action type). */
+  actionPayloadJson: Scalars['String']['input'];
+  /** Action type: "inject-task" or "availability-exception". */
+  actionType: Scalars['String']['input'];
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Optional environment qualifier: ci | interactive | ralph. */
+  environment?: InputMaybe<Scalars['String']['input']>;
+  /** When present, updates the existing rule (must belong to the caller). */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional project scope; null matches every project. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional plan-status qualifier (e.g. PENDING). */
+  status?: InputMaybe<Scalars['String']['input']>;
+  /** Tags that must ALL be present (AND); empty matches every plan. */
+  tagAll?: Array<Scalars['String']['input']>;
 };
 
 export type UserObject = {
@@ -4289,6 +4478,15 @@ export type ProjectDetailsFragment = {
   name: string;
 };
 
+export type PlanTagChipFragment = {
+  __typename?: 'PlanTagObject';
+  confidence?: number | null;
+  dimension: string;
+  id: string;
+  source: string;
+  tag: string;
+};
+
 export type PlanDetailsFragment = {
   __typename?: 'PlanObject';
   assignee?: string | null;
@@ -4305,6 +4503,14 @@ export type PlanDetailsFragment = {
   summary?: string | null;
   title: string;
   updatedAt: any;
+  tags: Array<{
+    __typename?: 'PlanTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  }>;
   projectRelation?: {
     __typename?: 'ProjectObject';
     id: string;
@@ -4334,6 +4540,14 @@ export type GetPlanByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'PlanTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -4496,12 +4710,40 @@ export type PlanDetailIndexLoaderQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'PlanTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
       name: string;
     } | null;
   } | null;
+  ruleApplications: Array<{
+    __typename?: 'RuleApplicationObject';
+    createdAt: any;
+    detailsJson?: string | null;
+    id: string;
+    planId: string;
+    ruleId: string;
+    state: string;
+    taskId?: string | null;
+  }>;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   tasksByPlanId: Array<{
     __typename?: 'TaskObject';
     assignee?: string | null;
@@ -4598,6 +4840,31 @@ export type PlanLifecycleNotificationsSubscription = {
         taskId?: string | null;
         event: string;
       };
+};
+
+export type PlanDetailAddPlanTagMutationVariables = Exact<{
+  input: AddPlanTagInput;
+}>;
+
+export type PlanDetailAddPlanTagMutation = {
+  __typename?: 'Mutation';
+  addPlanTag: {
+    __typename?: 'PlanTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  };
+};
+
+export type PlanDetailRemovePlanTagMutationVariables = Exact<{
+  input: RemovePlanTagInput;
+}>;
+
+export type PlanDetailRemovePlanTagMutation = {
+  __typename?: 'Mutation';
+  removePlanTag: boolean;
 };
 
 export type UpdatePlanMutationVariables = Exact<{
@@ -5312,6 +5579,92 @@ export type CreateQueueMutation = {
     queueName?: string | null;
     error?: string | null;
   };
+};
+
+export type TagActionRuleRowFragment = {
+  __typename?: 'TagActionRuleObject';
+  actionPayloadJson: string;
+  actionType: string;
+  createdAt: any;
+  enabled: boolean;
+  environment?: string | null;
+  id: string;
+  projectId?: string | null;
+  status?: string | null;
+  tagAll: Array<string>;
+  updatedAt: any;
+  userId: string;
+};
+
+export type RulesIndexLoaderQueryVariables = Exact<{ [key: string]: never }>;
+
+export type RulesIndexLoaderQuery = {
+  __typename?: 'Query';
+  tagActionRules: Array<{
+    __typename?: 'TagActionRuleObject';
+    actionPayloadJson: string;
+    actionType: string;
+    createdAt: any;
+    enabled: boolean;
+    environment?: string | null;
+    id: string;
+    projectId?: string | null;
+    status?: string | null;
+    tagAll: Array<string>;
+    updatedAt: any;
+    userId: string;
+  }>;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
+  skillAvailability: {
+    __typename?: 'SkillAvailabilityResolutionResult';
+    totalCount: number;
+    warnings: Array<string>;
+    skills: Array<{
+      __typename?: 'SkillAvailabilityResolvedSkillObject';
+      effectiveDisableModelInvocation: boolean;
+      slug: string;
+    }>;
+  };
+};
+
+export type RulesUpsertTagActionRuleMutationVariables = Exact<{
+  input: UpsertTagActionRuleInput;
+}>;
+
+export type RulesUpsertTagActionRuleMutation = {
+  __typename?: 'Mutation';
+  upsertTagActionRule: {
+    __typename?: 'TagActionRuleObject';
+    actionPayloadJson: string;
+    actionType: string;
+    createdAt: any;
+    enabled: boolean;
+    environment?: string | null;
+    id: string;
+    projectId?: string | null;
+    status?: string | null;
+    tagAll: Array<string>;
+    updatedAt: any;
+    userId: string;
+  };
+};
+
+export type RulesDeleteTagActionRuleMutationVariables = Exact<{
+  input: DeleteTagActionRuleInput;
+}>;
+
+export type RulesDeleteTagActionRuleMutation = {
+  __typename?: 'Mutation';
+  deleteTagActionRule: boolean;
 };
 
 export type GetSearchResultsQueryVariables = Exact<{
@@ -6219,6 +6572,29 @@ export const PlanTaskRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanTaskRowFragment, unknown>;
+export const PlanTagChipFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanTagChipFragment, unknown>;
 export const ProjectDetailsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -6252,6 +6628,19 @@ export const PlanDetailsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
@@ -6279,6 +6668,24 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
         ],
       },
     },
@@ -6656,6 +7063,35 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const TagActionRuleRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TagActionRuleRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRuleObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actionPayloadJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'actionType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TagActionRuleRowFragment, unknown>;
 export const ServiceAccountCredentialFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -9145,6 +9581,24 @@ export const GetPlanByIdDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ProjectDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -9168,6 +9622,19 @@ export const GetPlanByIdDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
@@ -9747,6 +10214,57 @@ export const PlanDetailIndexLoaderDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'ruleApplications' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'planId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'detailsJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ruleId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'tasksByPlanId' },
             arguments: [
               {
@@ -9925,6 +10443,24 @@ export const PlanDetailIndexLoaderDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ProjectDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -9948,6 +10484,19 @@ export const PlanDetailIndexLoaderDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
@@ -10174,6 +10723,129 @@ export const PlanLifecycleNotificationsDocument = {
 } as unknown as DocumentNode<
   PlanLifecycleNotificationsSubscription,
   PlanLifecycleNotificationsSubscriptionVariables
+>;
+export const PlanDetailAddPlanTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailAddPlanTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddPlanTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addPlanTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailAddPlanTagMutation,
+  PlanDetailAddPlanTagMutationVariables
+>;
+export const PlanDetailRemovePlanTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailRemovePlanTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemovePlanTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removePlanTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailRemovePlanTagMutation,
+  PlanDetailRemovePlanTagMutationVariables
 >;
 export const UpdatePlanDocument = {
   kind: 'Document',
@@ -12122,6 +12794,243 @@ export const CreateQueueDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateQueueMutation, CreateQueueMutationVariables>;
+export const RulesIndexLoaderDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'RulesIndexLoader' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tagActionRules' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TagActionRuleRow' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillAvailability' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'effectiveDisableModelInvocation',
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TagActionRuleRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRuleObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actionPayloadJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'actionType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RulesIndexLoaderQuery,
+  RulesIndexLoaderQueryVariables
+>;
+export const RulesUpsertTagActionRuleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RulesUpsertTagActionRule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpsertTagActionRuleInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'upsertTagActionRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TagActionRuleRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TagActionRuleRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRuleObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actionPayloadJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'actionType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RulesUpsertTagActionRuleMutation,
+  RulesUpsertTagActionRuleMutationVariables
+>;
+export const RulesDeleteTagActionRuleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RulesDeleteTagActionRule' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DeleteTagActionRuleInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteTagActionRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RulesDeleteTagActionRuleMutation,
+  RulesDeleteTagActionRuleMutationVariables
+>;
 export const GetSearchResultsDocument = {
   kind: 'Document',
   definitions: [

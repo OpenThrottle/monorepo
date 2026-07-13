@@ -12,7 +12,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useFetcher, useSearchParams } from 'react-router';
 import {
   BoltIcon,
   CogIcon,
@@ -27,8 +27,10 @@ import {
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import {
+  PlanDetailAddPlanTagDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailIndexLoaderDocument,
+  PlanDetailRemovePlanTagDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
@@ -49,7 +51,9 @@ import {
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
+import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
@@ -87,6 +91,8 @@ export const loader = async (args: Route.LoaderArgs) => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     };
   }
@@ -102,6 +108,8 @@ export const loader = async (args: Route.LoaderArgs) => {
     planOutputChunks: page.planOutputStreamChunks ?? [],
     planRunAuditRows: page.planRunsByPlanId ?? [],
     recentPlanRuns: page.metrics.recentPlanRunsMetrics ?? [],
+    ruleApplications: page.ruleApplications ?? [],
+    tagVocabulary: page.skillTagVocabulary.tags ?? [],
     tasks: page.tasksByPlanId ?? [],
   };
 };
@@ -123,10 +131,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, tasks } = loaderData;
+  const { plan, ruleApplications, tagVocabulary, tasks } = loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
+  const tagFetcher = useFetcher();
   const {
     jobRunHookRows,
     jobRunHooksJson,
@@ -285,6 +294,27 @@ export default function Component(
           ) : null} */}
         </div>
 
+        <div className="flex flex-col gap-3">
+          <PlanTagChips
+            onAddTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'addPlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            onRemoveTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'removePlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            pending={tagFetcher.state !== 'idle'}
+            tags={plan.tags}
+            vocabulary={tagVocabulary}
+          />
+          <PlanRuleApplications applications={ruleApplications} />
+        </div>
+
         <div className="">
           <OpenThrottleTabs
             urlSync={{
@@ -405,6 +435,40 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     return { cancelPlanRun: result.cancelPlanRun };
+  }
+
+  if (intent === 'addPlanTag') {
+    const tag = formData.get('tag');
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      return { planTagError: 'Tag is required.' };
+    }
+    try {
+      await executeGraphqlWithAuth(args.request, PlanDetailAddPlanTagDocument, {
+        input: { planId, tag: tag.trim() },
+      });
+      return { planTagUpdated: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { planTagError: message };
+    }
+  }
+
+  if (intent === 'removePlanTag') {
+    const tag = formData.get('tag');
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      return { planTagError: 'Tag is required.' };
+    }
+    try {
+      await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailRemovePlanTagDocument,
+        { input: { planId, tag: tag.trim() } },
+      );
+      return { planTagUpdated: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { planTagError: message };
+    }
   }
 
   if (intent === 'setPlanStatus') {

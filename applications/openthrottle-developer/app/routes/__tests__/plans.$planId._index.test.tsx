@@ -72,6 +72,7 @@ const mockPlan = {
   runConfigJson: JSON.stringify({ version: 1 }),
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
+  tags: [],
   title: 'Test Plan',
   updatedAt: '2025-01-02T00:00:00Z',
 };
@@ -109,6 +110,8 @@ describe('routes/plans.$planId.tsx', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [mockTask],
     };
     const component = renderWithPlanDetailRouteData(
@@ -152,6 +155,8 @@ describe('routes/plans.$planId.tsx', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     };
     const component = renderWithPlanDetailRouteData(
@@ -187,6 +192,8 @@ describe('routes/plans.$planId.tsx', () => {
             planOutputChunks: [],
             planRunAuditRows: [],
             recentPlanRuns: [],
+            ruleApplications: [],
+            tagVocabulary: [],
             tasks: [],
           }}
           matches={buildPlanDetailMatches({
@@ -194,6 +201,8 @@ describe('routes/plans.$planId.tsx', () => {
             planOutputChunks: [],
             planRunAuditRows: [],
             recentPlanRuns: [],
+            ruleApplications: [],
+            tagVocabulary: [],
             tasks: [],
           })}
           params={{ planId: mockPlan.id }}
@@ -214,6 +223,8 @@ describe('routes/plans.$planId.tsx', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [mockTask],
     };
     renderWithPlanDetailRouteData(
@@ -257,6 +268,8 @@ describe('routes/plans.$planId.tsx', () => {
       planOutputChunks: [],
       planRunAuditRows: [],
       recentPlanRuns: [],
+      ruleApplications: [],
+      tagVocabulary: [],
       tasks: [],
     };
     renderWithPlanDetailRouteData(

@@ -19,7 +19,7 @@ query TagActionRules {
   }
 }
 
-query RuleApplications($planId: String!) {
+query RuleApplications($planId: ID!) {
   ruleApplications(planId: $planId) {
     id
     ruleId

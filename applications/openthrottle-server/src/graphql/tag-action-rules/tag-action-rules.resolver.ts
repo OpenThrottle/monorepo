@@ -8,7 +8,7 @@
  */
 
 import { BadRequestException, UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   CurrentUser,
@@ -93,7 +93,7 @@ export class TagActionRulesResolver {
   })
   @Permissions(PERMISSIONS.PLANS_READ)
   async ruleApplications(
-    @Args('planId', { type: () => String }) planId: string,
+    @Args('planId', { type: () => ID }) planId: string,
   ): Promise<RuleApplicationObject[]> {
     const applications = await this.ruleApplicationsService.listForPlan(planId);
     return applications.map(toApplicationObject);
