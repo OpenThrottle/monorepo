@@ -1,6 +1,6 @@
 # Work ledger design: sessions + typed artifacts as the source of truth
 
-**Status:** draft complete — pending grilling (§7 lists the open questions).
+**Status:** grilled — all decisions locked (§7). Ready for the sliced implementation plan.
 **OT plan:** `6464971b-11f6-4c92-bcb9-7fb8b934e05f` (category `traceability`).
 **Pattern:** design doc → grill → merge → separate sliced implementation plan (precedent: [plan-task-tags-rules-design.md](./plan-task-tags-rules-design.md), PR #182).
 
@@ -154,6 +154,7 @@ CREATE TABLE work_sessions (
     plan_run_id              UUID REFERENCES plan_runs(id) ON DELETE SET NULL,
     conversation_id          UUID REFERENCES agent_conversations(id) ON DELETE SET NULL,
     summary                  TEXT,              -- set at end_session/promotion; legibility for unpromoted sessions (§6.2)
+    closed_by                TEXT,              -- 'explicit' | 'sweeper' | NULL (still open); analytics signal, not hygiene (G6)
     started_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ended_at                 TIMESTAMPTZ,
     created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -166,7 +167,8 @@ Decisions:
 - **Actor FKs default to `ON DELETE NO ACTION` (restrict), not `SET NULL`** — `SET NULL` would violate the one-actor CHECK, and both `users` and `service_accounts` are soft-delete-only (`disabled_at`) anyway. History must not lose its actor.
 - `on_behalf_of_verified` distinguishes the claim tiers from §2.3 (Ralph-run inheritance = `TRUE`; MCP `GITHUB_USER` hint = `FALSE`).
 - `plan_run_id` / `conversation_id` tie sessions to the two existing proto-session tables instead of absorbing them: `plan_runs` stays the queue-audit record, `agent_conversations` stays the chat transcript; a `work_session` is the _ledger view_ of either. `plan_output_stream` is reachable via `plan_run_id`→plan + `iteration`; no schema change to it.
-- Instant sessions (`started_at = ended_at`) are legal and cheap — needed for the status-change path (§4).
+- Instant sessions (`started_at = ended_at`, `closed_by='explicit'`) are legal and cheap — needed for the status-change path (§4).
+- **`closed_by` (G6):** a sweeper (§4.4) stamps `ended_at` on sessions left open past a 24h TTL and sets `closed_by='sweeper'`; explicit `endWorkSession` sets `'explicit'`. This is the honest "ran to completion vs. process died" signal — useful for Ralph reliability analytics — not just hygiene. The sweeper sets no verification/lifecycle state.
 
 ### 3.2 `work_session_subjects`
 
@@ -192,7 +194,7 @@ CREATE TABLE work_artifacts (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id   UUID NOT NULL REFERENCES work_sessions(id) ON DELETE CASCADE,
     type         TEXT NOT NULL,               -- 'git_commit' | 'pull_request' | 'document' | 'deployment' | 'status_change' | …
-    external_key TEXT NOT NULL,               -- canonical identity, e.g. 'github:OpenThrottle/monorepo@<sha>'
+    external_key TEXT NOT NULL,               -- per-type identity key; upsert types = canonical id ('github:OpenThrottle/monorepo@<sha>'), event types = discriminated ('task:<id>:COMPLETED:<seq>')
     payload      JSONB NOT NULL,              -- per-type shape, app-validated (zod), see §5
     lifecycle    TEXT,                        -- per-type vocabulary: git_commit 'created'→'landed'; document 'draft'→'published'; NULL = no lifecycle
     verification TEXT NOT NULL DEFAULT 'unverified',  -- 'unverified' | 'verified' | 'orphaned'
@@ -211,8 +213,9 @@ Decisions:
 
 - **JSONB payload + canonical `external_key` column**, not per-type columns. The type set is open by design (adapter contract, §5) — columns can't anticipate it. Identity, dedupe, and hot lookups ride the indexed `(type, external_key)`; payload shapes are validated in app code per type (the `tool_metadata` JSONB-with-app-validation precedent from 051).
 - **Dedupe is per-session** (`session_id, type, external_key`), not global. Two sessions may legitimately claim the same commit; cross-session grouping happens at query time by `external_key`. The old (plan, task, repo, sha) semantics collapse naturally: one Ralph session carries several task subjects and _one_ landed-commit artifact, where today that's N `commit_links` rows.
+- **Dedupe semantics are per-type, declared in the type registry (G10):** each type declares `identity: 'idempotent' | 'event'`. **Idempotent** types (`git_commit`, `pull_request`) upsert on the unique key — re-reporting the same sha promotes payload/lifecycle, never duplicates. **Event** types (`status_change`) are append-only: their `external_key` carries a transition discriminator (`<entity>:<id>:<to>:<seq>`) so `PENDING→IN_PROGRESS→COMPLETED` in one session yields two distinct rows, not an overwrite. The unique constraint holds for both because event keys never collide. This is why the constraint stays as-is while the _meaning_ of a re-report differs by type.
 - **First-party events are born `verified`**: a `status_change` artifact written by the server witnessing the mutation is a fact, not a claim. `verified` is not adapter-exclusive; adapters _upgrade_ third-party claims (§5).
-- **`status_change` is an artifact type**, payload `{entity: 'task'|'plan', id, from, to}` — this keeps the locked two-level model (no third "events" table) while making the zero-ceremony human path (§4) a real ledger row with an actor.
+- **`status_change` is an artifact type**, payload `{entity: 'task'|'plan', id, from, to}` — this keeps the locked two-level model (no third "events" table) while making the zero-ceremony human path (§4) a real ledger row with an actor. Its instant session auto-creates the subject row (plan + task) in the same transaction (§4.3); no separate attach call.
 
 ### 3.4 Query shapes the schema must serve
 
@@ -245,21 +248,22 @@ Principle: **the tool doing the work writes the ledger** — it's the only party
 - **Implicit session**: opened lazily on the first _mutating_ tool call per server process (stdio = one process per client session). `tool_name` derived from the MCP `initialize` `clientInfo.name` (e.g. `claude-code`, `cursor`), falling back to `openthrottle-mcp`; `tool_version` from `clientInfo.version`; `external_ref` = `WORKTREE_ID` + process id; `on_behalf_of_user_id` resolved from `GITHUB_USER` → `users.github_username`, `on_behalf_of_verified=FALSE` (§2.3).
 - **New tools**: `record_artifact` (type, external identity, payload, optional subject), `attach_session_subject` (plan/task), `end_session` (optional — abandoned sessions are swept, §4.4). Tool descriptions instruct agents to self-report outputs; agents are the party that reliably performs ceremony.
 - **Ambient attribution**: once a session exists, the MCP sends `X-OT-Session-Id` on its GraphQL requests; the server's CLS picks it up so side-effect ledger rows (e.g. a `status_change` from `update_task`) attach to the _agent's_ session instead of spawning an instant one.
+- **Trust boundary (G11):** `X-OT-Session-Id` is client-supplied, so the server **validates it against the request principal** — accept only if the session's `actor_*` matches the authenticated principal (once minting exists, if the session's actor is a credential owned by that principal). On mismatch or unknown id → **ignore the header and fall back to an instant session, never error** (a stale id after reconnect must not fail the mutation). This kills header-based attribution spoofing and cleanly subsumes the reconnect case: an unmatchable id just yields a fresh session.
 
 ### 4.3 Server mutations (the zero-ceremony human path)
 
-- `updateTask`/`updatePlan` status transitions write a `status_change` artifact **in the same transaction** as the row update (alongside `resolveCompletedAtForStatusChange`), attributed to the request principal. No ambient session (no `X-OT-Session-Id`) → an **instant session** (`started_at = ended_at`, `tool_name='developer-app'`). This single hook fixes the audit's two structural holes at once: task events become real events (no more inferring from mutable `updated_at`), and completions finally carry an actor.
-- Unlike BullMQ enqueues (fire-and-forget), this is a same-database write: transactional, not best-effort.
+- `updateTask`/`updatePlan` status transitions write a `status_change` artifact **in the same transaction** as the row update, attributed to the request principal. No ambient session (no `X-OT-Session-Id`) → an **instant session** (`started_at = ended_at`, `tool_name='developer-app'`, `closed_by='explicit'`) plus its subject row. This single hook fixes the audit's two structural holes at once: task events become real events (no more inferring from mutable `updated_at`), and completions finally carry an actor.
+- **Transaction refactor is required and its scope is deliberate (G12):** today `updateTask` is a bare `repo.save(entity)` with no transaction wrapper (verified in `tasks.resolver.ts`). The fact and its evidence — `completed_at` and the `status_change` artifact — must commit together or the migration 056–059 "record and evidence diverge" hole reopens at the new layer. So wrap exactly `{ save(entity); insert session; insert subject; insert artifact }` in one `dataSource.transaction`. Leave the **downstream reactions** (`syncParentPlanStatus`, notifications, `planRulesEvaluationService.enqueueEvaluation`) outside it, exactly as they are today — those are reactions, not the fact. **Facts get transactions; reactions get idempotent retry (G13).**
 - Manual artifact attach on plan/task detail pages creates an artifact (`source='human'`) in an instant session.
 
 ### 4.4 Idempotency / dedupe
 
-| Concern                                | Rule                                                                                                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Retried Ralph job (same BullMQ job id) | Create-or-reuse the open session by `plan_run_id`; a retry continues the same ledger session                                        |
-| Re-reported artifact                   | `UNIQUE (session_id, type, external_key)` makes `record_artifact` an upsert (payload/lifecycle may promote, never regress)          |
-| Reconnecting MCP client                | New process = new session — honest; cross-session grouping is by `external_key`                                                     |
-| Abandoned sessions (crash, kill)       | Sweeper job stamps `ended_at` = last artifact `produced_at` (or `started_at`) after a TTL; open-ended sessions never block anything |
+| Concern                                | Rule                                                                                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Retried Ralph job (same BullMQ job id) | Create-or-reuse the open session by `plan_run_id`; a retry continues the same ledger session                                                                         |
+| Re-reported artifact                   | `UNIQUE (session_id, type, external_key)` makes `record_artifact` an upsert (payload/lifecycle may promote, never regress)                                           |
+| Reconnecting MCP client                | New process = new session — honest; cross-session grouping is by `external_key`                                                                                      |
+| Abandoned sessions (crash, kill)       | Sweeper job stamps `ended_at` = last artifact `produced_at` (or `started_at`) + `closed_by='sweeper'` after a 24h TTL (G6); open-ended sessions never block anything |
 
 ### 4.5 GraphQL surface (sketch)
 
@@ -272,16 +276,20 @@ An ecosystem plugs into the ledger with exactly two things — and the second is
 1. **Artifact type definition** (required): type name, payload schema (zod), `external_key` derivation rule, lifecycle vocabulary + which transitions trigger downstream jobs. Registered in a server-side code registry in v1 (no DB-driven type registration).
 2. **Verifier** (optional): a worker that consumes the unverified-claims feed (§3.3 partial index) for its types and returns `{verification, lifecycle?, payloadPatch?}` per artifact — upgrading claims to facts (`verified`), driving lifecycle from external reality, or flagging `orphaned`. Runs on the established BullMQ pattern with deterministic jobIds; keeps a cursor in its own state row.
 
+The type definition also declares `identity: 'idempotent' | 'event'` (§3.3, G10) — the dedupe contract for `record_artifact`.
+
+**Verifier self-heal is the durability story (G13).** Because a verifier is a cursor-driven polling sweep, dropped downstream enqueues (§5's lifecycle→trigger edge) are recoverable without an outbox: on each sweep it re-enqueues the trigger for recently-landed artifacts lacking a corresponding downstream record (the `runCatchUp()` philosophy daily-stats already uses). **Facts get transactions (§4.3), reactions get idempotent retry** — OT has no transactional outbox anywhere and this edge doesn't justify introducing one.
+
 If the contract is this thin, "project doesn't use git" stops being an edge case: types like `document` or `deployment` can ship with **no verifier at all** — their artifacts remain visible, attributed claims, which is acceptable and honest.
 
 **Lifecycle promotions are the new trigger boundary.** `git_commit → landed` enqueues refine-tagging (re-keying the #182 trigger; jobId stays `tag-refine:<planId>:<sha>`, planId derived from the session's subjects — enqueue once per subject plan). Other types can declare their own trigger transitions later.
 
 ### 5.1 Git adapter (reference implementation — absorbs plan 03dbeb22)
 
-Local-first, two modes; webhooks remain a hosted-mode future:
+Two modes; webhooks remain a hosted-mode future. **v1 ships the poller only (G1):**
 
-- **Local scan** (default, zero tokens): walk registered checkouts' default branch incrementally from a stored cursor SHA (03dbeb22 task 2, minus the trailer dependency).
-- **GitHub poller** (optional, user token): resolves squash merges via PR data (merge_commit_sha, head branch), richer but rate-limited.
+- **GitHub poller (v1):** reuses the existing `GitHubService` (already wired — the shipped refine-tagging job fetches squash diffs through it), keeping a per-repo cursor in its own state row. It resolves squash merges via PR data (`merge_commit_sha`, head branch) — which the scan mode structurally can't. Its only prerequisite already shipped.
+- **Local scan (deferred):** walk registered checkouts' default branch incrementally from a stored cursor SHA (03dbeb22 task 2, minus the trailer dependency). This is the token-free future path, but it needs filesystem access to registered checkouts — the projects/WorkspaceLocalRepository work (`projects` table has no on-disk path today). It lands _with_ that work, not as a v1 dependency of this plan.
 
 Behaviors:
 
@@ -325,9 +333,9 @@ Kept forever — the ledger is append-only and unplanned work is _the point_: to
 
 ---
 
-## 7. Decided vs. open
+## 7. Decisions
 
-### Decided (locked during iteration, 2026-07-12/13)
+### Locked during initial iteration (2026-07-12/13)
 
 1. Claims and facts both stored; `verification` on artifacts; first-party server-witnessed events born `verified`.
 2. Subjectless sessions first-class; retroactive attach; chat→plan promotion built on them.
@@ -337,14 +345,30 @@ Kept forever — the ledger is append-only and unplanned work is _the point_: to
 6. Subjects are plan/task only; JSONB payload + `external_key`; per-session artifact dedupe.
 7. `plan_runs` / `agent_conversations` bridged, not absorbed; `commit_links` → legacy backfill → dual-write → compat view → drop.
 
-### Open questions (for the grilling session)
+### Resolved in grilling (2026-07-13)
 
-1. **Where does the git adapter's local scan run?** The server needs filesystem access to checkouts — this couples to the projects/WorkspaceLocalRepository vision (projects scoped to on-disk checkouts). Is checkout registration a v1 prerequisite, or does the scan mode wait for that work and the poller goes first?
-2. **Instant-session volume**: one row per human status change is honest but chatty. Acceptable, or batch same-actor-same-plan mutations within a window?
-3. **Transactional guarantees**: status_change writes are same-transaction; lifecycle-promotion _triggers_ stay fire-and-forget BullMQ (established pattern). Is inline-enqueue good enough for tag-refine re-key, or does the promotion→trigger edge deserve an outbox?
-4. **Dual-write window**: how long does `linkCommit` write both stores — time-boxed, or until the activity resolver re-key ships in the same implementation plan?
-5. **on_behalf_of hardening priority**: is the per-machine credential minting flow (§2.3 step 2) part of the implementation plan or deferred until multi-user actually materializes?
-6. **Sweeper TTL** for abandoned sessions (proposal: 24h).
-7. **Activity resolver**: rewrite onto the ledger inside the implementation plan (it simplifies to one query), or keep the three-query merge reading the compat view initially?
-8. **03dbeb22**: confirm cancel-and-fold (audit recommendation, §1.6) vs rescope-as-adapter-plan.
-9. **v1 read surface**: is a sessions/artifacts feed in the developer app in scope, or GraphQL/MCP-only first (skill-availability "v1 informational" precedent)?
+| #   | Question                    | Decision                                                                                                                                                                                                                           |
+| --- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G1  | Git verifier mode for v1    | **Poller only**, reusing the already-wired `GitHubService`. Local scan deferred to the projects/checkout-registration work, not a v1 dependency (§5.1).                                                                            |
+| G2  | Instant-session volume      | **Accept it** — two tiny rows per status change is negligible vs. `plan_output_stream`. No write-time batching; noise is a read-time grouping concern (§4.3).                                                                      |
+| G3  | Trigger durability / outbox | **Inline enqueue, no outbox** — verifier self-heal covers dropped enqueues (§5, G13).                                                                                                                                              |
+| G4  | Dual-write window + scope   | **Full cutover in one plan.** `linkCommit` dual-writes only until the activity resolver + refine-tagging trigger both re-key; then `commit_links`→compat view, `linkCommit`→pure ledger sugar. No parallel-universe schema (§3.5). |
+| G5  | `on_behalf_of` hardening    | **v1 = unverified `GITHUB_USER` hint only.** Credential minting deferred, but schema/session-open code must not pin `actor_service_account_id` to the seeded account (§2.3).                                                       |
+| G6  | Sweeper TTL + marking       | **24h TTL**; sweeper is pure hygiene (no verification/lifecycle writes) but records `closed_by='sweeper'` vs `'explicit'` as a reliability signal (§3.1, §4.4).                                                                    |
+| G7  | Activity resolver shape     | **Ledger ∪ `plan_output_stream`, merged at read time.** Row types become session-started, artifacts (incl. status_change), output-chunks — all actor-attributed. Sessions are activity rows, not just artifacts (§1.4).            |
+| G8  | Plan `03dbeb22`             | **Canceled 2026-07-13**, superseded by this plan. Survivors (file/path mapping; commits-in-semantic-search) held as backlog notes in the implementation plan, not a standalone plan (§1.6).                                        |
+| G9  | v1 read surface             | **Two surfaces:** the re-key'd activity feed + a linked-artifacts panel on plan/task detail. Session browser and orphan/unverified triage queue deferred (GraphQL/MCP answer them meanwhile).                                      |
+| G10 | Artifact dedupe semantics   | **Per-type, declared in the type registry** (`identity: 'idempotent' \| 'event'`). `git_commit`/`pull_request` upsert; `status_change` append-only with transition-discriminated `external_key` (§3.3). Fixes a lost-event bug.    |
+| G11 | `X-OT-Session-Id` trust     | **Validate against the request principal; ignore-and-fall-back-to-instant-session** on mismatch/unknown, never error. Kills attribution spoofing; subsumes the reconnect case (§4.2).                                              |
+| G12 | `status_change` atomicity   | **Same-transaction, tightly scoped**: wrap `{save; session; subject; artifact}` in one `dataSource.transaction` (a real refactor — `updateTask` is a bare save today). Downstream reactions stay outside, as now (§4.3).           |
+| G13 | Facts vs reactions          | **Facts get transactions; reactions get idempotent retry.** The clean durability line across G3/G12 (§4.3, §5).                                                                                                                    |
+
+### Deferred to backlog (recorded in the implementation plan, not v1)
+
+- Per-machine/per-human credential minting (§2.3 step 2); user-scoped PAT-like tokens (step 3).
+- Git adapter local-scan mode (with the projects/checkout-registration work).
+- File/path-level "why does this line exist" mapping; commits as a semantic-search source (ex-`03dbeb22`).
+- Session-browser UI; orphan/unverified triage queue; weekly unplanned-work digest (promotion funnel).
+- FK-ify `author`/`assignee` onto `users`.
+
+This plan realizes Roadmap (`ce7e2773`) Theme 2 / VISION commitment #3 ("traceable end to end, both directions") — the goal `03dbeb22` carried, now approached ledger-first.
