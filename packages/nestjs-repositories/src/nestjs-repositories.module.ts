@@ -23,6 +23,7 @@ import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.
 import { TasksModule } from './modules/tasks/tasks.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
+import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
+    WorkLedgerModule,
     WorkspaceSettingsModule,
   ],
   imports: [
@@ -79,6 +81,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
+    WorkLedgerModule,
     WorkspaceSettingsModule,
   ],
   providers: [],

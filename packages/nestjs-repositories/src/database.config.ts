@@ -35,6 +35,9 @@ import { RuleApplication } from './modules/tag-action-rules/rule-application.ent
 import { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity';
 import { TaskTag } from './modules/tags/task-tag.entity';
 import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
+import { WorkArtifact } from './modules/work-ledger/work-artifact.entity';
+import { WorkSession } from './modules/work-ledger/work-session.entity';
+import { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity';
 import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
 /**
@@ -92,6 +95,9 @@ export function getTypeOrmOptions(): DataSourceOptions {
       User,
       UserSkillTag,
       UserWorkspaceSettings,
+      WorkArtifact,
+      WorkSession,
+      WorkSessionSubject,
       WorkspaceLocalRepository,
     ],
     logging: process.env.NODE_ENV === 'development',
