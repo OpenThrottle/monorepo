@@ -45,8 +45,10 @@ describe('buildCsp', () => {
     const { value } = buildCsp(NONCE, { reportOnly: true });
     const scriptSrc = getDirective(value, 'script-src');
 
+    // NOTE: 'unsafe-eval' is a temporary prod allowance (see the FIXME in csp.ts);
+    // 'unsafe-inline' and wildcards remain disallowed.
     expect(scriptSrc).toBe(
-      `script-src 'self' 'nonce-${NONCE}' 'strict-dynamic'`,
+      `script-src 'self' 'nonce-${NONCE}' 'strict-dynamic' 'unsafe-eval'`,
     );
     expect(scriptSrc).not.toContain(`'unsafe-inline'`);
     expect(scriptSrc).not.toContain('https:');

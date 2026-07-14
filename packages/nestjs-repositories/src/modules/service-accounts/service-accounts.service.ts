@@ -79,6 +79,13 @@ export class ServiceAccountsService {
   }
 
   /**
+   * @description Finds a service account by its unique name (e.g. 'workflow-ralph'), or null.
+   */
+  async findByName(name: string): Promise<ServiceAccount | null> {
+    return this.serviceAccountRepository.findOne({ where: { name } });
+  }
+
+  /**
    * @description Creates a service account.
    */
   async create(data: {

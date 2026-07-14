@@ -8,6 +8,7 @@ import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module';
 import { PlansQueueProducerModule } from './plans-queue-producer.module';
 import { PlansProcessor } from './plans.processor';
+import { WorkLedgerRunService } from './work-ledger-run.service';
 
 /**
  * @description Processor half of the plans queue: the plans worker
@@ -34,6 +35,6 @@ import { PlansProcessor } from './plans.processor';
     PlanLifecycleHooksQueueProducerModule,
     PlansQueueProducerModule,
   ],
-  providers: [PlansProcessor],
+  providers: [PlansProcessor, WorkLedgerRunService],
 })
 export class PlansQueueModule {}

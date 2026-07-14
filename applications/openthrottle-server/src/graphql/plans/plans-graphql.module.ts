@@ -10,6 +10,7 @@ import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-produce
 import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
+import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module';
 import { PlanEnqueueService } from './plan-enqueue.service';
 import { PlanStatusService } from './plan-status.service';
 import { PlansLoaders } from './plans-loaders';
@@ -24,6 +25,7 @@ import { PlansResolver } from './plans.resolver';
     PlansQueueProducerModule,
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
+    WorkLedgerGraphqlModule,
   ],
   providers: [
     PlanEnqueueService,

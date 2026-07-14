@@ -52,6 +52,7 @@ import {
   // WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { WorkLedgerRunService } from './work-ledger-run.service';
 import { isRunPlanOrchestratorJobData } from './plans.types';
 import type {
   PlanRunJobResult,
@@ -114,6 +115,7 @@ export class PlansProcessor
     private readonly plansService: PlansService,
     private readonly processMetrics: ProcessMetricsService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerRun: WorkLedgerRunService,
   ) {
     super();
   }
@@ -419,6 +421,8 @@ export class PlansProcessor
     const abortSignal = this.planRunCancellation.attach(planId);
     const jobId = String(job.id);
     const queueName = PLANS_QUEUE_NAME;
+    // Work-ledger run session (best-effort; opened after the plan resolves, closed in finally).
+    let workSessionId: string | null = null;
 
     try {
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
@@ -433,6 +437,12 @@ export class PlansProcessor
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
       const _planTitle = plan?.title ?? undefined;
+
+      workSessionId = await this.workLedgerRun.openRalphSession({
+        bullmqJobId: jobId,
+        planId,
+        queueName,
+      });
 
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
 
@@ -512,6 +522,10 @@ export class PlansProcessor
       });
       this.bullMqRunOutputRetention.maybePruneAfterJobClose();
       this.planRunCancellation.detach(planId);
+      await this.workLedgerRun.closeRalphSession(
+        workSessionId,
+        `workflow-ralph run ${jobId}`,
+      );
     }
   }
 

@@ -14,6 +14,7 @@ import { TasksLoaders } from './tasks-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TasksResolver } from './tasks.resolver';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -39,10 +40,13 @@ describe('TasksResolver', () => {
         async (
           work: (manager: {
             getRepository: () => typeof transactionTaskRepo;
+            save: (entity: Task) => Promise<Task>;
           }) => unknown,
         ) =>
           work({
             getRepository: () => transactionTaskRepo,
+            // Delegate to repo.save so existing `expect(repo.save)` assertions still hold.
+            save: (entity: Task) => repo.save(entity),
           }),
       ),
     },
@@ -123,6 +127,10 @@ describe('TasksResolver', () => {
           useValue: mockNotificationsService,
         },
         { provide: TasksService, useValue: mockTasksService },
+        {
+          provide: WorkLedgerCaptureService,
+          useValue: createMock<WorkLedgerCaptureService>(),
+        },
       ],
     }).compile();
 
@@ -393,6 +401,10 @@ describe('TasksResolver', () => {
               }),
             }),
           },
+          {
+            provide: WorkLedgerCaptureService,
+            useValue: createMock<WorkLedgerCaptureService>(),
+          },
         ],
       }).compile();
       const r = app.get<TasksResolver>(TasksResolver);
@@ -457,6 +469,10 @@ describe('TasksResolver', () => {
                 findOne: vi.fn(),
               }),
             }),
+          },
+          {
+            provide: WorkLedgerCaptureService,
+            useValue: createMock<WorkLedgerCaptureService>(),
           },
         ],
       }).compile();
