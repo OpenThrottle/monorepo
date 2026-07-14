@@ -5,3 +5,12 @@ query getTaskById($id: ID!) {
     ...PlanTaskRow
   }
 }
+
+query TaskLinkedArtifacts($taskId: ID!) {
+  workArtifactsByTask(input: { taskId: $taskId }) {
+    artifacts {
+      ...LinkedArtifact
+    }
+    totalCount
+  }
+}

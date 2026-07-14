@@ -444,6 +444,13 @@ export class PlansProcessor
         queueName,
       });
 
+      // Direct operational write (fast, in-process, drives the notification below and the
+      // startup status reconcile). This intentionally does NOT emit a status_change artifact:
+      // it bypasses the updatePlan resolver, and the orchestrator's later
+      // promotePlanToInProgressIfNeeded is then a no-op for capture (from === to). The plan's
+      // worked-on state is instead represented by the run session's attached plan subject; the
+      // plan's COMPLETED transition and all task transitions ARE captured (via the orchestrator's
+      // resolver calls, attributed to this run session through X-OT-Session-Id).
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
 
       this.notifications.emitPlanUpdated({
@@ -503,6 +510,7 @@ export class PlansProcessor
         metricsAtStart,
         abortSignal,
         lifecycleDispatcher,
+        workSessionId,
       );
 
       if (result.taskRunMetrics) {
@@ -651,6 +659,7 @@ export class PlansProcessor
     lifecycleDispatcher?: ReturnType<
       WorkflowLifecycleDispatcherFactory['create']
     >,
+    workSessionId?: string | null,
   ): Promise<PlanRunJobResult> {
     if (!isRunPlanOrchestratorJobData(job.data)) {
       throw new Error('Expected orchestrator job data');
@@ -678,6 +687,7 @@ export class PlansProcessor
       jobData: data,
       lifecycleDispatcher,
       signal: abortSignal,
+      workSessionId,
     });
 
     this.logAgenticOrchestratorRunStructured({

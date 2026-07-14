@@ -109,6 +109,18 @@ export class WorkArtifactsBySessionInput {
 }
 
 @InputType()
+export class WorkArtifactsByPlanInput {
+  @Field(() => ID, { description: `Plan id to list linked artifacts for` })
+  planId!: string;
+}
+
+@InputType()
+export class WorkArtifactsByTaskInput {
+  @Field(() => ID, { description: `Task id to list linked artifacts for` })
+  taskId!: string;
+}
+
+@InputType()
 export class UnverifiedWorkArtifactsInput {
   @Field(() => Int, {
     description: `Max rows (verifier feed); clamped server-side`,

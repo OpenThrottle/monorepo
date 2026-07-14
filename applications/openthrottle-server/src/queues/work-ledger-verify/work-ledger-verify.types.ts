@@ -7,12 +7,16 @@ export interface WorkLedgerVerifyJobData {
 
 export type WorkLedgerVerifyJob = Job<WorkLedgerVerifyJobData, void>;
 
-/** @description Outcome of a verification sweep over unverified git_commit artifacts. */
+/** @description Outcome of a verification sweep over not-yet-landed git_commit artifacts. */
 export interface WorkLedgerVerifySummary {
   /** Artifacts examined this sweep. */
-  readonly examined: number;
-  /** Artifacts left unverified (commit not found on GitHub yet, or malformed). */
-  readonly pending: number;
-  /** Artifacts promoted unverified → verified (commit confirmed to exist). */
-  readonly verified: number;
+  examined: number;
+  /** Artifacts promoted to lifecycle='landed' (reachable on the default branch, directly or via squash). */
+  landed: number;
+  /** Artifacts marked orphaned (commit unfindable past the grace window). */
+  orphaned: number;
+  /** Artifacts left as-is (commit not found yet but within grace, verified-not-landed, or malformed). */
+  pending: number;
+  /** Artifacts promoted unverified → verified (commit confirmed to exist) but not yet landed. */
+  verified: number;
 }

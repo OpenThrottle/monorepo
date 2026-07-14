@@ -169,6 +169,22 @@ query PlanDetailIndexLoader($planId: ID!) {
     runKind
     status
   }
+  workArtifactsByPlan(input: { planId: $planId }) {
+    artifacts {
+      ...LinkedArtifact
+    }
+    totalCount
+  }
+}
+
+fragment LinkedArtifact on WorkArtifactObject {
+  externalKey
+  id
+  lifecycle
+  producedAt
+  source
+  type
+  verification
 }
 
 subscription PlanOutputChunkAdded($planId: ID!) {

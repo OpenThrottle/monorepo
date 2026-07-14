@@ -5,6 +5,7 @@ import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.serv
 
 import type { CommitLink, Plan, Task } from '@openthrottle/nestjs-repositories';
 import { CommitLinksService } from '@openthrottle/nestjs-repositories';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   Args,
   Int,
@@ -14,6 +15,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
 import {
@@ -37,6 +39,7 @@ export class CommitLinksResolver {
     private readonly commitLinksService: CommitLinksService,
     private readonly loaders: CommitLinksLoaders,
     private readonly taggingEnqueueService: TaggingEnqueueService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -129,8 +132,11 @@ export class CommitLinksResolver {
   async linkCommit(
     @Args('input', { type: () => LinkCommitInput })
     input: LinkCommitInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<CommitLink> {
-    const entity = this.commitLinksService.getRepository().create({
+    const repo = this.commitLinksService.getRepository();
+    const entity = repo.create({
       message: input.message ?? null,
       planId: input.planId,
       repo: input.repo,
@@ -138,9 +144,26 @@ export class CommitLinksResolver {
       taskId: input.taskId ?? null,
     });
 
-    const saved = await this.commitLinksService.getRepository().save(entity);
-    // Fire-and-forget refine-tagging on the landed squash (never blocks
-    // link_commit; the enqueue service swallows Redis failures).
+    // Dual-write (slice 7b): the commit_links row and the ledger git_commit artifact commit
+    // together so the two never diverge during the cutover. commit_links stays a deprecated,
+    // dual-written table (see OT task 3b798682 for the long-term VIEW/drop).
+    const saved = await repo.manager.transaction(async (manager) => {
+      const persisted = await manager.save(entity);
+      await this.workLedgerCapture.recordGitCommitLink(manager, {
+        actorKind,
+        actorSub,
+        message: input.message ?? null,
+        planId: persisted.planId,
+        repo: persisted.repo,
+        sha: persisted.sha,
+        taskId: persisted.taskId,
+      });
+      return persisted;
+    });
+
+    // Dual-trigger refine-tagging (decision 2026-07-13): linkCommit fires immediately on its
+    // landed-by-definition commit; the verifier also fires on the agent path's landed transition.
+    // Same deterministic jobId dedupes. Fire-and-forget (never blocks; swallows Redis failures).
     await this.taggingEnqueueService.enqueueRefine(
       saved.planId,
       saved.repo,
