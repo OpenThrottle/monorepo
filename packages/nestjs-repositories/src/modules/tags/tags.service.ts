@@ -25,6 +25,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
+import { Plan } from '../plans/plan.entity';
 import { Task } from '../tasks/task.entity';
 import { PlanTag } from './plan-tag.entity';
 import { ProjectTag } from './project-tag.entity';
@@ -354,8 +355,10 @@ export class TagsService {
 
   /**
    * @description Assembles the effective tag set. Plan context (no taskId):
-   * plan tags ∪ every task's tags. Task context: that task's tags ∪ the plan's
-   * tags. Deduped by tag name; the highest-provenance row wins for display.
+   * plan tags ∪ every task's tags ∪ the plan's project's tags. Task context:
+   * that task's tags ∪ the plan's tags ∪ the plan's project's tags. Deduped by
+   * tag name; the highest-provenance row wins for display (broader scope wins
+   * equal-rank ties: task < plan < project).
    */
   async getEffectiveTagSet(
     planId: string,
@@ -372,10 +375,18 @@ export class TagsService {
     }
     const taskTags = await taskTagsQuery.getMany();
 
-    // Task rows first so an equal-rank plan row overwrites them: the plan row
-    // is the broader statement of the same tag.
+    // Project tags for the plan's project (empty when the plan has no project).
+    const projectTags = await this.projectTagsRepository
+      .createQueryBuilder('projectTag')
+      .innerJoin(Plan, 'plan', 'plan.project_id = projectTag.project_id')
+      .where('plan.id = :planId', { planId })
+      .getMany();
+
+    // Ordered least-specific → most-specific (task, plan, project) so an
+    // equal-rank broader row overwrites a narrower one: the broader row is the
+    // broader statement of the same tag.
     const byTag = new Map<string, EffectiveTag>();
-    for (const row of [...taskTags, ...planTags]) {
+    for (const row of [...taskTags, ...planTags, ...projectTags]) {
       const existing = byTag.get(row.tag);
       if (
         existing != null &&

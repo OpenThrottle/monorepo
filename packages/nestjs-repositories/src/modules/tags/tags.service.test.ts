@@ -117,6 +117,16 @@ describe('TagsService', () => {
   taskTagsSelectBuilder.where.mockReturnValue(taskTagsSelectBuilder);
   taskTagsSelectBuilder.andWhere.mockReturnValue(taskTagsSelectBuilder);
 
+  const projectTagsSelectBuilder = {
+    andWhere: vi.fn(),
+    getMany: vi.fn(),
+    innerJoin: vi.fn(),
+    where: vi.fn(),
+  };
+  projectTagsSelectBuilder.innerJoin.mockReturnValue(projectTagsSelectBuilder);
+  projectTagsSelectBuilder.where.mockReturnValue(projectTagsSelectBuilder);
+  projectTagsSelectBuilder.andWhere.mockReturnValue(projectTagsSelectBuilder);
+
   const mockPlanTagsRepository = {
     create: vi.fn((data: Partial<PlanTag>) => ({ ...data })),
     delete: vi.fn(),
@@ -136,6 +146,7 @@ describe('TagsService', () => {
 
   const mockProjectTagsRepository = {
     create: vi.fn((data: Partial<ProjectTag>) => ({ ...data })),
+    createQueryBuilder: vi.fn(() => projectTagsSelectBuilder),
     delete: vi.fn(),
     find: vi.fn(),
     findOne: vi.fn(),
@@ -180,6 +191,12 @@ describe('TagsService', () => {
     taskTagsSelectBuilder.innerJoin.mockReturnValue(taskTagsSelectBuilder);
     taskTagsSelectBuilder.where.mockReturnValue(taskTagsSelectBuilder);
     taskTagsSelectBuilder.andWhere.mockReturnValue(taskTagsSelectBuilder);
+    projectTagsSelectBuilder.innerJoin.mockReturnValue(
+      projectTagsSelectBuilder,
+    );
+    projectTagsSelectBuilder.where.mockReturnValue(projectTagsSelectBuilder);
+    projectTagsSelectBuilder.andWhere.mockReturnValue(projectTagsSelectBuilder);
+    vi.mocked(projectTagsSelectBuilder.getMany).mockResolvedValue([]);
     vi.mocked(mockSkillTagsService.listForUser).mockResolvedValue(
       defaultVocabulary,
     );
@@ -457,6 +474,23 @@ describe('TagsService', () => {
           tag: 'breakdown',
         }),
         expect.objectContaining({ source: 'agent', tag: 'github' }),
+      ]);
+    });
+
+    it("includes the plan's project's tags in the effective set", async () => {
+      vi.mocked(mockPlanTagsRepository.find).mockResolvedValue([
+        planTagRow('backend', 'human'),
+      ]);
+      vi.mocked(taskTagsSelectBuilder.getMany).mockResolvedValue([]);
+      vi.mocked(projectTagsSelectBuilder.getMany).mockResolvedValue([
+        projectTagRow('github', 'human'),
+      ]);
+
+      const result = await service.getEffectiveTagSet(planId);
+
+      expect(result).toEqual([
+        expect.objectContaining({ source: 'human', tag: 'backend' }),
+        expect.objectContaining({ source: 'human', tag: 'github' }),
       ]);
     });
 

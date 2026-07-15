@@ -3289,12 +3289,12 @@ type Mutation {
   removePlanTag(input: RemovePlanTagInput!): Boolean!
 
   """
-  Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit).
+  Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit). Re-runs plan-rules evaluation for every plan in the project.
   """
   addProjectTag(input: AddProjectTagInput!): ProjectTagObject!
 
   """
-  Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present.
+  Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. Re-runs plan-rules evaluation for every plan in the project when a tag was removed.
   """
   removeProjectTag(input: RemoveProjectTagInput!): Boolean!
 
