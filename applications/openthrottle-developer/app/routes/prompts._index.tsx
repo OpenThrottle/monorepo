@@ -141,7 +141,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       {showStats && (
         <PromptsStats
           countAgents={countAgents}
@@ -160,7 +160,7 @@ export default function Component(
         />
         <PromptsTable
           className="bg-card"
-          prompts={prompts}
+          prompts={prompts ?? []}
           search={search ?? undefined}
         />
         <OpenThrottlePagination
