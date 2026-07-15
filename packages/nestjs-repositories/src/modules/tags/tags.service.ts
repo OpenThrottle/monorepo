@@ -27,6 +27,7 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import { Task } from '../tasks/task.entity';
 import { PlanTag } from './plan-tag.entity';
+import { ProjectTag } from './project-tag.entity';
 import { TaskTag } from './task-tag.entity';
 import {
   deriveTagSource,
@@ -93,6 +94,8 @@ export class TagsService {
     private readonly logger: LoggerService,
     @InjectRepository(PlanTag)
     private readonly planTagsRepository: Repository<PlanTag>,
+    @InjectRepository(ProjectTag)
+    private readonly projectTagsRepository: Repository<ProjectTag>,
     @InjectRepository(TaskTag)
     private readonly taskTagsRepository: Repository<TaskTag>,
     private readonly skillTagsService: SkillTagsService,
@@ -105,6 +108,13 @@ export class TagsService {
    */
   getPlanTagsRepository(): Repository<PlanTag> {
     return this.planTagsRepository;
+  }
+
+  /**
+   * @description Returns the TypeORM repository for project tags (loader factories).
+   */
+  getProjectTagsRepository(): Repository<ProjectTag> {
+    return this.projectTagsRepository;
   }
 
   /**
@@ -263,6 +273,82 @@ export class TagsService {
 
     assertLadderAllowsRemoval(deriveTagSource(caller), row);
     await this.taskTagsRepository.delete({ id: row.id });
+    return true;
+  }
+
+  /**
+   * @description Attaches a tag to a project as the caller's derived identity.
+   * Same vocabulary/dimension validation and provenance ladder as tasks; the
+   * ≤1-phase constraint is plan-level and does not apply per project (multiple
+   * tags allowed).
+   */
+  async addProjectTag(
+    caller: TagCaller,
+    projectId: string,
+    tag: string,
+    options: AddTagOptions = {},
+  ): Promise<ProjectTag> {
+    const normalized = normalizeTag(tag);
+    assertKebabCaseTag(normalized);
+
+    const dimension = await this.resolveDimension(caller, normalized);
+    const source = deriveTagSource(caller);
+    const confidence = options.confidence ?? null;
+
+    const findExisting = async (): Promise<ProjectTag | null> =>
+      this.projectTagsRepository.findOne({
+        where: { projectId, tag: normalized },
+      });
+
+    const existing = await findExisting();
+    if (existing != null) {
+      if (TAG_SOURCE_RANK[source] > TAG_SOURCE_RANK[existing.source]) {
+        existing.source = source;
+        existing.confidence = confidence;
+        return this.projectTagsRepository.save(existing);
+      }
+      return existing;
+    }
+
+    const entity = this.projectTagsRepository.create({
+      confidence,
+      dimension,
+      projectId,
+      source,
+      tag: normalized,
+    });
+    try {
+      return await this.projectTagsRepository.save(entity);
+    } catch (error) {
+      if (isPostgresError(error, '23503')) {
+        throw new NotFoundException(`Project "${projectId}" not found.`);
+      }
+      if (isPostgresError(error, '23505')) {
+        const winner = await findExisting();
+        if (winner != null) return winner;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * @description Removes a tag from a project under the same ladder as tasks.
+   * Returns false when absent.
+   */
+  async removeProjectTag(
+    caller: TagCaller,
+    projectId: string,
+    tag: string,
+  ): Promise<boolean> {
+    const row = await this.projectTagsRepository.findOne({
+      where: { projectId, tag: normalizeTag(tag) },
+    });
+    if (row == null) {
+      return false;
+    }
+
+    assertLadderAllowsRemoval(deriveTagSource(caller), row);
+    await this.projectTagsRepository.delete({ id: row.id });
     return true;
   }
 

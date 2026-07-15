@@ -14,6 +14,7 @@ import {
 } from '@openthrottle/nestjs-auth';
 import {
   type PlanTag,
+  type ProjectTag,
   ServiceAccountsService,
   type TagCaller,
   TagsService,
@@ -33,14 +34,17 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { PlanObject } from '../plans/plan.object';
+import { ProjectObject } from '../projects/project.object';
 import { TaskObject } from '../tasks/task.object';
 import {
   AddPlanTagInput,
+  AddProjectTagInput,
   AddTaskTagInput,
   RemovePlanTagInput,
+  RemoveProjectTagInput,
   RemoveTaskTagInput,
 } from './tags.input';
-import { PlanTagObject, TaskTagObject } from './tag.object';
+import { PlanTagObject, ProjectTagObject, TaskTagObject } from './tag.object';
 import { TagsLoaders } from './tags-loaders';
 
 @Resolver(() => PlanObject)
@@ -185,6 +189,59 @@ export class TaskTagsResolver {
       await this.enqueueTaskPlanEvaluation(input.taskId);
     }
     return removed;
+  }
+}
+
+@Resolver(() => ProjectObject)
+@UseGuards(GqlPermissionsGuard)
+export class ProjectTagsResolver {
+  constructor(
+    private readonly loaders: TagsLoaders,
+    private readonly serviceAccountsService: ServiceAccountsService,
+    private readonly tagsService: TagsService,
+  ) {}
+
+  @ResolveField(() => [ProjectTagObject], {
+    description: `Tags attached to this project, alphabetically by tag.`,
+  })
+  async tags(@Parent() parent: ProjectObject): Promise<ProjectTag[]> {
+    return this.loaders.projectTagsByProjectIdLoader.load(parent.id);
+  }
+
+  @Mutation(() => ProjectTagObject, {
+    description: `Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit).`,
+  })
+  @Permissions(PERMISSIONS.PLANS_WRITE)
+  async addProjectTag(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => AddProjectTagInput })
+    input: AddProjectTagInput,
+  ): Promise<ProjectTag> {
+    const caller = await resolveTagCaller(
+      principal,
+      this.serviceAccountsService,
+    );
+    return this.tagsService.addProjectTag(caller, input.projectId, input.tag);
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present.`,
+  })
+  @Permissions(PERMISSIONS.PLANS_WRITE)
+  async removeProjectTag(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => RemoveProjectTagInput })
+    input: RemoveProjectTagInput,
+  ): Promise<boolean> {
+    const caller = await resolveTagCaller(
+      principal,
+      this.serviceAccountsService,
+    );
+    return this.tagsService.removeProjectTag(
+      caller,
+      input.projectId,
+      input.tag,
+    );
   }
 }
 

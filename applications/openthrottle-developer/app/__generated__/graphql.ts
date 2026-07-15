@@ -117,6 +117,13 @@ export type AddPlanTagInput = {
   tag: Scalars['String']['input'];
 };
 
+export type AddProjectTagInput = {
+  /** Project to tag. */
+  projectId: Scalars['ID']['input'];
+  /** Kebab-case tag slug from the caller's skill-tag vocabulary. */
+  tag: Scalars['String']['input'];
+};
+
 export type AddSkillTagInput = {
   /** Vocabulary axis for the tag: "domain" (default) or "phase". */
   dimension?: InputMaybe<Scalars['String']['input']>;
@@ -1215,6 +1222,8 @@ export type Mutation = {
   addPermissionToRole: Scalars['Boolean']['output'];
   /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
   addPlanTag: PlanTagObject;
+  /** Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit). */
+  addProjectTag: ProjectTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
   addSkillAvailabilityRule: SkillAvailabilityRuleObject;
   /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
@@ -1322,6 +1331,8 @@ export type Mutation = {
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
+  /** Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
+  removeProjectTag: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
   /** Remove a role from a service account (admin, human only). */
@@ -1406,6 +1417,10 @@ export type MutationAddPermissionToRoleArgs = {
 
 export type MutationAddPlanTagArgs = {
   input: AddPlanTagInput;
+};
+
+export type MutationAddProjectTagArgs = {
+  input: AddProjectTagInput;
 };
 
 export type MutationAddSkillAvailabilityRuleArgs = {
@@ -1615,6 +1630,10 @@ export type MutationRemovePermissionFromRoleArgs = {
 
 export type MutationRemovePlanTagArgs = {
   input: RemovePlanTagInput;
+};
+
+export type MutationRemoveProjectTagArgs = {
+  input: RemoveProjectTagInput;
 };
 
 export type MutationRemoveRepeatableJobArgs = {
@@ -2065,6 +2084,8 @@ export type ProjectObject = {
   nxProjectName?: Maybe<Scalars['String']['output']>;
   /** Plans linked to this project; resolved via ResolveField. */
   plans?: Maybe<Array<PlanObject>>;
+  /** Tags attached to this project, alphabetically by tag. */
+  tags: Array<ProjectTagObject>;
   /** Tasks linked to this project; resolved via ResolveField. */
   tasks?: Maybe<Array<TaskObject>>;
   updatedAt: Scalars['DateTime']['output'];
@@ -2088,6 +2109,23 @@ export type ProjectSkillsResult = {
   skills: Array<ProjectSkillObject>;
   /** Number of skills in the universe. */
   totalCount: Scalars['Int']['output'];
+};
+
+/** A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans. */
+export type ProjectTagObject = {
+  __typename?: 'ProjectTagObject';
+  /** Model confidence (0-1) for server-llm rows; null otherwise. */
+  confidence?: Maybe<Scalars['Float']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage). */
+  dimension: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  projectId: Scalars['ID']['output'];
+  /** Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration. */
+  source: Scalars['String']['output'];
+  /** Kebab-case tag slug, unique per project. */
+  tag: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PrsMergedPerPeriodInput = {
@@ -2808,6 +2846,13 @@ export type RemovePermissionFromRoleInput = {
 export type RemovePlanTagInput = {
   /** Plan to remove the tag from. */
   planId: Scalars['ID']['input'];
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+};
+
+export type RemoveProjectTagInput = {
+  /** Project to remove the tag from. */
+  projectId: Scalars['ID']['input'];
   /** Tag slug to remove. */
   tag: Scalars['String']['input'];
 };

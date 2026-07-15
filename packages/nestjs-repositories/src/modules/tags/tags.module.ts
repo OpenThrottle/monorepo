@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { SkillTagsModule } from '../skill-tags/skill-tags.module';
 import { PlanTag } from './plan-tag.entity';
+import { ProjectTag } from './project-tag.entity';
 import { TaskTag } from './task-tag.entity';
 import { TagsService } from './tags.service';
 
@@ -12,7 +13,7 @@ import { TagsService } from './tags.service';
   imports: [
     LoggerModule,
     SkillTagsModule,
-    TypeOrmModule.forFeature([PlanTag, TaskTag]),
+    TypeOrmModule.forFeature([PlanTag, ProjectTag, TaskTag]),
   ],
   providers: [TagsService],
 })

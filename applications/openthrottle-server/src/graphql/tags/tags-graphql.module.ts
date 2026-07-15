@@ -9,7 +9,11 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
 import './tag.object';
 import './tags.input';
-import { PlanTagsResolver, TaskTagsResolver } from './tags.resolver';
+import {
+  PlanTagsResolver,
+  ProjectTagsResolver,
+  TaskTagsResolver,
+} from './tags.resolver';
 import { TagsLoaders } from './tags-loaders';
 
 @Module({
@@ -17,6 +21,7 @@ import { TagsLoaders } from './tags-loaders';
   providers: [
     GqlPermissionsGuard,
     PlanTagsResolver,
+    ProjectTagsResolver,
     TagsLoaders,
     TaskTagsResolver,
   ],

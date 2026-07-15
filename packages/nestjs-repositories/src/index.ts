@@ -183,6 +183,8 @@ export { TagActionRulesService } from './modules/tag-action-rules/tag-action-rul
 export type { UpsertTagActionRuleInput } from './modules/tag-action-rules/tag-action-rules.service';
 export { PlanTag } from './modules/tags/plan-tag.entity';
 export type { PlanTagData } from './modules/tags/plan-tag.entity';
+export { ProjectTag } from './modules/tags/project-tag.entity';
+export type { ProjectTagData } from './modules/tags/project-tag.entity';
 export { TaskTag } from './modules/tags/task-tag.entity';
 export type { TaskTagData } from './modules/tags/task-tag.entity';
 export {

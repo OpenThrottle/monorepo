@@ -298,6 +298,18 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.removePlanTagToolHandler,
     ),
     defineTool(
+      'add_project_tag',
+      Th.addProjectTagToolDescription,
+      Th.addProjectTagToolParameters,
+      Th.addProjectTagToolHandler,
+    ),
+    defineTool(
+      'remove_project_tag',
+      Th.removeProjectTagToolDescription,
+      Th.removeProjectTagToolParameters,
+      Th.removeProjectTagToolHandler,
+    ),
+    defineTool(
       'add_task_tag',
       Th.addTaskTagToolDescription,
       Th.addTaskTagToolParameters,

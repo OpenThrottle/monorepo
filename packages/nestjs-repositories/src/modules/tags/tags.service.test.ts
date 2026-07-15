@@ -8,6 +8,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity';
 import { PlanTag } from './plan-tag.entity';
+import { ProjectTag } from './project-tag.entity';
 import { TaskTag } from './task-tag.entity';
 import {
   deriveTagSource,
@@ -49,6 +50,7 @@ describe('deriveTagSource', () => {
 describe('TagsService', () => {
   const planId = '22222222-2222-4222-8222-222222222222';
   const taskId = '33333333-3333-4333-8333-333333333333';
+  const projectId = '66666666-6666-4666-8666-666666666666';
 
   const humanCaller: TagCaller = {
     principalKind: 'user',
@@ -95,6 +97,16 @@ describe('TagsService', () => {
       taskId,
     });
 
+  const projectTagRow = (tag: string, source: TagSource): ProjectTag =>
+    asMock<ProjectTag>({
+      confidence: null,
+      dimension: tag === 'breakdown' || tag === 'design' ? 'phase' : 'domain',
+      id: `project-tag-${tag}-${source}`,
+      projectId,
+      source,
+      tag,
+    });
+
   const taskTagsSelectBuilder = {
     andWhere: vi.fn(),
     getMany: vi.fn(),
@@ -122,6 +134,14 @@ describe('TagsService', () => {
     save: vi.fn((entity: TaskTag) => Promise.resolve(entity)),
   };
 
+  const mockProjectTagsRepository = {
+    create: vi.fn((data: Partial<ProjectTag>) => ({ ...data })),
+    delete: vi.fn(),
+    find: vi.fn(),
+    findOne: vi.fn(),
+    save: vi.fn((entity: ProjectTag) => Promise.resolve(entity)),
+  };
+
   const mockVocabularyRepository = { find: vi.fn() };
 
   const mockSkillTagsService = {
@@ -139,6 +159,10 @@ describe('TagsService', () => {
         {
           provide: getRepositoryToken(PlanTag),
           useValue: mockPlanTagsRepository,
+        },
+        {
+          provide: getRepositoryToken(ProjectTag),
+          useValue: mockProjectTagsRepository,
         },
         {
           provide: getRepositoryToken(TaskTag),
@@ -344,6 +368,70 @@ describe('TagsService', () => {
 
       await expect(
         service.removePlanTag(humanCaller, planId, 'backend'),
+      ).resolves.toBe(false);
+    });
+  });
+
+  describe('project tags (multi-tag, no phase constraint)', () => {
+    it('stores source=human for a user caller', async () => {
+      vi.mocked(mockProjectTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addProjectTag(humanCaller, projectId, 'backend');
+
+      expect(mockProjectTagsRepository.create).toHaveBeenCalledWith({
+        confidence: null,
+        dimension: 'domain',
+        projectId,
+        source: 'human',
+        tag: 'backend',
+      });
+    });
+
+    it('rejects a tag outside the caller vocabulary', async () => {
+      await expect(
+        service.addProjectTag(humanCaller, projectId, 'not-a-known-tag'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockProjectTagsRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('allows multiple phase tags (no ≤1-phase displacement)', async () => {
+      vi.mocked(mockProjectTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addProjectTag(humanCaller, projectId, 'design');
+
+      expect(mockProjectTagsRepository.delete).not.toHaveBeenCalled();
+      expect(mockProjectTagsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ dimension: 'phase', tag: 'design' }),
+      );
+    });
+
+    it('upgrades the source on same-tag add when the caller outranks', async () => {
+      const existing = projectTagRow('backend', 'server-llm');
+      vi.mocked(mockProjectTagsRepository.findOne).mockResolvedValue(existing);
+
+      await service.addProjectTag(humanCaller, projectId, 'backend');
+
+      expect(mockProjectTagsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'human' }),
+      );
+    });
+
+    it('removal honors the provenance ladder (agent cannot remove human)', async () => {
+      vi.mocked(mockProjectTagsRepository.findOne).mockResolvedValue(
+        projectTagRow('backend', 'human'),
+      );
+
+      await expect(
+        service.removeProjectTag(agentCaller, projectId, 'backend'),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(mockProjectTagsRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('returns false when removing an absent tag', async () => {
+      vi.mocked(mockProjectTagsRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.removeProjectTag(humanCaller, projectId, 'backend'),
       ).resolves.toBe(false);
     });
   });

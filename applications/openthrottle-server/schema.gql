@@ -162,6 +162,9 @@ type ProjectObject {
   """Tasks linked to this project; resolved via ResolveField."""
   tasks: [TaskObject!]
   updatedAt: DateTime!
+
+  """Tags attached to this project, alphabetically by tag."""
+  tags: [ProjectTagObject!]!
 }
 
 """
@@ -1982,6 +1985,30 @@ type PlanTagObject {
 }
 
 """
+A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans.
+"""
+type ProjectTagObject {
+  id: ID!
+  projectId: ID!
+
+  """Kebab-case tag slug, unique per project."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
 A tag attached to a task. Same shape and provenance semantics as plan tags.
 """
 type TaskTagObject {
@@ -3262,6 +3289,16 @@ type Mutation {
   removePlanTag(input: RemovePlanTagInput!): Boolean!
 
   """
+  Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit).
+  """
+  addProjectTag(input: AddProjectTagInput!): ProjectTagObject!
+
+  """
+  Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present.
+  """
+  removeProjectTag(input: RemoveProjectTagInput!): Boolean!
+
+  """
   Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity.
   """
   addTaskTag(input: AddTaskTagInput!): TaskTagObject!
@@ -4016,6 +4053,22 @@ input AddPlanTagInput {
 input RemovePlanTagInput {
   """Plan to remove the tag from."""
   planId: ID!
+
+  """Tag slug to remove."""
+  tag: String!
+}
+
+input AddProjectTagInput {
+  """Project to tag."""
+  projectId: ID!
+
+  """Kebab-case tag slug from the caller's skill-tag vocabulary."""
+  tag: String!
+}
+
+input RemoveProjectTagInput {
+  """Project to remove the tag from."""
+  projectId: ID!
 
   """Tag slug to remove."""
   tag: String!
