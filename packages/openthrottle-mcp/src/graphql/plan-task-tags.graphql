@@ -21,6 +21,23 @@ mutation RemovePlanTag($input: RemovePlanTagInput!) {
   removePlanTag(input: $input)
 }
 
+mutation AddProjectTag($input: AddProjectTagInput!) {
+  addProjectTag(input: $input) {
+    id
+    projectId
+    tag
+    dimension
+    source
+    confidence
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemoveProjectTag($input: RemoveProjectTagInput!) {
+  removeProjectTag(input: $input)
+}
+
 mutation AddTaskTag($input: AddTaskTagInput!) {
   addTaskTag(input: $input) {
     id

@@ -4,12 +4,28 @@ fragment ProjectPageDetails on ProjectObject {
   id
   name
   nxProjectName
+  tags {
+    confidence
+    dimension
+    id
+    source
+    tag
+  }
   updatedAt
 }
 
 query getProjectById($id: ID!, $limit: Float, $offset: Float) {
   project(id: $id) {
     ...ProjectPageDetails
+  }
+
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
   }
 
   projectTasksResult: tasksByProjectId(
@@ -29,4 +45,22 @@ query getProjectById($id: ID!, $limit: Float, $offset: Float) {
     }
     totalCount
   }
+}
+
+mutation ProjectDetailAddProjectTag($input: AddProjectTagInput!) {
+  addProjectTag(input: $input) {
+    ...ProjectTagChip
+  }
+}
+
+mutation ProjectDetailRemoveProjectTag($input: RemoveProjectTagInput!) {
+  removeProjectTag(input: $input)
+}
+
+fragment ProjectTagChip on ProjectTagObject {
+  confidence
+  dimension
+  id
+  source
+  tag
 }

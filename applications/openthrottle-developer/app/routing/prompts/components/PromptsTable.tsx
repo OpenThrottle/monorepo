@@ -15,7 +15,6 @@ import {
   formatPromptType,
 } from '~/routing/prompts/utils/formatters';
 import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
-import { extractContentAfterFrontmatter } from '@openthrottle/openthrottle-skills';
 
 export interface PromptsTableProps {
   className?: string;
@@ -160,7 +159,9 @@ PromptsTable.buildTable = (): ColumnDef<
               </div>
 
               <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
-                {extractContentAfterFrontmatter(prompt.content)}
+                {/* FIXME: can't use this due to server module usage */}
+                {/* {extractContentAfterFrontmatter(prompt.content)} */}
+                {prompt.content}
               </p>
             </div>
           </div>

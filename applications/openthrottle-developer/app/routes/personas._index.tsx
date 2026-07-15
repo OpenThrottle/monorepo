@@ -44,7 +44,7 @@ export default function Component(
   const entries = [...props.loaderData.entries];
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <PersonasIntroduction entries={entries} />
       <PersonasStats entries={entries} />
       <PersonasToolbar />

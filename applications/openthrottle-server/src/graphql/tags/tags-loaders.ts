@@ -6,6 +6,7 @@
 
 import {
   type PlanTag,
+  type ProjectTag,
   type TaskTag,
   TagsService,
   createCollectionByColumnLoader,
@@ -21,12 +22,17 @@ import type DataLoader from 'dataloader';
 @Injectable({ scope: Scope.REQUEST })
 export class TagsLoaders {
   readonly planTagsByPlanIdLoader: DataLoader<string, PlanTag[]>;
+  readonly projectTagsByProjectIdLoader: DataLoader<string, ProjectTag[]>;
   readonly taskTagsByTaskIdLoader: DataLoader<string, TaskTag[]>;
 
   constructor(tagsService: TagsService) {
     this.planTagsByPlanIdLoader = createCollectionByColumnLoader(
       { getRepository: () => tagsService.getPlanTagsRepository() },
       { column: 'planId', order: { tag: 'ASC' } },
+    );
+    this.projectTagsByProjectIdLoader = createCollectionByColumnLoader(
+      { getRepository: () => tagsService.getProjectTagsRepository() },
+      { column: 'projectId', order: { tag: 'ASC' } },
     );
     this.taskTagsByTaskIdLoader = createCollectionByColumnLoader(
       { getRepository: () => tagsService.getTaskTagsRepository() },

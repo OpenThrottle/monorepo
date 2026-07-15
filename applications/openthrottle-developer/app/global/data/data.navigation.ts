@@ -111,11 +111,18 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/prompts',
       },
       {
-        beta: true,
+        beta: false,
         children: 'Skills',
         disabled: false, // 🔴
         icon: BrainCircuitIcon,
         to: '/skills',
+      },
+      {
+        beta: false,
+        children: 'Rules',
+        disabled: false, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/rules',
       },
       {
         children: 'Usage',

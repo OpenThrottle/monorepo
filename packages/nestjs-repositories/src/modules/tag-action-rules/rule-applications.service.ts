@@ -10,11 +10,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, QueryFailedError, Repository } from 'typeorm';
+import { Task } from '../tasks/task.entity';
 import {
   RULE_APPLICATION_STATES,
   RuleApplication,
   type RuleApplicationState,
 } from './rule-application.entity';
+
+/** Status an orphaned injected task is soft-closed to (reversible). */
+const SOFT_CLOSED_TASK_STATUS = 'SKIPPED';
+
+/** Terminal task statuses left untouched by the orphan soft-close. */
+const TERMINAL_TASK_STATUSES = ['CANCELED', 'COMPLETED', 'SKIPPED'] as const;
 
 const isUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
@@ -102,7 +109,11 @@ export class RuleApplicationsService {
   /**
    * @description Flips 'applied' rows to 'orphaned' for rules that no longer
    * match the plan. Only applied rows flip — pre-satisfied/flagged/orphaned
-   * rows are left as-is. Returns the number of rows flipped.
+   * rows are left as-is. Any injected task carried by a flipped row (non-null
+   * task_id, an INJECT_TASK result) is soft-closed to SKIPPED in the same
+   * transaction, unless it is already terminal (COMPLETED/SKIPPED/CANCELED) or
+   * a human already deleted it (task_id SET NULL). The ledger row is untouched
+   * so the rule still never re-injects. Returns the number of rows flipped.
    */
   async orphanUnmatchedApplications(
     planId: string,
@@ -117,10 +128,37 @@ export class RuleApplicationsService {
       return 0;
     }
 
-    await this.repository.update(
-      { id: In(toOrphan.map((row) => row.id)) },
-      { state: RULE_APPLICATION_STATES.ORPHANED },
-    );
+    const injectedTaskIds = toOrphan
+      .map((row) => row.taskId)
+      .filter((taskId): taskId is string => taskId != null);
+
+    await this.repository.manager.transaction(async (manager) => {
+      await manager.update(
+        RuleApplication,
+        { id: In(toOrphan.map((row) => row.id)) },
+        { state: RULE_APPLICATION_STATES.ORPHANED },
+      );
+
+      if (injectedTaskIds.length > 0) {
+        await manager
+          .createQueryBuilder()
+          .update(Task)
+          .set({ status: SOFT_CLOSED_TASK_STATUS })
+          .where('id IN (:...ids)', { ids: injectedTaskIds })
+          .andWhere('status NOT IN (:...terminal)', {
+            terminal: [...TERMINAL_TASK_STATUSES],
+          })
+          .execute();
+      }
+    });
+
+    if (injectedTaskIds.length > 0) {
+      this.logger.debug(
+        `Soft-closed up to ${injectedTaskIds.length} orphaned injected task(s) on plan ${planId}`,
+        RuleApplicationsService.name,
+      );
+    }
+
     return toOrphan.length;
   }
 }

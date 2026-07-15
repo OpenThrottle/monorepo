@@ -50,6 +50,7 @@ export default function handleRequest(
    */
   const nonce = generateCspNonce();
   const csp = buildCsp(nonce, getCspOptions());
+
   responseHeaders.set(csp.headerName, csp.value);
   if (csp.reportingEndpoints) {
     responseHeaders.set('Reporting-Endpoints', csp.reportingEndpoints);
