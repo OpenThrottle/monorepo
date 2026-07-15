@@ -5160,12 +5160,64 @@ export type GetTaskByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'TaskTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
       name: string;
     } | null;
   } | null;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
+};
+
+export type TaskTagChipFragment = {
+  __typename?: 'TaskTagObject';
+  confidence?: number | null;
+  dimension: string;
+  id: string;
+  source: string;
+  tag: string;
+};
+
+export type TaskDetailAddTaskTagMutationVariables = Exact<{
+  input: AddTaskTagInput;
+}>;
+
+export type TaskDetailAddTaskTagMutation = {
+  __typename?: 'Mutation';
+  addTaskTag: {
+    __typename?: 'TaskTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  };
+};
+
+export type TaskDetailRemoveTaskTagMutationVariables = Exact<{
+  input: RemoveTaskTagInput;
+}>;
+
+export type TaskDetailRemoveTaskTagMutation = {
+  __typename?: 'Mutation';
+  removeTaskTag: boolean;
 };
 
 export type TaskLinkedArtifactsQueryVariables = Exact<{
@@ -7064,6 +7116,29 @@ export const LinkedArtifactFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<LinkedArtifactFragment, unknown>;
+export const TaskTagChipFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TaskTagChipFragment, unknown>;
 export const PlanCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11405,6 +11480,44 @@ export const GetTaskByIdDocument = {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'PlanTaskRow' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'TaskTagChip' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },
@@ -11447,8 +11560,149 @@ export const GetTaskByIdDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<GetTaskByIdQuery, GetTaskByIdQueryVariables>;
+export const TaskDetailAddTaskTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TaskDetailAddTaskTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddTaskTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addTaskTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskDetailAddTaskTagMutation,
+  TaskDetailAddTaskTagMutationVariables
+>;
+export const TaskDetailRemoveTaskTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TaskDetailRemoveTaskTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveTaskTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeTaskTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskDetailRemoveTaskTagMutation,
+  TaskDetailRemoveTaskTagMutationVariables
+>;
 export const TaskLinkedArtifactsDocument = {
   kind: 'Document',
   definitions: [

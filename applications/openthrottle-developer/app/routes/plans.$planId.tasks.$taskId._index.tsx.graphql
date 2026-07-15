@@ -3,7 +3,36 @@
 query getTaskById($id: ID!) {
   task(id: $id) {
     ...PlanTaskRow
+    tags {
+      ...TaskTagChip
+    }
   }
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
+}
+
+fragment TaskTagChip on TaskTagObject {
+  confidence
+  dimension
+  id
+  source
+  tag
+}
+
+mutation TaskDetailAddTaskTag($input: AddTaskTagInput!) {
+  addTaskTag(input: $input) {
+    ...TaskTagChip
+  }
+}
+
+mutation TaskDetailRemoveTaskTag($input: RemoveTaskTagInput!) {
+  removeTaskTag(input: $input)
 }
 
 query TaskLinkedArtifacts($taskId: ID!) {
