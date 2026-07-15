@@ -15,6 +15,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { useFetcher } from 'react-router';
 import {
   OpenThrottleClipboard,
   OpenThrottlePagination,
@@ -24,8 +25,13 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { formatProjectDate } from '~/routing/projects/utils/format';
-import { GetProjectByIdDocument } from '~/__generated__/graphql';
+import {
+  GetProjectByIdDocument,
+  ProjectDetailAddProjectTagDocument,
+  ProjectDetailRemoveProjectTagDocument,
+} from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -60,11 +66,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
   const offset = (page - 1) * limit;
 
-  const { project, projectTasksResult } = await executeGraphqlWithAuth(
-    args.request,
-    GetProjectByIdDocument,
-    { id: projectId, limit, offset },
-  );
+  const { project, projectTasksResult, skillTagVocabulary } =
+    await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
+      id: projectId,
+      limit,
+      offset,
+    });
 
   const projectTasks = projectTasksResult.tasks;
   const totalTaskCount = projectTasksResult.totalCount;
@@ -74,6 +81,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     page,
     project,
     projectTasks,
+    tagVocabulary: skillTagVocabulary.tags ?? [],
     totalTaskCount,
   };
 };
@@ -101,10 +109,12 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { limit, page, project, projectTasks, totalTaskCount } = loaderData;
+  const { limit, page, project, projectTasks, tagVocabulary, totalTaskCount } =
+    loaderData;
 
   // Hooks
   const [activeTab, setActiveTab] = React.useState<ProjectTabValue>('overview');
+  const tagFetcher = useFetcher();
 
   // Setup
   const tasks = projectTasks ?? [];
@@ -179,6 +189,31 @@ export default function Component(
                   <dd>{formatProjectDate(project.updatedAt)}</dd>
                 </div>
               </dl>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h2 className="text-muted-foreground text-xs font-medium uppercase">
+                  Tags
+                </h2>
+                <PlanTagChips
+                  onAddTag={(tag) =>
+                    tagFetcher.submit(
+                      { intent: 'addProjectTag', tag },
+                      { method: 'post' },
+                    )
+                  }
+                  onRemoveTag={(tag) =>
+                    tagFetcher.submit(
+                      { intent: 'removeProjectTag', tag },
+                      { method: 'post' },
+                    )
+                  }
+                  pending={tagFetcher.state !== 'idle'}
+                  tags={project.tags}
+                  vocabulary={tagVocabulary}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -217,7 +252,41 @@ export default function Component(
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (args: Route.ActionArgs) => {
+  const projectId = args.params.projectId;
+  if (!projectId) {
+    return { projectTagError: 'Missing project id.' };
+  }
+
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+  const tag = formData.get('tag');
+
+  if (intent === 'addProjectTag' || intent === 'removeProjectTag') {
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      return { projectTagError: 'Tag is required.' };
+    }
+    try {
+      if (intent === 'addProjectTag') {
+        await executeGraphqlWithAuth(
+          args.request,
+          ProjectDetailAddProjectTagDocument,
+          { input: { projectId, tag: tag.trim() } },
+        );
+      } else {
+        await executeGraphqlWithAuth(
+          args.request,
+          ProjectDetailRemoveProjectTagDocument,
+          { input: { projectId, tag: tag.trim() } },
+        );
+      }
+      return { projectTagUpdated: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { projectTagError: message };
+    }
+  }
+
   return {};
 };
 

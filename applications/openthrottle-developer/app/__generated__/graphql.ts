@@ -5389,6 +5389,14 @@ export type ProjectPageDetailsFragment = {
   name: string;
   nxProjectName?: string | null;
   updatedAt: any;
+  tags: Array<{
+    __typename?: 'ProjectTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  }>;
 };
 
 export type GetProjectByIdQueryVariables = Exact<{
@@ -5407,7 +5415,25 @@ export type GetProjectByIdQuery = {
     name: string;
     nxProjectName?: string | null;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'ProjectTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
   } | null;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   projectTasksResult: {
     __typename?: 'TasksByProjectIdResultObject';
     totalCount: number;
@@ -5425,6 +5451,40 @@ export type GetProjectByIdQuery = {
       planId: string;
     }>;
   };
+};
+
+export type ProjectDetailAddProjectTagMutationVariables = Exact<{
+  input: AddProjectTagInput;
+}>;
+
+export type ProjectDetailAddProjectTagMutation = {
+  __typename?: 'Mutation';
+  addProjectTag: {
+    __typename?: 'ProjectTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  };
+};
+
+export type ProjectDetailRemoveProjectTagMutationVariables = Exact<{
+  input: RemoveProjectTagInput;
+}>;
+
+export type ProjectDetailRemoveProjectTagMutation = {
+  __typename?: 'Mutation';
+  removeProjectTag: boolean;
+};
+
+export type ProjectTagChipFragment = {
+  __typename?: 'ProjectTagObject';
+  confidence?: number | null;
+  dimension: string;
+  id: string;
+  source: string;
+  tag: string;
 };
 
 export type ProjectCardFragment = {
@@ -7067,12 +7127,49 @@ export const ProjectPageDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<ProjectPageDetailsFragment, unknown>;
+export const ProjectTagChipFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectTagChipFragment, unknown>;
 export const ProjectCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -12040,6 +12137,31 @@ export const GetProjectByIdDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             alias: { kind: 'Name', value: 'projectTasksResult' },
             name: { kind: 'Name', value: 'tasksByProjectId' },
             arguments: [
@@ -12145,12 +12267,149 @@ export const GetProjectByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<GetProjectByIdQuery, GetProjectByIdQueryVariables>;
+export const ProjectDetailAddProjectTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectDetailAddProjectTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddProjectTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addProjectTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectDetailAddProjectTagMutation,
+  ProjectDetailAddProjectTagMutationVariables
+>;
+export const ProjectDetailRemoveProjectTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectDetailRemoveProjectTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveProjectTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeProjectTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectDetailRemoveProjectTagMutation,
+  ProjectDetailRemoveProjectTagMutationVariables
+>;
 export const GetProjectsDocument = {
   kind: 'Document',
   definitions: [
