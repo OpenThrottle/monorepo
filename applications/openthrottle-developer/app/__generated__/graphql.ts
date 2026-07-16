@@ -117,6 +117,13 @@ export type AddPlanTagInput = {
   tag: Scalars['String']['input'];
 };
 
+export type AddProjectTagInput = {
+  /** Project to tag. */
+  projectId: Scalars['ID']['input'];
+  /** Kebab-case tag slug from the caller's skill-tag vocabulary. */
+  tag: Scalars['String']['input'];
+};
+
 export type AddSkillTagInput = {
   /** Vocabulary axis for the tag: "domain" (default) or "phase". */
   dimension?: InputMaybe<Scalars['String']['input']>;
@@ -1215,6 +1222,8 @@ export type Mutation = {
   addPermissionToRole: Scalars['Boolean']['output'];
   /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
   addPlanTag: PlanTagObject;
+  /** Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit). Re-runs plan-rules evaluation for every plan in the project. */
+  addProjectTag: ProjectTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
   addSkillAvailabilityRule: SkillAvailabilityRuleObject;
   /** Add a kebab-case tag to the authenticated user's skill-tag vocabulary. */
@@ -1322,6 +1331,8 @@ export type Mutation = {
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
+  /** Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. Re-runs plan-rules evaluation for every plan in the project when a tag was removed. */
+  removeProjectTag: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
   /** Remove a role from a service account (admin, human only). */
@@ -1406,6 +1417,10 @@ export type MutationAddPermissionToRoleArgs = {
 
 export type MutationAddPlanTagArgs = {
   input: AddPlanTagInput;
+};
+
+export type MutationAddProjectTagArgs = {
+  input: AddProjectTagInput;
 };
 
 export type MutationAddSkillAvailabilityRuleArgs = {
@@ -1615,6 +1630,10 @@ export type MutationRemovePermissionFromRoleArgs = {
 
 export type MutationRemovePlanTagArgs = {
   input: RemovePlanTagInput;
+};
+
+export type MutationRemoveProjectTagArgs = {
+  input: RemoveProjectTagInput;
 };
 
 export type MutationRemoveRepeatableJobArgs = {
@@ -2065,6 +2084,8 @@ export type ProjectObject = {
   nxProjectName?: Maybe<Scalars['String']['output']>;
   /** Plans linked to this project; resolved via ResolveField. */
   plans?: Maybe<Array<PlanObject>>;
+  /** Tags attached to this project, alphabetically by tag. */
+  tags: Array<ProjectTagObject>;
   /** Tasks linked to this project; resolved via ResolveField. */
   tasks?: Maybe<Array<TaskObject>>;
   updatedAt: Scalars['DateTime']['output'];
@@ -2088,6 +2109,23 @@ export type ProjectSkillsResult = {
   skills: Array<ProjectSkillObject>;
   /** Number of skills in the universe. */
   totalCount: Scalars['Int']['output'];
+};
+
+/** A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans. */
+export type ProjectTagObject = {
+  __typename?: 'ProjectTagObject';
+  /** Model confidence (0-1) for server-llm rows; null otherwise. */
+  confidence?: Maybe<Scalars['Float']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage). */
+  dimension: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  projectId: Scalars['ID']['output'];
+  /** Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration. */
+  source: Scalars['String']['output'];
+  /** Kebab-case tag slug, unique per project. */
+  tag: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PrsMergedPerPeriodInput = {
@@ -2808,6 +2846,13 @@ export type RemovePermissionFromRoleInput = {
 export type RemovePlanTagInput = {
   /** Plan to remove the tag from. */
   planId: Scalars['ID']['input'];
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+};
+
+export type RemoveProjectTagInput = {
+  /** Project to remove the tag from. */
+  projectId: Scalars['ID']['input'];
   /** Tag slug to remove. */
   tag: Scalars['String']['input'];
 };
@@ -5115,12 +5160,64 @@ export type GetTaskByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'TaskTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
       name: string;
     } | null;
   } | null;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
+};
+
+export type TaskTagChipFragment = {
+  __typename?: 'TaskTagObject';
+  confidence?: number | null;
+  dimension: string;
+  id: string;
+  source: string;
+  tag: string;
+};
+
+export type TaskDetailAddTaskTagMutationVariables = Exact<{
+  input: AddTaskTagInput;
+}>;
+
+export type TaskDetailAddTaskTagMutation = {
+  __typename?: 'Mutation';
+  addTaskTag: {
+    __typename?: 'TaskTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  };
+};
+
+export type TaskDetailRemoveTaskTagMutationVariables = Exact<{
+  input: RemoveTaskTagInput;
+}>;
+
+export type TaskDetailRemoveTaskTagMutation = {
+  __typename?: 'Mutation';
+  removeTaskTag: boolean;
 };
 
 export type TaskLinkedArtifactsQueryVariables = Exact<{
@@ -5344,6 +5441,14 @@ export type ProjectPageDetailsFragment = {
   name: string;
   nxProjectName?: string | null;
   updatedAt: any;
+  tags: Array<{
+    __typename?: 'ProjectTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  }>;
 };
 
 export type GetProjectByIdQueryVariables = Exact<{
@@ -5362,7 +5467,25 @@ export type GetProjectByIdQuery = {
     name: string;
     nxProjectName?: string | null;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'ProjectTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
   } | null;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   projectTasksResult: {
     __typename?: 'TasksByProjectIdResultObject';
     totalCount: number;
@@ -5380,6 +5503,40 @@ export type GetProjectByIdQuery = {
       planId: string;
     }>;
   };
+};
+
+export type ProjectDetailAddProjectTagMutationVariables = Exact<{
+  input: AddProjectTagInput;
+}>;
+
+export type ProjectDetailAddProjectTagMutation = {
+  __typename?: 'Mutation';
+  addProjectTag: {
+    __typename?: 'ProjectTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  };
+};
+
+export type ProjectDetailRemoveProjectTagMutationVariables = Exact<{
+  input: RemoveProjectTagInput;
+}>;
+
+export type ProjectDetailRemoveProjectTagMutation = {
+  __typename?: 'Mutation';
+  removeProjectTag: boolean;
+};
+
+export type ProjectTagChipFragment = {
+  __typename?: 'ProjectTagObject';
+  confidence?: number | null;
+  dimension: string;
+  id: string;
+  source: string;
+  tag: string;
 };
 
 export type ProjectCardFragment = {
@@ -6959,6 +7116,29 @@ export const LinkedArtifactFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<LinkedArtifactFragment, unknown>;
+export const TaskTagChipFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TaskTagChipFragment, unknown>;
 export const PlanCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -7022,12 +7202,49 @@ export const ProjectPageDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<ProjectPageDetailsFragment, unknown>;
+export const ProjectTagChipFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectTagChipFragment, unknown>;
 export const ProjectCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11263,6 +11480,44 @@ export const GetTaskByIdDocument = {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'PlanTaskRow' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'TaskTagChip' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },
@@ -11305,8 +11560,149 @@ export const GetTaskByIdDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<GetTaskByIdQuery, GetTaskByIdQueryVariables>;
+export const TaskDetailAddTaskTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TaskDetailAddTaskTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddTaskTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addTaskTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskDetailAddTaskTagMutation,
+  TaskDetailAddTaskTagMutationVariables
+>;
+export const TaskDetailRemoveTaskTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TaskDetailRemoveTaskTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveTaskTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeTaskTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskDetailRemoveTaskTagMutation,
+  TaskDetailRemoveTaskTagMutationVariables
+>;
 export const TaskLinkedArtifactsDocument = {
   kind: 'Document',
   definitions: [
@@ -11995,6 +12391,31 @@ export const GetProjectByIdDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             alias: { kind: 'Name', value: 'projectTasksResult' },
             name: { kind: 'Name', value: 'tasksByProjectId' },
             arguments: [
@@ -12100,12 +12521,149 @@ export const GetProjectByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<GetProjectByIdQuery, GetProjectByIdQueryVariables>;
+export const ProjectDetailAddProjectTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectDetailAddProjectTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddProjectTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addProjectTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectDetailAddProjectTagMutation,
+  ProjectDetailAddProjectTagMutationVariables
+>;
+export const ProjectDetailRemoveProjectTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectDetailRemoveProjectTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveProjectTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeProjectTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectDetailRemoveProjectTagMutation,
+  ProjectDetailRemoveProjectTagMutationVariables
+>;
 export const GetProjectsDocument = {
   kind: 'Document',
   definitions: [

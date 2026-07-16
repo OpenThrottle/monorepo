@@ -467,6 +467,28 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.addProjectTagToolDescription,
+    name: 'add_project_tag',
+    parameters: asMcpParameters(Th.addProjectTagToolParameters),
+  })
+  addProjectTag(
+    args: Parameters<typeof Th.addProjectTagToolHandler>[0],
+  ): ReturnType<typeof Th.addProjectTagToolHandler> {
+    return Th.addProjectTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeProjectTagToolDescription,
+    name: 'remove_project_tag',
+    parameters: asMcpParameters(Th.removeProjectTagToolParameters),
+  })
+  removeProjectTag(
+    args: Parameters<typeof Th.removeProjectTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeProjectTagToolHandler> {
+    return Th.removeProjectTagToolHandler(args);
+  }
+
+  @Tool({
     description: Th.addTaskTagToolDescription,
     name: 'add_task_tag',
     parameters: asMcpParameters(Th.addTaskTagToolParameters),

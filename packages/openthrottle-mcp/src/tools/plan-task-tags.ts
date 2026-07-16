@@ -12,14 +12,18 @@ import type { z } from 'zod';
 
 import {
   AddPlanTagDocument,
+  AddProjectTagDocument,
   AddTaskTagDocument,
   RemovePlanTagDocument,
+  RemoveProjectTagDocument,
   RemoveTaskTagDocument,
 } from '../__generated__/graphql.js';
 import {
   AddPlanTagInputSchema,
+  AddProjectTagInputSchema,
   AddTaskTagInputSchema,
   RemovePlanTagInputSchema,
+  RemoveProjectTagInputSchema,
   RemoveTaskTagInputSchema,
 } from '../__generated__/schemas.ts';
 import type { GenericResult } from '../types/index.ts';
@@ -33,6 +37,17 @@ type PlanTag = {
   dimension: string;
   id: string;
   planId: string;
+  source: string;
+  tag: string;
+  updatedAt: string;
+};
+
+type ProjectTag = {
+  confidence: number | null;
+  createdAt: string;
+  dimension: string;
+  id: string;
+  projectId: string;
   source: string;
   tag: string;
   updatedAt: string;
@@ -113,6 +128,76 @@ export async function removePlanTagToolHandler(
     const text = removed
       ? `Removed tag "${parsed.data.tag}" from plan ${parsed.data.planId}`
       : `Tag "${parsed.data.tag}" not present on plan ${parsed.data.planId}`;
+    return { structuredContent: { removed }, text };
+  });
+}
+
+// ── add_project_tag ──────────────────────────────────────────────────────────
+
+export const addProjectTagToolParameters = AddProjectTagInputSchema();
+
+export const addProjectTagToolDescription = `Attach a tag to a project via the addProjectTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument). Multiple tags per project are allowed.`;
+
+export async function addProjectTagToolHandler(
+  args: z.infer<typeof addProjectTagToolParameters>,
+): Promise<GenericResult<{ tag: ProjectTag }>> {
+  const parsed = addProjectTagToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ tag: ProjectTag }>('add_project_tag', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, AddProjectTagDocument, {
+      input: parsed.data,
+    });
+    const added = result?.addProjectTag;
+    if (!added) {
+      return null;
+    }
+
+    const tag: ProjectTag = {
+      confidence: added.confidence ?? null,
+      createdAt: added.createdAt,
+      dimension: added.dimension,
+      id: added.id,
+      projectId: added.projectId,
+      source: added.source,
+      tag: added.tag,
+      updatedAt: added.updatedAt,
+    };
+    return {
+      structuredContent: { tag },
+      text: `Tagged project ${tag.projectId} with "${tag.tag}" (${tag.dimension}, source=${tag.source})`,
+    };
+  });
+}
+
+// ── remove_project_tag ───────────────────────────────────────────────────────
+
+export const removeProjectTagToolParameters = RemoveProjectTagInputSchema();
+
+export const removeProjectTagToolDescription = `Remove a tag from a project via the removeProjectTag GraphQL mutation. The provenance ladder applies (an agent cannot remove a human row). Returns whether a tag was removed.`;
+
+export async function removeProjectTagToolHandler(
+  args: z.infer<typeof removeProjectTagToolParameters>,
+): Promise<GenericResult<{ removed: boolean }>> {
+  const parsed = removeProjectTagToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ removed: boolean }>('remove_project_tag', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      RemoveProjectTagDocument,
+      { input: parsed.data },
+    );
+    const removed = result?.removeProjectTag ?? false;
+    const text = removed
+      ? `Removed tag "${parsed.data.tag}" from project ${parsed.data.projectId}`
+      : `Tag "${parsed.data.tag}" not present on project ${parsed.data.projectId}`;
     return { structuredContent: { removed }, text };
   });
 }

@@ -84,8 +84,11 @@ const loadSkillAvailability = async (
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
+  console.log('loader');
   const { discoverRepoSkills } =
     await import('~/routing/agents/data/discover-repo-skills.server');
+  console.log('discoverRepoSkills ---', discoverRepoSkills);
+
   const { getMonorepoRoot } =
     await import('~/routing/agents/data/resolve-monorepo-root.server');
 
@@ -101,6 +104,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     diskEntries,
     projectSkills,
   );
+
   const entries = mergeRepoSkillsWithSkillAvailability(
     withStatic,
     availability,

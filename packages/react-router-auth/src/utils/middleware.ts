@@ -13,7 +13,7 @@ const BETA_ROUTE_PREFIXES = [
   '/prompts',
   '/pull-requests',
   '/search',
-  '/skills',
+  // '/skills',
 ];
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
@@ -23,28 +23,39 @@ const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
  */
 export const authMiddleware: MiddlewareFunction = (args) => {
   const { request, url } = args;
+  const { pathname } = url;
+
+  const isBetaEnabled = process.env.FEATURE_BETA_PREVIEW === 'true';
+  const isProd = process.env.NODE_ENV === 'production';
 
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
-  const isBetaEnabled = process.env.FEATURE_BETA_PREVIEW === 'true';
 
   const isBetaRoute = BETA_ROUTE_PREFIXES.some(
-    (p) => url.pathname === p || url.pathname.startsWith(`${p}/`),
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 
   const isPublicRoute = PUBLIC_ROUTE_PREFIXES.some(
-    (p) => url.pathname === p || url.pathname.startsWith(`${p}/`),
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 
   if (!token && !isPublicRoute) {
+    const message = `🚨 authMiddleware: no token + non-public route`;
+    if (!isProd) console.log(message, { pathname, token });
+
     throw redirect('/auth', {
       headers: { 'Set-Cookie': getClearAuthCookieHeader() },
     });
   }
 
   if (isBetaRoute && !isBetaEnabled) {
+    const message = `🚨 authMiddleware: beta route, but beta is disabled`;
+    if (!isProd) console.log(message, { pathname, token });
+
     throw redirect('/dashboard');
   }
 
-  // console.log('🔒 authMiddleware: token found', token);
+  if (!isProd) {
+    console.log('🔒 authMiddleware', { pathname, token });
+  }
 };

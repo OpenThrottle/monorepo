@@ -8,6 +8,8 @@ import {
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
+  TaskDetailAddTaskTagDocument,
+  TaskDetailRemoveTaskTagDocument,
   TaskLinkedArtifactsDocument,
 } from '~/__generated__/graphql';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
@@ -17,8 +19,9 @@ import { ListOrderedIcon } from 'lucide-react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { redirect } from 'react-router';
+import { redirect, useFetcher } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
@@ -49,7 +52,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
 
   if (taskId == null || taskId === '') {
-    return { linkedArtifacts: [], plan: null, task: null };
+    return { linkedArtifacts: [], plan: null, tagVocabulary: [], task: null };
   }
 
   const taskResult = await executeGraphqlWithAuth(
@@ -59,6 +62,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   const task = taskResult.task ?? null;
+  const tagVocabulary = taskResult.skillTagVocabulary.tags ?? [];
 
   if (task?.planId != null && planId != null && task.planId !== planId) {
     return redirect(`/plans/${task.planId}/tasks/${taskId}`);
@@ -84,7 +88,7 @@ export const loader = async (args: Route.LoaderArgs) => {
         ).workArtifactsByTask.artifacts ?? [])
       : [];
 
-  return { linkedArtifacts, plan, task };
+  return { linkedArtifacts, plan, tagVocabulary, task };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -104,9 +108,10 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { linkedArtifacts, task } = loaderData;
+  const { linkedArtifacts, tagVocabulary, task } = loaderData;
 
   // Hooks
+  const tagFetcher = useFetcher();
 
   // Setup
   const _taskId = params.taskId ?? '';
@@ -142,13 +147,66 @@ export default function Component(
           </Badge>
         </div>
       </div>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-muted-foreground text-xs font-medium uppercase">
+          Tags
+        </h2>
+        <PlanTagChips
+          onAddTag={(tag) =>
+            tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
+          }
+          onRemoveTag={(tag) =>
+            tagFetcher.submit(
+              { intent: 'removeTaskTag', tag },
+              { method: 'post' },
+            )
+          }
+          pending={tagFetcher.state !== 'idle'}
+          tags={task.tags}
+          vocabulary={tagVocabulary}
+        />
+      </div>
       <TaskDetails planId={effectivePlanId} task={task} />
       <LinkedArtifactsPanel artifacts={linkedArtifacts} />
     </GlobalScreen>
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (args: Route.ActionArgs) => {
+  const taskId = args.params.taskId;
+  if (taskId == null || taskId === '') {
+    return { taskTagError: 'Missing task id.' };
+  }
+
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+  const tag = formData.get('tag');
+
+  if (intent === 'addTaskTag' || intent === 'removeTaskTag') {
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      return { taskTagError: 'Tag is required.' };
+    }
+    try {
+      if (intent === 'addTaskTag') {
+        await executeGraphqlWithAuth(
+          args.request,
+          TaskDetailAddTaskTagDocument,
+          { input: { tag: tag.trim(), taskId } },
+        );
+      } else {
+        await executeGraphqlWithAuth(
+          args.request,
+          TaskDetailRemoveTaskTagDocument,
+          { input: { tag: tag.trim(), taskId } },
+        );
+      }
+      return { taskTagUpdated: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { taskTagError: message };
+    }
+  }
+
   return {};
 };
 
