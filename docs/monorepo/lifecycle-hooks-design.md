@@ -228,3 +228,100 @@ transient vs materialized `each` expansion. Q2 (`jobRunHooksJson` fate): still
 writable; no cutover done. Q3 (`first`/`last` aliasing): **adopted** (task 4
 band placement). Q4 (limits): not yet enforced on materialized hooks — a
 service-layer cap is a follow-up. Q5 (`each` scoping): deferred to task 8.
+
+## 12. Task 8 — executor wiring design (for review, no code yet)
+
+### The loop as it stands
+
+`tools/workflows/src/bin/ralph.ts` `main()` is the per-run CLI (one plan run;
+the orchestrator/`enqueuePlanRalphOrchestrator` only spawns these — hooks belong
+here, not in the orchestrator). Its control flow today:
+
+1. Promote plan → `IN_PROGRESS` (once, before the loop). — `ralph.ts:139`
+2. `for (iteration…)`: load plan tasks, filter `remaining`
+   (PENDING/QUEUED/IN_PROGRESS/BLOCKED), pick the first IN_PROGRESS else first
+   QUEUED/PENDING as `taskForIteration`, set it IN_PROGRESS. — `:171-229`
+3. `runIteration()` runs the agent for that task. — `:250`
+4. Parse `<ralph:task-complete>` signals → mark tasks COMPLETED. — `:267+`
+5. When `remaining` is empty at the top of an iteration → plan COMPLETED, exit. — `:181-193`
+
+### Key realization
+
+**Materialized hook-tasks already flow through this loop.** A before-hook sorts
+immediately _before_ its anchor and an after-hook immediately _after_ (task 4
+bands / adjacency), and the loop consumes tasks in `sort_order`. So hooks are
+_already executed in the right order_ as ordinary iterations — the loop simply
+isn't **hook-aware**: it can't identify a hook, doesn't run `skill` hooks through
+the runner, doesn't apply `onFailure` (block/warn), and doesn't expand `each`.
+
+This reframes task 8 from "invoke the phase runner at 5 points" to "make the
+existing task loop hook-aware," which is smaller and lower-risk.
+
+### DECISION D4 (needs sign-off) — execution model
+
+- **Option A — hook-aware loop (recommended).** Keep hooks flowing through the
+  normal `sort_order` loop. When `taskForIteration.hookRole != null`, branch:
+  - `hook_source='skill'` → run via `executeJobRunHooksPhase` (project with task
+    7's `projectHookTaskToJobRunHookEntry`) instead of the normal agent prompt.
+  - `hook_source='template'` → run as a normal agent iteration (today's path).
+  - Apply `onFailure`: a failed `block` hook (before\*) halts the run and leaves
+    the anchor unstarted; a failed `warn` hook (after\*) logs + continues.
+  - Tag the `plan_output_stream` line as a hook (role/phase/slug) so consumers
+    separate hook results from task results.
+  - _Pros:_ minimal change, reuses ordering/adjacency, no parallel control flow.
+    _Cons:_ `beforeAll`/`afterAll` "run once" semantics must be enforced by
+    status (a completed once-hook isn't re-picked — already true), and `each`
+    still needs expansion (below).
+- **Option B — orchestrated phases.** Pull hooks OUT of task selection; call
+  `executeJobRunHooksPhase` explicitly at the 5 firing points (beforeAll before
+  the loop; beforeEach/afterEach around each non-hook task; afterAll at
+  completion). _Pros:_ matches the runner's existing phase model 1:1.
+  _Cons:_ duplicates ordering, needs a second control path, and makes the
+  materialized rows partly cosmetic — contradicting D1's "materialized tasks are
+  the source of truth."
+
+**Recommendation: Option A.** It honors D1 (materialized tasks drive execution)
+and is the smaller runtime change.
+
+### `each` expansion (Q1/Q5)
+
+At run start, for each plan-level `each` hook, either (i) materialize a
+transient per-task hook row adjacent to every regular task, or (ii) keep it
+virtual and, in the hook-aware loop, run the `each` skill/template around each
+regular task without a row. **Recommend (ii) virtual** — avoids row explosion
+and keeps the one-level-nesting invariant clean; `conditions.taskCategories/
+taskStatuses` (already on the runner) scope which tasks an `each` smothers.
+
+### Firing points (Option A, concrete)
+
+| Point                          | Where in `ralph.ts`                                                            | Fires                                           |
+| ------------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------- |
+| beforeAll                      | after `:139` plan→IN_PROGRESS, before the loop                                 | plan once-before skill/template hooks, in order |
+| beforeEach                     | inside the loop, before `runIteration`, when the picked task is a regular task | plan each-before hooks (virtual)                |
+| task / task-level before,after | natural — they're rows in `sort_order` around the anchor                       | —                                               |
+| afterEach                      | after a regular task is marked COMPLETED (`:267+`)                             | plan each-after hooks (virtual)                 |
+| afterAll                       | at the empty-`remaining` completion branch (`:181-193`), before plan→COMPLETED | plan once-after hooks                           |
+
+### Blocking / error semantics
+
+Reuse `resolveJobRunHookOnFailure`: `block` (before\*) on failure → stop the run,
+leave the anchor task un-started, surface the failure; `warn` (after\*) on
+failure → record + continue. A blocked before-hook must NOT mark its anchor
+COMPLETED.
+
+### Test plan
+
+Unit: hook-aware task selection (skill vs template branch), onFailure block halts
+/ warn continues, `each` virtual expansion honoring conditions, output-stream
+tagging. Integration/dry-run: a plan with a beforeAll skill hook + a per-task
+after hook + an each afterEach, asserting execution order and plan_output_stream
+separation.
+
+### Open items for sign-off
+
+1. Confirm **Option A** (hook-aware loop) over B.
+2. Confirm **virtual `each`** over materialized-per-task.
+3. `block` failure blast radius: halt the whole run, or just skip the anchor and
+   continue to the next independent task? (Recommend halt — matches CI gates.)
+4. Does `afterAll` run on a failed/aborted run, or only clean completion?
+   (Runner already models `whenPlanRunSucceeded`; wire it through.)
