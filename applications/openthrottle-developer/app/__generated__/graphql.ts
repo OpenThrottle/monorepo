@@ -2398,6 +2398,8 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
+  /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
+  tagActionRule?: Maybe<TagActionRuleObject>;
   /** The authenticated user's tag→action rules, oldest first. */
   tagActionRules: Array<TagActionRuleObject>;
   /** Get a task by ID */
@@ -2662,6 +2664,10 @@ export type QuerySkillAvailabilityArgs = {
 
 export type QuerySkillAvailabilityRuleSetArgs = {
   projectId: Scalars['ID']['input'];
+};
+
+export type QueryTagActionRuleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryTaskArgs = {
@@ -3425,6 +3431,8 @@ export type TagActionRuleObject = {
   status?: Maybe<Scalars['String']['output']>;
   /** Tags that must ALL be present in the plan's effective tag set; empty matches every plan. */
   tagAll: Array<Scalars['String']['output']>;
+  /** Human-readable label for the rule (required, non-empty). */
+  title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
 };
@@ -3726,6 +3734,8 @@ export type UpsertTagActionRuleInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   /** Tags that must ALL be present (AND); empty matches every plan. */
   tagAll?: Array<Scalars['String']['input']>;
+  /** Human-readable label for the rule (required, non-empty). */
+  title: Scalars['String']['input'];
 };
 
 export type UserObject = {
@@ -6184,6 +6194,7 @@ export type TagActionRuleRowFragment = {
   projectId?: string | null;
   status?: string | null;
   tagAll: Array<string>;
+  title: string;
   updatedAt: any;
   userId: string;
 };
@@ -6203,9 +6214,53 @@ export type RulesIndexLoaderQuery = {
     projectId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
+    title: string;
     updatedAt: any;
     userId: string;
   }>;
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
+  skillAvailability: {
+    __typename?: 'SkillAvailabilityResolutionResult';
+    totalCount: number;
+    warnings: Array<string>;
+    skills: Array<{
+      __typename?: 'SkillAvailabilityResolvedSkillObject';
+      effectiveDisableModelInvocation: boolean;
+      slug: string;
+    }>;
+  };
+};
+
+export type RuleEditLoaderQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type RuleEditLoaderQuery = {
+  __typename?: 'Query';
+  tagActionRule?: {
+    __typename?: 'TagActionRuleObject';
+    actionPayloadJson: string;
+    actionType: string;
+    createdAt: any;
+    enabled: boolean;
+    environment?: string | null;
+    id: string;
+    projectId?: string | null;
+    status?: string | null;
+    tagAll: Array<string>;
+    title: string;
+    updatedAt: any;
+    userId: string;
+  } | null;
   skillTagVocabulary: {
     __typename?: 'SkillTagVocabularyResult';
     totalCount: number;
@@ -6245,6 +6300,7 @@ export type RulesUpsertTagActionRuleMutation = {
     projectId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
+    title: string;
     updatedAt: any;
     userId: string;
   };
@@ -7834,6 +7890,7 @@ export const TagActionRuleRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
@@ -14457,6 +14514,7 @@ export const RulesIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
@@ -14467,6 +14525,132 @@ export const RulesIndexLoaderDocument = {
   RulesIndexLoaderQuery,
   RulesIndexLoaderQueryVariables
 >;
+export const RuleEditLoaderDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'RuleEditLoader' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tagActionRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TagActionRuleRow' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillAvailability' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'effectiveDisableModelInvocation',
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TagActionRuleRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRuleObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actionPayloadJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'actionType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RuleEditLoaderQuery, RuleEditLoaderQueryVariables>;
 export const RulesUpsertTagActionRuleDocument = {
   kind: 'Document',
   definitions: [
@@ -14538,6 +14722,7 @@ export const RulesUpsertTagActionRuleDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],

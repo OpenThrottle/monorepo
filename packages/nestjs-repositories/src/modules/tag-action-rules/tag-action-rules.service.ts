@@ -63,6 +63,14 @@ export class TagActionRulesService {
   }
 
   /**
+   * @description Finds one of the user's rules by id; null when absent or owned
+   * by someone else (so callers can 404 without leaking existence).
+   */
+  async findForUser(userId: string, id: string): Promise<TagActionRule | null> {
+    return this.repository.findOne({ where: { id, userId } });
+  }
+
+  /**
    * @description Lists the user's ENABLED rules for evaluation, oldest first.
    */
   async listEnabledForUser(userId: string): Promise<TagActionRule[]> {

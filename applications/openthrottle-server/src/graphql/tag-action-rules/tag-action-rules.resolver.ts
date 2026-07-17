@@ -89,6 +89,20 @@ export class TagActionRulesResolver {
     return rules.map(toRuleObject);
   }
 
+  @Query(() => TagActionRuleObject, {
+    description: `A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else.`,
+    nullable: true,
+  })
+  @Permissions(PERMISSIONS.PLANS_READ)
+  async tagActionRule(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<TagActionRuleObject | null> {
+    const userId = requireUserPrincipal(principal);
+    const rule = await this.tagActionRulesService.findForUser(userId, id);
+    return rule == null ? null : toRuleObject(rule);
+  }
+
   @Query(() => [RuleApplicationObject], {
     description: `The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications.`,
   })

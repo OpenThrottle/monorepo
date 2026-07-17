@@ -2576,6 +2576,11 @@ type Query {
   tagActionRules: [TagActionRuleObject!]!
 
   """
+  A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else.
+  """
+  tagActionRule(id: ID!): TagActionRuleObject
+
+  """
   The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications.
   """
   ruleApplications(planId: ID!): [RuleApplicationObject!]!
