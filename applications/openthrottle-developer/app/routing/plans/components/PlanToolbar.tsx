@@ -15,6 +15,7 @@ import {
 import {
   CheckCircle,
   ChevronDown,
+  Gauge,
   PencilIcon,
   PlayCircle,
   PlusCircle,
@@ -79,6 +80,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   } = props;
 
   // Hooks
+  const fetcherEvaluateRules = useFetcher<typeof action>();
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
   const runPlanWasBusy = React.useRef(false);
@@ -101,6 +103,15 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     'runPlanError' in runPlanData &&
     typeof runPlanData.runPlanError === 'string'
       ? runPlanData.runPlanError
+      : undefined;
+
+  const evaluateRulesData = fetcherEvaluateRules.data;
+  const evaluateRulesError =
+    evaluateRulesData != null &&
+    typeof evaluateRulesData === 'object' &&
+    'evaluatePlanRulesError' in evaluateRulesData &&
+    typeof evaluateRulesData.evaluatePlanRulesError === 'string'
+      ? evaluateRulesData.evaluatePlanRulesError
       : undefined;
 
   const getRunButtonLabel = (): string => {
@@ -178,6 +189,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     id: 'run-plan',
   });
 
+  useActionToast(fetcherEvaluateRules.data, {
+    active: fetcherEvaluateRules.state !== 'idle',
+    error: () => evaluateRulesError,
+    id: 'evaluate-plan-rules',
+    success: 'Rules evaluation queued',
+  });
+
   // 🔌 Short Circuit
 
   return (
@@ -250,6 +268,30 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 ? (workflowRunBlockedReason ??
                   'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
                 : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <fetcherEvaluateRules.Form method="post">
+              <Input name="intent" type="hidden" value="evaluatePlanRules" />
+              <Input name="planId" type="hidden" value={planId} />
+              <Button
+                disabled={fetcherEvaluateRules.state !== 'idle'}
+                size="sm"
+                type="submit"
+                variant="ghost"
+              >
+                <Gauge />
+                {fetcherEvaluateRules.state !== 'idle'
+                  ? 'Evaluating…'
+                  : 'Evaluate rules'}
+              </Button>
+            </fetcherEvaluateRules.Form>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs" side="top">
+            Queue a tag→action rules evaluation pass for this plan (recomputes
+            skills-via-rules; results appear in the rule applications ledger).
           </TooltipContent>
         </Tooltip>
 

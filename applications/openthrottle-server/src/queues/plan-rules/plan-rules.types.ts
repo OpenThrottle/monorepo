@@ -9,6 +9,7 @@ import type { Job } from 'bullmq';
  * on the job) — the evaluation itself is always a full pass over the plan.
  */
 export const PLAN_RULES_TRIGGER_KINDS = {
+  MANUAL: 'manual',
   PLAN_CREATED: 'plan-created',
   STATUS_CHANGED: 'status-changed',
   TAG_CHANGED: 'tag-changed',

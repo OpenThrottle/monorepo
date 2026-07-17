@@ -863,6 +863,16 @@ export type EnqueuePlanRunResultObject = {
   queueTotal: Scalars['Int']['output'];
 };
 
+export type EvaluatePlanRulesResultObject = {
+  __typename?: 'EvaluatePlanRulesResultObject';
+  /** True when a full plan-rules evaluation pass was enqueued. */
+  enqueued: Scalars['Boolean']['output'];
+  /** Plan id that was enqueued for evaluation. */
+  planId: Scalars['String']['output'];
+  /** Trigger kind recorded on the enqueued pass (always "manual" for this mutation). */
+  triggerKind: Scalars['String']['output'];
+};
+
 export type GeneratorDetailObject = {
   __typename?: 'GeneratorDetailObject';
   description: Scalars['String']['output'];
@@ -1314,6 +1324,8 @@ export type Mutation = {
   enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
   /** Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
+  /** Manually enqueue a full tag→action rules evaluation pass for a plan. Fire-and-forget: the pass runs async on the plan-rules:evaluate queue and results land in the rule_applications ledger (read via planRuleApplications). The ack only confirms the pass was enqueued. */
+  evaluatePlanRules: EvaluatePlanRulesResultObject;
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
@@ -1598,6 +1610,10 @@ export type MutationEnqueuePlanRalphOrchestratorArgs = {
 
 export type MutationEnqueuePlanRunArgs = {
   input: EnqueuePlanRunInput;
+};
+
+export type MutationEvaluatePlanRulesArgs = {
+  planId: Scalars['ID']['input'];
 };
 
 export type MutationHardDeleteCustomPromptArgs = {
@@ -4823,6 +4839,20 @@ export type PlanDetailEnqueuePlanRunMutation = {
     planId: string;
     queuePosition: number;
     queueTotal: number;
+  };
+};
+
+export type PlanDetailEvaluatePlanRulesMutationVariables = Exact<{
+  planId: Scalars['ID']['input'];
+}>;
+
+export type PlanDetailEvaluatePlanRulesMutation = {
+  __typename?: 'Mutation';
+  evaluatePlanRules: {
+    __typename?: 'EvaluatePlanRulesResultObject';
+    enqueued: boolean;
+    planId: string;
+    triggerKind: string;
   };
 };
 
@@ -10293,6 +10323,59 @@ export const PlanDetailEnqueuePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailEnqueuePlanRunMutationVariables
+>;
+export const PlanDetailEvaluatePlanRulesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailEvaluatePlanRules' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'evaluatePlanRules' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'planId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueued' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'triggerKind' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailEvaluatePlanRulesMutation,
+  PlanDetailEvaluatePlanRulesMutationVariables
 >;
 export const PlanDetailCancelPlanRunDocument = {
   kind: 'Document',

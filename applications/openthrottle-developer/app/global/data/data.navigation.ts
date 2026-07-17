@@ -139,6 +139,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         icon: MessageCircleCode,
         to: '/',
       },
+      {
+        children: 'Rules',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        end: true,
+        icon: MessageCircleCode,
+        to: '/rules',
+      },
     ],
     Settings: [
       {
