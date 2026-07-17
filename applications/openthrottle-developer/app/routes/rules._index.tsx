@@ -8,7 +8,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher, useNavigate } from 'react-router';
+import { Link, useFetcher } from 'react-router';
 import { WandSparklesIcon } from 'lucide-react';
 import {
   RulesDeleteTagActionRuleDocument,
@@ -99,7 +99,6 @@ export default function Component(
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
-  const navigate = useNavigate();
 
   // Setup
   const pending = fetcher.state !== 'idle';
@@ -118,10 +117,6 @@ export default function Component(
 
   const handleDelete = (id: string): void => {
     fetcher.submit({ id, intent: 'deleteRule' }, { method: 'post' });
-  };
-
-  const handleEdit = (rule: TagActionRuleRowData): void => {
-    void navigate(`/rules/${rule.id}/edit`);
   };
 
   // Markup
@@ -147,7 +142,6 @@ export default function Component(
 
       <RulesTable
         onDelete={handleDelete}
-        onEdit={handleEdit}
         onToggleEnabled={handleToggleEnabled}
         pending={pending}
         rules={rules}
