@@ -18,6 +18,11 @@ export class UpsertTagActionRuleInput {
   })
   projectId?: string | null;
 
+  @Field(() => String, {
+    description: `Human-readable label for the rule (required, non-empty).`,
+  })
+  title!: string;
+
   @Field(() => [String], {
     defaultValue: [],
     description: `Tags that must ALL be present (AND); empty matches every plan.`,

@@ -32,6 +32,7 @@ export interface UpsertTagActionRuleInput {
   readonly projectId?: string | null;
   readonly status?: string | null;
   readonly tagAll?: readonly string[];
+  readonly title: string;
 }
 
 @Injectable()
@@ -62,6 +63,14 @@ export class TagActionRulesService {
   }
 
   /**
+   * @description Finds one of the user's rules by id; null when absent or owned
+   * by someone else (so callers can 404 without leaking existence).
+   */
+  async findForUser(userId: string, id: string): Promise<TagActionRule | null> {
+    return this.repository.findOne({ where: { id, userId } });
+  }
+
+  /**
    * @description Lists the user's ENABLED rules for evaluation, oldest first.
    */
   async listEnabledForUser(userId: string): Promise<TagActionRule[]> {
@@ -84,6 +93,11 @@ export class TagActionRulesService {
       throw new BadRequestException(
         `Unknown action type "${input.actionType}": expected "inject-task" or "availability-exception".`,
       );
+    }
+
+    const title = input.title?.trim() ?? '';
+    if (title === '') {
+      throw new BadRequestException('Rule title must not be empty.');
     }
 
     let parsedPayload: unknown;
@@ -121,6 +135,7 @@ export class TagActionRulesService {
       existing.projectId = input.projectId ?? null;
       existing.status = input.status ?? null;
       existing.tagAll = [...(input.tagAll ?? [])];
+      existing.title = title;
       return this.repository.save(existing);
     }
 
@@ -132,6 +147,7 @@ export class TagActionRulesService {
       projectId: input.projectId ?? null,
       status: input.status ?? null,
       tagAll: [...(input.tagAll ?? [])],
+      title,
       userId,
     });
     return this.repository.save(entity);

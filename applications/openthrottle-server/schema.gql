@@ -1967,6 +1967,9 @@ type TagActionRuleObject {
   """Optional project scope; null matches every project."""
   projectId: ID
 
+  """Human-readable label for the rule (required, non-empty)."""
+  title: String!
+
   """
   Tags that must ALL be present in the plan's effective tag set; empty matches every plan.
   """
@@ -2571,6 +2574,11 @@ type Query {
 
   """The authenticated user's tag→action rules, oldest first."""
   tagActionRules: [TagActionRuleObject!]!
+
+  """
+  A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else.
+  """
+  tagActionRule(id: ID!): TagActionRuleObject
 
   """
   The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications.
@@ -4090,6 +4098,9 @@ input UpsertTagActionRuleInput {
 
   """Optional project scope; null matches every project."""
   projectId: ID
+
+  """Human-readable label for the rule (required, non-empty)."""
+  title: String!
 
   """Tags that must ALL be present (AND); empty matches every plan."""
   tagAll: [String!]! = []

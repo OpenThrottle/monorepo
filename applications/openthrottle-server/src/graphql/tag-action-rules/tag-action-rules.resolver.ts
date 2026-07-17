@@ -50,6 +50,7 @@ const toRuleObject = (rule: TagActionRule): TagActionRuleObject => ({
   projectId: rule.projectId,
   status: rule.status,
   tagAll: rule.tagAll,
+  title: rule.title,
   updatedAt: rule.updatedAt,
   userId: rule.userId,
 });
@@ -86,6 +87,20 @@ export class TagActionRulesResolver {
     const userId = requireUserPrincipal(principal);
     const rules = await this.tagActionRulesService.listForUser(userId);
     return rules.map(toRuleObject);
+  }
+
+  @Query(() => TagActionRuleObject, {
+    description: `A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else.`,
+    nullable: true,
+  })
+  @Permissions(PERMISSIONS.PLANS_READ)
+  async tagActionRule(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<TagActionRuleObject | null> {
+    const userId = requireUserPrincipal(principal);
+    const rule = await this.tagActionRulesService.findForUser(userId, id);
+    return rule == null ? null : toRuleObject(rule);
   }
 
   @Query(() => [RuleApplicationObject], {
@@ -128,6 +143,7 @@ export class TagActionRulesResolver {
       projectId: input.projectId ?? null,
       status: input.status ?? null,
       tagAll: input.tagAll ?? [],
+      title: input.title,
     });
     return toRuleObject(rule);
   }

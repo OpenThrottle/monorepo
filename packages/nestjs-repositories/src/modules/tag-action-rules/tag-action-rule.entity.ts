@@ -24,6 +24,7 @@ export interface TagActionRuleData {
   readonly projectId: string | null;
   readonly status: string | null;
   readonly tagAll: string[];
+  readonly title: string;
   readonly userId: string;
 }
 
@@ -45,6 +46,9 @@ export class TagActionRule {
   @ManyToOne(() => Project, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'project_id' })
   project?: Project | null;
+
+  @Column({ name: 'title', type: 'text' })
+  title!: string;
 
   @Column({ array: true, default: '{}', name: 'tag_all', type: 'text' })
   tagAll!: string[];
