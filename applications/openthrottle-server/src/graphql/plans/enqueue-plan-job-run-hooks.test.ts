@@ -110,6 +110,59 @@ describe('resolveJobRunHooksForEnqueue', () => {
       resolveJobRunHooksForEnqueue({ planHooks: { hooks: [] } }),
     ).toBeUndefined();
   });
+
+  it('unions materialized hook entries with config hooks', () => {
+    const resolved = resolveJobRunHooksForEnqueue({
+      materializedHookEntries: [
+        {
+          kind: 'skill',
+          phase: 'afterAll',
+          skillPath: '.agents/skills/validate-plan/SKILL.md',
+        },
+      ],
+      planHooks: {
+        hooks: [
+          {
+            kind: 'prompt_profile',
+            phase: 'before_run',
+            prompt: '/agents/ralph',
+            promptDelivery: 'named',
+          },
+        ],
+      },
+    });
+    expect(resolved?.hooks).toHaveLength(2);
+    expect(resolved?.hooks.map((h) => h.phase).sort()).toEqual([
+      'afterAll',
+      'beforeAll',
+    ]);
+  });
+
+  it('dedupes a skill hook present in both config and materialized (phase+skillPath)', () => {
+    const skillPath = '.agents/skills/validate-plan/SKILL.md';
+    const resolved = resolveJobRunHooksForEnqueue({
+      materializedHookEntries: [
+        { kind: 'skill', phase: 'afterAll', skillPath },
+      ],
+      planHooks: { hooks: [{ kind: 'skill', phase: 'after_run', skillPath }] },
+    });
+    expect(resolved?.hooks).toHaveLength(1);
+  });
+
+  it('returns materialized-only entries when no config hooks', () => {
+    const resolved = resolveJobRunHooksForEnqueue({
+      materializedHookEntries: [
+        {
+          kind: 'skill',
+          phase: 'beforeAll',
+          skillPath: '.agents/skills/validate-plan/SKILL.md',
+        },
+      ],
+      planHooks: { hooks: [] },
+    });
+    expect(resolved?.hooks).toHaveLength(1);
+    expect(resolved?.hooks[0]?.phase).toBe('beforeAll');
+  });
 });
 
 describe('jobRunHooksForJobPayload', () => {

@@ -6,6 +6,7 @@ import {
   PlansService,
   PlanRunsService,
   Task,
+  TasksService,
   type Plan,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -100,11 +101,17 @@ describe('PlanEnqueueService', () => {
     getRepository: vi.fn().mockReturnValue(repo),
   });
 
+  const mockGetPlanHooks = vi.fn().mockResolvedValue({ after: [], before: [] });
+  const mockTasksService = createMock<TasksService>({
+    getPlanHooks: mockGetPlanHooks,
+  });
+
   const service = new PlanEnqueueService(
     mockNotificationsService,
     mockPlanRunsService,
     mockPlansService,
     mockQueuesService,
+    mockTasksService,
     mockPlansQueue,
   );
 
