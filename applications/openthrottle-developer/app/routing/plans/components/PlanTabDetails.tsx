@@ -4,24 +4,17 @@ import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
-import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   parseWorkflowRunIterationTimeoutSeconds,
-  validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
-  jobRunHooksBlocked?: boolean;
-  jobRunHooksBlockedReason?: string;
-  jobRunHooksJson?: string;
-  ralphTuningJson: string;
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
   workflowInput: WorkflowRalphRunOptionsInput;
   workflowTimeout: string;
@@ -33,10 +26,6 @@ export const PlanTabDetails = (
 ): React.ReactElement | null => {
   const {
     fullscreen,
-    jobRunHooksBlocked = false,
-    jobRunHooksBlockedReason,
-    jobRunHooksJson = '',
-    ralphTuningJson,
     // setFullscreen,
     workingDirectory,
     workflowInput,
@@ -58,22 +47,6 @@ export const PlanTabDetails = (
     return formatWorkflowRalphCommandLine(buildWorkflowRalphOptionArgs(merged));
   }, [workflowInput, workflowTimeout]);
 
-  const workflowValidation = validateWorkflowRalphRunOptionsState(
-    workflowInput,
-    workflowTimeout,
-    { requireCliTargetIds: true },
-  );
-  const workspacePathError = validateWorkspacePathClient(
-    workingDirectory ?? '',
-  );
-  const workflowRunBlocked =
-    !workflowValidation.ok || workspacePathError != null || jobRunHooksBlocked;
-  const workflowRunBlockedReason = jobRunHooksBlocked
-    ? (jobRunHooksBlockedReason ??
-      'Fix job run lifecycle hooks in Configuration.')
-    : !workflowValidation.ok
-      ? workflowValidation.issues[0]?.message
-      : workspacePathError;
   const hasSummary = plan?.summary != null && plan.summary !== '';
   const requirements = React.useMemo(() => {
     return tasks
@@ -95,19 +68,6 @@ export const PlanTabDetails = (
   return (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
-        <PlanToolbar
-          className="bg-card border-card-border rounded-lg border p-4"
-          // className="p-4"
-          jobRunHooksJson={jobRunHooksJson}
-          planId={plan.id}
-          planStatus={plan.status}
-          planTitle={plan.title ?? 'Untitled'}
-          ralphTuningJson={ralphTuningJson}
-          workflowRunBlocked={workflowRunBlocked}
-          workflowRunBlockedReason={workflowRunBlockedReason}
-          workingDirectory={workingDirectory}
-        />
-
         <div
           className={clsx('bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,

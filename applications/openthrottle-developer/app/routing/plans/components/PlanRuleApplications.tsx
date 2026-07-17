@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Badge, Card } from '@openthrottle/react-router-shadcn';
+import { Badge } from '@openthrottle/react-router-shadcn';
 
 export interface PlanRuleApplicationRow {
   createdAt: string;
@@ -64,8 +64,7 @@ export const PlanRuleApplications = (
   }
 
   return (
-    <Card className="p-4" data-testid="PlanRuleApplications">
-      <h3 className="mb-2 text-sm font-semibold">Rule applications</h3>
+    <div data-testid="PlanRuleApplications">
       <ul className="flex flex-col gap-2">
         {ordered.map((application) => {
           const details = renderDetails(application.detailsJson);
@@ -95,6 +94,6 @@ export const PlanRuleApplications = (
           );
         })}
       </ul>
-    </Card>
+    </div>
   );
 };

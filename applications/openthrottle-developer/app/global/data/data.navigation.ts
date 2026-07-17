@@ -33,14 +33,51 @@ import {
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
 export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
   {
-    Workspace: [
+    Agents: [
       {
+        beta: true,
         children: 'Chats',
         disabled: false, // 🔴 🟠 🟡 🟢
         end: true,
         icon: MessageCircleCode,
         to: '/',
       },
+      {
+        beta: true,
+        children: 'Personas',
+        disabled: false, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/personas',
+      },
+      {
+        beta: true,
+        children: 'Prompts',
+        disabled: false, // 🔴
+        icon: BrainIcon,
+        to: '/prompts',
+      },
+      {
+        beta: false,
+        children: 'Skills',
+        disabled: false, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/skills',
+      },
+      {
+        beta: false,
+        children: 'Rules',
+        disabled: false, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/rules',
+      },
+      {
+        children: 'Usage',
+        disabled: false, // 🔴 🟠
+        icon: ChartAreaIcon,
+        to: '/usage',
+      },
+    ],
+    Workspace: [
       {
         children: 'Dashboard',
         disabled: false, // 🔴 🟠 🟡 🟢
@@ -95,59 +132,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/search',
       },
     ],
-    Agents: [
-      {
-        beta: true,
-        children: 'Personas',
-        disabled: false, // 🔴
-        icon: BrainCircuitIcon,
-        to: '/personas',
-      },
-      {
-        beta: true,
-        children: 'Prompts',
-        disabled: false, // 🔴
-        icon: BrainIcon,
-        to: '/prompts',
-      },
-      {
-        beta: false,
-        children: 'Skills',
-        disabled: false, // 🔴
-        icon: BrainCircuitIcon,
-        to: '/skills',
-      },
-      {
-        beta: false,
-        children: 'Rules',
-        disabled: false, // 🔴
-        icon: BrainCircuitIcon,
-        to: '/rules',
-      },
-      {
-        children: 'Usage',
-        disabled: false, // 🔴 🟠
-        icon: ChartAreaIcon,
-        to: '/usage',
-      },
-    ],
     Organization: [
-      {
-        children: 'Chats',
-        disabled: false, // 🔴 🟠 🟡 🟢
-        end: true,
-        icon: MessageCircleCode,
-        to: '/',
-      },
-      {
-        children: 'Rules',
-        disabled: false, // 🔴 🟠 🟡 🟢
-        end: true,
-        icon: MessageCircleCode,
-        to: '/rules',
-      },
-    ],
-    Settings: [
       {
         children: 'Application',
         disabled: false, // 🔴 🟠 🟡 🟢
@@ -212,6 +197,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/notifications',
       },
       {
+        beta: true,
         children: 'Profile',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: UserCircleIcon,

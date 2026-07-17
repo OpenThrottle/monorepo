@@ -86,7 +86,7 @@ export const KillPlanRunButton = (
           size={size}
           title={triggerTitle}
           type="button"
-          variant="outline"
+          variant="destructive"
         >
           <StopCircle aria-hidden={true} className="size-3.5 shrink-0" />
           {isSubmitting ? 'Stopping…' : 'Kill run'}
