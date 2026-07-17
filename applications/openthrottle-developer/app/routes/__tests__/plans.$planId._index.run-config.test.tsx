@@ -73,8 +73,10 @@ const storedRunConfigJson = JSON.stringify({
 
 const mockPlan = {
   __typename: 'PlanObject' as const,
+  afterHooks: [],
   assignee: 'visormatt',
   author: 'visormatt',
+  beforeHooks: [],
   category: 'feature',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Plan description',

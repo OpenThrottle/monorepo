@@ -14,6 +14,7 @@ import {
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
@@ -47,7 +48,7 @@ export const PlanTabTasks = (): React.ReactElement => {
   );
   const { tasks } = usePlanDetailRouteData();
   const sortedTasks = React.useMemo(
-    () => sortPlanTasksByListOrder(tasks),
+    () => sortPlanTasksByListOrder(filterOutHookTasks(tasks)),
     [tasks],
   );
   const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);

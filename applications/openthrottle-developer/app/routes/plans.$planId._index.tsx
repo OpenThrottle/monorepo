@@ -21,13 +21,17 @@ import {
   TerminalSquareIcon,
 } from 'lucide-react';
 import {
+  AddHookInputSchema,
+  DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
   RalphPlanRunTuningInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import {
+  PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
+  PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailEvaluatePlanRulesDocument,
   PlanDetailIndexLoaderDocument,
@@ -477,6 +481,65 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { planTagError: message };
+    }
+  }
+
+  if (intent === 'addHook') {
+    const optionalField = (key: string): string | undefined => {
+      const value = formData.get(key);
+      return typeof value === 'string' && value.trim() !== ''
+        ? value.trim()
+        : undefined;
+    };
+
+    try {
+      const input = AddHookInputSchema().parse({
+        anchorTaskId: optionalField('anchorTaskId'),
+        planId,
+        role: formData.get('role'),
+        scope: optionalField('scope'),
+        skillSlug: optionalField('skillSlug'),
+        source: formData.get('source'),
+        title: optionalField('title'),
+      });
+
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailAddHookDocument,
+        { input },
+      );
+
+      if (!result.addHook) {
+        return { addHookError: 'Failed to add hook.' };
+      }
+
+      return { addHook: result.addHook };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { addHookError: message };
+    }
+  }
+
+  if (intent === 'detachHook') {
+    try {
+      const input = DetachHookInputSchema().parse({
+        hookTaskId: formData.get('hookTaskId'),
+      });
+
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailDetachHookDocument,
+        { input },
+      );
+
+      if (!result.detachHook) {
+        return { detachHookError: 'Failed to remove hook.' };
+      }
+
+      return { detachHook: result.detachHook };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { detachHookError: message };
     }
   }
 

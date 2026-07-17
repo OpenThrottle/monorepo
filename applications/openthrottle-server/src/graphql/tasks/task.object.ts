@@ -26,8 +26,32 @@ export class TaskObject {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
+  @Field(() => String, {
+    description: `Lifecycle-hook role: 'before' or 'after'. NULL for a regular (non-hook) task.`,
+    nullable: true,
+  })
+  hookRole!: string | null;
+
+  @Field(() => String, {
+    description: `Plan-level hook scope: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach). NULL for regular tasks and task-level hooks.`,
+    nullable: true,
+  })
+  hookScope!: string | null;
+
+  @Field(() => String, {
+    description: `Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner). NULL for regular tasks.`,
+    nullable: true,
+  })
+  hookSource!: string | null;
+
   @Field(() => String)
   id!: string;
+
+  @Field(() => String, {
+    description: `Parent task this hook is anchored to (task-level before/after). NULL for regular tasks and plan-level hooks.`,
+    nullable: true,
+  })
+  parentTaskId!: string | null;
 
   @Field(() => PlanObject, {
     description: `Resolved plan entity when planId is set`,
@@ -58,6 +82,12 @@ export class TaskObject {
     description: `JSON string of requirements array`,
   })
   requirementsJson!: string;
+
+  @Field(() => String, {
+    description: `Skill slug when hookSource is 'skill'; NULL otherwise.`,
+    nullable: true,
+  })
+  skillSlug!: string | null;
 
   @Field(() => Int, {
     description: `Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId.`,

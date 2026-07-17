@@ -6,6 +6,7 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import { useFetcher, useRevalidator } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanTaskCard';
+import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
@@ -40,16 +41,20 @@ export const PlanTasksBoard = (
   const fetcher = useFetcher<PlanDetailActionData>();
   const revalidator = useRevalidator();
 
+  // Materialized hook-tasks are surfaced via the nested hooks section, not the
+  // board — keep them out of the columns.
+  const regularTasks = React.useMemo(() => filterOutHookTasks(tasks), [tasks]);
+
   const [displayTasks, setDisplayTasks] =
-    React.useState<PlanTaskRowFragment[]>(tasks);
+    React.useState<PlanTaskRowFragment[]>(regularTasks);
   const [announcement, setAnnouncement] = React.useState('');
 
-  const tasksRef = React.useRef(tasks);
-  tasksRef.current = tasks;
+  const tasksRef = React.useRef(regularTasks);
+  tasksRef.current = regularTasks;
 
   React.useEffect(() => {
-    setDisplayTasks(tasks);
-  }, [tasks]);
+    setDisplayTasks(regularTasks);
+  }, [regularTasks]);
 
   React.useEffect(() => {
     if (fetcher.state !== 'idle' || fetcher.data == null) return;
