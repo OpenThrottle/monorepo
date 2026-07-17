@@ -29,7 +29,10 @@ describe('filterOutHookTasks', () => {
   });
 
   test('returns all tasks when none are hooks', () => {
-    const tasks: { id: string }[] = [{ id: 'a' }, { id: 'b' }];
+    const tasks = [
+      { hookRole: null, id: 'a' },
+      { hookRole: null, id: 'b' },
+    ];
 
     expect(filterOutHookTasks(tasks)).toHaveLength(2);
   });
