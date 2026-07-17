@@ -32,6 +32,7 @@ export interface UpsertTagActionRuleInput {
   readonly projectId?: string | null;
   readonly status?: string | null;
   readonly tagAll?: readonly string[];
+  readonly title: string;
 }
 
 @Injectable()
@@ -86,6 +87,11 @@ export class TagActionRulesService {
       );
     }
 
+    const title = input.title?.trim() ?? '';
+    if (title === '') {
+      throw new BadRequestException('Rule title must not be empty.');
+    }
+
     let parsedPayload: unknown;
     try {
       parsedPayload = parseTagActionPayload(
@@ -121,6 +127,7 @@ export class TagActionRulesService {
       existing.projectId = input.projectId ?? null;
       existing.status = input.status ?? null;
       existing.tagAll = [...(input.tagAll ?? [])];
+      existing.title = title;
       return this.repository.save(existing);
     }
 
@@ -132,6 +139,7 @@ export class TagActionRulesService {
       projectId: input.projectId ?? null,
       status: input.status ?? null,
       tagAll: [...(input.tagAll ?? [])],
+      title,
       userId,
     });
     return this.repository.save(entity);
