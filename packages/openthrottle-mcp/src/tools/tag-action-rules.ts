@@ -169,7 +169,7 @@ export async function listRuleApplicationsToolHandler(
 export const upsertTagActionRuleToolParameters =
   UpsertTagActionRuleInputSchema();
 
-export const upsertTagActionRuleToolDescription = `Create or update a tag→action rule via the upsertTagActionRule GraphQL mutation. actionPayloadJson is a JSON string validated per actionType server-side (inject-task: {skillSlug, placement?, titleTemplate?, descriptionTemplate?}; availability-exception: {tagAllow?, tagDeny?, slugAllow?, slugDeny?}). Requires a USER token (rules are user-owned in v1).`;
+export const upsertTagActionRuleToolDescription = `Create or update a tag→action rule via the upsertTagActionRule GraphQL mutation. actionPayloadJson is a JSON string validated per actionType server-side (inject-task: {skillSlug, placement?, anchor?, titleTemplate?, descriptionTemplate?}; placement is 'first'|'last'|'before'|'after' (default 'first') — 'before'/'after' require an anchor {taskId|skillSlug|titleMatch} naming the task to land beside; availability-exception: {tagAllow?, tagDeny?, slugAllow?, slugDeny?}). Requires a USER token (rules are user-owned in v1).`;
 
 export async function upsertTagActionRuleToolHandler(
   args: z.infer<typeof upsertTagActionRuleToolParameters>,

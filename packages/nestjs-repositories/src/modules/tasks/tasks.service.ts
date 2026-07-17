@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { In, Not, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Plan } from '../plans/plan.entity';
 import { PlansService } from '../plans/plans.service';
-import { Task } from './task.entity';
+import { Task, type TaskHookScope, type TaskHookSource } from './task.entity';
 
 /** Gap between auto-assigned sortOrder values within a plan. */
 export const TASK_SORT_ORDER_GAP = 1000;
+
+/** Side of an anchor a hook/task is allocated on. */
+export type HookAdjacencySide = 'after' | 'before';
 
 /** Canonical order for plan-scoped task list queries. */
 export const PLAN_TASK_LIST_ORDER = {
@@ -37,6 +40,25 @@ export interface CreateTaskBatchItem {
   status: string;
   summary: string | null;
   title: string;
+}
+
+/**
+ * @description Attach-a-hook input. `source='skill'` requires `skillSlug`;
+ * `source='template'` uses `title`/`description`. `scope` is honored only for
+ * plan-level hooks (anchorTaskId omitted) and defaults to 'once'.
+ */
+export interface HookTaskInput {
+  readonly description?: string | null;
+  readonly scope?: TaskHookScope;
+  readonly skillSlug?: string | null;
+  readonly source: TaskHookSource;
+  readonly title?: string | null;
+}
+
+/** A parent (plan or task) with its before/after hook tasks (one level). */
+export interface GroupedHooks {
+  readonly after: Task[];
+  readonly before: Task[];
 }
 
 @Injectable()
@@ -71,6 +93,324 @@ export class TasksService {
       result?.max != null && result.max !== '' ? Number(result.max) : null;
 
     return max != null ? max + TASK_SORT_ORDER_GAP : TASK_SORT_ORDER_GAP;
+  }
+
+  /**
+   * @description Midpoint sort_order beside an anchor on the given side, or null
+   * when the integer gap to the neighbor on that side is exhausted (|gap| <= 1)
+   * so the caller must {@link rebalancePlanSortOrders} first. When the anchor is
+   * the plan edge on that side, steps out by {@link TASK_SORT_ORDER_GAP}. Keeps
+   * before-hooks immediately before their anchor and after-hooks immediately
+   * after, so a before/anchor/after group stays adjacent.
+   */
+  async midpointBesideAnchor(
+    planId: string,
+    anchorSortOrder: number,
+    side: HookAdjacencySide,
+    repository: Repository<Task> = this.taskRepository,
+  ): Promise<number | null> {
+    const base = repository
+      .createQueryBuilder('task')
+      .select('task.sortOrder', 'value')
+      .where('task.planId = :planId', { planId });
+
+    if (side === 'before') {
+      const neighbor = await base
+        .clone()
+        .andWhere('task.sortOrder < :anchor', { anchor: anchorSortOrder })
+        .orderBy('task.sortOrder', 'DESC')
+        .getRawOne<{ value: string }>();
+      if (neighbor?.value == null) {
+        return anchorSortOrder - TASK_SORT_ORDER_GAP;
+      }
+      const lo = Number(neighbor.value);
+      if (anchorSortOrder - lo <= 1) return null;
+      return Math.floor((lo + anchorSortOrder) / 2);
+    }
+
+    const neighbor = await base
+      .clone()
+      .andWhere('task.sortOrder > :anchor', { anchor: anchorSortOrder })
+      .orderBy('task.sortOrder', 'ASC')
+      .getRawOne<{ value: string }>();
+    if (neighbor?.value == null) {
+      return anchorSortOrder + TASK_SORT_ORDER_GAP;
+    }
+    const hi = Number(neighbor.value);
+    if (hi - anchorSortOrder <= 1) return null;
+    return Math.floor((anchorSortOrder + hi) / 2);
+  }
+
+  /**
+   * @description Renumbers every task in a plan onto a {@link TASK_SORT_ORDER_GAP}
+   * stride (1000, 2000, …) in canonical order (sort_order ASC, created_at ASC),
+   * reclaiming integer room for midpoint insertion. Two bulk passes in one
+   * transaction — park into a disjoint negative band, then restamp — avoid
+   * transient UNIQUE(plan_id, sort_order) collisions. Optionally reuses a caller
+   * manager to participate in an outer transaction.
+   */
+  async rebalancePlanSortOrders(
+    planId: string,
+    manager = this.taskRepository.manager,
+  ): Promise<void> {
+    const run = async (tx: typeof manager): Promise<void> => {
+      await tx.query(
+        `UPDATE tasks AS t
+         SET sort_order = -ranked.rn
+         FROM (
+           SELECT id, ROW_NUMBER() OVER (
+             ORDER BY sort_order ASC, created_at ASC
+           ) AS rn
+           FROM tasks WHERE plan_id = $1
+         ) AS ranked
+         WHERE t.id = ranked.id`,
+        [planId],
+      );
+      await tx.query(
+        `UPDATE tasks AS t
+         SET sort_order = ranked.rn * $2
+         FROM (
+           SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order DESC) AS rn
+           FROM tasks WHERE plan_id = $1
+         ) AS ranked
+         WHERE t.id = ranked.id`,
+        [planId, TASK_SORT_ORDER_GAP],
+      );
+    };
+    return manager === this.taskRepository.manager
+      ? this.taskRepository.manager.transaction(run)
+      : run(manager);
+  }
+
+  /**
+   * @description Allocates a sort_order immediately before/after an anchor task,
+   * rebalancing the plan and retrying once when the integer gap is exhausted.
+   * Throws when the anchor is not in the plan or no slot exists post-rebalance.
+   * The read + rebalance run under a plan row-lock so concurrent allocations
+   * serialize; the returned slot is intended for an insert within the same flow.
+   */
+  async allocateSortOrderBesideAnchor(
+    planId: string,
+    anchorTaskId: string,
+    side: HookAdjacencySide,
+  ): Promise<number> {
+    return this.taskRepository.manager.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
+      await manager
+        .getRepository(Plan)
+        .createQueryBuilder('plan')
+        .setLock('pessimistic_write')
+        .where('plan.id = :planId', { planId })
+        .getOne();
+
+      const anchor = await taskRepo.findOne({
+        where: { id: anchorTaskId, planId },
+      });
+      if (anchor == null) {
+        throw new Error(
+          `anchor task ${anchorTaskId} not found in plan ${planId}`,
+        );
+      }
+
+      const first = await this.midpointBesideAnchor(
+        planId,
+        anchor.sortOrder,
+        side,
+        taskRepo,
+      );
+      if (first != null) return first;
+
+      await this.rebalancePlanSortOrders(planId, manager);
+      const fresh = await taskRepo.findOne({
+        select: { sortOrder: true },
+        where: { id: anchorTaskId },
+      });
+      const retried = await this.midpointBesideAnchor(
+        planId,
+        fresh?.sortOrder ?? anchor.sortOrder,
+        side,
+        taskRepo,
+      );
+      if (retried == null) {
+        throw new Error(
+          `no sort_order slot beside anchor ${anchorTaskId} after rebalance`,
+        );
+      }
+      return retried;
+    });
+  }
+
+  /**
+   * @description Attach a before-hook to a plan (anchorTaskId omitted → plan-level
+   * beforeAll/beforeEach) or to a task (anchorTaskId set → per-task before). See
+   * {@link addHook}.
+   */
+  async addBeforeHook(
+    planId: string,
+    anchorTaskId: string | null,
+    input: HookTaskInput,
+  ): Promise<Task> {
+    return this.addHook(planId, anchorTaskId, 'before', input);
+  }
+
+  /**
+   * @description Attach an after-hook to a plan (anchorTaskId omitted → plan-level
+   * afterAll/afterEach) or to a task (anchorTaskId set → per-task after). See
+   * {@link addHook}.
+   */
+  async addAfterHook(
+    planId: string,
+    anchorTaskId: string | null,
+    input: HookTaskInput,
+  ): Promise<Task> {
+    return this.addHook(planId, anchorTaskId, 'after', input);
+  }
+
+  /**
+   * @description Detaches (deletes) a hook task by id. Only rows that are hooks
+   * (hook_role set) are removable this way; deleting a regular task goes through
+   * the normal delete path. Returns whether a hook row was removed.
+   */
+  async detachHook(hookTaskId: string): Promise<boolean> {
+    const result = await this.taskRepository.delete({
+      hookRole: Not(IsNull()),
+      id: hookTaskId,
+    });
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * @description Task-level hooks anchored to a task, grouped before/after in
+   * execution order (sort_order ASC, created_at ASC).
+   */
+  async getTaskHooks(taskId: string): Promise<GroupedHooks> {
+    const hooks = await this.taskRepository.find({
+      order: PLAN_TASK_LIST_ORDER,
+      where: { hookRole: Not(IsNull()), parentTaskId: taskId },
+    });
+    return this.groupHooks(hooks);
+  }
+
+  /**
+   * @description Plan-level hooks (parent_task_id NULL, hook_role set), grouped
+   * before/after in execution order. These are the beforeAll/afterAll (once) and
+   * beforeEach/afterEach (each) hooks.
+   */
+  async getPlanHooks(planId: string): Promise<GroupedHooks> {
+    const hooks = await this.taskRepository.find({
+      order: PLAN_TASK_LIST_ORDER,
+      where: { hookRole: Not(IsNull()), parentTaskId: IsNull(), planId },
+    });
+    return this.groupHooks(hooks);
+  }
+
+  private groupHooks(hooks: Task[]): GroupedHooks {
+    return {
+      after: hooks.filter((hook) => hook.hookRole === 'after'),
+      before: hooks.filter((hook) => hook.hookRole === 'before'),
+    };
+  }
+
+  /**
+   * @description Materializes a hook task. Plan-level (anchorTaskId null) hooks
+   * land at the plan head (before) / tail (after) band and carry a hook_scope
+   * ('once' default, or 'each' to expand per-task at run time); task-level hooks
+   * are allocated immediately beside their anchor via
+   * {@link allocateSortOrderBesideAnchor}. Enforces the invariants the DB CHECKs
+   * cannot: source=skill ⇒ skillSlug present; scope is plan-level only; and the
+   * one-level-nesting rule — the anchor must be a regular task, not itself a hook.
+   */
+  private async addHook(
+    planId: string,
+    anchorTaskId: string | null,
+    role: HookAdjacencySide,
+    input: HookTaskInput,
+  ): Promise<Task> {
+    if (input.source === 'skill' && !input.skillSlug) {
+      throw new Error("hook source 'skill' requires a skillSlug");
+    }
+    if (input.source === 'template' && input.skillSlug != null) {
+      throw new Error("hook source 'template' must not carry a skillSlug");
+    }
+
+    const isPlanLevel = anchorTaskId == null;
+    if (!isPlanLevel && input.scope != null) {
+      throw new Error('hook_scope is only valid for plan-level hooks');
+    }
+    const scope: TaskHookScope | null = isPlanLevel
+      ? (input.scope ?? 'once')
+      : null;
+
+    let sortOrder: number;
+    if (isPlanLevel) {
+      sortOrder = await this.resolvePlanEdgeSortOrder(planId, role);
+    } else {
+      const anchor = await this.taskRepository.findOne({
+        where: { id: anchorTaskId, planId },
+      });
+      if (anchor == null) {
+        throw new Error(
+          `anchor task ${anchorTaskId} not found in plan ${planId}`,
+        );
+      }
+      if (anchor.hookRole != null) {
+        throw new Error(
+          'hooks are one level deep: the anchor must be a regular task',
+        );
+      }
+      sortOrder = await this.allocateSortOrderBesideAnchor(
+        planId,
+        anchorTaskId,
+        role,
+      );
+    }
+
+    const entity = this.taskRepository.create({
+      description: input.description ?? null,
+      hookRole: role,
+      hookScope: scope,
+      hookSource: input.source,
+      parentTaskId: anchorTaskId,
+      planId,
+      skillSlug: input.source === 'skill' ? (input.skillSlug ?? null) : null,
+      sortOrder,
+      status: 'PENDING',
+      title: input.title ?? this.defaultHookTitle(role, input),
+    });
+    return this.taskRepository.save(entity);
+  }
+
+  private defaultHookTitle(
+    role: HookAdjacencySide,
+    input: HookTaskInput,
+  ): string {
+    const body = input.source === 'skill' ? `/${input.skillSlug}` : 'hook task';
+    return `${role}: ${body}`;
+  }
+
+  /**
+   * @description Plan-edge sort_order for a plan-level hook: before → MIN−GAP,
+   * after → MAX+GAP (empty plan starts at {@link TASK_SORT_ORDER_GAP}). Mirrors
+   * the first/last placement bands so plan hooks bookend the task list.
+   */
+  private async resolvePlanEdgeSortOrder(
+    planId: string,
+    role: HookAdjacencySide,
+  ): Promise<number> {
+    const aggregate = role === 'before' ? 'MIN' : 'MAX';
+    const result = await this.taskRepository
+      .createQueryBuilder('task')
+      .select(`${aggregate}(task.sortOrder)`, 'value')
+      .where('task.planId = :planId', { planId })
+      .getRawOne<{ value: string | null }>();
+    const value =
+      result?.value != null && result.value !== ''
+        ? Number(result.value)
+        : null;
+    if (value == null) return TASK_SORT_ORDER_GAP;
+    return role === 'before'
+      ? value - TASK_SORT_ORDER_GAP
+      : value + TASK_SORT_ORDER_GAP;
   }
 
   /**

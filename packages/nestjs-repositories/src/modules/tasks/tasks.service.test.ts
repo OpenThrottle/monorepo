@@ -4,7 +4,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
-import { EntityManager, In, Not, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Not, Repository } from 'typeorm';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 import { tasksFactory } from './tasks.factory';
@@ -36,7 +36,7 @@ describe('TasksService', () => {
   const mockTaskRepo = createMock<GetRepository>({
     count: vi.fn().mockResolvedValue(0),
     createQueryBuilder: vi.fn().mockReturnValue(mockQueryBuilder),
-    find: () => Promise.resolve(tasksFactory.buildList(2)),
+    find: vi.fn(() => Promise.resolve(tasksFactory.buildList(2))),
   });
 
   let service: TasksService;
@@ -316,6 +316,334 @@ describe('TasksService', () => {
       const completed = await service.completeParentPlanIfTasksDone(planId);
 
       expect(completed).toBe(false);
+    });
+  });
+
+  describe('midpointBesideAnchor', () => {
+    const planId = '77777777-7777-7777-7777-777777777777';
+
+    // A repository whose neighbor lookup (createQueryBuilder→clone→…→getRawOne)
+    // resolves to the given value ('4000', or null for "no neighbor").
+    const repoWithNeighbor = (
+      neighborValue: string | null,
+    ): Repository<Task> => {
+      const cloned = {
+        andWhere: vi.fn().mockReturnThis(),
+        getRawOne: vi
+          .fn()
+          .mockResolvedValue(
+            neighborValue == null ? undefined : { value: neighborValue },
+          ),
+        orderBy: vi.fn().mockReturnThis(),
+      };
+      const builder = {
+        clone: vi.fn().mockReturnValue(cloned),
+        select: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+      };
+      return createMock<Repository<Task>>({
+        createQueryBuilder: vi.fn().mockReturnValue(builder),
+      });
+    };
+
+    it('after: midpoint between anchor and its next neighbor', async () => {
+      const slot = await service.midpointBesideAnchor(
+        planId,
+        2000,
+        'after',
+        repoWithNeighbor('4000'),
+      );
+      expect(slot).toBe(3000);
+    });
+
+    it('before: midpoint between anchor and its previous neighbor', async () => {
+      const slot = await service.midpointBesideAnchor(
+        planId,
+        2000,
+        'before',
+        repoWithNeighbor('1000'),
+      );
+      expect(slot).toBe(1500);
+    });
+
+    it('steps out one gap when the anchor is the plan edge (no neighbor)', async () => {
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'after',
+          repoWithNeighbor(null),
+        ),
+      ).resolves.toBe(2000 + TASK_SORT_ORDER_GAP);
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'before',
+          repoWithNeighbor(null),
+        ),
+      ).resolves.toBe(2000 - TASK_SORT_ORDER_GAP);
+    });
+
+    it('returns null when the integer gap to the neighbor is exhausted', async () => {
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'after',
+          repoWithNeighbor('2001'),
+        ),
+      ).resolves.toBeNull();
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'before',
+          repoWithNeighbor('1999'),
+        ),
+      ).resolves.toBeNull();
+    });
+  });
+
+  describe('allocateSortOrderBesideAnchor', () => {
+    const planId = '88888888-8888-8888-8888-888888888888';
+    const anchorId = '99999999-9999-9999-9999-999999999999';
+
+    const txPlanBuilder = {
+      getOne: vi.fn().mockResolvedValue(null),
+      setLock: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+    };
+    const txFindOne = vi.fn();
+    const txRepo = createMock<Repository<Task>>({
+      createQueryBuilder: vi.fn().mockReturnValue(txPlanBuilder),
+      findOne: txFindOne,
+    });
+    const txManager = createMock<EntityManager>({
+      getRepository: () => txRepo,
+    });
+
+    beforeEach(() => {
+      txFindOne.mockReset();
+      vi.mocked(txPlanBuilder.setLock).mockClear();
+      vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
+        (
+          isolationOrRun:
+            | IsolationLevel
+            | ((manager: EntityManager) => Promise<unknown>),
+        ) =>
+          typeof isolationOrRun === 'function'
+            ? isolationOrRun(txManager)
+            : Promise.resolve(undefined),
+      );
+    });
+
+    it('locks the plan and returns the midpoint slot on the happy path', async () => {
+      txFindOne.mockResolvedValue(
+        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
+      );
+      const midpoint = vi
+        .spyOn(service, 'midpointBesideAnchor')
+        .mockResolvedValue(2500);
+      const rebalance = vi
+        .spyOn(service, 'rebalancePlanSortOrders')
+        .mockResolvedValue();
+
+      const slot = await service.allocateSortOrderBesideAnchor(
+        planId,
+        anchorId,
+        'after',
+      );
+
+      expect(slot).toBe(2500);
+      expect(txPlanBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
+      expect(rebalance).not.toHaveBeenCalled();
+      midpoint.mockRestore();
+      rebalance.mockRestore();
+    });
+
+    it('rebalances and retries once when the gap is exhausted', async () => {
+      txFindOne.mockResolvedValue(
+        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
+      );
+      const midpoint = vi
+        .spyOn(service, 'midpointBesideAnchor')
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(3000);
+      const rebalance = vi
+        .spyOn(service, 'rebalancePlanSortOrders')
+        .mockResolvedValue();
+
+      const slot = await service.allocateSortOrderBesideAnchor(
+        planId,
+        anchorId,
+        'before',
+      );
+
+      expect(slot).toBe(3000);
+      expect(rebalance).toHaveBeenCalledTimes(1);
+      midpoint.mockRestore();
+      rebalance.mockRestore();
+    });
+
+    it('throws when the anchor is not in the plan', async () => {
+      txFindOne.mockResolvedValue(null);
+
+      await expect(
+        service.allocateSortOrderBesideAnchor(planId, anchorId, 'after'),
+      ).rejects.toThrow(/anchor task/);
+    });
+  });
+
+  describe('hook CRUD', () => {
+    const planId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+    beforeEach(() => {
+      vi.mocked(mockTaskRepo.create).mockReturnValue(tasksFactory.build());
+      vi.mocked(mockTaskRepo.save).mockResolvedValue(tasksFactory.build());
+      vi.mocked(mockTaskRepo.findOne).mockReset();
+      vi.mocked(mockTaskRepo.delete).mockReset();
+    });
+
+    it('addAfterHook plan-level lands at the tail band with scope=once (template)', async () => {
+      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({
+        value: '3000',
+      });
+
+      await service.addAfterHook(planId, null, { source: 'template' });
+
+      expect(mockTaskRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hookRole: 'after',
+          hookScope: 'once',
+          hookSource: 'template',
+          parentTaskId: null,
+          planId,
+          skillSlug: null,
+          sortOrder: 4000,
+          status: 'PENDING',
+        }),
+      );
+    });
+
+    it('addBeforeHook plan-level supports scope=each and a skill source', async () => {
+      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({
+        value: '1000',
+      });
+
+      await service.addBeforeHook(planId, null, {
+        scope: 'each',
+        skillSlug: 'validate',
+        source: 'skill',
+      });
+
+      expect(mockTaskRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hookRole: 'before',
+          hookScope: 'each',
+          hookSource: 'skill',
+          parentTaskId: null,
+          skillSlug: 'validate',
+          sortOrder: 0,
+        }),
+      );
+    });
+
+    it('addAfterHook task-level delegates to the anchor allocator with null scope', async () => {
+      vi.mocked(mockTaskRepo.findOne).mockResolvedValue(
+        tasksFactory.build({ hookRole: null, id: 'anchor' }),
+      );
+      const alloc = vi
+        .spyOn(service, 'allocateSortOrderBesideAnchor')
+        .mockResolvedValue(2500);
+
+      await service.addAfterHook(planId, 'anchor', { source: 'template' });
+
+      expect(alloc).toHaveBeenCalledWith(planId, 'anchor', 'after');
+      expect(mockTaskRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hookRole: 'after',
+          hookScope: null,
+          parentTaskId: 'anchor',
+          sortOrder: 2500,
+        }),
+      );
+      alloc.mockRestore();
+    });
+
+    it('rejects a skill hook without a skillSlug', async () => {
+      await expect(
+        service.addBeforeHook(planId, null, { source: 'skill' }),
+      ).rejects.toThrow(/requires a skillSlug/);
+    });
+
+    it('rejects a scope on a task-level hook', async () => {
+      await expect(
+        service.addAfterHook(planId, 'anchor', {
+          scope: 'once',
+          source: 'template',
+        }),
+      ).rejects.toThrow(/plan-level/);
+    });
+
+    it('enforces one-level nesting: the anchor must be a regular task', async () => {
+      vi.mocked(mockTaskRepo.findOne).mockResolvedValue(
+        tasksFactory.build({ hookRole: 'before', id: 'anchor' }),
+      );
+
+      await expect(
+        service.addAfterHook(planId, 'anchor', { source: 'template' }),
+      ).rejects.toThrow(/one level deep/);
+    });
+
+    it('detachHook deletes only rows that are hooks', async () => {
+      vi.mocked(mockTaskRepo.delete).mockResolvedValue({
+        affected: 1,
+        raw: [],
+      });
+
+      const removed = await service.detachHook('hook-1');
+
+      expect(removed).toBe(true);
+      expect(mockTaskRepo.delete).toHaveBeenCalledWith({
+        hookRole: Not(IsNull()),
+        id: 'hook-1',
+      });
+    });
+
+    it('getPlanHooks groups plan-level hooks into before/after', async () => {
+      const before = tasksFactory.build({
+        hookRole: 'before',
+        parentTaskId: null,
+      });
+      const after = tasksFactory.build({
+        hookRole: 'after',
+        parentTaskId: null,
+      });
+      vi.mocked(mockTaskRepo.find).mockResolvedValueOnce([before, after]);
+
+      const grouped = await service.getPlanHooks(planId);
+
+      expect(grouped.before).toEqual([before]);
+      expect(grouped.after).toEqual([after]);
+      expect(mockTaskRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { hookRole: Not(IsNull()), parentTaskId: IsNull(), planId },
+        }),
+      );
+    });
+
+    it('getTaskHooks groups a task’s before/after hooks', async () => {
+      const before = tasksFactory.build({
+        hookRole: 'before',
+        parentTaskId: 'anchor',
+      });
+      vi.mocked(mockTaskRepo.find).mockResolvedValueOnce([before]);
+
+      const grouped = await service.getTaskHooks('anchor');
+
+      expect(grouped.before).toEqual([before]);
+      expect(grouped.after).toEqual([]);
     });
   });
 });

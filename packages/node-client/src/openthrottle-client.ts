@@ -666,9 +666,19 @@ export type PlanRow = Omit<
 };
 
 /** Task row with ISO string dates (e.g. from openthrottle-client CRUD). Derived from {@link TaskData}. */
+// Lifecycle-hook identity fields (migration 071) are intentionally excluded:
+// node-client is the legacy Postgres-direct path and does not surface hooks —
+// the canonical hook read surface is GraphQL. See docs/monorepo/lifecycle-hooks-design.md.
 export type TaskRow = Omit<
   TaskData,
-  'completedAt' | 'createdAt' | 'updatedAt'
+  | 'completedAt'
+  | 'createdAt'
+  | 'hookRole'
+  | 'hookScope'
+  | 'hookSource'
+  | 'parentTaskId'
+  | 'skillSlug'
+  | 'updatedAt'
 > & {
   readonly completedAt: string | null;
   readonly createdAt: string;

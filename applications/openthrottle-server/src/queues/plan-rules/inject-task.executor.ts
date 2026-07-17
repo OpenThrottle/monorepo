@@ -13,9 +13,11 @@
  *    {reason: 'skill-unavailable'}. An unresolvable project universe skips
  *    the gate.
  * 3. inject — placement 'first' = MIN(sort_order) − 1000, 'last' =
- *    MAX(sort_order) + 1000 (empty plan starts at 1000), one recompute retry
- *    on a UNIQUE (plan_id, sort_order) collision; the description carries a
- *    provenance footer (rule id, matched tags, fingerprint).
+ *    MAX(sort_order) + 1000 (empty plan starts at 1000); 'before'/'after' land
+ *    at the midpoint beside an anchor task (renumbering the plan on a 1000
+ *    stride when the integer gap is exhausted). One recompute retry on a UNIQUE
+ *    (plan_id, sort_order) collision; the description carries a provenance
+ *    footer (rule id, matched tags, fingerprint).
  * 4. ledger 'applied' + task_id. A lost ledger race (another evaluation
  *    applied concurrently) deletes the just-injected task — the UNIQUE
  *    (rule_id, plan_id) fingerprint stays the single source of truth.
@@ -181,7 +183,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
 
     const repository = this.tasksService.getRepository();
     const attemptInsert = async (): Promise<Task> => {
-      const sortOrder = await this.resolveSortOrder(plan.id, payload.placement);
+      const sortOrder = await this.resolveSortOrder(plan.id, payload);
       const entity = repository.create({
         description,
         planId: plan.id,
@@ -204,8 +206,29 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
 
   private async resolveSortOrder(
     planId: string,
-    placement: InjectTaskActionPayload['placement'],
+    payload: InjectTaskActionPayload,
   ): Promise<number> {
+    const { placement } = payload;
+    if (placement === 'before' || placement === 'after') {
+      if (payload.anchor == null) {
+        throw new Error(
+          `inject-task placement '${placement}' requires an anchor`,
+        );
+      }
+      const anchorTask = await this.resolveAnchorTask(planId, payload.anchor);
+      if (anchorTask == null) {
+        throw new Error(
+          `inject-task anchor did not resolve to a task in plan ${planId}`,
+        );
+      }
+      // Delegate adjacency + rebalance to the canonical TasksService allocator.
+      return this.tasksService.allocateSortOrderBesideAnchor(
+        planId,
+        anchorTask.id,
+        placement,
+      );
+    }
+
     const aggregate = placement === 'first' ? 'MIN' : 'MAX';
     const result = await this.tasksService
       .getRepository()
@@ -224,5 +247,40 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     return placement === 'first'
       ? value - TASK_SORT_ORDER_GAP
       : value + TASK_SORT_ORDER_GAP;
+  }
+
+  /**
+   * @description Resolves an anchor to a task: explicit taskId first, then a
+   * `/<skillSlug>` reference (title/description ILIKE), then a titleMatch
+   * substring. Returns the earliest matching task by sort_order, or null.
+   */
+  private async resolveAnchorTask(
+    planId: string,
+    anchor: NonNullable<InjectTaskActionPayload['anchor']>,
+  ): Promise<Task | null> {
+    const repository = this.tasksService.getRepository();
+    if (anchor.taskId != null) {
+      return repository.findOne({
+        where: { id: anchor.taskId, planId },
+      });
+    }
+
+    const base = repository
+      .createQueryBuilder('task')
+      .where('task.plan_id = :planId', { planId })
+      .orderBy('task.sort_order', 'ASC');
+
+    if (anchor.skillSlug != null) {
+      return base
+        .andWhere(
+          '(task.title ILIKE :reference OR task.description ILIKE :reference)',
+          { reference: `%/${anchor.skillSlug}%` },
+        )
+        .getOne();
+    }
+
+    return base
+      .andWhere('task.title ILIKE :match', { match: `%${anchor.titleMatch}%` })
+      .getOne();
   }
 }

@@ -2,6 +2,7 @@ import { z } from 'zod/v3';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
+  AddHookInput,
   AddPermissionToRoleInput,
   AddPlanTagInput,
   AddProjectTagInput,
@@ -40,6 +41,7 @@ import {
   DeleteProjectInput,
   DeleteTagActionRuleInput,
   DeleteTaskInput,
+  DetachHookInput,
   DuplicateJobInput,
   EndWorkSessionInput,
   EnqueueDocIngestionInput,
@@ -169,6 +171,19 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     startIso: z.string(),
+  });
+}
+
+export function AddHookInputSchema(): z.ZodObject<Properties<AddHookInput>> {
+  return z.object({
+    anchorTaskId: z.string().nullish(),
+    description: z.string().nullish(),
+    planId: z.string(),
+    role: z.string(),
+    scope: z.string().nullish(),
+    skillSlug: z.string().nullish(),
+    source: z.string(),
+    title: z.string().nullish(),
   });
 }
 
@@ -538,6 +553,14 @@ export function DeleteTaskInputSchema(): z.ZodObject<
 > {
   return z.object({
     id: z.string(),
+  });
+}
+
+export function DetachHookInputSchema(): z.ZodObject<
+  Properties<DetachHookInput>
+> {
+  return z.object({
+    hookTaskId: z.string(),
   });
 }
 

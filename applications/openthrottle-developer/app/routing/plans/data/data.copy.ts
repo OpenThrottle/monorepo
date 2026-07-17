@@ -9,3 +9,18 @@ export const PLAN_TASK_NOT_FOUND_COPY = {
   description: `The task you are looking for does not exist.`,
   title: `Task not found`,
 } as const;
+
+/**
+ * @description Copy for the lifecycle-hook lists rendered under a plan (beforeAll/
+ * afterAll, beforeEach/afterEach) and under each task (per-task before/after).
+ */
+export const HOOK_LIST_COPY = {
+  addAfter: `Add after-hook`,
+  addBefore: `Add before-hook`,
+  afterTitle: `After`,
+  beforeTitle: `Before`,
+  detach: `Remove hook`,
+  emptyAfter: `No after-hooks`,
+  emptyBefore: `No before-hooks`,
+  hookBadge: `hook`,
+} as const;
