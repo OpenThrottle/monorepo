@@ -8,6 +8,7 @@ query TagActionRules {
     id
     userId
     projectId
+    title
     tagAll
     status
     environment
@@ -37,6 +38,7 @@ mutation UpsertTagActionRule($input: UpsertTagActionRuleInput!) {
     id
     userId
     projectId
+    title
     tagAll
     status
     environment
