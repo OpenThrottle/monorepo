@@ -24,3 +24,18 @@ export const HOOK_LIST_COPY = {
   emptyBefore: `No before-hooks`,
   hookBadge: `hook`,
 } as const;
+
+/**
+ * @description Section headings and empty-state hints for the plan detail Output
+ * tab, which reads as a history: agent output, then the rule-applications change
+ * log, then linked artifacts. Headings mirror the reused panel components
+ * (PlanRuleApplications, LinkedArtifactsPanel) so populated and empty states read
+ * the same.
+ */
+export const PLAN_TAB_OUTPUT_COPY = {
+  agentOutputHeading: `Agent output`,
+  linkedArtifactsEmpty: `No linked artifacts yet. Artifacts appear here once a run produces and links them.`,
+  linkedArtifactsHeading: `Linked artifacts`,
+  ruleChangeLogEmpty: `No rule changes recorded yet. Evaluating rules records applications here.`,
+  ruleChangeLogHeading: `Rule applications`,
+} as const;
