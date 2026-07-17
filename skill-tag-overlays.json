@@ -46,6 +46,7 @@
     "secret-scanning": { "tags": ["github"] },
     "shadcn": { "tags": ["frontend", "ui"] },
     "skill-cleaner": { "tags": [] },
+    "validate-plan": { "tags": [] },
     "visual-plan": { "tags": ["planning"] },
     "visual-recap": { "tags": ["git", "pr-review"] },
     "workflow-ralph": { "tags": ["openthrottle"] }
