@@ -28,9 +28,7 @@ describe('GlobalScreen Component', () => {
     render(<RoutesStub />);
 
     expect(screen.getByText(/Beta:/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: /GitHub repository/i }),
-    ).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /GitHub/i })).toHaveAttribute(
       'href',
       'https://github.com/openthrottle/openthrottle/issues',
     );
