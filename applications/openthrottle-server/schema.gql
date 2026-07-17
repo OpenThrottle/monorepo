@@ -306,6 +306,19 @@ type CancelPlanRunResultObject {
   removedJobIds: [String!]!
 }
 
+type EvaluatePlanRulesResultObject {
+  """True when a full plan-rules evaluation pass was enqueued."""
+  enqueued: Boolean!
+
+  """Plan id that was enqueued for evaluation."""
+  planId: String!
+
+  """
+  Trigger kind recorded on the enqueued pass (always "manual" for this mutation).
+  """
+  triggerKind: String!
+}
+
 type TaskObject {
   assignee: String
   category: String
@@ -3157,6 +3170,11 @@ type Mutation {
 
   """Delete a plan by ID"""
   deletePlan(input: DeletePlanInput!): Boolean!
+
+  """
+  Manually enqueue a full tag→action rules evaluation pass for a plan. Fire-and-forget: the pass runs async on the plan-rules:evaluate queue and results land in the rule_applications ledger (read via planRuleApplications). The ack only confirms the pass was enqueued.
+  """
+  evaluatePlanRules(planId: ID!): EvaluatePlanRulesResultObject!
 
   """
   Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead.

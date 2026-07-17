@@ -14,6 +14,11 @@ const DEFAULT_COLORS = [
   '#7c3aed',
   '#db2777',
   '#0ea5e9',
+  // '#000',
+  // '#111',
+  // '#333',
+  // '#444',
+  // '#555',
 ] as const;
 
 export interface GradientMeshProps extends React.HTMLAttributes<HTMLDivElement> {

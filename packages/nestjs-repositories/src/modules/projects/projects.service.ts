@@ -39,6 +39,14 @@ export class ProjectsService {
    * when no explicit projectId is supplied.
    */
   async findByNxProjectName(nxProjectName: string): Promise<Project | null> {
+    const all = await this.projectRepository.find({ take: 100 });
+
+    this.logger.warn(
+      '🤖 🤖 🤖 🤖 all projects',
+      all.length,
+      all.map((p) => p.nxProjectName),
+    );
+
     return this.projectRepository.findOne({ where: { nxProjectName } });
   }
 

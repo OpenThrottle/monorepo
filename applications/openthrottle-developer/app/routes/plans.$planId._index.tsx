@@ -29,6 +29,7 @@ import {
 import {
   PlanDetailAddPlanTagDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailEvaluatePlanRulesDocument,
   PlanDetailIndexLoaderDocument,
   PlanDetailRemovePlanTagDocument,
   PlanDetailSetPlanStatusDocument,
@@ -473,6 +474,25 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { planTagError: message };
+    }
+  }
+
+  if (intent === 'evaluatePlanRules') {
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailEvaluatePlanRulesDocument,
+        { planId },
+      );
+
+      if (!result.evaluatePlanRules?.enqueued) {
+        return { evaluatePlanRulesError: 'Failed to queue rules evaluation.' };
+      }
+
+      return { evaluatePlanRulesTriggered: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { evaluatePlanRulesError: message };
     }
   }
 

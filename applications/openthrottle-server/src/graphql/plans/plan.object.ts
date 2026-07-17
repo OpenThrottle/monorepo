@@ -197,3 +197,26 @@ export class CancelPlanRunResultObject {
   })
   removedJobIds!: string[];
 }
+
+/**
+ * Ack for evaluatePlanRules: evaluation is async/queued, so the mutation only
+ * confirms a full pass was enqueued. Matched/dispatched actions land in the
+ * rule_applications ledger (read via planRuleApplications), not in this result.
+ */
+@ObjectType()
+export class EvaluatePlanRulesResultObject {
+  @Field(() => Boolean, {
+    description: `True when a full plan-rules evaluation pass was enqueued.`,
+  })
+  enqueued!: boolean;
+
+  @Field(() => String, {
+    description: 'Plan id that was enqueued for evaluation.',
+  })
+  planId!: string;
+
+  @Field(() => String, {
+    description: `Trigger kind recorded on the enqueued pass (always "manual" for this mutation).`,
+  })
+  triggerKind!: string;
+}

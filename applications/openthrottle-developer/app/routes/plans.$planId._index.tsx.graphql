@@ -75,6 +75,14 @@ mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
   }
 }
 
+mutation PlanDetailEvaluatePlanRules($planId: ID!) {
+  evaluatePlanRules(planId: $planId) {
+    enqueued
+    planId
+    triggerKind
+  }
+}
+
 mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
   cancelPlanRun(input: $input) {
     activeJobIdsCouldNotCancel

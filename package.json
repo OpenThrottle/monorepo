@@ -360,7 +360,7 @@
   },
   "nx": {
     "implicitDependencies": [],
-    "projectType": "application",
+    "projectType": "library",
     "sourceRoot": "./",
     "tags": [
       "name:@openthrottle/monorepo",

@@ -28,7 +28,10 @@ import {
 } from './plan.input';
 import { PlansLoaders } from './plans-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { PlansResolver } from './plans.resolver';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 
@@ -202,6 +205,13 @@ describe('PlansResolver', () => {
     enqueueSpawn: mockEnqueueSpawn,
   });
 
+  const mockEnqueueEvaluation = vi.fn().mockResolvedValue(undefined);
+  const mockPlanRulesEvaluationService = createMock<PlanRulesEvaluationService>(
+    {
+      enqueueEvaluation: mockEnqueueEvaluation,
+    },
+  );
+
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
@@ -209,7 +219,7 @@ describe('PlansResolver', () => {
         { provide: PlansLoaders, useValue: mockPlansLoaders },
         {
           provide: PlanRulesEvaluationService,
-          useValue: createMock<PlanRulesEvaluationService>(),
+          useValue: mockPlanRulesEvaluationService,
         },
         {
           provide: TaggingEnqueueService,
@@ -245,7 +255,10 @@ describe('PlansResolver', () => {
           useValue: mockPlansQueue,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(GqlPermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     resolver = app.get<PlansResolver>(PlansResolver);
     plansService = app.get<PlansService>(PlansService);
@@ -1315,6 +1328,49 @@ describe('PlansResolver', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('evaluatePlanRules', () => {
+    beforeEach(() => {
+      mockEnqueueEvaluation.mockClear();
+    });
+
+    test('enqueues a full pass with the manual trigger kind and acks', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      const result = await resolver.evaluatePlanRules(mockPlan.id);
+
+      expect(mockEnqueueEvaluation).toHaveBeenCalledTimes(1);
+      expect(mockEnqueueEvaluation).toHaveBeenCalledWith(
+        mockPlan.id,
+        PLAN_RULES_TRIGGER_KINDS.MANUAL,
+      );
+      expect(result).toEqual({
+        enqueued: true,
+        planId: mockPlan.id,
+        triggerKind: PLAN_RULES_TRIGGER_KINDS.MANUAL,
+      });
+    });
+
+    test('rejects and does not enqueue when the plan does not exist', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(null);
+
+      await expect(
+        resolver.evaluatePlanRules('non-existent-id'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockEnqueueEvaluation).not.toHaveBeenCalled();
+    });
+
+    test('is guarded by the PLANS_WRITE permission', () => {
+      const permissions = Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        resolver.evaluatePlanRules,
+      );
+
+      expect(permissions).toEqual([PERMISSIONS.PLANS_WRITE]);
     });
   });
 });
