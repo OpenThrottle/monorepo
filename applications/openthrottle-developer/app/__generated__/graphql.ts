@@ -5347,6 +5347,26 @@ export type GetTaskByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    afterHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
+    beforeHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
     tags: Array<{
       __typename?: 'TaskTagObject';
       confidence?: number | null;
@@ -12014,6 +12034,32 @@ export const GetTaskByIdDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'afterHooks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'HookTask' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'beforeHooks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'HookTask' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'tags' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -12090,6 +12136,26 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
