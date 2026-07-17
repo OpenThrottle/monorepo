@@ -34,9 +34,11 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
 import {
+  AddHookInput,
   CreateTaskInput,
   CreateTasksInput,
   DeleteTaskInput,
+  DetachHookInput,
   ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
   TasksByPlanIdInput,
@@ -101,6 +103,27 @@ const parseRequirements = (
   return parsed;
 };
 
+/** Narrows the free-text GraphQL role arg to the hook role union, or 400s. */
+const parseHookRole = (role: string): 'after' | 'before' => {
+  if (role === 'before' || role === 'after') return role;
+  throw new BadRequestException("hook role must be 'before' or 'after'");
+};
+
+/** Narrows the free-text GraphQL source arg to the hook source union, or 400s. */
+const parseHookSource = (source: string): 'skill' | 'template' => {
+  if (source === 'skill' || source === 'template') return source;
+  throw new BadRequestException("hook source must be 'skill' or 'template'");
+};
+
+/** Narrows the optional scope arg to the hook scope union, or 400s. */
+const parseHookScope = (
+  scope: string | null | undefined,
+): 'each' | 'once' | undefined => {
+  if (scope == null) return undefined;
+  if (scope === 'once' || scope === 'each') return scope;
+  throw new BadRequestException("hook scope must be 'once' or 'each'");
+};
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => TaskObject)
 export class TasksResolver {
@@ -140,6 +163,20 @@ export class TasksResolver {
     @Parent() parent: Task & { requirements?: unknown[] },
   ): string {
     return JSON.stringify(parent.requirements ?? []);
+  }
+
+  @ResolveField(() => [TaskObject], {
+    description: `Task-level before-hooks anchored to this task (one level), in execution order.`,
+  })
+  async beforeHooks(@Parent() parent: TaskObject): Promise<Task[]> {
+    return (await this.tasksService.getTaskHooks(parent.id)).before;
+  }
+
+  @ResolveField(() => [TaskObject], {
+    description: `Task-level after-hooks anchored to this task (one level), in execution order.`,
+  })
+  async afterHooks(@Parent() parent: TaskObject): Promise<Task[]> {
+    return (await this.tasksService.getTaskHooks(parent.id)).after;
   }
 
   @Query(() => TaskObject, {
@@ -609,5 +646,51 @@ export class TasksResolver {
     const result = await repo.delete({ id: input.id });
 
     return (result.affected ?? 0) > 0;
+  }
+
+  @Mutation(() => TaskObject, {
+    description: `Attach a lifecycle hook to a plan (anchorTaskId omitted → beforeAll/afterAll, or beforeEach/afterEach with scope 'each') or to a task (anchorTaskId set → per-task before/after). The hook is materialized as a task row carrying hook_role/scope/source.`,
+  })
+  async addHook(
+    @Args('input', { type: () => AddHookInput }) input: AddHookInput,
+  ): Promise<Task> {
+    const role = parseHookRole(input.role);
+    const source = parseHookSource(input.source);
+    const scope = parseHookScope(input.scope);
+    const anchorTaskId = input.anchorTaskId ?? null;
+
+    const attach =
+      role === 'before'
+        ? this.tasksService.addBeforeHook.bind(this.tasksService)
+        : this.tasksService.addAfterHook.bind(this.tasksService);
+
+    try {
+      return await attach(input.planId, anchorTaskId, {
+        description: input.description ?? null,
+        scope,
+        skillSlug: input.skillSlug ?? null,
+        source,
+        title: input.title ?? null,
+      });
+    } catch (error) {
+      if (isSortOrderUniqueViolation(error)) {
+        throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
+      }
+      // Service-layer invariant violations (skillSlug, scope, one-level nesting,
+      // unknown anchor) are client-input errors → surface as 400, not 500.
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way.`,
+  })
+  async detachHook(
+    @Args('input', { type: () => DetachHookInput }) input: DetachHookInput,
+  ): Promise<boolean> {
+    return this.tasksService.detachHook(input.hookTaskId);
   }
 }

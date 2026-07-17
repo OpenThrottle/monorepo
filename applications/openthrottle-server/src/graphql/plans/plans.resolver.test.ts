@@ -399,6 +399,30 @@ describe('PlansResolver', () => {
       expect(mockTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toBe(7);
     });
+
+    test('beforeHooks resolves the plan-level before group via getPlanHooks', async () => {
+      vi.mocked(mockTasksService.getPlanHooks).mockResolvedValueOnce({
+        after: [],
+        before: [],
+      });
+
+      const result = await resolver.beforeHooks(mockPlan);
+
+      expect(mockTasksService.getPlanHooks).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toEqual([]);
+    });
+
+    test('afterHooks resolves the plan-level after group via getPlanHooks', async () => {
+      vi.mocked(mockTasksService.getPlanHooks).mockResolvedValueOnce({
+        after: [],
+        before: [],
+      });
+
+      const result = await resolver.afterHooks(mockPlan);
+
+      expect(mockTasksService.getPlanHooks).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toEqual([]);
+    });
   });
 
   describe('listPlansByStatus', () => {

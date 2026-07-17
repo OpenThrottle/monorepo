@@ -49,7 +49,7 @@ COMMENT ON COLUMN tag_action_rules.environment IS 'Optional environment qualifie
 
 COMMENT ON COLUMN tag_action_rules.action_type IS 'Which ActionExecutor handles the payload: inject-task (require/inject a task into the plan) or availability-exception (ephemeral skill-availability resolver inputs on plan-context reads).';
 
-COMMENT ON COLUMN tag_action_rules.action_payload IS 'Typed action parameters, Zod-validated per action_type at write time (inject-task: skillSlug/placement/templates; availability-exception: tagAllow/tagDeny/slugAllow/slugDeny).';
+COMMENT ON COLUMN tag_action_rules.action_payload IS 'Typed action parameters, Zod-validated per action_type at write time (inject-task: skillSlug/placement/anchor/templates, placement first|last|before|after with before/after requiring an anchor {taskId|skillSlug|titleMatch}; availability-exception: tagAllow/tagDeny/slugAllow/slugDeny).';
 
 COMMENT ON COLUMN tag_action_rules.enabled IS 'Soft on/off switch; disabled rules never match. Preferred over deletion so the rule_applications ledger history survives.';
 

@@ -44,9 +44,10 @@ import type {
   PlanRunConfigStorage,
 } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import type { Project } from '@openthrottle/nestjs-repositories';
+import type { Project, Task } from '@openthrottle/nestjs-repositories';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { ProjectObject } from '../projects/project.object';
+import { TaskObject } from '../tasks/task.object';
 import {
   type EnqueueOutcome,
   PlanEnqueueService,
@@ -232,6 +233,20 @@ export class PlansResolver {
   })
   async taskCount(@Parent() parent: PlanObject): Promise<number> {
     return this.loaders.taskCountByPlanIdLoader.load(parent.id);
+  }
+
+  @ResolveField(() => [TaskObject], {
+    description: `Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.`,
+  })
+  async beforeHooks(@Parent() parent: PlanObject): Promise<Task[]> {
+    return (await this.tasksService.getPlanHooks(parent.id)).before;
+  }
+
+  @ResolveField(() => [TaskObject], {
+    description: `Plan-level after-hooks (afterAll, or afterEach when scope='each'), in execution order.`,
+  })
+  async afterHooks(@Parent() parent: PlanObject): Promise<Task[]> {
+    return (await this.tasksService.getPlanHooks(parent.id)).after;
   }
 
   private mapPlanRunObject(planRun: PlanRun): PlanRunObject {

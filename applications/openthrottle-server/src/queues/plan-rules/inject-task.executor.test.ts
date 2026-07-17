@@ -66,6 +66,10 @@ describe('InjectTaskExecutor', () => {
   let taskSave: ReturnType<typeof vi.fn>;
   let taskCreate: ReturnType<typeof vi.fn>;
   let taskDelete: ReturnType<typeof vi.fn>;
+  let taskFindOne: ReturnType<typeof vi.fn>;
+  let allocateSortOrderBesideAnchor: Mock<
+    TasksService['allocateSortOrderBesideAnchor']
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -90,12 +94,16 @@ describe('InjectTaskExecutor', () => {
       Promise.resolve({ ...entity, id: taskId }),
     );
     taskDelete = vi.fn();
+    taskFindOne = vi.fn().mockResolvedValue(null);
+    allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
     const tasksService = createMock<TasksService>({
+      allocateSortOrderBesideAnchor,
       getRepository: vi.fn(() =>
         asMock({
           create: taskCreate,
           createQueryBuilder: vi.fn(() => queryBuilder),
           delete: taskDelete,
+          findOne: taskFindOne,
           save: taskSave,
         }),
       ),
@@ -229,6 +237,87 @@ describe('InjectTaskExecutor', () => {
 
     expect(taskCreate).toHaveBeenCalledWith(
       expect.objectContaining({ sortOrder: 4000 }),
+    );
+  });
+
+  it('resolves a taskId anchor and delegates after-placement to the allocator', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
+    );
+    allocateSortOrderBesideAnchor.mockResolvedValue(2500);
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
+        placement: 'after',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'anchor',
+      'after',
+    );
+    expect(taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ sortOrder: 2500 }),
+    );
+  });
+
+  it('delegates before-placement to the allocator with the before side', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
+    );
+    allocateSortOrderBesideAnchor.mockResolvedValue(1500);
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
+        placement: 'before',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'anchor',
+      'before',
+    );
+    expect(taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ sortOrder: 1500 }),
+    );
+  });
+
+  it('resolves a skillSlug anchor (query builder) before delegating', async () => {
+    // 1st getOne = pre-satisfied (none); 2nd getOne = anchor-by-slug resolution.
+    preSatisfiedGetOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(
+        asMock<Task>({ id: 'lint-task', sortOrder: 2000 }),
+      );
+    allocateSortOrderBesideAnchor.mockResolvedValue(2500);
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { skillSlug: 'lint' },
+        placement: 'after',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'lint-task',
+      'after',
     );
   });
 

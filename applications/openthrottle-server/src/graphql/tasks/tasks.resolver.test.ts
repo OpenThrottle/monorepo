@@ -76,7 +76,13 @@ describe('TasksResolver', () => {
     completedAt: null,
     createdAt: new Date('2026-02-01T21:33:51.891Z'),
     description: 'Create TaskData type if needed',
+    hookChildren: [],
+    hookRole: null,
+    hookScope: null,
+    hookSource: null,
     id: 'b366d480-6a4f-498b-8755-23ade25d2b24',
+    parentTask: null,
+    parentTaskId: null,
     plan: createMock<Plan>({
       assignee: null,
       author: 'Plan author',
@@ -101,6 +107,7 @@ describe('TasksResolver', () => {
     projectId: null,
     projectRelation: null,
     requirements: [],
+    skillSlug: null,
     sortOrder: 1000,
     status: 'pending',
     summary: null,
@@ -1131,6 +1138,102 @@ describe('TasksResolver', () => {
         { ...taskA, sortOrder: 1000 },
         { ...taskB, sortOrder: 2000 },
       ]);
+    });
+  });
+
+  describe('hooks', () => {
+    test('addHook plan-level before delegates to addBeforeHook', async () => {
+      vi.mocked(mockTasksService.addBeforeHook).mockResolvedValue(mockTask);
+
+      const result = await resolver.addHook({
+        anchorTaskId: null,
+        description: null,
+        planId: mockTask.planId,
+        role: 'before',
+        scope: 'each',
+        skillSlug: 'validate',
+        source: 'skill',
+        title: null,
+      });
+
+      expect(mockTasksService.addBeforeHook).toHaveBeenCalledWith(
+        mockTask.planId,
+        null,
+        {
+          description: null,
+          scope: 'each',
+          skillSlug: 'validate',
+          source: 'skill',
+          title: null,
+        },
+      );
+      expect(result).toBe(mockTask);
+    });
+
+    test('addHook task-level after delegates to addAfterHook with the anchor', async () => {
+      vi.mocked(mockTasksService.addAfterHook).mockResolvedValue(mockTask);
+
+      await resolver.addHook({
+        anchorTaskId: 'anchor',
+        planId: 'plan-1',
+        role: 'after',
+        source: 'template',
+      });
+
+      expect(mockTasksService.addAfterHook).toHaveBeenCalledWith(
+        'plan-1',
+        'anchor',
+        expect.objectContaining({ scope: undefined, source: 'template' }),
+      );
+    });
+
+    test('addHook rejects an invalid role', async () => {
+      await expect(
+        resolver.addHook({ planId: 'p', role: 'sideways', source: 'template' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('addHook rejects an invalid source', async () => {
+      await expect(
+        resolver.addHook({ planId: 'p', role: 'before', source: 'bogus' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('addHook maps a service invariant error to a 400', async () => {
+      vi.mocked(mockTasksService.addBeforeHook).mockRejectedValue(
+        new Error("hook source 'skill' requires a skillSlug"),
+      );
+
+      await expect(
+        resolver.addHook({ planId: 'p', role: 'before', source: 'skill' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('detachHook delegates to the service', async () => {
+      vi.mocked(mockTasksService.detachHook).mockResolvedValue(true);
+
+      const removed = await resolver.detachHook({ hookTaskId: 'hook-1' });
+
+      expect(removed).toBe(true);
+      expect(mockTasksService.detachHook).toHaveBeenCalledWith('hook-1');
+    });
+
+    test('beforeHooks/afterHooks resolve via getTaskHooks', async () => {
+      const before = { ...mockTask, id: 'before-hook' };
+      const after = { ...mockTask, id: 'after-hook' };
+      vi.mocked(mockTasksService.getTaskHooks).mockResolvedValue({
+        after: [after],
+        before: [before],
+      });
+      const parent = {
+        ...mockTask,
+        plan: null,
+        projectRelation: null,
+        requirementsJson: '[]',
+      };
+
+      expect(await resolver.beforeHooks(parent)).toEqual([before]);
+      expect(await resolver.afterHooks(parent)).toEqual([after]);
     });
   });
 });

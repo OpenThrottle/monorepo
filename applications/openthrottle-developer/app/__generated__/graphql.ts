@@ -103,6 +103,25 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AddHookInput = {
+  /** Anchor task the hook attaches to (task-level before/after). Omit or null for a plan-level hook (beforeAll/afterAll, or beforeEach/afterEach with scope 'each'). */
+  anchorTaskId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional hook task description (template source). */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Plan the hook belongs to */
+  planId: Scalars['ID']['input'];
+  /** Hook role: 'before' or 'after'. */
+  role: Scalars['String']['input'];
+  /** Plan-level only: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach, expanded onto every task). Defaults to 'once'. Rejected for task-level hooks. */
+  scope?: InputMaybe<Scalars['String']['input']>;
+  /** Skill slug when source is 'skill'; required in that case. */
+  skillSlug?: InputMaybe<Scalars['String']['input']>;
+  /** Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner). */
+  source: Scalars['String']['input'];
+  /** Optional hook task title (template source). Defaults to a generated label. */
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type AddPermissionToRoleInput = {
   /** Permission id to add */
   permissionId: Scalars['ID']['input'];
@@ -722,6 +741,11 @@ export type DeleteTaskInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DetachHookInput = {
+  /** Hook task id to detach (delete) */
+  hookTaskId: Scalars['ID']['input'];
+};
+
 export type DiscoverAgentClisResult = {
   __typename?: 'DiscoverAgentClisResult';
   /** Allowlisted agent CLIs detected as available on the server host. */
@@ -1228,6 +1252,8 @@ export type ModelEndpointObject = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Attach a lifecycle hook to a plan (anchorTaskId omitted → beforeAll/afterAll, or beforeEach/afterEach with scope 'each') or to a task (anchorTaskId set → per-task before/after). The hook is materialized as a task row carrying hook_role/scope/source. */
+  addHook: TaskObject;
   /** Add a permission to a role */
   addPermissionToRole: Scalars['Boolean']['output'];
   /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
@@ -1303,6 +1329,8 @@ export type Mutation = {
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
   deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
+  /** Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way. */
+  detachHook: Scalars['Boolean']['output'];
   /** Disable a service account (admin, human only). */
   disableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Disable a user; they will not be able to log in. */
@@ -1421,6 +1449,10 @@ export type Mutation = {
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
+};
+
+export type MutationAddHookArgs = {
+  input: AddHookInput;
 };
 
 export type MutationAddPermissionToRoleArgs = {
@@ -1574,6 +1606,10 @@ export type MutationDeleteTaskArgs = {
 
 export type MutationDeleteWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationDetachHookArgs = {
+  input: DetachHookInput;
 };
 
 export type MutationDisableServiceAccountArgs = {
@@ -1887,8 +1923,12 @@ export type PlanEnqueuedNotification = NotificationEvent & {
 
 export type PlanObject = {
   __typename?: 'PlanObject';
+  /** Plan-level after-hooks (afterAll, or afterEach when scope='each'), in execution order. */
+  afterHooks: Array<TaskObject>;
   assignee?: Maybe<Scalars['String']['output']>;
   author: Scalars['String']['output'];
+  /** Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order. */
+  beforeHooks: Array<TaskObject>;
   category: Scalars['String']['output'];
   /** Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed. */
   completedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -3427,7 +3467,11 @@ export type TaskEmbeddingsByTaskInput = {
 
 export type TaskObject = {
   __typename?: 'TaskObject';
+  /** Task-level after-hooks anchored to this task (one level), in execution order. */
+  afterHooks: Array<TaskObject>;
   assignee?: Maybe<Scalars['String']['output']>;
+  /** Task-level before-hooks anchored to this task (one level), in execution order. */
+  beforeHooks: Array<TaskObject>;
   category?: Maybe<Scalars['String']['output']>;
   /** Set once on transition into COMPLETED; cleared if status leaves COMPLETED. Null when never completed. */
   completedAt?: Maybe<Scalars['DateTime']['output']>;
