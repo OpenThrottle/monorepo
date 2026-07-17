@@ -1,5 +1,20 @@
 import * as React from 'react';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
@@ -27,6 +42,7 @@ export interface RuleFormProps {
   vocabulary: RuleFormVocabularyOption[];
 }
 
+const ANY = 'any';
 const PLAN_STATUSES = [
   'BACKLOG',
   'BLOCKED',
@@ -70,9 +86,9 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
   const [tagAll, setTagAll] = React.useState<string[]>(
     initialRule?.tagAll ?? [],
   );
-  const [status, setStatus] = React.useState(initialRule?.status ?? '');
+  const [status, setStatus] = React.useState(initialRule?.status ?? ANY);
   const [environment, setEnvironment] = React.useState(
-    initialRule?.environment ?? '',
+    initialRule?.environment ?? ANY,
   );
   const [skillSlug, setSkillSlug] = React.useState(
     initialRule != null
@@ -150,219 +166,297 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
   };
 
   // Markup
-  const renderTagOption = (
+  const renderTagChip = (
     option: RuleFormVocabularyOption,
-  ): React.ReactElement => (
-    <label className="flex items-center gap-1 text-xs" key={option.tag}>
-      <input
-        checked={tagAll.includes(option.tag)}
-        onChange={() => handleToggleTag(option.tag)}
-        type="checkbox"
-      />
-      {option.tag}
-    </label>
-  );
+  ): React.ReactElement => {
+    const selected = tagAll.includes(option.tag);
+    return (
+      <Button
+        aria-pressed={selected}
+        key={option.tag}
+        onClick={() => handleToggleTag(option.tag)}
+        size="sm"
+        type="button"
+        variant={selected ? 'default' : 'outline'}
+      >
+        {option.tag}
+      </Button>
+    );
+  };
 
   // Life Cycle
 
   // 🔌 Short Circuit
 
   return (
-    <Card className="flex flex-col gap-4 p-4" data-testid="RuleForm">
-      <h3 className="text-sm font-semibold">
-        {isEdit ? RULES_COPY.editTitle : RULES_COPY.createTitle}
-      </h3>
+    <Card className="w-full max-w-2xl gap-8" data-testid="RuleForm">
+      <CardHeader>
+        <CardTitle>
+          {isEdit ? RULES_COPY.editTitle : RULES_COPY.createTitle}
+        </CardTitle>
+        <CardDescription>{RULES_COPY.formDescription}</CardDescription>
+      </CardHeader>
 
-      <Form className="flex flex-col gap-4" method="post">
-        {isEdit ? (
-          <input name="id" type="hidden" value={initialRule.id} />
-        ) : null}
-        <input
-          name="enabled"
-          type="hidden"
-          value={String(initialRule?.enabled ?? true)}
-        />
-        <input
-          name="actionPayloadJson"
-          type="hidden"
-          value={actionPayloadJson}
-        />
-        {tagAll.map((tag) => (
-          <input key={tag} name="tagAll" type="hidden" value={tag} />
-        ))}
-
-        <fieldset className="flex flex-col gap-1">
-          <legend className="text-xs font-medium">
-            {RULES_COPY.identityLegend}
-          </legend>
-          <label className="text-xs" htmlFor="rule-title">
-            {RULES_COPY.titleLabel}
-          </label>
+      <Form method="post">
+        <CardContent className="space-y-8">
+          {isEdit ? (
+            <input name="id" type="hidden" value={initialRule.id} />
+          ) : null}
           <input
-            className="border-input bg-background h-8 rounded-md border px-2 text-sm"
-            id="rule-title"
-            name="title"
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={RULES_COPY.titlePlaceholder}
-            required={true}
-            value={title}
+            name="enabled"
+            type="hidden"
+            value={String(initialRule?.enabled ?? true)}
           />
-        </fieldset>
+          <input name="actionType" type="hidden" value={actionType} />
+          <input
+            name="actionPayloadJson"
+            type="hidden"
+            value={actionPayloadJson}
+          />
+          <input
+            name="status"
+            type="hidden"
+            value={status === ANY ? '' : status}
+          />
+          <input
+            name="environment"
+            type="hidden"
+            value={environment === ANY ? '' : environment}
+          />
+          {tagAll.map((tag) => (
+            <input key={tag} name="tagAll" type="hidden" value={tag} />
+          ))}
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-xs font-medium">
-            {RULES_COPY.matchLegend}
-          </legend>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Phase tags</span>
-            <div className="flex flex-wrap gap-3">
-              {phaseOptions.map(renderTagOption)}
+          {/* Identity */}
+          <section className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold">
+                {RULES_COPY.identityLegend}
+              </h3>
+              <p className="text-muted-foreground text-xs">
+                {RULES_COPY.identityDescription}
+              </p>
             </div>
-            <span className="text-muted-foreground text-xs">Domain tags</span>
-            <div className="flex flex-wrap gap-3">
-              {domainOptions.map(renderTagOption)}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs" htmlFor="rule-status">
-              Status
-            </label>
-            <select
-              className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-              id="rule-status"
-              name="status"
-              onChange={(event) => setStatus(event.target.value)}
-              value={status}
-            >
-              <option value="">any</option>
-              {PLAN_STATUSES.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-            <label className="text-xs" htmlFor="rule-environment">
-              Environment
-            </label>
-            <select
-              className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-              id="rule-environment"
-              name="environment"
-              onChange={(event) => setEnvironment(event.target.value)}
-              value={environment}
-            >
-              <option value="">any</option>
-              {ENVIRONMENTS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-xs font-medium">
-            {RULES_COPY.actionLegend}
-          </legend>
-          <select
-            aria-label="Action type"
-            className="border-input bg-background h-7 w-fit rounded-md border px-2 text-xs"
-            onChange={(event) => setActionType(event.target.value)}
-            value={actionType}
-          >
-            <option value="inject-task">inject-task</option>
-            <option value="availability-exception">
-              availability-exception
-            </option>
-          </select>
-
-          {actionType === 'inject-task' ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="text-xs" htmlFor="rule-skill-slug">
-                Skill
-              </label>
-              <select
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                id="rule-skill-slug"
-                onChange={(event) => setSkillSlug(event.target.value)}
-                value={skillSlug}
-              >
-                <option value="">Pick a skill…</option>
-                {skillSlugs.map((slug) => (
-                  <option key={slug} value={slug}>
-                    {slug}
-                  </option>
-                ))}
-              </select>
-              <label className="text-xs" htmlFor="rule-placement">
-                Placement
-              </label>
-              <select
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                id="rule-placement"
-                onChange={(event) => setPlacement(event.target.value)}
-                value={placement}
-              >
-                <option value="first">first</option>
-                <option value="last">last</option>
-              </select>
-              <input
-                aria-label="Title template"
-                className="border-input bg-background h-7 min-w-64 rounded-md border px-2 text-xs"
-                onChange={(event) => setTitleTemplate(event.target.value)}
-                placeholder={RULES_COPY.titleTemplatePlaceholder}
-                value={titleTemplate}
+            <div className="space-y-1.5">
+              <Label htmlFor="rule-title">{RULES_COPY.titleLabel}</Label>
+              <Input
+                id="rule-title"
+                name="title"
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder={RULES_COPY.titlePlaceholder}
+                required={true}
+                value={title}
               />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              <input
-                aria-label="Tag allow list"
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                onChange={(event) => setTagAllow(event.target.value)}
-                placeholder="tagAllow (comma-separated)"
-                value={tagAllow}
-              />
-              <input
-                aria-label="Tag deny list"
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                onChange={(event) => setTagDeny(event.target.value)}
-                placeholder="tagDeny (comma-separated)"
-                value={tagDeny}
-              />
-              <input
-                aria-label="Slug allow list"
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                onChange={(event) => setSlugAllow(event.target.value)}
-                placeholder="slugAllow (comma-separated)"
-                value={slugAllow}
-              />
-              <input
-                aria-label="Slug deny list"
-                className="border-input bg-background h-7 rounded-md border px-2 text-xs"
-                onChange={(event) => setSlugDeny(event.target.value)}
-                placeholder="slugDeny (comma-separated)"
-                value={slugDeny}
-              />
+          </section>
+
+          {/* Match */}
+          <section className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold">
+                {RULES_COPY.matchLegend}
+              </h3>
+              <p className="text-muted-foreground text-xs">
+                {RULES_COPY.matchDescription}
+              </p>
             </div>
-          )}
-        </fieldset>
 
-        {error != null ? (
-          <p className="text-destructive text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
+            <div className="space-y-1.5">
+              <Label>{RULES_COPY.phaseTagsLabel}</Label>
+              <div className="flex flex-wrap gap-2">
+                {phaseOptions.map(renderTagChip)}
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <Button disabled={submitDisabled} size="sm" type="submit">
-            {RULES_COPY.saveAction}
-          </Button>
-          <Button asChild={true} size="sm" type="button" variant="outline">
+            <div className="space-y-1.5">
+              <Label>{RULES_COPY.domainTagsLabel}</Label>
+              <div className="flex flex-wrap gap-2">
+                {domainOptions.map(renderTagChip)}
+              </div>
+            </div>
+
+            {tagAll.length === 0 ? (
+              <p className="text-muted-foreground text-xs italic">
+                {RULES_COPY.noTagsHint}
+              </p>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="rule-status">{RULES_COPY.statusLabel}</Label>
+                <Select onValueChange={setStatus} value={status}>
+                  <SelectTrigger
+                    aria-label={RULES_COPY.statusLabel}
+                    id="rule-status"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
+                    {PLAN_STATUSES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="rule-environment">
+                  {RULES_COPY.environmentLabel}
+                </Label>
+                <Select onValueChange={setEnvironment} value={environment}>
+                  <SelectTrigger
+                    aria-label={RULES_COPY.environmentLabel}
+                    id="rule-environment"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
+                    {ENVIRONMENTS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          {/* Action */}
+          <section className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold">
+                {RULES_COPY.actionLegend}
+              </h3>
+              <p className="text-muted-foreground text-xs">
+                {RULES_COPY.actionDescription}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="rule-action-type">
+                {RULES_COPY.actionTypeLabel}
+              </Label>
+              <Select onValueChange={setActionType} value={actionType}>
+                <SelectTrigger
+                  aria-label={RULES_COPY.actionTypeLabel}
+                  className="w-fit"
+                  id="rule-action-type"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inject-task">
+                    {RULES_COPY.injectTaskOption}
+                  </SelectItem>
+                  <SelectItem value="availability-exception">
+                    {RULES_COPY.availabilityExceptionOption}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {actionType === 'inject-task' ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="rule-skill-slug">
+                    {RULES_COPY.skillLabel}
+                  </Label>
+                  <Select onValueChange={setSkillSlug} value={skillSlug}>
+                    <SelectTrigger
+                      aria-label={RULES_COPY.skillLabel}
+                      id="rule-skill-slug"
+                    >
+                      <SelectValue placeholder={RULES_COPY.skillPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {skillSlugs.map((slug) => (
+                        <SelectItem key={slug} value={slug}>
+                          {slug}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="rule-placement">
+                    {RULES_COPY.placementLabel}
+                  </Label>
+                  <Select onValueChange={setPlacement} value={placement}>
+                    <SelectTrigger
+                      aria-label={RULES_COPY.placementLabel}
+                      id="rule-placement"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="first">first</SelectItem>
+                      <SelectItem value="last">last</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="rule-title-template">Title template</Label>
+                  <Input
+                    aria-label="Title template"
+                    id="rule-title-template"
+                    onChange={(event) => setTitleTemplate(event.target.value)}
+                    placeholder={RULES_COPY.titleTemplatePlaceholder}
+                    value={titleTemplate}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  aria-label="Tag allow list"
+                  onChange={(event) => setTagAllow(event.target.value)}
+                  placeholder={RULES_COPY.tagAllowPlaceholder}
+                  value={tagAllow}
+                />
+                <Input
+                  aria-label="Tag deny list"
+                  onChange={(event) => setTagDeny(event.target.value)}
+                  placeholder={RULES_COPY.tagDenyPlaceholder}
+                  value={tagDeny}
+                />
+                <Input
+                  aria-label="Slug allow list"
+                  onChange={(event) => setSlugAllow(event.target.value)}
+                  placeholder={RULES_COPY.slugAllowPlaceholder}
+                  value={slugAllow}
+                />
+                <Input
+                  aria-label="Slug deny list"
+                  onChange={(event) => setSlugDeny(event.target.value)}
+                  placeholder={RULES_COPY.slugDenyPlaceholder}
+                  value={slugDeny}
+                />
+              </div>
+            )}
+          </section>
+
+          {error != null ? (
+            <p className="text-destructive text-sm" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </CardContent>
+
+        <CardFooter className="justify-end gap-3 pt-6">
+          <Button asChild={true} type="button" variant="ghost">
             <Link to="/rules">{RULES_COPY.cancelAction}</Link>
           </Button>
-        </div>
+          <Button disabled={submitDisabled} type="submit" variant="outline">
+            {RULES_COPY.saveAction}
+          </Button>
+        </CardFooter>
       </Form>
     </Card>
   );
