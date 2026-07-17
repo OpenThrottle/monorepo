@@ -37,8 +37,11 @@ fragment Task on TaskObject {
   category
   createdAt
   description
+  hookRole
+  hookSource
   id
   planId
+  parentTaskId
   project
   projectId
   requirementsJson

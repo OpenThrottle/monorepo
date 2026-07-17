@@ -3,6 +3,8 @@ import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 export {
   comparePlanTaskListOrder,
+  isRunnableRalphTask,
+  isRunnerExecutedHookTask,
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from './plan-task-list-order.ts';
