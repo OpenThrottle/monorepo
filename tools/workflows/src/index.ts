@@ -97,6 +97,13 @@ export type {
   JobRunHookIterationResult,
   JobRunHookPhaseEntryResult,
 } from './utils/job-run-hooks-runner';
+export {
+  hookTaskPhase,
+  projectHookTaskToJobRunHookEntry,
+  projectHookTasksToJobRunHookEntries,
+  skillSlugToSkillPath,
+} from './utils/hook-task-to-job-run-hook';
+export type { MaterializedHookTask } from './utils/hook-task-to-job-run-hook';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,
