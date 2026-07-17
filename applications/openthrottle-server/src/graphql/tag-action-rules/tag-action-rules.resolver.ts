@@ -50,6 +50,7 @@ const toRuleObject = (rule: TagActionRule): TagActionRuleObject => ({
   projectId: rule.projectId,
   status: rule.status,
   tagAll: rule.tagAll,
+  title: rule.title,
   updatedAt: rule.updatedAt,
   userId: rule.userId,
 });
@@ -128,6 +129,7 @@ export class TagActionRulesResolver {
       projectId: input.projectId ?? null,
       status: input.status ?? null,
       tagAll: input.tagAll ?? [],
+      title: input.title,
     });
     return toRuleObject(rule);
   }
