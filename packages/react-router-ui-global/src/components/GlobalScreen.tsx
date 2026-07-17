@@ -36,13 +36,13 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
           <p className="text-sm">
             <span className="font-semibold">Beta:</span> This route is a beta
             feature and may not function as expected. Please report any issues
-            to the{' '}
+            found using{' '}
             <Link
               className="hover:text-background underline underline-offset-4 transition-colors"
               target="_blank"
               to="https://github.com/openthrottle/openthrottle/issues"
             >
-              GitHub repository
+              GitHub
             </Link>
             .
           </p>
