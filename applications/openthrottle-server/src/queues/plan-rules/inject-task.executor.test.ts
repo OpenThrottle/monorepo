@@ -63,17 +63,23 @@ describe('InjectTaskExecutor', () => {
   >;
   let preSatisfiedGetOne: ReturnType<typeof vi.fn>;
   let aggregateGetRawOne: ReturnType<typeof vi.fn>;
+  let anchorGetRawOne: ReturnType<typeof vi.fn>;
   let taskSave: ReturnType<typeof vi.fn>;
   let taskCreate: ReturnType<typeof vi.fn>;
   let taskDelete: ReturnType<typeof vi.fn>;
+  let taskFindOne: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     preSatisfiedGetOne = vi.fn().mockResolvedValue(null);
     aggregateGetRawOne = vi.fn().mockResolvedValue({ value: '1000' });
+    // Cloned builders (anchor neighbor lookups) get their own getRawOne so
+    // first/last aggregate math and before/after neighbor math don't collide.
+    anchorGetRawOne = vi.fn().mockResolvedValue({ value: null });
     const queryBuilder = {
       andWhere: vi.fn(),
+      clone: vi.fn(),
       getOne: preSatisfiedGetOne,
       getRawOne: aggregateGetRawOne,
       orderBy: vi.fn(),
@@ -84,18 +90,36 @@ describe('InjectTaskExecutor', () => {
     queryBuilder.orderBy.mockReturnValue(queryBuilder);
     queryBuilder.select.mockReturnValue(queryBuilder);
     queryBuilder.where.mockReturnValue(queryBuilder);
+    // A cloned builder self-chains (andWhere/orderBy return the clone) so the
+    // neighbor lookup resolves through anchorGetRawOne, not the aggregate one.
+    queryBuilder.clone.mockImplementation(() => {
+      const cloned = {
+        andWhere: vi.fn(),
+        getRawOne: anchorGetRawOne,
+        orderBy: vi.fn(),
+        select: vi.fn(),
+        where: vi.fn(),
+      };
+      cloned.andWhere.mockReturnValue(cloned);
+      cloned.orderBy.mockReturnValue(cloned);
+      cloned.select.mockReturnValue(cloned);
+      cloned.where.mockReturnValue(cloned);
+      return cloned;
+    });
 
     taskCreate = vi.fn((data: Partial<Task>) => ({ ...data }));
     taskSave = vi.fn((entity: Task) =>
       Promise.resolve({ ...entity, id: taskId }),
     );
     taskDelete = vi.fn();
+    taskFindOne = vi.fn().mockResolvedValue(null);
     const tasksService = createMock<TasksService>({
       getRepository: vi.fn(() =>
         asMock({
           create: taskCreate,
           createQueryBuilder: vi.fn(() => queryBuilder),
           delete: taskDelete,
+          findOne: taskFindOne,
           save: taskSave,
         }),
       ),
@@ -229,6 +253,72 @@ describe('InjectTaskExecutor', () => {
 
     expect(taskCreate).toHaveBeenCalledWith(
       expect.objectContaining({ sortOrder: 4000 }),
+    );
+  });
+
+  it('injects after an anchor at the midpoint to its next neighbor', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
+    );
+    anchorGetRawOne.mockResolvedValue({ value: '4000' });
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
+        placement: 'after',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ sortOrder: 3000 }),
+    );
+  });
+
+  it('injects after the last anchor by stepping out one gap when no neighbor exists', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
+    );
+    anchorGetRawOne.mockResolvedValue({ value: null });
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
+        placement: 'after',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ sortOrder: 3000 }),
+    );
+  });
+
+  it('injects before an anchor at the midpoint to its previous neighbor', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
+    );
+    anchorGetRawOne.mockResolvedValue({ value: '1000' });
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
+        placement: 'before',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ sortOrder: 1500 }),
     );
   });
 

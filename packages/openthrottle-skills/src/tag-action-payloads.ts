@@ -31,19 +31,64 @@ const kebabSlug = z
   );
 
 /**
+ * @description Anchor for `before`/`after` placement: names the target task the
+ * injected task lands adjacent to. Resolved (in priority order) by explicit
+ * `taskId`, then `skillSlug` reference (`/<slug>` in title/description), then a
+ * case-insensitive `titleMatch` substring. Exactly one field should be set.
+ * @public
+ */
+export const injectTaskAnchorSchema = z
+  .object({
+    skillSlug: kebabSlug.optional(),
+    taskId: z.string().uuid().optional(),
+    titleMatch: z.string().min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (a) =>
+      [a.taskId, a.skillSlug, a.titleMatch].filter((v) => v != null).length ===
+      1,
+    { message: 'anchor must set exactly one of taskId, skillSlug, titleMatch' },
+  );
+
+/** @public */
+export type InjectTaskAnchor = z.infer<typeof injectTaskAnchorSchema>;
+
+/**
  * @description Payload for `inject-task`: which skill the injected task should
  * run, where it lands in the plan, and optional title/description templates
- * (interpolation: {{plan.title}}, {{plan.id}}, {{matchedTags}}).
+ * (interpolation: {{plan.title}}, {{plan.id}}, {{matchedTags}}). Placement
+ * `first`/`last` land at the plan head/tail; `before`/`after` land adjacent to
+ * an `anchor` task (required for those two placements).
  * @public
  */
 export const injectTaskActionPayloadSchema = z
   .object({
+    anchor: injectTaskAnchorSchema.optional(),
     descriptionTemplate: z.string().min(1).optional(),
-    placement: z.enum(['first', 'last']).default('first'),
+    placement: z.enum(['after', 'before', 'first', 'last']).default('first'),
     skillSlug: kebabSlug,
     titleTemplate: z.string().min(1).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((payload, ctx) => {
+    const relative =
+      payload.placement === 'before' || payload.placement === 'after';
+    if (relative && payload.anchor == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `placement '${payload.placement}' requires an anchor`,
+        path: ['anchor'],
+      });
+    }
+    if (!relative && payload.anchor != null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `anchor is only valid with placement 'before' or 'after'`,
+        path: ['anchor'],
+      });
+    }
+  });
 
 /** @public */
 export type InjectTaskActionPayload = z.infer<
