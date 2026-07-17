@@ -216,6 +216,16 @@ type PlanObject {
   """
   runConfigJson: String!
 
+  """
+  Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.
+  """
+  beforeHooks: [TaskObject!]!
+
+  """
+  Plan-level after-hooks (afterAll, or afterEach when scope='each'), in execution order.
+  """
+  afterHooks: [TaskObject!]!
+
   """Tags attached to this plan, alphabetically by tag."""
   tags: [PlanTagObject!]!
 }
@@ -356,6 +366,16 @@ type TaskObject {
 
   """Tags attached to this task, alphabetically by tag."""
   tags: [TaskTagObject!]!
+
+  """
+  Task-level before-hooks anchored to this task (one level), in execution order.
+  """
+  beforeHooks: [TaskObject!]!
+
+  """
+  Task-level after-hooks anchored to this task (one level), in execution order.
+  """
+  afterHooks: [TaskObject!]!
 }
 
 type TasksByProjectIdResultObject {
@@ -3346,6 +3366,16 @@ type Mutation {
   deleteTask(input: DeleteTaskInput!): Boolean!
 
   """
+  Attach a lifecycle hook to a plan (anchorTaskId omitted → beforeAll/afterAll, or beforeEach/afterEach with scope 'each') or to a task (anchorTaskId set → per-task before/after). The hook is materialized as a task row carrying hook_role/scope/source.
+  """
+  addHook(input: AddHookInput!): TaskObject!
+
+  """
+  Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way.
+  """
+  detachHook(input: DetachHookInput!): Boolean!
+
+  """
   Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable).
   """
   startTranscriptionStream: StartTranscriptionStreamResult!
@@ -4205,6 +4235,45 @@ input ReorderPlanTasksInput {
 input DeleteTaskInput {
   """Task id to delete"""
   id: ID!
+}
+
+input AddHookInput {
+  """
+  Anchor task the hook attaches to (task-level before/after). Omit or null for a plan-level hook (beforeAll/afterAll, or beforeEach/afterEach with scope 'each').
+  """
+  anchorTaskId: ID
+
+  """Optional hook task description (template source)."""
+  description: String
+
+  """Plan the hook belongs to"""
+  planId: ID!
+
+  """Hook role: 'before' or 'after'."""
+  role: String!
+
+  """
+  Plan-level only: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach, expanded onto every task). Defaults to 'once'. Rejected for task-level hooks.
+  """
+  scope: String
+
+  """Skill slug when source is 'skill'; required in that case."""
+  skillSlug: String
+
+  """
+  Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner).
+  """
+  source: String!
+
+  """
+  Optional hook task title (template source). Defaults to a generated label.
+  """
+  title: String
+}
+
+input DetachHookInput {
+  """Hook task id to detach (delete)"""
+  hookTaskId: ID!
 }
 
 input CreateUserInput {

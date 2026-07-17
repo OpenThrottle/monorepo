@@ -206,3 +206,55 @@ export class DeleteTaskInput {
   @Field(() => ID, { description: `Task id to delete` })
   id!: string;
 }
+
+@InputType()
+export class AddHookInput {
+  @Field(() => ID, {
+    description: `Anchor task the hook attaches to (task-level before/after). Omit or null for a plan-level hook (beforeAll/afterAll, or beforeEach/afterEach with scope 'each').`,
+    nullable: true,
+  })
+  anchorTaskId?: string | null;
+
+  @Field(() => String, {
+    description: `Optional hook task description (template source).`,
+    nullable: true,
+  })
+  description?: string | null;
+
+  @Field(() => ID, { description: `Plan the hook belongs to` })
+  planId!: string;
+
+  @Field(() => String, {
+    description: `Hook role: 'before' or 'after'.`,
+  })
+  role!: string;
+
+  @Field(() => String, {
+    description: `Plan-level only: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach, expanded onto every task). Defaults to 'once'. Rejected for task-level hooks.`,
+    nullable: true,
+  })
+  scope?: string | null;
+
+  @Field(() => String, {
+    description: `Skill slug when source is 'skill'; required in that case.`,
+    nullable: true,
+  })
+  skillSlug?: string | null;
+
+  @Field(() => String, {
+    description: `Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner).`,
+  })
+  source!: string;
+
+  @Field(() => String, {
+    description: `Optional hook task title (template source). Defaults to a generated label.`,
+    nullable: true,
+  })
+  title?: string | null;
+}
+
+@InputType()
+export class DetachHookInput {
+  @Field(() => ID, { description: `Hook task id to detach (delete)` })
+  hookTaskId!: string;
+}
