@@ -21,10 +21,13 @@ export const RULES_COPY = {
   emptyBody: `Rules map tag combinations on plans to actions — for example, injecting a /grilling task into every breakdown-tagged plan.`,
   emptyTitle: `No tag→action rules yet`,
   enableAction: `Enable`,
+  identityLegend: `Identity`,
   matchLegend: `Match (all selected tags must be present)`,
   matchesEveryPlan: `matches every plan`,
   newRuleAction: `New rule`,
   pageTitle: `Tag → action rules`,
   saveAction: `Save rule`,
+  titleLabel: `Title`,
+  titlePlaceholder: `A human-readable name for this rule`,
   titleTemplatePlaceholder: `Title template (optional, {{plan.title}} interpolates)`,
 } as const;

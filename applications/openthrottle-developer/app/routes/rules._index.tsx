@@ -8,7 +8,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
+import { Link, useFetcher, useNavigate } from 'react-router';
 import { WandSparklesIcon } from 'lucide-react';
 import {
   RulesDeleteTagActionRuleDocument,
@@ -16,8 +16,6 @@ import {
   RulesUpsertTagActionRuleDocument,
 } from '~/__generated__/graphql';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { RuleForm } from '~/routing/rules/components/RuleForm';
-import type { RuleFormValue } from '~/routing/rules/components/RuleForm';
 import { RulesTable } from '~/routing/rules/components/RulesTable';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -36,10 +34,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return {
     rules: page.tagActionRules ?? [],
-    skillSlugs: (page.skillAvailability.skills ?? [])
-      .filter((skill) => !skill.effectiveDisableModelInvocation)
-      .map((skill) => skill.slug),
-    vocabulary: page.skillTagVocabulary.tags ?? [],
   };
 };
 
@@ -65,12 +59,12 @@ export const action = async (args: Route.ActionArgs) => {
       return { ruleSaved: true };
     }
 
-    if (intent === 'upsertRule') {
+    if (intent === 'toggleEnabled') {
       const raw = formData.get('rule');
       if (typeof raw !== 'string' || raw === '') {
         return { ruleError: 'Rule payload is required.' };
       }
-      const value: RuleFormValue = JSON.parse(raw);
+      const value: TagActionRuleRowData = JSON.parse(raw);
       await executeGraphqlWithAuth(
         args.request,
         RulesUpsertTagActionRuleDocument,
@@ -78,11 +72,12 @@ export const action = async (args: Route.ActionArgs) => {
           input: {
             actionPayloadJson: value.actionPayloadJson,
             actionType: value.actionType,
-            enabled: value.enabled,
+            enabled: !value.enabled,
             environment: value.environment,
             id: value.id,
             status: value.status,
             tagAll: value.tagAll,
+            title: value.title,
           },
         },
       );
@@ -100,14 +95,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { rules, skillSlugs, vocabulary } = loaderData;
+  const { rules } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
-  const [editing, setEditing] = React.useState<TagActionRuleRowData | null>(
-    null,
-  );
-  const [showForm, setShowForm] = React.useState(false);
+  const navigate = useNavigate();
 
   // Setup
   const pending = fetcher.state !== 'idle';
@@ -117,35 +109,19 @@ export default function Component(
       : null;
 
   // Handlers
-  const handleSubmit = (value: RuleFormValue): void => {
-    fetcher.submit(
-      { intent: 'upsertRule', rule: JSON.stringify(value) },
-      { method: 'post' },
-    );
-    setShowForm(false);
-    setEditing(null);
-  };
-
   const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
     fetcher.submit(
-      {
-        intent: 'upsertRule',
-        rule: JSON.stringify({
-          actionPayloadJson: rule.actionPayloadJson,
-          actionType: rule.actionType,
-          enabled: !rule.enabled,
-          environment: rule.environment,
-          id: rule.id,
-          status: rule.status,
-          tagAll: rule.tagAll,
-        }),
-      },
+      { intent: 'toggleEnabled', rule: JSON.stringify(rule) },
       { method: 'post' },
     );
   };
 
   const handleDelete = (id: string): void => {
     fetcher.submit({ id, intent: 'deleteRule' }, { method: 'post' });
+  };
+
+  const handleEdit = (rule: TagActionRuleRowData): void => {
+    void navigate(`/rules/${rule.id}/edit`);
   };
 
   // Markup
@@ -158,15 +134,8 @@ export default function Component(
     <GlobalScreen className="flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex items-center justify-between">
         <GlobalHeading icon={WandSparklesIcon} title={RULES_COPY.pageTitle} />
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-          size="sm"
-          type="button"
-        >
-          {RULES_COPY.newRuleAction}
+        <Button asChild={true} size="sm">
+          <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>
         </Button>
       </div>
 
@@ -176,27 +145,9 @@ export default function Component(
         </p>
       ) : null}
 
-      {showForm || editing != null ? (
-        <RuleForm
-          initialRule={editing}
-          key={editing?.id ?? 'create'}
-          onCancel={() => {
-            setEditing(null);
-            setShowForm(false);
-          }}
-          onSubmit={handleSubmit}
-          pending={pending}
-          skillSlugs={skillSlugs}
-          vocabulary={vocabulary}
-        />
-      ) : null}
-
       <RulesTable
         onDelete={handleDelete}
-        onEdit={(rule) => {
-          setEditing(rule);
-          setShowForm(true);
-        }}
+        onEdit={handleEdit}
         onToggleEnabled={handleToggleEnabled}
         pending={pending}
         rules={rules}

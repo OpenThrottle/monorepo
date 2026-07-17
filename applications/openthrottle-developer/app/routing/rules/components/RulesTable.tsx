@@ -10,6 +10,7 @@ export interface TagActionRuleRowData {
   id: string;
   status?: string | null;
   tagAll: string[];
+  title: string;
 }
 
 export interface RulesTableProps {

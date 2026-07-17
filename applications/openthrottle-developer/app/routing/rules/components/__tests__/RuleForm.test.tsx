@@ -2,7 +2,9 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { RuleForm } from '../RuleForm';
 import type { RuleFormProps } from '../RuleForm';
 
@@ -13,8 +15,6 @@ describe('RuleForm Component', () => {
   beforeEach(() => {
     props = {
       initialRule: null,
-      onCancel: vi.fn(),
-      onSubmit: vi.fn(),
       skillSlugs: ['grilling', 'github-deep-review'],
       vocabulary: [
         { dimension: 'phase', tag: 'breakdown' },
@@ -22,57 +22,39 @@ describe('RuleForm Component', () => {
       ],
     };
 
-    component = render(<RuleForm {...props} />);
+    const Component = () => <RuleForm {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+    component = render(<RoutesStub />);
   });
 
-  test('submits an inject-task rule with the serialized payload', async () => {
+  test('renders the title field and the form shell', () => {
+    expect(component.getByTestId('RuleForm')).toBeInTheDocument();
+    expect(component.getByLabelText(RULES_COPY.titleLabel)).toBeInTheDocument();
+  });
+
+  test('save is disabled until a title and skill are provided', async () => {
     const user = userEvent.setup();
 
-    await user.click(component.getByLabelText('breakdown'));
-    await user.selectOptions(component.getByLabelText('Skill'), 'grilling');
-    await user.click(component.getByRole('button', { name: 'Save rule' }));
-
-    expect(props.onSubmit).toHaveBeenCalledWith({
-      actionPayloadJson: JSON.stringify({
-        placement: 'first',
-        skillSlug: 'grilling',
-      }),
-      actionType: 'inject-task',
-      enabled: true,
-      environment: null,
-      id: null,
-      status: null,
-      tagAll: ['breakdown'],
-    });
-  });
-
-  test('save is disabled for inject-task until a skill is picked', () => {
     expect(component.getByRole('button', { name: 'Save rule' })).toBeDisabled();
+
+    await user.type(
+      component.getByLabelText(RULES_COPY.titleLabel),
+      'Grill breakdowns',
+    );
+    await user.selectOptions(component.getByLabelText('Skill'), 'grilling');
+
+    expect(component.getByRole('button', { name: 'Save rule' })).toBeEnabled();
   });
 
-  test('switches to the availability-exception payload form and serializes lists', async () => {
+  test('switches to the availability-exception payload fields', async () => {
     const user = userEvent.setup();
 
     await user.selectOptions(
       component.getByLabelText('Action type'),
       'availability-exception',
     );
-    await user.type(
-      component.getByLabelText('Tag deny list'),
-      'github, terraform',
-    );
-    await user.click(component.getByRole('button', { name: 'Save rule' }));
 
-    expect(props.onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        actionPayloadJson: JSON.stringify({
-          slugAllow: [],
-          slugDeny: [],
-          tagAllow: [],
-          tagDeny: ['github', 'terraform'],
-        }),
-        actionType: 'availability-exception',
-      }),
-    );
+    expect(component.getByLabelText('Tag deny list')).toBeInTheDocument();
   });
 });

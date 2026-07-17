@@ -25,6 +25,7 @@ describe('RulesTable Component', () => {
           id: 'rule-1',
           status: 'PENDING',
           tagAll: ['breakdown'],
+          title: 'Grill breakdowns',
         },
       ],
     };
