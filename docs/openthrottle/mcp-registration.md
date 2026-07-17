@@ -206,5 +206,6 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 | MCP env, fixtures, smoke checks        | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Service account tokens & rotation      | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
 | First agent workflow after MCP works   | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
+| Author OT plans & tasks via MCP        | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
 | Fresh clone → server + MCP             | [local-quickstart.md](./local-quickstart.md)                                                    |
 | Committed config template              | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                    |
