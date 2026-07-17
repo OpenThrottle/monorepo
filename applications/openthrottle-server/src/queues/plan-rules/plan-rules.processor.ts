@@ -88,11 +88,16 @@ export class PlanRulesProcessor
 
     const owner = await this.usersService.findByGithubUsername(plan.author);
     if (owner == null) {
-      this.logger.debug(
-        `Plan ${planId} author "${plan.author}" has no user row; no rules to evaluate`,
-        PlanRulesProcessor.name,
-      );
-      return { dispatched: 0, matched: 0, orphaned: 0, skipped: 'no-owner' };
+      const message = `Plan ${planId} author "${plan.author}" has no user row; no rules to evaluate`;
+
+      this.logger.debug(message, PlanRulesProcessor.name);
+
+      return {
+        dispatched: 0,
+        matched: 0,
+        orphaned: 0,
+        skipped: 'no-owner',
+      };
     }
 
     const [effectiveTags, rules] = await Promise.all([
@@ -120,13 +125,14 @@ export class PlanRulesProcessor
       },
       ruleInputs,
     );
-    const rulesById = new Map(rules.map((rule) => [rule.id, rule]));
 
+    const rulesById = new Map(rules.map((rule) => [rule.id, rule]));
     const fingerprints = await Promise.all(
       matched.map((action) =>
         this.ruleApplicationsService.findByRuleAndPlan(action.ruleId, planId),
       ),
     );
+
     const fresh = matched.filter((_, index) => fingerprints[index] == null);
 
     const dispatchable = fresh.flatMap((action) => {
@@ -137,23 +143,31 @@ export class PlanRulesProcessor
           `No executor registered for "${action.actionType}" (rule ${action.ruleId}, plan ${planId}); skipping without a ledger row`,
           PlanRulesProcessor.name,
         );
+
         return [];
       }
+
       return [{ action, executor, rule }];
     });
 
     await Promise.all(
       dispatchable.map(({ action, executor, rule }) =>
-        executor.execute({ action, ownerUserId: owner.id, plan, rule }),
+        executor.execute({
+          action,
+          ownerUserId: owner.id,
+          plan,
+          rule,
+        }),
       ),
     );
-    const dispatched = dispatchable.length;
 
+    const dispatched = dispatchable.length;
     const orphaned =
       await this.ruleApplicationsService.orphanUnmatchedApplications(
         planId,
         matched.map((action) => action.ruleId),
       );
+
     if (orphaned > 0) {
       this.logger.info(
         `Orphaned ${orphaned} rule application(s) on plan ${planId} (trigger: ${triggerKind})`,
@@ -161,6 +175,11 @@ export class PlanRulesProcessor
       );
     }
 
-    return { dispatched, matched: matched.length, orphaned, skipped: null };
+    return {
+      dispatched,
+      matched: matched.length,
+      orphaned,
+      skipped: null,
+    };
   }
 }

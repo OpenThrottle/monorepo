@@ -69,7 +69,7 @@ export class ProjectsResolver {
     description: `List all projects, ordered by createdAt descending`,
   })
   async projects(): Promise<Project[]> {
-    const entities = await this.projectsService.findAll();
+    const entities = await this.projectsService.findAll({ limit: 100 });
 
     return entities;
   }

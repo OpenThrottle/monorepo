@@ -9,6 +9,7 @@ import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
 } from '../../queues/agentic-test/agentic-test.types';
+import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
@@ -17,6 +18,8 @@ import type {
   DocIngestionJobPayload,
   DocIngestionJobResult,
 } from '../../queues/doc-ingestion/doc-ingestion.types';
+import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
+import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
@@ -25,6 +28,9 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
+import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants';
+import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants';
+import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants';
 import { QueuesService } from './queues.service';
 
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
@@ -127,6 +133,13 @@ describe('QueuesService', () => {
     removeRepeatableByKey: mockRemoveRepeatableByKey,
   });
 
+  const mockStaticStatsQueue = createMock<Queue>({
+    getJobCounts: mockGetJobCounts,
+    getJobs: mockGetJobs,
+    getRepeatableJobs: mockGetRepeatableJobs,
+    removeRepeatableByKey: mockRemoveRepeatableByKey,
+  });
+
   const mockConfigService = createMock<ConfigService>({
     get: vi.fn((key: string) => {
       if (key === 'redis.host') return undefined;
@@ -150,6 +163,10 @@ describe('QueuesService', () => {
           useValue: mockAgenticTestQueue,
         },
         {
+          provide: getQueueToken(CODE_INDEX_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
+        },
+        {
           provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
           useValue: mockDailyStatsQueue,
         },
@@ -162,8 +179,28 @@ describe('QueuesService', () => {
           useValue: mockDocIngestionQueue,
         },
         {
+          provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
+        },
+        {
+          provide: getQueueToken(PLAN_RULES_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
+        },
+        {
           provide: getQueueToken(PLANS_QUEUE_NAME),
           useValue: mockPlansQueue,
+        },
+        {
+          provide: getQueueToken(TAGGING_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
+        },
+        {
+          provide: getQueueToken(WORK_LEDGER_SWEEP_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
+        },
+        {
+          provide: getQueueToken(WORK_LEDGER_VERIFY_QUEUE_NAME),
+          useValue: mockStaticStatsQueue,
         },
       ],
     }).compile();
@@ -398,6 +435,10 @@ describe('QueuesService', () => {
             useValue: mockAgenticTestQueue,
           },
           {
+            provide: getQueueToken(CODE_INDEX_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
+          },
+          {
             provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
             useValue: mockDailyStatsQueue,
           },
@@ -410,8 +451,28 @@ describe('QueuesService', () => {
             useValue: mockDocIngestionQueue,
           },
           {
+            provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
+          },
+          {
+            provide: getQueueToken(PLAN_RULES_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
+          },
+          {
             provide: getQueueToken(PLANS_QUEUE_NAME),
             useValue: null,
+          },
+          {
+            provide: getQueueToken(TAGGING_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
+          },
+          {
+            provide: getQueueToken(WORK_LEDGER_SWEEP_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
+          },
+          {
+            provide: getQueueToken(WORK_LEDGER_VERIFY_QUEUE_NAME),
+            useValue: mockStaticStatsQueue,
           },
         ],
       }).compile();
@@ -480,7 +541,7 @@ describe('QueuesService', () => {
 
       const result = await service.getStats();
 
-      expect(result).toHaveLength(5);
+      expect(result).toHaveLength(11);
       const agenticTestStats = result.find(
         (s) => s.name === AGENTIC_TEST_QUEUE_NAME,
       );
@@ -534,7 +595,7 @@ describe('QueuesService', () => {
         name: DATABASE_BACKUP_QUEUE_NAME,
         waitingCount: 3,
       });
-      expect(mockGetJobCounts).toHaveBeenCalledTimes(4);
+      expect(mockGetJobCounts).toHaveBeenCalledTimes(10);
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
     });
 

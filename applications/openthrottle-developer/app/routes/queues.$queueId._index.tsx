@@ -141,6 +141,7 @@ export default function Component(
           icon={ListOrderedIcon}
           title={`Queues: ${queue.name}`}
         />
+
         <p
           className="text-muted-foreground mb-6 text-sm"
           data-testid="queue-detail-operational-hint"

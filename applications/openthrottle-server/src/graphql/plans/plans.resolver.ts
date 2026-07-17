@@ -7,7 +7,7 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/node-client';
 import type { PlanStatusCount } from '@openthrottle/node-client';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -18,6 +18,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
@@ -78,6 +80,7 @@ import {
   CancelPlanRunResultObject,
   CreatePlansResultObject,
   EnqueuePlanRunResultObject,
+  EvaluatePlanRulesResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
   PlanRunObject,
@@ -793,6 +796,35 @@ export class PlansResolver {
     const result = await repo.delete({ id: input.id });
 
     return (result.affected ?? 0) > 0;
+  }
+
+  @Mutation(() => EvaluatePlanRulesResultObject, {
+    description: `Manually enqueue a full tag→action rules evaluation pass for a plan. Fire-and-forget: the pass runs async on the plan-rules:evaluate queue and results land in the rule_applications ledger (read via planRuleApplications). The ack only confirms the pass was enqueued.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.PLANS_WRITE)
+  async evaluatePlanRules(
+    @Args('planId', { type: () => ID }) planId: string,
+  ): Promise<EvaluatePlanRulesResultObject> {
+    const plan = await this.plansService
+      .getRepository()
+      .findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new BadRequestException(`Plan not found: ${planId}`);
+    }
+
+    await this.planRulesEvaluationService.enqueueEvaluation(
+      planId,
+      PLAN_RULES_TRIGGER_KINDS.MANUAL,
+    );
+
+    const result = new EvaluatePlanRulesResultObject();
+    result.enqueued = true;
+    result.planId = planId;
+    result.triggerKind = PLAN_RULES_TRIGGER_KINDS.MANUAL;
+
+    return result;
   }
 
   @ProfileResponseTime('PlansResolver.enqueuePlanRun')

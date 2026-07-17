@@ -106,7 +106,10 @@
         "executor": "nx:run-commands",
         "options": {
           "command": "nest start --path tsconfig.app.json --watch",
-          "cwd": "{projectRoot}"
+          "cwd": "{projectRoot}",
+          "env": {
+            "PROCESS_ROLE": "all"
+          }
         }
       },
       "dev-api": {

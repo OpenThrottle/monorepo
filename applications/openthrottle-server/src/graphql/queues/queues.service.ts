@@ -27,8 +27,14 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
+import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import type { DatabaseBackupJobPayload } from '../../queues/database-backup/database-backup.types';
+import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
+import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
+import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants';
+import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants';
+import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants';
 
 const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
 
@@ -195,10 +201,16 @@ const VALID_JOB_STATES = [
 
 const REGISTERED_QUEUES = [
   AGENTIC_TEST_QUEUE_NAME,
+  CODE_INDEX_QUEUE_NAME,
   DATABASE_BACKUP_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
   DOC_INGESTION_QUEUE_NAME,
+  PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
+  PLAN_RULES_QUEUE_NAME,
   PLANS_QUEUE_NAME,
+  TAGGING_QUEUE_NAME,
+  WORK_LEDGER_SWEEP_QUEUE_NAME,
+  WORK_LEDGER_VERIFY_QUEUE_NAME,
 ] as const;
 
 @Injectable()
@@ -209,14 +221,26 @@ export class QueuesService implements OnModuleDestroy {
     private readonly configService: ConfigService,
     @InjectQueue(AGENTIC_TEST_QUEUE_NAME)
     private readonly agenticTestQueue: Queue<AnyJobData, void>,
+    @InjectQueue(CODE_INDEX_QUEUE_NAME)
+    private readonly codeIndexQueue: Queue<AnyJobData, void>,
     @InjectQueue(DAILY_STATS_QUEUE_NAME)
     private readonly dailyStatsQueue: Queue<AnyJobData, void>,
     @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
     private readonly databaseBackupQueue: Queue<AnyJobData, void>,
     @InjectQueue(DOC_INGESTION_QUEUE_NAME)
     private readonly docIngestionQueue: Queue<AnyJobData, void>,
+    @InjectQueue(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME)
+    private readonly planLifecycleHooksQueue: Queue<AnyJobData, void>,
+    @InjectQueue(PLAN_RULES_QUEUE_NAME)
+    private readonly planRulesQueue: Queue<AnyJobData, void>,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<AnyJobData, void>,
+    @InjectQueue(TAGGING_QUEUE_NAME)
+    private readonly taggingQueue: Queue<AnyJobData, void>,
+    @InjectQueue(WORK_LEDGER_SWEEP_QUEUE_NAME)
+    private readonly workLedgerSweepQueue: Queue<AnyJobData, void>,
+    @InjectQueue(WORK_LEDGER_VERIFY_QUEUE_NAME)
+    private readonly workLedgerVerifyQueue: Queue<AnyJobData, void>,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -295,6 +319,10 @@ export class QueuesService implements OnModuleDestroy {
       return this.agenticTestQueue;
     }
 
+    if (name === CODE_INDEX_QUEUE_NAME) {
+      return this.codeIndexQueue;
+    }
+
     if (name === DAILY_STATS_QUEUE_NAME) {
       return this.dailyStatsQueue;
     }
@@ -307,8 +335,28 @@ export class QueuesService implements OnModuleDestroy {
       return this.docIngestionQueue;
     }
 
+    if (name === PLAN_LIFECYCLE_HOOKS_QUEUE_NAME) {
+      return this.planLifecycleHooksQueue;
+    }
+
+    if (name === PLAN_RULES_QUEUE_NAME) {
+      return this.planRulesQueue;
+    }
+
     if (name === PLANS_QUEUE_NAME) {
       return this.plansQueue;
+    }
+
+    if (name === TAGGING_QUEUE_NAME) {
+      return this.taggingQueue;
+    }
+
+    if (name === WORK_LEDGER_SWEEP_QUEUE_NAME) {
+      return this.workLedgerSweepQueue;
+    }
+
+    if (name === WORK_LEDGER_VERIFY_QUEUE_NAME) {
+      return this.workLedgerVerifyQueue;
     }
 
     return this.dynamicQueues.get(name) ?? null;

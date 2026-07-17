@@ -63,9 +63,11 @@ const resolveDogfoodProject = async (
     request,
     SkillAvailabilityProjectsDocument,
   );
-  const project = projects.find(
-    (candidate) => candidate.nxProjectName === DOGFOOD_NX_PROJECT_NAME,
-  );
+
+  const project = projects.find((candidate) => {
+    return candidate.nxProjectName === DOGFOOD_NX_PROJECT_NAME;
+  });
+
   return project == null ? null : { id: project.id, name: project.name };
 };
 

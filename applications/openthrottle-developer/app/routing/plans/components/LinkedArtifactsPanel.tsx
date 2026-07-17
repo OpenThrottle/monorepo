@@ -76,9 +76,9 @@ export const LinkedArtifactsPanel = (
               {artifact.verification}
             </Badge>
             <span className="font-medium">{artifact.type}</span>
-            <span className="text-muted-foreground">
+            {/* <span className="text-muted-foreground">
               {artifact.externalKey}
-            </span>
+            </span> */}
             {artifact.lifecycle != null ? (
               <span className="text-muted-foreground">
                 · {artifact.lifecycle}
