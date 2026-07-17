@@ -9,6 +9,9 @@ import { Task } from './task.entity';
 /** Gap between auto-assigned sortOrder values within a plan. */
 export const TASK_SORT_ORDER_GAP = 1000;
 
+/** Side of an anchor a hook/task is allocated on. */
+export type HookAdjacencySide = 'after' | 'before';
+
 /** Canonical order for plan-scoped task list queries. */
 export const PLAN_TASK_LIST_ORDER = {
   createdAt: 'ASC',
@@ -71,6 +74,151 @@ export class TasksService {
       result?.max != null && result.max !== '' ? Number(result.max) : null;
 
     return max != null ? max + TASK_SORT_ORDER_GAP : TASK_SORT_ORDER_GAP;
+  }
+
+  /**
+   * @description Midpoint sort_order beside an anchor on the given side, or null
+   * when the integer gap to the neighbor on that side is exhausted (|gap| <= 1)
+   * so the caller must {@link rebalancePlanSortOrders} first. When the anchor is
+   * the plan edge on that side, steps out by {@link TASK_SORT_ORDER_GAP}. Keeps
+   * before-hooks immediately before their anchor and after-hooks immediately
+   * after, so a before/anchor/after group stays adjacent.
+   */
+  async midpointBesideAnchor(
+    planId: string,
+    anchorSortOrder: number,
+    side: HookAdjacencySide,
+    repository: Repository<Task> = this.taskRepository,
+  ): Promise<number | null> {
+    const base = repository
+      .createQueryBuilder('task')
+      .select('task.sortOrder', 'value')
+      .where('task.planId = :planId', { planId });
+
+    if (side === 'before') {
+      const neighbor = await base
+        .clone()
+        .andWhere('task.sortOrder < :anchor', { anchor: anchorSortOrder })
+        .orderBy('task.sortOrder', 'DESC')
+        .getRawOne<{ value: string }>();
+      if (neighbor?.value == null) {
+        return anchorSortOrder - TASK_SORT_ORDER_GAP;
+      }
+      const lo = Number(neighbor.value);
+      if (anchorSortOrder - lo <= 1) return null;
+      return Math.floor((lo + anchorSortOrder) / 2);
+    }
+
+    const neighbor = await base
+      .clone()
+      .andWhere('task.sortOrder > :anchor', { anchor: anchorSortOrder })
+      .orderBy('task.sortOrder', 'ASC')
+      .getRawOne<{ value: string }>();
+    if (neighbor?.value == null) {
+      return anchorSortOrder + TASK_SORT_ORDER_GAP;
+    }
+    const hi = Number(neighbor.value);
+    if (hi - anchorSortOrder <= 1) return null;
+    return Math.floor((anchorSortOrder + hi) / 2);
+  }
+
+  /**
+   * @description Renumbers every task in a plan onto a {@link TASK_SORT_ORDER_GAP}
+   * stride (1000, 2000, …) in canonical order (sort_order ASC, created_at ASC),
+   * reclaiming integer room for midpoint insertion. Two bulk passes in one
+   * transaction — park into a disjoint negative band, then restamp — avoid
+   * transient UNIQUE(plan_id, sort_order) collisions. Optionally reuses a caller
+   * manager to participate in an outer transaction.
+   */
+  async rebalancePlanSortOrders(
+    planId: string,
+    manager = this.taskRepository.manager,
+  ): Promise<void> {
+    const run = async (tx: typeof manager): Promise<void> => {
+      await tx.query(
+        `UPDATE tasks AS t
+         SET sort_order = -ranked.rn
+         FROM (
+           SELECT id, ROW_NUMBER() OVER (
+             ORDER BY sort_order ASC, created_at ASC
+           ) AS rn
+           FROM tasks WHERE plan_id = $1
+         ) AS ranked
+         WHERE t.id = ranked.id`,
+        [planId],
+      );
+      await tx.query(
+        `UPDATE tasks AS t
+         SET sort_order = ranked.rn * $2
+         FROM (
+           SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order DESC) AS rn
+           FROM tasks WHERE plan_id = $1
+         ) AS ranked
+         WHERE t.id = ranked.id`,
+        [planId, TASK_SORT_ORDER_GAP],
+      );
+    };
+    return manager === this.taskRepository.manager
+      ? this.taskRepository.manager.transaction(run)
+      : run(manager);
+  }
+
+  /**
+   * @description Allocates a sort_order immediately before/after an anchor task,
+   * rebalancing the plan and retrying once when the integer gap is exhausted.
+   * Throws when the anchor is not in the plan or no slot exists post-rebalance.
+   * The read + rebalance run under a plan row-lock so concurrent allocations
+   * serialize; the returned slot is intended for an insert within the same flow.
+   */
+  async allocateSortOrderBesideAnchor(
+    planId: string,
+    anchorTaskId: string,
+    side: HookAdjacencySide,
+  ): Promise<number> {
+    return this.taskRepository.manager.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
+      await manager
+        .getRepository(Plan)
+        .createQueryBuilder('plan')
+        .setLock('pessimistic_write')
+        .where('plan.id = :planId', { planId })
+        .getOne();
+
+      const anchor = await taskRepo.findOne({
+        where: { id: anchorTaskId, planId },
+      });
+      if (anchor == null) {
+        throw new Error(
+          `anchor task ${anchorTaskId} not found in plan ${planId}`,
+        );
+      }
+
+      const first = await this.midpointBesideAnchor(
+        planId,
+        anchor.sortOrder,
+        side,
+        taskRepo,
+      );
+      if (first != null) return first;
+
+      await this.rebalancePlanSortOrders(planId, manager);
+      const fresh = await taskRepo.findOne({
+        select: { sortOrder: true },
+        where: { id: anchorTaskId },
+      });
+      const retried = await this.midpointBesideAnchor(
+        planId,
+        fresh?.sortOrder ?? anchor.sortOrder,
+        side,
+        taskRepo,
+      );
+      if (retried == null) {
+        throw new Error(
+          `no sort_order slot beside anchor ${anchorTaskId} after rebalance`,
+        );
+      }
+      return retried;
+    });
   }
 
   /**

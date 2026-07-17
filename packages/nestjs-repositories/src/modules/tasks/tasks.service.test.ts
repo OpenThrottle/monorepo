@@ -318,4 +318,180 @@ describe('TasksService', () => {
       expect(completed).toBe(false);
     });
   });
+
+  describe('midpointBesideAnchor', () => {
+    const planId = '77777777-7777-7777-7777-777777777777';
+
+    // A repository whose neighbor lookup (createQueryBuilder→clone→…→getRawOne)
+    // resolves to the given value ('4000', or null for "no neighbor").
+    const repoWithNeighbor = (
+      neighborValue: string | null,
+    ): Repository<Task> => {
+      const cloned = {
+        andWhere: vi.fn().mockReturnThis(),
+        getRawOne: vi
+          .fn()
+          .mockResolvedValue(
+            neighborValue == null ? undefined : { value: neighborValue },
+          ),
+        orderBy: vi.fn().mockReturnThis(),
+      };
+      const builder = {
+        clone: vi.fn().mockReturnValue(cloned),
+        select: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+      };
+      return createMock<Repository<Task>>({
+        createQueryBuilder: vi.fn().mockReturnValue(builder),
+      });
+    };
+
+    it('after: midpoint between anchor and its next neighbor', async () => {
+      const slot = await service.midpointBesideAnchor(
+        planId,
+        2000,
+        'after',
+        repoWithNeighbor('4000'),
+      );
+      expect(slot).toBe(3000);
+    });
+
+    it('before: midpoint between anchor and its previous neighbor', async () => {
+      const slot = await service.midpointBesideAnchor(
+        planId,
+        2000,
+        'before',
+        repoWithNeighbor('1000'),
+      );
+      expect(slot).toBe(1500);
+    });
+
+    it('steps out one gap when the anchor is the plan edge (no neighbor)', async () => {
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'after',
+          repoWithNeighbor(null),
+        ),
+      ).resolves.toBe(2000 + TASK_SORT_ORDER_GAP);
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'before',
+          repoWithNeighbor(null),
+        ),
+      ).resolves.toBe(2000 - TASK_SORT_ORDER_GAP);
+    });
+
+    it('returns null when the integer gap to the neighbor is exhausted', async () => {
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'after',
+          repoWithNeighbor('2001'),
+        ),
+      ).resolves.toBeNull();
+      await expect(
+        service.midpointBesideAnchor(
+          planId,
+          2000,
+          'before',
+          repoWithNeighbor('1999'),
+        ),
+      ).resolves.toBeNull();
+    });
+  });
+
+  describe('allocateSortOrderBesideAnchor', () => {
+    const planId = '88888888-8888-8888-8888-888888888888';
+    const anchorId = '99999999-9999-9999-9999-999999999999';
+
+    const txPlanBuilder = {
+      getOne: vi.fn().mockResolvedValue(null),
+      setLock: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+    };
+    const txFindOne = vi.fn();
+    const txRepo = createMock<Repository<Task>>({
+      createQueryBuilder: vi.fn().mockReturnValue(txPlanBuilder),
+      findOne: txFindOne,
+    });
+    const txManager = createMock<EntityManager>({
+      getRepository: () => txRepo,
+    });
+
+    beforeEach(() => {
+      txFindOne.mockReset();
+      vi.mocked(txPlanBuilder.setLock).mockClear();
+      vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
+        (
+          isolationOrRun:
+            | IsolationLevel
+            | ((manager: EntityManager) => Promise<unknown>),
+        ) =>
+          typeof isolationOrRun === 'function'
+            ? isolationOrRun(txManager)
+            : Promise.resolve(undefined),
+      );
+    });
+
+    it('locks the plan and returns the midpoint slot on the happy path', async () => {
+      txFindOne.mockResolvedValue(
+        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
+      );
+      const midpoint = vi
+        .spyOn(service, 'midpointBesideAnchor')
+        .mockResolvedValue(2500);
+      const rebalance = vi
+        .spyOn(service, 'rebalancePlanSortOrders')
+        .mockResolvedValue();
+
+      const slot = await service.allocateSortOrderBesideAnchor(
+        planId,
+        anchorId,
+        'after',
+      );
+
+      expect(slot).toBe(2500);
+      expect(txPlanBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
+      expect(rebalance).not.toHaveBeenCalled();
+      midpoint.mockRestore();
+      rebalance.mockRestore();
+    });
+
+    it('rebalances and retries once when the gap is exhausted', async () => {
+      txFindOne.mockResolvedValue(
+        tasksFactory.build({ id: anchorId, sortOrder: 2000 }),
+      );
+      const midpoint = vi
+        .spyOn(service, 'midpointBesideAnchor')
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(3000);
+      const rebalance = vi
+        .spyOn(service, 'rebalancePlanSortOrders')
+        .mockResolvedValue();
+
+      const slot = await service.allocateSortOrderBesideAnchor(
+        planId,
+        anchorId,
+        'before',
+      );
+
+      expect(slot).toBe(3000);
+      expect(rebalance).toHaveBeenCalledTimes(1);
+      midpoint.mockRestore();
+      rebalance.mockRestore();
+    });
+
+    it('throws when the anchor is not in the plan', async () => {
+      txFindOne.mockResolvedValue(null);
+
+      await expect(
+        service.allocateSortOrderBesideAnchor(planId, anchorId, 'after'),
+      ).rejects.toThrow(/anchor task/);
+    });
+  });
 });

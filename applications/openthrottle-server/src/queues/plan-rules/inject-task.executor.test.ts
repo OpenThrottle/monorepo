@@ -63,23 +63,21 @@ describe('InjectTaskExecutor', () => {
   >;
   let preSatisfiedGetOne: ReturnType<typeof vi.fn>;
   let aggregateGetRawOne: ReturnType<typeof vi.fn>;
-  let anchorGetRawOne: ReturnType<typeof vi.fn>;
   let taskSave: ReturnType<typeof vi.fn>;
   let taskCreate: ReturnType<typeof vi.fn>;
   let taskDelete: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
+  let allocateSortOrderBesideAnchor: Mock<
+    TasksService['allocateSortOrderBesideAnchor']
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     preSatisfiedGetOne = vi.fn().mockResolvedValue(null);
     aggregateGetRawOne = vi.fn().mockResolvedValue({ value: '1000' });
-    // Cloned builders (anchor neighbor lookups) get their own getRawOne so
-    // first/last aggregate math and before/after neighbor math don't collide.
-    anchorGetRawOne = vi.fn().mockResolvedValue({ value: null });
     const queryBuilder = {
       andWhere: vi.fn(),
-      clone: vi.fn(),
       getOne: preSatisfiedGetOne,
       getRawOne: aggregateGetRawOne,
       orderBy: vi.fn(),
@@ -90,22 +88,6 @@ describe('InjectTaskExecutor', () => {
     queryBuilder.orderBy.mockReturnValue(queryBuilder);
     queryBuilder.select.mockReturnValue(queryBuilder);
     queryBuilder.where.mockReturnValue(queryBuilder);
-    // A cloned builder self-chains (andWhere/orderBy return the clone) so the
-    // neighbor lookup resolves through anchorGetRawOne, not the aggregate one.
-    queryBuilder.clone.mockImplementation(() => {
-      const cloned = {
-        andWhere: vi.fn(),
-        getRawOne: anchorGetRawOne,
-        orderBy: vi.fn(),
-        select: vi.fn(),
-        where: vi.fn(),
-      };
-      cloned.andWhere.mockReturnValue(cloned);
-      cloned.orderBy.mockReturnValue(cloned);
-      cloned.select.mockReturnValue(cloned);
-      cloned.where.mockReturnValue(cloned);
-      return cloned;
-    });
 
     taskCreate = vi.fn((data: Partial<Task>) => ({ ...data }));
     taskSave = vi.fn((entity: Task) =>
@@ -113,7 +95,9 @@ describe('InjectTaskExecutor', () => {
     );
     taskDelete = vi.fn();
     taskFindOne = vi.fn().mockResolvedValue(null);
+    allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
     const tasksService = createMock<TasksService>({
+      allocateSortOrderBesideAnchor,
       getRepository: vi.fn(() =>
         asMock({
           create: taskCreate,
@@ -256,11 +240,11 @@ describe('InjectTaskExecutor', () => {
     );
   });
 
-  it('injects after an anchor at the midpoint to its next neighbor', async () => {
+  it('resolves a taskId anchor and delegates after-placement to the allocator', async () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
     );
-    anchorGetRawOne.mockResolvedValue({ value: '4000' });
+    allocateSortOrderBesideAnchor.mockResolvedValue(2500);
 
     await executor.execute({
       action: buildAction({
@@ -273,38 +257,21 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'anchor',
+      'after',
+    );
     expect(taskCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ sortOrder: 3000 }),
+      expect.objectContaining({ sortOrder: 2500 }),
     );
   });
 
-  it('injects after the last anchor by stepping out one gap when no neighbor exists', async () => {
+  it('delegates before-placement to the allocator with the before side', async () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
     );
-    anchorGetRawOne.mockResolvedValue({ value: null });
-
-    await executor.execute({
-      action: buildAction({
-        anchor: { taskId: '00000000-0000-4000-8000-000000000009' },
-        placement: 'after',
-        skillSlug: 'grilling',
-      }),
-      ownerUserId,
-      plan: buildPlan(),
-      rule: buildRule(),
-    });
-
-    expect(taskCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ sortOrder: 3000 }),
-    );
-  });
-
-  it('injects before an anchor at the midpoint to its previous neighbor', async () => {
-    taskFindOne.mockResolvedValue(
-      asMock<Task>({ id: 'anchor', sortOrder: 2000 }),
-    );
-    anchorGetRawOne.mockResolvedValue({ value: '1000' });
+    allocateSortOrderBesideAnchor.mockResolvedValue(1500);
 
     await executor.execute({
       action: buildAction({
@@ -317,8 +284,40 @@ describe('InjectTaskExecutor', () => {
       rule: buildRule(),
     });
 
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'anchor',
+      'before',
+    );
     expect(taskCreate).toHaveBeenCalledWith(
       expect.objectContaining({ sortOrder: 1500 }),
+    );
+  });
+
+  it('resolves a skillSlug anchor (query builder) before delegating', async () => {
+    // 1st getOne = pre-satisfied (none); 2nd getOne = anchor-by-slug resolution.
+    preSatisfiedGetOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(
+        asMock<Task>({ id: 'lint-task', sortOrder: 2000 }),
+      );
+    allocateSortOrderBesideAnchor.mockResolvedValue(2500);
+
+    await executor.execute({
+      action: buildAction({
+        anchor: { skillSlug: 'lint' },
+        placement: 'after',
+        skillSlug: 'grilling',
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+      planId,
+      'lint-task',
+      'after',
     );
   });
 
