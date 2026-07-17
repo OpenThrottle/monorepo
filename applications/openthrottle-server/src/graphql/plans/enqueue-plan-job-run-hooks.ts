@@ -3,11 +3,42 @@
  */
 
 import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
-import type { JobRunHooksConfig } from '@tools/workflows';
+import type { JobRunHookEntry, JobRunHooksConfig } from '@tools/workflows';
 import { parseJobRunHooksConfig } from '@tools/workflows';
 import { validateWorkingDirectory } from './enqueue-plan-ralph-tuning';
 
 const MAX_JOB_RUN_HOOKS_JSON_LEN = 512_000;
+
+/**
+ * @description Dedup key for a hook entry. Skill entries collapse on phase+skillPath so a hook that
+ * exists both as a materialized hook-task and in jobRunHooksJson runs once; other kinds never collide.
+ */
+const hookEntryDedupeKey = (entry: JobRunHookEntry): string =>
+  entry.kind === 'skill'
+    ? `skill::${entry.phase}::${entry.skillPath}`
+    : `other::${entry.phase}::${String(entry.order ?? '')}::${entry.kind}`;
+
+/**
+ * @description Unions config-authored hooks (jobRunHooksJson / plan column) with entries derived from
+ * materialized hook-tasks, config first, dropping later duplicates by {@link hookEntryDedupeKey}. No
+ * D1 cutover: jobRunHooksJson stays a first-class authoring surface; materialized hooks are additive.
+ */
+const mergeHookEntries = (
+  configHooks: readonly JobRunHookEntry[],
+  materializedHooks: readonly JobRunHookEntry[],
+): JobRunHookEntry[] => {
+  const seen = new Set<string>();
+  const merged: JobRunHookEntry[] = [];
+
+  for (const entry of [...configHooks, ...materializedHooks]) {
+    const key = hookEntryDedupeKey(entry);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(entry);
+  }
+
+  return merged;
+};
 
 /**
  * @description Serializes stored hooks for GraphQL `jobRunHooksJson`.
@@ -54,10 +85,13 @@ export const jobRunHooksFromPlanStorage = (
 ): JobRunHooksConfig => parseJobRunHooksConfig(stored ?? { hooks: [] });
 
 /**
- * @description Resolves hooks for a queued run: enqueue override wins, else persisted plan hooks.
+ * @description Resolves hooks for a queued run: enqueue override wins over the persisted plan column,
+ * then entries derived from materialized hook-tasks are unioned in (additive, deduped). Returns
+ * undefined when the merged set is empty so the BullMQ payload stays backward compatible.
  */
 export const resolveJobRunHooksForEnqueue = (params: {
   readonly enqueueHooksJson?: string | null;
+  readonly materializedHookEntries?: readonly JobRunHookEntry[];
   readonly planHooks: PlanJobRunHooksStorage | null | undefined;
   readonly workingDirectory?: string | null;
 }): JobRunHooksConfig | undefined => {
@@ -70,12 +104,17 @@ export const resolveJobRunHooksForEnqueue = (params: {
     params.enqueueHooksJson,
     validateOpts,
   );
-  if (override !== undefined) {
-    return override.hooks.length > 0 ? override : undefined;
-  }
+  const configHooks =
+    override !== undefined
+      ? override.hooks
+      : jobRunHooksFromPlanStorage(params.planHooks).hooks;
 
-  const fromPlan = jobRunHooksFromPlanStorage(params.planHooks);
-  return fromPlan.hooks.length > 0 ? fromPlan : undefined;
+  const merged = mergeHookEntries(
+    configHooks,
+    params.materializedHookEntries ?? [],
+  );
+
+  return merged.length > 0 ? { hooks: merged } : undefined;
 };
 
 /**

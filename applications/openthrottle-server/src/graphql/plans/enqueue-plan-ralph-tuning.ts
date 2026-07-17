@@ -17,6 +17,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   ChildJobInput,
+  JobRunHookEntry,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
@@ -327,6 +328,7 @@ const resolvePlanRunExecutionBackend = (
  */
 export const buildRunPlanJobData = (input: {
   readonly jobRunHooksJson?: string | null;
+  readonly materializedHookEntries?: readonly JobRunHookEntry[];
   readonly planId: string;
   readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
@@ -338,6 +340,7 @@ export const buildRunPlanJobData = (input: {
   const jobRunHooks = jobRunHooksForJobPayload(
     resolveJobRunHooksForEnqueue({
       enqueueHooksJson: input.jobRunHooksJson,
+      materializedHookEntries: input.materializedHookEntries,
       planHooks: input.planJobRunHooks,
       workingDirectory: input.workingDirectory,
     }),
@@ -358,6 +361,7 @@ export const buildRunPlanJobData = (input: {
  */
 export const buildRunPlanOrchestratorJobData = (input: {
   readonly jobRunHooksJson?: string | null;
+  readonly materializedHookEntries?: readonly JobRunHookEntry[];
   readonly mode?: 'plan' | 'task' | null;
   readonly planId: string;
   readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
@@ -379,6 +383,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
   const jobRunHooks = jobRunHooksForJobPayload(
     resolveJobRunHooksForEnqueue({
       enqueueHooksJson: input.jobRunHooksJson,
+      materializedHookEntries: input.materializedHookEntries,
       planHooks: input.planJobRunHooks,
       workingDirectory: input.workingDirectory,
     }),

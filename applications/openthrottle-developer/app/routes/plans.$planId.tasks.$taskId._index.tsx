@@ -8,11 +8,19 @@ import {
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
+  PlanDetailAddHookDocument,
+  PlanDetailDetachHookDocument,
   TaskDetailAddTaskTagDocument,
   TaskDetailRemoveTaskTagDocument,
   TaskLinkedArtifactsDocument,
 } from '~/__generated__/graphql';
+import {
+  AddHookInputSchema,
+  DetachHookInputSchema,
+} from '~/__generated__/schemas';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
+import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { ListOrderedIcon } from 'lucide-react';
@@ -167,6 +175,13 @@ export default function Component(
         />
       </div>
       <TaskDetails planId={effectivePlanId} task={task} />
+      <PlanLifecycleHooksSection
+        afterHooks={task.afterHooks}
+        anchorTaskId={task.id}
+        beforeHooks={task.beforeHooks}
+        heading={PLAN_LIFECYCLE_HOOKS_COPY.taskSectionTitle}
+        planId={effectivePlanId}
+      />
       <LinkedArtifactsPanel artifacts={linkedArtifacts} />
     </GlobalScreen>
   );
@@ -204,6 +219,70 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { taskTagError: message };
+    }
+  }
+
+  if (intent === 'addHook') {
+    const planId = args.params.planId;
+    if (planId == null || planId === '') {
+      return { addHookError: 'Missing plan id.' };
+    }
+
+    const optionalField = (key: string): string | undefined => {
+      const value = formData.get(key);
+      return typeof value === 'string' && value.trim() !== ''
+        ? value.trim()
+        : undefined;
+    };
+
+    try {
+      const input = AddHookInputSchema().parse({
+        anchorTaskId: taskId,
+        planId,
+        role: formData.get('role'),
+        scope: optionalField('scope'),
+        skillSlug: optionalField('skillSlug'),
+        source: formData.get('source'),
+        title: optionalField('title'),
+      });
+
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailAddHookDocument,
+        { input },
+      );
+
+      if (!result.addHook) {
+        return { addHookError: 'Failed to add hook.' };
+      }
+
+      return { addHook: result.addHook };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { addHookError: message };
+    }
+  }
+
+  if (intent === 'detachHook') {
+    try {
+      const input = DetachHookInputSchema().parse({
+        hookTaskId: formData.get('hookTaskId'),
+      });
+
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailDetachHookDocument,
+        { input },
+      );
+
+      if (!result.detachHook) {
+        return { detachHookError: 'Failed to remove hook.' };
+      }
+
+      return { detachHook: result.detachHook };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { detachHookError: message };
     }
   }
 

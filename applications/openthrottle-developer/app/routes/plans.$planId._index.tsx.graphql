@@ -1,8 +1,19 @@
+fragment HookTask on TaskObject {
+  hookRole
+  hookScope
+  hookSource
+  id
+  skillSlug
+  status
+  title
+}
+
 fragment PlanTaskRow on TaskObject {
   assignee
   category
   createdAt
   description
+  hookRole
   id
   planId
   projectRelation {
@@ -33,6 +44,12 @@ fragment PlanTagChip on PlanTagObject {
 fragment PlanDetails on PlanObject {
   tags {
     ...PlanTagChip
+  }
+  afterHooks {
+    ...HookTask
+  }
+  beforeHooks {
+    ...HookTask
   }
   assignee
   author
@@ -228,4 +245,14 @@ mutation PlanDetailAddPlanTag($input: AddPlanTagInput!) {
 
 mutation PlanDetailRemovePlanTag($input: RemovePlanTagInput!) {
   removePlanTag(input: $input)
+}
+
+mutation PlanDetailAddHook($input: AddHookInput!) {
+  addHook(input: $input) {
+    ...HookTask
+  }
+}
+
+mutation PlanDetailDetachHook($input: DetachHookInput!) {
+  detachHook(input: $input)
 }

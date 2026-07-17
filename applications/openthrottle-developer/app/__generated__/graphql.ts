@@ -3477,7 +3477,15 @@ export type TaskObject = {
   completedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  /** Lifecycle-hook role: 'before' or 'after'. NULL for a regular (non-hook) task. */
+  hookRole?: Maybe<Scalars['String']['output']>;
+  /** Plan-level hook scope: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach). NULL for regular tasks and task-level hooks. */
+  hookScope?: Maybe<Scalars['String']['output']>;
+  /** Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner). NULL for regular tasks. */
+  hookSource?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** Parent task this hook is anchored to (task-level before/after). NULL for regular tasks and plan-level hooks. */
+  parentTaskId?: Maybe<Scalars['String']['output']>;
   /** Resolved plan entity when planId is set */
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
@@ -3488,6 +3496,8 @@ export type TaskObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** JSON string of requirements array */
   requirementsJson: Scalars['String']['output'];
+  /** Skill slug when hookSource is 'skill'; NULL otherwise. */
+  skillSlug?: Maybe<Scalars['String']['output']>;
   /** Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId. */
   sortOrder: Scalars['Int']['output'];
   status: Scalars['String']['output'];
@@ -4737,12 +4747,24 @@ export type CreateNoteMutation = {
   };
 };
 
+export type HookTaskFragment = {
+  __typename?: 'TaskObject';
+  hookRole?: string | null;
+  hookScope?: string | null;
+  hookSource?: string | null;
+  id: string;
+  skillSlug?: string | null;
+  status: string;
+  title: string;
+};
+
 export type PlanTaskRowFragment = {
   __typename?: 'TaskObject';
   assignee?: string | null;
   category?: string | null;
   createdAt: any;
   description?: string | null;
+  hookRole?: string | null;
   id: string;
   planId: string;
   requirementsJson: string;
@@ -4797,6 +4819,26 @@ export type PlanDetailsFragment = {
     source: string;
     tag: string;
   }>;
+  afterHooks: Array<{
+    __typename?: 'TaskObject';
+    hookRole?: string | null;
+    hookScope?: string | null;
+    hookSource?: string | null;
+    id: string;
+    skillSlug?: string | null;
+    status: string;
+    title: string;
+  }>;
+  beforeHooks: Array<{
+    __typename?: 'TaskObject';
+    hookRole?: string | null;
+    hookScope?: string | null;
+    hookSource?: string | null;
+    id: string;
+    skillSlug?: string | null;
+    status: string;
+    title: string;
+  }>;
   projectRelation?: {
     __typename?: 'ProjectObject';
     id: string;
@@ -4834,6 +4876,26 @@ export type GetPlanByIdQuery = {
       source: string;
       tag: string;
     }>;
+    afterHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
+    beforeHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -4854,6 +4916,7 @@ export type GetTasksByPlanIdQuery = {
     category?: string | null;
     createdAt: any;
     description?: string | null;
+    hookRole?: string | null;
     id: string;
     planId: string;
     requirementsJson: string;
@@ -4944,6 +5007,7 @@ export type PlanDetailUpdateTaskMutation = {
     category?: string | null;
     createdAt: any;
     description?: string | null;
+    hookRole?: string | null;
     id: string;
     planId: string;
     requirementsJson: string;
@@ -5018,6 +5082,26 @@ export type PlanDetailIndexLoaderQuery = {
       source: string;
       tag: string;
     }>;
+    afterHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
+    beforeHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -5050,6 +5134,7 @@ export type PlanDetailIndexLoaderQuery = {
     category?: string | null;
     createdAt: any;
     description?: string | null;
+    hookRole?: string | null;
     id: string;
     planId: string;
     requirementsJson: string;
@@ -5192,6 +5277,33 @@ export type PlanDetailRemovePlanTagMutation = {
   removePlanTag: boolean;
 };
 
+export type PlanDetailAddHookMutationVariables = Exact<{
+  input: AddHookInput;
+}>;
+
+export type PlanDetailAddHookMutation = {
+  __typename?: 'Mutation';
+  addHook: {
+    __typename?: 'TaskObject';
+    hookRole?: string | null;
+    hookScope?: string | null;
+    hookSource?: string | null;
+    id: string;
+    skillSlug?: string | null;
+    status: string;
+    title: string;
+  };
+};
+
+export type PlanDetailDetachHookMutationVariables = Exact<{
+  input: DetachHookInput;
+}>;
+
+export type PlanDetailDetachHookMutation = {
+  __typename?: 'Mutation';
+  detachHook: boolean;
+};
+
 export type UpdatePlanMutationVariables = Exact<{
   input: UpdatePlanInput;
 }>;
@@ -5226,6 +5338,7 @@ export type GetTaskByIdQuery = {
     category?: string | null;
     createdAt: any;
     description?: string | null;
+    hookRole?: string | null;
     id: string;
     planId: string;
     requirementsJson: string;
@@ -5234,6 +5347,26 @@ export type GetTaskByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    afterHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
+    beforeHooks: Array<{
+      __typename?: 'TaskObject';
+      hookRole?: string | null;
+      hookScope?: string | null;
+      hookSource?: string | null;
+      id: string;
+      skillSlug?: string | null;
+      status: string;
+      title: string;
+    }>;
     tags: Array<{
       __typename?: 'TaskTagObject';
       confidence?: number | null;
@@ -7007,6 +7140,7 @@ export const PlanTaskRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           {
@@ -7054,6 +7188,31 @@ export const PlanTagChipFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanTagChipFragment, unknown>;
+export const HookTaskFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<HookTaskFragment, unknown>;
 export const ProjectDetailsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -7096,6 +7255,32 @@ export const PlanDetailsFragmentDoc = {
                 {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
                 },
               ],
             },
@@ -7145,6 +7330,26 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
@@ -10143,6 +10348,26 @@ export const GetPlanByIdDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ProjectDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -10175,6 +10400,32 @@ export const GetPlanByIdDocument = {
                 {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
                 },
               ],
             },
@@ -10277,6 +10528,7 @@ export const GetTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           {
@@ -10618,6 +10870,7 @@ export const PlanDetailUpdateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           {
@@ -11100,6 +11353,26 @@ export const PlanDetailIndexLoaderDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ProjectDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -11132,6 +11405,32 @@ export const PlanDetailIndexLoaderDocument = {
                 {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
                 },
               ],
             },
@@ -11180,6 +11479,7 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           {
@@ -11506,6 +11806,131 @@ export const PlanDetailRemovePlanTagDocument = {
   PlanDetailRemovePlanTagMutation,
   PlanDetailRemovePlanTagMutationVariables
 >;
+export const PlanDetailAddHookDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailAddHook' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddHookInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addHook' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailAddHookMutation,
+  PlanDetailAddHookMutationVariables
+>;
+export const PlanDetailDetachHookDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailDetachHook' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DetachHookInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'detachHook' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailDetachHookMutation,
+  PlanDetailDetachHookMutationVariables
+>;
 export const UpdatePlanDocument = {
   kind: 'Document',
   definitions: [
@@ -11609,6 +12034,32 @@ export const GetTaskByIdDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'afterHooks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'HookTask' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'beforeHooks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'HookTask' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'tags' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -11665,6 +12116,7 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           {
@@ -11684,6 +12136,26 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },

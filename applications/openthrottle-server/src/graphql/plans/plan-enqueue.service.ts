@@ -20,7 +20,10 @@ import {
   PlansService,
   PlanRunsService,
   Task,
+  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { JobRunHookEntry } from '@tools/workflows';
+import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
@@ -100,9 +103,22 @@ export class PlanEnqueueService {
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly queuesService: QueuesService,
+    private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
   ) {}
+
+  /**
+   * @description Projects the plan's materialized lifecycle hook-tasks into runner hook entries so a
+   * queued run executes them alongside any jobRunHooksJson config. Only plan-level SKILL hooks project
+   * (per the design bridge); template + task-level hooks run as materialized tasks in the Ralph loop.
+   */
+  private async resolveMaterializedHookEntries(
+    planId: string,
+  ): Promise<readonly JobRunHookEntry[]> {
+    const { after, before } = await this.tasksService.getPlanHooks(planId);
+    return projectHookTasksToJobRunHookEntries([...before, ...after]);
+  }
 
   /**
    * @description Enqueue a spawn plan-run (nested workflow-ralph in the worker). When the deployment
@@ -143,10 +159,14 @@ export class PlanEnqueueService {
       });
     }
 
+    const materializedHookEntries =
+      await this.resolveMaterializedHookEntries(planId);
+
     let jobData: RunPlanJobData;
     try {
       jobData = buildRunPlanJobData({
         jobRunHooksJson,
+        materializedHookEntries,
         planId,
         planJobRunHooks: plan.jobRunHooks,
         ralph,
@@ -222,10 +242,14 @@ export class PlanEnqueueService {
       throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
     }
 
+    const materializedHookEntries =
+      await this.resolveMaterializedHookEntries(planId);
+
     let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
     try {
       jobData = buildRunPlanOrchestratorJobData({
         jobRunHooksJson,
+        materializedHookEntries,
         mode: mode ?? null,
         planId,
         planJobRunHooks: plan.jobRunHooks,
