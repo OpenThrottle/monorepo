@@ -36,6 +36,7 @@ type TagActionRule = {
   projectId: string | null;
   status: string | null;
   tagAll: string[];
+  title: string;
   updatedAt: string;
   userId: string;
 };
@@ -83,6 +84,7 @@ export async function listTagActionRulesToolHandler(
         projectId: rule.projectId ?? null,
         status: rule.status ?? null,
         tagAll: rule.tagAll,
+        title: rule.title,
         updatedAt: rule.updatedAt,
         userId: rule.userId,
       }));
@@ -93,7 +95,7 @@ export async function listTagActionRulesToolHandler(
           : `Tag→action rules (${rules.length}): ${rules
               .map(
                 (rule) =>
-                  `${rule.id} [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]${rule.enabled ? '' : ' (disabled)'}`,
+                  `${rule.id} "${rule.title}" [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]${rule.enabled ? '' : ' (disabled)'}`,
               )
               .join('; ')}`;
 
@@ -203,12 +205,13 @@ export async function upsertTagActionRuleToolHandler(
         projectId: row.projectId ?? null,
         status: row.status ?? null,
         tagAll: row.tagAll,
+        title: row.title,
         updatedAt: row.updatedAt,
         userId: row.userId,
       };
       return {
         structuredContent: { rule },
-        text: `Upserted rule ${rule.id} [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]`,
+        text: `Upserted rule ${rule.id} "${rule.title}" [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]`,
       };
     },
   );

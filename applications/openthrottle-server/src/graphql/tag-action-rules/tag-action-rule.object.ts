@@ -23,6 +23,11 @@ export class TagActionRuleObject {
   })
   projectId!: string | null;
 
+  @Field(() => String, {
+    description: `Human-readable label for the rule (required, non-empty).`,
+  })
+  title!: string;
+
   @Field(() => [String], {
     description: `Tags that must ALL be present in the plan's effective tag set; empty matches every plan.`,
   })

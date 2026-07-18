@@ -8,12 +8,35 @@ fragment TagActionRuleRow on TagActionRuleObject {
   projectId
   status
   tagAll
+  title
   updatedAt
   userId
 }
 
 query RulesIndexLoader {
   tagActionRules {
+    ...TagActionRuleRow
+  }
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
+  skillAvailability {
+    skills {
+      effectiveDisableModelInvocation
+      slug
+    }
+    totalCount
+    warnings
+  }
+}
+
+query RuleEditLoader($id: ID!) {
+  tagActionRule(id: $id) {
     ...TagActionRuleRow
   }
   skillTagVocabulary {

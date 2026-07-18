@@ -1288,6 +1288,7 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     projectId: z.string().nullish(),
     status: z.string().nullish(),
     tagAll: z.array(z.string()),
+    title: z.string(),
   });
 }
 
