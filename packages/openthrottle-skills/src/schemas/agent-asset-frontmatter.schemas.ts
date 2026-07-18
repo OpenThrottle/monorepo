@@ -3,6 +3,15 @@ import { z } from 'zod';
 /** @public */
 export const AGENT_ASSET_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * @description Skill provenance values: `openthrottle` marks skills we author and manage; everything else is `external`.
+ * @public
+ */
+export const SKILL_SOURCES = ['external', 'openthrottle'] as const;
+
+/** @public */
+export type SkillSource = (typeof SKILL_SOURCES)[number];
+
 const nonEmptyTrimmedString = z.string().trim().min(1);
 
 /**
@@ -17,6 +26,8 @@ export const skillFrontmatterSchema = z
       AGENT_ASSET_SLUG_PATTERN,
       'name must be a kebab-case slug',
     ),
+    source: z.enum(SKILL_SOURCES).optional(),
+    sourceUrl: nonEmptyTrimmedString.optional(),
     // Permissive on purpose: this schema runs at ingest for external workspace
     // repos, which must not hard-fail on a tag outside this monorepo's
     // committed default vocabulary. The committed-vocabulary enum check is a

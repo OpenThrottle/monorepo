@@ -3,6 +3,7 @@ export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
   ruleFrontmatterSchema,
+  SKILL_SOURCES,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 export type {
@@ -11,6 +12,7 @@ export type {
   PersonaFrontmatter,
   RuleFrontmatter,
   SkillFrontmatter,
+  SkillSource,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */

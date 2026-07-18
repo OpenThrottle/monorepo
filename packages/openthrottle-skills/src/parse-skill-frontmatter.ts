@@ -1,10 +1,15 @@
 import { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.ts';
-import type { SkillFrontmatter } from './schemas/agent-asset-frontmatter.schemas.ts';
+import type {
+  SkillFrontmatter,
+  SkillSource,
+} from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface ParsedSkillFrontmatter {
   readonly description: string | undefined;
   readonly disableModelInvocation: boolean | undefined;
   readonly name: string | undefined;
+  readonly source: SkillSource;
+  readonly sourceUrl: string | undefined;
   readonly tags: readonly string[] | undefined;
 }
 
@@ -21,8 +26,15 @@ const toOptionalStringArray = (
   value: unknown,
 ): readonly string[] | undefined => (Array.isArray(value) ? value : undefined);
 
+// Conservative default: only an explicit `source: openthrottle` claims a skill
+// as ours; anything else (omitted, garbage, wrong type) reads as external.
+const toSkillSource = (value: unknown): SkillSource =>
+  typeof value === 'string' && value.trim().toLowerCase() === 'openthrottle'
+    ? 'openthrottle'
+    : 'external';
+
 /**
- * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter.
+ * @description Parses `name`, `description`, optional `disable-model-invocation`, optional `tags`, and provenance (`source`/`sourceUrl`) from SKILL.md frontmatter.
  * @public
  */
 export const parseSkillFrontmatter = (
@@ -37,6 +49,8 @@ export const parseSkillFrontmatter = (
         ? fields['disable-model-invocation']
         : undefined,
     name: toOptionalString(fields.name),
+    source: toSkillSource(fields.source),
+    sourceUrl: toOptionalString(fields.sourceUrl),
     tags: toOptionalStringArray(fields.tags),
   };
 };
@@ -59,6 +73,12 @@ export const parseSkillFrontmatterForValidation = (
   }
   if (fields['disable-model-invocation'] !== undefined) {
     result['disable-model-invocation'] = fields['disable-model-invocation'];
+  }
+  if (fields.source !== undefined) {
+    result.source = fields.source;
+  }
+  if (fields.sourceUrl !== undefined) {
+    result.sourceUrl = fields.sourceUrl;
   }
   if (fields.tags !== undefined) {
     result.tags = fields.tags;
