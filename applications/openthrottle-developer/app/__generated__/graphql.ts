@@ -2248,13 +2248,25 @@ export type Query = {
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
   codeSemanticSearch: CodeSemanticSearchResult;
-  /** Get a commit link by ID */
+  /**
+   * Get a commit link by ID
+   * @deprecated Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).
+   */
   commitLink?: Maybe<CommitLinkObject>;
-  /** List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists. */
+  /**
+   * List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.
+   * @deprecated Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).
+   */
   commitLinks: Array<CommitLinkObject>;
-  /** List commit links for a plan (plan-level and task-level), ordered by createdAt descending */
+  /**
+   * List commit links for a plan (plan-level and task-level), ordered by createdAt descending
+   * @deprecated Use workArtifactsByPlan. commit_links is being retired (epic 3b798682).
+   */
   commitLinksByPlanId: Array<CommitLinkObject>;
-  /** List commit links for a task, ordered by createdAt descending */
+  /**
+   * List commit links for a task, ordered by createdAt descending
+   * @deprecated Use workArtifactsByTask. commit_links is being retired (epic 3b798682).
+   */
   commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;

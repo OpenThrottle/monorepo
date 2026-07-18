@@ -58,15 +58,21 @@ query getTasks($limit: Int) {
   }
 }
 
-query getCommitLinksByPlanId($input: CommitLinksByPlanIdInput!) {
-  commitLinksByPlanId(input: $input) {
-    id
-    message
-    planId
-    repo
-    sha
-    taskId
-    createdAt
+query getWorkArtifactsByPlan($input: WorkArtifactsByPlanInput!) {
+  workArtifactsByPlan(input: $input) {
+    artifacts {
+      id
+      type
+      externalKey
+      message
+      lifecycle
+      verification
+      source
+      payloadJson
+      producedAt
+      createdAt
+    }
+    totalCount
   }
 }
 

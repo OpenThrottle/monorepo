@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
   WorkArtifact,
+  workArtifactsFactory,
   WorkSession,
   WorkSessionSubject,
   workSessionsFactory,
@@ -32,6 +33,12 @@ describe('WorkLedgerCaptureService', () => {
       workSessionsFactory.build({ id: 'instant-session' }),
     );
     vi.mocked(subjectRepo.findOne).mockResolvedValue(null);
+    vi.mocked(artifactRepo.save).mockResolvedValue(
+      workArtifactsFactory.build({
+        id: 'artifact-1',
+        producedAt: new Date('2026-02-01T22:00:00.000Z'),
+      }),
+    );
 
     manager = createMock<EntityManager>({
       getRepository: vi.fn((target: unknown) => {

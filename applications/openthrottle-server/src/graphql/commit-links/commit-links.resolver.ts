@@ -63,6 +63,7 @@ export class CommitLinksResolver {
   }
 
   @Query(() => CommitLinkObject, {
+    deprecationReason: `Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).`,
     description: `Get a commit link by ID`,
     nullable: true,
   })
@@ -78,6 +79,7 @@ export class CommitLinksResolver {
   }
 
   @Query(() => [CommitLinkObject], {
+    deprecationReason: `Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).`,
     description: `List commit links, ordered by createdAt descending. Capped at ${DEFAULT_COMMIT_LINKS_LIMIT} by default (max ${MAX_COMMIT_LINKS_LIMIT}); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.`,
   })
   async commitLinks(
@@ -97,6 +99,7 @@ export class CommitLinksResolver {
   }
 
   @Query(() => [CommitLinkObject], {
+    deprecationReason: `Use workArtifactsByPlan. commit_links is being retired (epic 3b798682).`,
     description: `List commit links for a plan (plan-level and task-level), ordered by createdAt descending`,
   })
   async commitLinksByPlanId(
@@ -112,6 +115,7 @@ export class CommitLinksResolver {
   }
 
   @Query(() => [CommitLinkObject], {
+    deprecationReason: `Use workArtifactsByTask. commit_links is being retired (epic 3b798682).`,
     description: `List commit links for a task, ordered by createdAt descending`,
   })
   async commitLinksByTaskId(
@@ -134,41 +138,44 @@ export class CommitLinksResolver {
     input: LinkCommitInput,
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
-  ): Promise<CommitLink> {
-    const repo = this.commitLinksService.getRepository();
-    const entity = repo.create({
-      message: input.message ?? null,
-      planId: input.planId,
-      repo: input.repo,
-      sha: input.sha,
-      taskId: input.taskId ?? null,
-    });
-
-    // Dual-write (slice 7b): the commit_links row and the ledger git_commit artifact commit
-    // together so the two never diverge during the cutover. commit_links stays a deprecated,
-    // dual-written table (see OT task 3b798682 for the long-term VIEW/drop).
-    const saved = await repo.manager.transaction(async (manager) => {
-      const persisted = await manager.save(entity);
-      await this.workLedgerCapture.recordGitCommitLink(manager, {
+  ): Promise<CommitLinkObject> {
+    // Ledger-only write (cutover 5/6): linkCommit no longer dual-writes commit_links. The
+    // work-ledger git_commit artifact (+session+subject) is the sole record; commit_links is a
+    // frozen, deprecated table dropped in 6/6. The transaction keeps the session/subject/artifact
+    // writes atomic. The returned CommitLinkObject is synthesized from the artifact + input so the
+    // GraphQL/MCP link_commit payload is unchanged (id is now the artifact uuid).
+    const manager = this.commitLinksService.getRepository().manager;
+    const artifact = await manager.transaction((txn) =>
+      this.workLedgerCapture.recordGitCommitLink(txn, {
         actorKind,
         actorSub,
         message: input.message ?? null,
-        planId: persisted.planId,
-        repo: persisted.repo,
-        sha: persisted.sha,
-        taskId: persisted.taskId,
-      });
-      return persisted;
-    });
+        planId: input.planId,
+        repo: input.repo,
+        sha: input.sha,
+        taskId: input.taskId ?? null,
+      }),
+    );
 
     // Dual-trigger refine-tagging (decision 2026-07-13): linkCommit fires immediately on its
     // landed-by-definition commit; the verifier also fires on the agent path's landed transition.
     // Same deterministic jobId dedupes. Fire-and-forget (never blocks; swallows Redis failures).
     await this.taggingEnqueueService.enqueueRefine(
-      saved.planId,
-      saved.repo,
-      saved.sha,
+      input.planId,
+      input.repo,
+      input.sha,
     );
-    return saved;
+
+    return {
+      createdAt: artifact.producedAt,
+      id: artifact.id,
+      message: input.message ?? null,
+      plan: null,
+      planId: input.planId,
+      repo: input.repo,
+      sha: input.sha,
+      task: null,
+      taskId: input.taskId ?? null,
+    };
   }
 }

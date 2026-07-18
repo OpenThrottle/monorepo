@@ -10,14 +10,20 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
  * follow-up (see the integration note at the bottom of this file).
  */
 
-const { embedQuery, query } = vi.hoisted(() => ({
+const { embedQuery, query, runQuery } = vi.hoisted(() => ({
   embedQuery: vi.fn(),
   query: vi.fn(),
+  runQuery: vi.fn(),
 }));
 
 vi.mock('./data-source.js', () => ({
-  getOrCreateDataSource: vi.fn(async () => ({ query })),
-  runQuery: vi.fn(),
+  getOrCreateDataSource: vi.fn(async () => ({
+    query,
+    // Run the callback with a manager stub; runQuery is mocked, so the stub is never queried.
+    transaction: (cb: (manager: { query: typeof query }) => unknown) =>
+      cb({ query }),
+  })),
+  runQuery,
 }));
 
 vi.mock('./embedding.js', () => ({
@@ -25,7 +31,10 @@ vi.mock('./embedding.js', () => ({
 }));
 
 const {
+  createCommitLink,
   getChunkById,
+  getCommitLinksByPlanId,
+  getCommitLinksByTaskId,
   runSemanticSearch,
   searchAgentAssets,
   searchPlansBySemanticQuery,
@@ -36,6 +45,7 @@ const EMBEDDING = Array.from({ length: 1536 }, () => 0);
 beforeEach(() => {
   query.mockReset();
   embedQuery.mockReset();
+  runQuery.mockReset();
 });
 
 describe('runSemanticSearch', () => {
@@ -318,6 +328,126 @@ describe('searchAgentAssets', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.labels).toEqual([]);
+  });
+});
+
+describe('commit-link readers (work-ledger backed)', () => {
+  test('getCommitLinksByPlanId reads work_artifacts, not commit_links, and maps rows', async () => {
+    runQuery.mockResolvedValueOnce({
+      rows: [
+        {
+          created_at: '2026-07-01T00:00:00.000Z',
+          id: 'artifact-1',
+          message: 'feat: x',
+          plan_id: 'plan-1',
+          repo: 'OpenThrottle/monorepo',
+          sha: 'abc123',
+          task_id: 'task-1',
+        },
+      ],
+    });
+
+    const result = await getCommitLinksByPlanId('plan-1');
+
+    // Queries the ledger join, never the deprecated base table.
+    const sql = String(runQuery.mock.calls[0]?.[1]);
+    expect(sql).toContain('work_artifacts');
+    expect(sql).toContain('work_session_subjects');
+    expect(sql).toContain("wa.type = 'git_commit'");
+    expect(sql).not.toContain('commit_links');
+    expect(runQuery.mock.calls[0]?.[2]).toEqual(['plan-1']);
+    // CommitLinkRow shape preserved (id is now the artifact uuid).
+    expect(result).toEqual([
+      {
+        createdAt: '2026-07-01T00:00:00.000Z',
+        id: 'artifact-1',
+        message: 'feat: x',
+        planId: 'plan-1',
+        repo: 'OpenThrottle/monorepo',
+        sha: 'abc123',
+        taskId: 'task-1',
+      },
+    ]);
+  });
+
+  test('getCommitLinksByTaskId filters on the task subject via the ledger', async () => {
+    runQuery.mockResolvedValueOnce({ rows: [] });
+
+    await getCommitLinksByTaskId('task-9');
+
+    const sql = String(runQuery.mock.calls[0]?.[1]);
+    expect(sql).toContain('wss.task_id = $1');
+    expect(sql).not.toContain('commit_links');
+    expect(runQuery.mock.calls[0]?.[2]).toEqual(['task-9']);
+  });
+});
+
+describe('createCommitLink (work-ledger backed)', () => {
+  test('writes session + subject + git_commit artifact, never commit_links, and returns a CommitLinkRow', async () => {
+    runQuery
+      // 1. resolve the node-client service account
+      .mockResolvedValueOnce({ rows: [{ id: 'sa-node-client' }] })
+      // 2. create-or-reuse session (no rows consumed)
+      .mockResolvedValueOnce({ rows: [] })
+      // 3. select the session id
+      .mockResolvedValueOnce({ rows: [{ id: 'sess-1' }] })
+      // 4. ensure subject (no rows consumed)
+      .mockResolvedValueOnce({ rows: [] })
+      // 5. upsert the artifact, RETURNING the row
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'artifact-1',
+            message: 'feat: x',
+            produced_at: '2026-07-17T00:00:00.000Z',
+          },
+        ],
+      });
+
+    const result = await createCommitLink({
+      message: 'feat: x',
+      planId: 'plan-1',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'abc123',
+      taskId: 'task-1',
+    });
+
+    const sqls = runQuery.mock.calls.map((c) => String(c[1]));
+    // Never touches the deprecated base table.
+    expect(sqls.some((s) => s.includes('commit_links'))).toBe(false);
+    // Writes the three ledger tables.
+    expect(sqls.some((s) => s.includes('work_sessions'))).toBe(true);
+    expect(sqls.some((s) => s.includes('work_session_subjects'))).toBe(true);
+    const artifactSql = sqls.find((s) => s.includes('work_artifacts')) ?? '';
+    // Idempotent create-or-promote; never regresses lifecycle/verification (not in the update set).
+    expect(artifactSql).toContain(
+      'ON CONFLICT (session_id, type, external_key)',
+    );
+    expect(artifactSql).toContain('DO UPDATE');
+    expect(artifactSql).not.toContain('lifecycle = EXCLUDED');
+    expect(artifactSql).not.toContain('verification = EXCLUDED');
+    // CommitLinkRow shape preserved (id = artifact uuid).
+    expect(result).toEqual({
+      createdAt: '2026-07-17T00:00:00.000Z',
+      id: 'artifact-1',
+      message: 'feat: x',
+      planId: 'plan-1',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'abc123',
+      taskId: 'task-1',
+    });
+  });
+
+  test('throws loudly if the node-client service account is absent', async () => {
+    runQuery.mockResolvedValueOnce({ rows: [] });
+
+    await expect(
+      createCommitLink({
+        planId: 'plan-1',
+        repo: 'OpenThrottle/monorepo',
+        sha: 'abc123',
+      }),
+    ).rejects.toThrow('node-client');
   });
 });
 
