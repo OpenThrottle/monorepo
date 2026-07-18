@@ -57,6 +57,17 @@ describe('CommitLinksResolver', () => {
     getRepository: vi.fn().mockReturnValue(commitLinksRepo),
   });
 
+  // linkCommit is ledger-only now: it calls recordGitCommitLink, which returns the created/promoted
+  // artifact's identity. The synthesized CommitLinkObject derives id/createdAt from this.
+  const mockArtifact = {
+    id: 'artifact-1',
+    producedAt: new Date('2026-02-01T22:00:00.000Z'),
+  };
+  const mockRecordGitCommitLink = vi.fn().mockResolvedValue(mockArtifact);
+  const mockWorkLedgerCapture = createMock<WorkLedgerCaptureService>({
+    recordGitCommitLink: mockRecordGitCommitLink,
+  });
+
   const mockPlanLoad = vi.fn().mockResolvedValue(null);
   const mockTaskLoad = vi.fn().mockResolvedValue(null);
   const mockLoaders: CommitLinksLoaders = createMock<CommitLinksLoaders>({
@@ -81,7 +92,7 @@ describe('CommitLinksResolver', () => {
         { provide: CommitLinksLoaders, useValue: mockLoaders },
         {
           provide: WorkLedgerCaptureService,
-          useValue: createMock<WorkLedgerCaptureService>(),
+          useValue: mockWorkLedgerCapture,
         },
       ],
     }).compile();
@@ -175,7 +186,9 @@ describe('CommitLinksResolver', () => {
   });
 
   describe('linkCommit', () => {
-    test('creates and returns CommitLinkObject', async () => {
+    test('writes only the work ledger and returns a synthesized CommitLinkObject', async () => {
+      mockRecordGitCommitLink.mockClear();
+      vi.mocked(commitLinksRepo.save).mockClear();
       const input = {
         message: 'feat: add linkCommit',
         planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
@@ -186,18 +199,28 @@ describe('CommitLinksResolver', () => {
 
       const result = await resolver.linkCommit(input);
 
-      expect(commitLinksRepo.create).toHaveBeenCalledWith({
-        message: input.message,
-        planId: input.planId,
-        repo: input.repo,
-        sha: input.sha,
-        taskId: input.taskId,
-      });
-      expect(commitLinksRepo.save).toHaveBeenCalledWith(createdEntity);
-      expect(result).not.toBeNull();
+      // Ledger-only: the commit_links base table is never written.
+      expect(commitLinksRepo.save).not.toHaveBeenCalled();
+      // The ledger git_commit artifact is recorded with the input fields.
+      expect(mockRecordGitCommitLink).toHaveBeenCalledTimes(1);
+      expect(mockRecordGitCommitLink).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          message: input.message,
+          planId: input.planId,
+          repo: input.repo,
+          sha: input.sha,
+          taskId: input.taskId,
+        }),
+      );
+      // The returned object is synthesized from the artifact + input (id = artifact uuid).
+      expect(result.id).toBe(mockArtifact.id);
+      expect(result.createdAt).toEqual(mockArtifact.producedAt);
       expect(result.planId).toBe(input.planId);
       expect(result.repo).toBe(input.repo);
       expect(result.sha).toBe(input.sha);
+      expect(result.message).toBe(input.message);
+      expect(result.taskId).toBe(input.taskId);
     });
   });
 

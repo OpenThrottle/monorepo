@@ -260,7 +260,7 @@ Most no-build packages are **`technology:react-router`** workspace libraries und
 
 Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
 
-### All projects without `build` (18)
+### All projects without `build` (17)
 
 | Nx project                                     | Role                                                                                                                              |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -277,7 +277,6 @@ Do **not** add a standalone `build` target to these libraries unless you are del
 | `@openthrottle/react-router-ui-global`         | Global UI shell pieces                                                                                                            |
 | `@openthrottle/react-router-utils`             | Config, env, logging, metadata utilities                                                                                          |
 | `@openthrottle/openthrottle-developer-codegen` | GraphQL/codegen outputs for `openthrottle-developer`                                                                              |
-| `@openthrottle/openthrottle-mcp`               | MCP-related React Router package (source consumed by apps/tools)                                                                  |
 | `@openthrottle/graphql-codegen`                | Shared GraphQL codegen utilities                                                                                                  |
 | `@openthrottle/openthrottle-skills`            | Skills package (TypeScript source)                                                                                                |
 | `@openthrottle/openthrottle-vscode`            | Editor-agnostic logic lib for the VS Code/Cursor extension (the deployable extension itself is the `vscode-openthrottle` project) |

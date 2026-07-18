@@ -442,6 +442,17 @@ export async function appendPlanOutputPostgres(
   }
 }
 
+/**
+ * @description Links a git commit to a plan/task by writing the work ledger rather than the
+ * deprecated commit_links base table — the postgres-transport twin of insertCommitLinkGraphql
+ * (which routes through the linkCommit mutation, ledger-only after 5/6). Replicates the server's
+ * create-or-promote in SQL (node-client 2/6 does the same for its DataSource): resolves the
+ * 'workflow-ralph' service account, creates-or-reuses a per-(plan,task) instant session, ensures
+ * the (session,plan,task) subject via the COALESCE zero-uuid sentinel, and upserts a git_commit
+ * artifact (source='agent', lifecycle='landed', verification='unverified') keyed on the sha so a
+ * re-link promotes rather than duplicates. Returns a CommitLinkRow so callers are unaffected
+ * (id is the artifact uuid). Wrapped in a transaction for all-or-nothing.
+ */
 export async function insertCommitLinkPostgres(
   config: WorkflowRalphConfig,
   input: CommitLinkInput,
@@ -449,38 +460,88 @@ export async function insertCommitLinkPostgres(
   const connectionString = requireConnectionString(config);
   const client = new pg.Client({ connectionString });
   await client.connect();
+  const externalRef = `workflow-ralph:${input.planId}:${input.taskId ?? 'plan'}`;
+  const externalKey = `github:${input.repo}@${input.sha}`;
+  const payload = JSON.stringify({
+    landedSha: input.sha,
+    repo: input.repo,
+    sha: input.sha,
+  });
   try {
-    const res = await client.query<{
-      created_at: string;
+    await client.query('BEGIN');
+
+    // 1. Actor: the credential-less workflow-ralph service account (Ralph's own identity).
+    const saRes = await client.query<{ id: string }>(
+      `SELECT id FROM service_accounts WHERE name = 'workflow-ralph' LIMIT 1`,
+    );
+    const serviceAccountId = saRes.rows[0]?.id;
+    if (!serviceAccountId) {
+      throw new Error(
+        "insertCommitLink: 'workflow-ralph' service account missing",
+      );
+    }
+
+    // 2. Create-or-reuse the (plan, task) instant session.
+    await client.query(
+      `INSERT INTO work_sessions
+         (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
+       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'workflow-ralph'
+       WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
+      [serviceAccountId, externalRef],
+    );
+    const sessionRes = await client.query<{ id: string }>(
+      `SELECT id FROM work_sessions WHERE external_ref = $1 LIMIT 1`,
+      [externalRef],
+    );
+    const sessionId = sessionRes.rows[0]?.id;
+    if (!sessionId) throw new Error('insertCommitLink: session not created');
+
+    // 3. Ensure the (session, plan, task) subject (COALESCE zero-uuid sentinel mirrors the unique index).
+    await client.query(
+      `INSERT INTO work_session_subjects (plan_id, session_id, task_id)
+       SELECT $1, $2, $3
+       WHERE NOT EXISTS (
+         SELECT 1 FROM work_session_subjects
+         WHERE session_id = $2 AND plan_id = $1
+           AND COALESCE(task_id, '00000000-0000-0000-0000-000000000000'::uuid)
+             = COALESCE($3::uuid, '00000000-0000-0000-0000-000000000000'::uuid)
+       )`,
+      [input.planId, sessionId, input.taskId ?? null],
+    );
+
+    // 4. Upsert the git_commit artifact; promote message/payload, never regress lifecycle/verification.
+    const artifactRes = await client.query<{
       id: string;
       message: string | null;
-      plan_id: string;
-      repo: string;
-      sha: string;
-      task_id: string | null;
+      produced_at: string;
     }>(
-      `INSERT INTO commit_links (plan_id, task_id, repo, sha, message)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, plan_id, task_id, repo, sha, message, created_at`,
-      [
-        input.planId,
-        input.taskId ?? null,
-        input.repo,
-        input.sha,
-        input.message ?? null,
-      ],
+      `INSERT INTO work_artifacts
+         (external_key, lifecycle, message, payload, produced_at, session_id, source, type, verification)
+       VALUES ($1, 'landed', $2, $3::jsonb, NOW(), $4, 'agent', 'git_commit', 'unverified')
+       ON CONFLICT (session_id, type, external_key)
+       DO UPDATE SET
+         message = EXCLUDED.message,
+         payload = work_artifacts.payload || EXCLUDED.payload
+       RETURNING id, message, produced_at`,
+      [externalKey, input.message ?? null, payload, sessionId],
     );
-    const row = res.rows[0];
-    if (!row) throw new Error('insertCommitLink: no row returned');
+    const row = artifactRes.rows[0];
+    if (!row) throw new Error('insertCommitLink: no artifact returned');
+
+    await client.query('COMMIT');
+
     return {
-      createdAt: row.created_at,
+      createdAt: row.produced_at,
       id: row.id,
       message: row.message,
-      planId: row.plan_id,
-      repo: row.repo,
-      sha: row.sha,
-      taskId: row.task_id,
+      planId: input.planId,
+      repo: input.repo,
+      sha: input.sha,
+      taskId: input.taskId ?? null,
     };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw error;
   } finally {
     await client.end();
   }
