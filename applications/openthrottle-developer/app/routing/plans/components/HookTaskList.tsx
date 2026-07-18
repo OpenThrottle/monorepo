@@ -31,10 +31,11 @@ export interface HookTaskListProps {
  * presentational — attach/detach are delegated to the caller's mutations.
  */
 export const HookTaskList = (props: HookTaskListProps): React.ReactElement => {
-  // 🪝 Hooks
-
-  // ⚙️ Setup
   const { className, hooks, onAdd, onDetach, role } = props;
+
+  // Hooks
+
+  // Setup
   const title =
     role === 'before' ? HOOK_LIST_COPY.beforeTitle : HOOK_LIST_COPY.afterTitle;
   const addLabel =
@@ -42,11 +43,14 @@ export const HookTaskList = (props: HookTaskListProps): React.ReactElement => {
   const emptyLabel =
     role === 'before' ? HOOK_LIST_COPY.emptyBefore : HOOK_LIST_COPY.emptyAfter;
 
-  // 🎬 Handlers
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // 🔌 Short Circuit
 
-  // 🎨 Markup
   return (
     <section
       aria-label={`${title} hooks`}
@@ -114,6 +118,4 @@ export const HookTaskList = (props: HookTaskListProps): React.ReactElement => {
       )}
     </section>
   );
-
-  // ♻️ Life Cycle
 };
