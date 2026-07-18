@@ -74,10 +74,18 @@ interface QueryResult<T = unknown> {
 }
 
 /**
+ * @description A TypeORM DataSource or transactional EntityManager — anything that can run a raw
+ * parameterized query. Lets runQuery be used both standalone and inside ds.transaction(manager => …).
+ */
+interface Queryable {
+  query(sql: string, params?: unknown[]): Promise<unknown>;
+}
+
+/**
  * @description Runs a raw query and normalizes the result to { rows, rowCount } (pg-style). Use for call sites that expect res.rows / res.rowCount.
  */
 export async function runQuery<T = unknown>(
-  ds: DataSource,
+  ds: Queryable,
   sql: string,
   params?: unknown[],
 ): Promise<QueryResult<T>> {

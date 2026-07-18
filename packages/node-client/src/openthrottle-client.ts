@@ -1189,49 +1189,117 @@ interface CreateCommitLinkInput {
 }
 
 /**
- * @description Creates a link between a git commit and a plan (and optionally a task). Returns the inserted row.
+ * @description Links a git commit to a plan (and optionally a task) by writing the work ledger
+ * rather than the deprecated commit_links base table. Idempotent: re-linking the same sha for the
+ * same (plan, task) promotes the existing artifact instead of duplicating it. Returns a CommitLinkRow
+ * synthesized from the artifact (id is the artifact uuid) so callers are unaffected.
+ *
+ * node-client has no NestJS DI, so it cannot call WorkLedgerCaptureService; it replicates the same
+ * create-or-promote in SQL within one transaction. The session actor is the credential-less
+ * 'node-client' service account (seeded by migration 073) — never the seeded openthrottle-mcp SA.
+ * A commit_link is a post-merge link, so the artifact is born lifecycle='landed' with
+ * payload.landedSha; verification stays 'unverified' until the git verifier confirms existence.
  */
 export async function createCommitLink(
   input: CreateCommitLinkInput,
 ): Promise<CommitLinkRow> {
   const ds = await getOrCreateDataSource();
+  const planId = input.planId;
+  const taskId = input.taskId ?? null;
+  // A stable per-(plan, task) instant session so re-links land in the same session and dedupe via
+  // UNIQUE (session_id, type, external_key). Mirrors migration 069's external_ref keying.
+  const externalRef = `node-client:${planId}:${taskId ?? 'plan'}`;
+  const externalKey = `github:${input.repo}@${input.sha}`;
+  const payload = JSON.stringify({
+    landedSha: input.sha,
+    repo: input.repo,
+    sha: input.sha,
+  });
 
-  const res = await runQuery<{
-    created_at: string;
-    id: string;
-    message: string | null;
-    plan_id: string;
-    repo: string;
-    sha: string;
-    task_id: string | null;
-  }>(
-    ds,
-    `INSERT INTO commit_links (plan_id, task_id, repo, sha, message)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, plan_id, task_id, repo, sha, message, created_at`,
-    [
-      input.planId,
-      input.taskId ?? null,
-      input.repo,
-      input.sha,
-      input.message ?? null,
-    ],
-  );
-  const row = res.rows[0];
-  if (!row) throw new Error('createCommitLink: no row returned');
-  return {
-    createdAt: row.created_at,
-    id: row.id,
-    message: row.message,
-    planId: row.plan_id,
-    repo: row.repo,
-    sha: row.sha,
-    taskId: row.task_id,
-  };
+  return ds.transaction(async (manager) => {
+    // 1. Actor: the credential-less node-client service account (seeded by migration 073).
+    const saRes = await runQuery<{ id: string }>(
+      manager,
+      `SELECT id FROM service_accounts WHERE name = 'node-client' LIMIT 1`,
+    );
+    const serviceAccountId = saRes.rows[0]?.id;
+    if (!serviceAccountId) {
+      throw new Error(
+        "createCommitLink: 'node-client' service account missing (run migration 073)",
+      );
+    }
+
+    // 2. Create-or-reuse the (plan, task) instant session (started_at = ended_at, closed explicitly).
+    await runQuery(
+      manager,
+      `INSERT INTO work_sessions
+         (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
+       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'node-client'
+       WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
+      [serviceAccountId, externalRef],
+    );
+    const sessionRes = await runQuery<{ id: string }>(
+      manager,
+      `SELECT id FROM work_sessions WHERE external_ref = $1 LIMIT 1`,
+      [externalRef],
+    );
+    const sessionId = sessionRes.rows[0]?.id;
+    if (!sessionId) throw new Error('createCommitLink: session not created');
+
+    // 3. Ensure the (session, plan, task) subject (COALESCE zero-uuid sentinel mirrors the unique index).
+    await runQuery(
+      manager,
+      `INSERT INTO work_session_subjects (plan_id, session_id, task_id)
+       SELECT $1, $2, $3
+       WHERE NOT EXISTS (
+         SELECT 1 FROM work_session_subjects
+         WHERE session_id = $2 AND plan_id = $1
+           AND COALESCE(task_id, '00000000-0000-0000-0000-000000000000'::uuid)
+             = COALESCE($3::uuid, '00000000-0000-0000-0000-000000000000'::uuid)
+       )`,
+      [planId, sessionId, taskId],
+    );
+
+    // 4. Upsert the git_commit artifact; promote message/payload, never regress lifecycle/verification.
+    const artifactRes = await runQuery<{
+      id: string;
+      message: string | null;
+      produced_at: string;
+    }>(
+      manager,
+      `INSERT INTO work_artifacts
+         (external_key, lifecycle, message, payload, produced_at, session_id, source, type, verification)
+       VALUES ($1, 'landed', $2, $3::jsonb, NOW(), $4, 'agent', 'git_commit', 'unverified')
+       ON CONFLICT (session_id, type, external_key)
+       DO UPDATE SET
+         message = EXCLUDED.message,
+         payload = work_artifacts.payload || EXCLUDED.payload
+       RETURNING id, message, produced_at`,
+      [externalKey, input.message ?? null, payload, sessionId],
+    );
+    const row = artifactRes.rows[0];
+    if (!row) throw new Error('createCommitLink: no artifact returned');
+
+    return {
+      createdAt: row.produced_at,
+      id: row.id,
+      message: row.message,
+      planId,
+      repo: input.repo,
+      sha: input.sha,
+      taskId,
+    };
+  });
 }
 
 /**
  * @description Fetches all commit links for a plan (plan-level and task-level for that plan), ordered by created_at desc.
+ *
+ * Reads the work ledger (git_commit artifacts) rather than the deprecated commit_links base table.
+ * Each artifact is attributed to the most-specific subject of its session (a task subject over a
+ * plan-level one) via DISTINCT ON (wa.id) — mirroring the server activity resolver — so a session
+ * with several subjects yields exactly one row per commit. The CommitLinkRow.id is now the artifact
+ * uuid (an opaque, unique key; callers treat it as opaque).
  */
 export async function getCommitLinksByPlanId(
   planId: string,
@@ -1248,10 +1316,22 @@ export async function getCommitLinksByPlanId(
     task_id: string | null;
   }>(
     ds,
-    `SELECT id, plan_id, task_id, repo, sha, message, created_at
-       FROM commit_links
-       WHERE plan_id = $1
-       ORDER BY created_at DESC`,
+    `SELECT sub.id, sub.plan_id, sub.task_id, sub.repo, sub.sha, sub.message, sub.created_at
+       FROM (
+         SELECT DISTINCT ON (wa.id)
+                wa.id,
+                wss.plan_id,
+                wss.task_id,
+                wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha,
+                wa.message,
+                wa.produced_at AS created_at
+           FROM work_artifacts wa
+           JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+          WHERE wa.type = 'git_commit' AND wss.plan_id = $1
+          ORDER BY wa.id, (wss.task_id IS NULL)
+       ) sub
+       ORDER BY sub.created_at DESC`,
     [planId],
   );
   return res.rows.map((r) => ({
@@ -1267,6 +1347,9 @@ export async function getCommitLinksByPlanId(
 
 /**
  * @description Fetches all commit links for a task (task-level only), ordered by created_at desc.
+ *
+ * Ledger-backed (see getCommitLinksByPlanId). Filters to git_commit artifacts whose session has a
+ * subject for this task.
  */
 export async function getCommitLinksByTaskId(
   taskId: string,
@@ -1283,10 +1366,22 @@ export async function getCommitLinksByTaskId(
     task_id: string | null;
   }>(
     ds,
-    `SELECT id, plan_id, task_id, repo, sha, message, created_at
-       FROM commit_links
-       WHERE task_id = $1
-       ORDER BY created_at DESC`,
+    `SELECT sub.id, sub.plan_id, sub.task_id, sub.repo, sub.sha, sub.message, sub.created_at
+       FROM (
+         SELECT DISTINCT ON (wa.id)
+                wa.id,
+                wss.plan_id,
+                wss.task_id,
+                wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha,
+                wa.message,
+                wa.produced_at AS created_at
+           FROM work_artifacts wa
+           JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+          WHERE wa.type = 'git_commit' AND wss.task_id = $1
+          ORDER BY wa.id, (wss.task_id IS NULL)
+       ) sub
+       ORDER BY sub.created_at DESC`,
     [taskId],
   );
   return res.rows.map((r) => ({
@@ -1356,7 +1451,20 @@ export async function getLastActivityForPlanOrTask(
       sha: string;
     }>(
       ds,
-      `SELECT created_at, repo, sha, message FROM commit_links WHERE task_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT sub.created_at, sub.repo, sub.sha, sub.message
+         FROM (
+           SELECT DISTINCT ON (wa.id)
+                  wa.id,
+                  wa.produced_at AS created_at,
+                  wa.payload->>'repo' AS repo,
+                  wa.payload->>'sha' AS sha,
+                  wa.message
+             FROM work_artifacts wa
+             JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+            WHERE wa.type = 'git_commit' AND wss.task_id = $1
+            ORDER BY wa.id, (wss.task_id IS NULL)
+         ) sub
+         ORDER BY sub.created_at DESC LIMIT 1`,
       [taskId],
     );
     const commitRow = commitRes.rows[0];
@@ -1380,7 +1488,20 @@ export async function getLastActivityForPlanOrTask(
       sha: string;
     }>(
       ds,
-      `SELECT created_at, repo, sha, message FROM commit_links WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT sub.created_at, sub.repo, sub.sha, sub.message
+         FROM (
+           SELECT DISTINCT ON (wa.id)
+                  wa.id,
+                  wa.produced_at AS created_at,
+                  wa.payload->>'repo' AS repo,
+                  wa.payload->>'sha' AS sha,
+                  wa.message
+             FROM work_artifacts wa
+             JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+            WHERE wa.type = 'git_commit' AND wss.plan_id = $1
+            ORDER BY wa.id, (wss.task_id IS NULL)
+         ) sub
+         ORDER BY sub.created_at DESC LIMIT 1`,
       [planId],
     );
     const commitRow = commitRes.rows[0];
@@ -1595,6 +1716,9 @@ interface ActivityByDateResult {
 
 /**
  * @description Fetches commit links in a date range (inclusive start, exclusive end). Joins plan and task titles.
+ *
+ * Ledger-backed (see getCommitLinksByPlanId): git_commit artifacts by produced_at, attributed to the
+ * most-specific subject via DISTINCT ON (wa.id), with plan/task titles joined outside the subquery.
  */
 async function getCommitLinksInDateRange(
   startIso: string,
@@ -1614,13 +1738,26 @@ async function getCommitLinksInDateRange(
     task_title: string | null;
   }>(
     ds,
-    `SELECT cl.id, cl.plan_id, cl.task_id, cl.repo, cl.sha, cl.message, cl.created_at,
+    `SELECT sub.id, sub.plan_id, sub.task_id, sub.repo, sub.sha, sub.message, sub.created_at,
               p.title AS plan_title, t.title AS task_title
-       FROM commit_links cl
-       JOIN plans p ON cl.plan_id = p.id
-       LEFT JOIN tasks t ON cl.task_id = t.id
-       WHERE cl.created_at >= $1::timestamptz AND cl.created_at < $2::timestamptz
-       ORDER BY cl.created_at DESC`,
+       FROM (
+         SELECT DISTINCT ON (wa.id)
+                wa.id,
+                wss.plan_id,
+                wss.task_id,
+                wa.payload->>'repo' AS repo,
+                wa.payload->>'sha' AS sha,
+                wa.message,
+                wa.produced_at AS created_at
+           FROM work_artifacts wa
+           JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+          WHERE wa.type = 'git_commit'
+            AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
+          ORDER BY wa.id, (wss.task_id IS NULL)
+       ) sub
+       JOIN plans p ON p.id = sub.plan_id
+       LEFT JOIN tasks t ON t.id = sub.task_id
+       ORDER BY sub.created_at DESC`,
     [startIso, endIso],
   );
   return res.rows.map((r) => ({

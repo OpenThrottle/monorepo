@@ -303,21 +303,21 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "format-write": {
-      "cache": false,
-      "description": "Format the workspace in place with Prettier (css/html/js/json/md/ts/yaml and more).",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
-        "cwd": "{workspaceRoot}"
-      }
-    },
     "format-check": {
       "cache": true,
       "description": "Check workspace formatting with Prettier without writing — CI parity for format-write.",
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-write": {
+      "cache": false,
+      "description": "Format the workspace in place with Prettier (css/html/js/json/md/ts/yaml and more).",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
       }
     },

@@ -2285,20 +2285,20 @@ type Query {
   codeIndexStatus(repositoryId: ID!): CodeIndexStatusObject!
 
   """Get a commit link by ID"""
-  commitLink(input: GetCommitLinkInput!): CommitLinkObject
+  commitLink(input: GetCommitLinkInput!): CommitLinkObject @deprecated(reason: "Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).")
 
   """
   List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.
   """
-  commitLinks(limit: Int): [CommitLinkObject!]!
+  commitLinks(limit: Int): [CommitLinkObject!]! @deprecated(reason: "Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).")
 
   """
   List commit links for a plan (plan-level and task-level), ordered by createdAt descending
   """
-  commitLinksByPlanId(input: CommitLinksByPlanIdInput!): [CommitLinkObject!]!
+  commitLinksByPlanId(input: CommitLinksByPlanIdInput!): [CommitLinkObject!]! @deprecated(reason: "Use workArtifactsByPlan. commit_links is being retired (epic 3b798682).")
 
   """List commit links for a task, ordered by createdAt descending"""
-  commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]!
+  commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]! @deprecated(reason: "Use workArtifactsByTask. commit_links is being retired (epic 3b798682).")
   workSession(id: String!): WorkSessionObject
   workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
   workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!

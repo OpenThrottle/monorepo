@@ -53,6 +53,12 @@ export interface RecordGitCommitLinkParams {
   readonly taskId: string | null;
 }
 
+/** Identity of the git_commit artifact created (or promoted) by recordGitCommitLink. */
+export interface RecordGitCommitLinkResult {
+  readonly id: string;
+  readonly producedAt: Date;
+}
+
 function resolveActorColumns(
   sub: string | undefined,
   kind: string | undefined,
@@ -143,7 +149,7 @@ export class WorkLedgerCaptureService {
   async recordGitCommitLink(
     manager: EntityManager,
     params: RecordGitCommitLinkParams,
-  ): Promise<void> {
+  ): Promise<RecordGitCommitLinkResult> {
     const actor = resolveActorColumns(params.actorSub, params.actorKind);
     const now = new Date();
     const session = await this.resolveSession(manager, actor, now);
@@ -163,9 +169,10 @@ export class WorkLedgerCaptureService {
       },
     });
 
-    if (existing) return;
+    // Idempotent within a session: a re-link returns the existing artifact's identity unchanged.
+    if (existing) return { id: existing.id, producedAt: existing.producedAt };
 
-    await artifactRepo.save(
+    const created = await artifactRepo.save(
       artifactRepo.create({
         externalKey: resolved.externalKey,
         // A commit_link is a post-merge link, so it is landed by definition.
@@ -179,6 +186,8 @@ export class WorkLedgerCaptureService {
         verification: WORK_ARTIFACT_VERIFICATION.UNVERIFIED,
       }),
     );
+
+    return { id: created.id, producedAt: created.producedAt };
   }
 
   /**
