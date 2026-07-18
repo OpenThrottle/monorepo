@@ -339,7 +339,27 @@ type TaskObject {
   completedAt: DateTime
   createdAt: DateTime!
   description: String
+
+  """
+  Lifecycle-hook role: 'before' or 'after'. NULL for a regular (non-hook) task.
+  """
+  hookRole: String
+
+  """
+  Plan-level hook scope: 'once' (beforeAll/afterAll) or 'each' (beforeEach/afterEach). NULL for regular tasks and task-level hooks.
+  """
+  hookScope: String
+
+  """
+  Hook body source: 'template' (inline title/description) or 'skill' (runs skillSlug via the hooks runner). NULL for regular tasks.
+  """
+  hookSource: String
   id: String!
+
+  """
+  Parent task this hook is anchored to (task-level before/after). NULL for regular tasks and plan-level hooks.
+  """
+  parentTaskId: String
 
   """Resolved plan entity when planId is set"""
   plan: PlanObject
@@ -354,6 +374,9 @@ type TaskObject {
 
   """JSON string of requirements array"""
   requirementsJson: String!
+
+  """Skill slug when hookSource is 'skill'; NULL otherwise."""
+  skillSlug: String
 
   """
   Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId.

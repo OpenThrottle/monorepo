@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   comparePlanTaskListOrder,
+  isRunnableRalphTask,
+  isRunnerExecutedHookTask,
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from '../plan-task-list-order.ts';
@@ -82,5 +84,79 @@ describe('pickRalphTaskForIteration', () => {
     ];
 
     expect(pickRalphTaskForIteration(tasks)?.id).toBe('resume-me');
+  });
+});
+
+describe('isRunnerExecutedHookTask', () => {
+  it('is true only for a plan-level skill hook (parentTaskId null, source skill)', () => {
+    expect(
+      isRunnerExecutedHookTask({
+        hookRole: 'before',
+        hookSource: 'skill',
+        parentTaskId: null,
+      }),
+    ).toBe(true);
+  });
+
+  it('is false for task-level skill hooks (anchored)', () => {
+    expect(
+      isRunnerExecutedHookTask({
+        hookRole: 'before',
+        hookSource: 'skill',
+        parentTaskId: 'anchor-1',
+      }),
+    ).toBe(false);
+  });
+
+  it('is false for plan-level template hooks and regular tasks', () => {
+    expect(
+      isRunnerExecutedHookTask({
+        hookRole: 'after',
+        hookSource: 'template',
+        parentTaskId: null,
+      }),
+    ).toBe(false);
+    expect(isRunnerExecutedHookTask({ hookRole: null })).toBe(false);
+  });
+});
+
+describe('isRunnableRalphTask', () => {
+  it('keeps regular remaining tasks', () => {
+    expect(isRunnableRalphTask({ status: 'PENDING' })).toBe(true);
+    expect(isRunnableRalphTask({ status: 'IN_PROGRESS' })).toBe(true);
+  });
+
+  it('drops terminal tasks', () => {
+    expect(isRunnableRalphTask({ status: 'COMPLETED' })).toBe(false);
+  });
+
+  it('drops runner-executed plan-level skill hook-tasks even when remaining', () => {
+    expect(
+      isRunnableRalphTask({
+        hookRole: 'before',
+        hookSource: 'skill',
+        parentTaskId: null,
+        status: 'QUEUED',
+      }),
+    ).toBe(false);
+  });
+
+  it('keeps task-level and template hook-tasks (they run as materialized tasks)', () => {
+    expect(
+      isRunnableRalphTask({
+        hookRole: 'before',
+        hookSource: 'skill',
+        parentTaskId: 'anchor-1',
+        status: 'QUEUED',
+      }),
+    ).toBe(true);
+    expect(
+      isRunnableRalphTask({
+        hookRole: 'after',
+        hookSource: 'template',
+        parentTaskId: null,
+        status: 'PENDING',
+      }),
+    ).toBe(true);
   });
 });

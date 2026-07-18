@@ -26,6 +26,28 @@ export const HOOK_LIST_COPY = {
 } as const;
 
 /**
+ * @description Copy for the plan/task lifecycle-hooks section (the container that
+ * groups the before/after {@link HOOK_LIST_COPY} lists) and its add-hook dialog.
+ */
+export const PLAN_LIFECYCLE_HOOKS_COPY = {
+  addDialogTitle: `Add lifecycle hook`,
+  cancel: `Cancel`,
+  planSectionTitle: `Lifecycle hooks`,
+  scopeEach: `Each task`,
+  scopeLabel: `Scope`,
+  scopeOnce: `Once`,
+  skillSlugLabel: `Skill slug`,
+  skillSlugPlaceholder: `e.g. validate-plan`,
+  sourceLabel: `Source`,
+  sourceSkill: `Skill`,
+  sourceTemplate: `Template`,
+  submit: `Add hook`,
+  taskSectionTitle: `Task hooks`,
+  titleLabel: `Title`,
+  titlePlaceholder: `e.g. seed fixtures`,
+} as const;
+
+/**
  * @description Section headings and empty-state hints for the plan detail Output
  * tab, which reads as a history: agent output, then the rule-applications change
  * log, then linked artifacts. Headings mirror the reused panel components

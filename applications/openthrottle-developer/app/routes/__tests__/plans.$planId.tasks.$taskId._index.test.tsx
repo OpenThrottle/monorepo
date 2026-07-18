@@ -7,10 +7,13 @@ import TaskDetailRoute from '../plans.$planId.tasks.$taskId._index';
 
 const mockTask = {
   __typename: 'TaskObject' as const,
+  afterHooks: [],
   assignee: null,
+  beforeHooks: [],
   category: 'feature',
   createdAt: '2025-01-02T00:00:00Z',
   description: 'Task description',
+  hookRole: null,
   id: 'task-1',
   planId: 'plan-1',
   projectRelation: null,
@@ -99,5 +102,64 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
     await user.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(submitted).toHaveLength(1));
     expect(submitted[0]).toEqual({ intent: 'addTaskTag', tag: 'design' });
+  });
+});
+
+describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
+  const renderWithHook = (): {
+    submitted: Record<string, FormDataEntryValue | null>[];
+  } => {
+    const submitted: Record<string, FormDataEntryValue | null>[] = [];
+    const taskWithHook = {
+      ...mockTask,
+      beforeHooks: [
+        {
+          hookRole: 'before',
+          hookScope: 'once',
+          hookSource: 'skill',
+          id: 'hook-9',
+          skillSlug: 'seed-db',
+          status: 'PENDING',
+          title: 'before: /seed-db',
+        },
+      ],
+    };
+
+    const RoutesStub = createRoutesStub([
+      {
+        Component: TaskDetailRoute,
+        action: async ({ request }: { request: Request }) => {
+          const formData = await request.formData();
+          submitted.push(Object.fromEntries(formData.entries()));
+          return { detachHook: true };
+        },
+        loader: () => ({ ...loaderData, task: taskWithHook }),
+        path: '/plans/:planId/tasks/:taskId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />);
+    return { submitted };
+  };
+
+  test('renders the task hooks section with its before-hook', async () => {
+    renderWithHook();
+    expect(await screen.findByText('Task hooks')).toBeInTheDocument();
+    expect(screen.getByText('before: /seed-db')).toBeInTheDocument();
+  });
+
+  test('removing a task hook submits the detachHook intent', async () => {
+    const user = userEvent.setup();
+    const { submitted } = renderWithHook();
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Remove hook: before: /seed-db',
+      }),
+    );
+    await waitFor(() => expect(submitted).toHaveLength(1));
+    expect(submitted[0]).toEqual({
+      hookTaskId: 'hook-9',
+      intent: 'detachHook',
+    });
   });
 });

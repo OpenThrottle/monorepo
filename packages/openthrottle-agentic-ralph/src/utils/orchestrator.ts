@@ -44,6 +44,7 @@ import {
 } from '../utils/output.ts';
 import {
   formatPlanAndTasksForPrompt,
+  isRunnableRalphTask,
   pickRalphTaskForIteration,
 } from '../utils/index.ts';
 import {
@@ -102,13 +103,6 @@ const buildOrchestratorBasePrompt = (params: {
     ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.'
   );
 };
-
-const REMAINING_TASK_STATUS = new Set([
-  'PENDING',
-  'QUEUED',
-  'IN_PROGRESS',
-  'BLOCKED',
-]);
 
 const toLifecycleTaskContext = (task: {
   readonly category?: string | null;
@@ -235,9 +229,7 @@ const reconcilePlanIfTasksExhausted = async (
     input: { planId },
   });
 
-  const remaining = planTasks.tasksByPlanId.filter((t) =>
-    REMAINING_TASK_STATUS.has(t.status),
-  );
+  const remaining = planTasks.tasksByPlanId.filter(isRunnableRalphTask);
 
   if (remaining.length > 0) {
     return false;
@@ -418,10 +410,9 @@ export const createWorkflowRalphOrchestrator = (
             input: { planId: effectivePlanId },
           });
 
-          // task.filter
-          const remaining = planTasks.tasksByPlanId.filter((t) =>
-            REMAINING_TASK_STATUS.has(t.status),
-          );
+          // task.filter — runner-executed hook-tasks are handled by the lifecycle
+          // dispatcher (beforeAll/afterAll/beforeEach/afterEach), never picked here.
+          const remaining = planTasks.tasksByPlanId.filter(isRunnableRalphTask);
 
           if (remaining.length === 0) {
             await executeGraphqlV2(

@@ -4,6 +4,8 @@ import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
   buildWorkflowRalphOptionArgs,
@@ -116,6 +118,15 @@ export const PlanTabDetails = (
               )}
             </div>
           )}
+        </div>
+
+        <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
+          <PlanLifecycleHooksSection
+            afterHooks={plan.afterHooks}
+            beforeHooks={plan.beforeHooks}
+            heading={PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
+            planId={plan.id}
+          />
         </div>
 
         <PlanWorkflowRunTransparency

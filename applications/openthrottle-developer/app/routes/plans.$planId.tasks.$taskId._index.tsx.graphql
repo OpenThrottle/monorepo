@@ -3,6 +3,12 @@
 query getTaskById($id: ID!) {
   task(id: $id) {
     ...PlanTaskRow
+    afterHooks {
+      ...HookTask
+    }
+    beforeHooks {
+      ...HookTask
+    }
     tags {
       ...TaskTagChip
     }
