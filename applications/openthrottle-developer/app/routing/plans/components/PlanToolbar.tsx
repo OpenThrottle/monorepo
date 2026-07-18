@@ -24,6 +24,11 @@ import { Link, useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
+import type {
+  PlanTagChipData,
+  PlanTagVocabularyOption,
+} from '~/routing/plans/components/PlanTagChips';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
@@ -37,6 +42,15 @@ export interface PlanToolbarProps {
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
    */
   jobRunHooksJson?: string;
+  /**
+   * @description Add a plan tag. When provided alongside {@link onRemoveTag},
+   * {@link tags}, and {@link tagVocabulary}, the toolbar renders the tag chips.
+   */
+  onAddTag?: (tag: string) => void;
+  /**
+   * @description Remove a plan tag. See {@link onAddTag}.
+   */
+  onRemoveTag?: (tag: string) => void;
   planId: string;
   planStatus?: string;
   /**
@@ -47,6 +61,18 @@ export interface PlanToolbarProps {
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
   ralphTuningJson?: string;
+  /**
+   * @description Available tag vocabulary for the add-tag dropdown. See {@link onAddTag}.
+   */
+  tagVocabulary?: PlanTagVocabularyOption[];
+  /**
+   * @description Applied plan tags rendered as chips. See {@link onAddTag}.
+   */
+  tags?: PlanTagChipData[];
+  /**
+   * @description Whether a tag add/remove is in flight (disables tag controls).
+   */
+  tagsPending?: boolean;
   /**
    * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
    */
@@ -69,11 +95,16 @@ export interface PlanToolbarProps {
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
     className,
+    onAddTag,
+    onRemoveTag,
     planId,
     planTitle = 'Untitled',
     planStatus,
     jobRunHooksJson = '',
     ralphTuningJson = '',
+    tags,
+    tagsPending = false,
+    tagVocabulary,
     workingDirectory,
     workflowRunBlocked = false,
     workflowRunBlockedReason,
@@ -200,153 +231,176 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('flex flex-1 flex-wrap items-center gap-2', className)}
+      className={clsx('flex flex-col gap-3', className)}
       data-testid="PlanToolbar"
     >
-      {/* Status / run group */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <fetcherSetPlanStatus.Form method="post">
-              <Input name="intent" type="hidden" value="setPlanStatus" />
-              <Input name="planId" type="hidden" value={planId} />
-              <Input name="status" type="hidden" value="COMPLETED" />
-              <Button
-                disabled={fetcherSetPlanStatus.state !== 'idle' || isCompleted}
-                size="sm"
-                type="submit"
-                variant="ghost"
-              >
-                <CheckCircle />
-                {fetcherSetPlanStatus.state !== 'idle'
-                  ? 'Marking…'
-                  : 'Mark Complete'}
-              </Button>
-            </fetcherSetPlanStatus.Form>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            {isCompleted
-              ? 'Plan is already completed'
-              : 'Mark this plan as completed'}
-          </TooltipContent>
-        </Tooltip>
+      <div className="flex flex-1 flex-wrap items-center gap-2">
+        {/* Status / run group */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Tooltip delayDuration={1_000}>
+            <TooltipTrigger asChild={true}>
+              <fetcherSetPlanStatus.Form method="post">
+                <Input name="intent" type="hidden" value="setPlanStatus" />
+                <Input name="planId" type="hidden" value={planId} />
+                <Input name="status" type="hidden" value="COMPLETED" />
+                <Button
+                  disabled={
+                    fetcherSetPlanStatus.state !== 'idle' || isCompleted
+                  }
+                  size="xs"
+                  type="submit"
+                  variant="ghost"
+                >
+                  <CheckCircle />
+                  {fetcherSetPlanStatus.state !== 'idle'
+                    ? 'Marking…'
+                    : 'Mark Complete'}
+                </Button>
+              </fetcherSetPlanStatus.Form>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {isCompleted
+                ? 'Plan is already completed'
+                : 'Mark this plan as completed'}
+            </TooltipContent>
+          </Tooltip>
 
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <fetcherRunPlan.Form method="post">
-              <Input name="intent" type="hidden" value="runPlan" />
-              <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
-              {jobRunHooksJson !== '' ? (
+          <Tooltip delayDuration={1_000}>
+            <TooltipTrigger asChild={true}>
+              <fetcherRunPlan.Form method="post">
+                <Input name="intent" type="hidden" value="runPlan" />
                 <Input
-                  name="jobRunHooksJson"
+                  name="ralphTuning"
                   type="hidden"
-                  value={jobRunHooksJson}
+                  value={ralphTuningJson}
                 />
-              ) : null}
-              {workingDirectory != null && workingDirectory !== '' && (
-                <Input
-                  name="workingDirectory"
-                  type="hidden"
-                  value={workingDirectory}
-                />
-              )}
-              <Button
-                disabled={fetcherRunPlan.state !== 'idle' || workflowRunBlocked}
-                size="sm"
-                type="submit"
-                variant="outline"
-              >
-                <PlayCircle />
-                {getRunButtonLabel()}
-              </Button>
-            </fetcherRunPlan.Form>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            {fetcherRunPlan.state !== 'idle'
-              ? 'Submitting…'
-              : workflowRunBlocked
-                ? (workflowRunBlockedReason ??
-                  'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
-                : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
-          </TooltipContent>
-        </Tooltip>
+                {jobRunHooksJson !== '' ? (
+                  <Input
+                    name="jobRunHooksJson"
+                    type="hidden"
+                    value={jobRunHooksJson}
+                  />
+                ) : null}
+                {workingDirectory != null && workingDirectory !== '' && (
+                  <Input
+                    name="workingDirectory"
+                    type="hidden"
+                    value={workingDirectory}
+                  />
+                )}
+                <Button
+                  disabled={
+                    fetcherRunPlan.state !== 'idle' || workflowRunBlocked
+                  }
+                  size="xs"
+                  type="submit"
+                  variant="ghost"
+                >
+                  <PlayCircle />
+                  {getRunButtonLabel()}
+                </Button>
+              </fetcherRunPlan.Form>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" side="top">
+              {fetcherRunPlan.state !== 'idle'
+                ? 'Submitting…'
+                : workflowRunBlocked
+                  ? (workflowRunBlockedReason ??
+                    'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
+                  : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+            </TooltipContent>
+          </Tooltip>
 
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <fetcherEvaluateRules.Form method="post">
-              <Input name="intent" type="hidden" value="evaluatePlanRules" />
-              <Input name="planId" type="hidden" value={planId} />
-              <Button
-                disabled={fetcherEvaluateRules.state !== 'idle'}
-                size="sm"
-                type="submit"
-                variant="ghost"
-              >
-                <Gauge />
-                {fetcherEvaluateRules.state !== 'idle'
-                  ? 'Evaluating…'
-                  : 'Evaluate rules'}
-              </Button>
-            </fetcherEvaluateRules.Form>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            Queue a tag→action rules evaluation pass for this plan (recomputes
-            skills-via-rules; results appear in the rule applications ledger).
-          </TooltipContent>
-        </Tooltip>
+          <Tooltip delayDuration={1_000}>
+            <TooltipTrigger asChild={true}>
+              <fetcherEvaluateRules.Form method="post">
+                <Input name="intent" type="hidden" value="evaluatePlanRules" />
+                <Input name="planId" type="hidden" value={planId} />
+                <Button
+                  disabled={fetcherEvaluateRules.state !== 'idle'}
+                  size="xs"
+                  type="submit"
+                  variant="ghost"
+                >
+                  <Gauge />
+                  {fetcherEvaluateRules.state !== 'idle'
+                    ? 'Evaluating…'
+                    : 'Evaluate rules'}
+                </Button>
+              </fetcherEvaluateRules.Form>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" side="top">
+              Queue a tag→action rules evaluation pass for this plan (recomputes
+              skills-via-rules; results appear in the rule applications ledger).
+            </TooltipContent>
+          </Tooltip>
 
-        <KillPlanRunButton
-          planId={planId}
-          planTitle={planTitle}
-          show={getPlanIsCancelable(planStatus)}
-          // show={true}
-          size="sm"
-        />
+          <KillPlanRunButton
+            planId={planId}
+            planTitle={planTitle}
+            show={getPlanIsCancelable(planStatus)}
+            // show={true}
+            size="xs"
+          />
+        </div>
+
+        <div className="flex-1" />
+
+        <Link
+          className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
+          to="#plan-workflow-run-transparency"
+        >
+          CLI preview and history
+        </Link>
+
+        {/* Add / edit group: DropdownMenu for secondary actions */}
+        <DropdownMenu>
+          <Tooltip delayDuration={1_000}>
+            <TooltipTrigger asChild={true}>
+              <DropdownMenuTrigger asChild={true}>
+                <Button id="plan-actions-trigger" size="xs" variant="ghost">
+                  Actions
+                  <ChevronDown />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">Add task or edit plan</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild={true}>
+              <Link
+                className="flex items-center gap-2"
+                to={`/plans/${planId}/tasks/create`}
+              >
+                <PlusCircle size={14} />
+                Add Task
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild={true}>
+              <Link
+                className="flex items-center gap-2"
+                to={`/plans/${planId}/edit`}
+              >
+                <PencilIcon size={14} />
+                Edit Plan
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div className="flex-1" />
-
-      <Link
-        className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
-        to="#plan-workflow-run-transparency"
-      >
-        CLI preview and history
-      </Link>
-
-      {/* Add / edit group: DropdownMenu for secondary actions */}
-      <DropdownMenu>
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <DropdownMenuTrigger asChild={true}>
-              <Button id="plan-actions-trigger" size="sm" variant="outline">
-                Actions
-                <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="top">Add task or edit plan</TooltipContent>
-        </Tooltip>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild={true}>
-            <Link
-              className="flex items-center gap-2"
-              to={`/plans/${planId}/tasks/create`}
-            >
-              <PlusCircle size={14} />
-              Add Task
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild={true}>
-            <Link
-              className="flex items-center gap-2"
-              to={`/plans/${planId}/edit`}
-            >
-              <PencilIcon size={14} />
-              Edit Plan
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {onAddTag != null &&
+      onRemoveTag != null &&
+      tags != null &&
+      tagVocabulary != null ? (
+        <PlanTagChips
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+          pending={tagsPending}
+          tags={tags}
+          vocabulary={tagVocabulary}
+        />
+      ) : null}
     </div>
   );
 };

@@ -272,7 +272,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-1 flex-col justify-end p-4 md:p-8 lg:p-12">
+    <GlobalScreen
+      beta={true}
+      className="flex flex-1 flex-col justify-end p-4 md:p-8 lg:p-12"
+    >
       {isEmptyThread && (
         <div className="flex flex-1 flex-col items-center justify-center">
           <h1 className="text-center text-2xl">

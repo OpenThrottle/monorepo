@@ -1,7 +1,8 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
 import { renderRoutesStub } from '~/testing/route-fixtures';
@@ -94,5 +95,27 @@ describe('PlanToolbar Component', () => {
       workflowRunBlockedReason: 'Fix CLI options',
     });
     expect(r.getByRole('button', { name: /^Add to Queue$/i })).toBeDisabled();
+  });
+
+  test('does not render tag chips when tag props are omitted', () => {
+    expect(component.queryByTestId('PlanTagChips')).not.toBeInTheDocument();
+  });
+
+  test('renders tag chips and wires removal when the tag contract is provided', async () => {
+    const user = userEvent.setup();
+    const onRemoveTag = vi.fn();
+    const r = renderToolbar({
+      onAddTag: vi.fn(),
+      onRemoveTag,
+      planId: 'p1',
+      tagVocabulary: [{ dimension: 'domain', tag: 'frontend' }],
+      tags: [{ dimension: 'domain', source: 'human', tag: 'backend' }],
+    });
+
+    expect(r.getByTestId('PlanTagChips')).toBeInTheDocument();
+    expect(r.getByText('backend')).toBeInTheDocument();
+
+    await user.click(r.getByRole('button', { name: /Remove tag backend/i }));
+    expect(onRemoveTag).toHaveBeenCalledWith('backend');
   });
 });

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Badge, Card } from '@openthrottle/react-router-shadcn';
+import { Badge } from '@openthrottle/react-router-shadcn';
 
 export interface LinkedArtifactRow {
   externalKey: string;
@@ -61,8 +61,7 @@ export const LinkedArtifactsPanel = (
   }
 
   return (
-    <Card className="p-4" data-testid="LinkedArtifactsPanel">
-      <h3 className="mb-2 text-sm font-semibold">Linked artifacts</h3>
+    <div data-testid="LinkedArtifactsPanel">
       <ul className="flex flex-col gap-2">
         {ordered.map((artifact) => (
           <li
@@ -91,6 +90,6 @@ export const LinkedArtifactsPanel = (
           </li>
         ))}
       </ul>
-    </Card>
+    </div>
   );
 };

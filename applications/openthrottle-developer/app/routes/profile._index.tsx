@@ -4,7 +4,10 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { OPENTHROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
@@ -48,7 +51,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div className="flex h-full items-center justify-center">
+    <GlobalScreen
+      beta={true}
+      className="flex h-full items-center justify-center"
+    >
       <div className="relative flex flex-col gap-8 p-12">
         <Avatar className="mx-auto mb-4 size-24 md:mb-4 md:size-32">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
@@ -70,7 +76,7 @@ export default function Component(
           */}
         </div>
       </div>
-    </div>
+    </GlobalScreen>
   );
 }
 

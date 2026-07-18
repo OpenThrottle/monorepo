@@ -46,11 +46,10 @@ const defaultPlanRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'] =
   [];
 
 describe('PlanTabDetails Component', () => {
-  test('renders overview tab with plan toolbar and workflow transparency', async () => {
+  test('renders overview tab with workflow transparency', async () => {
     const setFullscreen = vi.fn<PlanTabDetailsProps['setFullscreen']>();
     const props: PlanTabDetailsProps = {
       fullscreen: false,
-      ralphTuningJson: '',
       setFullscreen,
       workflowInput: defaultWorkflow,
       workflowTimeout: '',
@@ -71,7 +70,6 @@ describe('PlanTabDetails Component', () => {
       },
     );
 
-    expect(getByTestId('PlanToolbar')).toBeInTheDocument();
     expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
     // MarkdownRenderer compiles the description asynchronously, so await it.
     expect(

@@ -52,10 +52,8 @@ import {
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
-import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
-import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
+import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
@@ -135,8 +133,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { linkedArtifacts, plan, ruleApplications, tagVocabulary, tasks } =
-    loaderData;
+  const { plan, tagVocabulary, tasks } = loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -183,6 +180,16 @@ export default function Component(
   const completedTaskCount = tasks.filter(
     (task) => task.status === 'COMPLETED',
   ).length;
+
+  // Whether the page-level toolbar's Run/Queue is blocked. Reuses the config
+  // editor's validation (workflow options + workspace path) and folds in the
+  // job-run-hooks draft validity, matching the prior in-tab computation.
+  const jobRunHooksBlocked = !jobRunHooksValidation.ok;
+  const workflowRunBlocked = runConfigSaveBlocked || jobRunHooksBlocked;
+  const workflowRunBlockedReason = jobRunHooksBlocked
+    ? (jobRunHooksValidation.issues[0] ??
+      'Fix job run lifecycle hooks in Configuration.')
+    : runConfigSaveBlockedReason;
 
   // Handlers
 
@@ -299,119 +306,115 @@ export default function Component(
           ) : null} */}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <PlanTagChips
-            onAddTag={(tag) =>
-              tagFetcher.submit(
-                { intent: 'addPlanTag', tag },
-                { method: 'post' },
-              )
-            }
-            onRemoveTag={(tag) =>
-              tagFetcher.submit(
-                { intent: 'removePlanTag', tag },
-                { method: 'post' },
-              )
-            }
-            pending={tagFetcher.state !== 'idle'}
-            tags={plan.tags}
-            vocabulary={tagVocabulary}
-          />
-          <PlanRuleApplications applications={ruleApplications} />
-          <LinkedArtifactsPanel artifacts={linkedArtifacts} />
-        </div>
+        <PlanToolbar
+          className="bg-card border-card-border rounded-lg border p-4"
+          jobRunHooksJson={jobRunHooksJson}
+          onAddTag={(tag) =>
+            tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
+          }
+          onRemoveTag={(tag) =>
+            tagFetcher.submit(
+              { intent: 'removePlanTag', tag },
+              { method: 'post' },
+            )
+          }
+          planId={plan.id}
+          planStatus={plan.status}
+          planTitle={plan.title ?? 'Untitled'}
+          ralphTuningJson={ralphTuningJson}
+          tagVocabulary={tagVocabulary}
+          tags={plan.tags}
+          tagsPending={tagFetcher.state !== 'idle'}
+          workflowRunBlocked={workflowRunBlocked}
+          workflowRunBlockedReason={workflowRunBlockedReason}
+          workingDirectory={workingDirectory}
+        />
 
-        <div className="">
-          <OpenThrottleTabs
-            urlSync={{
-              defaultValue: 'overview',
-              param: PLANS_DETAIL_TAB_SEARCH_PARAM,
-              parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
-            }}
+        <OpenThrottleTabs
+          urlSync={{
+            defaultValue: 'overview',
+            param: PLANS_DETAIL_TAB_SEARCH_PARAM,
+            parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
+          }}
+        >
+          <TabsList
+            className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
+            variant="line"
           >
-            <TabsList
-              className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
-              variant="line"
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="plan-tab-overview"
+              value="overview"
             >
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                id="plan-tab-overview"
-                value="overview"
-              >
-                <BoltIcon />
-                Details
-              </TabsTrigger>
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                id="plan-tab-tasks"
-                value="tasks"
-              >
-                <LayoutListIcon />
-                Tasks ({completedTaskCount}/{tasks.length})
-              </TabsTrigger>
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                id="plan-tab-output"
-                value="output"
-              >
-                <TerminalSquareIcon />
-                Output
-              </TabsTrigger>
+              <BoltIcon />
+              Details
+            </TabsTrigger>
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="plan-tab-tasks"
+              value="tasks"
+            >
+              <LayoutListIcon />
+              Tasks ({completedTaskCount}/{tasks.length})
+            </TabsTrigger>
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="plan-tab-output"
+              value="output"
+            >
+              <TerminalSquareIcon />
+              Output
+            </TabsTrigger>
 
-              <div className="flex-1" />
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                id="plan-tab-configuration"
-                value="configuration"
-              >
-                <CogIcon />
-                Configuration
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex-1" />
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="plan-tab-configuration"
+              value="configuration"
+            >
+              <CogIcon />
+              Configuration
+            </TabsTrigger>
+          </TabsList>
 
-            <PlanTabDetails
-              fullscreen={fullscreen}
-              jobRunHooksBlocked={!jobRunHooksValidation.ok}
-              jobRunHooksBlockedReason={jobRunHooksValidation.issues[0]}
-              jobRunHooksJson={jobRunHooksJson}
-              ralphTuningJson={ralphTuningJson}
-              setFullscreen={setFullscreen}
-              workflowInput={workflowInput}
-              workflowTimeout={workflowTimeout}
-              workingDirectory={workingDirectory}
-            />
-            <PlanTabTasks />
-            <PlanTabOutput chunks={planOutputChunks} />
-            <PlanTabConfiguration
-              iterationTimeoutText={workflowTimeout}
-              jobRunHookRows={jobRunHookRows}
-              onCollapse={() => onToggleExpanded(false)}
-              onIterationTimeoutTextChange={setWorkflowTimeout}
-              onJobRunHookRowsChange={setJobRunHookRows}
-              onResetToDefaults={onResetToDefaults}
-              onSaveJobRunHooks={onSaveJobRunHooks}
-              onSaveRunConfig={onSaveRunConfig}
-              onValueChange={setWorkflowInput}
-              onWorkingDirectoryChange={setWorkingDirectory}
-              planId={plan.id}
-              saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
-              saveJobRunHooksPending={saveJobRunHooksPending}
-              saveRunConfigDisabled={runConfigSaveBlocked}
-              saveRunConfigPending={saveRunConfigPending}
-              value={workflowInput}
-              workingDirectory={workingDirectory}
-            />
+          <PlanTabDetails
+            fullscreen={fullscreen}
+            setFullscreen={setFullscreen}
+            workflowInput={workflowInput}
+            workflowTimeout={workflowTimeout}
+            workingDirectory={workingDirectory}
+          />
+          <PlanTabTasks />
+          <PlanTabOutput chunks={planOutputChunks} />
+          <PlanTabConfiguration
+            iterationTimeoutText={workflowTimeout}
+            jobRunHookRows={jobRunHookRows}
+            onCollapse={() => onToggleExpanded(false)}
+            onIterationTimeoutTextChange={setWorkflowTimeout}
+            onJobRunHookRowsChange={setJobRunHookRows}
+            onResetToDefaults={onResetToDefaults}
+            onSaveJobRunHooks={onSaveJobRunHooks}
+            onSaveRunConfig={onSaveRunConfig}
+            onValueChange={setWorkflowInput}
+            onWorkingDirectoryChange={setWorkingDirectory}
+            planId={plan.id}
+            saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
+            saveJobRunHooksPending={saveJobRunHooksPending}
+            saveRunConfigDisabled={runConfigSaveBlocked}
+            saveRunConfigPending={saveRunConfigPending}
+            value={workflowInput}
+            workingDirectory={workingDirectory}
+          />
 
-            {/* saveJobRunHooks / saveRunConfig outcomes surface as toasts
+          {/* saveJobRunHooks / saveRunConfig outcomes surface as toasts
                 (useActionToast in usePlanRunConfigEditor). */}
 
-            {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
-              <p className="text-muted-foreground px-4 text-xs" role="note">
-                Save configuration blocked: {runConfigSaveBlockedReason}
-              </p>
-            ) : null}
-          </OpenThrottleTabs>
-        </div>
+          {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
+            <p className="text-muted-foreground px-4 text-xs" role="note">
+              Save configuration blocked: {runConfigSaveBlockedReason}
+            </p>
+          ) : null}
+        </OpenThrottleTabs>
       </GlobalScreen>
 
       {isBoardView ? (
