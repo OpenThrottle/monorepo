@@ -117,6 +117,13 @@ jobs:
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
+      # skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
+      # generated artifacts, gitignored by design, so a fresh checkout lacks them.
+      # Materialize them before the affected tests and the SSOT drift guard, both of
+      # which read the fan-out. `--check` (run by check-agent-assets-ssot) then passes.
+      - name: '🔗 Materialize agent-skill symlinks (skill-sync)'
+        run: bash skills/skill-sync/scripts/sync.sh
+
       - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
         with:
