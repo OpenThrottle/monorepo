@@ -41,7 +41,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { content, entry } = props.loaderData;
+  const { content, editable, entry } = props.loaderData;
 
   // Hooks
 
@@ -57,7 +57,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <SkillDetail content={content} entry={entry} />
+      <SkillDetail content={content} editable={editable} entry={entry} />
     </GlobalScreen>
   );
 }

@@ -7,8 +7,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { Editor } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { PencilIcon } from 'lucide-react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   SKILL_DETAIL_COPY,
@@ -20,17 +22,26 @@ export interface SkillDetailProps {
   className?: string;
   /** Raw SKILL.md content; empty renders the unreadable-file notice. */
   content: string;
+  /** Local checkout with a resolved monorepo root — edit mode available. */
+  editable: boolean;
   entry: RepoSkillEntry;
+  /** Invoked with the full draft on Save; wired to the route action. */
+  onSave?: (draft: string) => void;
+  /** True while a save is submitting; disables Save/Cancel. */
+  saving?: boolean;
 }
 
 export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
-  const { className, content, entry } = props;
+  const { className, content, editable, entry, onSave, saving = false } = props;
 
   // Hooks
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState(content);
 
   // Setup
   const isOpenThrottle = entry.source === 'openthrottle';
   const { badge: invocationBadge } = getResolvedModelInvocationDisplay(entry);
+  const isDirty = draft !== content;
   const sourceTooltip = isOpenThrottle
     ? SKILLS_SOURCE_COPY.openthrottleTooltip
     : entry.sourceUrl
@@ -38,6 +49,23 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
       : SKILLS_SOURCE_COPY.externalTooltip;
 
   // Handlers
+  const handleEdit = (): void => {
+    setDraft(content);
+    setIsEditing(true);
+  };
+
+  const handleCancel = (): void => {
+    setDraft(content);
+    setIsEditing(false);
+  };
+
+  const handleDraftChange = (value: string | undefined): void => {
+    setDraft(value ?? '');
+  };
+
+  const handleSave = (): void => {
+    onSave?.(draft);
+  };
 
   // Markup
   const sourceBadge = (
@@ -50,6 +78,53 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
         ? SKILLS_SOURCE_COPY.openthrottleLabel
         : SKILLS_SOURCE_COPY.externalLabel}
     </Badge>
+  );
+
+  const editControls = isEditing ? (
+    <div className="flex gap-2">
+      <Button
+        data-testid="skill-save-button"
+        disabled={!isDirty || saving}
+        onClick={handleSave}
+        size="xs"
+      >
+        {SKILL_DETAIL_COPY.saveLabel}
+      </Button>
+      <Button
+        data-testid="skill-cancel-button"
+        disabled={saving}
+        onClick={handleCancel}
+        size="xs"
+        variant="outline"
+      >
+        {SKILL_DETAIL_COPY.cancelLabel}
+      </Button>
+    </div>
+  ) : editable ? (
+    <Button
+      data-testid="skill-edit-button"
+      onClick={handleEdit}
+      size="xs"
+      variant="outline"
+    >
+      <PencilIcon className="size-4" />
+      {SKILL_DETAIL_COPY.editLabel}
+    </Button>
+  ) : (
+    <Tooltip>
+      <TooltipTrigger asChild={true}>
+        {/* span keeps the tooltip live over the disabled button */}
+        <span data-testid="skill-edit-disabled">
+          <Button disabled={true} size="xs" variant="outline">
+            <PencilIcon className="size-4" />
+            {SKILL_DETAIL_COPY.editLabel}
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs" side="top">
+        {SKILL_DETAIL_COPY.editDisabledTooltip}
+      </TooltipContent>
+    </Tooltip>
   );
 
   // Life Cycle
@@ -103,6 +178,10 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
               {tag}
             </Badge>
           ))}
+
+          <div className="flex-1" />
+
+          {editControls}
         </div>
 
         <p className="text-muted-foreground text-sm">{entry.summary}</p>
@@ -120,15 +199,32 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
         </div>
       </div>
 
-      <div className="ui-border bg-card rounded-lg border p-6">
-        {content.length > 0 ? (
-          <MarkdownRenderer source={content} />
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {SKILL_DETAIL_COPY.emptyContentNotice}
-          </p>
-        )}
-      </div>
+      {isEditing ? (
+        <div
+          className="ui-border flex h-[70vh] flex-col overflow-hidden rounded-lg border"
+          data-testid="skill-editor"
+        >
+          <Editor
+            language="markdown"
+            onChange={handleDraftChange}
+            path={entry.repoRelativePath}
+            showSidebar={false}
+            showTabs={false}
+            showToolbar={false}
+            value={draft}
+          />
+        </div>
+      ) : (
+        <div className="ui-border bg-card rounded-lg border p-6">
+          {content.length > 0 ? (
+            <MarkdownRenderer source={content} />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              {SKILL_DETAIL_COPY.emptyContentNotice}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

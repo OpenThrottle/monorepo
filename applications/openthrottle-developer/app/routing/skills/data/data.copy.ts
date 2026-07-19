@@ -29,9 +29,13 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
  */
 export const SKILL_DETAIL_COPY = {
   backLink: `Back to skills`,
+  cancelLabel: `Cancel`,
+  editDisabledTooltip: `Editing needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT), so this deployed view is read-only.`,
+  editLabel: `Edit`,
   emptyContentNotice: `The SKILL.md for this skill could not be read from disk.`,
   notFoundStatusText: `Skill not found`,
   pathCopyLabel: `Copy path`,
+  saveLabel: `Save`,
   tagsLabel: `Tags`,
 } as const;
 
