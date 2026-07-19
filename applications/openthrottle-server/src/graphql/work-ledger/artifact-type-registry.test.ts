@@ -12,6 +12,7 @@ describe('artifact-type-registry', () => {
       'deployment',
       'document',
       'git_commit',
+      'plan_promotion',
       'pull_request',
       'status_change',
     ]);

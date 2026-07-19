@@ -83,6 +83,14 @@ const statusChangePayload = z
   })
   .strict();
 
+const planPromotionPayload = z
+  .object({
+    newPlanId: z.string().min(1),
+    sourcePlanId: z.string().min(1),
+    sourceTaskId: z.string().min(1),
+  })
+  .strict();
+
 /**
  * @description The artifact type registry. Keyed by the `type` string persisted on work_artifacts.
  */
@@ -114,6 +122,17 @@ const ARTIFACT_TYPE_REGISTRY: Readonly<Record<string, ArtifactTypeDefinition>> =
       // 'landed' fires refine-tagging in slice 6/7 (re-keying the #182 trigger off link_commit).
       triggerStates: ['landed'],
       validatePayload: (raw) => gitCommitPayload.parse(raw),
+    },
+    plan_promotion: {
+      // One promotion per source task: re-delivery of the promotion job upserts
+      // the same key rather than appending a duplicate provenance row.
+      deriveExternalKey: (payload) =>
+        `plan_promotion:${String(payload.sourceTaskId)}`,
+      identity: ARTIFACT_IDENTITY.IDEMPOTENT,
+      initialLifecycle: null,
+      lifecycleStates: [],
+      triggerStates: [],
+      validatePayload: (raw) => planPromotionPayload.parse(raw),
     },
     pull_request: {
       deriveExternalKey: (payload) =>

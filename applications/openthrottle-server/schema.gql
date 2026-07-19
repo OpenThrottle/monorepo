@@ -411,6 +411,17 @@ type CreateTasksResultObject {
   totalCount: Int!
 }
 
+type PromoteTaskToPlanResultObject {
+  """Whether the promotion job was accepted and enqueued."""
+  success: Boolean!
+
+  """BullMQ job id when success is true."""
+  jobId: String
+
+  """Error message when success is false (validation/enqueue)."""
+  error: String
+}
+
 type ActivityCommitRowObject {
   createdAt: DateTime!
   id: String!
@@ -3417,6 +3428,11 @@ type Mutation {
   detachHook(input: DetachHookInput!): Boolean!
 
   """
+  Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.
+  """
+  promoteTaskToPlan(input: PromoteTaskToPlanInput!): PromoteTaskToPlanResultObject!
+
+  """
   Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable).
   """
   startTranscriptionStream: StartTranscriptionStreamResult!
@@ -4318,6 +4334,16 @@ input AddHookInput {
 input DetachHookInput {
   """Hook task id to detach (delete)"""
   hookTaskId: ID!
+}
+
+input PromoteTaskToPlanInput {
+  """Id of the task to promote into a new plan"""
+  taskId: ID!
+
+  """
+  Optional idempotency key: re-submitting the same key enqueues at most one promotion job. Letters, digits, and ._:- only.
+  """
+  idempotencyKey: String
 }
 
 input CreateUserInput {

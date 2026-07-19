@@ -258,3 +258,15 @@ export class DetachHookInput {
   @Field(() => ID, { description: `Hook task id to detach (delete)` })
   hookTaskId!: string;
 }
+
+@InputType()
+export class PromoteTaskToPlanInput {
+  @Field(() => ID, { description: `Id of the task to promote into a new plan` })
+  taskId!: string;
+
+  @Field(() => String, {
+    description: `Optional idempotency key: re-submitting the same key enqueues at most one promotion job. Letters, digits, and ._:- only.`,
+    nullable: true,
+  })
+  idempotencyKey?: string | null;
+}

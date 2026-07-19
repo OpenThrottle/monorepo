@@ -41,6 +41,14 @@ mutation TaskDetailRemoveTaskTag($input: RemoveTaskTagInput!) {
   removeTaskTag(input: $input)
 }
 
+mutation TaskDetailPromoteToPlan($input: PromoteTaskToPlanInput!) {
+  promoteTaskToPlan(input: $input) {
+    error
+    jobId
+    success
+  }
+}
+
 query TaskLinkedArtifacts($taskId: ID!) {
   workArtifactsByTask(input: { taskId: $taskId }) {
     artifacts {
