@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { buildRootMatch } from '~/testing/root-match-fixture';
@@ -35,19 +35,22 @@ const matchesFor = (content: string): Route.ComponentProps['matches'] => [
   },
 ];
 
-const renderRoute = (content: string) =>
-  render(
+const renderRoute = (content: string) => {
+  // useFetcher in the route component requires a data router.
+  const Wrapped = () => (
     <TooltipProvider>
-      <MemoryRouter>
-        <Component
-          actionData={undefined}
-          loaderData={loaderDataFor(content)}
-          matches={matchesFor(content)}
-          params={{ slug: 'ot-plans' }}
-        />
-      </MemoryRouter>
-    </TooltipProvider>,
+      <Component
+        actionData={undefined}
+        loaderData={loaderDataFor(content)}
+        matches={matchesFor(content)}
+        params={{ slug: 'ot-plans' }}
+      />
+    </TooltipProvider>
   );
+  const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
+
+  return render(<RoutesStub />);
+};
 
 describe('routes/skills.$slug.tsx', () => {
   test('renders the skill header and the rendered SKILL.md content', () => {

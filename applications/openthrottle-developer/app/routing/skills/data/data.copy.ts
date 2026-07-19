@@ -40,6 +40,20 @@ export const SKILL_DETAIL_COPY = {
 } as const;
 
 /**
+ * Copy for the skill write-back action. Every refusal names why the save was
+ * rejected without writing; the ingest note reminds that server-side rows
+ * (`projectSkills`) refresh on the next agent-asset ingest run, not on save.
+ */
+export const SKILL_WRITE_COPY = {
+  invalidFrontmatterError: `Save rejected — the edited frontmatter no longer validates:`,
+  missingContentError: `Save rejected — no content was submitted.`,
+  noRootError: `Saving needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
+  pathEscapeError: `Save rejected — the resolved skill path escapes the repository.`,
+  unknownSlugError: `Save rejected — this skill is no longer discoverable on disk.`,
+  writeFailedError: `Save failed — the file could not be written to disk.`,
+} as const;
+
+/**
  * Copy for the "Source" provenance column and the toolbar source filter. A skill
  * is OpenThrottle-managed only when its frontmatter explicitly claims
  * `source: openthrottle`; everything else (including omitted keys) reads as

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useFetcher } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -7,7 +8,10 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
-import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_DETAIL_COPY,
+  SKILL_WRITE_COPY,
+} from '~/routing/skills/data/data.copy';
 import type { Route } from '@/app/routes/+types/skills.$slug';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -44,10 +48,17 @@ export default function Component(
   const { content, editable, entry } = props.loaderData;
 
   // Hooks
+  const fetcher = useFetcher<typeof action>();
 
   // Setup
+  const saving = fetcher.state !== 'idle';
+  const saveError =
+    fetcher.data && fetcher.data.ok === false ? fetcher.data.error : undefined;
 
   // Handlers
+  const handleSave = (draft: string): void => {
+    void fetcher.submit({ content: draft }, { method: 'post' });
+  };
 
   // Markup
 
@@ -57,9 +68,30 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <SkillDetail content={content} editable={editable} entry={entry} />
+      <SkillDetail
+        content={content}
+        editable={editable}
+        entry={entry}
+        onSave={handleSave}
+        saveError={saveError}
+        saving={saving}
+      />
     </GlobalScreen>
   );
 }
+
+export const action = async (args: Route.ActionArgs) => {
+  const { writeSkillFileBySlug } =
+    await import('~/routing/skills/data/write-skill-file.server');
+
+  const formData = await args.request.formData();
+  const content = formData.get('content');
+
+  if (typeof content !== 'string') {
+    return { error: SKILL_WRITE_COPY.missingContentError, ok: false as const };
+  }
+
+  return writeSkillFileBySlug(args.params.slug, content);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

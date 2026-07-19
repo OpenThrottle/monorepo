@@ -8,11 +8,18 @@ vi.mock('~/routing/skills/data/read-skill-file.server', () => ({
   readSkillFileBySlug: vi.fn(),
 }));
 
+vi.mock('~/routing/skills/data/write-skill-file.server', () => ({
+  writeSkillFileBySlug: vi.fn(),
+}));
+
 const { readSkillFileBySlug } =
   await import('~/routing/skills/data/read-skill-file.server');
-const { loader } = await import('../skills.$slug');
+const { writeSkillFileBySlug } =
+  await import('~/routing/skills/data/write-skill-file.server');
+const { action, loader } = await import('../skills.$slug');
 
 const mockReadSkillFileBySlug = vi.mocked(readSkillFileBySlug);
+const mockWriteSkillFileBySlug = vi.mocked(writeSkillFileBySlug);
 
 const SAMPLE_ENTRY: RepoSkillEntry = {
   disableModelInvocation: undefined,
@@ -73,6 +80,50 @@ describe('routes/skills.$slug loader', () => {
     if (thrown instanceof Response) {
       expect(thrown.status).toBe(404);
     }
+  });
+
+  test('delegates saves to writeSkillFileBySlug via the action', async () => {
+    mockWriteSkillFileBySlug.mockReturnValue({ ok: true });
+    // URL-encoded body (matching fetcher.submit's default) keeps \n intact;
+    // multipart FormData would normalize newlines to \r\n.
+    const request = new Request('http://localhost/skills/ot-plans', {
+      body: new URLSearchParams({
+        content: '---\nname: ot-plans\n---\n\n# Edited\n',
+      }),
+      method: 'POST',
+    });
+
+    const result = await action({
+      context: createTestRouterContext(),
+      params: { slug: 'ot-plans' },
+      pattern: '/skills/:slug',
+      request,
+      url: new URL(request.url),
+    });
+
+    expect(mockWriteSkillFileBySlug).toHaveBeenCalledWith(
+      'ot-plans',
+      '---\nname: ot-plans\n---\n\n# Edited\n',
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
+  test('action rejects a submission without content and never writes', async () => {
+    const request = new Request('http://localhost/skills/ot-plans', {
+      body: new URLSearchParams({}),
+      method: 'POST',
+    });
+
+    const result = await action({
+      context: createTestRouterContext(),
+      params: { slug: 'ot-plans' },
+      pattern: '/skills/:slug',
+      request,
+      url: new URL(request.url),
+    });
+
+    expect(result.ok).toBe(false);
+    expect(mockWriteSkillFileBySlug).not.toHaveBeenCalled();
   });
 
   test('throws a 404 Response when no monorepo root resolves (deployed app)', async () => {

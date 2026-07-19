@@ -27,16 +27,27 @@ export interface SkillDetailProps {
   entry: RepoSkillEntry;
   /** Invoked with the full draft on Save; wired to the route action. */
   onSave?: (draft: string) => void;
+  /** Action-side rejection message, shown inline next to Save. */
+  saveError?: string;
   /** True while a save is submitting; disables Save/Cancel. */
   saving?: boolean;
 }
 
 export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
-  const { className, content, editable, entry, onSave, saving = false } = props;
+  const {
+    className,
+    content,
+    editable,
+    entry,
+    onSave,
+    saveError,
+    saving = false,
+  } = props;
 
   // Hooks
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(content);
+  const wasSavingRef = React.useRef(false);
 
   // Setup
   const isOpenThrottle = entry.source === 'openthrottle';
@@ -81,7 +92,16 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
   );
 
   const editControls = isEditing ? (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-2">
+      {saveError ? (
+        <p
+          className="text-destructive text-xs"
+          data-testid="skill-save-error"
+          role="alert"
+        >
+          {saveError}
+        </p>
+      ) : null}
       <Button
         data-testid="skill-save-button"
         disabled={!isDirty || saving}
@@ -128,6 +148,21 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
   );
 
   // Life Cycle
+  React.useEffect(() => {
+    // A save that finished without a rejection revalidated the loader; leave
+    // edit mode and let the read view pick up the fresh content.
+    if (wasSavingRef.current && !saving && !saveError) {
+      setIsEditing(false);
+    }
+    wasSavingRef.current = saving;
+  }, [saveError, saving]);
+
+  React.useEffect(() => {
+    // Keep a non-dirty draft following loader revalidations (e.g. post-save).
+    if (!isEditing) {
+      setDraft(content);
+    }
+  }, [content, isEditing]);
 
   // 🔌 Short Circuit
 
