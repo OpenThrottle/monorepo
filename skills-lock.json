@@ -31,18 +31,6 @@
       "skillPath": "skills/git-commit/SKILL.md",
       "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
     },
-    "github-deep-review": {
-      "source": "steipete/agent-scripts",
-      "sourceType": "github",
-      "skillPath": "skills/github-deep-review/SKILL.md",
-      "computedHash": "dcf692f6dfb01d01bf7032df7ecb452fade3e1709fa224783fd2432221c39215"
-    },
-    "github-project-triage": {
-      "source": "steipete/agent-scripts",
-      "sourceType": "github",
-      "skillPath": "skills/github-project-triage/SKILL.md",
-      "computedHash": "06338f3ee2615bb94977b87f2993b626dc5e0b9ebf98e81b9a487b6629296cc8"
-    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -85,12 +73,6 @@
       "skillPath": "skills/monitor-ci/SKILL.md",
       "computedHash": "e549eacd3b7175f16cfb933a817481b99b7effc6f10c93de3c98cb8cf082c4ce"
     },
-    "my-pull-requests": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/my-pull-requests/SKILL.md",
-      "computedHash": "79d5b3c35f5358322bf650f86afbdbf00bb6304ee8464fb424e91b461e3fd412"
-    },
     "nx-generate": {
       "source": "nrwl/nx-ai-agents-config",
       "sourceType": "github",
@@ -120,18 +102,6 @@
       "sourceType": "github",
       "skillPath": "skills/nx-workspace/SKILL.md",
       "computedHash": "32b7b72c54c6644e97ac8c8491e3cfa936afa6f8a86798214258d631367b4add"
-    },
-    "secret-scanning": {
-      "source": "github/copilot-plugins",
-      "sourceType": "github",
-      "skillPath": "plugins/advanced-security/skills/secret-scanning/SKILL.md",
-      "computedHash": "05ab3e9afd37ada6902db7c3cc9667771aab9efa454e262ada16bd1b27eb8993"
-    },
-    "shadcn": {
-      "source": "shadcn/ui",
-      "sourceType": "github",
-      "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "ac9d0d69caac7de1d1e5647f3db3bcd2f13af355d6b3a78780fbf7fc80e8dca0"
     },
     "skill-cleaner": {
       "source": "steipete/agent-scripts",

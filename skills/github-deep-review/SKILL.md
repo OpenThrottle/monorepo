@@ -1,7 +1,7 @@
 ---
 name: github-deep-review
 description: 'GitHub deep review: bugs, PRs, best fix, stale-or-real, read code first.'
-source: external
+source: openthrottle
 ---
 
 # GitHub Deep Review
