@@ -10,20 +10,30 @@ import {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** Marks UTF-8 continuation bytes (0b10xxxxxx) when backing off to a code-point boundary. */
+const UTF8_CONTINUATION_MASK = 0b1100_0000;
+const UTF8_CONTINUATION_VALUE = 0b1000_0000;
+
 const truncateUtf8 = (
   value: string,
   maxBytes: number,
 ): { readonly truncated: boolean; readonly value: string } => {
-  if (Buffer.byteLength(value, 'utf8') <= maxBytes) {
+  const buffer = Buffer.from(value, 'utf8');
+  if (buffer.byteLength <= maxBytes) {
     return { truncated: false, value };
   }
 
-  let end = value.length;
-  while (end > 0 && Buffer.byteLength(value.slice(0, end), 'utf8') > maxBytes) {
+  // Cut on the byte side (O(n)) — shrinking the string one char at a time
+  // re-encodes the whole prefix per step and goes quadratic on large inputs.
+  let end = maxBytes;
+  while (
+    end > 0 &&
+    ((buffer[end] ?? 0) & UTF8_CONTINUATION_MASK) === UTF8_CONTINUATION_VALUE
+  ) {
     end -= 1;
   }
 
-  return { truncated: true, value: value.slice(0, end) };
+  return { truncated: true, value: buffer.subarray(0, end).toString('utf8') };
 };
 
 /**
