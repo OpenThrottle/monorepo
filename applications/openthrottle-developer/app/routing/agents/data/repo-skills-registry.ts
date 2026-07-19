@@ -7,6 +7,8 @@
  * `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
+import type { SkillSource } from '@openthrottle/openthrottle-skills';
+
 export type SkillRegistryLayout = 'agents' | 'claude' | 'cursor' | 'opencode';
 
 const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> = {
@@ -53,6 +55,18 @@ export interface RepoSkillEntry {
   readonly provenance?: string;
   readonly repoRelativePath: string;
   readonly slug: string;
+  /**
+   * Skill provenance from frontmatter `source`: `openthrottle` for skills we
+   * author and manage, `external` otherwise (omitted or unrecognized values
+   * normalize to `external`). Sourced from disk frontmatter, overridden by the
+   * ingested `projectSkills` GraphQL value when present.
+   */
+  readonly source: SkillSource;
+  /**
+   * Optional origin URL for external skills (marketplace listing or upstream
+   * repo); `undefined` when the frontmatter omits it.
+   */
+  readonly sourceUrl?: string;
   readonly summary: string;
   /** Static frontmatter tags; `undefined` when the frontmatter omits `tags`. */
   readonly tags: readonly string[] | undefined;

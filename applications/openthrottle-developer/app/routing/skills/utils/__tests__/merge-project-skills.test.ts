@@ -13,6 +13,7 @@ const diskEntry = (
   layout: 'agents',
   repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
   slug,
+  source: 'external',
   summary: `${slug} summary`,
   tags: undefined,
   ...overrides,
@@ -61,6 +62,63 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
 
     expect(merged.disableModelInvocation).toBeUndefined();
     expect(merged.tags).toEqual([]);
+  });
+
+  test('overlays source and sourceUrl from a recognized GraphQL row value', () => {
+    const entries = [diskEntry('owned', { source: 'external' })];
+    const rows: ProjectSkillFlagRow[] = [
+      {
+        slug: 'owned',
+        source: 'openthrottle',
+        sourceUrl: null,
+        staticDisableModelInvocation: null,
+        tags: [],
+      },
+    ];
+
+    const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+
+    expect(merged.source).toBe('openthrottle');
+    expect(merged.sourceUrl).toBeUndefined();
+  });
+
+  test('overlays an ingested sourceUrl for an external skill', () => {
+    const entries = [diskEntry('vendored')];
+    const rows: ProjectSkillFlagRow[] = [
+      {
+        slug: 'vendored',
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/vendored',
+        staticDisableModelInvocation: null,
+        tags: [],
+      },
+    ];
+
+    const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+
+    expect(merged.source).toBe('external');
+    expect(merged.sourceUrl).toBe('https://example.com/skills/vendored');
+  });
+
+  test('keeps the disk source when the GraphQL row omits or garbles it', () => {
+    const entries = [
+      diskEntry('kept-owned', {
+        source: 'openthrottle',
+        sourceUrl: undefined,
+      }),
+    ];
+    const rows: ProjectSkillFlagRow[] = [
+      {
+        slug: 'kept-owned',
+        source: 'garbage-value',
+        staticDisableModelInvocation: null,
+        tags: [],
+      },
+    ];
+
+    const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+
+    expect(merged.source).toBe('openthrottle');
   });
 
   test('leaves disk entries without a matching GraphQL row untouched', () => {

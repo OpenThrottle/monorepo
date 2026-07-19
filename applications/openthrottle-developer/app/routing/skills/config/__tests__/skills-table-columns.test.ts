@@ -18,6 +18,7 @@ describe('routing/skills config skills-table-columns', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/foo/SKILL.md',
         slug: 'foo',
+        source: 'external',
         summary: 'Foo skill',
         tags: undefined,
       };
@@ -30,6 +31,7 @@ describe('routing/skills config skills-table-columns', () => {
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/bar/SKILL.md',
         slug: '',
+        source: 'external',
         summary: 'Bar skill',
         tags: undefined,
       };
@@ -42,6 +44,7 @@ describe('routing/skills config skills-table-columns', () => {
         layout: 'agents',
         repoRelativePath: '',
         slug: '',
+        source: 'external',
         summary: 'No path',
         tags: undefined,
       };

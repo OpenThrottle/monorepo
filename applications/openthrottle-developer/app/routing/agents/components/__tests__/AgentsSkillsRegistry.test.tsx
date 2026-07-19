@@ -13,6 +13,7 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/unique-alpha/SKILL.md',
     slug: 'unique-alpha',
+    source: 'external',
     summary: 'Alpha summary for registry tests.',
     tags: undefined,
   },
@@ -21,6 +22,7 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/unique-beta/SKILL.md',
     slug: 'unique-beta',
+    source: 'external',
     summary: 'Beta summary only in cursor tree.',
     tags: undefined,
   },
@@ -134,6 +136,7 @@ describe('AgentsSkillsRegistry', () => {
       provenance: 'tag-allow:github@rule-1',
       repoRelativePath: '.agents/skills/git-commit/SKILL.md',
       slug: 'git-commit',
+      source: 'external',
       summary: 'Commit skill re-enabled by a tag rule.',
       tags: ['git', 'github'],
     };

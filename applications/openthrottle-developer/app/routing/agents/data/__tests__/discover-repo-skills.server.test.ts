@@ -79,18 +79,21 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/alpha-skill/SKILL.md',
         slug: 'alpha-skill',
+        source: 'external',
         summary: 'Alpha agents skill.',
       },
       {
         layout: 'agents',
         repoRelativePath: '.agents/skills/zebra-skill/SKILL.md',
         slug: 'zebra-skill',
+        source: 'external',
         summary: 'Zebra agents skill.',
       },
       {
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/monitor-ci/SKILL.md',
         slug: 'monitor-ci',
+        source: 'external',
         summary: 'Cursor CI skill.',
       },
     ]);
@@ -135,6 +138,71 @@ describe('discoverRepoSkills', () => {
     expect(entry?.tags).toBeUndefined();
   });
 
+  test('threads source and sourceUrl from frontmatter into the entry', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'owned-skill',
+      [
+        'name: owned-skill',
+        'description: We author this one.',
+        'source: openthrottle',
+      ].join('\n'),
+    );
+    writeSkill(
+      root,
+      '.agents/skills',
+      'vendored-skill',
+      [
+        'name: vendored-skill',
+        'description: Installed from a marketplace.',
+        'source: external',
+        'sourceUrl: https://example.com/skills/vendored-skill',
+      ].join('\n'),
+    );
+
+    const entries = discoverRepoSkills(root);
+    const owned = entries.find((entry) => entry.slug === 'owned-skill');
+    const vendored = entries.find((entry) => entry.slug === 'vendored-skill');
+
+    expect(owned?.source).toBe('openthrottle');
+    expect(owned?.sourceUrl).toBeUndefined();
+    expect(vendored?.source).toBe('external');
+    expect(vendored?.sourceUrl).toBe(
+      'https://example.com/skills/vendored-skill',
+    );
+  });
+
+  test('defaults source to external when frontmatter omits or garbles it', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'unsourced-skill',
+      'name: unsourced-skill\ndescription: No source key.',
+    );
+    writeSkill(
+      root,
+      '.agents/skills',
+      'garbled-skill',
+      [
+        'name: garbled-skill',
+        'description: Unknown source value.',
+        'source: marketplace-thing',
+      ].join('\n'),
+    );
+
+    const entries = discoverRepoSkills(root);
+
+    expect(entries.map((entry) => entry.source)).toEqual([
+      'external',
+      'external',
+    ]);
+  });
+
   test('uses folder name for slug when frontmatter name is missing', () => {
     const root = makeTempDir();
 
@@ -150,6 +218,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/folder-only/SKILL.md',
         slug: 'folder-only',
+        source: 'external',
         summary: 'Summary from description field only.',
       },
     ]);
@@ -186,6 +255,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/no-summary/SKILL.md',
         slug: 'no-summary',
+        source: 'external',
         summary: 'No description in SKILL.md frontmatter.',
       },
     ]);
@@ -205,6 +275,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/markdown-only/SKILL.md',
         slug: 'markdown-only',
+        source: 'external',
         summary: 'No description in SKILL.md frontmatter.',
       },
     ]);
@@ -226,6 +297,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/has-skill/SKILL.md',
         slug: 'has-skill',
+        source: 'external',
         summary: 'Present.',
       },
     ]);
@@ -251,6 +323,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared-skill/SKILL.md',
         slug: 'shared-skill',
+        source: 'external',
         summary: 'Canonical agents skill.',
       },
     ]);
@@ -273,6 +346,7 @@ describe('discoverRepoSkills', () => {
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/real-skill/SKILL.md',
         slug: 'real-skill',
+        source: 'external',
         summary: 'Cursor skill.',
       },
     ]);

@@ -2,7 +2,8 @@
  * @description Pure merge of the `projectSkills` GraphQL flag+tags onto the
  * disk-discovered skill entries. Disk discovery stays the source of the entry
  * LIST (which skills exist, their order, summary, path); a matching GraphQL row
- * (keyed by slug) wins for `disableModelInvocation` and `tags`. When the
+ * (keyed by slug) wins for `disableModelInvocation`, `tags`, and — when it
+ * carries a recognized value — `source`/`sourceUrl`. When the
  * GraphQL result is empty — the current local reality on a DB that has not been
  * migrated/ingested — disk entries pass through unchanged, which is the Skills
  * loader's silent fallback. See docs/monorepo/skill-availability-design.md
@@ -18,6 +19,13 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
  */
 export interface ProjectSkillFlagRow {
   readonly slug: string;
+  /**
+   * Ingested provenance (`openthrottle` | `external`); any other/absent value
+   * leaves the disk-parsed source in place.
+   */
+  readonly source?: string;
+  /** Ingested origin URL; `null` when the ingested frontmatter omitted it. */
+  readonly sourceUrl?: string | null;
   readonly staticDisableModelInvocation?: boolean | null;
   readonly tags: readonly string[];
 }
@@ -43,6 +51,11 @@ export const mergeRepoSkillsWithProjectSkills = (
     return {
       ...entry,
       disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
+      // The ingested row wins for provenance when it carries a recognized
+      // value; the disk-parsed source stays otherwise.
+      ...(row.source === 'external' || row.source === 'openthrottle'
+        ? { source: row.source, sourceUrl: row.sourceUrl ?? undefined }
+        : {}),
       tags: row.tags,
     };
   });

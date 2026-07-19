@@ -62,12 +62,14 @@ const readSkillEntry = (
       layout,
       repoRelativePath,
       slug: folderName,
+      source: 'external',
+      sourceUrl: undefined,
       summary: MISSING_SUMMARY_PLACEHOLDER,
       tags: undefined,
     };
   }
 
-  const { description, disableModelInvocation, name, tags } =
+  const { description, disableModelInvocation, name, source, sourceUrl, tags } =
     parseSkillFrontmatter(fileContent);
   const slug = name && name.trim().length > 0 ? name.trim() : folderName;
   const summary =
@@ -80,6 +82,8 @@ const readSkillEntry = (
     layout,
     repoRelativePath,
     slug,
+    source,
+    sourceUrl,
     summary,
     tags,
   };

@@ -6618,6 +6618,8 @@ export type ProjectSkillsQuery = {
     skills: Array<{
       __typename?: 'ProjectSkillObject';
       slug: string;
+      source: string;
+      sourceUrl?: string | null;
       staticDisableModelInvocation?: boolean | null;
       tags: Array<string>;
     }>;
@@ -15807,6 +15809,14 @@ export const ProjectSkillsDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'sourceUrl' },
+                      },
                       {
                         kind: 'Field',
                         name: {

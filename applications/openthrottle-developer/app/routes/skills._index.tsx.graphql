@@ -2,6 +2,8 @@ query ProjectSkills($projectId: ID) {
   projectSkills(projectId: $projectId) {
     skills {
       slug
+      source
+      sourceUrl
       staticDisableModelInvocation
       tags
     }
