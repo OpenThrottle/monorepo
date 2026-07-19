@@ -99,32 +99,40 @@ With monorepo root resolved, on-disk counts should match:
 
 Includes skills missing from the old static array (e.g. `openthrottle-generators`, `ot-plans`, `workflow-ralph`, `openthrottle-stack`).
 
-## Source (provenance) frontmatter
+## Source (provenance) — derived, never frontmatter
 
-Plan: **Skills detail route: Read/Update SKILL.md + OpenThrottle vs external source classification** (`6c785a74-fd94-474f-8e1b-0e182bd5c0b0`).
+Plans: **Skills detail route + source classification**
+(`6c785a74-fd94-474f-8e1b-0e182bd5c0b0`) and **Fully-virtual skill
+provenance** (`9dc16a01-ddff-44d6-984f-41b119938379`).
 
-SKILL.md frontmatter may carry an explicit provenance:
+Provenance is **derived from the skill-sync architecture** — installed skills
+are installed, that's it; every layer on top of them is virtual:
 
-```yaml
-source: openthrottle # authored and managed in this monorepo
-# or
-source: external
-sourceUrl: https://github.com/nrwl/nx-console # optional origin (external only)
-```
+| Layout signal (realpath of the skill folder)      | Provenance                                      |
+| ------------------------------------------------- | ----------------------------------------------- |
+| Resolves under `<root>/skills/` (authored SSOT)   | `openthrottle` — written and PR-reviewed here   |
+| Anything else (lockfile-installed real directory) | `external`, `sourceUrl` from `skills-lock.json` |
 
-**Semantics:** the enum is `openthrottle | external` (`SKILL_SOURCES` in
-`@openthrottle/openthrottle-skills`). An **omitted or unrecognized value
-normalizes to `external`** at parse time — conservative on purpose: only
-skills we explicitly claim read as ours. The shared Zod schema
-(`skillFrontmatterSchema`) rejects values outside the enum in CI/ingest
-validation, while `parseSkillFrontmatter` stays lenient for display paths.
+**Rules:**
 
-**Flow:** disk parse → `RepoSkillEntry.source`/`sourceUrl` → merged with the
-ingested `projectSkills` GraphQL row (a recognized ingested value overlays the
-disk value; the empty-GraphQL silent fallback is unchanged) → Source badge
-column + All/OpenThrottle/External toolbar filter on the index. Postgres
-persists the value on `project_skills.source` (+ nullable `source_url`,
-migration 074).
+- The enum is `openthrottle | external` (`SKILL_SOURCES` in
+  `@openthrottle/openthrottle-skills`), but it is **not a frontmatter key** —
+  `parseSkillFrontmatter` and `skillFrontmatterSchema` know nothing about it,
+  and a stray `source:` key in a SKILL.md is an ignored unknown.
+- The realpath rule works identically for every scanned layout
+  (`.agents/skills`, `.claude/skills`, `.cursor/skills`) because the generated
+  symlink chains all resolve to the authored directory.
+- `sourceUrl` comes from the repo-root `skills-lock.json` entry for the folder
+  name (`github` shorthand `owner/repo` → `https://github.com/owner/repo`;
+  full-URL sources pass through; missing/invalid lockfile ⇒ no URL).
+
+**Flow:** layout + lockfile derivation → `RepoSkillEntry.source`/`sourceUrl` →
+merged with the ingested `projectSkills` GraphQL row (a recognized ingested
+value overlays the disk value; the empty-GraphQL silent fallback is unchanged)
+→ Source badge column + All/OpenThrottle/External toolbar filter on the index.
+Postgres persists the derived value on `project_skills.source` (+ nullable
+`source_url`, migration 074); the ingest path derives it the same way via the
+walker's `authored` flag + `parseSkillsLockFile`.
 
 ## Detail route (`/skills/:slug`) — read and update
 
@@ -146,7 +154,7 @@ migration 074).
     repository (symlinked `.claude`/`.cursor` layouts resolve in-repo first).
   - The new content's frontmatter is re-validated with
     `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
-    and satisfy the schema — including the `source` enum) **before** anything
+    and satisfy the schema) **before** anything
     touches disk; rejections return structured errors without writing.
   - On success the whole file is written (`writeFileSync`, utf8) and loader
     revalidation returns the UI to read mode with the fresh render.
