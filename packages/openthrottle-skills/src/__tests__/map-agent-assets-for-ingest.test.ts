@@ -78,16 +78,16 @@ description: No tags, no flag.
 
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
-      expect(record.source).toBe('external');
-      expect(record.sourceUrl).toBeUndefined();
+      // No walker authored flag defaults to a non-authored (external) skill.
+      expect(record.authored).toBe(false);
     });
 
-    test('carries source and sourceUrl frontmatter into the record', () => {
+    test('carries the walker authored flag into the record', () => {
       const entry: AgentAssetFileEntry = {
+        authored: true,
         content: `---
 name: owned-skill
 description: We author this one.
-source: openthrottle
 ---
 
 # Owned
@@ -99,32 +99,7 @@ source: openthrottle
 
       const record = mapAgentAssetFileToIngestRecord(entry);
 
-      expect(record.source).toBe('openthrottle');
-      expect(record.sourceUrl).toBeUndefined();
-    });
-
-    test('carries an external sourceUrl into the record', () => {
-      const entry: AgentAssetFileEntry = {
-        content: `---
-name: vendored-skill
-description: Installed from a marketplace.
-source: external
-sourceUrl: https://example.com/skills/vendored-skill
----
-
-# Vendored
-`,
-        kind: 'skill',
-        path: '.agents/skills/vendored-skill/SKILL.md',
-        slug: 'vendored-skill',
-      };
-
-      const record = mapAgentAssetFileToIngestRecord(entry);
-
-      expect(record.source).toBe('external');
-      expect(record.sourceUrl).toBe(
-        'https://example.com/skills/vendored-skill',
-      );
+      expect(record.authored).toBe(true);
     });
 
     test('preserves disable-model-invocation false as a distinct value', () => {
@@ -172,8 +147,7 @@ description: Architecture lens. USE WHEN designing modules.
       expect(record.labels).toEqual(['persona', 'architect']);
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
-      expect(record.source).toBeUndefined();
-      expect(record.sourceUrl).toBeUndefined();
+      expect(record.authored).toBeUndefined();
     });
   });
 

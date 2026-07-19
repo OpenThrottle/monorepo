@@ -73,6 +73,14 @@ export type {
 
 /** @public */
 export {
+  deriveSkillSourceUrl,
+  parseSkillsLockFile,
+  SKILLS_LOCK_FILENAME,
+} from './parse-skills-lock.ts';
+export type { SkillsLockEntry, SkillsLockMap } from './parse-skills-lock.ts';
+
+/** @public */
+export {
   parseSkillFrontmatter,
   parseSkillFrontmatterForValidation,
 } from './parse-skill-frontmatter.ts';

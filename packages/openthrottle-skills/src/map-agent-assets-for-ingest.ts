@@ -3,12 +3,18 @@ import { basename } from 'node:path';
 import { parsePersonaFrontmatter } from './parse-persona-frontmatter.ts';
 import { parseRuleFrontmatter } from './parse-rule-frontmatter.ts';
 import { parseSkillFrontmatter } from './parse-skill-frontmatter.ts';
-import type { SkillSource } from './schemas/agent-asset-frontmatter.schemas.ts';
 import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
 
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'rules' | 'skills';
 
 export interface AgentAssetIngestRecord {
+  /**
+   * Skill-only: whether the skill folder resolves under the repo's authored
+   * `skills/` tree (see {@link AgentAssetFileEntry.authored}). Provenance is
+   * derived from this virtually — never from frontmatter. `undefined` for
+   * non-skill assets.
+   */
+  readonly authored: boolean | undefined;
   readonly content: string;
   readonly description: string | null;
   /**
@@ -20,16 +26,6 @@ export interface AgentAssetIngestRecord {
   readonly filePath: string;
   readonly labels: readonly string[];
   readonly promptType: AgentAssetPromptType;
-  /**
-   * Skill-only: frontmatter provenance (`openthrottle` | `external`; omitted or
-   * unrecognized values normalize to `external`). `undefined` for non-skill assets.
-   */
-  readonly source: SkillSource | undefined;
-  /**
-   * Skill-only: optional origin URL for external skills. `undefined` for
-   * non-skill assets and for skills that omit the key.
-   */
-  readonly sourceUrl: string | undefined;
   /**
    * Skill-only: the static `tags` frontmatter list. `undefined` for non-skill
    * assets and for skills that omit the key (distinct from an explicit empty list).
@@ -63,14 +59,13 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'skill') {
     const frontmatter = parseSkillFrontmatter(content);
     return {
+      authored: entry.authored ?? false,
       content,
       description: frontmatter.description ?? null,
       disableModelInvocation: frontmatter.disableModelInvocation,
       filePath: path,
       labels: slug ? [slug] : [],
       promptType: 'skills',
-      source: frontmatter.source,
-      sourceUrl: frontmatter.sourceUrl,
       tags: frontmatter.tags,
       title: frontmatter.name ?? slug ?? basename(path, '/SKILL.md'),
     };
@@ -79,14 +74,13 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'persona') {
     const frontmatter = parsePersonaFrontmatter(content);
     return {
+      authored: undefined,
       content,
       description: frontmatter.description ?? null,
       disableModelInvocation: undefined,
       filePath: path,
       labels: ['persona', ...(slug ? [slug] : [])],
       promptType: 'personas',
-      source: undefined,
-      sourceUrl: undefined,
       tags: undefined,
       title: frontmatter.name ?? slug ?? basename(path, '.md'),
     };
@@ -95,14 +89,13 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'prompt') {
     const title = slug ?? basename(path, '.md');
     return {
+      authored: undefined,
       content,
       description: null,
       disableModelInvocation: undefined,
       filePath: path,
       labels: slug ? [slug] : [],
       promptType: 'prompts',
-      source: undefined,
-      sourceUrl: undefined,
       tags: undefined,
       title,
     };
@@ -112,14 +105,13 @@ export const mapAgentAssetFileToIngestRecord = (
   const title = basename(path, '.mdc');
 
   return {
+    authored: undefined,
     content,
     description: frontmatter.description ?? null,
     disableModelInvocation: undefined,
     filePath: path,
     labels: ruleLabelsFromPath(path),
     promptType: 'rules',
-    source: undefined,
-    sourceUrl: undefined,
     tags: undefined,
     title,
   };

@@ -165,6 +165,22 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
 
     expect(warnings).toEqual([]);
     expect(files.map((file) => file.slug)).toEqual(['linked-skill']);
+    // Resolves under <root>/skills/ — the authored (openthrottle) signal.
+    expect(files[0]?.authored).toBe(true);
+  });
+
+  test('marks a real (lockfile-installed) skill directory as not authored', () => {
+    mkdirSync(join(monorepoRoot, '.agents/skills/installed-skill'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(monorepoRoot, '.agents/skills/installed-skill/SKILL.md'),
+      SKILL_BODY,
+    );
+
+    const { files } = walkAgentAssetFiles({ monorepoRoot });
+
+    expect(files[0]?.authored).toBe(false);
   });
 
   test('skips a skill directory symlink escaping the monorepo root', () => {
