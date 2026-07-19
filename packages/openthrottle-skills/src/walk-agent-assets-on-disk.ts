@@ -1,5 +1,5 @@
 import type { Dirent } from 'node:fs';
-import { readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, join, relative, sep } from 'node:path';
 
 import type {
@@ -8,6 +8,13 @@ import type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export interface AgentAssetFileEntry {
+  /**
+   * Skill-only: whether the skill folder resolves under the repo's authored
+   * `skills/` tree (the skill-sync layout symlinks authored skills into
+   * `.agents/skills/`; lockfile-installed external skills are real
+   * directories there). `undefined` for non-skill assets.
+   */
+  readonly authored?: boolean;
   readonly content: string;
   readonly kind: AgentAssetKind;
   readonly path: string;
@@ -130,6 +137,45 @@ const readFileSafely = (
   }
 };
 
+/**
+ * A skill folder is a real directory OR a symlink resolving to a directory
+ * that stays inside the monorepo — the skill-sync layout links the repo's
+ * authored `skills/<slug>` dirs into `.agents/skills/` while external
+ * installs stay real directories. Links escaping the repo are skipped, the
+ * same out-of-tree guard the rules walk applies. `authored` is true when the
+ * folder's real path lives under `<monorepoRoot>/skills/` — the virtual
+ * provenance signal (a generated symlink chain resolves there; a
+ * lockfile-installed real dir does not).
+ */
+const resolveSkillFolder = (
+  monorepoRoot: string,
+  skillsRoot: string,
+  dirent: Dirent,
+): { readonly authored: boolean } | undefined => {
+  if (!dirent.isDirectory() && !dirent.isSymbolicLink()) {
+    return undefined;
+  }
+  try {
+    const target = join(skillsRoot, dirent.name);
+    if (!statSync(target).isDirectory()) {
+      return undefined;
+    }
+    const realRoot = realpathSync(monorepoRoot);
+    const realTarget = realpathSync(target);
+    if (
+      dirent.isSymbolicLink() &&
+      !realTarget.startsWith(`${realRoot}${sep}`)
+    ) {
+      return undefined;
+    }
+    return {
+      authored: realTarget.startsWith(`${realRoot}${sep}skills${sep}`),
+    };
+  } catch {
+    return undefined;
+  }
+};
+
 const walkSkillFiles = (
   monorepoRoot: string,
   warnings: AgentAssetValidationIssue[],
@@ -143,7 +189,8 @@ const walkSkillFiles = (
   const results: AgentAssetFileEntry[] = [];
 
   for (const dirent of entries) {
-    if (!dirent.isDirectory()) {
+    const folder = resolveSkillFolder(monorepoRoot, skillsRoot, dirent);
+    if (folder === undefined) {
       continue;
     }
 
@@ -155,6 +202,7 @@ const walkSkillFiles = (
     }
 
     results.push({
+      authored: folder.authored,
       content,
       kind: 'skill',
       path: toRepoRelativePath(monorepoRoot, skillPath),

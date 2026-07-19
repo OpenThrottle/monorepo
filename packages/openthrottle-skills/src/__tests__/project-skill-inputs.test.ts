@@ -6,6 +6,7 @@ import { toProjectSkillInputs } from '../project-skill-inputs.ts';
 const skillRecord = (
   overrides: Partial<AgentAssetIngestRecord>,
 ): AgentAssetIngestRecord => ({
+  authored: false,
   content: '# body',
   description: 'A skill.',
   disableModelInvocation: undefined,
@@ -32,10 +33,61 @@ describe('toProjectSkillInputs', () => {
       {
         disableModelInvocation: true,
         slug: 'github-commit',
+        source: 'external',
         sourcePath: '.agents/skills/github-commit/SKILL.md',
+        sourceUrl: undefined,
         tags: ['github', 'commit'],
       },
     ]);
+  });
+
+  test('derives openthrottle for an authored (symlinked) skill', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ authored: true, labels: ['owned'] }),
+    ]);
+
+    expect(input?.source).toBe('openthrottle');
+    expect(input?.sourceUrl).toBeUndefined();
+  });
+
+  test('derives external with a lockfile origin URL for an installed skill', () => {
+    const [input] = toProjectSkillInputs(
+      [skillRecord({ authored: false, labels: ['vendored'] })],
+      undefined,
+      {
+        vendored: { source: 'github/awesome-copilot', sourceType: 'github' },
+      },
+    );
+
+    expect(input?.source).toBe('external');
+    expect(input?.sourceUrl).toBe('https://github.com/github/awesome-copilot');
+  });
+
+  test('an authored skill never picks up a lockfile URL', () => {
+    const [input] = toProjectSkillInputs(
+      [skillRecord({ authored: true, labels: ['owned'] })],
+      undefined,
+      { owned: { source: 'github/elsewhere', sourceType: 'github' } },
+    );
+
+    expect(input?.sourceUrl).toBeUndefined();
+  });
+
+  test('an installed skill without a lockfile entry stays external with no URL', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ authored: false, labels: ['orphan'] }),
+    ]);
+
+    expect(input?.source).toBe('external');
+    expect(input?.sourceUrl).toBeUndefined();
+  });
+
+  test('treats an undefined authored flag as external', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ authored: undefined, labels: ['legacy'] }),
+    ]);
+
+    expect(input?.source).toBe('external');
   });
 
   test('merges overlay tags (order-preserving union) when overlays are supplied', () => {
@@ -87,6 +139,7 @@ describe('toProjectSkillInputs', () => {
       skillRecord({ labels: ['kept'] }),
       skillRecord({ labels: [] }),
       {
+        authored: undefined,
         content: 'persona',
         description: null,
         disableModelInvocation: undefined,

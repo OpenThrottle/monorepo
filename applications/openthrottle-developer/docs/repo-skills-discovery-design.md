@@ -99,7 +99,74 @@ With monorepo root resolved, on-disk counts should match:
 
 Includes skills missing from the old static array (e.g. `openthrottle-generators`, `ot-plans`, `workflow-ralph`, `openthrottle-stack`).
 
+## Source (provenance) — derived, never frontmatter
+
+Plans: **Skills detail route + source classification**
+(`6c785a74-fd94-474f-8e1b-0e182bd5c0b0`) and **Fully-virtual skill
+provenance** (`9dc16a01-ddff-44d6-984f-41b119938379`).
+
+Provenance is **derived from the skill-sync architecture** — installed skills
+are installed, that's it; every layer on top of them is virtual:
+
+| Layout signal (realpath of the skill folder)      | Provenance                                      |
+| ------------------------------------------------- | ----------------------------------------------- |
+| Resolves under `<root>/skills/` (authored SSOT)   | `openthrottle` — written and PR-reviewed here   |
+| Anything else (lockfile-installed real directory) | `external`, `sourceUrl` from `skills-lock.json` |
+
+**Rules:**
+
+- The enum is `openthrottle | external` (`SKILL_SOURCES` in
+  `@openthrottle/openthrottle-skills`), but it is **not a frontmatter key** —
+  `parseSkillFrontmatter` and `skillFrontmatterSchema` know nothing about it,
+  and a stray `source:` key in a SKILL.md is an ignored unknown.
+- The realpath rule works identically for every scanned layout
+  (`.agents/skills`, `.claude/skills`, `.cursor/skills`) because the generated
+  symlink chains all resolve to the authored directory.
+- `sourceUrl` comes from the repo-root `skills-lock.json` entry for the folder
+  name (`github` shorthand `owner/repo` → `https://github.com/owner/repo`;
+  full-URL sources pass through; missing/invalid lockfile ⇒ no URL).
+
+**Flow:** layout + lockfile derivation → `RepoSkillEntry.source`/`sourceUrl` →
+merged with the ingested `projectSkills` GraphQL row (a recognized ingested
+value overlays the disk value; the empty-GraphQL silent fallback is unchanged)
+→ Source badge column + All/OpenThrottle/External toolbar filter on the index.
+Postgres persists the derived value on `project_skills.source` (+ nullable
+`source_url`, migration 074); the ingest path derives it the same way via the
+walker's `authored` flag + `parseSkillsLockFile`.
+
+## Detail route (`/skills/:slug`) — read and update
+
+- **Loader** (`read-skill-file.server.ts`): resolve root → re-run discovery →
+  find entry by slug → read the raw SKILL.md. Unknown slug or null root ⇒ 404
+  `Response` via the route ErrorBoundary. Returns `{ entry, content, editable }`
+  with `editable = monorepoRoot !== null`.
+- **Read mode:** the whole file renders with `MarkdownRenderer` under a header
+  (slug, Source badge with origin link, model-invocation badge, tags,
+  repo-relative path + copy).
+- **Edit mode:** `Editor` (Monaco, `@openthrottle/react-router-editor`,
+  single-document surface) bound to the raw file; dirty tracking gates Save;
+  Cancel reverts to the loaded content. `editable === false` (deployed app)
+  shows a disabled Edit affordance with an explanatory tooltip.
+- **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
+  - The absolute target derives **only** from the discovered entry's
+    `repoRelativePath` under the resolved root — never from client input.
+  - A realpath containment guard rejects any resolved path that escapes the
+    repository (symlinked `.claude`/`.cursor` layouts resolve in-repo first).
+  - The new content's frontmatter is re-validated with
+    `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
+    and satisfy the schema) **before** anything
+    touches disk; rejections return structured errors without writing.
+  - On success the whole file is written (`writeFileSync`, utf8) and loader
+    revalidation returns the UI to read mode with the fresh render.
+
+**Re-ingest expectation:** saving does **not** refresh the server-side
+`projectSkills` / `skillAvailability` rows. Those update on the next
+agent-asset ingest run (e.g. `database:import` / the ingest script). The disk
+is the source of the entry list, so the detail and index pages reflect a save
+immediately; only the ingested overlay lags until the next ingest.
+
 ## Related code
 
-- UI route: `app/routes/skills._index.tsx`
+- UI routes: `app/routes/skills._index.tsx`, `app/routes/skills.$slug.tsx`
+- Detail data: `app/routing/skills/data/{read,write}-skill-file.server.ts`
 - Server paths for workspace editor apply: `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` (separate follow-up to derive from discovery or shared source)

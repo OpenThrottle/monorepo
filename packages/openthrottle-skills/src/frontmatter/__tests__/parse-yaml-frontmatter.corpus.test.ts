@@ -298,6 +298,26 @@ const KNOWN_CONTENT_DIVERGENCES: readonly KnownDivergence[] = [
     field: 'description',
     path: '.agents/skills/brag-sheet/SKILL.md',
   },
+  {
+    // This file declares `allowed-tools:` as a *block* sequence (`- item`
+    // lines). The retired regex parser had no block-sequence support at all
+    // and kept only the bare `allowed-tools:` line as an empty scalar; the
+    // `yaml`-backed parser correctly yields the string array. Same content,
+    // real shape fix — assert the old side collapsed to '' and the new side
+    // parsed a non-empty string list.
+    assertRelationship: (oldValue, newValue) => {
+      expect(oldValue).toBe('');
+      expect(Array.isArray(newValue)).toBe(true);
+      if (Array.isArray(newValue)) {
+        expect(newValue.length).toBeGreaterThan(0);
+        for (const item of newValue) {
+          expect(typeof item).toBe('string');
+        }
+      }
+    },
+    field: 'allowed-tools',
+    path: '.agents/skills/monitor-ci/SKILL.md',
+  },
 ];
 
 /**

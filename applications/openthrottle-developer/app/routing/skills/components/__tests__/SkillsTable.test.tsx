@@ -13,6 +13,7 @@ const mockEntries: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
     slug: 'brag-sheet',
+    source: 'external',
     summary: 'Build impact statements from commits and PR activity.',
     tags: undefined,
   },
@@ -21,6 +22,7 @@ const mockEntries: readonly RepoSkillEntry[] = [
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
+    source: 'external',
     summary: 'Explore Nx projects, targets, and dependency graph.',
     tags: undefined,
   },
@@ -34,6 +36,7 @@ const triStateEntries: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/github-commit/SKILL.md',
     slug: 'github-commit',
+    source: 'external',
     summary: 'Commit via a guarded skill.',
     tags: ['git', 'github'],
   },
@@ -42,6 +45,7 @@ const triStateEntries: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/agents-ralph/SKILL.md',
     slug: 'agents-ralph',
+    source: 'external',
     summary: 'Ralph loop.',
     tags: ['planning'],
   },
@@ -50,6 +54,7 @@ const triStateEntries: readonly RepoSkillEntry[] = [
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
+    source: 'external',
     summary: 'Explore the Nx workspace.',
     tags: undefined,
   },
@@ -115,6 +120,77 @@ describe('SkillsTable Component', () => {
     });
   });
 
+  describe('Source column (provenance badge)', () => {
+    const sourceEntries: readonly RepoSkillEntry[] = [
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/ot-plans/SKILL.md',
+        slug: 'ot-plans',
+        source: 'openthrottle',
+        summary: 'OpenThrottle plans skill.',
+        tags: undefined,
+      },
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
+        slug: 'brag-sheet',
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/brag-sheet',
+        summary: 'Vendored skill with an origin URL.',
+        tags: undefined,
+      },
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/create-cli/SKILL.md',
+        slug: 'create-cli',
+        source: 'external',
+        summary: 'Vendored skill without an origin URL.',
+        tags: undefined,
+      },
+    ];
+
+    let component: RenderResult;
+
+    beforeEach(() => {
+      cleanup();
+      component = renderRoutesStub(
+        <SkillsTable entries={[...sourceEntries]} />,
+      );
+    });
+
+    test('renders the Source column header', () => {
+      expect(
+        component.getByRole('columnheader', { name: 'Source' }),
+      ).toBeInTheDocument();
+    });
+
+    test('renders an OpenThrottle badge for source: openthrottle', () => {
+      expect(component.getByText('OpenThrottle')).toBeInTheDocument();
+    });
+
+    test('renders an External badge per external entry', () => {
+      expect(component.getAllByText('External')).toHaveLength(2);
+    });
+
+    test('links the external badge to its sourceUrl when present', () => {
+      const link = component.getByTestId('skill-source-link');
+
+      expect(link).toHaveAttribute(
+        'href',
+        'https://example.com/skills/brag-sheet',
+      );
+      expect(link).toHaveAttribute('target', '_blank');
+    });
+
+    test('renders exactly one origin link (url-less entries stay plain badges)', () => {
+      expect(component.getAllByTestId('skill-source-badge')).toHaveLength(3);
+      expect(component.getAllByTestId('skill-source-link')).toHaveLength(1);
+    });
+  });
+
   describe('Model invocation column (tri-state badge)', () => {
     let component: RenderResult;
 
@@ -158,6 +234,7 @@ describe('SkillsTable Component', () => {
               provenance: 'tag-allow:github@rule-1',
               repoRelativePath: '.agents/skills/git-commit/SKILL.md',
               slug: 'git-commit',
+              source: 'external',
               summary: 'Commit skill re-enabled by a tag rule.',
               tags: ['git'],
             },
@@ -184,6 +261,7 @@ describe('SkillsTable Component', () => {
               provenance: 'frontmatter:unset',
               repoRelativePath: '.agents/skills/planner/SKILL.md',
               slug: 'planner',
+              source: 'external',
               summary: 'Planner.',
               tags: undefined,
             },
@@ -209,6 +287,7 @@ describe('SkillsTable Component', () => {
               provenance: 'frontmatter:true',
               repoRelativePath: '.agents/skills/guarded/SKILL.md',
               slug: 'guarded',
+              source: 'external',
               summary: 'Statically guarded, no rules.',
               tags: undefined,
             },
@@ -232,6 +311,7 @@ describe('SkillsTable Component', () => {
               layout: 'agents',
               repoRelativePath: '.agents/skills/legacy/SKILL.md',
               slug: 'legacy',
+              source: 'external',
               summary: 'No availability resolved.',
               tags: undefined,
             },

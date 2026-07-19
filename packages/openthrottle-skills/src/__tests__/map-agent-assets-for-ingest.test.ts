@@ -78,6 +78,28 @@ description: No tags, no flag.
 
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
+      // No walker authored flag defaults to a non-authored (external) skill.
+      expect(record.authored).toBe(false);
+    });
+
+    test('carries the walker authored flag into the record', () => {
+      const entry: AgentAssetFileEntry = {
+        authored: true,
+        content: `---
+name: owned-skill
+description: We author this one.
+---
+
+# Owned
+`,
+        kind: 'skill',
+        path: '.agents/skills/owned-skill/SKILL.md',
+        slug: 'owned-skill',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.authored).toBe(true);
     });
 
     test('preserves disable-model-invocation false as a distinct value', () => {
@@ -125,6 +147,7 @@ description: Architecture lens. USE WHEN designing modules.
       expect(record.labels).toEqual(['persona', 'architect']);
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
+      expect(record.authored).toBeUndefined();
     });
   });
 

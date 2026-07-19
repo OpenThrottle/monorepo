@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { EditorWindow } from '@openthrottle/react-router-editor';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
@@ -13,7 +14,6 @@ import {
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { EditorWindow } from '@openthrottle/react-router-editor';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
@@ -70,6 +70,15 @@ export const PlanTabDetails = (
   return (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
+        <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
+          <PlanLifecycleHooksSection
+            afterHooks={plan.afterHooks}
+            beforeHooks={plan.beforeHooks}
+            heading={PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
+            planId={plan.id}
+          />
+        </div>
+
         <div
           className={clsx('bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
@@ -118,15 +127,6 @@ export const PlanTabDetails = (
               )}
             </div>
           )}
-        </div>
-
-        <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
-          <PlanLifecycleHooksSection
-            afterHooks={plan.afterHooks}
-            beforeHooks={plan.beforeHooks}
-            heading={PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
-            planId={plan.id}
-          />
         </div>
 
         <PlanWorkflowRunTransparency

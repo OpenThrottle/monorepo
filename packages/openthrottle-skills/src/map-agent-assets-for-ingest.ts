@@ -8,6 +8,13 @@ import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'rules' | 'skills';
 
 export interface AgentAssetIngestRecord {
+  /**
+   * Skill-only: whether the skill folder resolves under the repo's authored
+   * `skills/` tree (see {@link AgentAssetFileEntry.authored}). Provenance is
+   * derived from this virtually — never from frontmatter. `undefined` for
+   * non-skill assets.
+   */
+  readonly authored: boolean | undefined;
   readonly content: string;
   readonly description: string | null;
   /**
@@ -52,6 +59,7 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'skill') {
     const frontmatter = parseSkillFrontmatter(content);
     return {
+      authored: entry.authored ?? false,
       content,
       description: frontmatter.description ?? null,
       disableModelInvocation: frontmatter.disableModelInvocation,
@@ -66,6 +74,7 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'persona') {
     const frontmatter = parsePersonaFrontmatter(content);
     return {
+      authored: undefined,
       content,
       description: frontmatter.description ?? null,
       disableModelInvocation: undefined,
@@ -80,6 +89,7 @@ export const mapAgentAssetFileToIngestRecord = (
   if (kind === 'prompt') {
     const title = slug ?? basename(path, '.md');
     return {
+      authored: undefined,
       content,
       description: null,
       disableModelInvocation: undefined,
@@ -95,6 +105,7 @@ export const mapAgentAssetFileToIngestRecord = (
   const title = basename(path, '.mdc');
 
   return {
+    authored: undefined,
     content,
     description: frontmatter.description ?? null,
     disableModelInvocation: undefined,

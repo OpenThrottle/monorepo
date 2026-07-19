@@ -22,7 +22,7 @@ const toOptionalStringArray = (
 ): readonly string[] | undefined => (Array.isArray(value) ? value : undefined);
 
 /**
- * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter.
+ * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the skill-sync layout (see `walk-agent-assets-on-disk.ts` and `parse-skills-lock.ts`).
  * @public
  */
 export const parseSkillFrontmatter = (

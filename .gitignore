@@ -68,3 +68,9 @@ CLAUDE.local.md
 .claude/worktrees
 .claude/settings.local.json
 
+
+# Start 🔄 Managed by OpenThrottle skill-sync
+.agents/skills/*
+!.agents/skills/*/
+.claude/skills/
+# End 🔄 Managed by OpenThrottle skill-sync

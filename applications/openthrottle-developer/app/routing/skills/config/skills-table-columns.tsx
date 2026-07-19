@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
@@ -11,7 +12,10 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
 import { formatPromptType } from '~/routing/prompts/utils/formatters';
-import { SKILLS_MODEL_INVOCATION_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILLS_MODEL_INVOCATION_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export type SkillsTableColumnValue =
@@ -19,6 +23,7 @@ export type SkillsTableColumnValue =
   | RepoSkillEntry['layout']
   | RepoSkillEntry['repoRelativePath']
   | RepoSkillEntry['slug']
+  | RepoSkillEntry['source']
   | RepoSkillEntry['summary']
   | RepoSkillEntry['tags'];
 
@@ -56,7 +61,9 @@ export const skillsTableColumns: ColumnDef<
     cell: ({ row }) => (
       <div className="p-2">
         <h3 className="text-foreground mb-2 line-clamp-1">
-          /{row.original.slug}
+          <Link className="hover:underline" to={`/skills/${row.original.slug}`}>
+            /{row.original.slug}
+          </Link>
         </h3>
         <p className="text-muted-foreground line-clamp-2 text-xs">
           {row.original.summary}
@@ -64,6 +71,56 @@ export const skillsTableColumns: ColumnDef<
       </div>
     ),
     header: () => <div className="p-2">Summary</div>,
+  },
+  {
+    accessorKey: 'source',
+    cell: ({ row }) => {
+      const isOpenThrottle = row.original.source === 'openthrottle';
+      const { sourceUrl } = row.original;
+
+      const badge = (
+        <Badge
+          color={isOpenThrottle ? 'violet' : 'slate'}
+          data-testid="skill-source-badge"
+          size="xs"
+        >
+          {isOpenThrottle
+            ? SKILLS_SOURCE_COPY.openthrottleLabel
+            : SKILLS_SOURCE_COPY.externalLabel}
+        </Badge>
+      );
+
+      const tooltip = isOpenThrottle
+        ? SKILLS_SOURCE_COPY.openthrottleTooltip
+        : sourceUrl
+          ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${sourceUrl}`
+          : SKILLS_SOURCE_COPY.externalTooltip;
+
+      return (
+        <div className="p-2">
+          <Tooltip>
+            <TooltipTrigger asChild={true}>
+              {!isOpenThrottle && sourceUrl ? (
+                <a
+                  data-testid="skill-source-link"
+                  href={sourceUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {badge}
+                </a>
+              ) : (
+                badge
+              )}
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" side="top">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    },
+    header: () => <div className="p-2">{SKILLS_SOURCE_COPY.columnHeader}</div>,
   },
   {
     accessorKey: 'modelInvocation',
@@ -119,9 +176,14 @@ export const skillsTableColumns: ColumnDef<
             text={row.original.repoRelativePath}
           />
         </Button>
-        <Button size="xs" variant="outline">
-          <ScanEyeIcon className="size-4" />
-          <span className="sr-only">View Skill</span>
+        <Button asChild={true} size="xs" variant="outline">
+          <Link
+            data-testid="skill-view-link"
+            to={`/skills/${row.original.slug}`}
+          >
+            <ScanEyeIcon className="size-4" />
+            <span className="sr-only">View Skill</span>
+          </Link>
         </Button>
       </div>
     ),

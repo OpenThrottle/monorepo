@@ -15,6 +15,30 @@ import {
 
 const monorepoRootCandidate = join(import.meta.dirname, '../../../../../../..');
 
+// Fan-out layouts skill-sync materializes; discoverRepoSkills scans these, not
+// the canonical `skills/` root.
+const SKILL_LAYOUT_DIRS = [
+  '.agents/skills',
+  '.claude/skills',
+  '.cursor/skills',
+  '.opencode/skills',
+] as const;
+
+/**
+ * The required slugs are canonical skills that live at `skills/<slug>` and reach
+ * the fan-out only as skill-sync symlinks — which are gitignored and absent on a
+ * fresh checkout (CI runs no skill-sync). Only assert their presence once the
+ * fan-out is actually materialized; otherwise there is nothing to integrate
+ * against and the check would false-fail. See repo-skills-discovery-design.md.
+ */
+const requiredSkillsMaterialized = (root: string | null): boolean =>
+  root !== null &&
+  REQUIRED_AGENTS_SKILL_SLUGS.every((slug) =>
+    SKILL_LAYOUT_DIRS.some((dir) =>
+      existsSync(join(root, dir, slug, 'SKILL.md')),
+    ),
+  );
+
 const countOnDiskSkillFolders = (root: string, skillsDir: string): number => {
   const absoluteDir = join(root, skillsDir);
   if (!existsSync(absoluteDir)) {
@@ -51,17 +75,18 @@ describe('discoverRepoSkills monorepo integration', () => {
     },
   );
 
-  test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
-    'includes repo skills that replaced the static registry list',
-    () => {
-      const entries = discoverRepoSkills(monorepoRoot);
-      const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
+  test.skipIf(
+    !monorepoRoot ||
+      !isMonorepoRootDirectory(monorepoRoot) ||
+      !requiredSkillsMaterialized(monorepoRoot),
+  )('includes repo skills that replaced the static registry list', () => {
+    const entries = discoverRepoSkills(monorepoRoot);
+    const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
 
-      for (const slug of REQUIRED_AGENTS_SKILL_SLUGS) {
-        expect(slugs.has(slug)).toBe(true);
-      }
-    },
-  );
+    for (const slug of REQUIRED_AGENTS_SKILL_SLUGS) {
+      expect(slugs.has(slug)).toBe(true);
+    }
+  });
 
   test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
     'repoRelativePath values point at existing SKILL.md files',

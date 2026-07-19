@@ -14,6 +14,7 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
+    source: 'external',
     summary: 'Explore Nx workspace structure.',
     tags: undefined,
   },

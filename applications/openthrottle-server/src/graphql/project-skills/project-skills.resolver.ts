@@ -29,6 +29,8 @@ const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
 function toObject(view: ProjectSkillView): ProjectSkillObject {
   return {
     slug: view.slug,
+    source: view.source,
+    sourceUrl: view.sourceUrl ?? null,
     staticDisableModelInvocation: view.staticDisableModelInvocation ?? null,
     tags: [...view.tags],
   };

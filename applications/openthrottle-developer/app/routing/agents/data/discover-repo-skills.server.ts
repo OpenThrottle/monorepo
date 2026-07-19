@@ -1,7 +1,20 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+} from 'node:fs';
 import type { Dirent } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
+import {
+  deriveSkillSourceUrl,
+  parseSkillsLockFile,
+  SKILLS_LOCK_FILENAME,
+  type SkillsLockMap,
+  type SkillSource,
+} from '@openthrottle/openthrottle-skills';
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
 import {
   dedupeRepoSkillEntriesBySlug,
@@ -45,13 +58,54 @@ const sortRepoSkillEntries = (
 const toRepoRelativePath = (skillsDir: string, folderName: string): string =>
   `${skillsDir}/${folderName}/${SKILL_FILE_NAME}`;
 
+interface SkillProvenance {
+  readonly source: SkillSource;
+  readonly sourceUrl: string | undefined;
+}
+
+/**
+ * Provenance is derived from the skill-sync layout, never from frontmatter:
+ * a skill folder whose real path resolves under `<root>/skills/` is authored
+ * here (`openthrottle`); anything else is a lockfile install (`external`),
+ * with its origin URL looked up from skills-lock.json by folder name.
+ */
+const deriveSkillProvenance = (
+  monorepoRoot: string,
+  absoluteSkillDir: string,
+  folderName: string,
+  lock: SkillsLockMap,
+): SkillProvenance => {
+  try {
+    const realRoot = realpathSync(monorepoRoot);
+    const realDir = realpathSync(absoluteSkillDir);
+    if (realDir.startsWith(`${realRoot}${sep}skills${sep}`)) {
+      return { source: 'openthrottle', sourceUrl: undefined };
+    }
+  } catch {
+    // Unresolvable path — treat as external below.
+  }
+
+  return {
+    source: 'external',
+    sourceUrl: deriveSkillSourceUrl(lock[folderName]),
+  };
+};
+
 const readSkillEntry = (
+  monorepoRoot: string,
   layout: SkillRegistryLayout,
   skillsDir: string,
   folderName: string,
   skillFilePath: string,
+  lock: SkillsLockMap,
 ): RepoSkillEntry => {
   const repoRelativePath = toRepoRelativePath(skillsDir, folderName);
+  const { source, sourceUrl } = deriveSkillProvenance(
+    monorepoRoot,
+    join(monorepoRoot, skillsDir, folderName),
+    folderName,
+    lock,
+  );
   let fileContent = '';
 
   try {
@@ -62,6 +116,8 @@ const readSkillEntry = (
       layout,
       repoRelativePath,
       slug: folderName,
+      source,
+      sourceUrl,
       summary: MISSING_SUMMARY_PLACEHOLDER,
       tags: undefined,
     };
@@ -80,6 +136,8 @@ const readSkillEntry = (
     layout,
     repoRelativePath,
     slug,
+    source,
+    sourceUrl,
     summary,
     tags,
   };
@@ -103,10 +161,21 @@ const isSkillFolder = (
   }
 };
 
+const readSkillsLock = (monorepoRoot: string): SkillsLockMap => {
+  try {
+    return parseSkillsLockFile(
+      readFileSync(join(monorepoRoot, SKILLS_LOCK_FILENAME), 'utf8'),
+    );
+  } catch {
+    return {};
+  }
+};
+
 const scanSkillsLayout = (
   monorepoRoot: string,
   layout: SkillRegistryLayout,
   skillsDir: string,
+  lock: SkillsLockMap,
 ): RepoSkillEntry[] => {
   const absoluteSkillsDir = join(monorepoRoot, skillsDir);
 
@@ -135,7 +204,16 @@ const scanSkillsLayout = (
       continue;
     }
 
-    entries.push(readSkillEntry(layout, skillsDir, folderName, skillFilePath));
+    entries.push(
+      readSkillEntry(
+        monorepoRoot,
+        layout,
+        skillsDir,
+        folderName,
+        skillFilePath,
+        lock,
+      ),
+    );
   }
 
   return entries;
@@ -158,9 +236,10 @@ export const discoverRepoSkills = (
   }
 
   const entries: RepoSkillEntry[] = [];
+  const lock = readSkillsLock(monorepoRoot);
 
   for (const { layout, skillsDir } of LAYOUT_SCAN_TARGETS) {
-    entries.push(...scanSkillsLayout(monorepoRoot, layout, skillsDir));
+    entries.push(...scanSkillsLayout(monorepoRoot, layout, skillsDir, lock));
   }
 
   return sortRepoSkillEntries([...dedupeRepoSkillEntriesBySlug(entries)]);

@@ -24,6 +24,55 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
 } as const;
 
 /**
+ * Copy for the /skills/:slug detail route (read view). The empty-content notice
+ * covers a discovered entry whose file could not be read back.
+ */
+export const SKILL_DETAIL_COPY = {
+  backLink: `Back to skills`,
+  cancelLabel: `Cancel`,
+  editDisabledTooltip: `Editing needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT), so this deployed view is read-only.`,
+  editLabel: `Edit`,
+  emptyContentNotice: `The SKILL.md for this skill could not be read from disk.`,
+  notFoundStatusText: `Skill not found`,
+  pathCopyLabel: `Copy path`,
+  saveLabel: `Save`,
+  tagsLabel: `Tags`,
+} as const;
+
+/**
+ * Copy for the skill write-back action. Every refusal names why the save was
+ * rejected without writing; the ingest note reminds that server-side rows
+ * (`projectSkills`) refresh on the next agent-asset ingest run, not on save.
+ */
+export const SKILL_WRITE_COPY = {
+  invalidFrontmatterError: `Save rejected — the edited frontmatter no longer validates:`,
+  missingContentError: `Save rejected — no content was submitted.`,
+  noRootError: `Saving needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
+  pathEscapeError: `Save rejected — the resolved skill path escapes the repository.`,
+  unknownSlugError: `Save rejected — this skill is no longer discoverable on disk.`,
+  writeFailedError: `Save failed — the file could not be written to disk.`,
+} as const;
+
+/**
+ * Copy for the "Source" provenance column and the toolbar source filter. A skill
+ * is OpenThrottle-managed only when its frontmatter explicitly claims
+ * `source: openthrottle`; everything else (including omitted keys) reads as
+ * external, optionally with an origin URL.
+ */
+export const SKILLS_SOURCE_COPY = {
+  columnHeader: `Source`,
+  externalLabel: `External`,
+  externalTooltip: `Installed from an external source.`,
+  externalUrlTooltipPrefix: `Installed from`,
+  filterAllLabel: `All`,
+  filterExternalLabel: `External`,
+  filterGroupLabel: `Filter by source`,
+  filterOpenThrottleLabel: `OpenThrottle`,
+  openthrottleLabel: `OpenThrottle`,
+  openthrottleTooltip: `Authored and managed in this OpenThrottle monorepo.`,
+} as const;
+
+/**
  * Copy for the skill-availability authoring surface (posture, rules, vocabulary). All of this
  * concerns model auto-invocation only — human `/skill` invocation is never gated. Rename/remove
  * caveats are deliberately honest: those operations touch the workspace vocabulary alone and never

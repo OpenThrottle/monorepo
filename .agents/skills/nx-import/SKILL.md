@@ -138,7 +138,7 @@ Same `name` in `package.json` across source and dest causes `MultipleProjectsWit
 
 ### Workspace Dep Import Ordering
 
-`pnpm install` fails during `nx import` if a `"workspace:^"` dependency hasn't been imported yet. File operations still succeed. **Fix**: Import all projects first, then `pnpm install --no-frozen-lockfile`.
+`pnpm install` fails during `nx import` if a `"workspace:*"` dependency hasn't been imported yet. File operations still succeed. **Fix**: Import all projects first, then `pnpm install --no-frozen-lockfile`.
 
 ### `.gitkeep` Blocking Subdirectory Import
 

@@ -17,26 +17,12 @@ is_symlink() {
   [[ -L "$path" ]]
 }
 
-# --- Skills: .cursor/skills, .claude/skills, skills/ must symlink into .agents/skills ---
-for editor_tree in .cursor/skills .claude/skills skills; do
-  [[ -d "$editor_tree" ]] || continue
-  for entry in "$editor_tree"/*; do
-    [[ -e "$entry" ]] || continue
-    name="$(basename "$entry")"
-    [[ "$name" == "README.md" ]] && continue
-    if ! is_symlink "$entry"; then
-      fail "$entry is not a symlink (edit .agents/skills/$name only)"
-      continue
-    fi
-    target="$(readlink "$entry")"
-    if [[ ! "$target" == *".agents/skills/$name"* ]]; then
-      fail "$entry symlinks to unexpected target: $target"
-    fi
-    if [[ ! -e "$entry" ]]; then
-      fail "$entry is a broken symlink"
-    fi
-  done
-done
+# --- Skills: skill-sync owns the layout (skills/ = authored SSOT, .agents/skills = merged
+# view of skills/ symlinks + lockfile-installed external dirs, <agent>/skills = generated
+# fan-out). Its --check validates the whole two-stage pipeline without writing. ---
+if ! bash skills/skill-sync/scripts/sync.sh --check; then
+  fail "skill layout drift (see skill-sync output above; run: bash skills/skill-sync/scripts/sync.sh)"
+fi
 
 # --- Rules: .cursor/rules/**/*.mdc must symlink into .agents/rules (except gitignored nx-rules.mdc) ---
 while IFS= read -r -d '' rule; do
@@ -57,14 +43,6 @@ if [[ -f .cursor/rules/README.md ]] && ! is_symlink .cursor/rules/README.md; the
   fail ".cursor/rules/README.md must symlink to .agents/rules/README.md"
 fi
 
-# --- SSOT skill bodies must not be symlinks out of .agents ---
-for skill_md in .agents/skills/*/SKILL.md; do
-  [[ -f "$skill_md" ]] || continue
-  if is_symlink "$skill_md"; then
-    fail "$skill_md must be a regular file (SSOT body)"
-  fi
-done
-
 # --- SSOT rule bodies must not be symlinks out of .agents ---
 while IFS= read -r -d '' rule; do
   rel="${rule#./}"
@@ -72,18 +50,6 @@ while IFS= read -r -d '' rule; do
     fail "$rel must be a regular file (SSOT body)"
   fi
 done < <(find .agents/rules -name '*.mdc' -print0 2>/dev/null)
-
-# --- OpenCode mirror: copies, not symlinks (partial parity — plan 1.5). Any
-# .opencode/skills/<slug>/SKILL.md that has a .agents counterpart must match it byte-for-byte. ---
-for skill_md in .opencode/skills/*/SKILL.md; do
-  [[ -f "$skill_md" ]] || continue
-  slug="$(basename "$(dirname "$skill_md")")"
-  ssot=".agents/skills/$slug/SKILL.md"
-  [[ -f "$ssot" ]] || continue
-  if ! cmp -s "$ssot" "$skill_md"; then
-    fail "$skill_md drifted from $ssot (re-copy from .agents; OpenCode mirrors are not symlinked yet — plan 1.5)"
-  fi
-done
 
 # --- Skill tags: validate the repo-root skill-tag-overlays.json — every skill
 # has an overlay entry (complete coverage; zero tags is fine), no stale entries,

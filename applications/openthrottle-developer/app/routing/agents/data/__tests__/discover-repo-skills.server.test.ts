@@ -79,18 +79,21 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/alpha-skill/SKILL.md',
         slug: 'alpha-skill',
+        source: 'external',
         summary: 'Alpha agents skill.',
       },
       {
         layout: 'agents',
         repoRelativePath: '.agents/skills/zebra-skill/SKILL.md',
         slug: 'zebra-skill',
+        source: 'external',
         summary: 'Zebra agents skill.',
       },
       {
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/monitor-ci/SKILL.md',
         slug: 'monitor-ci',
+        source: 'external',
         summary: 'Cursor CI skill.',
       },
     ]);
@@ -135,6 +138,94 @@ describe('discoverRepoSkills', () => {
     expect(entry?.tags).toBeUndefined();
   });
 
+  test('derives openthrottle for an authored skill symlinked from skills/', () => {
+    const root = makeTempDir();
+
+    // Authored home: skills/<slug>, linked into .agents/skills by skill-sync.
+    writeSkill(
+      root,
+      'skills',
+      'owned-skill',
+      'name: owned-skill\ndescription: We author this one.',
+    );
+    mkdirSync(join(root, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(root, 'skills/owned-skill'),
+      join(root, '.agents/skills/owned-skill'),
+      'dir',
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.slug).toBe('owned-skill');
+    expect(entry?.source).toBe('openthrottle');
+    expect(entry?.sourceUrl).toBeUndefined();
+  });
+
+  test('derives external with a lockfile origin URL for an installed skill', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'vendored-skill',
+      'name: vendored-skill\ndescription: Installed via the skills CLI.',
+    );
+    writeFileSync(
+      join(root, 'skills-lock.json'),
+      JSON.stringify({
+        skills: {
+          'vendored-skill': {
+            source: 'github/awesome-copilot',
+            sourceType: 'github',
+          },
+        },
+        version: 1,
+      }),
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.source).toBe('external');
+    expect(entry?.sourceUrl).toBe('https://github.com/github/awesome-copilot');
+  });
+
+  test('derives external with no URL when the lockfile is absent', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'orphan-skill',
+      'name: orphan-skill\ndescription: Real dir, no lockfile.',
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.source).toBe('external');
+    expect(entry?.sourceUrl).toBeUndefined();
+  });
+
+  test('ignores a source frontmatter key — provenance is layout-derived', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'stamped-skill',
+      [
+        'name: stamped-skill',
+        'description: Claims to be ours in frontmatter.',
+        'source: openthrottle',
+      ].join('\n'),
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    // A real (installed) directory reads external regardless of frontmatter.
+    expect(entry?.source).toBe('external');
+  });
+
   test('uses folder name for slug when frontmatter name is missing', () => {
     const root = makeTempDir();
 
@@ -150,6 +241,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/folder-only/SKILL.md',
         slug: 'folder-only',
+        source: 'external',
         summary: 'Summary from description field only.',
       },
     ]);
@@ -186,6 +278,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/no-summary/SKILL.md',
         slug: 'no-summary',
+        source: 'external',
         summary: 'No description in SKILL.md frontmatter.',
       },
     ]);
@@ -205,6 +298,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/markdown-only/SKILL.md',
         slug: 'markdown-only',
+        source: 'external',
         summary: 'No description in SKILL.md frontmatter.',
       },
     ]);
@@ -226,6 +320,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/has-skill/SKILL.md',
         slug: 'has-skill',
+        source: 'external',
         summary: 'Present.',
       },
     ]);
@@ -251,6 +346,7 @@ describe('discoverRepoSkills', () => {
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared-skill/SKILL.md',
         slug: 'shared-skill',
+        source: 'external',
         summary: 'Canonical agents skill.',
       },
     ]);
@@ -273,6 +369,7 @@ describe('discoverRepoSkills', () => {
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/real-skill/SKILL.md',
         slug: 'real-skill',
+        source: 'external',
         summary: 'Cursor skill.',
       },
     ]);

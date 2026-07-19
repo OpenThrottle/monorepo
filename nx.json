@@ -424,6 +424,7 @@
           "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
         }
       },
+      "description": "Run the app's Maestro E2E flows from {projectRoot}/tests/e2e against a running server; configurations: smoke/full tag filters, watch, record, studio.",
       "executor": "nx:run-commands",
       "options": {
         "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",

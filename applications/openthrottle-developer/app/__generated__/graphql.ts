@@ -2152,6 +2152,10 @@ export type ProjectSkillObject = {
   __typename?: 'ProjectSkillObject';
   /** Skill slug (the skill frontmatter `name`). */
   slug: Scalars['String']['output'];
+  /** Skill provenance from frontmatter `source`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external'). */
+  source: Scalars['String']['output'];
+  /** Optional origin URL for external skills (marketplace listing or upstream repo); null when the frontmatter omits it. */
+  sourceUrl?: Maybe<Scalars['String']['output']>;
   /** Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled. */
   staticDisableModelInvocation?: Maybe<Scalars['Boolean']['output']>;
   /** Static frontmatter tags for this skill (empty when none). */
@@ -6614,6 +6618,8 @@ export type ProjectSkillsQuery = {
     skills: Array<{
       __typename?: 'ProjectSkillObject';
       slug: string;
+      source: string;
+      sourceUrl?: string | null;
       staticDisableModelInvocation?: boolean | null;
       tags: Array<string>;
     }>;
@@ -15803,6 +15809,14 @@ export const ProjectSkillsDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'sourceUrl' },
+                      },
                       {
                         kind: 'Field',
                         name: {

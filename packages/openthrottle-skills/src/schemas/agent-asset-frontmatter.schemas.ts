@@ -3,6 +3,18 @@ import { z } from 'zod';
 /** @public */
 export const AGENT_ASSET_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * @description Derived skill provenance values: `openthrottle` for skills
+ * authored in the repo's `skills/` tree, `external` for lockfile installs.
+ * NOT a frontmatter key — derivation is virtual (see `parse-skills-lock.ts`
+ * and the walker's `authored` flag).
+ * @public
+ */
+export const SKILL_SOURCES = ['external', 'openthrottle'] as const;
+
+/** @public */
+export type SkillSource = (typeof SKILL_SOURCES)[number];
+
 const nonEmptyTrimmedString = z.string().trim().min(1);
 
 /**
