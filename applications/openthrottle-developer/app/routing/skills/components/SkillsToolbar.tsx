@@ -4,27 +4,45 @@ import { Link } from 'react-router';
 import {
   Button,
   Input,
+  ToggleGroup,
+  ToggleGroupItem,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { FilePlusIcon, SlidersHorizontalIcon } from 'lucide-react';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_AVAILABILITY_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
+import {
+  isSkillSourceFilter,
+  type SkillSourceFilter,
+} from '~/routing/skills/utils/filter-skills-by-source';
 
 export interface SkillsToolbarProps {
   className?: string;
+  onSourceFilterChange?: (filter: SkillSourceFilter) => void;
+  sourceFilter?: SkillSourceFilter;
 }
 
 export const SkillsToolbar = (
   props: SkillsToolbarProps,
 ): React.ReactElement => {
-  const { className } = props;
+  const { className, onSourceFilterChange, sourceFilter = 'all' } = props;
 
   // Hooks
 
   // Setup
 
   // Handlers
+  const handleSourceFilterChange = (value: string): void => {
+    // Radix single toggle emits '' when the active item is clicked again;
+    // keep the current selection instead of clearing the filter.
+    if (isSkillSourceFilter(value)) {
+      onSourceFilterChange?.(value);
+    }
+  };
 
   // Markup
 
@@ -40,6 +58,25 @@ export const SkillsToolbar = (
           Search
         </Button>
       </div>
+
+      <ToggleGroup
+        aria-label={SKILLS_SOURCE_COPY.filterGroupLabel}
+        data-testid="skills-source-filter"
+        onValueChange={handleSourceFilterChange}
+        type="single"
+        value={sourceFilter}
+        variant="outline"
+      >
+        <ToggleGroupItem value="all">
+          {SKILLS_SOURCE_COPY.filterAllLabel}
+        </ToggleGroupItem>
+        <ToggleGroupItem value="openthrottle">
+          {SKILLS_SOURCE_COPY.filterOpenThrottleLabel}
+        </ToggleGroupItem>
+        <ToggleGroupItem value="external">
+          {SKILLS_SOURCE_COPY.filterExternalLabel}
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       <div className="flex-1" />
 

@@ -120,6 +120,77 @@ describe('SkillsTable Component', () => {
     });
   });
 
+  describe('Source column (provenance badge)', () => {
+    const sourceEntries: readonly RepoSkillEntry[] = [
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/ot-plans/SKILL.md',
+        slug: 'ot-plans',
+        source: 'openthrottle',
+        summary: 'OpenThrottle plans skill.',
+        tags: undefined,
+      },
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
+        slug: 'brag-sheet',
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/brag-sheet',
+        summary: 'Vendored skill with an origin URL.',
+        tags: undefined,
+      },
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/create-cli/SKILL.md',
+        slug: 'create-cli',
+        source: 'external',
+        summary: 'Vendored skill without an origin URL.',
+        tags: undefined,
+      },
+    ];
+
+    let component: RenderResult;
+
+    beforeEach(() => {
+      cleanup();
+      component = renderRoutesStub(
+        <SkillsTable entries={[...sourceEntries]} />,
+      );
+    });
+
+    test('renders the Source column header', () => {
+      expect(
+        component.getByRole('columnheader', { name: 'Source' }),
+      ).toBeInTheDocument();
+    });
+
+    test('renders an OpenThrottle badge for source: openthrottle', () => {
+      expect(component.getByText('OpenThrottle')).toBeInTheDocument();
+    });
+
+    test('renders an External badge per external entry', () => {
+      expect(component.getAllByText('External')).toHaveLength(2);
+    });
+
+    test('links the external badge to its sourceUrl when present', () => {
+      const link = component.getByTestId('skill-source-link');
+
+      expect(link).toHaveAttribute(
+        'href',
+        'https://example.com/skills/brag-sheet',
+      );
+      expect(link).toHaveAttribute('target', '_blank');
+    });
+
+    test('renders exactly one origin link (url-less entries stay plain badges)', () => {
+      expect(component.getAllByTestId('skill-source-badge')).toHaveLength(3);
+      expect(component.getAllByTestId('skill-source-link')).toHaveLength(1);
+    });
+  });
+
   describe('Model invocation column (tri-state badge)', () => {
     let component: RenderResult;
 

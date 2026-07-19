@@ -11,7 +11,10 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
 import { formatPromptType } from '~/routing/prompts/utils/formatters';
-import { SKILLS_MODEL_INVOCATION_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILLS_MODEL_INVOCATION_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export type SkillsTableColumnValue =
@@ -19,6 +22,7 @@ export type SkillsTableColumnValue =
   | RepoSkillEntry['layout']
   | RepoSkillEntry['repoRelativePath']
   | RepoSkillEntry['slug']
+  | RepoSkillEntry['source']
   | RepoSkillEntry['summary']
   | RepoSkillEntry['tags'];
 
@@ -64,6 +68,56 @@ export const skillsTableColumns: ColumnDef<
       </div>
     ),
     header: () => <div className="p-2">Summary</div>,
+  },
+  {
+    accessorKey: 'source',
+    cell: ({ row }) => {
+      const isOpenThrottle = row.original.source === 'openthrottle';
+      const { sourceUrl } = row.original;
+
+      const badge = (
+        <Badge
+          color={isOpenThrottle ? 'violet' : 'slate'}
+          data-testid="skill-source-badge"
+          size="xs"
+        >
+          {isOpenThrottle
+            ? SKILLS_SOURCE_COPY.openthrottleLabel
+            : SKILLS_SOURCE_COPY.externalLabel}
+        </Badge>
+      );
+
+      const tooltip = isOpenThrottle
+        ? SKILLS_SOURCE_COPY.openthrottleTooltip
+        : sourceUrl
+          ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${sourceUrl}`
+          : SKILLS_SOURCE_COPY.externalTooltip;
+
+      return (
+        <div className="p-2">
+          <Tooltip>
+            <TooltipTrigger asChild={true}>
+              {!isOpenThrottle && sourceUrl ? (
+                <a
+                  data-testid="skill-source-link"
+                  href={sourceUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {badge}
+                </a>
+              ) : (
+                badge
+              )}
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" side="top">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    },
+    header: () => <div className="p-2">{SKILLS_SOURCE_COPY.columnHeader}</div>,
   },
   {
     accessorKey: 'modelInvocation',

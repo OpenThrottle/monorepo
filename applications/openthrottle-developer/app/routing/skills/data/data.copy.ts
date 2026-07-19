@@ -24,6 +24,25 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
 } as const;
 
 /**
+ * Copy for the "Source" provenance column and the toolbar source filter. A skill
+ * is OpenThrottle-managed only when its frontmatter explicitly claims
+ * `source: openthrottle`; everything else (including omitted keys) reads as
+ * external, optionally with an origin URL.
+ */
+export const SKILLS_SOURCE_COPY = {
+  columnHeader: `Source`,
+  externalLabel: `External`,
+  externalTooltip: `Installed from an external source.`,
+  externalUrlTooltipPrefix: `Installed from`,
+  filterAllLabel: `All`,
+  filterExternalLabel: `External`,
+  filterGroupLabel: `Filter by source`,
+  filterOpenThrottleLabel: `OpenThrottle`,
+  openthrottleLabel: `OpenThrottle`,
+  openthrottleTooltip: `Authored and managed in this OpenThrottle monorepo.`,
+} as const;
+
+/**
  * Copy for the skill-availability authoring surface (posture, rules, vocabulary). All of this
  * concerns model auto-invocation only — human `/skill` invocation is never gated. Rename/remove
  * caveats are deliberately honest: those operations touch the workspace vocabulary alone and never
