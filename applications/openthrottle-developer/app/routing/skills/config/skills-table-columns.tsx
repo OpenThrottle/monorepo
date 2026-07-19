@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
@@ -60,7 +61,9 @@ export const skillsTableColumns: ColumnDef<
     cell: ({ row }) => (
       <div className="p-2">
         <h3 className="text-foreground mb-2 line-clamp-1">
-          /{row.original.slug}
+          <Link className="hover:underline" to={`/skills/${row.original.slug}`}>
+            /{row.original.slug}
+          </Link>
         </h3>
         <p className="text-muted-foreground line-clamp-2 text-xs">
           {row.original.summary}
@@ -173,9 +176,14 @@ export const skillsTableColumns: ColumnDef<
             text={row.original.repoRelativePath}
           />
         </Button>
-        <Button size="xs" variant="outline">
-          <ScanEyeIcon className="size-4" />
-          <span className="sr-only">View Skill</span>
+        <Button asChild={true} size="xs" variant="outline">
+          <Link
+            data-testid="skill-view-link"
+            to={`/skills/${row.original.slug}`}
+          >
+            <ScanEyeIcon className="size-4" />
+            <span className="sr-only">View Skill</span>
+          </Link>
         </Button>
       </div>
     ),

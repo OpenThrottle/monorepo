@@ -24,6 +24,18 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
 } as const;
 
 /**
+ * Copy for the /skills/:slug detail route (read view). The empty-content notice
+ * covers a discovered entry whose file could not be read back.
+ */
+export const SKILL_DETAIL_COPY = {
+  backLink: `Back to skills`,
+  emptyContentNotice: `The SKILL.md for this skill could not be read from disk.`,
+  notFoundStatusText: `Skill not found`,
+  pathCopyLabel: `Copy path`,
+  tagsLabel: `Tags`,
+} as const;
+
+/**
  * Copy for the "Source" provenance column and the toolbar source filter. A skill
  * is OpenThrottle-managed only when its frontmatter explicitly claims
  * `source: openthrottle`; everything else (including omitted keys) reads as
