@@ -4,7 +4,6 @@ metadata:
   author: openthrottle
   version: '1.0.0'
 name: skill-sync
-source: openthrottle
 ---
 
 # skill-sync

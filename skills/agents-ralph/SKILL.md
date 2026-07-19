@@ -7,7 +7,6 @@ description: >-
   /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
   executing OT plan tasks with Plan-Id and Task-Id traceability.
 disable-model-invocation: false
-source: openthrottle
 ---
 
 **Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 .agents/skills/agents-ralph - v1.0.4 🌟 🤗 🚀".

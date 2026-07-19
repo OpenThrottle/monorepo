@@ -40,7 +40,6 @@ description: Original description.
 const VALID_EDIT = `---
 name: my-skill
 description: Edited description.
-source: openthrottle
 ---
 
 # My skill (edited)
@@ -139,13 +138,15 @@ describe('writeSkillFileBySlug', () => {
     expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
   });
 
-  test('rejects a garbage source value via the shared schema', () => {
-    const result = writeSkillFileBySlug(
-      'my-skill',
-      '---\nname: my-skill\ndescription: Valid.\nsource: marketplace-thing\n---\n\n# Body\n',
-    );
+  test('ignores a frontmatter source key on save (provenance is layout-derived)', () => {
+    const content =
+      '---\nname: my-skill\ndescription: Valid.\nsource: openthrottle\n---\n\n# Body\n';
 
-    expect(result.ok).toBe(false);
-    expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
+    const result = writeSkillFileBySlug('my-skill', content);
+
+    // Unknown keys are not validation errors — the key is written verbatim
+    // but never read for provenance.
+    expect(result).toEqual({ ok: true });
+    expect(readFileSync(skillPath, 'utf8')).toBe(content);
   });
 });

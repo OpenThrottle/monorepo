@@ -23,8 +23,6 @@ describe('parseSkillFrontmatter', () => {
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
-      source: 'external',
-      sourceUrl: undefined,
       tags: undefined,
     });
   });
@@ -41,8 +39,6 @@ disable-model-invocation: true
       description: 'Short one-line summary.',
       disableModelInvocation: true,
       name: 'my-skill',
-      source: 'external',
-      sourceUrl: undefined,
       tags: undefined,
     });
   });
@@ -60,8 +56,6 @@ description: >-
       description: 'First line of the summary. Second line of the summary.',
       disableModelInvocation: undefined,
       name: 'folded-skill',
-      source: 'external',
-      sourceUrl: undefined,
       tags: undefined,
     });
   });
@@ -123,64 +117,6 @@ tags: github
     expect(result.tags).toBeUndefined();
   });
 
-  test('parses an explicit source: openthrottle', () => {
-    const result = parseSkillFrontmatter(`---
-name: owned-skill
-description: We author this one.
-source: openthrottle
----
-`);
-
-    expect(result.source).toBe('openthrottle');
-    expect(result.sourceUrl).toBeUndefined();
-  });
-
-  test('parses an explicit source: external with a sourceUrl', () => {
-    const result = parseSkillFrontmatter(`---
-name: vendored-skill
-description: Installed from a marketplace.
-source: external
-sourceUrl: https://example.com/skills/vendored-skill
----
-`);
-
-    expect(result.source).toBe('external');
-    expect(result.sourceUrl).toBe('https://example.com/skills/vendored-skill');
-  });
-
-  test('defaults source to external when the frontmatter key is absent', () => {
-    const result = parseSkillFrontmatter(`---
-name: unsourced-skill
-description: No source key.
----
-`);
-
-    expect(result.source).toBe('external');
-    expect(result.sourceUrl).toBeUndefined();
-  });
-
-  test('normalizes a garbage source value to external', () => {
-    const result = parseSkillFrontmatter(`---
-name: garbage-source-skill
-description: Unknown source value.
-source: marketplace-thing
----
-`);
-
-    expect(result.source).toBe('external');
-  });
-
-  test('normalizes source casing and whitespace before matching openthrottle', () => {
-    const result = parseSkillFrontmatter(`---
-name: cased-skill
-description: Uppercase source value.
-source: " OpenThrottle "
----
-`);
-
-    expect(result.source).toBe('openthrottle');
-  });
-
   test('parses real openthrottle-generators SKILL.md frontmatter', () => {
     const content = readFileSync(
       join(monorepoRoot, '.agents/skills/openthrottle-generators/SKILL.md'),
@@ -225,30 +161,6 @@ tags: github
 `);
 
     expect(result.tags).toBe('github');
-  });
-
-  test('passes raw source/sourceUrl through for Zod to validate', () => {
-    const result = parseSkillFrontmatterForValidation(`---
-name: sourced-skill
-description: Has provenance.
-source: marketplace-thing
-sourceUrl: https://example.com/skills/sourced-skill
----
-`);
-
-    expect(result.source).toBe('marketplace-thing');
-    expect(result.sourceUrl).toBe('https://example.com/skills/sourced-skill');
-  });
-
-  test('omits source/sourceUrl entirely when the frontmatter keys are absent', () => {
-    const result = parseSkillFrontmatterForValidation(`---
-name: unsourced-skill
-description: No provenance keys.
----
-`);
-
-    expect('source' in result).toBe(false);
-    expect('sourceUrl' in result).toBe(false);
   });
 });
 

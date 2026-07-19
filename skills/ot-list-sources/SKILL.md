@@ -6,7 +6,6 @@ description: >-
   the knowledge base, or wants to discover available OT collections before
   searching.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to list what plans and sources are in the OpenThrottle plans knowledge base using the openthrottle-mcp MCP server.

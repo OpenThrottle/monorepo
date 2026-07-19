@@ -6,7 +6,6 @@ description: >-
   lifecycle hook (typically afterEach or afterAll) as a validation-as-skill gate,
   or when asked to validate a change before it is considered done.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to validate the current work by running the project's required

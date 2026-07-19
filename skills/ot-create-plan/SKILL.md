@@ -6,7 +6,6 @@ description: >-
   /ot/create-plan, asks to add a plan to OpenThrottle/OT, or wants a structured plan
   record without starting execution—report created plan and task ids.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to create a new **plan** in OpenThrottle using the openthrottle-mcp MCP server. Optionally add initial **tasks** to the plan.

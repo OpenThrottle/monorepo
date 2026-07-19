@@ -6,7 +6,6 @@ description: >-
   WHEN the user runs /ot/list-by-status, asks for plans in a given status, or
   did not specify status and wants pending/in-progress/completed listings.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to list plans in OpenThrottle filtered by **status** using the openthrottle-mcp MCP server.

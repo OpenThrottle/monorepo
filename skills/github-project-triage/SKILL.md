@@ -1,7 +1,6 @@
 ---
 name: 'github-project-triage'
 description: 'GitHub issue/PR triage: queues, CI, blockers, risk, proof, next actions.'
-source: openthrottle
 ---
 
 # GitHub Project Triage

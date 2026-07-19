@@ -14,7 +14,6 @@ describe('parseSkillFrontmatter', () => {
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
-      source: 'external',
     });
   });
 
@@ -23,7 +22,6 @@ describe('parseSkillFrontmatter', () => {
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
-      source: 'external',
     });
   });
 
@@ -40,7 +38,6 @@ description: Short one-line summary.
       description: 'Short one-line summary.',
       disableModelInvocation: undefined,
       name: 'my-skill',
-      source: 'external',
     });
   });
 
@@ -55,7 +52,6 @@ description: 'Single-quoted summary.'
       description: 'Single-quoted summary.',
       disableModelInvocation: undefined,
       name: 'quoted-name',
-      source: 'external',
     });
   });
 
@@ -69,7 +65,6 @@ license: MIT
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
-      source: 'external',
     });
   });
 
@@ -86,7 +81,6 @@ description: >-
       description: 'First line of the summary. Second line of the summary.',
       disableModelInvocation: undefined,
       name: 'folded-skill',
-      source: 'external',
     });
   });
 
@@ -103,7 +97,6 @@ description: >
       description: 'Line one. Line two.',
       disableModelInvocation: undefined,
       name: 'folded-plain',
-      source: 'external',
     });
   });
 
@@ -120,7 +113,6 @@ description: |-
       description: 'Line one.\nLine two.',
       disableModelInvocation: undefined,
       name: 'literal-skill',
-      source: 'external',
     });
   });
 

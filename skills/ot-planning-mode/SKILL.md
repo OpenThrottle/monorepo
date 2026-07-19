@@ -6,7 +6,6 @@ description: >-
   /ot/planning-mode, has an unstructured PRD or idea, or wants documented plan
   and task ids before Ralph or manual execution—keep output concise.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to support the **"random idea → documented plan"** workflow using OpenThrottle (openthrottle-mcp MCP server). Turn the user's idea or rough notes into a structured plan with optional tasks.

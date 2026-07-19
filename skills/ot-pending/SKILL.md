@@ -5,7 +5,6 @@ description: >-
   list_plans_by_status. USE WHEN the user runs /ot/pending, asks for pending
   plans, or wants the backlog of not-yet-started OT work—report titles and ids.
 disable-model-invocation: true
-source: openthrottle
 ---
 
 Your job is to list plans that are in a **pending** state using OpenThrottle (openthrottle-mcp MCP server).
