@@ -4,11 +4,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  AttachWorkSessionSubjectDocument,
-  EndWorkSessionDocument,
+  RalphAttachWorkSessionSubjectDocument,
+  RalphEndWorkSessionDocument,
   GetPlanDocument,
-  RecordWorkArtifactDocument,
-  StartWorkSessionDocument,
+  RalphRecordWorkArtifactDocument,
+  RalphStartWorkSessionDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
 
 const executeWorkflowGraphqlV2Mock = vi.hoisted(() => vi.fn());
@@ -79,13 +79,13 @@ describe('openthrottle-ralph-graphql', () => {
 
   it('insertCommitLinkGraphql orchestrates the generic ledger primitives (no linkCommit)', async () => {
     executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
-      if (document === StartWorkSessionDocument) {
+      if (document === RalphStartWorkSessionDocument) {
         return { startWorkSession: { id: 'session-1' } };
       }
-      if (document === AttachWorkSessionSubjectDocument) {
+      if (document === RalphAttachWorkSessionSubjectDocument) {
         return { attachWorkSessionSubject: { id: 'subject-1' } };
       }
-      if (document === RecordWorkArtifactDocument) {
+      if (document === RalphRecordWorkArtifactDocument) {
         return {
           recordWorkArtifact: {
             createdAt: '2026-07-19T00:00:00.000Z',
@@ -94,7 +94,7 @@ describe('openthrottle-ralph-graphql', () => {
           },
         };
       }
-      if (document === EndWorkSessionDocument) {
+      if (document === RalphEndWorkSessionDocument) {
         return { endWorkSession: { id: 'session-1' } };
       }
       return {};
@@ -127,10 +127,10 @@ describe('openthrottle-ralph-graphql', () => {
       (call) => call[0],
     );
     expect(documents).toEqual([
-      StartWorkSessionDocument,
-      AttachWorkSessionSubjectDocument,
-      RecordWorkArtifactDocument,
-      EndWorkSessionDocument,
+      RalphStartWorkSessionDocument,
+      RalphAttachWorkSessionSubjectDocument,
+      RalphRecordWorkArtifactDocument,
+      RalphEndWorkSessionDocument,
     ]);
 
     const [, attachVars] = executeWorkflowGraphqlV2Mock.mock.calls[1] ?? [];

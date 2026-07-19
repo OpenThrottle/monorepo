@@ -8,17 +8,17 @@ import type {
 } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   AppendPlanOutputDocument,
-  AttachWorkSessionSubjectDocument,
   CreateProjectDocument,
-  EndWorkSessionDocument,
   GetPlanDocument,
   GetProjectsDocument,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
   ListPlansByStatusDocument,
-  RecordWorkArtifactDocument,
-  StartWorkSessionDocument,
+  RalphAttachWorkSessionSubjectDocument,
+  RalphEndWorkSessionDocument,
+  RalphRecordWorkArtifactDocument,
+  RalphStartWorkSessionDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
@@ -256,15 +256,18 @@ export async function appendPlanOutputGraphql(
 export async function insertCommitLinkGraphql(
   input: CommitLinkInput,
 ): Promise<CommitLinkRow> {
-  const session = await executeWorkflowGraphqlV2(StartWorkSessionDocument, {
-    input: {
-      externalRef: `workflow-ralph:${input.planId}:${input.taskId ?? 'plan'}`,
-      toolName: 'workflow-ralph',
+  const session = await executeWorkflowGraphqlV2(
+    RalphStartWorkSessionDocument,
+    {
+      input: {
+        externalRef: `workflow-ralph:${input.planId}:${input.taskId ?? 'plan'}`,
+        toolName: 'workflow-ralph',
+      },
     },
-  });
+  );
   const sessionId = session.startWorkSession.id;
 
-  await executeWorkflowGraphqlV2(AttachWorkSessionSubjectDocument, {
+  await executeWorkflowGraphqlV2(RalphAttachWorkSessionSubjectDocument, {
     input: {
       planId: input.planId,
       sessionId,
@@ -272,20 +275,23 @@ export async function insertCommitLinkGraphql(
     },
   });
 
-  const artifact = await executeWorkflowGraphqlV2(RecordWorkArtifactDocument, {
-    input: {
-      message: input.message ?? null,
-      payloadJson: JSON.stringify({
-        landedSha: input.sha,
-        repo: input.repo,
-        sha: input.sha,
-      }),
-      sessionId,
-      type: 'git_commit',
+  const artifact = await executeWorkflowGraphqlV2(
+    RalphRecordWorkArtifactDocument,
+    {
+      input: {
+        message: input.message ?? null,
+        payloadJson: JSON.stringify({
+          landedSha: input.sha,
+          repo: input.repo,
+          sha: input.sha,
+        }),
+        sessionId,
+        type: 'git_commit',
+      },
     },
-  });
+  );
 
-  await executeWorkflowGraphqlV2(EndWorkSessionDocument, {
+  await executeWorkflowGraphqlV2(RalphEndWorkSessionDocument, {
     input: { sessionId },
   });
 

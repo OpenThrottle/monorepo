@@ -302,17 +302,6 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
-    description: Th.linkCommitToolDescription,
-    name: 'link_commit',
-    parameters: asMcpParameters(Th.linkCommitToolParameters),
-  })
-  linkCommit(
-    args: Parameters<typeof Th.linkCommitToolHandler>[0],
-  ): ReturnType<typeof Th.linkCommitToolHandler> {
-    return Th.linkCommitToolHandler(args);
-  }
-
-  @Tool({
     description: Th.attachSessionSubjectToolDescription,
     name: 'attach_session_subject',
     parameters: asMcpParameters(Th.attachSessionSubjectToolParameters),

@@ -25,15 +25,15 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 ## How this fits other skills
 
-| Need                                        | Use                                                                             |
-| ------------------------------------------- | ------------------------------------------------------------------------------- |
-| `@tools/generators`, `NX_ISOLATE_PLUGINS`   | **openthrottle-generators** — `.agents/skills/openthrottle-generators/SKILL.md` |
-| Plans, `Plan-Id` / `Task-Id`, `link_commit` | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| `workflow-ralph`, BullMQ mental model       | **workflow-ralph** — `.agents/skills/workflow-ralph/SKILL.md`                   |
-| Nx graph, `nx show project`, affected       | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| Run `nx` targets                            | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
-| **SQL migrations / table comments**         | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
-| **This file**                               | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
+| Need                                                       | Use                                                                             |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **openthrottle-generators** — `.agents/skills/openthrottle-generators/SKILL.md` |
+| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
+| `workflow-ralph`, BullMQ mental model                      | **workflow-ralph** — `.agents/skills/workflow-ralph/SKILL.md`                   |
+| Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
+| Run `nx` targets                                           | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
+| **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
+| **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
 
 ---
 

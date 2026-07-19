@@ -12,7 +12,7 @@ How to turn an idea into structured, executable work in **OpenThrottle (OT)** �
 - [OpenThrottle is DB-backed PM software](#openthrottle-is-db-backed-pm-software) — the mental model
 - [Connect your editor/agent to OT](#connect-your-editoragent-to-ot) — get oriented, then link the registration docs
 - [Author plans & tasks via MCP tools](#author-plans--tasks-via-mcp-tools) — copy-pasteable tool usage
-- [Queue, execute & trace](#queue-execute--trace) — Ralph, output stream, Plan-Id/Task-Id, link_commit
+- [Queue, execute & trace](#queue-execute--trace) — Ralph, output stream, Plan-Id/Task-Id, work-ledger commit recording
 - [End-to-end worked example](#end-to-end-worked-example) — the whole loop in one narrative
 - [See also](#see-also)
 
@@ -197,20 +197,21 @@ Task-Id: 9f8e7d6c-…-…
 ```
 
 - Only conventional footers are allowed (`Plan-Id:`, `Task-Id:`, `BREAKING CHANGE:`, `Closes #123`). **Never** add `Co-authored-by` or any attribution line — this is enforced by repo convention ([CLAUDE.md](../../CLAUDE.md)).
-- **Do not** call `link_commit` for these intermediate work commits.
+- **Do not** record a commit artifact for these intermediate work commits.
 
-**2. `link_commit` records the _landed_ squash commit — after merge.** `link_commit(planId, repo, sha, taskId?, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one link per task**, to what actually shipped. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
+**2. Record the _landed_ squash commit on the work ledger — after merge.** The legacy `link_commit` tool is retired; record a work-ledger `git_commit` artifact instead. `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one artifact per task**, to what actually shipped. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
 
 ```jsonc
-// AFTER the PR merges to main:
-link_commit({ "planId": "…plan-uuid…", "repo": "OpenThrottle/monorepo",
-              "sha": "…squash-sha…", "taskId": "…task-uuid…",
-              "message": "feat(server): add rate-limit guard (#123)" })
+// AFTER the PR merges to main (under an open session):
+attach_session_subject({ "planId": "…plan-uuid…", "taskId": "…task-uuid…" })
+record_artifact({ "type": "git_commit",
+                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"…squash-sha…\"}",
+                  "message": "feat(server): add rate-limit guard (#123)" })
 ```
 
-Or the CLI equivalent: `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`.
+Or the one-shot CLI equivalent (orchestrates the same primitives): `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`.
 
-> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; `link_commit` gives OT a clean record of exactly one shipped SHA per task. Linking every branch commit would pollute that record — so footers during, `link_commit` once, on merge.
+> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger `git_commit` artifact gives OT a clean record of exactly one shipped SHA per task. Recording every branch commit would pollute that record — so footers during, one ledger artifact on merge.
 
 ## End-to-end worked example
 
@@ -273,7 +274,7 @@ Plan-Id: 1a2b3c4d-0000-4000-8000-000000000001
 Task-Id: 9f8e7d6c-0000-4000-8000-000000000002
 ```
 
-No `link_commit` yet — this is in-flight work. Optionally narrate:
+No commit artifact yet — this is in-flight work. Optionally narrate:
 
 ```jsonc
 append_plan_output({ "planId": "1a2b3c4d-0000-4000-8000-000000000001",
@@ -289,15 +290,17 @@ update_task({ "id": "9f8e7d6c-0000-4000-8000-000000000002", "status": "COMPLETED
 
 **7 — Open a PR, get it merged.** Repeat steps 4–6 for the remaining tasks.
 
-**8 — After the PR merges to `main`, link the landed squash commit** — one `link_commit` per task, to the shipped SHA:
+**8 — After the PR merges to `main`, record the landed squash commit on the work ledger** — one `git_commit` artifact per task, to the shipped SHA:
 
 ```jsonc
-link_commit({ "planId": "1a2b3c4d-0000-4000-8000-000000000001",
-              "repo": "OpenThrottle/monorepo",
-              "sha": "abcdef1234567890",
-              "taskId": "9f8e7d6c-0000-4000-8000-000000000002",
-              "message": "feat(server): add rate-limit guard (#123)" })
+attach_session_subject({ "planId": "1a2b3c4d-0000-4000-8000-000000000001",
+                         "taskId": "9f8e7d6c-0000-4000-8000-000000000002" })
+record_artifact({ "type": "git_commit",
+                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"abcdef1234567890\"}",
+                  "message": "feat(server): add rate-limit guard (#123)" })
 ```
+
+Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-000000000001 --task 9f8e7d6c-0000-4000-8000-000000000002 --repo OpenThrottle/monorepo --sha abcdef1234567890`.
 
 **9 — Close out the plan.** When every task is `COMPLETED`, set the plan to `COMPLETED` and give it a `summary` (next actions / usage notes). Now `get_last_activity` and `get_activity_by_date` show the plan's landed history, and `semantic_search` can surface it for the next person. The idea became rows, the rows became shipped code, and the code points back to the rows.
 

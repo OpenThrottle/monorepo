@@ -3,7 +3,7 @@ name: agents-ralph
 description: >-
   Ralph loop: idea or PRD → OpenThrottle plan and tasks → one task at a time
   (IN_PROGRESS → work → validate → COMPLETED → /github/commit). Progress in
-  plan_output_stream; link_commit only after merge squash. USE WHEN running
+  plan_output_stream; record the merged squash on the work ledger (record_artifact / workflow-link-merge) only after merge. USE WHEN running
   /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
   executing OT plan tasks with Plan-Id and Task-Id traceability.
 disable-model-invocation: false
@@ -16,7 +16,7 @@ disable-model-invocation: false
 ## What Ralph does
 
 1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [openthrottle.mdc](../../rules/commands/openthrottle.mdc). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../../databases/README.md).
-2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github/commit`**. Do **not** call `link_commit` during the loop. Link only the **squash commit after the PR is merged** (so `commit_links` stores the one SHA on main). After merge, call `link_commit` (openthrottle-mcp) with `planId`, `repo`, squash SHA, optional `taskId`, and PR message, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`. Add new tasks when the work reveals more work. Repeat until every task is `COMPLETED`.
+2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github/commit`**. Do **not** record a commit artifact during the loop. Record only the **squash commit after the PR is merged**, as a work-ledger `git_commit` artifact. After merge, either call the openthrottle-mcp ledger tools (`attach_session_subject` with `planId`/optional `taskId`, then `record_artifact` type `git_commit`, payload `{repo, sha}`, optional PR message) or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>` (it orchestrates the same primitives). Add new tasks when the work reveals more work. Repeat until every task is `COMPLETED`.
 3. **Progress:** Plan and tasks live in OpenThrottle; decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`. No separate output files.
 
 ## Rules

@@ -96,19 +96,19 @@ mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   }
 }
 
-mutation startWorkSession($input: StartWorkSessionInput!) {
+mutation ralphStartWorkSession($input: StartWorkSessionInput!) {
   startWorkSession(input: $input) {
     id
   }
 }
 
-mutation attachWorkSessionSubject($input: AttachWorkSessionSubjectInput!) {
+mutation ralphAttachWorkSessionSubject($input: AttachWorkSessionSubjectInput!) {
   attachWorkSessionSubject(input: $input) {
     id
   }
 }
 
-mutation recordWorkArtifact($input: RecordWorkArtifactInput!) {
+mutation ralphRecordWorkArtifact($input: RecordWorkArtifactInput!) {
   recordWorkArtifact(input: $input) {
     createdAt
     id
@@ -116,7 +116,7 @@ mutation recordWorkArtifact($input: RecordWorkArtifactInput!) {
   }
 }
 
-mutation endWorkSession($input: EndWorkSessionInput!) {
+mutation ralphEndWorkSession($input: EndWorkSessionInput!) {
   endWorkSession(input: $input) {
     id
   }
