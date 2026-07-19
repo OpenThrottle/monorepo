@@ -8,6 +8,8 @@ import { REGEX_SLUG } from '../../utils/regex';
 export interface ReactRouterApplicationGeneratorSchema {
   readonly interactive?: boolean;
   readonly name?: string;
+  /** Dev-server port baked into the generated .env; existing apps use 60xx. */
+  readonly port?: number;
 }
 
 export const generatorReactRouterApplication = async (
@@ -43,7 +45,10 @@ export const generatorReactRouterApplication = async (
 
   const destination = join('applications', name);
   const templates = join(__dirname, 'files/application');
-  const variables = getCommonVariables(name);
+  const variables = {
+    ...getCommonVariables(name),
+    port: schema.port ?? 6000,
+  };
 
   // addProjectConfiguration(tree, options.name, {
   //   root: projectRoot,
