@@ -13,6 +13,7 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import { TasksLoaders } from './tasks-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
 import { TasksResolver } from './tasks.resolver';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 
@@ -63,6 +64,11 @@ describe('TasksResolver', () => {
   const mockNotificationsService = createMock<NotificationsService>({
     emitPlanStatusChanged: vi.fn(),
   });
+
+  const mockTaskPromotionEnqueueService =
+    createMock<TaskPromotionEnqueueService>({
+      enqueuePromotion: vi.fn(),
+    });
 
   const mockLoaders = createMock<TasksLoaders>({
     planLoader: { load: vi.fn() },
@@ -128,6 +134,10 @@ describe('TasksResolver', () => {
           provide: TaggingEnqueueService,
           useValue: createMock<TaggingEnqueueService>(),
         },
+        {
+          provide: TaskPromotionEnqueueService,
+          useValue: mockTaskPromotionEnqueueService,
+        },
         { provide: TasksLoaders, useValue: mockLoaders },
         {
           provide: NotificationsService,
@@ -160,6 +170,77 @@ describe('TasksResolver', () => {
     vi.mocked(repo.find).mockClear();
     vi.mocked(transactionTaskRepo.update).mockClear();
     vi.mocked(repo.manager.transaction).mockClear();
+    vi.mocked(mockTaskPromotionEnqueueService.enqueuePromotion).mockReset();
+  });
+
+  describe('promoteTaskToPlan', () => {
+    test('maps a successful enqueue to success + jobId', async () => {
+      vi.mocked(
+        mockTaskPromotionEnqueueService.enqueuePromotion,
+      ).mockResolvedValue({ jobId: 'promote:task-1' });
+
+      const result = await resolver.promoteTaskToPlan(
+        { idempotencyKey: null, taskId: 'task-1' },
+        'user-1',
+        'user',
+      );
+
+      expect(
+        mockTaskPromotionEnqueueService.enqueuePromotion,
+      ).toHaveBeenCalledWith({
+        actorServiceAccountId: null,
+        actorUserId: 'user-1',
+        idempotencyKey: null,
+        taskId: 'task-1',
+      });
+      expect(result).toEqual({
+        error: null,
+        jobId: 'promote:task-1',
+        success: true,
+      });
+    });
+
+    test('attributes a service-account principal via actorServiceAccountId', async () => {
+      vi.mocked(
+        mockTaskPromotionEnqueueService.enqueuePromotion,
+      ).mockResolvedValue({ jobId: 'promote:task-2' });
+
+      await resolver.promoteTaskToPlan(
+        { idempotencyKey: null, taskId: 'task-2' },
+        'svc-1',
+        'service_account',
+      );
+
+      expect(
+        mockTaskPromotionEnqueueService.enqueuePromotion,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorServiceAccountId: 'svc-1',
+          actorUserId: null,
+          taskId: 'task-2',
+        }),
+      );
+    });
+
+    test('maps a validation error to success false + error', async () => {
+      vi.mocked(
+        mockTaskPromotionEnqueueService.enqueuePromotion,
+      ).mockResolvedValue({
+        error: 'Task has already been promoted to a plan.',
+      });
+
+      const result = await resolver.promoteTaskToPlan(
+        { idempotencyKey: null, taskId: 'task-3' },
+        'user-1',
+        'user',
+      );
+
+      expect(result).toEqual({
+        error: 'Task has already been promoted to a plan.',
+        jobId: null,
+        success: false,
+      });
+    });
   });
 
   describe('task', () => {
@@ -394,6 +475,10 @@ describe('TasksResolver', () => {
             useValue: createMock<TaggingEnqueueService>(),
           },
           {
+            provide: TaskPromotionEnqueueService,
+            useValue: createMock<TaskPromotionEnqueueService>(),
+          },
+          {
             provide: TasksLoaders,
             useValue: createMock<TasksLoaders>({
               planLoader,
@@ -466,6 +551,10 @@ describe('TasksResolver', () => {
           {
             provide: TaggingEnqueueService,
             useValue: createMock<TaggingEnqueueService>(),
+          },
+          {
+            provide: TaskPromotionEnqueueService,
+            useValue: createMock<TaskPromotionEnqueueService>(),
           },
           {
             provide: TasksLoaders,

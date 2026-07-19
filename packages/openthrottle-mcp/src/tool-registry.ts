@@ -411,6 +411,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.updateTaskToolParameters,
       Th.updateTaskToolHandler,
     ),
+    defineTool(
+      'promote_task',
+      Th.promoteTaskToolDescription,
+      Th.promoteTaskToolParameters,
+      Th.promoteTaskToolHandler,
+    ),
   ];
 
 /**

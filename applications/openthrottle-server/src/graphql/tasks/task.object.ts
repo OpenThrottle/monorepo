@@ -126,3 +126,29 @@ export class CreateTasksResultObject {
   @Field(() => Int)
   totalCount!: number;
 }
+
+/**
+ * Result of promoteTaskToPlan: the promotion runs asynchronously in the
+ * task-promotion queue, so success returns the accepted job id (not the new
+ * plan). The new plan surfaces via the task-status subscription + linked
+ * artifacts once the job completes.
+ */
+@ObjectType()
+export class PromoteTaskToPlanResultObject {
+  @Field(() => Boolean, {
+    description: 'Whether the promotion job was accepted and enqueued.',
+  })
+  success!: boolean;
+
+  @Field(() => String, {
+    description: 'BullMQ job id when success is true.',
+    nullable: true,
+  })
+  jobId!: string | null;
+
+  @Field(() => String, {
+    description: 'Error message when success is false (validation/enqueue).',
+    nullable: true,
+  })
+  error!: string | null;
+}

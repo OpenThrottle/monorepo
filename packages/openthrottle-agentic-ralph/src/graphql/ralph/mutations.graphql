@@ -72,6 +72,14 @@ mutation deleteTask($input: DeleteTaskInput!) {
   deleteTask(input: $input)
 }
 
+mutation promoteTaskToPlan($input: PromoteTaskToPlanInput!) {
+  promoteTaskToPlan(input: $input) {
+    error
+    jobId
+    success
+  }
+}
+
 mutation reorderPlanTasks($input: ReorderPlanTasksInput!) {
   reorderPlanTasks(input: $input) {
     ...Task

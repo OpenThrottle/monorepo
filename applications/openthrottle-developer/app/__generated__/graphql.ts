@@ -1364,6 +1364,8 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
+  /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
+  promoteTaskToPlan: PromoteTaskToPlanResultObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
@@ -1666,6 +1668,10 @@ export type MutationLinkCommitArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+export type MutationPromoteTaskToPlanArgs = {
+  input: PromoteTaskToPlanInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -2186,6 +2192,23 @@ export type ProjectTagObject = {
   /** Kebab-case tag slug, unique per project. */
   tag: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PromoteTaskToPlanInput = {
+  /** Optional idempotency key: re-submitting the same key enqueues at most one promotion job. Letters, digits, and ._:- only. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Id of the task to promote into a new plan */
+  taskId: Scalars['ID']['input'];
+};
+
+export type PromoteTaskToPlanResultObject = {
+  __typename?: 'PromoteTaskToPlanResultObject';
+  /** Error message when success is false (validation/enqueue). */
+  error?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job id when success is true. */
+  jobId?: Maybe<Scalars['String']['output']>;
+  /** Whether the promotion job was accepted and enqueued. */
+  success: Scalars['Boolean']['output'];
 };
 
 export type PrsMergedPerPeriodInput = {
@@ -5451,6 +5474,20 @@ export type TaskDetailRemoveTaskTagMutationVariables = Exact<{
 export type TaskDetailRemoveTaskTagMutation = {
   __typename?: 'Mutation';
   removeTaskTag: boolean;
+};
+
+export type TaskDetailPromoteToPlanMutationVariables = Exact<{
+  input: PromoteTaskToPlanInput;
+}>;
+
+export type TaskDetailPromoteToPlanMutation = {
+  __typename?: 'Mutation';
+  promoteTaskToPlan: {
+    __typename?: 'PromoteTaskToPlanResultObject';
+    error?: string | null;
+    jobId?: string | null;
+    success: boolean;
+  };
 };
 
 export type TaskLinkedArtifactsQueryVariables = Exact<{
@@ -12376,6 +12413,62 @@ export const TaskDetailRemoveTaskTagDocument = {
 } as unknown as DocumentNode<
   TaskDetailRemoveTaskTagMutation,
   TaskDetailRemoveTaskTagMutationVariables
+>;
+export const TaskDetailPromoteToPlanDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TaskDetailPromoteToPlan' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PromoteTaskToPlanInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'promoteTaskToPlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskDetailPromoteToPlanMutation,
+  TaskDetailPromoteToPlanMutationVariables
 >;
 export const TaskLinkedArtifactsDocument = {
   kind: 'Document',

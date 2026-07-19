@@ -1,5 +1,5 @@
 /**
- * @description Task CRUD tool handlers + schemas: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, delete_task. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
+ * @description Task CRUD tool handlers + schemas: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, promote_task, delete_task. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import {
   type GetTaskQuery,
   type GetTasksByPlanIdQuery,
   type GetTasksQuery,
+  type PromoteTaskToPlanMutation,
   type ReorderPlanTasksMutation,
   type UpdateTaskMutation,
   CreateTaskDocument,
@@ -20,12 +21,14 @@ import {
   GetTaskDocument,
   GetTasksByPlanIdDocument,
   GetTasksDocument,
+  PromoteTaskToPlanDocument,
   ReorderPlanTasksDocument,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
 import {
   CreateTaskInputSchema,
   DeleteTaskInputSchema,
+  PromoteTaskToPlanInputSchema,
   RemainingTasksByPlanIdInputSchema,
   ReorderPlanTasksInputSchema,
   TasksByPlanIdInputSchema,
@@ -82,12 +85,17 @@ type UpdateTaskResult = GenericResult<{
   task: UpdateTaskMutation['updateTask'];
 }>;
 
+type PromoteTaskResult = GenericResult<{
+  promotion: PromoteTaskToPlanMutation['promoteTaskToPlan'];
+}>;
+
 export const createTaskToolParameters = CreateTaskInputSchema();
 export const deleteTaskToolParameters = DeleteTaskInputSchema();
 export const getRemainingTasksForPlanToolParameters =
   RemainingTasksByPlanIdInputSchema();
 export const getTasksByPlanIdToolParameters = TasksByPlanIdInputSchema();
 export const getTaskToolParameters = z.object({ id: z.string().min(1) });
+export const promoteTaskToolParameters = PromoteTaskToPlanInputSchema();
 export const reorderPlanTasksToolParameters = ReorderPlanTasksInputSchema();
 export const updateTaskToolParameters = UpdateTaskInputSchema();
 
@@ -133,6 +141,8 @@ export const listTasksByCategoryToolDescription = `List tasks filtered by catego
 export const reorderPlanTasksToolDescription = `Reorder tasks within a plan. Requires planId and taskIds (array of task UUIDs in desired order). Renumbers sortOrder to 1000, 2000, … atomically. Prefer this over delete-and-recreate when fixing task execution order.`;
 
 export const updateTaskToolDescription = `Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000).`;
+
+export const promoteTaskToolDescription = `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async promotion job: it creates a new plan from the task (carrying its title, description, and tags), seeds an initial "Break down and scope this plan" task, and closes out the source task (status SKIPPED + \`promoted\` tag). Requires taskId; optional idempotencyKey (re-submitting the same key enqueues at most one job). Returns the accepted job id; the new plan is created asynchronously.`;
 
 export async function createTaskToolHandler(
   args: z.infer<typeof createTaskToolParameters>,
@@ -404,4 +414,34 @@ export async function updateTaskToolHandler(
       return { structuredContent: { task }, text };
     },
   );
+}
+
+export async function promoteTaskToolHandler(
+  args: z.infer<typeof promoteTaskToolParameters>,
+): Promise<PromoteTaskResult> {
+  const parsed = promoteTaskToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{
+    promotion: PromoteTaskToPlanMutation['promoteTaskToPlan'];
+  }>('promote_task', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      PromoteTaskToPlanDocument,
+      { input: parsed.data },
+    );
+
+    const promotion = result?.promoteTaskToPlan;
+    if (!promotion) return null;
+
+    if (!promotion.success) {
+      throw new Error(promotion.error ?? 'Failed to promote task to a plan.');
+    }
+
+    const text = `Queued promotion of task ${parsed.data.taskId} (job ${promotion.jobId ?? 'unknown'}). The new plan is created asynchronously.`;
+    return { structuredContent: { promotion }, text };
+  });
 }

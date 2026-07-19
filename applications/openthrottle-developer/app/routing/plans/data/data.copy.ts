@@ -61,3 +61,21 @@ export const PLAN_TAB_OUTPUT_COPY = {
   ruleChangeLogEmpty: `No rule changes recorded yet. Evaluating rules records applications here.`,
   ruleChangeLogHeading: `Rule applications`,
 } as const;
+
+/**
+ * @description Labels for the task-detail toolbar (PlanTaskToolbar): the tag
+ * section heading and the secondary actions. Mirrors the plan-level toolbar so
+ * task and plan surfaces read the same.
+ */
+export const PLAN_TASK_TOOLBAR_COPY = {
+  actionsLabel: `Actions`,
+  actionsTooltip: `Task actions`,
+  editTaskLabel: `Edit Task`,
+  promoteConfirmLabel: `Promote`,
+  promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it SKIPPED and tags it "promoted"). This cannot be undone from here.`,
+  promoteDialogTitle: `Promote task to a plan?`,
+  promoteLabel: `Promote to Plan`,
+  promoteTooltip: `Create a first-class plan from this task and close the task out.`,
+  promotedDisabledTooltip: `This task has already been promoted to a plan.`,
+  tagsHeading: `Tags`,
+} as const;

@@ -11,12 +11,16 @@ import { z } from 'zod';
 import { AGENT_ASSET_SLUG_PATTERN } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /**
- * @description The two v1 rule action types.
+ * @description The rule action types. `promote-task-to-plan` is a task-scoped
+ * automation trigger: a matched rule promotes the plan's tasks carrying the
+ * rule's tags into new plans via the same TaskPromotionService the explicit
+ * mutation uses.
  * @public
  */
 export const TAG_ACTION_TYPES = {
   AVAILABILITY_EXCEPTION: 'availability-exception',
   INJECT_TASK: 'inject-task',
+  PROMOTE_TASK_TO_PLAN: 'promote-task-to-plan',
 } as const;
 
 /** @public */
@@ -115,10 +119,25 @@ export type AvailabilityExceptionActionPayload = z.infer<
   typeof availabilityExceptionActionPayloadSchema
 >;
 
+/**
+ * @description Payload for `promote-task-to-plan`: no configuration in v1. The
+ * executor promotes every not-yet-promoted task in the plan that carries one of
+ * the rule's matched tags. Kept as a strict empty object so future options
+ * (e.g. status filters) can be added without a breaking payload change.
+ * @public
+ */
+export const promoteTaskToPlanActionPayloadSchema = z.object({}).strict();
+
+/** @public */
+export type PromoteTaskToPlanActionPayload = z.infer<
+  typeof promoteTaskToPlanActionPayloadSchema
+>;
+
 const PAYLOAD_SCHEMAS = {
   [TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION]:
     availabilityExceptionActionPayloadSchema,
   [TAG_ACTION_TYPES.INJECT_TASK]: injectTaskActionPayloadSchema,
+  [TAG_ACTION_TYPES.PROMOTE_TASK_TO_PLAN]: promoteTaskToPlanActionPayloadSchema,
 } as const;
 
 /**
@@ -130,7 +149,10 @@ const PAYLOAD_SCHEMAS = {
 export const parseTagActionPayload = (
   actionType: TagActionType,
   payload: unknown,
-): InjectTaskActionPayload | AvailabilityExceptionActionPayload =>
+):
+  | InjectTaskActionPayload
+  | AvailabilityExceptionActionPayload
+  | PromoteTaskToPlanActionPayload =>
   PAYLOAD_SCHEMAS[actionType].parse(payload);
 
 /**
@@ -139,4 +161,5 @@ export const parseTagActionPayload = (
  */
 export const isTagActionType = (value: string): value is TagActionType =>
   value === TAG_ACTION_TYPES.INJECT_TASK ||
-  value === TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION;
+  value === TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION ||
+  value === TAG_ACTION_TYPES.PROMOTE_TASK_TO_PLAN;

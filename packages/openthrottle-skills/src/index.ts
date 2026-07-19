@@ -44,11 +44,13 @@ export {
   injectTaskActionPayloadSchema,
   isTagActionType,
   parseTagActionPayload,
+  promoteTaskToPlanActionPayloadSchema,
   TAG_ACTION_TYPES,
 } from './tag-action-payloads.ts';
 export type {
   AvailabilityExceptionActionPayload,
   InjectTaskActionPayload,
+  PromoteTaskToPlanActionPayload,
   TagActionType,
 } from './tag-action-payloads.ts';
 
