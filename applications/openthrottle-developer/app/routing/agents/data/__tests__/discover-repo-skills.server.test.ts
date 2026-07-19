@@ -138,69 +138,92 @@ describe('discoverRepoSkills', () => {
     expect(entry?.tags).toBeUndefined();
   });
 
-  test('threads source and sourceUrl from frontmatter into the entry', () => {
+  test('derives openthrottle for an authored skill symlinked from skills/', () => {
     const root = makeTempDir();
 
+    // Authored home: skills/<slug>, linked into .agents/skills by skill-sync.
     writeSkill(
       root,
-      '.agents/skills',
+      'skills',
       'owned-skill',
-      [
-        'name: owned-skill',
-        'description: We author this one.',
-        'source: openthrottle',
-      ].join('\n'),
+      'name: owned-skill\ndescription: We author this one.',
     );
+    mkdirSync(join(root, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(root, 'skills/owned-skill'),
+      join(root, '.agents/skills/owned-skill'),
+      'dir',
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.slug).toBe('owned-skill');
+    expect(entry?.source).toBe('openthrottle');
+    expect(entry?.sourceUrl).toBeUndefined();
+  });
+
+  test('derives external with a lockfile origin URL for an installed skill', () => {
+    const root = makeTempDir();
+
     writeSkill(
       root,
       '.agents/skills',
       'vendored-skill',
-      [
-        'name: vendored-skill',
-        'description: Installed from a marketplace.',
-        'source: external',
-        'sourceUrl: https://example.com/skills/vendored-skill',
-      ].join('\n'),
+      'name: vendored-skill\ndescription: Installed via the skills CLI.',
+    );
+    writeFileSync(
+      join(root, 'skills-lock.json'),
+      JSON.stringify({
+        skills: {
+          'vendored-skill': {
+            source: 'github/awesome-copilot',
+            sourceType: 'github',
+          },
+        },
+        version: 1,
+      }),
     );
 
-    const entries = discoverRepoSkills(root);
-    const owned = entries.find((entry) => entry.slug === 'owned-skill');
-    const vendored = entries.find((entry) => entry.slug === 'vendored-skill');
+    const [entry] = discoverRepoSkills(root);
 
-    expect(owned?.source).toBe('openthrottle');
-    expect(owned?.sourceUrl).toBeUndefined();
-    expect(vendored?.source).toBe('external');
-    expect(vendored?.sourceUrl).toBe(
-      'https://example.com/skills/vendored-skill',
-    );
+    expect(entry?.source).toBe('external');
+    expect(entry?.sourceUrl).toBe('https://github.com/github/awesome-copilot');
   });
 
-  test('defaults source to external when frontmatter omits or garbles it', () => {
+  test('derives external with no URL when the lockfile is absent', () => {
     const root = makeTempDir();
 
     writeSkill(
       root,
       '.agents/skills',
-      'unsourced-skill',
-      'name: unsourced-skill\ndescription: No source key.',
+      'orphan-skill',
+      'name: orphan-skill\ndescription: Real dir, no lockfile.',
     );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.source).toBe('external');
+    expect(entry?.sourceUrl).toBeUndefined();
+  });
+
+  test('ignores a source frontmatter key — provenance is layout-derived', () => {
+    const root = makeTempDir();
+
     writeSkill(
       root,
       '.agents/skills',
-      'garbled-skill',
+      'stamped-skill',
       [
-        'name: garbled-skill',
-        'description: Unknown source value.',
-        'source: marketplace-thing',
+        'name: stamped-skill',
+        'description: Claims to be ours in frontmatter.',
+        'source: openthrottle',
       ].join('\n'),
     );
 
-    const entries = discoverRepoSkills(root);
+    const [entry] = discoverRepoSkills(root);
 
-    expect(entries.map((entry) => entry.source)).toEqual([
-      'external',
-      'external',
-    ]);
+    // A real (installed) directory reads external regardless of frontmatter.
+    expect(entry?.source).toBe('external');
   });
 
   test('uses folder name for slug when frontmatter name is missing', () => {

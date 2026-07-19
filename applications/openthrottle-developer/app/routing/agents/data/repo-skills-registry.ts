@@ -56,15 +56,17 @@ export interface RepoSkillEntry {
   readonly repoRelativePath: string;
   readonly slug: string;
   /**
-   * Skill provenance from frontmatter `source`: `openthrottle` for skills we
-   * author and manage, `external` otherwise (omitted or unrecognized values
-   * normalize to `external`). Sourced from disk frontmatter, overridden by the
-   * ingested `projectSkills` GraphQL value when present.
+   * Derived skill provenance (never frontmatter): `openthrottle` when the
+   * skill folder's real path resolves under the repo's authored `skills/`
+   * tree (skill-sync symlinks it into the scanned layouts), `external` for
+   * lockfile-installed real directories. Overridden by the ingested
+   * `projectSkills` GraphQL value when present.
    */
   readonly source: SkillSource;
   /**
-   * Optional origin URL for external skills (marketplace listing or upstream
-   * repo); `undefined` when the frontmatter omits it.
+   * Origin URL for external skills, derived from the repo-root
+   * skills-lock.json entry; `undefined` for authored skills or when the
+   * lockfile has no usable source.
    */
   readonly sourceUrl?: string;
   readonly summary: string;
