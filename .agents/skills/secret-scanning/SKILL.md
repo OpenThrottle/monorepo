@@ -12,6 +12,8 @@ metadata:
       - Cursor
       - GitHub Copilot Coding Agent
 name: secret-scanning
+source: external
+sourceUrl: https://github.com/github/github-mcp-server
 ---
 
 # Secret Scanning Skill

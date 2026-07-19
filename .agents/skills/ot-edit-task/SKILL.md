@@ -6,6 +6,7 @@ description: >-
   WHEN the user runs /ot/edit-task, names a task UUID, or wants to change task
   status or fields in OT—report what was updated.
 disable-model-invocation: true
+source: openthrottle
 ---
 
 Your job is to **edit** an existing task in OpenThrottle using the openthrottle-mcp MCP server.

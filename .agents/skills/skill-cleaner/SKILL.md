@@ -1,6 +1,7 @@
 ---
 name: skill-cleaner
 description: 'Codex/OpenClaw skill audit: live budget, usage, duplicates, compact descriptions.'
+source: external
 ---
 
 # Skill Cleaner

@@ -17,6 +17,7 @@ compatibility: 'Cross-platform (Windows, macOS, Linux). Works with any GitHub Co
 metadata:
   version: '1.1'
 argument-hint: 'Optional: time range ("last 2 weeks", "this half"), category ("infrastructure"), "backfill", or "review prep"'
+source: external
 ---
 
 # Brag Sheet — Work Impact Writer

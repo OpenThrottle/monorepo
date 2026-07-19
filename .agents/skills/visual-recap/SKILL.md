@@ -6,6 +6,7 @@ description: >-
   notes.
 metadata:
   visibility: exported
+source: external
 ---
 
 # Visual Recap

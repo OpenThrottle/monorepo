@@ -6,6 +6,7 @@ name: openthrottle-folders
 metadata:
   author: OpenThrottle
   version: '1.0'
+source: openthrottle
 ---
 
 # OpenThrottle Folders

@@ -7,6 +7,7 @@ description: >-
   OpenThrottle", or wants semantic search over plans, status listings, or
   activity by date—answer only from retrieved chunks.
 disable-model-invocation: true
+source: openthrottle
 ---
 
 Your job is to answer the user's question using the **OpenThrottle** (openthrottle-mcp) MCP server—the plans knowledge base.
