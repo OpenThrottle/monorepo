@@ -33,6 +33,7 @@ import type { DatabaseBackupJobPayload } from '../../queues/database-backup/data
 import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
 import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
 import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants';
+import { TASK_PROMOTION_QUEUE_NAME } from '../../queues/task-promotion/task-promotion.constants';
 import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants';
 import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants';
 
@@ -202,13 +203,14 @@ const VALID_JOB_STATES = [
 const REGISTERED_QUEUES = [
   AGENTIC_TEST_QUEUE_NAME,
   CODE_INDEX_QUEUE_NAME,
-  DATABASE_BACKUP_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
+  DATABASE_BACKUP_QUEUE_NAME,
   DOC_INGESTION_QUEUE_NAME,
   PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
   PLAN_RULES_QUEUE_NAME,
   PLANS_QUEUE_NAME,
   TAGGING_QUEUE_NAME,
+  TASK_PROMOTION_QUEUE_NAME,
   WORK_LEDGER_SWEEP_QUEUE_NAME,
   WORK_LEDGER_VERIFY_QUEUE_NAME,
 ] as const;
