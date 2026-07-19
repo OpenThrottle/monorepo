@@ -1,6 +1,6 @@
 ---
 name: skill-cleaner
-description: 'Codex/OpenClaw skill audit: live budget, usage, duplicates, compact descriptions.'
+description: "Codex/OpenClaw skill audit: live budget, usage, duplicates, compact descriptions."
 ---
 
 # Skill Cleaner
@@ -27,7 +27,6 @@ node --experimental-strip-types skills/skill-cleaner/scripts/skill-cleaner.ts --
 ```
 
 2. Read the report in this order:
-
 - `Skill Budget`: live Codex inventory, 2% budget, budgeted usage, and full-description pressure.
 - `Description candidates`: long descriptions where relaxed grammar saves prompt budget.
 - `Duplicates`: same skill name or near-identical description/body across Codex, plugin cache, repo siblings, and personal skill roots.
@@ -35,7 +34,6 @@ node --experimental-strip-types skills/skill-cleaner/scripts/skill-cleaner.ts --
 - `Root summary`: where skills came from and whether config marks them disabled.
 
 3. Before deleting or editing:
-
 - Verify the kept copy exists and is loaded.
 - Prefer deleting repo-local or `agent-scripts` duplicates when Codex built-ins cover them.
 - Keep repo-local OpenClaw maintainer skills when they encode repo policy or live operations.
