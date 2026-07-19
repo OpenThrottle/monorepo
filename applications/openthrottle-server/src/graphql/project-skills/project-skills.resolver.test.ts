@@ -20,16 +20,22 @@ describe('ProjectSkillsResolver', () => {
   const views: ProjectSkillView[] = [
     {
       slug: 'agents-ralph',
+      source: 'openthrottle',
+      sourceUrl: undefined,
       staticDisableModelInvocation: false,
       tags: ['planning'],
     },
     {
       slug: 'git-commit',
+      source: 'external',
+      sourceUrl: undefined,
       staticDisableModelInvocation: undefined,
       tags: [],
     },
     {
       slug: 'github-commit',
+      source: 'external',
+      sourceUrl: 'https://example.com/skills/github-commit',
       staticDisableModelInvocation: true,
       tags: ['git', 'github'],
     },
@@ -73,12 +79,22 @@ describe('ProjectSkillsResolver', () => {
       skills: [
         {
           slug: 'agents-ralph',
+          source: 'openthrottle',
+          sourceUrl: null,
           staticDisableModelInvocation: false,
           tags: ['planning'],
         },
-        { slug: 'git-commit', staticDisableModelInvocation: null, tags: [] },
+        {
+          slug: 'git-commit',
+          source: 'external',
+          sourceUrl: null,
+          staticDisableModelInvocation: null,
+          tags: [],
+        },
         {
           slug: 'github-commit',
+          source: 'external',
+          sourceUrl: 'https://example.com/skills/github-commit',
           staticDisableModelInvocation: true,
           tags: ['git', 'github'],
         },

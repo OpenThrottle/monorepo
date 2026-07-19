@@ -1,4 +1,5 @@
 import type { AgentAssetIngestRecord } from './map-agent-assets-for-ingest.ts';
+import type { SkillSource } from './schemas/agent-asset-frontmatter.schemas.ts';
 import {
   mergeSkillTags,
   type SkillTagOverlayMap,
@@ -18,8 +19,15 @@ export interface ProjectSkillInput {
   readonly disableModelInvocation: boolean | undefined;
   /** Kebab-case skill slug (the `.agents/skills/<slug>` directory name). */
   readonly slug: string;
+  /**
+   * Frontmatter provenance (`openthrottle` | `external`); omitted or
+   * unrecognized frontmatter values normalize to `external`.
+   */
+  readonly source: SkillSource;
   /** Repo-relative SKILL.md path the skill was ingested from. */
   readonly sourcePath: string;
+  /** Optional origin URL for external skills; `undefined` when omitted. */
+  readonly sourceUrl: string | undefined;
   /** Static `tags`; an empty list when the skill declares none. */
   readonly tags: readonly string[];
 }
@@ -61,7 +69,9 @@ export const toProjectSkillInputs = (
     inputs.push({
       disableModelInvocation: record.disableModelInvocation,
       slug,
+      source: record.source ?? 'external',
       sourcePath: record.filePath,
+      sourceUrl: record.sourceUrl,
       tags: mergeSkillTags(record.tags, overlays?.[slug]?.tags),
     });
   }

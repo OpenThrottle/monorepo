@@ -12,6 +12,8 @@ const skillRecord = (
   filePath: '.agents/skills/example/SKILL.md',
   labels: ['example'],
   promptType: 'skills',
+  source: 'external',
+  sourceUrl: undefined,
   tags: undefined,
   title: 'example',
   ...overrides,
@@ -32,10 +34,41 @@ describe('toProjectSkillInputs', () => {
       {
         disableModelInvocation: true,
         slug: 'github-commit',
+        source: 'external',
         sourcePath: '.agents/skills/github-commit/SKILL.md',
+        sourceUrl: undefined,
         tags: ['github', 'commit'],
       },
     ]);
+  });
+
+  test('carries source and sourceUrl through to the input', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({
+        labels: ['vendored'],
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/vendored',
+      }),
+    ]);
+
+    expect(input?.source).toBe('external');
+    expect(input?.sourceUrl).toBe('https://example.com/skills/vendored');
+  });
+
+  test('carries an openthrottle source through to the input', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ labels: ['owned'], source: 'openthrottle' }),
+    ]);
+
+    expect(input?.source).toBe('openthrottle');
+  });
+
+  test('defaults an undefined record source to external', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ labels: ['legacy'], source: undefined }),
+    ]);
+
+    expect(input?.source).toBe('external');
   });
 
   test('merges overlay tags (order-preserving union) when overlays are supplied', () => {
@@ -93,6 +126,8 @@ describe('toProjectSkillInputs', () => {
         filePath: '.agents/personas/architect.md',
         labels: ['persona', 'architect'],
         promptType: 'personas',
+        source: undefined,
+        sourceUrl: undefined,
         tags: undefined,
         title: 'architect',
       },

@@ -20,7 +20,9 @@ describe('ProjectSkillsService', () => {
       id: `id-${overrides.slug}`,
       ingestedAt: new Date('2026-07-11T12:00:00.000Z'),
       projectId,
+      source: 'external',
       sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
+      sourceUrl: null,
       tags: [],
       updatedAt: new Date('2026-07-11T12:00:00.000Z'),
       ...overrides,
@@ -70,15 +72,51 @@ describe('ProjectSkillsService', () => {
       expect(result).toEqual([
         {
           slug: 'github-commit',
+          source: 'external',
+          sourceUrl: undefined,
           staticDisableModelInvocation: true,
           tags: ['github'],
         },
-        { slug: 'agents-ralph', staticDisableModelInvocation: false, tags: [] },
-        { slug: 'improve', staticDisableModelInvocation: undefined, tags: [] },
+        {
+          slug: 'agents-ralph',
+          source: 'external',
+          sourceUrl: undefined,
+          staticDisableModelInvocation: false,
+          tags: [],
+        },
+        {
+          slug: 'improve',
+          source: 'external',
+          sourceUrl: undefined,
+          staticDisableModelInvocation: undefined,
+          tags: [],
+        },
       ]);
       expect(mockRepository.find).toHaveBeenCalledWith({
         order: { slug: 'ASC' },
         where: { projectId },
+      });
+    });
+
+    it('projects source and sourceUrl and normalizes them in the view', async () => {
+      vi.mocked(mockRepository.find).mockResolvedValue([
+        makeRow({ slug: 'owned', source: 'openthrottle' }),
+        makeRow({
+          slug: 'vendored',
+          sourceUrl: 'https://example.com/skills/vendored',
+        }),
+      ]);
+
+      const result = await service.getSkillsForProject(projectId);
+
+      expect(result[0]).toMatchObject({
+        slug: 'owned',
+        source: 'openthrottle',
+      });
+      expect(result[1]).toMatchObject({
+        slug: 'vendored',
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/vendored',
       });
     });
 
@@ -94,7 +132,9 @@ describe('ProjectSkillsService', () => {
       overrides: Partial<ProjectSkillInput> & Pick<ProjectSkillInput, 'slug'>,
     ): ProjectSkillInput => ({
       disableModelInvocation: undefined,
+      source: 'external',
       sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
+      sourceUrl: undefined,
       tags: [],
       ...overrides,
     });
@@ -129,6 +169,22 @@ describe('ProjectSkillsService', () => {
         vi.mocked(mockRepository.delete).mock.calls[0] ?? [];
       expect(deleteCriteria).toMatchObject({ projectId });
       expect(result).toEqual({ deleted: 2, upserted: 1 });
+    });
+
+    it('carries source into the upsert row and normalizes an unset sourceUrl to null', async () => {
+      vi.mocked(mockRepository.find).mockResolvedValue([
+        makeRow({ slug: 'owned' }),
+      ]);
+
+      await service.reconcileProjectSkills(projectId, [
+        input({ slug: 'owned', source: 'openthrottle' }),
+      ]);
+
+      const [rows] = vi.mocked(mockRepository.upsert).mock.calls[0] ?? [];
+      expect(rows?.[0]).toMatchObject({
+        source: 'openthrottle',
+        sourceUrl: null,
+      });
     });
 
     it('normalizes an unset flag to null in the upsert row', async () => {

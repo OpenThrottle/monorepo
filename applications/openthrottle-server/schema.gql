@@ -1698,6 +1698,16 @@ type ProjectSkillObject {
   """Skill slug (the skill frontmatter `name`)."""
   slug: String!
 
+  """
+  Skill provenance from frontmatter `source`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external').
+  """
+  source: String!
+
+  """
+  Optional origin URL for external skills (marketplace listing or upstream repo); null when the frontmatter omits it.
+  """
+  sourceUrl: String
+
   """Static frontmatter tags for this skill (empty when none)."""
   tags: [String!]!
 

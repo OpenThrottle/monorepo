@@ -78,6 +78,53 @@ description: No tags, no flag.
 
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
+      expect(record.source).toBe('external');
+      expect(record.sourceUrl).toBeUndefined();
+    });
+
+    test('carries source and sourceUrl frontmatter into the record', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: owned-skill
+description: We author this one.
+source: openthrottle
+---
+
+# Owned
+`,
+        kind: 'skill',
+        path: '.agents/skills/owned-skill/SKILL.md',
+        slug: 'owned-skill',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.source).toBe('openthrottle');
+      expect(record.sourceUrl).toBeUndefined();
+    });
+
+    test('carries an external sourceUrl into the record', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: vendored-skill
+description: Installed from a marketplace.
+source: external
+sourceUrl: https://example.com/skills/vendored-skill
+---
+
+# Vendored
+`,
+        kind: 'skill',
+        path: '.agents/skills/vendored-skill/SKILL.md',
+        slug: 'vendored-skill',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.source).toBe('external');
+      expect(record.sourceUrl).toBe(
+        'https://example.com/skills/vendored-skill',
+      );
     });
 
     test('preserves disable-model-invocation false as a distinct value', () => {
@@ -125,6 +172,8 @@ description: Architecture lens. USE WHEN designing modules.
       expect(record.labels).toEqual(['persona', 'architect']);
       expect(record.tags).toBeUndefined();
       expect(record.disableModelInvocation).toBeUndefined();
+      expect(record.source).toBeUndefined();
+      expect(record.sourceUrl).toBeUndefined();
     });
   });
 

@@ -20,6 +20,17 @@ export class ProjectSkillObject {
   })
   slug!: string;
 
+  @Field(() => String, {
+    description: `Skill provenance from frontmatter \`source\`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external').`,
+  })
+  source!: string;
+
+  @Field(() => String, {
+    description: `Optional origin URL for external skills (marketplace listing or upstream repo); null when the frontmatter omits it.`,
+    nullable: true,
+  })
+  sourceUrl!: string | null;
+
   @Field(() => [String], {
     description: `Static frontmatter tags for this skill (empty when none).`,
   })

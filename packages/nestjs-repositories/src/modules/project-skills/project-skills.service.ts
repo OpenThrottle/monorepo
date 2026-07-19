@@ -14,7 +14,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ProjectSkillInput } from '@openthrottle/openthrottle-skills';
+import type {
+  ProjectSkillInput,
+  SkillSource,
+} from '@openthrottle/openthrottle-skills';
 import { In, Repository } from 'typeorm';
 import { ProjectSkill } from './project-skill.entity';
 
@@ -25,6 +28,8 @@ import { ProjectSkill } from './project-skill.entity';
  */
 export interface ProjectSkillView {
   readonly slug: string;
+  readonly source: SkillSource;
+  readonly sourceUrl: string | undefined;
   readonly staticDisableModelInvocation: boolean | undefined;
   readonly tags: readonly string[];
 }
@@ -65,6 +70,10 @@ export class ProjectSkillsService {
 
     return rows.map((row) => ({
       slug: row.slug,
+      // The CHECK constraint pins the column to the SkillSource values; the
+      // ternary narrows string → SkillSource without a cast.
+      source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
+      sourceUrl: row.sourceUrl ?? undefined,
       staticDisableModelInvocation: row.disableModelInvocation ?? undefined,
       tags: row.tags,
     }));
@@ -85,7 +94,9 @@ export class ProjectSkillsService {
       ingestedAt,
       projectId,
       slug: input.slug,
+      source: input.source,
       sourcePath: input.sourcePath,
+      sourceUrl: input.sourceUrl ?? null,
       tags: [...input.tags],
     }));
 
