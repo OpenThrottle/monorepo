@@ -2,7 +2,6 @@
 name: frontend-design
 description: 'Frontend UI: pages, apps, components, polished non-generic design.'
 license: Complete terms in LICENSE.txt
-source: external
 ---
 
 This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.

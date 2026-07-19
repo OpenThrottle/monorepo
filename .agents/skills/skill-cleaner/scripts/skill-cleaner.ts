@@ -75,18 +75,18 @@ const noLogs = args.has('--no-logs');
 const deepLogs = args.has('--deep-logs');
 const json = args.has('--json');
 const includeAll = args.has('--all');
-const noLive = args.has('--no-live');
+const rootOnly = args.has('--root-only');
+const noLive = args.has('--no-live') || rootOnly;
 const model = argValue('--model', 'gpt-5.5');
 const budgetPercent = Number(argValue('--budget-percent', '2'));
 const contextTokensOverride = argValue('--context-tokens', '');
 const charsPerToken = Number(argValue('--chars-per-token', '4'));
 const maxLogBytes = Number(argValue('--max-log-mb', '300')) * 1024 * 1024;
 const cutoffMs = Date.now() - Math.max(0, months) * 31 * 24 * 60 * 60 * 1000;
-const extraRoots = process.argv
-  .slice(2)
-  .flatMap((arg, index, all) =>
-    arg === '--root' && all[index + 1] ? [all[index + 1]] : [],
-  );
+const extraRoots = process.argv.slice(2).flatMap((arg, index, all) => {
+  const value = all[index + 1];
+  return arg === '--root' && value && !value.startsWith('--') ? [value] : [];
+});
 
 function expandHome(input: string): string {
   return input.replace(/^~(?=$|\/)/, home);
@@ -569,22 +569,32 @@ function configState(): {
   return { disabledPaths, disabledNames, disabledPlugins };
 }
 
-function discoverRoots(): string[] {
+export function discoverRoots(
+  baseHome = home,
+  providedRoots = extraRoots,
+  exclusive = rootOnly,
+): string[] {
   const rootsByRealPath = new Map<string, string>();
-  [
-    path.join(home, '.codex/skills'),
-    path.join(home, '.codex/plugins/cache'),
-    path.join(home, 'Projects/agent-scripts/skills'),
-    ...extraRoots.map(expandHome),
-  ].forEach((root) => {
+  const roots = providedRoots.map((root) =>
+    root.replace(/^~(?=$|\/)/, baseHome),
+  );
+  const candidates = exclusive
+    ? roots
+    : [
+        path.join(baseHome, '.codex/skills'),
+        path.join(baseHome, '.codex/plugins/cache'),
+        path.join(baseHome, 'Projects/agent-scripts/skills'),
+        ...roots,
+      ];
+  candidates.forEach((root) => {
     if (!exists(root)) return;
     const real = fs.realpathSync(root);
     const current = rootsByRealPath.get(real);
     if (!current || root.length < current.length)
       rootsByRealPath.set(real, root);
   });
-  const projects = path.join(home, 'Projects');
-  if (exists(projects)) {
+  const projects = path.join(baseHome, 'Projects');
+  if (!exclusive && exists(projects)) {
     for (const entry of fs.readdirSync(projects, { withFileTypes: true })) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
       const skillRoot = path.join(projects, entry.name, '.agents/skills');
@@ -1441,6 +1451,13 @@ function render(
 }
 
 function main(): void {
+  if (rootOnly && extraRoots.length === 0) {
+    console.error(
+      'skill-cleaner: --root-only requires at least one --root <path>',
+    );
+    process.exitCode = 2;
+    return;
+  }
   const skills = discoverSkills();
   const live = livePrompt();
   const liveSkills = live ? parseLiveSkills(live) : [];

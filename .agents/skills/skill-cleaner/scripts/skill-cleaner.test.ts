@@ -1,13 +1,37 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 import {
   compactDescription,
+  discoverRoots,
   parseLiveSkillsPrompt,
   plainLogSkillReads,
   referencedSkillPaths,
   usageEvidence,
 } from './skill-cleaner.ts';
+
+test('limits root discovery to explicitly supplied roots', (context) => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-cleaner-roots-'));
+  context.after(() => fs.rmSync(temp, { recursive: true, force: true }));
+  const defaultRoots = [
+    path.join(temp, '.codex/skills'),
+    path.join(temp, '.codex/plugins/cache'),
+    path.join(temp, 'Projects/agent-scripts/skills'),
+    path.join(temp, 'Projects/demo/.agents/skills'),
+  ];
+  const isolatedRoot = path.join(temp, 'isolated/skills');
+  for (const root of [...defaultRoots, isolatedRoot])
+    fs.mkdirSync(root, { recursive: true });
+
+  assert.deepEqual(discoverRoots(temp, [isolatedRoot], true), [isolatedRoot]);
+  assert.deepEqual(
+    discoverRoots(temp, [isolatedRoot], false),
+    [...defaultRoots, isolatedRoot].sort(),
+  );
+});
 
 test('parses Codex skill roots and model-visible lines', () => {
   const raw = JSON.stringify([

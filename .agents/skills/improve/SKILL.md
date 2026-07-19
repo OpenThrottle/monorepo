@@ -5,7 +5,6 @@ license: MIT
 metadata:
   author: shadcn
   version: '1.0.0'
-source: openthrottle
 ---
 
 # Improve
