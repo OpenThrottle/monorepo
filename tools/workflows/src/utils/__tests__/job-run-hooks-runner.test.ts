@@ -89,7 +89,7 @@ describe('resolveJobRunHookLayer1Prompt', () => {
     const entry = parseJobRunHookEntry({
       kind: 'skill',
       phase: 'afterAll',
-      skillPath: '.agents/skills/workflow-ralph/SKILL.md',
+      skillPath: 'skills/workflow-ralph/SKILL.md',
     });
 
     const text = resolveJobRunHookLayer1Prompt(entry, process.cwd());
