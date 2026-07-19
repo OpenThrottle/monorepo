@@ -7,7 +7,7 @@ pnpm dlx skills add https://github.com/steipete/agent-scripts --skill create-cli
 
 pnpm dlx skills add https://github.com/shadcn/improve --skill improve --agent universal
 
-pnpm dlx skills add https://github.com/mattpocock/skills --skill improve grilling grill-me grill-with-docs --agent universal
+pnpm dlx skills add https://github.com/mattpocock/skills --skill improve grilling grill-me grill-with-docs handoff teach writing-great-skills --agent universal
 
 - secret-scanning
 - visual-plan
