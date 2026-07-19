@@ -1,5 +1,5 @@
 import type { Dirent } from 'node:fs';
-import { readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, join, relative, sep } from 'node:path';
 
 import type {
@@ -130,6 +130,36 @@ const readFileSafely = (
   }
 };
 
+/**
+ * A skill folder is a real directory OR a symlink resolving to a directory
+ * that stays inside the monorepo — the skill-sync layout links the repo's
+ * authored `skills/<slug>` dirs into `.agents/skills/` while external
+ * installs stay real directories. Links escaping the repo are skipped, the
+ * same out-of-tree guard the rules walk applies.
+ */
+const isSkillFolder = (
+  monorepoRoot: string,
+  skillsRoot: string,
+  dirent: Dirent,
+): boolean => {
+  if (dirent.isDirectory()) {
+    return true;
+  }
+  if (!dirent.isSymbolicLink()) {
+    return false;
+  }
+  try {
+    const target = join(skillsRoot, dirent.name);
+    if (!statSync(target).isDirectory()) {
+      return false;
+    }
+    const realRoot = realpathSync(monorepoRoot);
+    return realpathSync(target).startsWith(`${realRoot}${sep}`);
+  } catch {
+    return false;
+  }
+};
+
 const walkSkillFiles = (
   monorepoRoot: string,
   warnings: AgentAssetValidationIssue[],
@@ -143,7 +173,7 @@ const walkSkillFiles = (
   const results: AgentAssetFileEntry[] = [];
 
   for (const dirent of entries) {
-    if (!dirent.isDirectory()) {
+    if (!isSkillFolder(monorepoRoot, skillsRoot, dirent)) {
       continue;
     }
 

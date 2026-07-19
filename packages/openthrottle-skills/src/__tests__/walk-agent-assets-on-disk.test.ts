@@ -147,6 +147,57 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
     expect(warnings).toEqual([]);
   });
 
+  test('walks a symlinked skill directory (skill-sync authored layout)', () => {
+    // skill-sync links the authored skills/<slug> dirs into .agents/skills/.
+    mkdirSync(join(monorepoRoot, 'skills/linked-skill'), { recursive: true });
+    writeFileSync(
+      join(monorepoRoot, 'skills/linked-skill/SKILL.md'),
+      SKILL_BODY,
+    );
+    mkdirSync(join(monorepoRoot, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(monorepoRoot, 'skills/linked-skill'),
+      join(monorepoRoot, '.agents/skills/linked-skill'),
+      'dir',
+    );
+
+    const { files, warnings } = walkAgentAssetFiles({ monorepoRoot });
+
+    expect(warnings).toEqual([]);
+    expect(files.map((file) => file.slug)).toEqual(['linked-skill']);
+  });
+
+  test('skips a skill directory symlink escaping the monorepo root', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'ot-skills-outside-'));
+    mkdirSync(join(outside, 'escapee'), { recursive: true });
+    writeFileSync(join(outside, 'escapee/SKILL.md'), SKILL_BODY);
+    mkdirSync(join(monorepoRoot, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(outside, 'escapee'),
+      join(monorepoRoot, '.agents/skills/escapee'),
+      'dir',
+    );
+
+    const { files } = walkAgentAssetFiles({ monorepoRoot });
+
+    expect(files).toEqual([]);
+    rmSync(outside, { force: true, recursive: true });
+  });
+
+  test('skips a broken skill directory symlink without warnings', () => {
+    mkdirSync(join(monorepoRoot, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(monorepoRoot, 'skills/gone-skill'),
+      join(monorepoRoot, '.agents/skills/gone-skill'),
+      'dir',
+    );
+
+    const { files, warnings } = walkAgentAssetFiles({ monorepoRoot });
+
+    expect(files).toEqual([]);
+    expect(warnings).toEqual([]);
+  });
+
   test('collects skills, personas, prompts, and rules from a synthetic tree', () => {
     mkdirSync(join(monorepoRoot, '.agents/skills/alpha-skill'), {
       recursive: true,
