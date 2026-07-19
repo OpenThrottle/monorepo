@@ -99,7 +99,66 @@ With monorepo root resolved, on-disk counts should match:
 
 Includes skills missing from the old static array (e.g. `openthrottle-generators`, `ot-plans`, `workflow-ralph`, `openthrottle-stack`).
 
+## Source (provenance) frontmatter
+
+Plan: **Skills detail route: Read/Update SKILL.md + OpenThrottle vs external source classification** (`6c785a74-fd94-474f-8e1b-0e182bd5c0b0`).
+
+SKILL.md frontmatter may carry an explicit provenance:
+
+```yaml
+source: openthrottle # authored and managed in this monorepo
+# or
+source: external
+sourceUrl: https://github.com/nrwl/nx-console # optional origin (external only)
+```
+
+**Semantics:** the enum is `openthrottle | external` (`SKILL_SOURCES` in
+`@openthrottle/openthrottle-skills`). An **omitted or unrecognized value
+normalizes to `external`** at parse time — conservative on purpose: only
+skills we explicitly claim read as ours. The shared Zod schema
+(`skillFrontmatterSchema`) rejects values outside the enum in CI/ingest
+validation, while `parseSkillFrontmatter` stays lenient for display paths.
+
+**Flow:** disk parse → `RepoSkillEntry.source`/`sourceUrl` → merged with the
+ingested `projectSkills` GraphQL row (a recognized ingested value overlays the
+disk value; the empty-GraphQL silent fallback is unchanged) → Source badge
+column + All/OpenThrottle/External toolbar filter on the index. Postgres
+persists the value on `project_skills.source` (+ nullable `source_url`,
+migration 074).
+
+## Detail route (`/skills/:slug`) — read and update
+
+- **Loader** (`read-skill-file.server.ts`): resolve root → re-run discovery →
+  find entry by slug → read the raw SKILL.md. Unknown slug or null root ⇒ 404
+  `Response` via the route ErrorBoundary. Returns `{ entry, content, editable }`
+  with `editable = monorepoRoot !== null`.
+- **Read mode:** the whole file renders with `MarkdownRenderer` under a header
+  (slug, Source badge with origin link, model-invocation badge, tags,
+  repo-relative path + copy).
+- **Edit mode:** `Editor` (Monaco, `@openthrottle/react-router-editor`,
+  single-document surface) bound to the raw file; dirty tracking gates Save;
+  Cancel reverts to the loaded content. `editable === false` (deployed app)
+  shows a disabled Edit affordance with an explanatory tooltip.
+- **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
+  - The absolute target derives **only** from the discovered entry's
+    `repoRelativePath` under the resolved root — never from client input.
+  - A realpath containment guard rejects any resolved path that escapes the
+    repository (symlinked `.claude`/`.cursor` layouts resolve in-repo first).
+  - The new content's frontmatter is re-validated with
+    `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
+    and satisfy the schema — including the `source` enum) **before** anything
+    touches disk; rejections return structured errors without writing.
+  - On success the whole file is written (`writeFileSync`, utf8) and loader
+    revalidation returns the UI to read mode with the fresh render.
+
+**Re-ingest expectation:** saving does **not** refresh the server-side
+`projectSkills` / `skillAvailability` rows. Those update on the next
+agent-asset ingest run (e.g. `database:import` / the ingest script). The disk
+is the source of the entry list, so the detail and index pages reflect a save
+immediately; only the ingested overlay lags until the next ingest.
+
 ## Related code
 
-- UI route: `app/routes/skills._index.tsx`
+- UI routes: `app/routes/skills._index.tsx`, `app/routes/skills.$slug.tsx`
+- Detail data: `app/routing/skills/data/{read,write}-skill-file.server.ts`
 - Server paths for workspace editor apply: `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` (separate follow-up to derive from discovery or shared source)
