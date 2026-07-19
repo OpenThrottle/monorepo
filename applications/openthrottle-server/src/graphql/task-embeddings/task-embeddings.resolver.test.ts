@@ -32,7 +32,6 @@ describe('TaskEmbeddingsResolver', () => {
     task: {
       assignee: 'Task assignee',
       category: 'Task category',
-      commitLinks: [],
       completedAt: null,
       createdAt: new Date('2026-02-01T22:00:00.000Z'),
       description: 'Task description',
@@ -47,7 +46,6 @@ describe('TaskEmbeddingsResolver', () => {
         assignee: 'Plan assignee',
         author: 'Plan author',
         category: 'Plan category',
-        commitLinks: [],
         completedAt: null,
         createdAt: new Date('2026-02-01T22:00:00.000Z'),
         description: 'Plan description',

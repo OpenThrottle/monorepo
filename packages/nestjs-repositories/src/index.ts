@@ -22,10 +22,6 @@ export {
   type ListPaginationInput,
   type ResolvedListPagination,
 } from './common/list-pagination';
-export { CommitLink } from './modules/commit-links/commit-link.entity';
-export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
-export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
-export { CommitLinksService } from './modules/commit-links/commit-links.service';
 export { WorkArtifact } from './modules/work-ledger/work-artifact.entity';
 export type { WorkArtifactData } from './modules/work-ledger/work-artifact.entity';
 export { WorkSession } from './modules/work-ledger/work-session.entity';

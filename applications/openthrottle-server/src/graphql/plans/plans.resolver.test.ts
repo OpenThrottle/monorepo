@@ -51,7 +51,6 @@ describe('PlansResolver', () => {
     assignee: null,
     author: 'visormatt',
     category: 'openthrottle-server',
-    commitLinks: [],
     createdAt: new Date('2026-02-01T19:57:37.738Z'),
     description: 'A test plan',
     id: '80864bba-630a-451d-bfd2-4b25ec202381',

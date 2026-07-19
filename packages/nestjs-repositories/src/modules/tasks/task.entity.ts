@@ -12,7 +12,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { CommitLink } from '../commit-links/commit-link.entity';
 import type { Plan } from '../plans/plan.entity';
 import type { Project } from '../projects/project.entity';
 import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
@@ -150,9 +149,6 @@ export class Task {
 
   @OneToMany('TaskEmbedding', 'task')
   taskEmbeddings!: TaskEmbedding[];
-
-  @OneToMany('CommitLink', 'task')
-  commitLinks!: CommitLink[];
 
   /** Anchor task this hook belongs to (task-level hooks only). */
   @ManyToOne('Task', 'hookChildren', { onDelete: 'CASCADE' })

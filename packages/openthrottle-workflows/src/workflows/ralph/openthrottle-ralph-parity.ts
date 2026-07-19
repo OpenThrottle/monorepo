@@ -25,7 +25,7 @@
  * - `getPlanById` → `getPlan` (`queries.graphql`)
  * - `getTaskById` → `getTask`
  * - `getTasksByPlanId` → `getTasksByPlanId`
- * - `insertCommitLink` → `linkCommit`
+ * - `insertCommitLink` → work-ledger mutations (`ralphStartWorkSession` → `ralphAttachWorkSessionSubject` → `ralphRecordWorkArtifact` git_commit → `ralphEndWorkSession`)
  * - `listPlansByStatus` → `listPlansByStatus`
  * - `listProjects` → `getProjects` (filter client-side by `nxProjectName` when matching Nx names)
  * - `ensureProjectForNxName` → `getProjects` then `createProject` if no row matches `nxProjectName`
@@ -42,7 +42,7 @@
  * ## Related workflow bins (same `openthrottle-ralph` module)
  *
  * - `child-job.ts`: `appendPlanOutput`, `getTasksByPlanId`, `updatePlanStatus`
- * - `link-merge.ts`: `insertCommitLink` → `linkCommit`
+ * - `link-merge.ts`: `insertCommitLink` → work-ledger mutations (session → subject → git_commit artifact → close)
  *
  * ## `updatePlanStatus` → `IN_PROGRESS` (openthrottle-ralph ↔ GraphQL)
  *

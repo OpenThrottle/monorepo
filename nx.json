@@ -14,7 +14,7 @@
   },
   "namedInputs": {
     "codegenGraphqlInputs": [
-      "{workspaceRoot}/schema.gql",
+      "{workspaceRoot}/applications/openthrottle-server/schema.gql",
       "{projectRoot}/codegen.ts",
       "{projectRoot}/app/**/*.graphql",
       "{projectRoot}/app/**/*.ts",

@@ -13,7 +13,6 @@ const buildMockPlan = (projectId: string): Plan => ({
   assignee: null,
   author: 'visormatt',
   category: 'infra',
-  commitLinks: [],
   completedAt: null,
   createdAt: new Date('2026-02-03T10:00:00.000Z'),
   description: null,
@@ -205,7 +204,6 @@ describe('ProjectsResolver', () => {
         {
           assignee: null,
           category: null,
-          commitLinks: [],
           completedAt: null,
           createdAt: new Date('2026-02-03T10:00:00.000Z'),
           description: null,
