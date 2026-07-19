@@ -86,13 +86,28 @@ describe('resolveJobRunHookLayer1Prompt', () => {
   });
 
   it('loads repo skill markdown for skill kind', () => {
+    // Write the skill under a temp cwd rather than reading the real repo file:
+    // `.agents/skills/*` symlinks are skill-sync artifacts (gitignored, absent in
+    // CI); the canonical source lives at `skills/<slug>/SKILL.md`.
+    const dir = mkdtempSync(join(tmpdir(), 'ot-hook-repo-skill-'));
+    const skillRel = '.agents/skills/workflow-ralph/SKILL.md';
+    mkdirSync(join(dir, '.agents/skills/workflow-ralph'), { recursive: true });
+    writeFileSync(
+      join(dir, skillRel),
+      `---
+name: workflow-ralph
+---
+# Workflow Ralph (CLI and queue)`,
+      'utf8',
+    );
+
     const entry = parseJobRunHookEntry({
       kind: 'skill',
       phase: 'afterAll',
-      skillPath: 'skills/workflow-ralph/SKILL.md',
+      skillPath: skillRel,
     });
 
-    const text = resolveJobRunHookLayer1Prompt(entry, process.cwd());
+    const text = resolveJobRunHookLayer1Prompt(entry, dir);
 
     expect(text).toContain(
       '# Repo skill: .agents/skills/workflow-ralph/SKILL.md',
@@ -155,16 +170,29 @@ describe('executeJobRunHooksPhase', () => {
       >()
       .mockResolvedValue({ ok: true, output: 'ok' });
 
+    // Temp cwd holding the skill file — see note on the sibling skill-kind test.
+    const dir = mkdtempSync(join(tmpdir(), 'ot-hook-repo-skill-'));
+    const skillRel = '.agents/skills/workflow-ralph/SKILL.md';
+    mkdirSync(join(dir, '.agents/skills/workflow-ralph'), { recursive: true });
+    writeFileSync(
+      join(dir, skillRel),
+      `---
+name: workflow-ralph
+---
+# Workflow Ralph (CLI and queue)`,
+      'utf8',
+    );
+
     const entry = parseJobRunHookEntry({
       kind: 'skill',
       phase: 'beforeAll',
-      skillPath: '.agents/skills/workflow-ralph/SKILL.md',
+      skillPath: skillRel,
     });
 
     await executeJobRunHooksPhase({
       deps: {
         appendPlanOutput: vi.fn().mockResolvedValue(undefined),
-        cwd: process.cwd(),
+        cwd: dir,
         runHookIteration,
       },
       hooks: { hooks: [entry] },
