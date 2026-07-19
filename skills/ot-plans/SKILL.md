@@ -4,8 +4,8 @@ description: >-
   OpenThrottle (OT) plans and tasks via the openthrottle-mcp MCP server (GraphQL
   to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
   OT only, failing loudly when MCP is unavailable (no Markdown plan
-  fallbacks), Plan-Id and Task-Id in commits, link_commit or
-  workflow-link-merge after merge, or the user mentions OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
+  fallbacks), Plan-Id and Task-Id in commits, recording a merged squash on the
+  work ledger (record_artifact / workflow-link-merge) after merge, or the user mentions OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
   over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
   databases/README and plan/task lifecycle.
 ---
@@ -41,7 +41,7 @@ GraphQL-only boundary to **openthrottle-server**. Typical tools:
 - **Tasks:** `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `get_task`, `create_task`, `create_tasks`, `update_task`, `reorder_plan_tasks` — list tools return tasks in `sortOrder ASC`, `createdAt ASC`. `create_task` / `create_tasks` accept optional `sortOrder` (auto-append `MAX + 1000` when omitted; batch appends preserve array order at end of plan). `update_task` accepts optional `sortOrder` for gap-based mid-list inserts. **`reorder_plan_tasks`** bulk-renumbers `1000, 2000, …` in the given task-id order — **prefer this over delete-and-recreate** when fixing Ralph execution order.
 - **Activity:** `get_activity_by_date`, `get_last_activity`
 - **Output stream (e.g. Ralph):** `append_plan_output`, `get_plan_output`
-- **After merge:** `link_commit`
+- **After merge (work ledger):** `attach_session_subject` + `record_artifact` (type `git_commit`) — or the `workflow-link-merge` CLI, which orchestrates them
 
 **Author and assignee** on plans must be the **GitHub username** (not display name). When `GITHUB_USER` is set, the MCP uses it for author/assignee.
 
@@ -59,15 +59,16 @@ When you commit work tied to a plan or task:
    Task-Id: <task-uuid>
    ```
 
-3. **Do not** call `link_commit` for every task commit. **`link_commit` is for landed work** (see below).
+3. **Do not** record a commit artifact for every task commit. **Record only landed work** (see below).
 
-## Post-merge: `link_commit` (squash on main)
+## Post-merge: record the squash commit on the work ledger
 
-- **`link_commit(planId, repo, sha, taskId?, message?)`** associates the **squash commit on main** with the plan (and optionally a task).
-- **Preferred workflow:** link **only the squash commit after the PR merges** so `commit_links` reflects what shipped. Avoid linking transient branch commits during Ralph runs if your team follows Option A.
-- **Alternative:** `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`
+The `link_commit` MCP tool and its `commit_links` table are **retired** (work-ledger epic). Record the merged squash commit as a work-ledger `git_commit` artifact instead:
 
-`get_activity_by_date` and `get_last_activity` are aligned with **landed** commits when you link this way.
+- **MCP:** `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` under an open session (opened implicitly by the MCP). One artifact per task per **squash commit on main** — not transient branch commits.
+- **One-shot CLI (preferred ergonomics):** `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo> [--task <task-uuid>] [--message <msg>]` — orchestrates the same ledger primitives internally.
+
+The artifact is recorded `unverified`; the git verifier promotes it to `landed`/`verified`. `get_activity_by_date` and `get_last_activity` surface the ledger, aligned with **landed** commits.
 
 ## Task sortOrder (execution order)
 

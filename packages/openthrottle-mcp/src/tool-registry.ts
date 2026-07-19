@@ -208,12 +208,6 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.healthToolHandler,
     ),
     defineTool(
-      'link_commit',
-      Th.linkCommitToolDescription,
-      Th.linkCommitToolParameters,
-      Th.linkCommitToolHandler,
-    ),
-    defineTool(
       'attach_session_subject',
       Th.attachSessionSubjectToolDescription,
       Th.attachSessionSubjectToolParameters,

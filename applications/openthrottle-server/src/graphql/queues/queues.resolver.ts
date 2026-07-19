@@ -138,8 +138,7 @@ export class QueuesResolver {
   }
 
   @Query(() => [RepeatableJobObject], {
-    description:
-      'List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject.',
+    description: `List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject.`,
     nullable: false,
   })
   async repeatableJobs(
@@ -236,8 +235,7 @@ export class QueuesResolver {
   }
 
   @Mutation(() => EnqueueAgenticTestResultObject, {
-    description:
-      'Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error.',
+    description: `Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error.`,
   })
   async enqueueAgenticTest(): Promise<EnqueueAgenticTestResultObject> {
     const result = await this.queuesService.enqueueAgenticTest();
@@ -310,8 +308,7 @@ export class QueuesResolver {
   }
 
   @Mutation(() => RemoveRepeatableJobResultObject, {
-    description:
-      'Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName).',
+    description: `Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName).`,
   })
   async removeRepeatableJob(
     @Args('input', { type: () => RemoveRepeatableJobInput })

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @description Links the squash commit (after PR merge) to a OpenThrottle plan. Run after merging a PR so commit_links stores the one SHA on main. Option A: no pre-merge linking; activity-by-date reflects only landed commits.
+ * @description Links the squash commit (after PR merge) to a OpenThrottle plan by recording a git_commit work-ledger artifact (via {@link insertCommitLink} — session + subject + artifact; no commit_links). Run after merging a PR. Option A: no pre-merge linking; activity-by-date reflects only landed commits.
  */
 
 import {

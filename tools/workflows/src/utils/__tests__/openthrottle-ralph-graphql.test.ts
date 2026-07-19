@@ -3,7 +3,13 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GetPlanDocument } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  RalphAttachWorkSessionSubjectDocument,
+  RalphEndWorkSessionDocument,
+  GetPlanDocument,
+  RalphRecordWorkArtifactDocument,
+  RalphStartWorkSessionDocument,
+} from '@openthrottle/openthrottle-agentic-ralph';
 
 const executeWorkflowGraphqlV2Mock = vi.hoisted(() => vi.fn());
 
@@ -69,5 +75,76 @@ describe('openthrottle-ralph-graphql', () => {
 
     expect(row).toBeNull();
     expect(executeWorkflowGraphqlV2Mock).toHaveBeenCalledTimes(1);
+  });
+
+  it('insertCommitLinkGraphql orchestrates the generic ledger primitives (no linkCommit)', async () => {
+    executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
+      if (document === RalphStartWorkSessionDocument) {
+        return { startWorkSession: { id: 'session-1' } };
+      }
+      if (document === RalphAttachWorkSessionSubjectDocument) {
+        return { attachWorkSessionSubject: { id: 'subject-1' } };
+      }
+      if (document === RalphRecordWorkArtifactDocument) {
+        return {
+          recordWorkArtifact: {
+            createdAt: '2026-07-19T00:00:00.000Z',
+            id: 'artifact-1',
+            message: 'PR title',
+          },
+        };
+      }
+      if (document === RalphEndWorkSessionDocument) {
+        return { endWorkSession: { id: 'session-1' } };
+      }
+      return {};
+    });
+
+    const { insertCommitLinkGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    const row = await insertCommitLinkGraphql({
+      message: 'PR title',
+      planId: 'plan-1',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'abc123',
+      taskId: 'task-1',
+    });
+
+    // Artifact identity flows back as the CommitLinkRow id; the (repo, sha) are echoed from input.
+    expect(row).toEqual({
+      createdAt: '2026-07-19T00:00:00.000Z',
+      id: 'artifact-1',
+      message: 'PR title',
+      planId: 'plan-1',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'abc123',
+      taskId: 'task-1',
+    });
+
+    // Ordered orchestration: start → attach subject → record git_commit → end.
+    const documents = executeWorkflowGraphqlV2Mock.mock.calls.map(
+      (call) => call[0],
+    );
+    expect(documents).toEqual([
+      RalphStartWorkSessionDocument,
+      RalphAttachWorkSessionSubjectDocument,
+      RalphRecordWorkArtifactDocument,
+      RalphEndWorkSessionDocument,
+    ]);
+
+    const [, attachVars] = executeWorkflowGraphqlV2Mock.mock.calls[1] ?? [];
+    expect(attachVars).toEqual({
+      input: { planId: 'plan-1', sessionId: 'session-1', taskId: 'task-1' },
+    });
+
+    const [, recordVars] = executeWorkflowGraphqlV2Mock.mock.calls[2] ?? [];
+    expect(recordVars.input.type).toBe('git_commit');
+    expect(recordVars.input.sessionId).toBe('session-1');
+    expect(JSON.parse(recordVars.input.payloadJson)).toEqual({
+      landedSha: 'abc123',
+      repo: 'OpenThrottle/monorepo',
+      sha: 'abc123',
+    });
   });
 });

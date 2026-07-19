@@ -57,15 +57,15 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 
 ### When to use which tool
 
-| Question or intent                            | Use                                                                                                              |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| “What plans/tasks exist?” / status lists      | **openthrottle-mcp** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                |
-| “Find plans about X” (meaning, not filenames) | **openthrottle-mcp** — `semantic_search`, then `get_document` for a chunk                                        |
-| “What’s in the OT knowledge base?”            | **openthrottle-mcp** — `list_sources`                                                                            |
-| “What does this repo’s docs say about X?”     | **openthrottle-mcp** — `semantic_search` / `get_document` over ingested `docs/`                                  |
-| Create or update a plan/task                  | **openthrottle-mcp** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)           |
-| Log agent iteration output for a plan         | **openthrottle-mcp** — `append_plan_output`                                                                      |
-| Tie landed work on `main` to a plan           | After PR merge — `link_commit` or `workflow-link-merge` (see [`databases/README.md`](../../databases/README.md)) |
+| Question or intent                            | Use                                                                                                                                                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| “What plans/tasks exist?” / status lists      | **openthrottle-mcp** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                                                                                            |
+| “Find plans about X” (meaning, not filenames) | **openthrottle-mcp** — `semantic_search`, then `get_document` for a chunk                                                                                                                    |
+| “What’s in the OT knowledge base?”            | **openthrottle-mcp** — `list_sources`                                                                                                                                                        |
+| “What does this repo’s docs say about X?”     | **openthrottle-mcp** — `semantic_search` / `get_document` over ingested `docs/`                                                                                                              |
+| Create or update a plan/task                  | **openthrottle-mcp** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)                                                                                       |
+| Log agent iteration output for a plan         | **openthrottle-mcp** — `append_plan_output`                                                                                                                                                  |
+| Tie landed work on `main` to a plan           | After PR merge — record a `git_commit` work-ledger artifact (`record_artifact` + `attach_session_subject`) or `workflow-link-merge` (see [`databases/README.md`](../../databases/README.md)) |
 
 ---
 
