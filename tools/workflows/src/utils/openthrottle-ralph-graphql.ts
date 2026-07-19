@@ -8,14 +8,17 @@ import type {
 } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   AppendPlanOutputDocument,
+  AttachWorkSessionSubjectDocument,
   CreateProjectDocument,
+  EndWorkSessionDocument,
   GetPlanDocument,
   GetProjectsDocument,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
-  LinkCommitDocument,
   ListPlansByStatusDocument,
+  RecordWorkArtifactDocument,
+  StartWorkSessionDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
@@ -241,28 +244,60 @@ export async function appendPlanOutputGraphql(
   });
 }
 
+/**
+ * @description Records a git commit against a plan/task by orchestrating the generic work-ledger
+ * primitives — the linkCommit sugar was fully retired (5b/6). Mirrors {@link insertCommitLinkPostgres}:
+ * open an instant `workflow-ralph` session, attach the (plan, task) subject, record a `git_commit`
+ * artifact (the server derives its external_key as `github:<repo>@<sha>` and upserts on re-report),
+ * then close the session. The artifact enters lifecycle `created`/`unverified`; the git verifier
+ * promotes it to `landed`/`verified` (claims-vs-facts) — unlike the postgres twin, which writes
+ * `landed` directly. Returns a {@link CommitLinkRow} (id is the artifact uuid) so callers are unaffected.
+ */
 export async function insertCommitLinkGraphql(
   input: CommitLinkInput,
 ): Promise<CommitLinkRow> {
-  const result = await executeWorkflowGraphqlV2(LinkCommitDocument, {
+  const session = await executeWorkflowGraphqlV2(StartWorkSessionDocument, {
     input: {
-      message: input.message ?? null,
+      externalRef: `workflow-ralph:${input.planId}:${input.taskId ?? 'plan'}`,
+      toolName: 'workflow-ralph',
+    },
+  });
+  const sessionId = session.startWorkSession.id;
+
+  await executeWorkflowGraphqlV2(AttachWorkSessionSubjectDocument, {
+    input: {
       planId: input.planId,
-      repo: input.repo,
-      sha: input.sha,
+      sessionId,
       taskId: input.taskId ?? null,
     },
   });
 
-  const link = result.linkCommit;
+  const artifact = await executeWorkflowGraphqlV2(RecordWorkArtifactDocument, {
+    input: {
+      message: input.message ?? null,
+      payloadJson: JSON.stringify({
+        landedSha: input.sha,
+        repo: input.repo,
+        sha: input.sha,
+      }),
+      sessionId,
+      type: 'git_commit',
+    },
+  });
+
+  await executeWorkflowGraphqlV2(EndWorkSessionDocument, {
+    input: { sessionId },
+  });
+
+  const row = artifact.recordWorkArtifact;
 
   return {
-    createdAt: toIsoString(link.createdAt),
-    id: link.id,
-    message: link.message ?? null,
-    planId: link.planId,
-    repo: link.repo,
-    sha: link.sha,
-    taskId: link.taskId ?? null,
+    createdAt: toIsoString(row.createdAt),
+    id: row.id,
+    message: row.message ?? null,
+    planId: input.planId,
+    repo: input.repo,
+    sha: input.sha,
+    taskId: input.taskId ?? null,
   };
 }

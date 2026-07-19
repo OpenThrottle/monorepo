@@ -96,9 +96,29 @@ mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   }
 }
 
-mutation linkCommit($input: LinkCommitInput!) {
-  linkCommit(input: $input) {
-    ...CommitLink
+mutation startWorkSession($input: StartWorkSessionInput!) {
+  startWorkSession(input: $input) {
+    id
+  }
+}
+
+mutation attachWorkSessionSubject($input: AttachWorkSessionSubjectInput!) {
+  attachWorkSessionSubject(input: $input) {
+    id
+  }
+}
+
+mutation recordWorkArtifact($input: RecordWorkArtifactInput!) {
+  recordWorkArtifact(input: $input) {
+    createdAt
+    id
+    message
+  }
+}
+
+mutation endWorkSession($input: EndWorkSessionInput!) {
+  endWorkSession(input: $input) {
+    id
   }
 }
 
