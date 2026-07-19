@@ -158,6 +158,11 @@ export class WorkLedgerResolver {
       lifecycle: resolved.initialLifecycle,
       message: input.message,
       payload: resolved.payload,
+      // Set produced_at explicitly (mirrors work-ledger-capture.service.ts): the DB
+      // column defaults to now(), but repo.save(repo.create(...)) does not reflect a
+      // DB default back onto the returned entity, so the non-nullable
+      // WorkArtifactObject.producedAt would resolve to null on the create path.
+      producedAt: new Date(),
       sessionId: input.sessionId,
       source: WORK_ARTIFACT_SOURCE.AGENT,
       type: input.type,
