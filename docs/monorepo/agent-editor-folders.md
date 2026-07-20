@@ -2,9 +2,9 @@
 
 **Plan-Id:** `318f9dd8-f36c-4d1a-9826-7f8cf14a5e2c` (SSOT migration) · `a55015f4-1d17-4f79-9772-d3f4788f8cfc` (inventory)
 
-Single entry point for **where agent- and editor-specific config lives** in the OpenThrottle monorepo: folder layout, **`.agents/` SSOT**, symlink views for editors, and where to edit for common tasks.
+Single entry point for **where agent- and editor-specific config lives** in the OpenThrottle monorepo: folder layout, symlink views for editors, and where to edit for common tasks.
 
-**Canonical layout (post-migration):** [agent-assets-canonical-layout.md](./agent-assets-canonical-layout.md)
+> **⚠️ Skills model updated — this doc is mid-migration.** Skills are now managed by the **`skill-sync`** skill: `skills/` is the hand-authored SSOT for OT-owned skills, `.agents/skills/` is a **generated** merged view (symlinks to `skills/*` + real dirs for external `skills-lock.json` installs), and `<agent>/skills/` (default `.claude/skills/`) is generated fan-out. The old `.cursor/skills` fan-out was **dropped**. For anything skill-related, the current authorities are [`skills/skill-sync/SKILL.md`](../../skills/skill-sync/SKILL.md) and [docs/Skills.md](../Skills.md); the skill-specific sections below still describe the pre-skill-sync `.agents/`-as-SSOT layout and are being updated. (Rules/personas/prompts sections remain accurate.)
 
 **Deep dives (same plan, linked — not duplicated here):**
 
@@ -103,7 +103,7 @@ Full table and editor-unique paths: [ownership doc](./agent-editor-folders-owner
 
 ## 4. Duplication matrix (post-SSOT)
 
-**Sync mechanism:** **symlinks only** — no copied bodies. Create/repair editor symlinks (skills → `.cursor`/`.claude`/`skills`; rules → `.cursor/rules`) with [`scripts/link-agent-assets.sh`](../../scripts/link-agent-assets.sh) (idempotent fixer, scope flags `--skills-only`/`--rules-only`; run after any skill install — e.g. skills.sh — that drops a new slug into `.agents/`). Drift is a **CI failure** (`check-agent-assets-ssot`).
+**Sync mechanism:** skills are synced by the **`skill-sync`** skill — `bash skills/skill-sync/scripts/sync.sh` (rebuild) / `--check` (drift gate). See [`skills/skill-sync/SKILL.md`](../../skills/skill-sync/SKILL.md) and [docs/Skills.md](../Skills.md). Rule symlinks (`.cursor/rules` → `.agents/rules`) are maintained separately. Drift is a **CI failure** (`check-agent-assets-ssot`, which runs `skill-sync --check`).
 
 | Relationship                | Locations                                   | Notes                                              |
 | --------------------------- | ------------------------------------------- | -------------------------------------------------- |
@@ -121,17 +121,17 @@ Historical pre-SSOT duplication: [duplication map](./agent-editor-folders-duplic
 
 ## 5. Where to edit (common tasks)
 
-| I want to…                                | Edit here (SSOT)                                                                                                                                                   | Do not edit                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Change TypeScript / JS style              | `.agents/rules/coding/*.mdc`                                                                                                                                       | `.cursor/rules/coding/` (symlink)               |
-| Change OT / GitHub / Ralph rules          | `.agents/rules/commands/*.mdc`                                                                                                                                     | `.cursor/rules/commands/` (symlink)             |
-| Add or change a **skill**                 | `.agents/skills/<slug>/SKILL.md`                                                                                                                                   | `.cursor/skills/`, `.claude/skills/`, `skills/` |
-| Add a **persona**                         | `.agents/personas/<id>.md` from `_template.md`                                                                                                                     | —                                               |
-| Change **Ralph loop** behavior            | `.agents/skills/agents-ralph/SKILL.md`                                                                                                                             | — (`.cursor/skills/agents-ralph` is symlink)    |
-| Change **Ralph CLI** flags / queue        | `.agents/skills/workflow-ralph/`, `tools/workflows/`                                                                                                               | —                                               |
-| Configure **openthrottle-mcp** locally    | Copy `.cursor/mcp.json.example` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md))                                      | —                                               |
-| Add **Cursor hook** (e.g. format on edit) | `.cursor/hooks.json`, `.cursor/hooks/`                                                                                                                             | — (Cursor-only)                                 |
-| Recreate editor symlinks after clone      | `bash scripts/link-agent-assets.sh` (or `ln -s` per [canonical layout §3](./agent-assets-canonical-layout.md#3-editor-views-symlinks-only--no-independent-bodies)) | —                                               |
+| I want to…                                | Edit here (SSOT)                                                                                                              | Do not edit                                     |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Change TypeScript / JS style              | `.agents/rules/coding/*.mdc`                                                                                                  | `.cursor/rules/coding/` (symlink)               |
+| Change OT / GitHub / Ralph rules          | `.agents/rules/commands/*.mdc`                                                                                                | `.cursor/rules/commands/` (symlink)             |
+| Add or change a **skill**                 | `.agents/skills/<slug>/SKILL.md`                                                                                              | `.cursor/skills/`, `.claude/skills/`, `skills/` |
+| Add a **persona**                         | `.agents/personas/<id>.md` from `_template.md`                                                                                | —                                               |
+| Change **Ralph loop** behavior            | `.agents/skills/agents-ralph/SKILL.md`                                                                                        | — (`.cursor/skills/agents-ralph` is symlink)    |
+| Change **Ralph CLI** flags / queue        | `.agents/skills/workflow-ralph/`, `tools/workflows/`                                                                          | —                                               |
+| Configure **openthrottle-mcp** locally    | Copy `.cursor/mcp.json.example` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md)) | —                                               |
+| Add **Cursor hook** (e.g. format on edit) | `.cursor/hooks.json`, `.cursor/hooks/`                                                                                        | — (Cursor-only)                                 |
+| Recreate editor symlinks after clone      | `bash skills/skill-sync/scripts/sync.sh` (see [skill-sync](../../skills/skill-sync/SKILL.md))                                 | —                                               |
 
 ---
 
