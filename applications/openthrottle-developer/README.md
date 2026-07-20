@@ -59,7 +59,7 @@ The **Skills** route (`/skills`) lists skills discovered from the monorepo check
 
 | Requirement       | Detail                                                                                                                           |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **On disk**       | `.agents/skills/<slug>/SKILL.md` and `.cursor/skills/<slug>/SKILL.md` under the repo root                                        |
+| **On disk**       | `.agents/skills/<slug>/SKILL.md` under the repo root (the SSOT view; `.claude/skills` fan-out is deduped in)                     |
 | **When it runs**  | Server-only in the `skills._index` route loader (not in the client bundle)                                                       |
 | **Monorepo root** | `WORKSPACE_ROOT` if set to an existing directory; otherwise walk up from `process.cwd()` for `nx.json` and `pnpm-workspace.yaml` |
 

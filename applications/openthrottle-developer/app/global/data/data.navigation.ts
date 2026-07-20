@@ -28,6 +28,7 @@ import {
   SwatchBookIcon,
   TerminalSquareIcon,
   UserCircleIcon,
+  WandSparklesIcon,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
@@ -67,7 +68,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         beta: false,
         children: 'Rules',
         disabled: false, // 🔴
-        icon: BrainCircuitIcon,
+        icon: WandSparklesIcon,
         to: '/rules',
       },
       {

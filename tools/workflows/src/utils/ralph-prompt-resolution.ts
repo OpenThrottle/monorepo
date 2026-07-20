@@ -18,7 +18,7 @@ interface ResolvedRalphPromptProfile {
 }
 
 /**
- * @description Strips leading YAML frontmatter when present (e.g. migrated `.cursor/skills/*\/SKILL.md`).
+ * @description Strips leading YAML frontmatter when present (e.g. `.agents/skills/*\/SKILL.md`).
  */
 export const stripYamlFrontmatter = (content: string): string => {
   if (!content.startsWith('---\n')) {

@@ -61,7 +61,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <GlobalScreen>
       <RuleForm
         actionData={actionData}
         skillSlugs={skillSlugs}

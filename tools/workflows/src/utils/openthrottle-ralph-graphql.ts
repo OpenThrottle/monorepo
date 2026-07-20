@@ -3,6 +3,7 @@
  */
 
 import type {
+  GraphqlV2Failure,
   PlanFragment,
   TaskFragment,
 } from '@openthrottle/openthrottle-agentic-ralph';
@@ -22,7 +23,11 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { executeWorkflowGraphqlV2 } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  executeWorkflowGraphqlV2,
+  unwrapWorkflowGraphqlResult,
+  WorkflowGraphqlError,
+} from '@openthrottle/openthrottle-agentic-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import type {
   CommitLinkInput,
@@ -86,11 +91,42 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
 };
 
 /**
- * @description GraphQL read-before-write preflight (the single documented exception).
+ * @description Classifies a transport {@link GraphqlV2Failure} into an operator-facing hint for the
+ * reachability preflight — the structured `kind` lets us distinguish a down server (`network`), an
+ * auth rejection (`http` 401/403), and a server-side error (`graphql_errors` / other `http`) instead
+ * of collapsing every fault to one opaque message.
+ */
+const describeReachabilityFailure = (failure: GraphqlV2Failure): string => {
+  switch (failure.kind) {
+    case 'graphql_errors':
+      return 'OpenThrottle GraphQL returned errors on the health query.';
+    case 'http':
+      return failure.httpStatus === 401 || failure.httpStatus === 403
+        ? `OpenThrottle GraphQL rejected the request (HTTP ${String(failure.httpStatus)} — check the auth token).`
+        : `OpenThrottle GraphQL returned HTTP ${String(failure.httpStatus ?? 'error')}.`;
+    case 'network':
+      return 'OpenThrottle GraphQL is unreachable (network error).';
+    default:
+      return failure.message;
+  }
+};
+
+/**
+ * @description GraphQL read-before-write preflight (the single documented exception). Branches on the
+ * structured {@link GraphqlV2Failure} so transport/auth faults surface a classified message (and the
+ * failure `kind`/`httpStatus` stays inspectable on the thrown {@link WorkflowGraphqlError}).
  */
 export async function ensureGraphqlIsReachable(): Promise<void> {
-  const result = await executeWorkflowGraphqlV2(GetServerHealthDocument, {});
-  const database = result.serverHealth.database?.trim().toLowerCase();
+  const outcome = await executeWorkflowGraphqlV2(GetServerHealthDocument, {});
+
+  if (!outcome.ok) {
+    throw new WorkflowGraphqlError(
+      outcome.error,
+      `${describeReachabilityFailure(outcome.error)} Check API_URL_INTERNAL / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL and server connectivity.`,
+    );
+  }
+
+  const database = outcome.data.serverHealth.database?.trim().toLowerCase();
 
   if (database === 'ok') {
     return;
@@ -99,7 +135,7 @@ export async function ensureGraphqlIsReachable(): Promise<void> {
   const detail =
     database === 'unconfigured'
       ? 'OpenThrottle database is not configured on the server.'
-      : `OpenThrottle database is unreachable (serverHealth.database=${result.serverHealth.database}).`;
+      : `OpenThrottle database is unreachable (serverHealth.database=${outcome.data.serverHealth.database}).`;
 
   throw new Error(
     `${detail} Check API_URL_INTERNAL / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL and server connectivity.`,
@@ -107,16 +143,20 @@ export async function ensureGraphqlIsReachable(): Promise<void> {
 }
 
 export async function getTaskByIdGraphql(id: string): Promise<TaskRow | null> {
-  const result = await executeWorkflowGraphqlV2(GetTaskDocument, { id });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(GetTaskDocument, { id }),
+  );
   return result.task ? taskFragmentToRow(result.task) : null;
 }
 
 export async function listPlansByStatusGraphql(
   status: string,
 ): Promise<ListPlansByStatusRow[]> {
-  const result = await executeWorkflowGraphqlV2(ListPlansByStatusDocument, {
-    input: { statuses: [status] },
-  });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(ListPlansByStatusDocument, {
+      input: { statuses: [status] },
+    }),
+  );
 
   return result.listPlansByStatus.plans.map((plan) => ({
     createdAt: toIsoString(plan.createdAt),
@@ -127,12 +167,16 @@ export async function listPlansByStatusGraphql(
 }
 
 export async function getPlanByIdGraphql(id: string): Promise<PlanRow | null> {
-  const result = await executeWorkflowGraphqlV2(GetPlanDocument, { id });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(GetPlanDocument, { id }),
+  );
   return result.plan ? planFragmentToRow(result.plan) : null;
 }
 
 export async function listProjectsGraphql(): Promise<ProjectRow[]> {
-  const result = await executeWorkflowGraphqlV2(GetProjectsDocument, {});
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(GetProjectsDocument, {}),
+  );
 
   return result.projects.map((project) => ({
     id: project.id,
@@ -144,7 +188,9 @@ export async function listProjectsGraphql(): Promise<ProjectRow[]> {
 export async function ensureProjectForNxNameGraphql(
   nxProjectName: string,
 ): Promise<string> {
-  const result = await executeWorkflowGraphqlV2(GetProjectsDocument, {});
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(GetProjectsDocument, {}),
+  );
   const existing = result.projects.find(
     (project) => project.nxProjectName === nxProjectName,
   );
@@ -153,9 +199,11 @@ export async function ensureProjectForNxNameGraphql(
     return existing.id;
   }
 
-  const created = await executeWorkflowGraphqlV2(CreateProjectDocument, {
-    input: { name: nxProjectName, nxProjectName },
-  });
+  const created = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(CreateProjectDocument, {
+      input: { name: nxProjectName, nxProjectName },
+    }),
+  );
 
   return created.createProject.id;
 }
@@ -164,9 +212,11 @@ export async function updatePlanProjectIdGraphql(
   planId: string,
   projectId: string | null,
 ): Promise<boolean> {
-  const result = await executeWorkflowGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, projectId },
-  });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(UpdatePlanDocument, {
+      input: { id: planId, projectId },
+    }),
+  );
 
   return result.updatePlan != null;
 }
@@ -174,9 +224,11 @@ export async function updatePlanProjectIdGraphql(
 export async function getTasksByPlanIdGraphql(
   planId: string,
 ): Promise<TaskRow[]> {
-  const result = await executeWorkflowGraphqlV2(GetTasksByPlanIdDocument, {
-    input: { planId },
-  });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(GetTasksByPlanIdDocument, {
+      input: { planId },
+    }),
+  );
 
   return result.tasksByPlanId.map(taskFragmentToRow);
 }
@@ -196,9 +248,11 @@ export async function updatePlanStatusGraphql(
     }
   }
 
-  const result = await executeWorkflowGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, status },
-  });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(UpdatePlanDocument, {
+      input: { id: planId, status },
+    }),
+  );
 
   return result.updatePlan ? planFragmentToRow(result.updatePlan) : null;
 }
@@ -207,9 +261,11 @@ export async function updateTaskStatusGraphql(
   id: string,
   status: string,
 ): Promise<TaskRow | null> {
-  const result = await executeWorkflowGraphqlV2(UpdateTaskDocument, {
-    input: { id, status },
-  });
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(UpdateTaskDocument, {
+      input: { id, status },
+    }),
+  );
 
   if (!result.updateTask) {
     return null;
@@ -239,9 +295,11 @@ export async function appendPlanOutputGraphql(
     planId,
   });
 
-  await executeWorkflowGraphqlV2(AppendPlanOutputDocument, {
-    input: { content, iteration: iteration ?? null, planId },
-  });
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(AppendPlanOutputDocument, {
+      input: { content, iteration: iteration ?? null, planId },
+    }),
+  );
 }
 
 /**
@@ -256,28 +314,28 @@ export async function appendPlanOutputGraphql(
 export async function insertCommitLinkGraphql(
   input: CommitLinkInput,
 ): Promise<CommitLinkRow> {
-  const session = await executeWorkflowGraphqlV2(
-    RalphStartWorkSessionDocument,
-    {
+  const session = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RalphStartWorkSessionDocument, {
       input: {
         externalRef: `workflow-ralph:${input.planId}:${input.taskId ?? 'plan'}`,
         toolName: 'workflow-ralph',
       },
-    },
+    }),
   );
   const sessionId = session.startWorkSession.id;
 
-  await executeWorkflowGraphqlV2(RalphAttachWorkSessionSubjectDocument, {
-    input: {
-      planId: input.planId,
-      sessionId,
-      taskId: input.taskId ?? null,
-    },
-  });
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RalphAttachWorkSessionSubjectDocument, {
+      input: {
+        planId: input.planId,
+        sessionId,
+        taskId: input.taskId ?? null,
+      },
+    }),
+  );
 
-  const artifact = await executeWorkflowGraphqlV2(
-    RalphRecordWorkArtifactDocument,
-    {
+  const artifact = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RalphRecordWorkArtifactDocument, {
       input: {
         message: input.message ?? null,
         payloadJson: JSON.stringify({
@@ -288,12 +346,14 @@ export async function insertCommitLinkGraphql(
         sessionId,
         type: 'git_commit',
       },
-    },
+    }),
   );
 
-  await executeWorkflowGraphqlV2(RalphEndWorkSessionDocument, {
-    input: { sessionId },
-  });
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RalphEndWorkSessionDocument, {
+      input: { sessionId },
+    }),
+  );
 
   const row = artifact.recordWorkArtifact;
 

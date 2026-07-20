@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { GraphqlV2Failure } from '../graphql.ts';
 import {
   buildWorkflowExecuteGraphqlV2Options,
   resolveWorkflowAuthTokenFromEnv,
   resolveWorkflowGraphqlConfigFromEnv,
   resolveWorkflowGraphqlUrlOverrideFromEnv,
+  unwrapWorkflowGraphqlResult,
+  WorkflowGraphqlError,
 } from '../graphql.ts';
 
 const INTERNAL_BASE = 'http://localhost:6021';
@@ -143,5 +146,57 @@ describe('resolveWorkflowGraphqlConfigFromEnv', () => {
       graphqlUrl: undefined,
       token: undefined,
     });
+  });
+});
+
+const httpFailure: GraphqlV2Failure = {
+  cause: undefined,
+  graphqlErrors: [{ message: 'Unauthorized' }],
+  graphqlPath: undefined,
+  httpStatus: 401,
+  kind: 'http',
+  message: 'Unauthorized',
+};
+
+describe('unwrapWorkflowGraphqlResult', () => {
+  it('returns data on an ok result', () => {
+    expect(
+      unwrapWorkflowGraphqlResult({ data: { serverHealth: 'ok' }, ok: true }),
+    ).toEqual({ serverHealth: 'ok' });
+  });
+
+  it('throws WorkflowGraphqlError preserving the structured failure on an err result', () => {
+    try {
+      unwrapWorkflowGraphqlResult({ error: httpFailure, ok: false });
+      expect.unreachable('unwrap should have thrown on an err result');
+    } catch (error) {
+      expect(error).toBeInstanceOf(WorkflowGraphqlError);
+
+      if (error instanceof WorkflowGraphqlError) {
+        expect(error.failure.kind).toBe('http');
+        expect(error.failure.httpStatus).toBe(401);
+        expect(error.failure.graphqlErrors).toEqual([
+          { message: 'Unauthorized' },
+        ]);
+        expect(error.message).toBe('Unauthorized');
+      }
+    }
+  });
+});
+
+describe('WorkflowGraphqlError', () => {
+  it('defaults message to the failure message and keeps the failure inspectable', () => {
+    const error = new WorkflowGraphqlError(httpFailure);
+
+    expect(error.name).toBe('WorkflowGraphqlError');
+    expect(error.message).toBe('Unauthorized');
+    expect(error.failure).toBe(httpFailure);
+  });
+
+  it('uses the override message when provided while preserving the failure', () => {
+    const error = new WorkflowGraphqlError(httpFailure, 'preflight failed');
+
+    expect(error.message).toBe('preflight failed');
+    expect(error.failure.kind).toBe('http');
   });
 });

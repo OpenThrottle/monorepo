@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import {
   Badge,
   Button,
@@ -172,10 +173,8 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
       data-testid="SkillDetail"
     >
       <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-foreground text-lg font-semibold">
-            /{entry.slug}
-          </h2>
+        <div className="flex flex-wrap items-center gap-4">
+          <GlobalHeading heading="h1" title={`/${entry.slug}`} />
 
           <Tooltip>
             <TooltipTrigger asChild={true}>

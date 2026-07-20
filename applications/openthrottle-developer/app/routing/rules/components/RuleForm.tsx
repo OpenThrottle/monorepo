@@ -16,8 +16,10 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import { WandSparklesIcon } from 'lucide-react';
 
 export interface RuleFormVocabularyOption {
   dimension: string;
@@ -189,194 +191,135 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Card className="w-full max-w-2xl gap-8" data-testid="RuleForm">
-      <CardHeader>
-        <CardTitle>
-          {isEdit ? RULES_COPY.editTitle : RULES_COPY.createTitle}
-        </CardTitle>
-        <CardDescription>{RULES_COPY.formDescription}</CardDescription>
-      </CardHeader>
+    <>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={WandSparklesIcon}
+          title="Rules"
+        />
+        <p className="text-muted-foreground text-sm">
+          Plans are OpenThrottle&apos;s record of intended work—what you decided
+          to build, broken into tasks with status, assignee, and optional
+          summaries. Browse and filter here, open a plan for tasks and iteration
+          output, queue a run for agentic execution (Ralph), and follow linked
+          commits that tie shipped work on main back to each plan.
+        </p>
+      </div>
+      <Card className="max-w-2xl-- w-full gap-8" data-testid="RuleForm">
+        <CardHeader>
+          {/* <GlobalHeading
+          heading="h1"
+          title={isEdit ? RULES_COPY.editTitle : RULES_COPY.createTitle}
+        /> */}
+          <CardTitle>
+            {isEdit ? RULES_COPY.editTitle : RULES_COPY.createTitle}
+          </CardTitle>
+          <CardDescription>{RULES_COPY.formDescription}</CardDescription>
+        </CardHeader>
 
-      <Form method="post">
-        <CardContent className="space-y-8">
-          {isEdit ? (
-            <input name="id" type="hidden" value={initialRule.id} />
-          ) : null}
-          <input
-            name="enabled"
-            type="hidden"
-            value={String(initialRule?.enabled ?? true)}
-          />
-          <input name="actionType" type="hidden" value={actionType} />
-          <input
-            name="actionPayloadJson"
-            type="hidden"
-            value={actionPayloadJson}
-          />
-          <input
-            name="status"
-            type="hidden"
-            value={status === ANY ? '' : status}
-          />
-          <input
-            name="environment"
-            type="hidden"
-            value={environment === ANY ? '' : environment}
-          />
-          {tagAll.map((tag) => (
-            <input key={tag} name="tagAll" type="hidden" value={tag} />
-          ))}
-
-          {/* Identity */}
-          <section className="space-y-3">
-            <div>
-              <h3 className="text-sm font-semibold">
-                {RULES_COPY.identityLegend}
-              </h3>
-              <p className="text-muted-foreground text-xs">
-                {RULES_COPY.identityDescription}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="rule-title">{RULES_COPY.titleLabel}</Label>
-              <Input
-                id="rule-title"
-                name="title"
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={RULES_COPY.titlePlaceholder}
-                required={true}
-                value={title}
-              />
-            </div>
-          </section>
-
-          {/* Match */}
-          <section className="space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold">
-                {RULES_COPY.matchLegend}
-              </h3>
-              <p className="text-muted-foreground text-xs">
-                {RULES_COPY.matchDescription}
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{RULES_COPY.phaseTagsLabel}</Label>
-              <div className="flex flex-wrap gap-2">
-                {phaseOptions.map(renderTagChip)}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{RULES_COPY.domainTagsLabel}</Label>
-              <div className="flex flex-wrap gap-2">
-                {domainOptions.map(renderTagChip)}
-              </div>
-            </div>
-
-            {tagAll.length === 0 ? (
-              <p className="text-muted-foreground text-xs italic">
-                {RULES_COPY.noTagsHint}
-              </p>
+        <Form method="post">
+          <CardContent className="space-y-8">
+            {isEdit ? (
+              <input name="id" type="hidden" value={initialRule.id} />
             ) : null}
+            <input
+              name="enabled"
+              type="hidden"
+              value={String(initialRule?.enabled ?? true)}
+            />
+            <input name="actionType" type="hidden" value={actionType} />
+            <input
+              name="actionPayloadJson"
+              type="hidden"
+              value={actionPayloadJson}
+            />
+            <input
+              name="status"
+              type="hidden"
+              value={status === ANY ? '' : status}
+            />
+            <input
+              name="environment"
+              type="hidden"
+              value={environment === ANY ? '' : environment}
+            />
+            {tagAll.map((tag) => (
+              <input key={tag} name="tagAll" type="hidden" value={tag} />
+            ))}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Identity */}
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold">
+                  {RULES_COPY.identityLegend}
+                </h3>
+                <p className="text-muted-foreground text-xs">
+                  {RULES_COPY.identityDescription}
+                </p>
+              </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rule-status">{RULES_COPY.statusLabel}</Label>
-                <Select onValueChange={setStatus} value={status}>
-                  <SelectTrigger
-                    aria-label={RULES_COPY.statusLabel}
-                    id="rule-status"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
-                    {PLAN_STATUSES.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="rule-title">{RULES_COPY.titleLabel}</Label>
+                <Input
+                  id="rule-title"
+                  name="title"
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder={RULES_COPY.titlePlaceholder}
+                  required={true}
+                  value={title}
+                />
+              </div>
+            </section>
+
+            {/* Match */}
+            <section className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold">
+                  {RULES_COPY.matchLegend}
+                </h3>
+                <p className="text-muted-foreground text-xs">
+                  {RULES_COPY.matchDescription}
+                </p>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="rule-environment">
-                  {RULES_COPY.environmentLabel}
-                </Label>
-                <Select onValueChange={setEnvironment} value={environment}>
-                  <SelectTrigger
-                    aria-label={RULES_COPY.environmentLabel}
-                    id="rule-environment"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
-                    {ENVIRONMENTS.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>{RULES_COPY.phaseTagsLabel}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {phaseOptions.map(renderTagChip)}
+                </div>
               </div>
-            </div>
-          </section>
 
-          {/* Action */}
-          <section className="space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold">
-                {RULES_COPY.actionLegend}
-              </h3>
-              <p className="text-muted-foreground text-xs">
-                {RULES_COPY.actionDescription}
-              </p>
-            </div>
+              <div className="space-y-1.5">
+                <Label>{RULES_COPY.domainTagsLabel}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {domainOptions.map(renderTagChip)}
+                </div>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="rule-action-type">
-                {RULES_COPY.actionTypeLabel}
-              </Label>
-              <Select onValueChange={setActionType} value={actionType}>
-                <SelectTrigger
-                  aria-label={RULES_COPY.actionTypeLabel}
-                  className="w-fit"
-                  id="rule-action-type"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inject-task">
-                    {RULES_COPY.injectTaskOption}
-                  </SelectItem>
-                  <SelectItem value="availability-exception">
-                    {RULES_COPY.availabilityExceptionOption}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              {tagAll.length === 0 ? (
+                <p className="text-muted-foreground text-xs italic">
+                  {RULES_COPY.noTagsHint}
+                </p>
+              ) : null}
 
-            {actionType === 'inject-task' ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="rule-skill-slug">
-                    {RULES_COPY.skillLabel}
-                  </Label>
-                  <Select onValueChange={setSkillSlug} value={skillSlug}>
+                  <Label htmlFor="rule-status">{RULES_COPY.statusLabel}</Label>
+                  <Select onValueChange={setStatus} value={status}>
                     <SelectTrigger
-                      aria-label={RULES_COPY.skillLabel}
-                      id="rule-skill-slug"
+                      aria-label={RULES_COPY.statusLabel}
+                      id="rule-status"
                     >
-                      <SelectValue placeholder={RULES_COPY.skillPlaceholder} />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {skillSlugs.map((slug) => (
-                        <SelectItem key={slug} value={slug}>
-                          {slug}
+                      <SelectItem value={ANY}>
+                        {RULES_COPY.anyOption}
+                      </SelectItem>
+                      {PLAN_STATUSES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -384,80 +327,166 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="rule-placement">
-                    {RULES_COPY.placementLabel}
+                  <Label htmlFor="rule-environment">
+                    {RULES_COPY.environmentLabel}
                   </Label>
-                  <Select onValueChange={setPlacement} value={placement}>
+                  <Select onValueChange={setEnvironment} value={environment}>
                     <SelectTrigger
-                      aria-label={RULES_COPY.placementLabel}
-                      id="rule-placement"
+                      aria-label={RULES_COPY.environmentLabel}
+                      id="rule-environment"
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="first">first</SelectItem>
-                      <SelectItem value="last">last</SelectItem>
+                      <SelectItem value={ANY}>
+                        {RULES_COPY.anyOption}
+                      </SelectItem>
+                      {ENVIRONMENTS.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </section>
 
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="rule-title-template">Title template</Label>
+            {/* Action */}
+            <section className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold">
+                  {RULES_COPY.actionLegend}
+                </h3>
+                <p className="text-muted-foreground text-xs">
+                  {RULES_COPY.actionDescription}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="rule-action-type">
+                  {RULES_COPY.actionTypeLabel}
+                </Label>
+                <Select onValueChange={setActionType} value={actionType}>
+                  <SelectTrigger
+                    aria-label={RULES_COPY.actionTypeLabel}
+                    className="w-fit"
+                    id="rule-action-type"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inject-task">
+                      {RULES_COPY.injectTaskOption}
+                    </SelectItem>
+                    <SelectItem value="availability-exception">
+                      {RULES_COPY.availabilityExceptionOption}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {actionType === 'inject-task' ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rule-skill-slug">
+                      {RULES_COPY.skillLabel}
+                    </Label>
+                    <Select onValueChange={setSkillSlug} value={skillSlug}>
+                      <SelectTrigger
+                        aria-label={RULES_COPY.skillLabel}
+                        id="rule-skill-slug"
+                      >
+                        <SelectValue
+                          placeholder={RULES_COPY.skillPlaceholder}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skillSlugs.map((slug) => (
+                          <SelectItem key={slug} value={slug}>
+                            {slug}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rule-placement">
+                      {RULES_COPY.placementLabel}
+                    </Label>
+                    <Select onValueChange={setPlacement} value={placement}>
+                      <SelectTrigger
+                        aria-label={RULES_COPY.placementLabel}
+                        id="rule-placement"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="first">first</SelectItem>
+                        <SelectItem value="last">last</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="rule-title-template">Title template</Label>
+                    <Input
+                      aria-label="Title template"
+                      id="rule-title-template"
+                      onChange={(event) => setTitleTemplate(event.target.value)}
+                      placeholder={RULES_COPY.titleTemplatePlaceholder}
+                      value={titleTemplate}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
-                    aria-label="Title template"
-                    id="rule-title-template"
-                    onChange={(event) => setTitleTemplate(event.target.value)}
-                    placeholder={RULES_COPY.titleTemplatePlaceholder}
-                    value={titleTemplate}
+                    aria-label="Tag allow list"
+                    onChange={(event) => setTagAllow(event.target.value)}
+                    placeholder={RULES_COPY.tagAllowPlaceholder}
+                    value={tagAllow}
+                  />
+                  <Input
+                    aria-label="Tag deny list"
+                    onChange={(event) => setTagDeny(event.target.value)}
+                    placeholder={RULES_COPY.tagDenyPlaceholder}
+                    value={tagDeny}
+                  />
+                  <Input
+                    aria-label="Slug allow list"
+                    onChange={(event) => setSlugAllow(event.target.value)}
+                    placeholder={RULES_COPY.slugAllowPlaceholder}
+                    value={slugAllow}
+                  />
+                  <Input
+                    aria-label="Slug deny list"
+                    onChange={(event) => setSlugDeny(event.target.value)}
+                    placeholder={RULES_COPY.slugDenyPlaceholder}
+                    value={slugDeny}
                   />
                 </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Input
-                  aria-label="Tag allow list"
-                  onChange={(event) => setTagAllow(event.target.value)}
-                  placeholder={RULES_COPY.tagAllowPlaceholder}
-                  value={tagAllow}
-                />
-                <Input
-                  aria-label="Tag deny list"
-                  onChange={(event) => setTagDeny(event.target.value)}
-                  placeholder={RULES_COPY.tagDenyPlaceholder}
-                  value={tagDeny}
-                />
-                <Input
-                  aria-label="Slug allow list"
-                  onChange={(event) => setSlugAllow(event.target.value)}
-                  placeholder={RULES_COPY.slugAllowPlaceholder}
-                  value={slugAllow}
-                />
-                <Input
-                  aria-label="Slug deny list"
-                  onChange={(event) => setSlugDeny(event.target.value)}
-                  placeholder={RULES_COPY.slugDenyPlaceholder}
-                  value={slugDeny}
-                />
-              </div>
-            )}
-          </section>
+              )}
+            </section>
 
-          {error != null ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </CardContent>
+            {error != null ? (
+              <p className="text-destructive text-sm" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </CardContent>
 
-        <CardFooter className="justify-end gap-3 pt-6">
-          <Button asChild={true} type="button" variant="ghost">
-            <Link to="/rules">{RULES_COPY.cancelAction}</Link>
-          </Button>
-          <Button disabled={submitDisabled} type="submit" variant="outline">
-            {RULES_COPY.saveAction}
-          </Button>
-        </CardFooter>
-      </Form>
-    </Card>
+          <CardFooter className="justify-end gap-3 pt-6">
+            <Button asChild={true} type="button" variant="ghost">
+              <Link to="/rules">{RULES_COPY.cancelAction}</Link>
+            </Button>
+            <Button disabled={submitDisabled} type="submit" variant="outline">
+              {RULES_COPY.saveAction}
+            </Button>
+          </CardFooter>
+        </Form>
+      </Card>
+    </>
   );
 };

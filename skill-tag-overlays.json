@@ -31,14 +31,8 @@
     "github-create-issue": {
       "tags": ["github"]
     },
-    "github-deep-review": {
-      "tags": ["github", "pr-review"]
-    },
     "github-my-pull-requests": {
       "tags": ["github"]
-    },
-    "github-project-triage": {
-      "tags": ["ci", "github", "pr-review"]
     },
     "github-pull-request": {
       "tags": ["git", "github"]

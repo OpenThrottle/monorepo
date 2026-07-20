@@ -28,14 +28,14 @@ describe('routing/skills config skills-table-columns', () => {
     test('falls back to repoRelativePath when slug is empty', () => {
       const entry: RepoSkillEntry = {
         disableModelInvocation: undefined,
-        layout: 'cursor',
-        repoRelativePath: '.cursor/skills/bar/SKILL.md',
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/bar/SKILL.md',
         slug: '',
         source: 'external',
         summary: 'Bar skill',
         tags: undefined,
       };
-      expect(getSkillsTableRowId(entry, 2)).toBe('.cursor/skills/bar/SKILL.md');
+      expect(getSkillsTableRowId(entry, 2)).toBe('.agents/skills/bar/SKILL.md');
     });
 
     test('falls back to index-based id when slug and path are empty', () => {

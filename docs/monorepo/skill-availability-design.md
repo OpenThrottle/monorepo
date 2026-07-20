@@ -2,8 +2,8 @@
 
 > Status: **reviewed design** (decided 2026-07-11, grilling session; OT plan
 > `9a58dbe9-9cdb-4269-bfa0-108381965519`). This document is the interface the plan's
-> implementation tasks build against. Current-state audit:
-> [agent-skills-pipeline-findings.md](./agent-skills-pipeline-findings.md).
+> implementation tasks build against. Current skills layout: [docs/Skills.md](../Skills.md)
+> and [skill-sync SKILL.md](../../skills/skill-sync/SKILL.md).
 
 ## Problem
 
@@ -250,8 +250,7 @@ read path.
 
 Materialize the resolved flag into synced target-repo skill copies via the yaml writer
 (SSOT untouched), and reconcile with `OPENTHROTTLE_REPO_SKILL_PATHS` — a hand-maintained
-25-entry list that has already drifted (dangling `my-pull-requests` entry; see the
-[audit](./agent-skills-pipeline-findings.md)). The working intent is that resolver output
+25-entry list that has already drifted (dangling `my-pull-requests` entry). The working intent is that resolver output
 **subsumes** the hardcoded list; the enforcement task proves or amends that, and owns the
 migration/compat story for repos synced under the old list. Omitting skills from sync is
 explicitly rejected as the mechanism — it would gate human invocation too.
