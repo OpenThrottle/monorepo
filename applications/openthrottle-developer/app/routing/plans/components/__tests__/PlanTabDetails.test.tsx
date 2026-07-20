@@ -8,10 +8,6 @@ import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
 } from '~/__generated__/graphql';
-import {
-  getDefaultWorkflowRalphRunOptionsInput,
-  type WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 const mockPlan: PlanDetailsFragment = {
   __typename: 'PlanObject',
@@ -38,9 +34,6 @@ const mockPlan: PlanDetailsFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const defaultWorkflow: WorkflowRalphRunOptionsInput =
-  getDefaultWorkflowRalphRunOptionsInput({ planId: mockPlan.id });
-
 const defaultRecent: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'] =
   [];
 
@@ -53,8 +46,6 @@ describe('PlanTabDetails Component', () => {
     const props: PlanTabDetailsProps = {
       fullscreen: false,
       setFullscreen,
-      workflowInput: defaultWorkflow,
-      workflowTimeout: '',
     };
 
     const { findAllByText, getByTestId } = renderWithPlanDetailRouteData(

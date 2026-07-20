@@ -20,7 +20,7 @@ import { buildRalphPlanRunTuningInputFromWorkflowRunOptions } from './workflow-r
 /**
  * @description One validation issue; messages mirror `tools/workflows/src/utils/parsers.ts` where applicable.
  */
-interface WorkflowRalphValidationIssue {
+export interface WorkflowRalphValidationIssue {
   readonly code: string;
   readonly message: string;
 }
