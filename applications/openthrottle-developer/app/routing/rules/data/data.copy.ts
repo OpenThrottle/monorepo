@@ -36,7 +36,7 @@ export const RULES_COPY = {
   matchesEveryPlan: `matches every plan`,
   newRuleAction: `New rule`,
   noTagsHint: `No tags selected — this rule matches every plan.`,
-  pageTitle: `Tag → action rules`,
+  pageTitle: `Rules`,
   phaseTagsLabel: `Phase tags`,
   placementLabel: `Placement`,
   saveAction: `Save rule`,

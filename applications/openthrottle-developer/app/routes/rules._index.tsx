@@ -126,10 +126,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <GlobalScreen>
       <div className="flex items-center justify-between">
         <GlobalHeading icon={WandSparklesIcon} title={RULES_COPY.pageTitle} />
-        <Button asChild={true} size="sm">
+        <Button asChild={true} size="xs">
           <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>
         </Button>
       </div>

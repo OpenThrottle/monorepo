@@ -79,7 +79,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (rule == null) {
     return (
-      <GlobalScreen className="flex h-full w-full flex-col gap-2 p-4 md:p-8">
+      <GlobalScreen>
         <p className="font-medium">{RULES_NOT_FOUND_COPY.title}</p>
         <p className="text-muted-foreground text-sm">
           {RULES_NOT_FOUND_COPY.description}
@@ -89,7 +89,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen className="flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <GlobalScreen>
       <RuleForm
         actionData={actionData}
         initialRule={rule}
