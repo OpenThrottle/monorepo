@@ -4,9 +4,9 @@
  * Ralph plan-run helpers are re-exported from {@link ralph-plan-run-context.js}; codegen documents live
  * under `graphql/*.graphql`.
  *
- * Follow-up: surface structured failures (full `errors[]`, extensions, HTTP metadata) by migrating to
- * the Result-based `executeGraphql_v2` from `@openthrottle/nodejs-graphql`. Tracked as OT task
- * 206d2fc3-fcd7-4a4f-a612-fe86500b92af (caller-facing try/catch -> Result change, out of scope here).
+ * NOTE (legacy duplicate): the live Ralph transport now returns a non-throwing `GraphqlV2Result` via
+ * `executeGraphql_v2` in `@openthrottle/openthrottle-agentic-ralph` (`utils/graphql.ts`). This package's
+ * Ralph subtree is superseded by that package and pending retirement, so this copy stays throw-based.
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
@@ -87,8 +87,8 @@ export async function executeWorkflowGraphqlV2<
     resolveWorkflowGraphqlConfigFromEnv(),
   );
 
-  // Follow-up: wrap with structured error mapping (status, errors[], extensions) via `executeGraphql_v2`;
-  // callers use try/catch today. Tracked as OT task 206d2fc3-fcd7-4a4f-a612-fe86500b92af.
+  // Legacy duplicate: the structured-failure migration landed on the live copy in
+  // `@openthrottle/openthrottle-agentic-ralph`; this throw-based path is pending package retirement.
   return executeGraphqlV2(document, variables, options);
 }
 

@@ -14,10 +14,9 @@
  *   not wired in this package; Ralph startup uses direct Postgres (`ensureDatabaseReachableOrExit`).
  *   See `tools/workflows/README.md` (getServerHealth vs workflow GraphQL transport errors).
  *
- * Follow-up (OT task 206d2fc3-fcd7-4a4f-a612-fe86500b92af): surface structured failure payloads
- * (`errors[]`, extensions, HTTP metadata) from {@link executeWorkflowGraphqlV2} or dedicated mappers
- * by migrating to the Result-based `executeGraphql_v2` from `@openthrottle/nodejs-graphql`, so tooling
- * can classify failures without relying only on `Error.message` strings.
+ * NOTE: structured failure payloads (`errors[]`, extensions, HTTP metadata) are surfaced on the live
+ * copy in `@openthrottle/openthrottle-agentic-ralph`, where `executeWorkflowGraphqlV2` now returns a
+ * non-throwing `GraphqlV2Result`. This package's duplicate is superseded and pending retirement.
  *
  * ## Queries / mutations (alphabetical by helper in `openthrottle-ralph.ts`)
  *
