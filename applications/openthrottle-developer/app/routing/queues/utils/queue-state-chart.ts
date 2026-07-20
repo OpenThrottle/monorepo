@@ -144,10 +144,10 @@ export function queueStateChartHeight(barCount: number): number {
 }
 
 /** Width (px) reserved for the category (queue-name) axis. */
-export const QUEUE_STATE_CHART_CATEGORY_AXIS_WIDTH = 132;
+export const QUEUE_STATE_CHART_CATEGORY_AXIS_WIDTH = 160;
 
 /** Max characters shown for a queue-name axis label before truncating. */
-export const QUEUE_STATE_CHART_LABEL_MAX_CHARS = 16;
+export const QUEUE_STATE_CHART_LABEL_MAX_CHARS = 18;
 
 /**
  * @description Truncates a queue-name axis label to a single line, appending an

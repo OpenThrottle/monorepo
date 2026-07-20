@@ -11,6 +11,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import type { QueueCardFragment } from '~/__generated__/graphql';
+import { QueueStateChartAxisTick } from '~/routing/queues/components/QueueStateChartAxisTick';
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
@@ -19,7 +20,6 @@ import {
   QUEUE_STATE_CHART_SERIES,
   queueStateChartData,
   queueStateChartHeight,
-  truncateQueueLabel,
 } from '~/routing/queues/utils/queue-state-chart';
 import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 
@@ -145,7 +145,7 @@ export const QueueStateChart = (
               axisLine={false}
               dataKey="name"
               interval={0}
-              tickFormatter={truncateQueueLabel}
+              tick={<QueueStateChartAxisTick />}
               tickLine={false}
               tickMargin={8}
               type="category"
