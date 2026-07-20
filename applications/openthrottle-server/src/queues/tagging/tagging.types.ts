@@ -19,7 +19,7 @@ export interface PredictTaggingJobData {
 
 export interface RefineTaggingJobData {
   readonly planId: string;
-  /** owner/name, as stored on commit_links.repo. */
+  /** owner/name, as stored on the git_commit work-ledger artifact payload (repo). */
   readonly repo: string;
   readonly sha: string;
 }

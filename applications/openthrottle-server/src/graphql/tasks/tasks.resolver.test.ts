@@ -78,7 +78,6 @@ describe('TasksResolver', () => {
   const mockTask: Task = {
     assignee: null,
     category: 'testing',
-    commitLinks: [],
     completedAt: null,
     createdAt: new Date('2026-02-01T21:33:51.891Z'),
     description: 'Create TaskData type if needed',
@@ -93,7 +92,6 @@ describe('TasksResolver', () => {
       assignee: null,
       author: 'Plan author',
       category: 'Plan category',
-      commitLinks: [],
       createdAt: new Date('2026-02-01T21:33:51.891Z'),
       description: 'Plan description',
       id: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',

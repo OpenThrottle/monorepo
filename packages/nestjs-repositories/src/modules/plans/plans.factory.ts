@@ -32,7 +32,6 @@ export const plansFactory = Factory.define<Plan>(() => ({
   assignee: null,
   author: faker.internet.username(),
   category: faker.helpers.arrayElement(['general', 'testing', 'docs']),
-  commitLinks: [],
   completedAt: null,
   createdAt: faker.date.past(),
   description: faker.lorem.paragraph(),

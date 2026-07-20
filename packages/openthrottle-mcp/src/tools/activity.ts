@@ -41,9 +41,9 @@ export const getActivityByDateToolParameters =
 
 export const getLastActivityToolParameters = LastActivityInputSchema();
 
-export const getActivityByDateToolDescription = `Fetch activity (commits, plan output chunks, tasks updated) for "worked on / shipped on X date or X days ago" answers. Provide either date (YYYY-MM-DD) for that day, or daysBack (1–365) for the last N days. Uses commit_links, plan_output_stream, and task updated_at.`;
+export const getActivityByDateToolDescription = `Fetch activity (commits, plan output chunks, tasks updated) for "worked on / shipped on X date or X days ago" answers. Provide either date (YYYY-MM-DD) for that day, or daysBack (1–365) for the last N days. Uses the work ledger (git_commit artifacts), plan_output_stream, and task updated_at.`;
 
-export const getLastActivityToolDescription = `Answer "What was the last thing we did for <plan> or <task>?" Returns the single most recent activity: last commit (commit_links), last plan output chunk, or last task update. Provide planId; optionally taskId to scope to that task.`;
+export const getLastActivityToolDescription = `Answer "What was the last thing we did for <plan> or <task>?" Returns the single most recent activity: last commit (work-ledger git_commit artifact), last plan output chunk, or last task update. Provide planId; optionally taskId to scope to that task.`;
 
 export async function getActivityByDateToolHandler(
   args: z.infer<typeof getActivityByDateToolParameters>,
