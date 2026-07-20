@@ -64,12 +64,6 @@ mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   }
 }
 
-mutation linkCommit($input: LinkCommitInput!) {
-  linkCommit(input: $input) {
-    ...CommitLink
-  }
-}
-
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     ...Project

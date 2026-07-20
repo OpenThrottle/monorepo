@@ -148,19 +148,19 @@ Embedding tables (`plan_embeddings`, `task_embeddings`, `documentation_embedding
 
 Do **not** change existing `vector(1536)` columns or remove the OpenAI code path. Additive only.
 
-### Commit links (Option A workflow)
+### Recording merged commits on the work ledger (Option A workflow)
 
-We use **Option A:** link only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle stores that single SHA in `commit_links` so "what landed" matches the repo.
+We use **Option A:** record only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle records that single SHA as a work-ledger `git_commit` artifact so "what landed" matches the repo. (The legacy `link_commit` MCP tool and its `commit_links` table are **retired** — work-ledger epic 3b798682.)
 
-- **When to call `link_commit`:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. Do **not** link commits during the Ralph loop or while the PR is open.
-- **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read from `commit_links`. Because we only store the squash SHA, activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
+- **When to record:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. Do **not** record commit artifacts during the Ralph loop or while the PR is open.
+- **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read the work ledger. The artifact is recorded `unverified` and the git verifier promotes it to `landed`/`verified`, so activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
 - **Day-to-day workflow:**
-  - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(openthrottle): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** call `link_commit` for these commits—they are normal branch commits. Only after the PR is merged, link the squash commit once (see below).
-  - **Ralph / agent:** While executing tasks, commit and push as above; do **not** call `link_commit`. After the PR is merged, link the squash commit once (see below).
-  - **After merge:** Call MCP `link_commit(planId, repo, squashSha, taskId?, message?)` with the squash SHA and optional PR message, or run:
+  - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(openthrottle): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** record a commit artifact for these commits—they are normal branch commits. Only after the PR is merged, record the squash commit once (see below).
+  - **Ralph / agent:** While executing tasks, commit and push as above; do **not** record commit artifacts. After the PR is merged, record the squash commit once (see below).
+  - **After merge:** Either run the one-shot CLI:
     `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`
-    (optional: `--message`, `--task`).
-    This keeps `commit_links` in sync with main and powers activity-by-date and last-activity for the plan/task.
+    (optional: `--message`, `--task`), or call the MCP ledger tools directly — `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` under an open session.
+    This records the squash on the ledger and powers activity-by-date and last-activity for the plan/task.
 
 ### Plan and task attributes (PRD mapping)
 

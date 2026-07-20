@@ -5,7 +5,7 @@ description: >-
   OpenThrottle plan/task UUIDs; injected /agents/ralph prompt layer; spawn worker vs
   in-process orchestrator (enqueuePlanRun vs enqueuePlanRalphOrchestrator);
   BullMQ and worktree docs in tools/workflows; commit cadence and post-merge
-  link_commit; WORKFLOW_RALPH_DEBUG and --debug. USE WHEN running Ralph,
+  work-ledger recording (workflow-link-merge); WORKFLOW_RALPH_DEBUG and --debug. USE WHEN running Ralph,
   debugging iterations, or the user mentions workflow-ralph, Ralph, plan
   queue, nested workflow-ralph, Cursor backend, workflow-link-merge, or
   tools/workflows README.
@@ -54,7 +54,7 @@ On **ERROR** or **INPUT_REQUIRED**, Ralph exits non-zero per parser rules.
 
 ## Commit cadence during Ralph runs
 
-After each task or logical chunk: **commit** with conventional messages and **`Plan-Id` / `Task-Id`** footers. **Do not** call **`link_commit`** for those commits. Link **only the squash commit on main after PR merge** — use **`pnpm exec workflow-link-merge`** or OT **`link_commit`** (see **`.agents/skills/ot-plans/SKILL.md`**).
+After each task or logical chunk: **commit** with conventional messages and **`Plan-Id` / `Task-Id`** footers. **Do not** record a commit artifact for those commits. Record **only the squash commit on main after PR merge** as a work-ledger `git_commit` artifact — use **`pnpm exec workflow-link-merge`** or the OT ledger tools `attach_session_subject` + `record_artifact` (see **`.agents/skills/ot-plans/SKILL.md`**).
 
 ## Spawn vs orchestrator (API queue)
 
@@ -76,7 +76,7 @@ Opt-in shim logger: **`WORKFLOW_RALPH_DEBUG=1`**, **`--debug`**, or **`--verbose
 
 ## Related bins
 
-- **`pnpm exec workflow-link-merge --plan <uuid> --sha <squash-sha> --repo <owner/repo>`** — post-merge squash link to OT (pair with **ot-plans** skill).
+- **`pnpm exec workflow-link-merge --plan <uuid> --sha <squash-sha> --repo <owner/repo>`** — post-merge: records the squash commit as a work-ledger `git_commit` artifact (pair with **ot-plans** skill).
 
 ## Cross-links
 
@@ -84,6 +84,6 @@ Opt-in shim logger: **`WORKFLOW_RALPH_DEBUG=1`**, **`--debug`**, or **`--verbose
 - **Config migration:** `docs/workflows/ralph-config-migration.md`
 - **Design / runtime config:** `docs/workflows/ralph-design.md`, `docs/workflows/ralph-workflow-runtime-config.md`, `docs/workflows/ralph-per-package-config-adr.md`
 - **Process / worktrees:** `docs/process-model.md`, `docs/worktree-registration-and-allocation.md`
-- **OT plans, commits, link_commit:** `.agents/skills/ot-plans/SKILL.md`
+- **OT plans, commits, work-ledger recording:** `.agents/skills/ot-plans/SKILL.md`
 - **Repo index:** `AGENTS.md` (Workflow CLI section)
 - **Investigation (Docker/worker cwd):** OpenThrottle plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`
