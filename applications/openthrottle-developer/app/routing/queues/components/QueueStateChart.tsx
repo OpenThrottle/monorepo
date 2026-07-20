@@ -14,10 +14,12 @@ import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
+  QUEUE_STATE_CHART_CATEGORY_AXIS_WIDTH,
   QUEUE_STATE_CHART_CONFIG,
   QUEUE_STATE_CHART_SERIES,
   queueStateChartData,
   queueStateChartHeight,
+  truncateQueueLabel,
 } from '~/routing/queues/utils/queue-state-chart';
 import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 
@@ -142,9 +144,12 @@ export const QueueStateChart = (
             <YAxis
               axisLine={false}
               dataKey="name"
+              interval={0}
+              tickFormatter={truncateQueueLabel}
               tickLine={false}
+              tickMargin={8}
               type="category"
-              width={96}
+              width={QUEUE_STATE_CHART_CATEGORY_AXIS_WIDTH}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />

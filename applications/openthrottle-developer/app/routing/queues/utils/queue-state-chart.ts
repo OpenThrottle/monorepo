@@ -143,6 +143,26 @@ export function queueStateChartHeight(barCount: number): number {
   );
 }
 
+/** Width (px) reserved for the category (queue-name) axis. */
+export const QUEUE_STATE_CHART_CATEGORY_AXIS_WIDTH = 132;
+
+/** Max characters shown for a queue-name axis label before truncating. */
+export const QUEUE_STATE_CHART_LABEL_MAX_CHARS = 16;
+
+/**
+ * @description Truncates a queue-name axis label to a single line, appending an
+ * ellipsis when clipped. Full name stays available via the chart tooltip.
+ */
+export function truncateQueueLabel(
+  value: string,
+  max: number = QUEUE_STATE_CHART_LABEL_MAX_CHARS,
+): string {
+  if (value.length <= max) {
+    return value;
+  }
+  return `${value.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+}
+
 /**
  * @description Compact numeric ticks for the job-count axis (e.g. 48200 → "48.2K").
  */

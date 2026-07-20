@@ -3,6 +3,8 @@ import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
+  QUEUE_STATE_CHART_LABEL_MAX_CHARS,
+  truncateQueueLabel,
   QUEUE_STATE_CHART_AGGREGATE_LABEL,
   QUEUE_STATE_CHART_CONFIG,
   QUEUE_STATE_CHART_MIN_HEIGHT,
@@ -223,6 +225,30 @@ describe('formatQueueStateChartTick', () => {
 
   test('passes through non-finite values as strings', () => {
     expect(formatQueueStateChartTick(Number.NaN)).toBe('NaN');
+  });
+});
+
+describe('truncateQueueLabel', () => {
+  test('returns short names unchanged', () => {
+    expect(truncateQueueLabel('default')).toBe('default');
+    expect(truncateQueueLabel('All queues')).toBe('All queues');
+  });
+
+  test('truncates long names to a single ellipsised line', () => {
+    const long = 'a-really-long-queue-name-that-overflows';
+    const result = truncateQueueLabel(long);
+
+    expect(result).toHaveLength(QUEUE_STATE_CHART_LABEL_MAX_CHARS);
+    expect(result.endsWith('…')).toBe(true);
+    expect(long.startsWith(result.slice(0, -1))).toBe(true);
+  });
+
+  test('respects a custom max length', () => {
+    expect(truncateQueueLabel('notifications', 5)).toBe('noti…');
+  });
+
+  test('trims trailing whitespace before the ellipsis', () => {
+    expect(truncateQueueLabel('ab cdefghij', 4)).toBe('ab…');
   });
 });
 
