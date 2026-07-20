@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { useAtomValue } from 'jotai';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
@@ -14,13 +15,15 @@ import {
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import {
+  workflowRalphRunOptionsAtom,
+  workflowRunIterationTimeoutTextAtom,
+  workflowWorkingDirectoryAtom,
+} from '~/routing/plans/data/atom.plan';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
-  workflowInput: WorkflowRalphRunOptionsInput;
-  workflowTimeout: string;
-  workingDirectory?: string;
 }
 
 export const PlanTabDetails = (
@@ -29,14 +32,14 @@ export const PlanTabDetails = (
   const {
     fullscreen,
     // setFullscreen,
-    workingDirectory,
-    workflowInput,
-    workflowTimeout,
   } = props;
 
   // Hooks
   const { plan, planRunAuditRows, recentPlanRuns, tasks } =
     usePlanDetailRouteData();
+  const workflowInput = useAtomValue(workflowRalphRunOptionsAtom);
+  const workflowTimeout = useAtomValue(workflowRunIterationTimeoutTextAtom);
+  const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
 
   // Setup
   const canonicalWorkflowCommand = React.useMemo(() => {
