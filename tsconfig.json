@@ -140,9 +140,6 @@
       "path": "./tools/generators"
     },
     {
-      "path": "./packages/openthrottle-workflows"
-    },
-    {
       "path": "./packages/openthrottle-skills"
     },
     {

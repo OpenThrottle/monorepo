@@ -89,7 +89,6 @@
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/openthrottle-vscode": "workspace:^",
-    "@openthrottle/openthrottle-workflows": "workspace:^",
     "@openthrottle/react-router-auth": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",

@@ -368,12 +368,12 @@ The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFil
 
 These targets read the committed `applications/openthrottle-server/schema.gql` via each project’s `codegen.ts`:
 
-| Area                    | Nx project(s)                                                                                                        | Generated output (typical)                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Developer UI            | `openthrottle-developer`, `@openthrottle/openthrottle-developer-codegen`                                             | `app/__generated__/` or package `src/__generated__/` |
-| Other React Router apps | `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`                                                   | `app/__generated__/`                                 |
-| MCP / Ralph / workflows | `@openthrottle/openthrottle-mcp`, `@openthrottle/openthrottle-agentic-ralph`, `@openthrottle/openthrottle-workflows` | `src/__generated__/`                                 |
-| Editor extension        | `@openthrottle/vscode-openthrottle`                                                                                  | extension `src/__generated__/`                       |
+| Area                    | Nx project(s)                                                                | Generated output (typical)                           |
+| ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Developer UI            | `openthrottle-developer`, `@openthrottle/openthrottle-developer-codegen`     | `app/__generated__/` or package `src/__generated__/` |
+| Other React Router apps | `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`           | `app/__generated__/`                                 |
+| MCP / Ralph / workflows | `@openthrottle/openthrottle-mcp`, `@openthrottle/openthrottle-agentic-ralph` | `src/__generated__/`                                 |
+| Editor extension        | `@openthrottle/vscode-openthrottle`                                          | extension `src/__generated__/`                       |
 
 **CI drift guards for committed package output:** `@openthrottle/openthrottle-mcp` and `@openthrottle/openthrottle-agentic-ralph` must keep `src/__generated__/` in sync with the schema (regenerate with `pnpm nx run <project>:codegen-graphql` and commit, or CI’s `verify-graphql-codegen` fails).
 

@@ -43,7 +43,6 @@
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
-    "@openthrottle/openthrottle-workflows": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
     "chokidar": "catalog:",

@@ -81,4 +81,50 @@ describe('formatPlanAndTasksForPrompt', () => {
     expect(output).toContain('broken');
     expect(output).toContain('Requirements: ok');
   });
+
+  it('renders requirements from a TypeORM-style entity `requirements` array (no requirementsJson)', () => {
+    // The server lifecycle / job-run hooks pass entity rows whose requirements
+    // live in a parsed array, not a GraphQL `requirementsJson` string.
+    const output = formatPlanAndTasksForPrompt(plan(), [
+      {
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        description: null,
+        id: 'entity',
+        requirements: ['gamma', 'delta'],
+        sortOrder: 1000,
+        status: 'PENDING',
+        title: 'entity',
+      },
+    ]);
+
+    expect(output).toContain('Requirements: gamma, delta');
+  });
+
+  it('sorts entity rows with a Date createdAt by sortOrder without throwing', () => {
+    const build = () =>
+      formatPlanAndTasksForPrompt(plan(), [
+        {
+          createdAt: new Date('2026-02-01T00:00:00.000Z'),
+          id: 'second',
+          requirements: [],
+          sortOrder: 2000,
+          status: 'PENDING',
+          title: 'second',
+        },
+        {
+          createdAt: new Date('2026-01-01T00:00:00.000Z'),
+          id: 'first',
+          requirements: [],
+          sortOrder: 1000,
+          status: 'PENDING',
+          title: 'first',
+        },
+      ]);
+
+    expect(build).not.toThrow();
+
+    const output = build();
+
+    expect(output.indexOf('first')).toBeLessThan(output.indexOf('second'));
+  });
 });
