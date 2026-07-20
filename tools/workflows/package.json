@@ -47,7 +47,7 @@
       "production:true",
       "technology:nodejs",
       "technology:typescript",
-      "type:tool"
+      "type:package"
     ],
     "targets": {
       "build": {
