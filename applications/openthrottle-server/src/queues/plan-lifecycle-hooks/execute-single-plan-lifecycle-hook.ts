@@ -9,7 +9,7 @@ import {
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-workflows';
+import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   buildJobRunHookAgentPrompt,

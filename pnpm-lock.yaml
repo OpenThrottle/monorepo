@@ -1191,9 +1191,6 @@ importers:
       '@openthrottle/openthrottle-vscode':
         specifier: workspace:^
         version: link:packages/openthrottle-vscode
-      '@openthrottle/openthrottle-workflows':
-        specifier: workspace:^
-        version: link:packages/openthrottle-workflows
       '@openthrottle/react-router-auth':
         specifier: workspace:^
         version: link:packages/react-router-auth
@@ -2302,9 +2299,6 @@ importers:
       '@openthrottle/openthrottle-skills':
         specifier: workspace:^
         version: link:../../packages/openthrottle-skills
-      '@openthrottle/openthrottle-workflows':
-        specifier: workspace:^
-        version: link:../../packages/openthrottle-workflows
       '@tools/workflows':
         specifier: workspace:^
         version: link:../../tools/workflows
@@ -3011,25 +3005,6 @@ importers:
         version: 4.4.3
 
   packages/openthrottle-vscode: {}
-
-  packages/openthrottle-workflows:
-    dependencies:
-      '@openthrottle/graphql-codegen':
-        specifier: workspace:^
-        version: link:../graphql-codegen
-      '@openthrottle/nodejs-graphql':
-        specifier: workspace:^
-        version: link:../nodejs-graphql
-      '@openthrottle/openthrottle-agentic-utils':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-utils
-      '@openthrottle/openthrottle-agentic-workflow':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-workflow
-    devDependencies:
-      '@openthrottle/openthrottle-agentic-ralph':
-        specifier: workspace:^
-        version: link:../openthrottle-agentic-ralph
 
   packages/react-router-auth: {}
 
