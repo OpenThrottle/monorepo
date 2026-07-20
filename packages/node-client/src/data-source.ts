@@ -3,7 +3,6 @@
  */
 
 import {
-  CommitLink,
   Plan,
   PlanEmbedding,
   PlanOutputStreamChunk,
@@ -18,7 +17,7 @@ const cache = new Map<string, DataSource>();
 
 /**
  * @description Returns a TypeORM DataSource for the given config, creating and initializing one per connection string (connection pooling).
- * Registers Plan, Task, PlanEmbedding, TaskEmbedding, Project, CommitLink, and PlanOutputStreamChunk so repository-based CRUD and relation metadata (e.g. Plan#commitLinks) resolve correctly.
+ * Registers Plan, Task, PlanEmbedding, TaskEmbedding, Project, and PlanOutputStreamChunk so repository-based CRUD and relation metadata resolve correctly.
  */
 export async function getOrCreateDataSource(): Promise<DataSource> {
   const url = getPostgresUrl();
@@ -36,7 +35,6 @@ export async function getOrCreateDataSource(): Promise<DataSource> {
 
   ds = new DataSource({
     entities: [
-      CommitLink,
       Plan,
       PlanEmbedding,
       PlanOutputStreamChunk,

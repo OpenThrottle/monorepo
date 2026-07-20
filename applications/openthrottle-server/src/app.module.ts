@@ -38,7 +38,6 @@ import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.module';
 import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module';
-import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module';
 import { CspReportsModule } from './modules/csp-reports/csp-reports.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
@@ -244,7 +243,6 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           AgentsGraphqlModule,
           AuthGraphqlModule,
           CodeSearchGraphqlModule,
-          CommitLinksGraphqlModule,
           ConversationStreamGraphqlModule,
           CustomPromptsGraphqlModule,
           DailyStatsGraphqlModule,

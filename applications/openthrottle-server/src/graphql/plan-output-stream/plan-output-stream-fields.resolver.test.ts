@@ -19,7 +19,6 @@ describe('PlanOutputStreamFieldsResolver', () => {
     assignee: null,
     author: 'Plan author',
     category: 'Plan category',
-    commitLinks: [],
     completedAt: null,
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     description: 'Plan description',

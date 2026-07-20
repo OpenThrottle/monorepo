@@ -739,80 +739,6 @@ type IndexCodeRepositoryResult {
   status: String!
 }
 
-type WorkSessionObject {
-  actorServiceAccountId: String
-  actorUserId: String
-
-  """How the session closed: explicit | sweeper; null while open"""
-  closedBy: String
-  conversationId: String
-  createdAt: DateTime!
-  endedAt: DateTime
-  externalRef: String
-  id: String!
-  model: String
-  onBehalfOfUserId: String
-  onBehalfOfVerified: Boolean!
-  planRunId: String
-  startedAt: DateTime!
-  summary: String
-  toolName: String!
-  toolVersion: String
-}
-
-type WorkSessionSubjectObject {
-  attachedAt: DateTime!
-  id: String!
-  planId: String!
-  sessionId: String!
-  taskId: String
-}
-
-type WorkArtifactObject {
-  createdAt: DateTime!
-  externalKey: String!
-  id: String!
-  lifecycle: String
-  message: String
-
-  """JSON-serialized per-type payload (parse client-side)"""
-  payloadJson: String!
-  producedAt: DateTime!
-  sessionId: String!
-  source: String!
-  type: String!
-
-  """Claims-vs-facts state: unverified | verified | orphaned"""
-  verification: String!
-  verifiedAt: DateTime
-}
-
-type WorkSessionListResult {
-  sessions: [WorkSessionObject!]!
-  totalCount: Int!
-}
-
-type WorkArtifactListResult {
-  artifacts: [WorkArtifactObject!]!
-  totalCount: Int!
-}
-
-type CommitLinkObject {
-  createdAt: DateTime!
-  id: String!
-  message: String
-
-  """Resolved plan entity when planId is set"""
-  plan: PlanObject
-  planId: String!
-  repo: String!
-  sha: String!
-
-  """Resolved task entity when taskId is set"""
-  task: TaskObject
-  taskId: String
-}
-
 type ConversationStreamChunkObject {
   conversationId: String!
 
@@ -1671,6 +1597,64 @@ type PlanOutputStreamChunkObject {
   planId: String!
 }
 
+type WorkSessionObject {
+  actorServiceAccountId: String
+  actorUserId: String
+
+  """How the session closed: explicit | sweeper; null while open"""
+  closedBy: String
+  conversationId: String
+  createdAt: DateTime!
+  endedAt: DateTime
+  externalRef: String
+  id: String!
+  model: String
+  onBehalfOfUserId: String
+  onBehalfOfVerified: Boolean!
+  planRunId: String
+  startedAt: DateTime!
+  summary: String
+  toolName: String!
+  toolVersion: String
+}
+
+type WorkSessionSubjectObject {
+  attachedAt: DateTime!
+  id: String!
+  planId: String!
+  sessionId: String!
+  taskId: String
+}
+
+type WorkArtifactObject {
+  createdAt: DateTime!
+  externalKey: String!
+  id: String!
+  lifecycle: String
+  message: String
+
+  """JSON-serialized per-type payload (parse client-side)"""
+  payloadJson: String!
+  producedAt: DateTime!
+  sessionId: String!
+  source: String!
+  type: String!
+
+  """Claims-vs-facts state: unverified | verified | orphaned"""
+  verification: String!
+  verifiedAt: DateTime
+}
+
+type WorkSessionListResult {
+  sessions: [WorkSessionObject!]!
+  totalCount: Int!
+}
+
+type WorkArtifactListResult {
+  artifacts: [WorkArtifactObject!]!
+  totalCount: Int!
+}
+
 type QueueJobLogEventObject {
   """Opaque cursor positioned AFTER this event; pass as `after` to resume."""
   cursor: String!
@@ -2305,28 +2289,6 @@ type Query {
   """
   codeIndexStatus(repositoryId: ID!): CodeIndexStatusObject!
 
-  """Get a commit link by ID"""
-  commitLink(input: GetCommitLinkInput!): CommitLinkObject @deprecated(reason: "Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).")
-
-  """
-  List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.
-  """
-  commitLinks(limit: Int): [CommitLinkObject!]! @deprecated(reason: "Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).")
-
-  """
-  List commit links for a plan (plan-level and task-level), ordered by createdAt descending
-  """
-  commitLinksByPlanId(input: CommitLinksByPlanIdInput!): [CommitLinkObject!]! @deprecated(reason: "Use workArtifactsByPlan. commit_links is being retired (epic 3b798682).")
-
-  """List commit links for a task, ordered by createdAt descending"""
-  commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]! @deprecated(reason: "Use workArtifactsByTask. commit_links is being retired (epic 3b798682).")
-  workSession(id: String!): WorkSessionObject
-  workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
-  workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
-  workArtifactsByPlan(input: WorkArtifactsByPlanInput!): WorkArtifactListResult!
-  workArtifactsByTask(input: WorkArtifactsByTaskInput!): WorkArtifactListResult!
-  unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
-
   """
   Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama).
   """
@@ -2493,6 +2455,12 @@ type Query {
 
   """Distinct author and assignee values from plans and tasks for filters"""
   listDistinctAuthorsAndAssignees: [String!]!
+  workSession(id: String!): WorkSessionObject
+  workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
+  workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
+  workArtifactsByPlan(input: WorkArtifactsByPlanInput!): WorkArtifactListResult!
+  workArtifactsByTask(input: WorkArtifactsByTaskInput!): WorkArtifactListResult!
+  unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
 
   """
   A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability.
@@ -2714,49 +2682,6 @@ input CodeSemanticSearchInput {
 
   """Registered WorkspaceLocalRepository id to search within."""
   repositoryId: ID!
-}
-
-input GetCommitLinkInput {
-  """Commit link id"""
-  id: ID!
-}
-
-input CommitLinksByPlanIdInput {
-  """Plan id to list commit links for"""
-  planId: ID!
-}
-
-input CommitLinksByTaskIdInput {
-  """Task id to list commit links for"""
-  taskId: ID!
-}
-
-input WorkSessionsByPlanInput {
-  """Plan id to list sessions for"""
-  planId: ID!
-}
-
-input WorkArtifactsBySessionInput {
-  """Session id to list artifacts for"""
-  sessionId: ID!
-}
-
-input WorkArtifactsByPlanInput {
-  """Plan id to list linked artifacts for"""
-  planId: ID!
-}
-
-input WorkArtifactsByTaskInput {
-  """Task id to list linked artifacts for"""
-  taskId: ID!
-}
-
-input UnverifiedWorkArtifactsInput {
-  """Max rows (verifier feed); clamped server-side"""
-  limit: Int
-
-  """Restrict to a single artifact type (e.g. git_commit)"""
-  type: String
 }
 
 """Input for semantic search over agent-asset (custom_prompt) embeddings."""
@@ -3031,6 +2956,34 @@ input SearchPlansInput {
   query: String!
 }
 
+input WorkSessionsByPlanInput {
+  """Plan id to list sessions for"""
+  planId: ID!
+}
+
+input WorkArtifactsBySessionInput {
+  """Session id to list artifacts for"""
+  sessionId: ID!
+}
+
+input WorkArtifactsByPlanInput {
+  """Plan id to list linked artifacts for"""
+  planId: ID!
+}
+
+input WorkArtifactsByTaskInput {
+  """Task id to list linked artifacts for"""
+  taskId: ID!
+}
+
+input UnverifiedWorkArtifactsInput {
+  """Max rows (verifier feed); clamped server-side"""
+  limit: Int
+
+  """Restrict to a single artifact type (e.g. git_commit)"""
+  type: String
+}
+
 input QueueJobLogsInput {
   """Opaque cursor from a prior page. Mutually exclusive with `since`."""
   after: String
@@ -3146,15 +3099,6 @@ type Mutation {
   indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
 
   """
-  Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA.
-  """
-  linkCommit(input: LinkCommitInput!): CommitLinkObject!
-  startWorkSession(input: StartWorkSessionInput!): WorkSessionObject!
-  recordWorkArtifact(input: RecordWorkArtifactInput!): WorkArtifactObject!
-  attachWorkSessionSubject(input: AttachWorkSessionSubjectInput!): WorkSessionSubjectObject!
-  endWorkSession(input: EndWorkSessionInput!): WorkSessionObject
-
-  """
   Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures.
   """
   startConversationStream(input: StartConversationStreamInput!): StartConversationStreamResult!
@@ -3267,6 +3211,10 @@ type Mutation {
   Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
+  startWorkSession(input: StartWorkSessionInput!): WorkSessionObject!
+  recordWorkArtifact(input: RecordWorkArtifactInput!): WorkArtifactObject!
+  attachWorkSessionSubject(input: AttachWorkSessionSubjectInput!): WorkSessionSubjectObject!
+  endWorkSession(input: EndWorkSessionInput!): WorkSessionObject
 
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
@@ -3549,89 +3497,6 @@ input RegisterInput {
 
   """GitHub username for display; defaults to email local part if omitted"""
   githubUsername: String
-}
-
-input LinkCommitInput {
-  """Plan id to link the commit to"""
-  planId: ID!
-
-  """Repository (e.g. owner/repo)"""
-  repo: String!
-
-  """Git commit SHA (squash commit after PR merge)"""
-  sha: String!
-
-  """Optional task id to link the commit to"""
-  taskId: ID
-
-  """Optional commit or PR message"""
-  message: String
-}
-
-input StartWorkSessionInput {
-  """Chat conversation id when this session is a chat thread"""
-  conversationId: String
-
-  """
-  External correlation id (BullMQ job id, worktree+pid, agent session id)
-  """
-  externalRef: String
-
-  """Model identifier when an agent did the work (e.g. claude-fable-5)"""
-  model: String
-
-  """
-  Unverified hint: the human this machine work is on behalf of (users.id)
-  """
-  onBehalfOfUserId: ID
-
-  """plan_runs.id when this session is a Ralph run"""
-  planRunId: ID
-
-  """
-  Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name
-  """
-  toolName: String!
-
-  """Tool/client version"""
-  toolVersion: String
-}
-
-input RecordWorkArtifactInput {
-  """Optional human-readable note (e.g. commit message)"""
-  message: String
-
-  """
-  JSON-serialized payload; validated server-side against the type's schema
-  """
-  payloadJson: String!
-
-  """Session that produced the artifact"""
-  sessionId: ID!
-
-  """
-  Artifact type: git_commit | pull_request | document | deployment | status_change
-  """
-  type: String!
-}
-
-input AttachWorkSessionSubjectInput {
-  """Subject plan"""
-  planId: ID!
-
-  """Session to attach the subject to"""
-  sessionId: ID!
-
-  """Subject task (task-level subject); omit for plan-level"""
-  taskId: ID
-}
-
-input EndWorkSessionInput {
-  """Session to close"""
-  sessionId: ID!
-
-  """Summary set at close (legibility for unpromoted sessions)"""
-  summary: String
 }
 
 input StartConversationStreamInput {
@@ -3972,6 +3837,72 @@ enum PlanRalphWorkflowMode {
 input CancelPlanRunInput {
   """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
   planId: ID!
+}
+
+input StartWorkSessionInput {
+  """Chat conversation id when this session is a chat thread"""
+  conversationId: String
+
+  """
+  External correlation id (BullMQ job id, worktree+pid, agent session id)
+  """
+  externalRef: String
+
+  """Model identifier when an agent did the work (e.g. claude-fable-5)"""
+  model: String
+
+  """
+  Unverified hint: the human this machine work is on behalf of (users.id)
+  """
+  onBehalfOfUserId: ID
+
+  """plan_runs.id when this session is a Ralph run"""
+  planRunId: ID
+
+  """
+  Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name
+  """
+  toolName: String!
+
+  """Tool/client version"""
+  toolVersion: String
+}
+
+input RecordWorkArtifactInput {
+  """Optional human-readable note (e.g. commit message)"""
+  message: String
+
+  """
+  JSON-serialized payload; validated server-side against the type's schema
+  """
+  payloadJson: String!
+
+  """Session that produced the artifact"""
+  sessionId: ID!
+
+  """
+  Artifact type: git_commit | pull_request | document | deployment | status_change
+  """
+  type: String!
+}
+
+input AttachWorkSessionSubjectInput {
+  """Subject plan"""
+  planId: ID!
+
+  """Session to attach the subject to"""
+  sessionId: ID!
+
+  """Subject task (task-level subject); omit for plan-level"""
+  taskId: ID
+}
+
+input EndWorkSessionInput {
+  """Session to close"""
+  sessionId: ID!
+
+  """Summary set at close (legibility for unpromoted sessions)"""
+  summary: String
 }
 
 input CreateProjectInput {

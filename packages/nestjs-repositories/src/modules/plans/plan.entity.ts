@@ -12,7 +12,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { CommitLink } from '../commit-links/commit-link.entity';
 import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
 import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
 import type { Project } from '../projects/project.entity';
@@ -115,9 +114,6 @@ export class Plan {
 
   @OneToMany('PlanEmbedding', 'plan')
   planEmbeddings!: PlanEmbedding[];
-
-  @OneToMany('CommitLink', 'plan')
-  commitLinks!: CommitLink[];
 
   @OneToMany('PlanOutputStreamChunk', 'plan')
   planOutputChunks!: PlanOutputStreamChunk[];

@@ -4,7 +4,7 @@ import { Client } from 'pg';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 /**
- * @description Truncates all openthrottle tables (plans, tasks, embeddings, commit_links, plan_output_stream).
+ * @description Truncates all openthrottle tables (plans, tasks, embeddings, plan_output_stream).
  * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
  * Run before a fresh ingest to avoid duplicate plans.
  */
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
 
   try {
     await client.query(`
-      TRUNCATE plan_output_stream, commit_links, task_embeddings, plan_embeddings, tasks, plans
+      TRUNCATE plan_output_stream, task_embeddings, plan_embeddings, tasks, plans
       RESTART IDENTITY CASCADE
     `);
 

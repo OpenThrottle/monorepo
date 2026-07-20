@@ -413,31 +413,6 @@ export type CodeSemanticSearchResult = {
   matches: Array<CodeSearchMatch>;
 };
 
-export type CommitLinkObject = {
-  __typename?: 'CommitLinkObject';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['String']['output'];
-  message?: Maybe<Scalars['String']['output']>;
-  /** Resolved plan entity when planId is set */
-  plan?: Maybe<PlanObject>;
-  planId: Scalars['String']['output'];
-  repo: Scalars['String']['output'];
-  sha: Scalars['String']['output'];
-  /** Resolved task entity when taskId is set */
-  task?: Maybe<TaskObject>;
-  taskId?: Maybe<Scalars['String']['output']>;
-};
-
-export type CommitLinksByPlanIdInput = {
-  /** Plan id to list commit links for */
-  planId: Scalars['ID']['input'];
-};
-
-export type CommitLinksByTaskIdInput = {
-  /** Task id to list commit links for */
-  taskId: Scalars['ID']['input'];
-};
-
 export type CommitsPerPrInput = {
   /** Max merged PRs to fetch commit count for (default 100); caps API calls. */
   maxPrs?: InputMaybe<Scalars['Int']['input']>;
@@ -918,11 +893,6 @@ export type GetAgentConversationMessagesInput = {
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type GetCommitLinkInput = {
-  /** Commit link id */
-  id: Scalars['ID']['input'];
-};
-
 export type GetGeneratorInput = {
   /** Generator name (e.g. from @tools/generators) */
   name: Scalars['String']['input'];
@@ -1072,19 +1042,6 @@ export type LinesAddedDeletedRowObject = {
   period: Scalars['String']['output'];
   /** Number of merged PRs in this bucket. */
   prCount: Scalars['Int']['output'];
-};
-
-export type LinkCommitInput = {
-  /** Optional commit or PR message */
-  message?: InputMaybe<Scalars['String']['input']>;
-  /** Plan id to link the commit to */
-  planId: Scalars['ID']['input'];
-  /** Repository (e.g. owner/repo) */
-  repo: Scalars['String']['input'];
-  /** Git commit SHA (squash commit after PR merge) */
-  sha: Scalars['String']['input'];
-  /** Optional task id to link the commit to */
-  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ListAgentConversationMessagesResultObject = {
@@ -1358,8 +1315,6 @@ export type Mutation = {
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
   indexCodeRepository: IndexCodeRepositoryResult;
-  /** Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA. */
-  linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -1660,10 +1615,6 @@ export type MutationHardDeleteCustomPromptArgs = {
 
 export type MutationIndexCodeRepositoryArgs = {
   repositoryId: Scalars['ID']['input'];
-};
-
-export type MutationLinkCommitArgs = {
-  input: LinkCommitInput;
 };
 
 export type MutationLoginArgs = {
@@ -2275,26 +2226,6 @@ export type Query = {
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
   codeSemanticSearch: CodeSemanticSearchResult;
-  /**
-   * Get a commit link by ID
-   * @deprecated Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).
-   */
-  commitLink?: Maybe<CommitLinkObject>;
-  /**
-   * List commit links, ordered by createdAt descending. Capped at 100 by default (max 500); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.
-   * @deprecated Use the work ledger (workArtifactsByPlan / workArtifactsByTask / activity). commit_links is being retired (epic 3b798682).
-   */
-  commitLinks: Array<CommitLinkObject>;
-  /**
-   * List commit links for a plan (plan-level and task-level), ordered by createdAt descending
-   * @deprecated Use workArtifactsByPlan. commit_links is being retired (epic 3b798682).
-   */
-  commitLinksByPlanId: Array<CommitLinkObject>;
-  /**
-   * List commit links for a task, ordered by createdAt descending
-   * @deprecated Use workArtifactsByTask. commit_links is being retired (epic 3b798682).
-   */
-  commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) and paginates commits per PR; maxPrs caps the per-PR commit-count requests. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
   /** Get a custom prompt by ID */
@@ -2485,22 +2416,6 @@ export type QueryCodeIndexStatusArgs = {
 
 export type QueryCodeSemanticSearchArgs = {
   input: CodeSemanticSearchInput;
-};
-
-export type QueryCommitLinkArgs = {
-  input: GetCommitLinkInput;
-};
-
-export type QueryCommitLinksArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type QueryCommitLinksByPlanIdArgs = {
-  input: CommitLinksByPlanIdInput;
-};
-
-export type QueryCommitLinksByTaskIdArgs = {
-  input: CommitLinksByTaskIdInput;
 };
 
 export type QueryCommitsPerPrArgs = {

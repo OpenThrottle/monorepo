@@ -18,8 +18,6 @@ import {
   AttachWorkSessionSubjectInput,
   CancelPlanRunInput,
   CodeSemanticSearchInput,
-  CommitLinksByPlanIdInput,
-  CommitLinksByTaskIdInput,
   CommitsPerPrInput,
   CreateAgentConversationInput,
   CreateCustomPromptInput,
@@ -48,7 +46,6 @@ import {
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   GetAgentConversationMessagesInput,
-  GetCommitLinkInput,
   GetGeneratorInput,
   GetPlanEmbeddingInput,
   GetPlanOutputStreamChunkInput,
@@ -57,7 +54,6 @@ import {
   GitHubRepoInput,
   LastActivityInput,
   LinesAddedDeletedInput,
-  LinkCommitInput,
   ListAgentConversationsInput,
   ListCustomPromptsInput,
   ListPlanOutputStreamChunksInput,
@@ -323,22 +319,6 @@ export function CodeSemanticSearchInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     query: z.string(),
     repositoryId: z.string(),
-  });
-}
-
-export function CommitLinksByPlanIdInputSchema(): z.ZodObject<
-  Properties<CommitLinksByPlanIdInput>
-> {
-  return z.object({
-    planId: z.string(),
-  });
-}
-
-export function CommitLinksByTaskIdInputSchema(): z.ZodObject<
-  Properties<CommitLinksByTaskIdInput>
-> {
-  return z.object({
-    taskId: z.string(),
   });
 }
 
@@ -633,14 +613,6 @@ export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
   });
 }
 
-export function GetCommitLinkInputSchema(): z.ZodObject<
-  Properties<GetCommitLinkInput>
-> {
-  return z.object({
-    id: z.string(),
-  });
-}
-
 export function GetGeneratorInputSchema(): z.ZodObject<
   Properties<GetGeneratorInput>
 > {
@@ -708,18 +680,6 @@ export function LinesAddedDeletedInputSchema(): z.ZodObject<
     owner: z.string(),
     period: z.string().nullish(),
     repo: z.string(),
-  });
-}
-
-export function LinkCommitInputSchema(): z.ZodObject<
-  Properties<LinkCommitInput>
-> {
-  return z.object({
-    message: z.string().nullish(),
-    planId: z.string(),
-    repo: z.string(),
-    sha: z.string(),
-    taskId: z.string().nullish(),
   });
 }
 

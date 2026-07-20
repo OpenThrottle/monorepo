@@ -8,7 +8,6 @@ import { AgentConversationMessage } from './modules/agent-conversations/agent-co
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
 import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
 import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity';
-import { CommitLink } from './modules/commit-links/commit-link.entity';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
@@ -70,7 +69,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
       AgentConversationMessage,
       CodeEmbedding,
       CodeIndexSnapshot,
-      CommitLink,
       CustomPrompt,
       DailyStat,
       Note,

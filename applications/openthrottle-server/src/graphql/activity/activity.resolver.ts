@@ -1,7 +1,7 @@
 // FIXME: Swap out eventually
 
 /**
- * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across commit_links, plan_output_stream, tasks.
+ * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
  */
 
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
