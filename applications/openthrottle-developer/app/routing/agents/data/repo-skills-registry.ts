@@ -1,6 +1,6 @@
 /**
  * @description Types and helpers for repo skill entries discovered from
- * `.agents/skills` and `.cursor/skills` at request time (see
+ * `.agents/skills` (the SSOT view) at request time (see
  * `discover-repo-skills.server.ts` and the `skills._index` route loader).
  *
  * Keep `OPENTHROTTLE_REPO_SKILL_PATHS` in
@@ -9,13 +9,12 @@
  */
 import type { SkillSource } from '@openthrottle/openthrottle-skills';
 
-export type SkillRegistryLayout = 'agents' | 'claude' | 'cursor' | 'opencode';
+export type SkillRegistryLayout = 'agents' | 'claude' | 'opencode';
 
 const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
   claude: 1,
-  cursor: 2,
-  opencode: 3,
+  opencode: 2,
 };
 
 /**
@@ -98,19 +97,9 @@ export const dedupeRepoSkillEntriesBySlug = (
 };
 
 /**
- * @description Returns layout counts for display next to the discovered skills list.
+ * @description Returns the count of discovered skills under the `.agents/skills`
+ * SSOT view, for display next to the skills list.
  */
 export const getRepoSkillsRegistryCounts = (
   entries: ReadonlyArray<RepoSkillEntry>,
-): { readonly agents: number; readonly cursor: number } => {
-  let agents = 0;
-  let cursor = 0;
-  for (const e of entries) {
-    if (e.layout === 'cursor') {
-      cursor += 1;
-    } else {
-      agents += 1;
-    }
-  }
-  return { agents, cursor };
-};
+): { readonly agents: number } => ({ agents: entries.length });

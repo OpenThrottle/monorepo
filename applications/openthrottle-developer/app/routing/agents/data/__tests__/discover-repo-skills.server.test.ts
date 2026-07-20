@@ -52,7 +52,7 @@ describe('discoverRepoSkills', () => {
     expect(discoverRepoSkills(root)).toEqual([]);
   });
 
-  test('discovers agents and cursor skills and sorts by layout then slug', () => {
+  test('discovers agents and claude skills and sorts by layout then slug', () => {
     const root = makeTempDir();
 
     writeSkill(
@@ -69,9 +69,9 @@ describe('discoverRepoSkills', () => {
     );
     writeSkill(
       root,
-      '.cursor/skills',
+      '.claude/skills',
       'monitor-ci',
-      'name: monitor-ci\ndescription: Cursor CI skill.',
+      'name: monitor-ci\ndescription: Claude CI skill.',
     );
 
     expect(discoverRepoSkills(root)).toEqual([
@@ -90,11 +90,11 @@ describe('discoverRepoSkills', () => {
         summary: 'Zebra agents skill.',
       },
       {
-        layout: 'cursor',
-        repoRelativePath: '.cursor/skills/monitor-ci/SKILL.md',
+        layout: 'claude',
+        repoRelativePath: '.claude/skills/monitor-ci/SKILL.md',
         slug: 'monitor-ci',
         source: 'external',
-        summary: 'Cursor CI skill.',
+        summary: 'Claude CI skill.',
       },
     ]);
   });
@@ -326,7 +326,7 @@ describe('discoverRepoSkills', () => {
     ]);
   });
 
-  test('dedupes symlinked cursor skill when agents layout has the same slug', () => {
+  test('dedupes symlinked claude skill when agents layout has the same slug', () => {
     const root = makeTempDir();
 
     writeSkill(
@@ -337,9 +337,9 @@ describe('discoverRepoSkills', () => {
     );
 
     const agentsSkillDir = join(root, '.agents/skills/shared-skill');
-    const cursorSkillsRoot = join(root, '.cursor/skills');
-    mkdirSync(cursorSkillsRoot, { recursive: true });
-    symlinkSync(agentsSkillDir, join(cursorSkillsRoot, 'shared-skill'));
+    const claudeSkillsRoot = join(root, '.claude/skills');
+    mkdirSync(claudeSkillsRoot, { recursive: true });
+    symlinkSync(agentsSkillDir, join(claudeSkillsRoot, 'shared-skill'));
 
     expect(discoverRepoSkills(root)).toEqual([
       {
@@ -354,23 +354,23 @@ describe('discoverRepoSkills', () => {
 
   test('ignores non-directory entries under the skills root', () => {
     const root = makeTempDir();
-    const skillsRoot = join(root, '.cursor/skills');
+    const skillsRoot = join(root, '.claude/skills');
     mkdirSync(skillsRoot, { recursive: true });
     writeFileSync(join(skillsRoot, 'README.md'), '# not a skill folder\n');
     writeSkill(
       root,
-      '.cursor/skills',
+      '.claude/skills',
       'real-skill',
-      'name: real-skill\ndescription: Cursor skill.',
+      'name: real-skill\ndescription: Claude skill.',
     );
 
     expect(discoverRepoSkills(root)).toEqual([
       {
-        layout: 'cursor',
-        repoRelativePath: '.cursor/skills/real-skill/SKILL.md',
+        layout: 'claude',
+        repoRelativePath: '.claude/skills/real-skill/SKILL.md',
         slug: 'real-skill',
         source: 'external',
-        summary: 'Cursor skill.',
+        summary: 'Claude skill.',
       },
     ]);
   });

@@ -10,25 +10,19 @@ const REQUIRED_AGENTS_SKILL_SLUGS = [
 
 describe('OPENTHROTTLE_REPO_SKILL_PATHS', () => {
   test('lists OpenThrottle agent skills aligned with .agents/skills', () => {
-    const agentSlugs = new Set(
-      OPENTHROTTLE_REPO_SKILL_PATHS.filter(
-        (entry) => entry.layout === 'agents',
-      ).map((entry) => entry.slug),
+    const slugs = new Set(
+      OPENTHROTTLE_REPO_SKILL_PATHS.map((entry) => entry.slug),
     );
 
     for (const slug of REQUIRED_AGENTS_SKILL_SLUGS) {
-      expect(agentSlugs.has(slug)).toBe(true);
+      expect(slugs.has(slug)).toBe(true);
     }
   });
 
-  test('uses repo-relative SKILL.md paths for agent entries', () => {
+  test('uses repo-relative .agents/skills SKILL.md paths', () => {
     for (const entry of OPENTHROTTLE_REPO_SKILL_PATHS) {
       expect(entry.repoRelativePath).toMatch(/\/SKILL\.md$/);
-      if (entry.layout === 'agents') {
-        expect(entry.repoRelativePath.startsWith('.agents/skills/')).toBe(true);
-      } else {
-        expect(entry.repoRelativePath.startsWith('.cursor/skills/')).toBe(true);
-      }
+      expect(entry.repoRelativePath.startsWith('.agents/skills/')).toBe(true);
     }
   });
 });

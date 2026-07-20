@@ -8,10 +8,7 @@ import { dirname, join } from 'path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
-import {
-  OPENTHROTTLE_REPO_SKILL_PATHS,
-  type RepoSkillPathLayout,
-} from './openthrottle-repo-skill-paths';
+import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { WorkspaceEditorId } from './workspace-editor-id';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
 import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
@@ -37,9 +34,6 @@ export interface WorkspaceEditorConfigApplication {
   readonly repositoryId: string;
   readonly warnings: readonly string[];
 }
-
-const layoutForEditor = (editorId: WorkspaceEditorId): RepoSkillPathLayout =>
-  editorId === 'cursor' ? 'cursor' : 'agents';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -171,9 +165,9 @@ export class WorkspaceEditorConfigService {
       recursive: true,
     });
 
-    const skillPaths = OPENTHROTTLE_REPO_SKILL_PATHS.filter(
-      (entry) => entry.layout === layoutForEditor(params.editor),
-    ).map((entry) => entry.repoRelativePath);
+    const skillPaths = OPENTHROTTLE_REPO_SKILL_PATHS.map(
+      (entry) => entry.repoRelativePath,
+    );
 
     for (const skillPath of skillPaths) {
       // eslint-disable-next-line no-await-in-loop

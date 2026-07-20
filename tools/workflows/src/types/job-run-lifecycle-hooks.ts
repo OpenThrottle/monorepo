@@ -122,7 +122,7 @@ export interface JobRunHookPromptProfileFile extends JobRunHookEntryBase {
 }
 
 /**
- * Repo skill under `.agents/skills` or `.cursor/skills` (SKILL.md path).
+ * Repo skill under `.agents/skills` (SKILL.md path).
  */
 export interface JobRunHookSkill extends JobRunHookEntryBase {
   readonly kind: 'skill';
@@ -192,10 +192,7 @@ export const MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS = 7 * 24 * 3600;
 /**
  * Allowed repo-relative prefixes for {@link JobRunHookSkill.skillPath}.
  */
-export const JOB_RUN_HOOK_SKILL_PATH_PREFIXES = [
-  '.agents/skills/',
-  '.cursor/skills/',
-] as const;
+export const JOB_RUN_HOOK_SKILL_PATH_PREFIXES = ['.agents/skills/'] as const;
 
 const PHASE_SORT_ORDER: Readonly<Record<JobRunHookPhase, number>> = {
   afterAll: 3,

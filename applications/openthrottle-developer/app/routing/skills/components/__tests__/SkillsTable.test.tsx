@@ -19,8 +19,8 @@ const mockEntries: readonly RepoSkillEntry[] = [
   },
   {
     disableModelInvocation: undefined,
-    layout: 'cursor',
-    repoRelativePath: '.cursor/skills/nx-workspace/SKILL.md',
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
     source: 'external',
     summary: 'Explore Nx projects, targets, and dependency graph.',
@@ -51,8 +51,8 @@ const triStateEntries: readonly RepoSkillEntry[] = [
   },
   {
     disableModelInvocation: undefined,
-    layout: 'cursor',
-    repoRelativePath: '.cursor/skills/nx-workspace/SKILL.md',
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
     slug: 'nx-workspace',
     source: 'external',
     summary: 'Explore the Nx workspace.',
@@ -105,8 +105,7 @@ describe('SkillsTable Component', () => {
     test('renders table rows from entries', () => {
       renderRoutesStub(<SkillsTable {...props} />);
 
-      expect(screen.getByText('Agents')).toBeInTheDocument();
-      expect(screen.getByText('Cursor')).toBeInTheDocument();
+      expect(screen.getAllByText('Agents')).toHaveLength(2);
       expect(screen.getByText('/brag-sheet')).toBeInTheDocument();
       expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
       expect(

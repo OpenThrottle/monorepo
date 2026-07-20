@@ -1,6 +1,8 @@
 # Repo skills discovery — design
 
-Plan: **Dynamic repo skills registry from `.agents/skills` and `.cursor/skills`** (`fca6f044-fcb2-48f9-8ff5-1e32a76773c3`).
+Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f9-8ff5-1e32a76773c3`).
+
+> **Updated 2026-07-20:** the `.cursor/skills` layout was retired. OpenThrottle standardizes on `.agents/skills` — the SSOT view combining authored `skills/` and lockfile-installed external skills — with `.claude/skills` as generated fan-out (deduped in, preferring `.agents`). Discovery + counts now cover `.agents/skills`; the cursor-specific details below are historical. See [docs/Skills.md](../../../docs/Skills.md) and [skills/skill-sync/SKILL.md](../../../skills/skill-sync/SKILL.md).
 
 ## Problem
 
@@ -55,13 +57,12 @@ When `getMonorepoRoot()` returns `null`, or when skill directories are missing u
 
 - Return **`entries: []`** (empty array).
 - **Do not** throw or return HTTP 5xx from the loader.
-- `getRepoSkillsRegistryCounts([])` → `{ agents: 0, cursor: 0 }`.
+- `getRepoSkillsRegistryCounts([])` → `{ agents: 0 }`.
 
 Missing **individual** paths is normal:
 
-- `.agents/skills` absent → zero agents entries; still scan `.cursor/skills` if present.
-- `.cursor/skills` absent → zero cursor entries.
-- Neither directory exists → empty list.
+- `.agents/skills` absent → zero entries; the `.claude/skills` fan-out is still scanned if present.
+- No skill directories exist → empty list.
 
 **Deployed environments:** Vercel/production builds typically do not mount the full OpenThrottle monorepo. Expect an empty Skills table unless `WORKSPACE_ROOT` points at a checkout (or volume) that includes `.agents/skills` and `.cursor/skills`. Document in developer app README and `.env.default`.
 

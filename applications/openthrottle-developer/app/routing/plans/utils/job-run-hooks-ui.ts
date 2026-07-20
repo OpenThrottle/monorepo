@@ -59,10 +59,7 @@ export const MAX_JOB_RUN_HOOKS_TOTAL = 20;
 export const MAX_JOB_RUN_HOOK_STRING_LEN = 8192;
 export const MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS = 7 * 24 * 3600;
 
-export const JOB_RUN_HOOK_SKILL_PATH_PREFIXES = [
-  '.agents/skills/',
-  '.cursor/skills/',
-] as const;
+export const JOB_RUN_HOOK_SKILL_PATH_PREFIXES = ['.agents/skills/'] as const;
 
 const compareJobRunHookEntries = (
   a: Pick<JobRunHookEntry, 'order' | 'phase'>,
