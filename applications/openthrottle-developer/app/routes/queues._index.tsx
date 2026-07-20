@@ -7,6 +7,7 @@ import {
 import { GetQueuesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
 import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
@@ -59,6 +60,7 @@ export default function Component(
     <GlobalScreen>
       <QueuesIntroduction />
       <QueuesTable className="bg-card" queues={queues} />
+      <QueueStateChart queues={queues} />
       <QueuesStats queues={queues} />
     </GlobalScreen>
   );
