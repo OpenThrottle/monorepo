@@ -123,26 +123,28 @@ export const QueueStateChart = (
             accessibilityLayer={true}
             data={chartData}
             height={chartHeight}
-            margin={{ bottom: 28, left: 4, right: 12, top: 4 }}
+            layout="vertical"
+            margin={{ bottom: 4, left: 4, right: 12, top: 4 }}
             style={{ minHeight: 240 }}
           >
             <CartesianGrid
-              horizontal={true}
+              horizontal={false}
               strokeDasharray="3 3"
-              vertical={false}
+              vertical={true}
             />
             <XAxis
-              axisLine={false}
-              dataKey="name"
-              tickLine={false}
-              type="category"
-            />
-            <YAxis
               allowDecimals={false}
               axisLine={false}
               tickFormatter={formatQueueStateChartTick}
               tickLine={false}
               type="number"
+            />
+            <YAxis
+              axisLine={false}
+              dataKey="name"
+              tickLine={false}
+              type="category"
+              width={96}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
