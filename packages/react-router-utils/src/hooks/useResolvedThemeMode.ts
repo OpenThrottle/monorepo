@@ -32,11 +32,20 @@ const prefersColorSchemeDark = (): boolean =>
  * persisted theme and use the return value for the SSR `<html>` class.
  */
 export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
+  // Hooks
   // Lazily read the OS preference on the client so the very first client render
   // resolves `system` correctly (SSR has no OS knowledge → false).
   const [prefersDark, setPrefersDark] = useState<boolean>(
     prefersColorSchemeDark,
   );
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // Keep `prefersDark` in sync with the OS. The change listener is attached
   // only while in system mode — the one mode where the OS preference changes
@@ -71,6 +80,8 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
     }
     document.documentElement.classList.toggle('dark', resolved === 'dark');
   }, [resolved]);
+
+  // 🔌 Short Circuit
 
   return resolved;
 };
