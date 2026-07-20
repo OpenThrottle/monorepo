@@ -9,6 +9,8 @@ import { FormEvent, useEffect, useState } from 'react';
 export const useForm = <T extends FormikValues = FormikValues>(
   config: FormikConfig<T>,
 ) => {
+  // Setup
+
   // Hooks
   const formik = useFormik(config);
   const { state } = useNavigation();
@@ -37,6 +39,9 @@ export const useForm = <T extends FormikValues = FormikValues>(
       return;
     }
 
+    // Markup
+
+    // Life Cycle
     /**
      * @description Otherwise the form is valid: let the event continue to the
      * "server" (action), which is simply letting the browser's native form
@@ -51,6 +56,8 @@ export const useForm = <T extends FormikValues = FormikValues>(
   useEffect(() => {
     setLoading(state === 'submitting');
   }, [state]);
+
+  // 🔌 Short Circuit
 
   return {
     formik,

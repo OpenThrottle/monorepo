@@ -11,8 +11,11 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, useFetcher, useSearchParams } from 'react-router';
+import {
+  mergeRouteModuleMeta,
+  useKeyboardShortcut,
+} from '@openthrottle/react-router-utils';
+import { Link, useFetcher, useNavigate, useSearchParams } from 'react-router';
 import {
   BoltIcon,
   CogIcon,
@@ -140,6 +143,7 @@ export default function Component(
   const { plan, tagVocabulary, tasks } = loaderData;
 
   // Hooks
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tagFetcher = useFetcher();
   const {
@@ -236,6 +240,15 @@ export default function Component(
   // Revalidate plan detail when a plan/task lifecycle notification arrives over
   // the GraphQL subscription (server-side topic routing by planId).
   usePlanLifecycleRevalidation(planId);
+
+  // Cmd/Ctrl+E jumps to the plan edit route. Registered before the `!plan`
+  // short-circuit (hooks must run unconditionally) and gated via `enabled`.
+  useKeyboardShortcut({
+    enabled: plan != null,
+    key: 'e',
+    meta: true,
+    onPress: () => navigate(`/plans/${planId}/edit`),
+  });
 
   // 🔌 Short Circuit
   if (!plan) {
