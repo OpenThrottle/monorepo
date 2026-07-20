@@ -8,6 +8,7 @@ import {
   createTaskToolHandler,
   createTasksToolHandler,
   getTasksByPlanIdToolHandler,
+  promoteTaskToolHandler,
   reorderPlanTasksToolHandler,
   updateTaskToolHandler,
 } from './tasks.ts';
@@ -448,6 +449,58 @@ describe('reorderPlanTasksToolHandler', () => {
         content: [{ text: expect.stringMatching(/no tasks were reordered/) }],
         structuredContent: { tasks: [] },
       });
+    });
+  });
+});
+
+describe('promoteTaskToolHandler', () => {
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when the mutation accepts the promotion', () => {
+    it('passes the input and returns the queued job id', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        promoteTaskToPlan: {
+          error: null,
+          jobId: 'promote:job-1',
+          success: true,
+        },
+      });
+
+      const result = await promoteTaskToolHandler({ taskId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { taskId } },
+      );
+      expect(result).toMatchObject({
+        structuredContent: {
+          promotion: { error: null, jobId: 'promote:job-1', success: true },
+        },
+      });
+    });
+  });
+
+  describe('when the mutation rejects the promotion', () => {
+    it('surfaces the validation error', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        promoteTaskToPlan: {
+          error: 'Task has already been promoted to a plan.',
+          jobId: null,
+          success: false,
+        },
+      });
+
+      const result = await promoteTaskToolHandler({ taskId });
+
+      expect(result).toMatchObject({ isError: true });
     });
   });
 });

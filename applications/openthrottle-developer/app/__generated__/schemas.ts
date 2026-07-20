@@ -70,6 +70,7 @@ import {
   PlanRunsByPlanIdInput,
   PrCountByLabelInput,
   PressureLevel,
+  PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
   QueueJobLogLevel,
@@ -826,6 +827,15 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
     owner: z.string(),
     repo: z.string(),
     state: z.string().nullish(),
+  });
+}
+
+export function PromoteTaskToPlanInputSchema(): z.ZodObject<
+  Properties<PromoteTaskToPlanInput>
+> {
+  return z.object({
+    idempotencyKey: z.string().nullish(),
+    taskId: z.string(),
   });
 }
 

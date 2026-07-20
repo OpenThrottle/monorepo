@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { format } from 'date-fns';
 import {
-  Button,
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   Separator,
 } from '@openthrottle/react-router-shadcn';
@@ -167,17 +165,6 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
             </div>
           </CardContent>
         )}
-
-        <CardFooter>
-          <Button asChild={true} variant="outline">
-            <Link
-              className="text-primary text-sm hover:underline"
-              to={`/plans/${planId}/tasks/${task.id}/edit`}
-            >
-              Edit task
-            </Link>
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

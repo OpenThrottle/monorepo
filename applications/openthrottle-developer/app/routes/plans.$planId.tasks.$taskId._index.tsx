@@ -11,8 +11,10 @@ import {
   PlanDetailAddHookDocument,
   PlanDetailDetachHookDocument,
   TaskDetailAddTaskTagDocument,
+  TaskDetailPromoteToPlanDocument,
   TaskDetailRemoveTaskTagDocument,
   TaskLinkedArtifactsDocument,
+  UpdateTaskDocument,
 } from '~/__generated__/graphql';
 import {
   AddHookInputSchema,
@@ -27,8 +29,8 @@ import { ListOrderedIcon } from 'lucide-react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
+import { PlanTaskToolbar } from '~/routing/plans/components/PlanTaskToolbar';
 import { redirect, useFetcher } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
@@ -125,6 +127,10 @@ export default function Component(
   const _taskId = params.taskId ?? '';
   const effectivePlanId = task != null ? (task.planId ?? '') : '';
   const color = parseTaskStatusColor(task?.status ?? '');
+  const isPromoted =
+    task != null &&
+    task.status === 'SKIPPED' &&
+    task.tags.some((tag) => tag.tag === 'promoted');
 
   // Handlers
 
@@ -155,25 +161,24 @@ export default function Component(
           </Badge>
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <h2 className="text-muted-foreground text-xs font-medium uppercase">
-          Tags
-        </h2>
-        <PlanTagChips
-          onAddTag={(tag) =>
-            tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
-          }
-          onRemoveTag={(tag) =>
-            tagFetcher.submit(
-              { intent: 'removeTaskTag', tag },
-              { method: 'post' },
-            )
-          }
-          pending={tagFetcher.state !== 'idle'}
-          tags={task.tags}
-          vocabulary={tagVocabulary}
-        />
-      </div>
+      <PlanTaskToolbar
+        isPromoted={isPromoted}
+        onAddTag={(tag) =>
+          tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
+        }
+        onRemoveTag={(tag) =>
+          tagFetcher.submit(
+            { intent: 'removeTaskTag', tag },
+            { method: 'post' },
+          )
+        }
+        planId={effectivePlanId}
+        tagVocabulary={tagVocabulary}
+        tags={task.tags}
+        tagsPending={tagFetcher.state !== 'idle'}
+        taskId={task.id}
+        taskStatus={task.status}
+      />
       <TaskDetails planId={effectivePlanId} task={task} />
       <PlanLifecycleHooksSection
         afterHooks={task.afterHooks}
@@ -196,6 +201,47 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
   const tag = formData.get('tag');
+
+  if (intent === 'promoteTask') {
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        TaskDetailPromoteToPlanDocument,
+        { input: { taskId } },
+      );
+      const promote = result.promoteTaskToPlan;
+      if (promote == null || !promote.success) {
+        return {
+          promoteTaskError: promote?.error ?? 'Failed to promote task.',
+        };
+      }
+      return { promoteTask: promote };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { promoteTaskError: message };
+    }
+  }
+
+  if (intent === 'setTaskStatus') {
+    const status = formData.get('status');
+    if (typeof status !== 'string' || status.trim() === '') {
+      return { setTaskStatusError: 'Status is required.' };
+    }
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        UpdateTaskDocument,
+        { input: { id: taskId, status: status.trim() } },
+      );
+      if (!result.updateTask) {
+        return { setTaskStatusError: 'Failed to update task status.' };
+      }
+      return { setTaskStatus: result.updateTask };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { setTaskStatusError: message };
+    }
+  }
 
   if (intent === 'addTaskTag' || intent === 'removeTaskTag') {
     if (typeof tag !== 'string' || tag.trim() === '') {

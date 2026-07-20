@@ -39,6 +39,7 @@ import {
   CreateTasksInput,
   DeleteTaskInput,
   DetachHookInput,
+  PromoteTaskToPlanInput,
   ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
   TasksByPlanIdInput,
@@ -47,6 +48,7 @@ import {
 } from './task.input';
 import {
   CreateTasksResultObject,
+  PromoteTaskToPlanResultObject,
   TaskObject,
   TasksByProjectIdResultObject,
 } from './task.object';
@@ -54,6 +56,7 @@ import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-e
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import { TasksLoaders } from './tasks-loaders';
 
@@ -132,6 +135,7 @@ export class TasksResolver {
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
+    private readonly taskPromotionEnqueueService: TaskPromotionEnqueueService,
     private readonly tasksService: TasksService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
@@ -692,5 +696,38 @@ export class TasksResolver {
     @Args('input', { type: () => DetachHookInput }) input: DetachHookInput,
   ): Promise<boolean> {
     return this.tasksService.detachHook(input.hookTaskId);
+  }
+
+  @Mutation(() => PromoteTaskToPlanResultObject, {
+    description: `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + \`promoted\` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.`,
+  })
+  async promoteTaskToPlan(
+    @Args('input', { type: () => PromoteTaskToPlanInput })
+    input: PromoteTaskToPlanInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
+  ): Promise<PromoteTaskToPlanResultObject> {
+    const isUser = actorKind === 'user' && actorSub != null;
+    const isServiceAccount =
+      actorKind === 'service_account' && actorSub != null;
+
+    const result = await this.taskPromotionEnqueueService.enqueuePromotion({
+      actorServiceAccountId: isServiceAccount ? actorSub : null,
+      actorUserId: isUser ? actorSub : null,
+      idempotencyKey: input.idempotencyKey ?? null,
+      taskId: input.taskId,
+    });
+
+    const out = new PromoteTaskToPlanResultObject();
+    if ('jobId' in result) {
+      out.success = true;
+      out.jobId = result.jobId;
+      out.error = null;
+    } else {
+      out.success = false;
+      out.jobId = null;
+      out.error = result.error;
+    }
+    return out;
   }
 }

@@ -699,4 +699,15 @@ export class McpDeveloperMcpSurface {
   ): ReturnType<typeof Th.updateTaskToolHandler> {
     return Th.updateTaskToolHandler(args);
   }
+
+  @Tool({
+    description: Th.promoteTaskToolDescription,
+    name: 'promote_task',
+    parameters: asMcpParameters(Th.promoteTaskToolParameters),
+  })
+  promoteTask(
+    args: Parameters<typeof Th.promoteTaskToolHandler>[0],
+  ): ReturnType<typeof Th.promoteTaskToolHandler> {
+    return Th.promoteTaskToolHandler(args);
+  }
 }

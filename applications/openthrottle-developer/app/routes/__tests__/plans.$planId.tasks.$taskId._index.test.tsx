@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import TaskDetailRoute from '../plans.$planId.tasks.$taskId._index';
@@ -71,7 +72,11 @@ const renderRoute = (): {
     },
   ]);
 
-  render(<RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />);
+  render(
+    <TooltipProvider>
+      <RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />
+    </TooltipProvider>,
+  );
   return { submitted };
 };
 
@@ -138,7 +143,11 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks
       },
     ]);
 
-    render(<RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />);
+    render(
+      <TooltipProvider>
+        <RoutesStub initialEntries={['/plans/plan-1/tasks/task-1']} />
+      </TooltipProvider>,
+    );
     return { submitted };
   };
 
