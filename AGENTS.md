@@ -50,15 +50,15 @@ For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `
 
 **Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets.
 
-## Cursor Agent Skills (OpenThrottle)
+## OpenThrottle Agent Skills
 
-Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above.
+OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([skill-sync](./skills/skill-sync/SKILL.md)). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside the generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above. Full policy + installed set: [docs/Skills.md](./docs/Skills.md).
 
-- **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`.agents/skills/openthrottle-generators/SKILL.md`](./.agents/skills/openthrottle-generators/SKILL.md)
-- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`.agents/skills/openthrottle-stack/SKILL.md`](./.agents/skills/openthrottle-stack/SKILL.md)
-- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`.agents/skills/ot-postgres/SKILL.md`](./.agents/skills/ot-postgres/SKILL.md)
-- **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`.agents/skills/ot-plans/SKILL.md`](./.agents/skills/ot-plans/SKILL.md)
-- **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`.agents/skills/workflow-ralph/SKILL.md`](./.agents/skills/workflow-ralph/SKILL.md)
+- **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md)
+- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/openthrottle-stack/SKILL.md`](./skills/openthrottle-stack/SKILL.md)
+- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
+- **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
+- **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`skills/workflow-ralph/SKILL.md`](./skills/workflow-ralph/SKILL.md)
 
 ## Workflow CLI (@tools/workflows)
 
