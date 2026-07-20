@@ -15,7 +15,7 @@ description: >
 license: MIT
 compatibility: 'Cross-platform (Windows, macOS, Linux). Works with any GitHub Copilot CLI session. Optional: git, gh CLI.'
 metadata:
-  version: '1.1'
+  version: "1.1"
 argument-hint: 'Optional: time range ("last 2 weeks", "this half"), category ("infrastructure"), "backfill", or "review prep"'
 ---
 
@@ -28,11 +28,11 @@ DO NOT USE FOR: project management, sprint planning, time tracking, ticket creat
 
 ## Quick Start
 
-| User wants...              | Mode            | Output                                               |
-| -------------------------- | --------------- | ---------------------------------------------------- |
-| Log one accomplishment     | **Capture**     | 1 impact-first entry                                 |
-| "What did I do last week?" | **Backfill**    | Entries grouped by week, mined from git/PRs/sessions |
-| Prep for review or promo   | **Review Pack** | Entries grouped by impact theme + STAR narratives    |
+| User wants... | Mode | Output |
+|---------------|------|--------|
+| Log one accomplishment | **Capture** | 1 impact-first entry |
+| "What did I do last week?" | **Backfill** | Entries grouped by week, mined from git/PRs/sessions |
+| Prep for review or promo | **Review Pack** | Entries grouped by impact theme + STAR narratives |
 
 ## Agent Behavior Rules
 
@@ -59,43 +59,43 @@ Did [action] → [result/impact] → [evidence]
 
 ### Anti-Patterns
 
-| ❌ Don't                                   | ✅ Do instead                                                                                 |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| "Fixed a bug in auth"                      | "Fixed token refresh race condition → eliminated 401s affecting 12% of API calls → PR #247"   |
-| "Worked on dashboards"                     | "Built latency dashboard in Grafana → on-call detects P95 spikes in <2min → deployed to prod" |
-| Invent a metric: "saved 40% of eng time"   | Ask: "Do you have a rough estimate, or should I keep this qualitative?"                       |
-| One entry per commit                       | Group related commits into one entry with highest-impact framing                              |
-| Passive voice: "The pipeline was improved" | Active voice: "Built CI matrix → caught Windows-only bug before release"                      |
-| List technologies used                     | State the outcome: "Migrated 4 services to IaC → deploy time 45min → 8min"                    |
-| Silently drop weak entries                 | Mark `(evidence needed)` and present for user to fill in                                      |
+| ❌ Don't | ✅ Do instead |
+|---------|--------------|
+| "Fixed a bug in auth" | "Fixed token refresh race condition → eliminated 401s affecting 12% of API calls → PR #247" |
+| "Worked on dashboards" | "Built latency dashboard in Grafana → on-call detects P95 spikes in <2min → deployed to prod" |
+| Invent a metric: "saved 40% of eng time" | Ask: "Do you have a rough estimate, or should I keep this qualitative?" |
+| One entry per commit | Group related commits into one entry with highest-impact framing |
+| Passive voice: "The pipeline was improved" | Active voice: "Built CI matrix → caught Windows-only bug before release" |
+| List technologies used | State the outcome: "Migrated 4 services to IaC → deploy time 45min → 8min" |
+| Silently drop weak entries | Mark `(evidence needed)` and present for user to fill in |
 
 ## Evidence Ladder
 
 Not every entry needs a metric. Use the strongest evidence available:
 
-| Strength      | Evidence type           | Example                                                   |
-| ------------- | ----------------------- | --------------------------------------------------------- |
-| 🥇 Best       | Quantified metric       | "Reduced P95 latency from 800ms to 120ms"                 |
-| 🥈 Strong     | PR, commit, or doc link | "PR #312, design doc in wiki"                             |
-| 🥉 Good       | Observable outcome      | "Unblocked Team X", "Resolved Sev2 incident Y"            |
-| ✅ Acceptable | Qualitative + context   | "Reduced toil for on-call rotation — see updated runbook" |
-| ⚠️ Weak       | Activity only           | "Worked on auth" — reframe or mark `(evidence needed)`    |
+| Strength | Evidence type | Example |
+|----------|--------------|---------|
+| 🥇 Best | Quantified metric | "Reduced P95 latency from 800ms to 120ms" |
+| 🥈 Strong | PR, commit, or doc link | "PR #312, design doc in wiki" |
+| 🥉 Good | Observable outcome | "Unblocked Team X", "Resolved Sev2 incident Y" |
+| ✅ Acceptable | Qualitative + context | "Reduced toil for on-call rotation — see updated runbook" |
+| ⚠️ Weak | Activity only | "Worked on auth" — reframe or mark `(evidence needed)` |
 
 Never invent a metric to fill the gap. Qualitative evidence with context beats fabricated numbers.
 
 ## Categories
 
-| ID               | Emoji | Use for                                |
-| ---------------- | ----- | -------------------------------------- |
-| `pr`             | 🚀    | Merged PRs, shipped features           |
-| `bugfix`         | 🐛    | Bug fixes, incident patches            |
-| `infrastructure` | 🏗️    | Infra, deployments, migrations         |
-| `investigation`  | 🔍    | Root cause analysis, debugging         |
-| `collaboration`  | 🤝    | Reviews, mentoring, design discussions |
-| `tooling`        | 🔧    | Dev tools, scripts, automation         |
-| `oncall`         | 🚨    | Incident response, on-call wins        |
-| `design`         | 📐    | Design docs, architecture decisions    |
-| `documentation`  | 📝    | Docs, runbooks, guides                 |
+| ID | Emoji | Use for |
+|----|-------|---------|
+| `pr` | 🚀 | Merged PRs, shipped features |
+| `bugfix` | 🐛 | Bug fixes, incident patches |
+| `infrastructure` | 🏗️ | Infra, deployments, migrations |
+| `investigation` | 🔍 | Root cause analysis, debugging |
+| `collaboration` | 🤝 | Reviews, mentoring, design discussions |
+| `tooling` | 🔧 | Dev tools, scripts, automation |
+| `oncall` | 🚨 | Incident response, on-call wins |
+| `design` | 📐 | Design docs, architecture decisions |
+| `documentation` | 📝 | Docs, runbooks, guides |
 
 ## How to Help the User
 
@@ -118,7 +118,6 @@ When the user asks "what did I do last week" or "backfill my history":
 ### Step 1: Scan available sources
 
 Check what's available, then mine each source:
-
 ```bash
 git --version 2>/dev/null         # for commit mining
 gh --version 2>/dev/null          # for PR mining
@@ -126,21 +125,18 @@ ls ~/.copilot/session-state/ 2>/dev/null  # Copilot session logs
 ```
 
 **Git commits** — recent commits by the user in the current repo:
-
 ```bash
 git log --author="$(git config user.email)" --since="2 weeks ago" \
   --pretty=format:'%h|%ad|%s' --date=short --no-merges
 ```
 
 **PR history** — merged PRs across repos:
-
 ```bash
 gh pr list --author @me --state merged --limit 20 \
   --json number,title,repository,mergedAt
 ```
 
 **Copilot session history** (unique to this skill):
-
 - Path: `~/.copilot/session-state/<session-id>/workspace.yaml`
 - Read fields: `summary`, `cwd`, `repository`, `branch`
 - Skip sessions without a `summary` field
@@ -151,7 +147,6 @@ If none of these sources are available, fall back to the guided interview.
 ### Step 2: Group related work
 
 Cluster related signals into one entry:
-
 - Same PR + its commits → 1 entry
 - Multiple commits on the same file/feature within 3 days → 1 entry
 - Copilot sessions referencing the same repo + branch → merge into PR entry if one exists
@@ -172,11 +167,9 @@ Format as markdown grouped by week:
 ## Week of 2025-04-14
 
 ### 🚀 PRs & Features
-
 - **Migrated auth service to managed identity** → eliminated 3 secret rotation incidents/quarter → PR #312
 
 ### 🏗️ Infrastructure
-
 - **Built CI pipeline for copilot-brag-sheet** → 107 tests across 3 OSes × 3 Node versions → shipped v1.0.0
 ```
 
@@ -201,12 +194,12 @@ When the user is preparing for a performance review (Connect, annual review, etc
 
 ### Strong vs weak entries
 
-| ✅ Strong                      | ❌ Weak                       |
-| ------------------------------ | ----------------------------- |
-| Outcome-first, quantified      | Activity list ("worked on X") |
-| Tied to customer/team impact   | No beneficiary mentioned      |
-| Includes evidence (PR, metric) | No measurable result          |
-| Shows ownership or leadership  | Pure task completion          |
+| ✅ Strong | ❌ Weak |
+|----------|--------|
+| Outcome-first, quantified | Activity list ("worked on X") |
+| Tied to customer/team impact | No beneficiary mentioned |
+| Includes evidence (PR, metric) | No measurable result |
+| Shows ownership or leadership | Pure task completion |
 
 ### Narrative format
 
@@ -217,7 +210,6 @@ For Microsoft employees using the Connect preset, frame entries around Core Prio
 ## Output Contract
 
 Before finishing, ensure:
-
 1. Every entry has action → result → evidence (mark `(evidence needed)` if missing)
 2. No fabricated metrics — only user-provided or source-verified data
 3. Entries shown to user before saving
@@ -227,37 +219,28 @@ Before finishing, ensure:
 ## Gotchas
 
 ### No recent commits in the current repo
-
 The user may work across multiple repos. Before concluding there's nothing to backfill:
-
 1. Ask if they want to scan a different repo or branch
 2. Check `gh pr list --author @me --state merged` for cross-repo PRs
 3. Fall back to the guided interview — not all impactful work leaves git traces (design docs, incident response, mentoring)
 
 ### Review period doesn't match git history
-
 Performance reviews often cover 6–12 months. Explicitly set the date range:
-
 ```bash
 git log --author="$(git config user.name)" --since="2024-07-01" --until="2025-01-01" --oneline
 ```
-
 PR history (`gh pr list --state merged`) is more reliable for long time ranges than commit logs.
 
 ### User can't quantify impact
-
 Not every entry needs a number. See the Evidence Ladder above. Acceptable evidence includes PR links, "unblocked Team X", or qualitative outcomes with context. Never invent a metric to fill the gap.
 
 ### Copilot session directory doesn't exist
-
 `~/.copilot/session-state/` only exists if the user has run Copilot CLI sessions. Don't error — silently skip and note: "No Copilot session history found; scanning git and PRs only."
 
 ### "brag" might mean something else
-
 The user might say "brag about this feature to my team" (a launch announcement, not a work entry). Confirm intent if ambiguous.
 
 ### Pair programming or co-authored commits
-
 If multiple authors appear on the same commits, ask: "Should I credit this as your work, shared work, or skip it?"
 
 ## Automatic Session Tracking (Optional)

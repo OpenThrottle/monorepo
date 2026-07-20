@@ -1,9 +1,9 @@
 #!/usr/bin/env -S node --experimental-strip-types
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { execFileSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 type Skill = {
   name: string;
@@ -70,23 +70,25 @@ function argValue(name: string, fallback: string): string {
   return index >= 0 && raw[index + 1] ? raw[index + 1] : fallback;
 }
 
-const months = Number(argValue('--months', '3'));
-const noLogs = args.has('--no-logs');
-const deepLogs = args.has('--deep-logs');
-const json = args.has('--json');
-const includeAll = args.has('--all');
-const noLive = args.has('--no-live');
-const model = argValue('--model', 'gpt-5.5');
-const budgetPercent = Number(argValue('--budget-percent', '2'));
-const contextTokensOverride = argValue('--context-tokens', '');
-const charsPerToken = Number(argValue('--chars-per-token', '4'));
-const maxLogBytes = Number(argValue('--max-log-mb', '300')) * 1024 * 1024;
+const months = Number(argValue("--months", "3"));
+const noLogs = args.has("--no-logs");
+const deepLogs = args.has("--deep-logs");
+const json = args.has("--json");
+const includeAll = args.has("--all");
+const rootOnly = args.has("--root-only");
+const noLive = args.has("--no-live") || rootOnly;
+const model = argValue("--model", "gpt-5.5");
+const budgetPercent = Number(argValue("--budget-percent", "2"));
+const contextTokensOverride = argValue("--context-tokens", "");
+const charsPerToken = Number(argValue("--chars-per-token", "4"));
+const maxLogBytes = Number(argValue("--max-log-mb", "300")) * 1024 * 1024;
 const cutoffMs = Date.now() - Math.max(0, months) * 31 * 24 * 60 * 60 * 1000;
 const extraRoots = process.argv
   .slice(2)
-  .flatMap((arg, index, all) =>
-    arg === '--root' && all[index + 1] ? [all[index + 1]] : [],
-  );
+  .flatMap((arg, index, all) => {
+    const value = all[index + 1];
+    return arg === "--root" && value && !value.startsWith("--") ? [value] : [];
+  });
 
 function expandHome(input: string): string {
   return input.replace(/^~(?=$|\/)/, home);
@@ -106,10 +108,7 @@ function numberArg(value: string, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function findModelRecord(
-  value: unknown,
-  target: string,
-): Record<string, unknown> | null {
+function findModelRecord(value: unknown, target: string): Record<string, unknown> | null {
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = findModelRecord(item, target);
@@ -117,10 +116,10 @@ function findModelRecord(
     }
     return null;
   }
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
   const names = [record.slug, record.id, record.model, record.name]
-    .filter((item): item is string => typeof item === 'string')
+    .filter((item): item is string => typeof item === "string")
     .map((item) => item.toLowerCase());
   if (names.includes(target.toLowerCase())) return record;
   for (const item of Object.values(record)) {
@@ -136,43 +135,28 @@ function codexModelContext(modelName: string): {
   effectivePercent: number | null;
 } {
   const override = numberArg(contextTokensOverride, 0);
-  if (override > 0)
-    return {
-      tokens: override,
-      source: '--context-tokens',
-      effectivePercent: null,
-    };
+  if (override > 0) return { tokens: override, source: "--context-tokens", effectivePercent: null };
 
-  const cache = path.join(home, '.codex/models_cache.json');
+  const cache = path.join(home, ".codex/models_cache.json");
   if (exists(cache)) {
     try {
-      const record = findModelRecord(
-        JSON.parse(fs.readFileSync(cache, 'utf8')),
-        modelName,
-      );
+      const record = findModelRecord(JSON.parse(fs.readFileSync(cache, "utf8")), modelName);
       const tokens = Number(record?.context_window);
       const effectivePercent = Number(record?.effective_context_window_percent);
       if (Number.isFinite(tokens) && tokens > 0) {
         return {
           tokens,
           source: cache,
-          effectivePercent:
-            Number.isFinite(effectivePercent) && effectivePercent > 0
-              ? effectivePercent
-              : null,
+          effectivePercent: Number.isFinite(effectivePercent) && effectivePercent > 0 ? effectivePercent : null,
         };
       }
     } catch {}
   }
 
-  return { tokens: 272_000, source: 'fallback:gpt-5.5', effectivePercent: 95 };
+  return { tokens: 272_000, source: "fallback:gpt-5.5", effectivePercent: 95 };
 }
 
-function walkFiles(
-  root: string,
-  predicate: (file: string) => boolean,
-  maxDepth = 8,
-): string[] {
+function walkFiles(root: string, predicate: (file: string) => boolean, maxDepth = 8): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   function walk(dir: string, depth: number) {
@@ -192,7 +176,7 @@ function walkFiles(
       return;
     }
     for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      if (entry.name === "node_modules" || entry.name === ".git") continue;
       const file = path.join(dir, entry.name);
       if (entry.isDirectory() || entry.isSymbolicLink()) {
         let stat: fs.Stats;
@@ -212,10 +196,7 @@ function walkFiles(
 }
 
 function sanitizeSingleLine(value: string): string {
-  return value
-    .replace(/[\r\n\t]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return value.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function parseYamlScalar(raw: string): string {
@@ -229,45 +210,43 @@ function parseYamlScalar(raw: string): string {
   return value;
 }
 
-function parseFrontmatter(
-  file: string,
-): { name?: string; description?: string; body: string } | null {
-  const text = fs.readFileSync(file, 'utf8');
+function parseFrontmatter(file: string): { name?: string; description?: string; body: string } | null {
+  const text = fs.readFileSync(file, "utf8");
   const lines = text.split(/\r?\n/);
-  if (lines[0]?.trim() !== '---') return null;
+  if (lines[0]?.trim() !== "---") return null;
   const fm: string[] = [];
   let end = -1;
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i]?.trim() === '---') {
+    if (lines[i]?.trim() === "---") {
       end = i;
       break;
     }
-    fm.push(lines[i] ?? '');
+    fm.push(lines[i] ?? "");
   }
   if (end < 0) return null;
   let name: string | undefined;
   let description: string | undefined;
   for (let i = 0; i < fm.length; i++) {
-    const line = fm[i] ?? '';
+    const line = fm[i] ?? "";
     const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
     if (!match) continue;
     const key = match[1];
-    const raw = match[2] ?? '';
-    if (key === 'name') name = sanitizeSingleLine(parseYamlScalar(raw));
-    if (key === 'description') {
-      if (raw.trim() === '|' || raw.trim() === '>') {
+    const raw = match[2] ?? "";
+    if (key === "name") name = sanitizeSingleLine(parseYamlScalar(raw));
+    if (key === "description") {
+      if (raw.trim() === "|" || raw.trim() === ">") {
         const block: string[] = [];
         for (let j = i + 1; j < fm.length; j++) {
-          if (/^[A-Za-z0-9_-]+:\s*/.test(fm[j] ?? '')) break;
-          block.push((fm[j] ?? '').replace(/^\s{2}/, ''));
+          if (/^[A-Za-z0-9_-]+:\s*/.test(fm[j] ?? "")) break;
+          block.push((fm[j] ?? "").replace(/^\s{2}/, ""));
         }
-        description = sanitizeSingleLine(block.join(' '));
+        description = sanitizeSingleLine(block.join(" "));
       } else {
         description = sanitizeSingleLine(parseYamlScalar(raw));
       }
     }
   }
-  return { name, description, body: lines.slice(end + 1).join('\n') };
+  return { name, description, body: lines.slice(end + 1).join("\n") };
 }
 
 type LivePrompt = {
@@ -277,9 +256,8 @@ type LivePrompt = {
 };
 
 function findSkillsPrompt(value: unknown): string | null {
-  if (typeof value === 'string') {
-    return value.includes('<skills_instructions>') &&
-      value.includes('### Available skills')
+  if (typeof value === "string") {
+    return value.includes("<skills_instructions>") && value.includes("### Available skills")
       ? value
       : null;
   }
@@ -290,7 +268,7 @@ function findSkillsPrompt(value: unknown): string | null {
     }
     return null;
   }
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
   for (const item of Object.values(value as Record<string, unknown>)) {
     const found = findSkillsPrompt(item);
     if (found) return found;
@@ -301,53 +279,49 @@ function findSkillsPrompt(value: unknown): string | null {
 export function parseLiveSkillsPrompt(raw: string): LivePrompt {
   const parsed = JSON.parse(raw) as unknown;
   const prompt = findSkillsPrompt(parsed);
-  if (!prompt)
-    throw new Error('Codex prompt output did not contain skills instructions');
+  if (!prompt) throw new Error("Codex prompt output did not contain skills instructions");
 
   const roots = new Map<string, string>();
   const skillLines: string[] = [];
-  let section = '';
+  let section = "";
   for (const line of prompt.split(/\r?\n/)) {
-    if (line === '### Skill roots') {
-      section = 'roots';
+    if (line === "### Skill roots") {
+      section = "roots";
       continue;
     }
-    if (line === '### Available skills') {
-      section = 'skills';
+    if (line === "### Available skills") {
+      section = "skills";
       continue;
     }
-    if (line === '### How to use skills') {
-      section = '';
+    if (line === "### How to use skills") {
+      section = "";
       continue;
     }
-    if (section === 'roots') {
+    if (section === "roots") {
       const match = /^- `(r\d+)` = `([^`]+)`$/.exec(line);
       if (match) roots.set(match[1]!, match[2]!);
-    } else if (section === 'skills' && line.startsWith('- ')) {
+    } else if (section === "skills" && line.startsWith("- ")) {
       skillLines.push(line);
     }
   }
-  if (skillLines.length === 0)
-    throw new Error('Codex prompt output contained no skills');
+  if (skillLines.length === 0) throw new Error("Codex prompt output contained no skills");
   return { prompt, roots, skillLines };
 }
 
 function livePrompt(): LivePrompt | null {
   if (noLive) return null;
   try {
-    const raw = execFileSync('codex', ['debug', 'prompt-input'], {
+    const raw = execFileSync("codex", ["debug", "prompt-input"], {
       cwd: process.cwd(),
-      encoding: 'utf8',
+      encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'ignore'],
+      stdio: ["ignore", "pipe", "ignore"],
     });
     return parseLiveSkillsPrompt(raw);
   } catch (error) {
     if (!json) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(
-        `skill-cleaner: live Codex inventory unavailable (${message}); using filesystem scan`,
-      );
+      console.error(`skill-cleaner: live Codex inventory unavailable (${message}); using filesystem scan`);
     }
     return null;
   }
@@ -355,9 +329,7 @@ function livePrompt(): LivePrompt | null {
 
 function resolveLivePath(locator: string, roots: Map<string, string>): string {
   const match = /^(r\d+)\/(.+)$/.exec(locator);
-  return match
-    ? path.join(roots.get(match[1]!) ?? match[1]!, match[2]!)
-    : expandHome(locator);
+  return match ? path.join(roots.get(match[1]!) ?? match[1]!, match[2]!) : expandHome(locator);
 }
 
 function parseLiveSkills(live: LivePrompt): Skill[] {
@@ -370,40 +342,33 @@ function parseLiveSkills(live: LivePrompt): Skill[] {
     if (!exists(file)) return [];
     const parsed = parseFrontmatter(file);
     if (!parsed) return [];
-    const description = parsed.description ?? '';
+    const description = parsed.description ?? "";
     const realPath = fs.realpathSync(file);
-    const root =
-      [...live.roots.values()]
-        .filter(
-          (candidate) =>
-            realPath === candidate ||
-            realPath.startsWith(`${candidate}${path.sep}`),
-        )
-        .sort((a, b) => b.length - a.length)[0] ?? path.dirname(file);
-    const baseName = name.split(':').at(-1) ?? name;
-    return [
-      {
-        name,
-        baseName,
-        description,
-        path: file,
-        realPath,
-        dir: path.dirname(file),
-        root,
-        realRoot: exists(root) ? fs.realpathSync(root) : root,
-        scope: skillRootScope(root),
-        enabled: true,
-        descChars: [...description].length,
-        lineChars: [...`${line}\n`].length,
-        lineBytes: Buffer.byteLength(`${line}\n`, 'utf8'),
-        bodyHash: fnv1a(normalizeWords(parsed.body)),
-        bodyKey: normalizeWords(parsed.body),
-        descKey: normalizeWords(description),
-        renderPath,
-        order,
-        live: true,
-      },
-    ];
+    const root = [...live.roots.values()]
+      .filter((candidate) => realPath === candidate || realPath.startsWith(`${candidate}${path.sep}`))
+      .sort((a, b) => b.length - a.length)[0] ?? path.dirname(file);
+    const baseName = name.split(":").at(-1) ?? name;
+    return [{
+      name,
+      baseName,
+      description,
+      path: file,
+      realPath,
+      dir: path.dirname(file),
+      root,
+      realRoot: exists(root) ? fs.realpathSync(root) : root,
+      scope: skillRootScope(root),
+      enabled: true,
+      descChars: [...description].length,
+      lineChars: [...`${line}\n`].length,
+      lineBytes: Buffer.byteLength(`${line}\n`, "utf8"),
+      bodyHash: fnv1a(normalizeWords(parsed.body)),
+      bodyKey: normalizeWords(parsed.body),
+      descKey: normalizeWords(description),
+      renderPath,
+      order,
+      live: true,
+    }];
   });
 }
 
@@ -413,23 +378,19 @@ function fnv1a(input: string): string {
     hash ^= input.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193);
   }
-  return (hash >>> 0).toString(16).padStart(8, '0');
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 function normalizeWords(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[`"'’().,;:!?/\\[\]{}_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[`"'’().,;:!?/\\[\]{}_-]+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function wordSet(input: string): Set<string> {
-  return new Set(
-    normalizeWords(input)
-      .split(' ')
-      .filter((word) => word.length >= 2),
-  );
+  return new Set(normalizeWords(input).split(" ").filter((word) => word.length >= 2));
 }
 
 function jaccard(a: Set<string>, b: Set<string>): number {
@@ -442,31 +403,22 @@ function jaccard(a: Set<string>, b: Set<string>): number {
 }
 
 function skillRootScope(root: string): string {
-  const normalized = root.split(path.sep).join('/');
-  if (normalized.includes('/.codex/plugins/cache')) return 'codex-plugin';
-  if (normalized.includes('/.codex/skills')) return 'codex';
-  if (normalized.includes('/Projects/agent-scripts/skills'))
-    return 'agent-scripts';
-  if (normalized.includes('/.agents/skills')) return 'repo';
-  if (normalized.includes('/Dropbox/')) return 'dropbox';
-  return 'extra';
+  const normalized = root.split(path.sep).join("/");
+  if (normalized.includes("/.codex/plugins/cache")) return "codex-plugin";
+  if (normalized.includes("/.codex/skills")) return "codex";
+  if (normalized.includes("/Projects/agent-scripts/skills")) return "agent-scripts";
+  if (normalized.includes("/.agents/skills")) return "repo";
+  if (normalized.includes("/Dropbox/")) return "dropbox";
+  return "extra";
 }
 
 function deletePriority(skill: Skill): number {
-  if (skill.path.includes('/.codex/skills/.system/')) return 0;
-  if (
-    skill.path.includes('/.codex/skills/') &&
-    !skill.realPath.includes('/Projects/agent-scripts/')
-  )
-    return 1;
-  if (
-    skill.path.includes('/.codex/plugins/cache/') &&
-    !skill.path.includes('/plugin-install-')
-  )
-    return 2;
-  if (skill.path.includes('/.codex/plugins/cache/')) return 3;
-  if (skill.realPath.includes('/Projects/agent-scripts/skills/')) return 4;
-  if (skill.realPath.includes('/.agents/skills/')) return 5;
+  if (skill.path.includes("/.codex/skills/.system/")) return 0;
+  if (skill.path.includes("/.codex/skills/") && !skill.realPath.includes("/Projects/agent-scripts/")) return 1;
+  if (skill.path.includes("/.codex/plugins/cache/") && !skill.path.includes("/plugin-install-")) return 2;
+  if (skill.path.includes("/.codex/plugins/cache/")) return 3;
+  if (skill.realPath.includes("/Projects/agent-scripts/skills/")) return 4;
+  if (skill.realPath.includes("/.agents/skills/")) return 5;
   return 6;
 }
 
@@ -474,15 +426,12 @@ function preferredKeepSkill(list: Skill[]): Skill {
   return [...list].sort((a, b) => {
     const byPriority = deletePriority(a) - deletePriority(b);
     if (byPriority !== 0) return byPriority;
-    return (
-      a.realPath.length - b.realPath.length ||
-      a.realPath.localeCompare(b.realPath)
-    );
+    return a.realPath.length - b.realPath.length || a.realPath.localeCompare(b.realPath);
   })[0]!;
 }
 
 function displayPathPriority(skill: Skill): number {
-  if (skill.path.includes('/.codex/skills/agent-scripts/')) return 10;
+  if (skill.path.includes("/.codex/skills/agent-scripts/")) return 10;
   if (skill.path === skill.realPath) return 0;
   return 1;
 }
@@ -496,25 +445,18 @@ function preferredDisplaySkill(a: Skill, b: Skill): Skill {
 
 function pluginPrefixFor(file: string): string | null {
   const parts = file.split(path.sep);
-  const cache = parts.indexOf('cache');
-  const skills = parts.lastIndexOf('skills');
+  const cache = parts.indexOf("cache");
+  const skills = parts.lastIndexOf("skills");
   if (cache >= 0 && skills > cache + 1) {
     const maybePlugin = parts[cache + 2];
-    if (maybePlugin && maybePlugin !== 'plugin-install-VGdwGs')
-      return maybePlugin;
+    if (maybePlugin && maybePlugin !== "plugin-install-VGdwGs") return maybePlugin;
     return parts[cache + 3] ?? null;
   }
   return null;
 }
 
-function disabledPluginMatches(
-  disabledPlugin: string,
-  pluginPrefix: string,
-): boolean {
-  return (
-    disabledPlugin === pluginPrefix ||
-    disabledPlugin.startsWith(`${pluginPrefix}@`)
-  );
+function disabledPluginMatches(disabledPlugin: string, pluginPrefix: string): boolean {
+  return disabledPlugin === pluginPrefix || disabledPlugin.startsWith(`${pluginPrefix}@`);
 }
 
 function configState(): {
@@ -525,19 +467,19 @@ function configState(): {
   const disabledPaths = new Set<string>();
   const disabledNames = new Set<string>();
   const disabledPlugins = new Set<string>();
-  const config = path.join(home, '.codex/config.toml');
+  const config = path.join(home, ".codex/config.toml");
   if (!exists(config)) return { disabledPaths, disabledNames, disabledPlugins };
-  const lines = fs.readFileSync(config, 'utf8').split(/\r?\n/);
-  let block = '';
-  let currentPath = '';
-  let currentName = '';
+  const lines = fs.readFileSync(config, "utf8").split(/\r?\n/);
+  let block = "";
+  let currentPath = "";
+  let currentName = "";
   for (const line of lines) {
     const skillBlock = /^\[\[skills\.config\]\]/.test(line);
     const pluginBlock = /^\[plugins\."([^"]+)"\]/.exec(line);
     if (skillBlock) {
-      block = 'skill';
-      currentPath = '';
-      currentName = '';
+      block = "skill";
+      currentPath = "";
+      currentName = "";
       continue;
     }
     if (pluginBlock) {
@@ -545,54 +487,57 @@ function configState(): {
       continue;
     }
     if (/^\[/.test(line)) {
-      block = '';
-      currentPath = '';
-      currentName = '';
+      block = "";
+      currentPath = "";
+      currentName = "";
       continue;
     }
-    if (block === 'skill') {
+    if (block === "skill") {
       const pathMatch = /^path\s*=\s*"([^"]+)"/.exec(line);
       const nameMatch = /^name\s*=\s*"([^"]+)"/.exec(line);
-      if (pathMatch) currentPath = expandHome(pathMatch[1] ?? '');
-      if (nameMatch) currentName = nameMatch[1] ?? '';
+      if (pathMatch) currentPath = expandHome(pathMatch[1] ?? "");
+      if (nameMatch) currentName = nameMatch[1] ?? "";
       if (/^enabled\s*=\s*false/.test(line)) {
         if (currentPath) disabledPaths.add(currentPath);
         if (currentName) disabledNames.add(currentName);
       }
-    } else if (
-      block.startsWith('plugin:') &&
-      /^enabled\s*=\s*false/.test(line)
-    ) {
-      disabledPlugins.add(block.slice('plugin:'.length));
+    } else if (block.startsWith("plugin:") && /^enabled\s*=\s*false/.test(line)) {
+      disabledPlugins.add(block.slice("plugin:".length));
     }
   }
   return { disabledPaths, disabledNames, disabledPlugins };
 }
 
-function discoverRoots(): string[] {
+export function discoverRoots(
+  baseHome = home,
+  providedRoots = extraRoots,
+  exclusive = rootOnly,
+): string[] {
   const rootsByRealPath = new Map<string, string>();
-  [
-    path.join(home, '.codex/skills'),
-    path.join(home, '.codex/plugins/cache'),
-    path.join(home, 'Projects/agent-scripts/skills'),
-    ...extraRoots.map(expandHome),
-  ].forEach((root) => {
+  const roots = providedRoots.map((root) => root.replace(/^~(?=$|\/)/, baseHome));
+  const candidates = exclusive
+    ? roots
+    : [
+        path.join(baseHome, ".codex/skills"),
+        path.join(baseHome, ".codex/plugins/cache"),
+        path.join(baseHome, "Projects/agent-scripts/skills"),
+        ...roots,
+      ];
+  candidates.forEach((root) => {
     if (!exists(root)) return;
     const real = fs.realpathSync(root);
     const current = rootsByRealPath.get(real);
-    if (!current || root.length < current.length)
-      rootsByRealPath.set(real, root);
+    if (!current || root.length < current.length) rootsByRealPath.set(real, root);
   });
-  const projects = path.join(home, 'Projects');
-  if (exists(projects)) {
+  const projects = path.join(baseHome, "Projects");
+  if (!exclusive && exists(projects)) {
     for (const entry of fs.readdirSync(projects, { withFileTypes: true })) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-      const skillRoot = path.join(projects, entry.name, '.agents/skills');
+      const skillRoot = path.join(projects, entry.name, ".agents/skills");
       if (exists(skillRoot)) {
         const real = fs.realpathSync(skillRoot);
         const current = rootsByRealPath.get(real);
-        if (!current || skillRoot.length < current.length)
-          rootsByRealPath.set(real, skillRoot);
+        if (!current || skillRoot.length < current.length) rootsByRealPath.set(real, skillRoot);
       }
     }
   }
@@ -603,27 +548,20 @@ function discoverSkills(): Skill[] {
   const { disabledPaths, disabledNames, disabledPlugins } = configState();
   const skillsByRealPath = new Map<string, Skill>();
   for (const root of discoverRoots()) {
-    for (const file of walkFiles(
-      root,
-      (candidate) => path.basename(candidate) === 'SKILL.md',
-      10,
-    )) {
+    for (const file of walkFiles(root, (candidate) => path.basename(candidate) === "SKILL.md", 10)) {
       const parsed = parseFrontmatter(file);
       if (!parsed) continue;
       const baseName = parsed.name || path.basename(path.dirname(file));
       const pluginPrefix = pluginPrefixFor(file);
       const name = pluginPrefix ? `${pluginPrefix}:${baseName}` : baseName;
-      const description = parsed.description ?? '';
+      const description = parsed.description ?? "";
       const rendered = description
         ? `- ${name}: ${description} (file: ${file})`
         : `- ${name}: (file: ${file})`;
       const disabledByPath = disabledPaths.has(file);
       const disabledByName = disabledNames.has(name);
       const disabledByPlugin =
-        pluginPrefix != null &&
-        [...disabledPlugins].some((plugin) =>
-          disabledPluginMatches(plugin, pluginPrefix),
-        );
+        pluginPrefix != null && [...disabledPlugins].some((plugin) => disabledPluginMatches(plugin, pluginPrefix));
       const bodyKey = normalizeWords(parsed.body);
       const skill: Skill = {
         name,
@@ -638,7 +576,7 @@ function discoverSkills(): Skill[] {
         enabled: !disabledByPath && !disabledByName && !disabledByPlugin,
         descChars: [...description].length,
         lineChars: [...`${rendered}\n`].length,
-        lineBytes: Buffer.byteLength(`${rendered}\n`, 'utf8'),
+        lineBytes: Buffer.byteLength(`${rendered}\n`, "utf8"),
         bodyHash: fnv1a(bodyKey),
         bodyKey,
         descKey: normalizeWords(description),
@@ -647,10 +585,7 @@ function discoverSkills(): Skill[] {
         live: false,
       };
       const existing = skillsByRealPath.get(skill.realPath);
-      skillsByRealPath.set(
-        skill.realPath,
-        existing ? preferredDisplaySkill(existing, skill) : skill,
-      );
+      skillsByRealPath.set(skill.realPath, existing ? preferredDisplaySkill(existing, skill) : skill);
     }
   }
   return [...skillsByRealPath.values()];
@@ -659,22 +594,18 @@ function discoverSkills(): Skill[] {
 function recentLogFiles(): string[] {
   if (noLogs) return [];
   const files = new Set<string>();
-  const roots = [path.join(home, '.codex/sessions')];
+  const roots = [path.join(home, ".codex/sessions")];
   if (deepLogs) {
     roots.push(
-      path.join(home, '.codex/archived_sessions'),
-      path.join(home, '.openclaw'),
-      path.join(home, '.clawd'),
+      path.join(home, ".codex/archived_sessions"),
+      path.join(home, ".openclaw"),
+      path.join(home, ".clawd"),
     );
   }
-  const history = path.join(home, '.codex/history.jsonl');
+  const history = path.join(home, ".codex/history.jsonl");
   if (exists(history)) files.add(history);
   for (const root of roots) {
-    for (const file of walkRecentFiles(
-      root,
-      (candidate) => candidate.endsWith('.jsonl') || candidate.endsWith('.log'),
-      8,
-    )) {
+    for (const file of walkRecentFiles(root, (candidate) => candidate.endsWith(".jsonl") || candidate.endsWith(".log"), 8)) {
       try {
         if (fs.statSync(file).mtimeMs >= cutoffMs) files.add(file);
       } catch {}
@@ -683,11 +614,7 @@ function recentLogFiles(): string[] {
   return [...files].sort();
 }
 
-function walkRecentFiles(
-  root: string,
-  predicate: (file: string) => boolean,
-  maxDepth = 8,
-): string[] {
+function walkRecentFiles(root: string, predicate: (file: string) => boolean, maxDepth = 8): string[] {
   const out: string[] = [];
   function walk(dir: string, depth: number) {
     if (depth > maxDepth) return;
@@ -708,11 +635,7 @@ function walkRecentFiles(
       if (entry.isDirectory()) {
         if (depth > 0 && stat.mtimeMs < cutoffMs) continue;
         walk(file, depth + 1);
-      } else if (
-        entry.isFile() &&
-        stat.mtimeMs >= cutoffMs &&
-        predicate(file)
-      ) {
+      } else if (entry.isFile() && stat.mtimeMs >= cutoffMs && predicate(file)) {
         out.push(file);
       }
     }
@@ -722,12 +645,11 @@ function walkRecentFiles(
 }
 
 function messageText(value: unknown): string[] {
-  if (typeof value === 'string') return [value];
+  if (typeof value === "string") return [value];
   if (Array.isArray(value)) return value.flatMap(messageText);
-  if (!value || typeof value !== 'object') return [];
+  if (!value || typeof value !== "object") return [];
   const record = value as Record<string, unknown>;
-  if (record.type === 'input_text' && typeof record.text === 'string')
-    return [record.text];
+  if (record.type === "input_text" && typeof record.text === "string") return [record.text];
   return Object.values(record).flatMap(messageText);
 }
 
@@ -736,37 +658,31 @@ export function usageEvidence(record: Record<string, unknown>): {
   userText?: string;
 } {
   const payload = record.payload as Record<string, unknown> | undefined;
-  if (record.type === 'response_item' && payload?.type === 'function_call') {
+  if (record.type === "response_item" && payload?.type === "function_call") {
     return {
-      callArgs: typeof payload.arguments === 'string' ? payload.arguments : '',
+      callArgs: typeof payload.arguments === "string" ? payload.arguments : "",
     };
   }
   if (
-    typeof record.session_id === 'string' &&
-    typeof record.text === 'string' &&
-    typeof record.ts === 'number'
+    typeof record.session_id === "string" &&
+    typeof record.text === "string" &&
+    typeof record.ts === "number"
   ) {
     return { userText: record.text };
   }
   const isUser =
-    (record.type === 'response_item' &&
-      payload?.type === 'message' &&
-      payload.role === 'user') ||
-    (record.type === 'event_msg' && payload?.type === 'user_message');
-  return isUser ? { userText: messageText(payload).join('\n') } : {};
+    (record.type === "response_item" && payload?.type === "message" && payload.role === "user") ||
+    (record.type === "event_msg" && payload?.type === "user_message");
+  return isUser ? { userText: messageText(payload).join("\n") } : {};
 }
 
 function collectWorkingDirectories(value: unknown): string[] {
   if (Array.isArray(value)) return value.flatMap(collectWorkingDirectories);
-  if (!value || typeof value !== 'object') return [];
+  if (!value || typeof value !== "object") return [];
   const record = value as Record<string, unknown>;
-  const current = [record.workdir, record.cwd].filter(
-    (item): item is string => typeof item === 'string',
-  );
-  return [
-    ...current,
-    ...Object.values(record).flatMap(collectWorkingDirectories),
-  ];
+  const current = [record.workdir, record.cwd]
+    .filter((item): item is string => typeof item === "string");
+  return [...current, ...Object.values(record).flatMap(collectWorkingDirectories)];
 }
 
 export function referencedSkillPaths(callArgs: string): string[] {
@@ -774,20 +690,17 @@ export function referencedSkillPaths(callArgs: string): string[] {
   try {
     parsed = JSON.parse(callArgs) as unknown;
   } catch {}
-  const texts = typeof parsed === 'string' ? [parsed] : messageText(parsed);
+  const texts = typeof parsed === "string" ? [parsed] : messageText(parsed);
   const workdirs = collectWorkingDirectories(parsed).map(expandHome);
   const paths = new Set<string>();
   for (const text of texts) {
-    for (const match of text.matchAll(
-      /(?:^|[\s"'`=])((?:\/|\.{1,2}\/)?[^\s"'`]*\/SKILL\.md)\b/g,
-    )) {
-      const locator = expandHome(match[1] ?? '');
+    for (const match of text.matchAll(/(?:^|[\s"'`=])((?:\/|\.{1,2}\/)?[^\s"'`]*\/SKILL\.md)\b/g)) {
+      const locator = expandHome(match[1] ?? "");
       if (!locator) continue;
       if (path.isAbsolute(locator)) {
         paths.add(path.normalize(locator));
       } else {
-        for (const workdir of workdirs)
-          paths.add(path.resolve(workdir, locator));
+        for (const workdir of workdirs) paths.add(path.resolve(workdir, locator));
       }
     }
   }
@@ -800,16 +713,12 @@ function applyUserMentions(
   usage: Map<string, Usage>,
 ): void {
   const dollarCounts = countTokens(
-    [...userText.matchAll(/\$([A-Za-z][A-Za-z0-9_.:-]{1,80})/g)].map((match) =>
-      (match[1] ?? '').toLowerCase(),
-    ),
+    [...userText.matchAll(/\$([A-Za-z][A-Za-z0-9_.:-]{1,80})/g)]
+      .map((match) => (match[1] ?? "").toLowerCase()),
   );
   const textCounts = countTokens(
-    [
-      ...userText.matchAll(
-        /\b(?:use|using|load|read)\s+`?\$?([A-Za-z][A-Za-z0-9_.:-]{1,80})`?/gi,
-      ),
-    ].map((match) => (match[1] ?? '').toLowerCase()),
+    [...userText.matchAll(/\b(?:use|using|load|read)\s+`?\$?([A-Za-z][A-Za-z0-9_.:-]{1,80})`?/gi)]
+      .map((match) => (match[1] ?? "").toLowerCase()),
   );
   for (const [realPath, names] of aliases) {
     const item = usage.get(realPath);
@@ -822,41 +731,29 @@ function applyUserMentions(
 }
 
 export function plainLogSkillReads(text: string): string[] {
-  return [
-    ...text.matchAll(
-      /\b(?:cat|sed|head|tail|less|open|read)\b[^\r\n]{0,500}?(?:\.agents\/)?skills\/([^/"'`\\\s]+)\/SKILL\.md/gi,
-    ),
-  ].map((match) => (match[1] ?? '').toLowerCase());
+  return [...text.matchAll(
+    /\b(?:cat|sed|head|tail|less|open|read)\b[^\r\n]{0,500}?(?:\.agents\/)?skills\/([^/"'`\\\s]+)\/SKILL\.md/gi,
+  )].map((match) => (match[1] ?? "").toLowerCase());
 }
 
 function scanUsage(skills: Skill[], logFiles: string[]): Map<string, Usage> {
-  const uniqueSkills = [
-    ...new Map(skills.map((skill) => [skill.realPath, skill])).values(),
-  ];
+  const uniqueSkills = [...new Map(skills.map((skill) => [skill.realPath, skill])).values()];
   const aliases = new Map<string, string[]>();
   for (const skill of uniqueSkills) {
-    const values = new Set([
-      skill.name,
-      skill.baseName,
-      skill.name.split(':').at(-1) ?? skill.name,
-    ]);
-    aliases.set(
-      skill.realPath,
-      [...values].map((value) => value.toLowerCase()),
-    );
+    const values = new Set([skill.name, skill.baseName, skill.name.split(":").at(-1) ?? skill.name]);
+    aliases.set(skill.realPath, [...values].map((value) => value.toLowerCase()));
   }
   const usage = new Map<string, Usage>();
-  for (const skill of uniqueSkills)
-    usage.set(skill.realPath, { dollar: 0, fileRead: 0, text: 0 });
+  for (const skill of uniqueSkills) usage.set(skill.realPath, { dollar: 0, fileRead: 0, text: 0 });
   let consumedBytes = 0;
   for (const file of logFiles) {
-    let text = '';
+    let text = "";
     try {
       const stat = fs.statSync(file);
       if (stat.size > 150 * 1024 * 1024) continue;
       if (consumedBytes + stat.size > maxLogBytes) break;
       consumedBytes += stat.size;
-      text = fs.readFileSync(file, 'utf8');
+      text = fs.readFileSync(file, "utf8");
     } catch {
       continue;
     }
@@ -897,14 +794,13 @@ function scanUsage(skills: Skill[], logFiles: string[]): Map<string, Usage> {
       applyUserMentions(evidence.userText, aliases, usage);
     }
     if (plainLines.length > 0) {
-      const plainText = plainLines.join('\n');
+      const plainText = plainLines.join("\n");
       applyUserMentions(plainText, aliases, usage);
       const pathCounts = countTokens(plainLogSkillReads(plainText));
       for (const [realPath, names] of aliases) {
         const item = usage.get(realPath);
         if (!item) continue;
-        for (const candidate of names)
-          item.fileRead += pathCounts.get(candidate) ?? 0;
+        for (const candidate of names) item.fileRead += pathCounts.get(candidate) ?? 0;
       }
     }
   }
@@ -917,32 +813,22 @@ function countTokens(values: string[]): Map<string, number> {
   return map;
 }
 
-export function compactDescription(
-  description: string,
-  maxChars = 110,
-): string {
+export function compactDescription(description: string, maxChars = 110): string {
   let draft = sanitizeSingleLine(description)
-    .replace(
-      /^Use this skill alongside ([A-Za-z0-9_.:-]+) when the task involves /i,
-      '$1 + workflow: ',
-    )
-    .replace(/^Use this skill whenever /i, '')
-    .replace(/^Use this skill when /i, '')
-    .replace(/^Use when /i, '')
-    .replace(/^Trigger whenever the user asks to /i, '')
-    .replace(/^This is the preferred workflow skill whenever /i, '')
-    .replace(/\bthe user wants to\b/gi, '')
-    .replace(/\s+/g, ' ')
+    .replace(/^Use this skill alongside ([A-Za-z0-9_.:-]+) when the task involves /i, "$1 + workflow: ")
+    .replace(/^Use this skill whenever /i, "")
+    .replace(/^Use this skill when /i, "")
+    .replace(/^Use when /i, "")
+    .replace(/^Trigger whenever the user asks to /i, "")
+    .replace(/^This is the preferred workflow skill whenever /i, "")
+    .replace(/\bthe user wants to\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
   const firstSentence = draft.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
   if (firstSentence && firstSentence.length >= 35) draft = firstSentence;
   if ([...draft].length <= maxChars) return draft;
-  const prefix = [...draft].slice(0, maxChars - 3).join('');
-  const boundary = Math.max(
-    prefix.lastIndexOf(';'),
-    prefix.lastIndexOf(','),
-    prefix.lastIndexOf(' '),
-  );
+  const prefix = [...draft].slice(0, maxChars - 3).join("");
+  const boundary = Math.max(prefix.lastIndexOf(";"), prefix.lastIndexOf(","), prefix.lastIndexOf(" "));
   return `${prefix.slice(0, boundary >= maxChars * 0.6 ? boundary : prefix.length).trimEnd()}...`;
 }
 
@@ -955,15 +841,9 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   return map;
 }
 
-function similarity(
-  a: Skill,
-  b: Skill,
-): { description: number; body: number; overall: number } {
+function similarity(a: Skill, b: Skill): { description: number; body: number; overall: number } {
   const description = jaccard(wordSet(a.description), wordSet(b.description));
-  const body =
-    a.bodyHash === b.bodyHash
-      ? 1
-      : jaccard(wordSet(a.bodyKey), wordSet(b.bodyKey));
+  const body = a.bodyHash === b.bodyHash ? 1 : jaccard(wordSet(a.bodyKey), wordSet(b.bodyKey));
   return {
     description,
     body,
@@ -980,17 +860,17 @@ function formatOnePct(value: number): string {
 }
 
 function formatNumber(value: number): string {
-  return Math.round(value).toLocaleString('en-US');
+  return Math.round(value).toLocaleString("en-US");
 }
 
 function tokenCost(text: string): number {
-  return Math.ceil(Buffer.byteLength(text, 'utf8') / 4);
+  return Math.ceil(Buffer.byteLength(text, "utf8") / 4);
 }
 
 function skillOrderRank(skill: Skill): number {
-  if (skill.path.includes('/.codex/skills/.system/')) return 0;
-  if (skill.scope === 'codex-plugin') return 1;
-  if (skill.scope === 'repo') return 2;
+  if (skill.path.includes("/.codex/skills/.system/")) return 0;
+  if (skill.scope === "codex-plugin") return 1;
+  if (skill.scope === "repo") return 2;
   return 3;
 }
 
@@ -1009,12 +889,9 @@ function renderSkillLine(skill: Skill, description: string): string {
     : `- ${skill.name}: (file: ${skill.renderPath})`;
 }
 
-function renderSkillDescriptionPrefix(
-  skill: Skill,
-  descriptionChars: number,
-): string {
-  if (descriptionChars <= 0) return '';
-  return [...skill.description].slice(0, descriptionChars).join('');
+function renderSkillDescriptionPrefix(skill: Skill, descriptionChars: number): string {
+  if (descriptionChars <= 0) return "";
+  return [...skill.description].slice(0, descriptionChars).join("");
 }
 
 function lineTokenCost(line: string): number {
@@ -1022,7 +899,7 @@ function lineTokenCost(line: string): number {
 }
 
 function minimumLineTokenCost(skill: Skill): number {
-  return lineTokenCost(renderSkillLine(skill, ''));
+  return lineTokenCost(renderSkillLine(skill, ""));
 }
 
 function fullLineTokenCost(skill: Skill): number {
@@ -1030,23 +907,20 @@ function fullLineTokenCost(skill: Skill): number {
 }
 
 function extraDescriptionCosts(skill: Skill): number[] {
-  const minimumLine = renderSkillLine(skill, '');
-  const minimumBytes = Buffer.byteLength(`${minimumLine}\n`, 'utf8');
+  const minimumLine = renderSkillLine(skill, "");
+  const minimumBytes = Buffer.byteLength(`${minimumLine}\n`, "utf8");
   const minimumCost = Math.ceil(minimumBytes / 4);
   const costs = [0];
   let prefixBytes = 0;
   for (const char of skill.description) {
-    prefixBytes += Buffer.byteLength(char, 'utf8');
+    prefixBytes += Buffer.byteLength(char, "utf8");
     const renderedBytes = minimumBytes + prefixBytes + 1;
     costs.push(Math.ceil(renderedBytes / 4) - minimumCost);
   }
   return costs;
 }
 
-function codexBudgetedSkillCost(
-  skills: Skill[],
-  budgetTokens: number,
-): {
+function codexBudgetedSkillCost(skills: Skill[], budgetTokens: number): {
   fullTokens: number;
   minimumTokens: number;
   budgetedTokens: number;
@@ -1056,17 +930,11 @@ function codexBudgetedSkillCost(
   truncatedDescriptionCount: number;
 } {
   const ordered = orderedSkillsForBudget(skills);
-  const fullTokens = ordered.reduce(
-    (sum, skill) => sum + fullLineTokenCost(skill),
-    0,
-  );
+  const fullTokens = ordered.reduce((sum, skill) => sum + fullLineTokenCost(skill), 0);
   if (fullTokens <= budgetTokens) {
     return {
       fullTokens,
-      minimumTokens: ordered.reduce(
-        (sum, skill) => sum + minimumLineTokenCost(skill),
-        0,
-      ),
+      minimumTokens: ordered.reduce((sum, skill) => sum + minimumLineTokenCost(skill), 0),
       budgetedTokens: fullTokens,
       includedSkills: ordered.length,
       omittedSkills: 0,
@@ -1075,14 +943,9 @@ function codexBudgetedSkillCost(
     };
   }
 
-  const minimumTokens = ordered.reduce(
-    (sum, skill) => sum + minimumLineTokenCost(skill),
-    0,
-  );
+  const minimumTokens = ordered.reduce((sum, skill) => sum + minimumLineTokenCost(skill), 0);
   if (minimumTokens <= budgetTokens) {
-    const remainingByIndex = ordered.map(
-      (skill) => [...skill.description].length,
-    );
+    const remainingByIndex = ordered.map((skill) => [...skill.description].length);
     const allocatedByIndex = ordered.map(() => 0);
     const currentExtraCosts = ordered.map(() => 0);
     const extraCostsByIndex = ordered.map(extraDescriptionCosts);
@@ -1092,8 +955,7 @@ function codexBudgetedSkillCost(
       for (let index = 0; index < ordered.length; index++) {
         if (allocatedByIndex[index] >= remainingByIndex[index]) continue;
         const nextChars = allocatedByIndex[index] + 1;
-        const nextCost =
-          extraCostsByIndex[index]?.[nextChars] ?? currentExtraCosts[index];
+        const nextCost = extraCostsByIndex[index]?.[nextChars] ?? currentExtraCosts[index];
         const delta = nextCost - currentExtraCosts[index];
         if (delta <= remaining) {
           allocatedByIndex[index] = nextChars;
@@ -1106,31 +968,19 @@ function codexBudgetedSkillCost(
     }
 
     const rendered = ordered.map((skill, index) =>
-      renderSkillLine(
-        skill,
-        renderSkillDescriptionPrefix(skill, allocatedByIndex[index] ?? 0),
-      ),
+      renderSkillLine(skill, renderSkillDescriptionPrefix(skill, allocatedByIndex[index] ?? 0))
     );
     const truncatedDescriptionChars = ordered.reduce(
-      (sum, skill, index) =>
-        sum +
-        Math.max(
-          0,
-          [...skill.description].length - (allocatedByIndex[index] ?? 0),
-        ),
+      (sum, skill, index) => sum + Math.max(0, [...skill.description].length - (allocatedByIndex[index] ?? 0)),
       0,
     );
     const truncatedDescriptionCount = ordered.filter(
-      (skill, index) =>
-        (allocatedByIndex[index] ?? 0) < [...skill.description].length,
+      (skill, index) => (allocatedByIndex[index] ?? 0) < [...skill.description].length,
     ).length;
     return {
       fullTokens,
       minimumTokens,
-      budgetedTokens: rendered.reduce(
-        (sum, line) => sum + lineTokenCost(line),
-        0,
-      ),
+      budgetedTokens: rendered.reduce((sum, line) => sum + lineTokenCost(line), 0),
       includedSkills: ordered.length,
       omittedSkills: 0,
       truncatedDescriptionChars,
@@ -1170,10 +1020,7 @@ function skillBudget(skills: Skill[], metadataOverheadTokens = 0): Budget {
   const context = codexModelContext(model);
   const tokenRatio = numberArg(String(charsPerToken), 4);
   const percent = numberArg(String(budgetPercent), 2);
-  const renderedLineChars = skills.reduce(
-    (sum, skill) => sum + skill.lineChars,
-    0,
-  );
+  const renderedLineChars = skills.reduce((sum, skill) => sum + skill.lineChars, 0);
   const effectiveContextTokens = context.effectivePercent
     ? Math.floor(context.tokens * (context.effectivePercent / 100))
     : null;
@@ -1204,14 +1051,10 @@ function skillBudget(skills: Skill[], metadataOverheadTokens = 0): Budget {
     charsPerToken: tokenRatio,
     unbudgetedBudgetUsedRatio: fullTokens / budgetTokens,
     budgetedBudgetUsedRatio: budgetedTokens / budgetTokens,
-    effectiveBudgetUsedRatio: effectiveBudgetTokens
-      ? budgetedTokens / effectiveBudgetTokens
-      : null,
+    effectiveBudgetUsedRatio: effectiveBudgetTokens ? budgetedTokens / effectiveBudgetTokens : null,
     unbudgetedContextUsedRatio: fullTokens / context.tokens,
     budgetedContextUsedRatio: budgetedTokens / context.tokens,
-    effectiveContextUsedRatio: effectiveContextTokens
-      ? budgetedTokens / effectiveContextTokens
-      : null,
+    effectiveContextUsedRatio: effectiveContextTokens ? budgetedTokens / effectiveContextTokens : null,
     remainingBudgetTokens: budgetTokens - budgetedTokens,
     remainingEffectiveBudgetTokens: effectiveBudgetTokens
       ? effectiveBudgetTokens - budgetedTokens
@@ -1224,9 +1067,7 @@ function skillBudget(skills: Skill[], metadataOverheadTokens = 0): Budget {
 }
 
 function isLikelyCopy(score: { description: number; body: number }): boolean {
-  return (
-    score.body >= 0.95 || (score.body >= 0.85 && score.description >= 0.85)
-  );
+  return score.body >= 0.95 || (score.body >= 0.85 && score.description >= 0.85);
 }
 
 function duplicateDeleteSuggestions(groups: [string, Skill[]][]): string[] {
@@ -1237,11 +1078,7 @@ function duplicateDeleteSuggestions(groups: [string, Skill[]][]): string[] {
       .filter((skill) => skill.realPath !== keep.realPath)
       .map((skill) => ({ skill, score: similarity(keep, skill) }))
       .filter(({ score }) => isLikelyCopy(score))
-      .sort(
-        (a, b) =>
-          b.score.body - a.score.body ||
-          b.score.description - a.score.description,
-      );
+      .sort((a, b) => b.score.body - a.score.body || b.score.description - a.score.description);
     if (candidates.length === 0) continue;
     lines.push(`- ${name}`);
     lines.push(`  keep: ${keep.scope}: ${keep.path}`);
@@ -1251,7 +1088,7 @@ function duplicateDeleteSuggestions(groups: [string, Skill[]][]): string[] {
       );
     }
   }
-  return lines.length ? lines : ['- none'];
+  return lines.length ? lines : ["- none"];
 }
 
 function liveMetadataOverhead(live: LivePrompt | null): number {
@@ -1275,17 +1112,11 @@ function render(
 ): string {
   const considered = includeAll ? discovered : selected;
   const roots = groupBy(discovered, (skill) => skill.root);
-  const duplicatePool = includeAll
-    ? discovered
-    : discovered.filter((skill) => skill.enabled);
-  const byBase = [
-    ...groupBy(duplicatePool, (skill) =>
-      skill.baseName.toLowerCase(),
-    ).entries(),
-  ].filter(([, list]) => list.length > 1);
-  const byBody = [
-    ...groupBy(duplicatePool, (skill) => skill.bodyHash).entries(),
-  ].filter(([hash, list]) => hash !== '811c9dc5' && list.length > 1);
+  const duplicatePool = includeAll ? discovered : discovered.filter((skill) => skill.enabled);
+  const byBase = [...groupBy(duplicatePool, (skill) => skill.baseName.toLowerCase()).entries()]
+    .filter(([, list]) => list.length > 1);
+  const byBody = [...groupBy(duplicatePool, (skill) => skill.bodyHash).entries()]
+    .filter(([hash, list]) => hash !== "811c9dc5" && list.length > 1);
   const longDescriptions = considered
     .filter((skill) => skill.descChars >= 110 || skill.lineChars >= 180)
     .sort((a, b) => b.descChars - a.descChars)
@@ -1295,182 +1126,129 @@ function render(
       const item = usageForSkill(usage, skill);
       return !item || item.dollar + item.fileRead + item.text === 0;
     })
-    .filter((skill) => !['codex', 'codex-plugin'].includes(skill.scope))
-    .sort(
-      (a, b) => a.scope.localeCompare(b.scope) || a.name.localeCompare(b.name),
-    )
+    .filter((skill) => !["codex", "codex-plugin"].includes(skill.scope))
+    .sort((a, b) => a.scope.localeCompare(b.scope) || a.name.localeCompare(b.name))
     .slice(0, 80);
-  const totalLineChars = considered.reduce(
-    (sum, skill) => sum + skill.lineChars,
-    0,
-  );
-  const totalDescChars = considered.reduce(
-    (sum, skill) => sum + skill.descChars,
-    0,
-  );
+  const totalLineChars = considered.reduce((sum, skill) => sum + skill.lineChars, 0);
+  const totalDescChars = considered.reduce((sum, skill) => sum + skill.descChars, 0);
   const budget = skillBudget(considered, liveMetadataOverhead(live));
   const lines: string[] = [];
-  lines.push('# Skill Cleaner Report', '');
+  lines.push("# Skill Cleaner Report", "");
   lines.push(`generated: ${new Date().toISOString()}`);
   lines.push(`months: ${months}`);
-  lines.push(
-    `inventory_source: ${live ? 'codex debug prompt-input' : 'filesystem fallback'}`,
-  );
-  lines.push(
-    `skills: ${discovered.length} discovered, ${selected.length} live, ${considered.length} considered`,
-  );
+  lines.push(`inventory_source: ${live ? "codex debug prompt-input" : "filesystem fallback"}`);
+  lines.push(`skills: ${discovered.length} discovered, ${selected.length} live, ${considered.length} considered`);
   lines.push(`description_chars: ${totalDescChars}`);
   lines.push(`rendered_line_chars: ${totalLineChars}`);
-  lines.push(`log_files_scanned: ${logFiles.length}`, '');
+  lines.push(`log_files_scanned: ${logFiles.length}`, "");
 
-  lines.push('## Skill Budget', '');
+  lines.push("## Skill Budget", "");
   lines.push(`model: ${budget.model}`);
   lines.push(`context_tokens: ${formatNumber(budget.contextTokens)}`);
   lines.push(`context_source: ${budget.contextSource}`);
-  lines.push(
-    `${budget.budgetPercent}%_budget_tokens: ${formatNumber(budget.budgetTokens)}`,
-  );
+  lines.push(`${budget.budgetPercent}%_budget_tokens: ${formatNumber(budget.budgetTokens)}`);
   lines.push(`codex_cost_rule: ceil(utf8_bytes / ${budget.charsPerToken})`);
-  lines.push(
-    `unbudgeted_full_tokens: ${formatNumber(budget.unbudgetedFullTokens)}`,
-  );
-  lines.push(
-    `minimum_no_description_tokens: ${formatNumber(budget.minimumTokens)}`,
-  );
+  lines.push(`unbudgeted_full_tokens: ${formatNumber(budget.unbudgetedFullTokens)}`);
+  lines.push(`minimum_no_description_tokens: ${formatNumber(budget.minimumTokens)}`);
   lines.push(`budgeted_tokens_used: ${formatNumber(budget.budgetedTokens)}`);
-  lines.push(
-    `used_of_2%_budget: ${formatOnePct(budget.budgetedBudgetUsedRatio)}`,
-  );
-  lines.push(
-    `unbudgeted_used_of_2%_budget: ${formatOnePct(budget.unbudgetedBudgetUsedRatio)}`,
-  );
-  lines.push(
-    `used_of_context: ${formatOnePct(budget.budgetedContextUsedRatio)}`,
-  );
-  lines.push(
-    `remaining_2%_budget_tokens: ${formatNumber(budget.remainingBudgetTokens)}`,
-  );
+  lines.push(`used_of_2%_budget: ${formatOnePct(budget.budgetedBudgetUsedRatio)}`);
+  lines.push(`unbudgeted_used_of_2%_budget: ${formatOnePct(budget.unbudgetedBudgetUsedRatio)}`);
+  lines.push(`used_of_context: ${formatOnePct(budget.budgetedContextUsedRatio)}`);
+  lines.push(`remaining_2%_budget_tokens: ${formatNumber(budget.remainingBudgetTokens)}`);
   lines.push(`included_skills_after_budget: ${budget.includedSkills}`);
   lines.push(`omitted_skills_after_budget: ${budget.omittedSkills}`);
-  lines.push(
-    `truncated_description_chars: ${formatNumber(budget.truncatedDescriptionChars)}`,
-  );
-  if (
-    budget.effectiveContextTokens &&
-    budget.effectiveBudgetTokens &&
-    budget.remainingEffectiveBudgetTokens != null
-  ) {
-    lines.push(
-      `effective_context_tokens: ${formatNumber(budget.effectiveContextTokens)} (${budget.effectivePercent}%)`,
-    );
-    lines.push(
-      `effective_2%_budget_tokens: ${formatNumber(budget.effectiveBudgetTokens)}`,
-    );
-    lines.push(
-      `used_of_effective_2%_budget: ${formatOnePct(budget.effectiveBudgetUsedRatio ?? 0)}`,
-    );
-    lines.push(
-      `remaining_effective_2%_budget_tokens: ${formatNumber(budget.remainingEffectiveBudgetTokens)}`,
-    );
+  lines.push(`truncated_description_chars: ${formatNumber(budget.truncatedDescriptionChars)}`);
+  if (budget.effectiveContextTokens && budget.effectiveBudgetTokens && budget.remainingEffectiveBudgetTokens != null) {
+    lines.push(`effective_context_tokens: ${formatNumber(budget.effectiveContextTokens)} (${budget.effectivePercent}%)`);
+    lines.push(`effective_2%_budget_tokens: ${formatNumber(budget.effectiveBudgetTokens)}`);
+    lines.push(`used_of_effective_2%_budget: ${formatOnePct(budget.effectiveBudgetUsedRatio ?? 0)}`);
+    lines.push(`remaining_effective_2%_budget_tokens: ${formatNumber(budget.remainingEffectiveBudgetTokens)}`);
   }
-  lines.push('');
+  lines.push("");
 
-  lines.push('## Description Candidates', '');
+  lines.push("## Description Candidates", "");
   for (const skill of longDescriptions) {
     lines.push(`- ${skill.name}`);
     lines.push(`  path: ${skill.path}`);
-    lines.push(
-      `  chars: description=${skill.descChars}, rendered_line=${skill.lineChars}`,
-    );
+    lines.push(`  chars: description=${skill.descChars}, rendered_line=${skill.lineChars}`);
     lines.push(`  current: ${skill.description}`);
     lines.push(`  draft: ${compactDescription(skill.description)}`);
   }
-  if (longDescriptions.length === 0) lines.push('- none');
-  lines.push('');
+  if (longDescriptions.length === 0) lines.push("- none");
+  lines.push("");
 
-  lines.push('## Duplicates By Name', '');
+  lines.push("## Duplicates By Name", "");
   for (const [name, list] of byBase.slice(0, 40)) {
     lines.push(`- ${name}`);
     const keep = preferredKeepSkill(list);
     lines.push(`  keep-default: ${keep.scope}: ${keep.path}`);
     for (const skill of list) {
-      const score =
-        skill.realPath === keep.realPath
-          ? { body: 1, description: 1 }
-          : similarity(keep, skill);
+      const score = skill.realPath === keep.realPath ? { body: 1, description: 1 } : similarity(keep, skill);
       lines.push(
         `  - ${skill.scope}: ${skill.path} (body=${formatPct(score.body)}, description=${formatPct(score.description)})`,
       );
     }
   }
-  if (byBase.length === 0) lines.push('- none');
-  lines.push('');
+  if (byBase.length === 0) lines.push("- none");
+  lines.push("");
 
-  lines.push('## Duplicate Delete Suggestions', '');
+  lines.push("## Duplicate Delete Suggestions", "");
   lines.push(...duplicateDeleteSuggestions(byBase));
-  lines.push('');
+  lines.push("");
 
-  lines.push('## Duplicates By Body Hash', '');
+  lines.push("## Duplicates By Body Hash", "");
   for (const [, list] of byBody.slice(0, 30)) {
-    lines.push(`- ${list.map((skill) => skill.name).join(', ')}`);
+    lines.push(`- ${list.map((skill) => skill.name).join(", ")}`);
     for (const skill of list) lines.push(`  - ${skill.scope}: ${skill.path}`);
   }
-  if (byBody.length === 0) lines.push('- none');
-  lines.push('');
+  if (byBody.length === 0) lines.push("- none");
+  lines.push("");
 
-  lines.push('## Unused Candidates', '');
+  lines.push("## Unused Candidates", "");
   for (const skill of unused) {
     const item = usageForSkill(usage, skill);
-    lines.push(
-      `- ${skill.name}: ${skill.scope}; usage=$${item.dollar}, reads=${item.fileRead}, text=${item.text}; ${skill.path}`,
-    );
+    lines.push(`- ${skill.name}: ${skill.scope}; usage=$${item.dollar}, reads=${item.fileRead}, text=${item.text}; ${skill.path}`);
   }
-  if (unused.length === 0) lines.push('- none');
-  lines.push('');
+  if (unused.length === 0) lines.push("- none");
+  lines.push("");
 
-  lines.push('## Root Summary', '');
-  for (const [root, list] of [...roots.entries()].sort(
-    (a, b) => b[1].length - a[1].length,
-  )) {
+  lines.push("## Root Summary", "");
+  for (const [root, list] of [...roots.entries()].sort((a, b) => b[1].length - a[1].length)) {
     const disabled = list.filter((skill) => !skill.enabled).length;
-    lines.push(
-      `- ${root}: ${list.length} skills${disabled ? `, ${disabled} disabled` : ''}`,
-    );
+    lines.push(`- ${root}: ${list.length} skills${disabled ? `, ${disabled} disabled` : ""}`);
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function main(): void {
+  if (rootOnly && extraRoots.length === 0) {
+    console.error("skill-cleaner: --root-only requires at least one --root <path>");
+    process.exitCode = 2;
+    return;
+  }
   const skills = discoverSkills();
   const live = livePrompt();
   const liveSkills = live ? parseLiveSkills(live) : [];
-  const selectedSkills =
-    liveSkills.length > 0
-      ? liveSkills
-      : skills.filter((skill) => skill.enabled || includeAll);
+  const selectedSkills = liveSkills.length > 0
+    ? liveSkills
+    : skills.filter((skill) => skill.enabled || includeAll);
   const logFiles = recentLogFiles();
   const usage = scanUsage([...skills, ...liveSkills], logFiles);
   const consideredSkills = includeAll ? skills : selectedSkills;
   const budget = skillBudget(consideredSkills, liveMetadataOverhead(live));
   const output = json
-    ? JSON.stringify(
-        {
-          skills,
-          selectedSkills,
-          inventorySource: live
-            ? 'codex debug prompt-input'
-            : 'filesystem fallback',
-          usage: Object.fromEntries(usage),
-          logFiles,
-          budget,
-        },
-        null,
-        2,
-      )
+    ? JSON.stringify({
+        skills,
+        selectedSkills,
+        inventorySource: live ? "codex debug prompt-input" : "filesystem fallback",
+        usage: Object.fromEntries(usage),
+        logFiles,
+        budget,
+      }, null, 2)
     : render(skills, selectedSkills, usage, logFiles, live);
   console.log(output);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   main();
 }

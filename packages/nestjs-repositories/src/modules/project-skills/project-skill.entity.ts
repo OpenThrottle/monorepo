@@ -41,6 +41,12 @@ export class ProjectSkill {
   })
   disableModelInvocation!: boolean | null;
 
+  @Column({ default: 'external', name: 'source', type: 'text' })
+  source!: string;
+
+  @Column({ name: 'source_url', nullable: true, type: 'text' })
+  sourceUrl!: string | null;
+
   @Column({ name: 'source_path', type: 'text' })
   sourcePath!: string;
 

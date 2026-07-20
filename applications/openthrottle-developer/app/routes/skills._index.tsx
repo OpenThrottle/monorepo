@@ -19,6 +19,10 @@ import {
   type ProjectSkillFlagRow,
 } from '~/routing/skills/utils/merge-project-skills';
 import {
+  filterSkillsBySource,
+  type SkillSourceFilter,
+} from '~/routing/skills/utils/filter-skills-by-source';
+import {
   mergeRepoSkillsWithSkillAvailability,
   type SkillAvailabilityRow,
 } from '~/routing/skills/utils/merge-skill-availability';
@@ -127,8 +131,14 @@ export default function Component(
   const { entries } = props.loaderData;
 
   // Hooks
+  const [sourceFilter, setSourceFilter] =
+    React.useState<SkillSourceFilter>('all');
 
   // Setup
+  const filteredEntries = React.useMemo(
+    () => [...filterSkillsBySource(entries, sourceFilter)],
+    [entries, sourceFilter],
+  );
 
   // Handlers
 
@@ -144,8 +154,11 @@ export default function Component(
         <SkillsIntroduction entries={[...entries]} />
 
         <div className="flex flex-col gap-4">
-          <SkillsToolbar />
-          <SkillsTable className="bg-card" entries={[...entries]} />
+          <SkillsToolbar
+            onSourceFilterChange={setSourceFilter}
+            sourceFilter={sourceFilter}
+          />
+          <SkillsTable className="bg-card" entries={filteredEntries} />
         </div>
 
         {/* <AgentsSectionQuickLinks /> */}

@@ -27,10 +27,24 @@ describe('SkillAvailabilityResolutionResolver', () => {
   });
 
   const views: ProjectSkillView[] = [
-    { slug: 'agents-ralph', staticDisableModelInvocation: false, tags: [] },
-    { slug: 'git-commit', staticDisableModelInvocation: undefined, tags: [] },
+    {
+      slug: 'agents-ralph',
+      source: 'openthrottle',
+      sourceUrl: undefined,
+      staticDisableModelInvocation: false,
+      tags: [],
+    },
+    {
+      slug: 'git-commit',
+      source: 'external',
+      sourceUrl: undefined,
+      staticDisableModelInvocation: undefined,
+      tags: [],
+    },
     {
       slug: 'github-deep-review',
+      source: 'external',
+      sourceUrl: undefined,
       staticDisableModelInvocation: true,
       tags: ['github'],
     },
@@ -241,6 +255,8 @@ describe('SkillAvailabilityResolutionResolver', () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
       {
         slug: 'mystery-skill',
+        source: 'external',
+        sourceUrl: undefined,
         staticDisableModelInvocation: false,
         tags: ['not-a-real-tag'],
       },

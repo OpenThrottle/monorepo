@@ -13,6 +13,7 @@ const diskEntry = (
   layout: 'agents',
   repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
   slug,
+  source: 'external',
   summary: `${slug} summary`,
   tags: undefined,
   ...overrides,

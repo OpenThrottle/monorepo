@@ -39,6 +39,24 @@ describe('capAgentConversationContent', () => {
       256 * 1024,
     );
   });
+
+  it('never splits a multibyte code point at the cap boundary', () => {
+    // 4-byte emoji; 256 KiB is not a multiple of 4, so a byte-side cut lands
+    // mid-code-point unless the truncation backs off to a boundary.
+    const emoji = '😀';
+    const long = emoji.repeat(80_000);
+    const result = capAgentConversationContent(long);
+
+    expect(result.contentTruncated).toBe(true);
+    expect(Buffer.byteLength(result.content, 'utf8')).toBeLessThanOrEqual(
+      256 * 1024,
+    );
+    expect(result.content.includes('�')).toBe(false);
+    // Round-trips cleanly: decoding produced no replacement characters.
+    expect(Buffer.from(result.content, 'utf8').toString('utf8')).toBe(
+      result.content,
+    );
+  });
 });
 
 describe('capAgentConversationToolMetadata', () => {

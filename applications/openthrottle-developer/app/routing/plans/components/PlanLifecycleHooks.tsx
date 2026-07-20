@@ -31,9 +31,6 @@ export interface PlanLifecycleHooksProps {
 export const PlanLifecycleHooks = (
   props: PlanLifecycleHooksProps,
 ): React.ReactElement => {
-  // 🪝 Hooks
-
-  // ⚙️ Setup
   const {
     afterHooks,
     beforeHooks,
@@ -43,7 +40,11 @@ export const PlanLifecycleHooks = (
     onRequestAdd,
   } = props;
 
-  // 🎬 Handlers
+  // Hooks
+
+  // Setup
+
+  // Handlers
   const handleAddBefore = React.useCallback(
     () => onRequestAdd('before'),
     [onRequestAdd],
@@ -53,9 +54,12 @@ export const PlanLifecycleHooks = (
     [onRequestAdd],
   );
 
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
 
-  // 🎨 Markup
   return (
     <section
       aria-label={heading ?? PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
@@ -82,6 +86,4 @@ export const PlanLifecycleHooks = (
       </div>
     </section>
   );
-
-  // ♻️ Life Cycle
 };

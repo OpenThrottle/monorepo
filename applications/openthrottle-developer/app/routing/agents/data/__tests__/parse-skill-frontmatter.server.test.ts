@@ -118,7 +118,7 @@ description: |-
 
   test('parses real openthrottle-generators SKILL.md frontmatter', () => {
     const content = readFileSync(
-      join(monorepoRoot, '.agents/skills/openthrottle-generators/SKILL.md'),
+      join(monorepoRoot, 'skills/openthrottle-generators/SKILL.md'),
       'utf8',
     );
 

@@ -42,19 +42,21 @@ export interface AddHookDialogProps {
 export const AddHookDialog = (
   props: AddHookDialogProps,
 ): React.ReactElement => {
-  // 🪝 Hooks
+  // Hooks
+
   const { isPlanLevel, onOpenChange, onSubmit, open, pending, role } = props;
+
   const [source, setSource] = React.useState<HookSource>('skill');
   const [scope, setScope] = React.useState<HookScope>('once');
   const [skillSlug, setSkillSlug] = React.useState('');
   const [title, setTitle] = React.useState('');
 
-  // ⚙️ Setup
+  // Setup
   const copy = PLAN_LIFECYCLE_HOOKS_COPY;
   const submitDisabled =
     pending === true || (source === 'skill' && skillSlug.trim() === '');
 
-  // 🎬 Handlers
+  // Handlers
   const handleSubmit = React.useCallback(() => {
     if (source === 'skill' && skillSlug.trim() === '') {
       return;
@@ -71,7 +73,6 @@ export const AddHookDialog = (
     });
   }, [isPlanLevel, onSubmit, role, scope, skillSlug, source, title]);
 
-  // ♻️ Life Cycle
   // Reset the form each time the dialog opens so a prior draft never leaks in.
   React.useEffect(() => {
     if (open) {
@@ -82,9 +83,12 @@ export const AddHookDialog = (
     }
   }, [open]);
 
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
 
-  // 🎨 Markup
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>

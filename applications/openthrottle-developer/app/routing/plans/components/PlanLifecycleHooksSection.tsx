@@ -28,17 +28,18 @@ export interface PlanLifecycleHooksSectionProps {
 export const PlanLifecycleHooksSection = (
   props: PlanLifecycleHooksSectionProps,
 ): React.ReactElement => {
-  // 🪝 Hooks
   const { afterHooks, anchorTaskId, beforeHooks, className, heading, planId } =
     props;
+
+  // Hooks
   const fetcher = useFetcher();
   const [dialogRole, setDialogRole] = React.useState<HookRole | null>(null);
 
-  // ⚙️ Setup
+  // Setup
   const isPlanLevel = anchorTaskId == null;
   const pending = fetcher.state !== 'idle';
 
-  // 🎬 Handlers
+  // Handlers
   const handleDetach = React.useCallback(
     (hookTaskId: string) => {
       fetcher.submit({ hookTaskId, intent: 'detachHook' }, { method: 'post' });
@@ -63,14 +64,18 @@ export const PlanLifecycleHooksSection = (
         },
         { method: 'post' },
       );
+
       setDialogRole(null);
     },
     [anchorTaskId, fetcher, planId],
   );
 
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
 
-  // 🎨 Markup
   return (
     <>
       <PlanLifecycleHooks
@@ -97,6 +102,4 @@ export const PlanLifecycleHooksSection = (
       )}
     </>
   );
-
-  // ♻️ Life Cycle
 };

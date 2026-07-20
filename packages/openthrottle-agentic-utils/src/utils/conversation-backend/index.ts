@@ -1,6 +1,6 @@
 /**
- * Conversation backends: a uniform async-iterable streaming seam over an
- * OpenAI-compatible endpoint (and, later, spawned agentic CLIs).
+ * Conversation backends: a uniform async-iterable streaming seam over both an
+ * OpenAI-compatible endpoint and spawned agentic CLIs (e.g. cursor-agent).
  */
 export * from './agent-discovery.ts';
 export * from './cursor-agent/index.ts';

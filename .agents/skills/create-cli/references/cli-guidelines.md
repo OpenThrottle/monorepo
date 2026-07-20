@@ -1,12 +1,10 @@
 # Command Line Interface Guidelines (condensed)
 
 Source + contribution:
-
 - Full guide: https://clig.dev/
 - Propose changes: https://github.com/cli-guidelines/cli-guidelines
 
 Table of contents:
-
 - Foreword
 - Introduction
 - Philosophy
@@ -88,7 +86,7 @@ This is a practical rubric for designing CLI interfaces (args/flags/subcommands/
 
 ### Robustness
 
-- Be correct _and_ feel robust: responsive, clear, no scary traces by default.
+- Be correct *and* feel robust: responsive, clear, no scary traces by default.
 - Handle bad input gracefully; validate early; clear errors.
 
 ### Empathy
@@ -126,7 +124,7 @@ This is a practical rubric for designing CLI interfaces (args/flags/subcommands/
 
 - Humans first, machines second: detect TTY to choose formatting.
 - If fancy human output breaks parsing, offer `--plain` (stable, line-based) and/or `--json`.
-- On success: usually print _something_, but keep it brief; add `-q/--quiet` when useful.
+- On success: usually print *something*, but keep it brief; add `-q/--quiet` when useful.
 - If you change state, say what changed and what the new state is.
 - Suggest “next commands” in workflowy tools.
 - Use color sparingly; disable when not a TTY, `NO_COLOR` set, `TERM=dumb`, or `--no-color`.

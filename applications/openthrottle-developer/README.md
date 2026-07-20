@@ -67,6 +67,12 @@ The **Skills** route (`/skills`) lists skills discovered from the monorepo check
 
 **Deployed environments (Vercel, Docker without a full checkout):** The Skills table is empty unless the runtime can resolve a root that contains the skill directories—for example mount the repo (or `.agents` / `.cursor` trees) and set `WORKSPACE_ROOT` to that mount. The loader returns an empty list rather than failing the page.
 
+**Source (provenance):** Derived from the skill-sync layout, never from frontmatter — a skill folder whose real path resolves under the repo's authored `skills/` tree reads as OpenThrottle; lockfile-installed real directories read as External, with their origin link derived from `skills-lock.json`. Installed skills are never written to; every layer on them (provenance, tags) is virtual. The index table surfaces this as a Source column plus an All / OpenThrottle / External toolbar filter; ingested `projectSkills` rows overlay the disk value when present.
+
+**Detail route (`/skills/:slug`):** Renders the whole SKILL.md with `MarkdownRenderer` under a metadata header (source, model-invocation, tags, path). An unknown slug 404s via the route ErrorBoundary.
+
+**Editing (local checkout only):** The detail route's Edit mode binds a Monaco editor (`@openthrottle/react-router-editor`) to the raw file; Save writes the **entire file** back to disk through a guarded action. Editing requires a resolvable monorepo root — deployed apps show a disabled Edit affordance. Saves are rejected without writing when the resolved path escapes the repository (realpath containment guard) or the edited frontmatter no longer validates (parse failure, missing `name`, `name` ≠ slug). Server-side `projectSkills` rows refresh on the next agent-asset ingest run, not on save; the disk-backed page reflects the edit immediately.
+
 Design and behavior: [docs/repo-skills-discovery-design.md](./docs/repo-skills-discovery-design.md).
 
 ## Deployment

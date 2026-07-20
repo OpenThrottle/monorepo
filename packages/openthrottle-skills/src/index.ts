@@ -3,6 +3,7 @@ export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
   ruleFrontmatterSchema,
+  SKILL_SOURCES,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 export type {
@@ -11,6 +12,7 @@ export type {
   PersonaFrontmatter,
   RuleFrontmatter,
   SkillFrontmatter,
+  SkillSource,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /** @public */
@@ -68,6 +70,14 @@ export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
 } from './frontmatter/parse-yaml-frontmatter.ts';
+
+/** @public */
+export {
+  deriveSkillSourceUrl,
+  parseSkillsLockFile,
+  SKILLS_LOCK_FILENAME,
+} from './parse-skills-lock.ts';
+export type { SkillsLockEntry, SkillsLockMap } from './parse-skills-lock.ts';
 
 /** @public */
 export {

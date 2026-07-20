@@ -12,11 +12,16 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
   collectAgentAssetsForIngest,
+  parseSkillsLockFile,
   parseSkillTagOverlayFile,
   SKILL_TAG_OVERLAYS_FILENAME,
+  SKILLS_LOCK_FILENAME,
   toProjectSkillInputs,
 } from '@openthrottle/openthrottle-skills';
-import type { SkillTagOverlayMap } from '@openthrottle/openthrottle-skills';
+import type {
+  SkillsLockMap,
+  SkillTagOverlayMap,
+} from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
 import {
@@ -147,20 +152,23 @@ const reconcileDogfoodProjectSkills = async (
   client: Client,
   records: Parameters<typeof toProjectSkillInputs>[0],
   overlays: SkillTagOverlayMap,
+  lock: SkillsLockMap,
 ): Promise<{ deleted: number; upserted: number }> => {
   const projectId = await resolveDogfoodProjectId(client);
-  const inputs = toProjectSkillInputs(records, overlays);
+  const inputs = toProjectSkillInputs(records, overlays, lock);
 
   for (const input of inputs) {
     await client.query(
       `INSERT INTO project_skills (
-         project_id, slug, tags, disable_model_invocation, source_path, ingested_at
+         project_id, slug, tags, disable_model_invocation, source, source_url, source_path, ingested_at
        )
-       VALUES ($1, $2, $3::text[], $4, $5, NOW())
+       VALUES ($1, $2, $3::text[], $4, $5, $6, $7, NOW())
        ON CONFLICT (project_id, slug)
        DO UPDATE SET
          tags = EXCLUDED.tags,
          disable_model_invocation = EXCLUDED.disable_model_invocation,
+         source = EXCLUDED.source,
+         source_url = EXCLUDED.source_url,
          source_path = EXCLUDED.source_path,
          ingested_at = EXCLUDED.ingested_at,
          updated_at = NOW()`,
@@ -169,6 +177,8 @@ const reconcileDogfoodProjectSkills = async (
         input.slug,
         input.tags,
         input.disableModelInvocation ?? null,
+        input.source,
+        input.sourceUrl ?? null,
         input.sourcePath,
       ],
     );
@@ -188,11 +198,23 @@ const reconcileDogfoodProjectSkills = async (
   return { deleted: deleteResult.rowCount ?? 0, upserted: inputs.length };
 };
 
+/** Reads the repo-root skills-lock.json; a missing lockfile is an empty map. */
+const readSkillsLock = (monorepoRoot: string): SkillsLockMap => {
+  try {
+    return parseSkillsLockFile(
+      readFileSync(join(monorepoRoot, SKILLS_LOCK_FILENAME), 'utf8'),
+    );
+  } catch {
+    return {};
+  }
+};
+
 const main = async (): Promise<void> => {
   const monorepoRoot = process.cwd();
   const overlayFile = parseSkillTagOverlayFile(
     readFileSync(join(monorepoRoot, SKILL_TAG_OVERLAYS_FILENAME), 'utf8'),
   );
+  const skillsLock = readSkillsLock(monorepoRoot);
   const { records, validation } = collectAgentAssetsForIngest({
     monorepoRoot,
   });
@@ -354,6 +376,7 @@ const main = async (): Promise<void> => {
         client,
         records,
         overlayFile.overlays,
+        skillsLock,
       );
       console.log(
         `  project_skills reconciled: ${projectSkills.upserted} upserted, ${projectSkills.deleted} removed`,

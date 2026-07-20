@@ -18,6 +18,12 @@ applications/openthrottle-server/schema.gql
 __generated__/
 .nx/
 .nx/cache
+
+# Installed agent skills are managed by the skills CLI (skills-lock.json) and
+# must stay byte-for-byte 1:1 with their upstream source — never reformat.
+# Authored skills are formatted at their real home, skills/ (the .agents
+# entries for those are generated symlinks anyway).
+.agents/skills/
 .nx/workspace-data
 .react-router/
 .venv/
