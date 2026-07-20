@@ -26,7 +26,14 @@
       }
     ],
     "noMarkdown": ["!{projectRoot}/**/*.md"],
-    "production": ["default", "!{projectRoot}/jest.config.ts"]
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.test.{js,jsx,ts,tsx}",
+      "!{projectRoot}/**/*.spec.{js,jsx,ts,tsx}",
+      "!{projectRoot}/**/__tests__/**",
+      "!{projectRoot}/vitest.config.{js,ts}",
+      "!{projectRoot}/**/*.md"
+    ]
   },
   "plugins": [
     {
@@ -397,7 +404,7 @@
       "dependsOn": ["^build"],
       "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}.",
       "executor": "@nx/vitest:test",
-      "inputs": ["default", "^default", "^production"],
+      "inputs": ["default", "^production"],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
@@ -460,12 +467,7 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Type-check the project with tsc, emitting declarations to dist; runs after build and codegen.",
-      "outputs": [
-        "{projectRoot}/dist/**/*.d.ts",
-        "{projectRoot}/dist/**/*.d.ts.map",
-        "{projectRoot}/tsconfig.tsbuildinfo"
-      ]
+      "description": "Type-check the project with tsc; runs after build and codegen. Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
     }
   },
   "tui": {
