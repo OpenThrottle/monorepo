@@ -109,6 +109,12 @@
       "skillPath": "skills/skill-cleaner/SKILL.md",
       "computedHash": "4aaf81611a1b437a02d4fee50d9e3c7908891b5ec5447946c82994271142d189"
     },
+    "skillopt-sleep": {
+      "source": "microsoft/SkillOpt",
+      "sourceType": "github",
+      "skillPath": "plugins/claude-code/skills/skillopt-sleep/SKILL.md",
+      "computedHash": "a393f0c781ca9e8683e54d3a2216e9eece4ca046a67c4903a2c3d9eb58c78595"
+    },
     "teach": {
       "source": "mattpocock/skills",
       "sourceType": "github",
