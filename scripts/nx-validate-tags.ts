@@ -24,7 +24,7 @@ type ValidTechnologyTag = (typeof VALID_TECHNOLOGY_TAGS)[number];
 export const isValidTechnologyTag = (
   tag: string,
 ): tag is ValidTechnologyTag => {
-  return VALID_TECHNOLOGY_TAGS.includes(tag as ValidTechnologyTag);
+  return VALID_TECHNOLOGY_TAGS.some((valid) => valid === tag);
 };
 
 /**
@@ -52,21 +52,75 @@ export const extractProductionTags = (tags: readonly string[]): string[] => {
 export const isValidProductionValue = (
   value: string,
 ): value is ValidProductionValue => {
-  return VALID_PRODUCTION_VALUES.includes(value as ValidProductionValue);
+  return VALID_PRODUCTION_VALUES.some((valid) => valid === value);
 };
 
 /**
- * @description Validates technology and production tags for a single project
+ * @description Valid `type:` tag values. Every project must carry exactly one —
+ * it drives module boundaries (@nx/enforce-module-boundaries depConstraints)
+ * and release scoping.
+ */
+export const VALID_TYPE_TAGS = [
+  'application',
+  'infrastructure',
+  'package',
+  'tool',
+] as const;
+
+type ValidTypeTag = (typeof VALID_TYPE_TAGS)[number];
+
+export const isValidTypeTag = (tag: string): tag is ValidTypeTag => {
+  return VALID_TYPE_TAGS.some((valid) => valid === tag);
+};
+
+/**
+ * @description Extracts `type:` tag values from project tags
+ */
+export const extractTypeTags = (tags: readonly string[]): string[] => {
+  return tags
+    .filter((tag) => tag.startsWith('type:'))
+    .map((tag) => tag.replace('type:', ''));
+};
+
+export const VALID_PUBLISH_VALUES = ['true', 'false'] as const;
+
+type ValidPublishValue = (typeof VALID_PUBLISH_VALUES)[number];
+
+/**
+ * @description Extracts `publish:` tag values from project tags
+ */
+export const extractPublishTags = (tags: readonly string[]): string[] => {
+  return tags
+    .filter((tag) => tag.startsWith('publish:'))
+    .map((tag) => tag.replace('publish:', ''));
+};
+
+export const isValidPublishValue = (
+  value: string,
+): value is ValidPublishValue => {
+  return VALID_PUBLISH_VALUES.some((valid) => valid === value);
+};
+
+/**
+ * @description Validates technology, production, type, and publish tags for a
+ * single project.
  */
 export interface ValidationResult {
-  readonly conflictingNodejsTypescript: boolean;
   readonly hasProductionTag: boolean;
+  readonly hasPublishTag: boolean;
   readonly hasTechnologyTag: boolean;
+  readonly hasTypeTag: boolean;
   readonly invalidProductionTags: readonly string[];
+  readonly invalidPublishValues: readonly string[];
   readonly invalidTechnologyTags: readonly string[];
+  readonly invalidTypeTags: readonly string[];
   readonly multipleProductionTags: boolean;
+  readonly multiplePublishTags: boolean;
+  readonly multipleTypeTags: boolean;
   readonly projectName: string;
+  readonly requiresPublishTag: boolean;
   readonly technologyTags: readonly string[];
+  readonly typeTags: readonly string[];
 }
 
 export const validateProjectTags = (
@@ -75,39 +129,61 @@ export const validateProjectTags = (
 ): ValidationResult => {
   const technologyTags = extractTechnologyTags(tags);
   const productionTags = extractProductionTags(tags);
+  const typeTags = extractTypeTags(tags);
+  const publishTags = extractPublishTags(tags);
+
   const invalidTechnologyTags = technologyTags.filter(
     (tag) => !isValidTechnologyTag(tag),
   );
   const invalidProductionTags = productionTags.filter(
     (tag) => !isValidProductionValue(tag),
   );
+  const invalidTypeTags = typeTags.filter((tag) => !isValidTypeTag(tag));
+  const invalidPublishValues = publishTags.filter(
+    (value) => !isValidPublishValue(value),
+  );
 
-  const hasNodejs = technologyTags.includes('nodejs');
-  const hasTypescript = technologyTags.includes('typescript');
+  // A single, valid `type:` value of package/tool must declare its publish
+  // intent (these are the release-scoped project kinds).
+  const typeValue = typeTags.length === 1 ? typeTags[0] : undefined;
+  const requiresPublishTag = typeValue === 'package' || typeValue === 'tool';
 
   return {
-    conflictingNodejsTypescript: hasNodejs && hasTypescript && false, // FIXME: Temp
     hasProductionTag: productionTags.length === 1,
+    hasPublishTag: publishTags.length === 1,
     hasTechnologyTag: technologyTags.length > 0,
+    hasTypeTag: typeTags.length === 1,
     invalidProductionTags,
+    invalidPublishValues,
     invalidTechnologyTags,
+    invalidTypeTags,
     multipleProductionTags: productionTags.length > 1,
+    multiplePublishTags: publishTags.length > 1,
+    multipleTypeTags: typeTags.length > 1,
     projectName,
+    requiresPublishTag,
     technologyTags,
+    typeTags,
   };
 };
 
 /**
- * @description True when a single result carries any tag violation (missing/duplicate/invalid
- * technology or production tags, or the conflicting nodejs+typescript combination).
+ * @description True when a single result carries any tag violation (missing,
+ * duplicate, or invalid technology / production / type tags, or a missing,
+ * duplicate, or invalid publish tag where one is required).
  */
 export const resultHasErrors = (result: ValidationResult): boolean =>
   !result.hasTechnologyTag ||
   !result.hasProductionTag ||
+  !result.hasTypeTag ||
   result.multipleProductionTags ||
+  result.multipleTypeTags ||
   result.invalidTechnologyTags.length > 0 ||
   result.invalidProductionTags.length > 0 ||
-  result.conflictingNodejsTypescript;
+  result.invalidTypeTags.length > 0 ||
+  (result.requiresPublishTag && !result.hasPublishTag) ||
+  result.multiplePublishTags ||
+  result.invalidPublishValues.length > 0;
 
 /**
  * @description True when any project in the set has a tag violation.
@@ -131,8 +207,15 @@ export const formatResults = (results: readonly ValidationResult[]): string => {
   const invalidProductionTags = results.filter(
     (r) => r.invalidProductionTags.length > 0,
   );
-  const conflictingNodejsTypescript = results.filter(
-    (r) => r.conflictingNodejsTypescript,
+  const missingTypeTags = results.filter((r) => !r.hasTypeTag);
+  const multipleTypeTags = results.filter((r) => r.multipleTypeTags);
+  const invalidTypeTags = results.filter((r) => r.invalidTypeTags.length > 0);
+  const missingPublishTags = results.filter(
+    (r) => r.requiresPublishTag && !r.hasPublishTag,
+  );
+  const multiplePublishTags = results.filter((r) => r.multiplePublishTags);
+  const invalidPublishValues = results.filter(
+    (r) => r.invalidPublishValues.length > 0,
   );
 
   const lines: string[] = [];
@@ -188,21 +271,69 @@ export const formatResults = (results: readonly ValidationResult[]): string => {
     lines.push('');
   }
 
-  if (conflictingNodejsTypescript.length > 0) {
-    lines.push(
-      '❌ Projects with both technology:nodejs and technology:typescript:',
-    );
+  if (missingTypeTags.length > 0) {
+    lines.push('❌ Projects missing exactly one type tag:');
     lines.push('');
-    conflictingNodejsTypescript.forEach((result) => {
+    missingTypeTags.forEach((result) => {
       lines.push(`  - ${result.projectName}`);
     });
     lines.push('');
+    lines.push(`   Valid values: ${VALID_TYPE_TAGS.join(', ')}.`);
+    lines.push('');
+  }
+
+  if (multipleTypeTags.length > 0) {
+    lines.push('❌ Projects with multiple type tags:');
+    lines.push('');
+    multipleTypeTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+  }
+
+  if (invalidTypeTags.length > 0) {
+    lines.push('❌ Projects with invalid type tags:');
+    lines.push('');
+    invalidTypeTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}:`);
+      result.invalidTypeTags.forEach((tag) => {
+        lines.push(
+          `    • type:${tag} (must be one of ${VALID_TYPE_TAGS.join(', ')})`,
+        );
+      });
+    });
+    lines.push('');
+  }
+
+  if (missingPublishTags.length > 0) {
     lines.push(
-      '   Use technology:nodejs only for isomorphic shared libraries or monorepo root.',
+      '❌ Projects requiring a publish tag (type:package / type:tool) that are missing or have duplicate publish tags:',
     );
-    lines.push(
-      '   Use technology:typescript for Node-only TypeScript packages.',
-    );
+    lines.push('');
+    missingPublishTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+  }
+
+  if (multiplePublishTags.length > 0) {
+    lines.push('❌ Projects with multiple publish tags:');
+    lines.push('');
+    multiplePublishTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+  }
+
+  if (invalidPublishValues.length > 0) {
+    lines.push('❌ Projects with invalid publish tags:');
+    lines.push('');
+    invalidPublishValues.forEach((result) => {
+      lines.push(`  - ${result.projectName}:`);
+      result.invalidPublishValues.forEach((value) => {
+        lines.push(`    • publish:${value} (must be true or false)`);
+      });
+    });
     lines.push('');
   }
 
@@ -212,10 +343,17 @@ export const formatResults = (results: readonly ValidationResult[]): string => {
     multipleProductionTags.length > 0 ||
     invalidTechnologyTags.length > 0 ||
     invalidProductionTags.length > 0 ||
-    conflictingNodejsTypescript.length > 0;
+    missingTypeTags.length > 0 ||
+    multipleTypeTags.length > 0 ||
+    invalidTypeTags.length > 0 ||
+    missingPublishTags.length > 0 ||
+    multiplePublishTags.length > 0 ||
+    invalidPublishValues.length > 0;
 
   if (!hasErrors) {
-    lines.push('✅ All projects have valid technology and production tags!');
+    lines.push(
+      '✅ All projects have valid technology, production, type, and publish tags!',
+    );
     lines.push('');
     lines.push(`Validated ${results.length} projects`);
   }
@@ -266,11 +404,11 @@ const getAllProjectNames = (): readonly string[] => {
 };
 
 /**
- * @description Main function to validate technology tags across all projects
+ * @description Main function to validate project tags across all projects
  */
 const main = async (): Promise<void> => {
   console.log(
-    '🔍 Validating technology and production tags across all NX projects...\n',
+    '🔍 Validating technology, production, type, and publish tags across all NX projects...\n',
   );
 
   try {
@@ -298,7 +436,7 @@ const main = async (): Promise<void> => {
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Error validating technology tags:', error);
+    console.error('❌ Error validating project tags:', error);
 
     process.exit(1);
   }

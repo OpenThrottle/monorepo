@@ -36,7 +36,7 @@
     "tags": [
       "name:@openthrottle/nestjs-bullmq-board",
       "production:true",
-      "publish:true",
+      "publish:false",
       "technology:nestjs",
       "type:package"
     ],
