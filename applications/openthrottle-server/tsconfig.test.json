@@ -22,9 +22,6 @@
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
     },
     {

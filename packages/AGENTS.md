@@ -24,4 +24,4 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 ## Gotchas
 
 - `packages/openthrottle-postgres/` contains only a stray `dist/` — no `package.json`, not an Nx project. Don't model new packages on it.
-- Some packages carry their own codegen targets (`codegen-graphql`, e.g. `openthrottle-mcp`, `openthrottle-workflows`); their `__generated__` output follows the root codegen flow — regenerate, never hand-edit.
+- Some packages carry their own codegen targets (`codegen-graphql`, e.g. `openthrottle-mcp`, `openthrottle-agentic-ralph`); their `__generated__` output follows the root codegen flow — regenerate, never hand-edit.

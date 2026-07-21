@@ -1,6 +1,0 @@
-{
-  "extends": "../../tsconfig.node.json",
-  "files": [],
-  "include": [],
-  "references": [{ "path": "./tsconfig.lib.json" }]
-}

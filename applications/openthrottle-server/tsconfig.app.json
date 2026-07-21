@@ -90,9 +90,6 @@
       "path": "../../packages/openthrottle-skills/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     },
     {

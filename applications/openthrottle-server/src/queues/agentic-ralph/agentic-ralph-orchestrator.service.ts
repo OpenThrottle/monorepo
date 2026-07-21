@@ -32,7 +32,7 @@ type PlanRunTuningInput = NonNullable<
  * {@link AGENTIC_WORKFLOW_REGISTRY} by id ({@link AGENTIC_WORKFLOW_RALPH_ID}, `'ralph'`) and builds its
  * orchestrator via {@link AgenticWorkflowBase.createOrchestrator}. The registry indirection is
  * behavior-neutral: id `'ralph'` yields exactly today's `createWorkflowRalphOrchestrator(deps)` wiring
- * (`@openthrottle/openthrottle-agentic-ralph`, not the legacy `@openthrottle/openthrottle-workflows`).
+ * from `@openthrottle/openthrottle-agentic-ralph`.
  */
 @Injectable()
 export class AgenticRalphOrchestratorService {

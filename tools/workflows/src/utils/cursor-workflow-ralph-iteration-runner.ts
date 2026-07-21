@@ -1,6 +1,6 @@
 /**
  * @description Factory for a {@link WorkflowRalphIterationRunner}-compatible iteration runner
- * (see `@openthrottle/openthrottle-workflows` `WorkflowRalphOrchestratorDeps.iterationRunner`).
+ * (see `@openthrottle/openthrottle-agentic-ralph` `WorkflowRalphOrchestratorDeps.iterationRunner`).
  * Wraps {@link runIterationAsync} so hosts can attach streaming side effects without duplicating field mapping.
  *
  * Backend selection is **per plan run**: pass {@link CursorWorkflowRalphIterationRunParams.runner}
@@ -14,11 +14,11 @@ import type { CursorAgentChunk } from '../bin/run-iteration';
 
 /**
  * @description Parameters for one agent iteration; aligned with
- * `WorkflowRalphIterationRunParams` in `@openthrottle/openthrottle-workflows`.
+ * `WorkflowRalphIterationRunParams` in `@openthrottle/openthrottle-agentic-ralph`.
  */
 /**
  * @description Aligns with {@link WorkflowRalphIterationStreamChunk} in
- * `@openthrottle/openthrottle-workflows`.
+ * `@openthrottle/openthrottle-agentic-ralph`.
  */
 export interface CursorWorkflowRalphIterationStreamChunk {
   readonly data: string;
@@ -71,7 +71,7 @@ export interface CreateCursorWorkflowRalphIterationRunnerOptions {
 
 /**
  * @description Injected runner for `createWorkflowRalphOrchestrator`: same shape as
- * `WorkflowRalphIterationRunner` in `@openthrottle/openthrottle-workflows`.
+ * `WorkflowRalphIterationRunner` in `@openthrottle/openthrottle-agentic-ralph`.
  */
 export interface CursorWorkflowRalphIterationRunner {
   readonly run: (
