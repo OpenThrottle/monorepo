@@ -3,39 +3,33 @@ import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
 type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 
 /**
- * @description User-facing summary after `cancelPlanRun` (toast or inline message).
+ * @description Toast tone for a cancel outcome. Only NO_ACTIVE_RUN is a no-op (nothing was
+ * cancelled) — surfaced as an explicit `info`, never a misleading `success`. Every other outcome
+ * did something (removed a job, or signaled/requested a stop) and is a `success`.
+ */
+export const cancelPlanRunToastTone = (
+  payload: CancelPayload,
+): 'info' | 'success' =>
+  payload.outcome === 'NO_ACTIVE_RUN' ? 'info' : 'success';
+
+/**
+ * @description User-facing summary after `cancelPlanRun` (toast or inline message), keyed off the
+ * server's machine-readable `outcome` so the message always reflects the path that actually fired
+ * (kill-semantics matrix, OT plan 2ab62876) — never an ambiguous "success" on a no-op.
  */
 export const describeCancelPlanRunResult = (payload: CancelPayload): string => {
-  if (payload.noMatchingJob) {
-    return 'No queued or active plan run was found for this plan.';
+  switch (payload.outcome) {
+    case 'RUN_CANCELLED': {
+      const count = payload.removedJobIds.length;
+      return `Run cancelled — removed ${count} queued job${count === 1 ? '' : 's'} from the queue.`;
+    }
+    case 'RUN_STOPPING':
+      return 'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).';
+    case 'CANCELLATION_REQUESTED':
+      return 'Cancellation requested — the run stops at its next checkpoint.';
+    case 'NO_ACTIVE_RUN':
+      return 'No queued or active plan run was found to cancel.';
+    default:
+      return 'Plan run cancellation processed.';
   }
-
-  const parts: string[] = [];
-
-  if (payload.removedJobIds.length > 0) {
-    parts.push(
-      `Removed ${payload.removedJobIds.length} queued job${payload.removedJobIds.length === 1 ? '' : 's'}.`,
-    );
-  }
-
-  if (payload.signaledActiveRunToStop) {
-    parts.push(
-      'Signaled the worker to stop the in-flight run (Ralph may take a moment to shut down).',
-    );
-  }
-
-  if (
-    payload.activeJobIdsCouldNotCancel.length > 0 &&
-    !payload.signaledActiveRunToStop
-  ) {
-    parts.push(
-      `Some jobs could not be removed while active (${payload.activeJobIdsCouldNotCancel.join(', ')}).`,
-    );
-  }
-
-  if (parts.length > 0) {
-    return parts.join(' ');
-  }
-
-  return 'Plan run cancellation completed.';
 };

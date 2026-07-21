@@ -13,6 +13,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   PlanOutputStreamService,
+  PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -247,6 +248,13 @@ describe('PlansProcessor', () => {
         {
           provide: NotificationsService,
           useValue: createMock<NotificationsService>(),
+        },
+        {
+          provide: PlanRunsService,
+          useValue: createMock<PlanRunsService>({
+            clearRunLocation: vi.fn().mockResolvedValue(0),
+            markRunStarted: vi.fn().mockResolvedValue(0),
+          }),
         },
         {
           provide: PlansService,

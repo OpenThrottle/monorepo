@@ -236,15 +236,37 @@ type PlanStatusCountObject {
 }
 
 type PlanRunObject {
-  """BullMQ job id for this run."""
-  bullmqJobId: String!
+  """
+  BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.
+  """
+  bullmqJobId: String
+
+  """
+  Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary.
+  """
+  cancelRequestedAt: DateTime
   createdAt: DateTime!
 
   """Execution backend selected once for the whole run: cursor or claude."""
   executionBackend: String!
+
+  """
+  Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.
+  """
+  hostname: String
   id: String!
+
+  """
+  OS process id of the worker executing this run. Null when not actively executing.
+  """
+  pid: Int
   planId: String!
   queueName: String!
+
+  """
+  Identifier of the worker instance executing this run. Null when not actively executing.
+  """
+  workerId: String
 
   """
   Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
@@ -296,6 +318,16 @@ type CancelPlanRunResultObject {
   True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
   """
   signaledActiveRunToStop: Boolean!
+
+  """
+  True when a durable cancel marker was stamped on a live run (the cross-process/host/CLI guarantee). The run stops at its next iteration boundary even if the low-latency pub/sub signal was missed.
+  """
+  cancelRequested: Boolean!
+
+  """
+  Machine-readable primary outcome for UI messaging: RUN_CANCELLED (queued job removed), RUN_STOPPING (active run signaled to stop), CANCELLATION_REQUESTED (durable cancel requested; stops at next checkpoint), or NO_ACTIVE_RUN (nothing to cancel).
+  """
+  outcome: String!
 
   """
   True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.

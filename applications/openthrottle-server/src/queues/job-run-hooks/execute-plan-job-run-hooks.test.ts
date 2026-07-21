@@ -85,7 +85,7 @@ const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
 
 const baseJobData = {
   planId,
-  runKind: 'spawn' as const,
+  runKind: 'orchestrator' as const,
 };
 
 describe('executePlanJobRunHooks', () => {
@@ -173,7 +173,7 @@ describe('executePlanJobRunHooks', () => {
     const call = mockExecuteJobRunHooksPhase.mock.calls[0]?.[0];
     expect(call?.phase).toBe('beforeAll');
     expect(call?.planId).toBe(planId);
-    expect(call?.runKind).toBe('spawn');
+    expect(call?.runKind).toBe('orchestrator');
     expect(call?.hooks).toEqual(namedBeforeHook);
     expect(call?.planContextBlock).toContain('Test plan');
     expect(call?.layer1Suffix).toContain('preflight');

@@ -769,6 +769,62 @@ describe('createWorkflowRalphOrchestrator abort cancellation', () => {
     // before the control marker is interpreted.
     expect(run).toHaveBeenCalledTimes(1);
   });
+
+  it('returns workflow_cancelled when the durable cancel marker is set (no abort signal)', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    // Channel 1: the pub/sub signal was missed, but the run loop polls the marker.
+    const result = await orchestrator.execute({
+      context: {
+        ...baseContext,
+        isCancellationRequested: () => true,
+      },
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_cancelled',
+      status: 'finished',
+    });
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('treats a throwing cancel-marker check as "not cancelled" and keeps running', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: {
+        ...baseContext,
+        isCancellationRequested: () => {
+          throw new Error('marker read failed');
+        },
+      },
+    });
+
+    // A transient marker-read failure must never crash or cancel the run.
+    expect(result.reason).not.toBe('workflow_cancelled');
+    expect(run).toHaveBeenCalled();
+  });
 });
 
 describe('createWorkflowRalphOrchestrator lifecycle beforeEach blocking', () => {

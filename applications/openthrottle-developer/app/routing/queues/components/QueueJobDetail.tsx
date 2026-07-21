@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { Badge, Button, toast } from '@openthrottle/react-router-shadcn';
-import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
+import {
+  cancelPlanRunToastTone,
+  describeCancelPlanRunResult,
+} from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { QueueCorrelationAndSupport } from '~/routing/queues/components/QueueCorrelationAndSupport';
 import { QueueJobMetrics } from '~/routing/queues/components/QueueJobMetrics';
@@ -113,7 +116,13 @@ export const QueueJobDetail = (
     }
 
     if ('cancelPlanRun' in fetcher.data && fetcher.data.cancelPlanRun != null) {
-      toast.success(describeCancelPlanRunResult(fetcher.data.cancelPlanRun));
+      const message = describeCancelPlanRunResult(fetcher.data.cancelPlanRun);
+      // No-op cancel (NO_ACTIVE_RUN) is info, not a misleading success.
+      if (cancelPlanRunToastTone(fetcher.data.cancelPlanRun) === 'success') {
+        toast.success(message);
+      } else {
+        toast.info(message);
+      }
       revalidator.revalidate();
     }
   }, [fetcher.data, fetcher.state, revalidator]);

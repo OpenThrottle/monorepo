@@ -253,9 +253,12 @@ export class PlansResolver {
     const out = new PlanRunObject();
 
     out.bullmqJobId = planRun.bullmqJobId;
+    out.cancelRequestedAt = planRun.cancelRequestedAt;
     out.createdAt = planRun.createdAt;
     out.executionBackend = planRun.executionBackend;
+    out.hostname = planRun.hostname;
     out.id = planRun.id;
+    out.pid = planRun.pid;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
     out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
@@ -264,6 +267,7 @@ export class PlansResolver {
     out.runKind = planRun.runKind;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
+    out.workerId = planRun.workerId;
 
     return out;
   }
@@ -997,6 +1001,16 @@ export class PlansResolver {
             severity: 'info' as const,
           };
         }
+        // Cross-process/CLI: no local controller fired, but the durable cancel marker was stamped
+        // (and pub/sub published) — the owning run stops at its next iteration boundary.
+        if (ret.cancelRequested) {
+          return {
+            message:
+              'Plan run cancellation requested (stops at next checkpoint)',
+            planId: ret.planId,
+            severity: 'info' as const,
+          };
+        }
         return null;
       },
     },
@@ -1014,12 +1028,19 @@ export class PlansResolver {
   async cancelPlanRun(
     @Args('input', { type: () => CancelPlanRunInput })
     input: CancelPlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<CancelPlanRunResultObject> {
-    const outcome = await this.planStatusService.cancelRun(input.planId);
+    const outcome = await this.planStatusService.cancelRun(
+      input.planId,
+      resolveActorUserId(actorSub, actorKind),
+    );
 
     const out = new CancelPlanRunResultObject();
     out.activeJobIdsCouldNotCancel = outcome.activeJobIdsCouldNotCancel;
+    out.cancelRequested = outcome.cancelRequested;
     out.noMatchingJob = outcome.noMatchingJob;
+    out.outcome = outcome.outcome;
     out.planId = outcome.planId;
     out.planStatusAfter = outcome.planStatusAfter;
     out.removedJobIds = outcome.removedJobIds;
