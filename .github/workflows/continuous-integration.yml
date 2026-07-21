@@ -48,8 +48,6 @@ env:
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
-  RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
-  RELEASE_PUBLISH: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--yes' || '--skip-publish' }}
 
 permissions:
   actions: write
@@ -230,40 +228,3 @@ jobs:
             ${{ env.OUTPUT_FILE }}
             static/
           retention-days: 30
-
-  # nx-release:
-  #   if: ${{ github.actor != 'dependabot[bot]' }}
-  #   runs-on: blacksmith-4vcpu-ubuntu-2204
-  #   timeout-minutes: 15
-  #   steps:
-  #     - name: "📦 Checkout the code"
-  #       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-  #       with:
-  #         fetch-depth: 0
-
-  #     # Inject the dynamic bucket name directly into nx.json
-  #     # Security: By using Strategy 2, you maintain the "Two-Bucket" security model which is the only way to protect your production cache from CREEP (CVE-2025-36852) when using bucket-based remote caching.
-  #     - name: "🪣 NX Setup Cache"
-  #       run: |
-  #         sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
-
-  #     - name: "🌥️ Google Cloud Provider (GCP)"
-  #       uses: ./.github/actions/google-cloud
-  #       with:
-  #         branch: ${{ env.BRANCH_NAME }}
-  #         credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
-  #         google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
-
-  #     - name: "🤖 Node Setup"
-  #       uses: ./.github/actions/node-setup
-
-  #     - name: "🐙 Setup Git"
-  #       run: |
-  #         git config user.email "matthew.scholta@gmail.com"
-  #         git config user.name "visormatt"
-
-  #     - name: "🔍 Print Environment Info"
-  #       run: pnpm exec nx report
-
-  #     - name: "🚀 Release"
-  #       run: pnpm exec nx release ${{ env.RELEASE_DRY_RUN }} ${{ env.RELEASE_PUBLISH }}

@@ -9,11 +9,19 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
 - **Tags**: projects are expected to have at least one `technology:*` tag, plus `type:*` and `name:*` tags in most cases.
   - See `docs/monorepo/NX/tags.md`.
   - Validate with `pnpm nx:validate-tags`.
-- **Caching**: remote caching is configured via `@nx/gcs-cache` with a **two-bucket model** in CI (staging vs production).
+- **Caching**: remote caching is configured via `@nx/gcs-cache` against a single self-hosted GCS bucket (`openthrottle-staging-nx-cache`) with `localMode: "read-only"` everywhere. Main-branch CI does **not** currently populate the remote cache, so it is effectively cold — a documented status-quo tradeoff (see [Operational decisions](#operational-decisions-2026-07-21)).
   - Setup notes: `docs/infra/gcs-nx-cache-verify.md`.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
 - **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
+
+### Operational decisions (2026-07-21)
+
+Recorded from the Nx implementation audit:
+
+- **Remote cache writes — status quo.** The GCS cache stays `read-only` everywhere and main CI does not write entries, so cross-run cache hits are unavailable and the remote cache is effectively cold. The "two-bucket CREEP-safe model" (CVE-2025-36852) was never actually wired — every staging/production ternary in the workflows and `scripts/gcs-nx-cache-*.sh` resolves to the same `openthrottle-staging-nx-cache` bucket. Accepted for now; revisit (single-bucket main-only writes, or the real two-bucket model) if cache misses become a CI-time problem.
+- **Nx Cloud — not adopted.** The workspace stays on self-hosted `@nx/gcs-cache`. The CI sharding infra (`scripts/parallelize-tasks.ts`, the matrix, the `merge_group` trigger) is built but pinned to a single runner as a deliberate cost tradeoff; **enable it when CI wall-time regularly approaches the 15-minute job timeout** (rough trigger: sustained > ~12 min). Distributed task execution, the test atomizer, flaky-task retries, and self-healing CI remain unavailable. The `monitor-ci` agent skill depends on Nx Cloud; it self-detects the missing connection (its "Step 0") and reports itself inoperable here, so it is a no-op until/unless Nx Cloud is adopted.
+- **Releases — manual only.** `nx release` stays invocable via the `workflow_dispatch`-only `nx-release.yml`; the duplicate commented-out release job in `continuous-integration.yml` has been removed. Nothing is `publish:true` today (nothing is being published), so there is no automated release on `main`. Flip a package to `publish:true` and revisit if publishing resumes.
 
 **Features:**
 
