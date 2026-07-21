@@ -1,28 +1,11 @@
 import * as React from 'react';
-import {
-  Badge,
-  Card,
-  TabsList,
-  TabsTrigger,
-} from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
+  GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  mergeRouteModuleMeta,
-  useKeyboardShortcut,
-} from '@openthrottle/react-router-utils';
-import { Link, useFetcher, useNavigate, useSearchParams } from 'react-router';
-import {
-  BoltIcon,
-  CogIcon,
-  LayoutListIcon,
-  NotebookTextIcon,
-  TerminalSquareIcon,
-} from 'lucide-react';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   AddHookInputSchema,
   DetachHookInputSchema,
@@ -45,36 +28,16 @@ import {
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { cancelPlanRun } from '~/routing/plans/actions/planId';
-import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
-import {
-  PLANS_DETAIL_TAB_SEARCH_PARAM,
-  parsePlanDetailTab,
-  parsePlanTasksView,
-} from '~/routing/plans/utils/parsers';
-import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
-import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
-import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
-import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
+import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
+import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
-  OpenThrottleTabs,
 } from '@openthrottle/react-router-ui';
-import { formatPlanDate } from '~/routing/plans/utils/formatters';
-import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
-import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
-import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
-import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -139,116 +102,8 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, tagVocabulary, tasks } = loaderData;
-
-  // Hooks
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tagFetcher = useFetcher();
-  const {
-    jobRunHookRows,
-    jobRunHooksJson,
-    jobRunHooksValidation,
-    onResetToDefaults,
-    onSaveJobRunHooks,
-    onSaveRunConfig,
-    onToggleExpanded,
-    ralphTuningJson,
-    runConfigSaveBlocked,
-    runConfigSaveBlockedReason,
-    saveJobRunHooksPending,
-    saveRunConfigPending,
-    setJobRunHookRows,
-    setWorkflowInput,
-    setWorkflowTimeout,
-    setWorkingDirectory,
-    workflowInput,
-    workflowTimeout,
-    workingDirectory,
-  } = usePlanRunConfigEditor(plan);
-
-  // Setup
-  const [fullscreen, setFullscreen] = React.useState(false);
-
-  const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
-  const isBoardView = planTasksView === 'board';
-
-  const planId = params.planId ?? '';
-
-  // Pilot: seed from the loader snapshot, then merge live deltas from the
-  // planOutputChunkAdded subscription (graphql-ws). Socket.IO keeps running.
-  const planOutputChunks = usePlanOutputStream(
-    planId,
-    loaderData.planOutputChunks,
-  );
-  const status =
-    plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
-
-  const completedTaskCount = tasks.filter(
-    (task) => task.status === 'COMPLETED',
-  ).length;
-
-  // Whether the page-level toolbar's Run/Queue is blocked. Reuses the config
-  // editor's validation (workflow options + workspace path) and folds in the
-  // job-run-hooks draft validity, matching the prior in-tab computation.
-  const jobRunHooksBlocked = !jobRunHooksValidation.ok;
-  const workflowRunBlocked = runConfigSaveBlocked || jobRunHooksBlocked;
-  const workflowRunBlockedReason = jobRunHooksBlocked
-    ? (jobRunHooksValidation.issues[0] ??
-      'Fix job run lifecycle hooks in Configuration.')
-    : runConfigSaveBlockedReason;
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // When URL has no `view`, apply last choice from localStorage (board only adds a query param).
-  // Runs when the plan changes so switching plans can restore the saved board preference without
-  // re-applying on every search-param change (e.g. after the user clears `view` for table).
-  React.useEffect(() => {
-    if (parsePlanTasksView(searchParams.get('view'))) return;
-
-    try {
-      const stored = parsePlanTasksView(
-        localStorage.getItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY),
-      );
-      if (stored === 'board') {
-        const next = new URLSearchParams(searchParams);
-        next.set('view', 'board');
-        setSearchParams(next, { replace: true });
-      }
-    } catch {
-      // ignore
-    }
-  }, [planId]);
-
-  // Keep storage in sync when `view` is present in the URL (e.g. shared links).
-  React.useEffect(() => {
-    const fromUrl = parsePlanTasksView(searchParams.get('view'));
-    if (!fromUrl) return;
-
-    try {
-      localStorage.setItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY, fromUrl);
-    } catch {
-      // ignore
-    }
-  }, [searchParams]);
-
-  // Revalidate plan detail when a plan/task lifecycle notification arrives over
-  // the GraphQL subscription (server-side topic routing by planId).
-  usePlanLifecycleRevalidation(planId);
-
-  // Cmd/Ctrl+E jumps to the plan edit route. Registered before the `!plan`
-  // short-circuit (hooks must run unconditionally) and gated via `enabled`.
-  useKeyboardShortcut({
-    enabled: plan != null,
-    key: 'e',
-    meta: true,
-    onPress: () => navigate(`/plans/${planId}/edit`),
-  });
+  const { loaderData, params } = props;
+  const { plan } = loaderData;
 
   // 🔌 Short Circuit
   if (!plan) {
@@ -262,184 +117,14 @@ export default function Component(
     );
   }
 
+  // Route-scoped Jotai store keyed on plan.id: run-config atoms reset on plan
+  // navigation and are seeded once per mount from the plan's persisted config.
+  // The body reads those atoms, so it must live inside the Provider (a component
+  // cannot consume a Provider it renders in its own JSX).
   return (
-    <>
-      <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
-        <div>
-          <GlobalHeading
-            className="mb-4"
-            icon={NotebookTextIcon}
-            title={plan.title ?? 'Untitled'}
-          />
-          <div className="text-muted-foreground line-clamp-3 flex items-center gap-2 text-sm">
-            <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
-            <span>&bull;</span>
-            {plan.projectRelation?.id != null ? (
-              <Badge asChild={true} color="slate" size="xs">
-                <Link
-                  to={`/projects/${plan.projectRelation.id}`}
-                  viewTransition={true}
-                >
-                  {plan.projectRelation.name}
-                </Link>
-              </Badge>
-            ) : (
-              <Badge color="slate" size="xs">
-                {plan.projectRelation?.name
-                  ? plan.projectRelation.name
-                  : plan.project}
-              </Badge>
-            )}
-            <span>&bull;</span>
-            <span>Last updated</span>
-            <span>&bull;</span>
-            <span className="font-medium">
-              {formatPlanDate(plan.updatedAt)}
-            </span>
-            {/* {plan.description ?? 'No description'} */}
-          </div>
-          {/* {plan.projectRelation != null ||
-          (plan.project != null && plan.project !== '') ? (
-            <div
-              className="bg-muted/40 text-muted-foreground mt-3 rounded-md border px-3 py-2 text-sm"
-              role="note"
-            >
-              Project:{' '}
-              {plan.projectRelation != null ? (
-                <Link
-                  aria-label={`Project: ${plan.projectRelation.name}`}
-                  className="hover:text-foreground font-medium underline underline-offset-2"
-                  to={`/projects/${plan.projectRelation.id}`}
-                  viewTransition={true}
-                >
-                  {plan.projectRelation.name}
-                </Link>
-              ) : (
-                <span className="text-foreground font-medium">
-                  {plan.project}
-                </span>
-              )}
-            </div>
-          ) : null} */}
-        </div>
-
-        <PlanToolbar
-          className="bg-card border-card-border rounded-lg border p-4"
-          jobRunHooksJson={jobRunHooksJson}
-          onAddTag={(tag) =>
-            tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
-          }
-          onRemoveTag={(tag) =>
-            tagFetcher.submit(
-              { intent: 'removePlanTag', tag },
-              { method: 'post' },
-            )
-          }
-          planId={plan.id}
-          planStatus={plan.status}
-          planTitle={plan.title ?? 'Untitled'}
-          ralphTuningJson={ralphTuningJson}
-          tagVocabulary={tagVocabulary}
-          tags={plan.tags}
-          tagsPending={tagFetcher.state !== 'idle'}
-          workflowRunBlocked={workflowRunBlocked}
-          workflowRunBlockedReason={workflowRunBlockedReason}
-          workingDirectory={workingDirectory}
-        />
-
-        <OpenThrottleTabs
-          urlSync={{
-            defaultValue: 'overview',
-            param: PLANS_DETAIL_TAB_SEARCH_PARAM,
-            parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
-          }}
-        >
-          <TabsList
-            className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
-            variant="line"
-          >
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-overview"
-              value="overview"
-            >
-              <BoltIcon />
-              Details
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-tasks"
-              value="tasks"
-            >
-              <LayoutListIcon />
-              Tasks ({completedTaskCount}/{tasks.length})
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-output"
-              value="output"
-            >
-              <TerminalSquareIcon />
-              Output
-            </TabsTrigger>
-
-            <div className="flex-1" />
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-configuration"
-              value="configuration"
-            >
-              <CogIcon />
-              Configuration
-            </TabsTrigger>
-          </TabsList>
-
-          <PlanTabDetails
-            fullscreen={fullscreen}
-            setFullscreen={setFullscreen}
-            workflowInput={workflowInput}
-            workflowTimeout={workflowTimeout}
-            workingDirectory={workingDirectory}
-          />
-          <PlanTabTasks />
-          <PlanTabOutput chunks={planOutputChunks} />
-          <PlanTabConfiguration
-            iterationTimeoutText={workflowTimeout}
-            jobRunHookRows={jobRunHookRows}
-            onCollapse={() => onToggleExpanded(false)}
-            onIterationTimeoutTextChange={setWorkflowTimeout}
-            onJobRunHookRowsChange={setJobRunHookRows}
-            onResetToDefaults={onResetToDefaults}
-            onSaveJobRunHooks={onSaveJobRunHooks}
-            onSaveRunConfig={onSaveRunConfig}
-            onValueChange={setWorkflowInput}
-            onWorkingDirectoryChange={setWorkingDirectory}
-            planId={plan.id}
-            saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
-            saveJobRunHooksPending={saveJobRunHooksPending}
-            saveRunConfigDisabled={runConfigSaveBlocked}
-            saveRunConfigPending={saveRunConfigPending}
-            value={workflowInput}
-            workingDirectory={workingDirectory}
-          />
-
-          {/* saveJobRunHooks / saveRunConfig outcomes surface as toasts
-                (useActionToast in usePlanRunConfigEditor). */}
-
-          {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
-            <p className="text-muted-foreground px-4 text-xs" role="note">
-              Save configuration blocked: {runConfigSaveBlockedReason}
-            </p>
-          ) : null}
-        </OpenThrottleTabs>
-      </GlobalScreen>
-
-      {isBoardView ? (
-        <Card className="mx-4 overflow-hidden">
-          <PlanTasksBoard />
-        </Card>
-      ) : null}
-    </>
+    <PlanRunConfigStoreProvider key={plan.id} plan={plan}>
+      <PlanDetailRoute loaderData={loaderData} params={params} plan={plan} />
+    </PlanRunConfigStoreProvider>
   );
 }
 

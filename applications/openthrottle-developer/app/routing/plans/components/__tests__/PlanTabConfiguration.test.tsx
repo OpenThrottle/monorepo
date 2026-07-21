@@ -13,12 +13,9 @@ describe('PlanTabConfiguration Component', () => {
     getDefaultStore().set(resetWorkflowRunToDefaultsAtom, undefined);
   });
 
-  test('renders workflow command preview when plan id seeds CLI target', () => {
+  test('renders workflow command preview from the run-config atoms', () => {
     const props: PlanTabConfigurationProps = {
-      onJobRunHookRowsChange: () => undefined,
       onSaveJobRunHooks: () => undefined,
-      onWorkingDirectoryChange: () => undefined,
-      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
     };
     const Component = () => (
       <Tabs value="configuration">
