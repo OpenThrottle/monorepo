@@ -171,10 +171,10 @@ For code-level naming conventions (variables, functions, classes), see [`.cursor
 
 ```bash
 # List available generators
-nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 
 # Generate a new project
-nx generate @tools/generators:<GENERATOR_NAME>
+NX_ISOLATE_PLUGINS=false pnpm nx generate @tools/generators:<GENERATOR_NAME>
 ```
 
 ### Manual Creation

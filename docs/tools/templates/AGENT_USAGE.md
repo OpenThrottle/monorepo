@@ -168,7 +168,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 ## Generator References
 
 - **[React Generator](./react.md)** – Components, hooks, utils, etc.
-- **[React Router Generator](./remix.md)** – Apps, components, forms, modals, routes, etc. (registered as `@tools/generators:react-router`)
+- **[React Router Generator](./react-router.md)** – Apps, components, forms, modals, routes, etc. (registered as `@tools/generators:react-router`)
 - **[NestJS Generator](./nestjs.md)** – Apps, services, modules, agents, etc.
 - **[React Native](./react-native.md)** — not registered in this repo; see file
 - **[Package Generator](./package.md)**

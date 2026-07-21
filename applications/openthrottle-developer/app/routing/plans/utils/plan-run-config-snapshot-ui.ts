@@ -2,6 +2,7 @@
  * @description Compares persisted plan run snapshots to current Configuration tab state.
  */
 
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Isomorphic plan-run-config helpers are deliberately deep-imported from nestjs-repositories source to avoid pulling the server barrel (TypeORM/NestJS) into the browser bundle. Proper fix: extract a shared isomorphic package (tracked as a follow-up task on this plan).
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,

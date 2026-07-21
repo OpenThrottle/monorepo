@@ -39,15 +39,15 @@
   "name": "@tools/workflows",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
       "name:@tools/workflows",
       "production:true",
+      "publish:false",
       "technology:nodejs",
       "technology:typescript",
-      "type:tool"
+      "type:package"
     ],
     "targets": {
       "build": {

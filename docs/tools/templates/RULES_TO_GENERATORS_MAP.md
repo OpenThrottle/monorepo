@@ -8,29 +8,29 @@ This document maps `.cursor/rules` (and related conventions) to `@tools/generato
 
 Which rules apply to code produced by (or that should be produced by) each generator.
 
-| Rule / convention                                                                      | remix | react                          | react-native | nestjs | package | folders |
-| -------------------------------------------------------------------------------------- | ----- | ------------------------------ | ------------ | ------ | ------- | ------- |
-| **personal-generators.mdc** (generator-first)                                          | ✓     | ✓                              | ✓            | ✓      | ✓       | ✓       |
-| **personal-general.mdc** (UI: Remix/React, create via generator)                       | ✓     | ✓                              | —            | ✓      | —       | ✓       |
-| **personal-general.mdc** (API: NestJS, create via generator)                           | —     | —                              | —            | ✓      | —       | —       |
-| **personal-general.mdc** (testing: component, userEvent, waitFor, describe per branch) | ✓     | ✓                              | ✓            | ✓      | —       | —       |
-| **personal-general.mdc** (shared-ui usage)                                             | ✓     | ✓ (shared-ui is a destination) | —            | —      | —       | —       |
-| **cursor-commands.mdc** (PNPM, NX, `import * as React`)                                | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/default-exports.mdc** (no default except framework pages)                     | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/return-types.mdc** (declare return types; components excepted)                | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/naming-conventions.mdc** (kebab files, PascalCase components, etc.)           | ✓     | ✓                              | ✓            | ✓      | ✓       | ✓       |
-| **coding/import-type.mdc** (use `import type` for types)                               | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/interface-extends.mdc** (prefer interface extends over `&`)                   | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/readonly-properties.mdc** (readonly by default)                               | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/optional-properties.mdc** (sparing use)                                       | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/discriminated-unions.mdc** (model variants with type field)                   | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/throwing.mdc** (prefer result types over throw)                               | —     | —                              | —            | ✓      | ✓       | —       |
-| **coding/enums.mdc** (no new enums; use `as const`)                                    | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/jsdoc-comments.mdc** (JSDoc when not self-evident)                            | ✓     | ✓                              | ✓            | ✓      | ✓       | —       |
-| **coding/installing-libraries.mdc** (pnpm -w, latest)                                  | —     | —                              | —            | —      | —       | —       |
-| **personal-general.mdc** (NestJS: ListResult/Result, deprecate not remove)             | —     | —                              | —            | ✓      | —       | —       |
+| Rule / convention                                                                      | react-router | react                          | react-native | nestjs | package | folders |
+| -------------------------------------------------------------------------------------- | ------------ | ------------------------------ | ------------ | ------ | ------- | ------- |
+| **personal-generators.mdc** (generator-first)                                          | ✓            | ✓                              | ✓            | ✓      | ✓       | ✓       |
+| **personal-general.mdc** (UI: Remix/React, create via generator)                       | ✓            | ✓                              | —            | ✓      | —       | ✓       |
+| **personal-general.mdc** (API: NestJS, create via generator)                           | —            | —                              | —            | ✓      | —       | —       |
+| **personal-general.mdc** (testing: component, userEvent, waitFor, describe per branch) | ✓            | ✓                              | ✓            | ✓      | —       | —       |
+| **personal-general.mdc** (shared-ui usage)                                             | ✓            | ✓ (shared-ui is a destination) | —            | —      | —       | —       |
+| **cursor-commands.mdc** (PNPM, NX, `import * as React`)                                | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/default-exports.mdc** (no default except framework pages)                     | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/return-types.mdc** (declare return types; components excepted)                | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/naming-conventions.mdc** (kebab files, PascalCase components, etc.)           | ✓            | ✓                              | ✓            | ✓      | ✓       | ✓       |
+| **coding/import-type.mdc** (use `import type` for types)                               | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/interface-extends.mdc** (prefer interface extends over `&`)                   | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/readonly-properties.mdc** (readonly by default)                               | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/optional-properties.mdc** (sparing use)                                       | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/discriminated-unions.mdc** (model variants with type field)                   | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/throwing.mdc** (prefer result types over throw)                               | —            | —                              | —            | ✓      | ✓       | —       |
+| **coding/enums.mdc** (no new enums; use `as const`)                                    | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/jsdoc-comments.mdc** (JSDoc when not self-evident)                            | ✓            | ✓                              | ✓            | ✓      | ✓       | —       |
+| **coding/installing-libraries.mdc** (pnpm -w, latest)                                  | —            | —                              | —            | —      | —       | —       |
+| **personal-general.mdc** (NestJS: ListResult/Result, deprecate not remove)             | —            | —                              | —            | ✓      | —       | —       |
 
-- **remix**: component, form, modal, route, table, application
+- **react-router**: component, form, modal, route, table, application
 - **react**: component, hook, util
 - **react-native**: component, package (--type)
 - **nestjs**: application, graphql-service, simple-service, module, queue, ai-agent
@@ -41,10 +41,10 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ## 2. Generator → rules (what each generator’s output should satisfy)
 
-### 2.1 remix
+### 2.1 react-router
 
-- **Workflow:** personal-generators.mdc (use generator first); personal-general.mdc for Remix/React creation and testing.
-- **Naming:** naming-conventions.mdc + AGENT_USAGE/remix.md: PascalCase components; forms end with `Form`, modals with `Modal`, tables with `Table`; routes any valid name.
+- **Workflow:** personal-generators.mdc (use generator first); personal-general.mdc for React Router/React creation and testing.
+- **Naming:** naming-conventions.mdc + AGENT_USAGE/react-router.md: PascalCase components; forms end with `Form`, modals with `Modal`, tables with `Table`; routes any valid name.
 - **Exports:** default-exports.mdc — components/forms/modals/tables use **named exports**; route files may use **default export** (framework requirement).
 - **Types:** return-types.mdc (except JSX components), import-type.mdc, interface-extends.mdc, readonly-properties.mdc, optional-properties.mdc.
 - **React:** cursor-commands.mdc: `import * as React from 'react'`.
@@ -57,7 +57,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 - **Exports:** default-exports.mdc — all generated components/hooks/utils use **named exports** (templates already do).
 - **Types:** return-types.mdc (except JSX), import-type.mdc, interface-extends.mdc, readonly-properties.mdc.
 - **React:** cursor-commands.mdc: `import * as React from 'react'`.
-- **Testing:** Same as Remix; component, userEvent, waitFor, describe per branch.
+- **Testing:** Same as react-router; component, userEvent, waitFor, describe per branch.
 
 ### 2.3 react-native
 
@@ -92,8 +92,8 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ## 3. Template alignment with rules (verified)
 
-- **default-exports:** React/Remix component templates use **named** `export const <%= name %>`. Remix route and React Native route/layout templates use `export default` only where the framework requires it (allowed by rule). **Aligned.**
-- **naming:** Generator docs (react.md, remix.md, nestjs.md, react-native.md, package.md, folders.md) match naming-conventions.mdc (PascalCase components, kebab-case files/services/packages). **Aligned.**
+- **default-exports:** React/React Router component templates use **named** `export const <%= name %>`. React Router route and React Native route/layout templates use `export default` only where the framework requires it (allowed by rule). **Aligned.**
+- **naming:** Generator docs (react.md, react-router.md, nestjs.md, react-native.md, package.md, folders.md) match naming-conventions.mdc (PascalCase components, kebab-case files/services/packages). **Aligned.**
 - **React import:** Generator source uses `import * as React from 'react'` in component templates. **Aligned** with cursor-commands.mdc.
 
 ---
@@ -107,7 +107,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ### 4.2 Generator coverage
 
-- **Remix route-api:** AGENT_USAGE and remix generator source mention route-api; remix.md doc doesn’t list it in the Sub-Generators table. **Gap:** Doc vs implementation mismatch; clarify in remix.md if route-api is supported and list params.
+- **React Router route-api:** AGENT_USAGE and the react-router generator source mention route-api; the react-router.md doc doesn’t list it in the Sub-Generators table. **Gap:** Doc vs implementation mismatch; clarify in react-router.md if route-api is supported and list params.
 - **React Native:** Only `component` and `package` types documented; route generators exist in source (flat/nested). **Gap:** react-native.md doesn’t list route sub-types; agents may not discover them. **Recommendation:** Document route generation in react-native.md or confirm routes are out of scope for the generator.
 - **core-repository:** personal-general.mdc mentions “core-repository” for NestJS; nestjs generator has graphql-service, simple-service, module, queue, ai-agent, application but no “core-repository” subGenerator. **Gap:** Rule references an artifact type that may not exist in @tools/generators. **Recommendation:** Either add core-repository to nestjs generator or update personal-general.mdc to match actual subGenerators.
 
@@ -139,7 +139,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 ## 6. Recommended next steps (for downstream tasks)
 
 - **Document generator-first workflow for agents (task 8a9832fd):** Use this map and AGENT_USAGE.md; make personal-general.mdc and AGENTS.md point to the same workflow and generator list.
-- **Define agent inputs (task 746ba239):** Provide agents with: (1) personal-generators.mdc + AGENT_USAGE.md, (2) this map, (3) generator docs (react.md, remix.md, nestjs.md, react-native.md, package.md, folders.md), (4) coding/\* rules.
-- **Audit checklist (task a5a13afe):** When building a checklist, use §2 (generator → rules) to define per-artifact checks (e.g. “Remix component: named export, PascalCase, Form/Modal/Table suffix if applicable, import \* as React”).
+- **Define agent inputs (task 746ba239):** Provide agents with: (1) personal-generators.mdc + AGENT_USAGE.md, (2) this map, (3) generator docs (react.md, react-router.md, nestjs.md, react-native.md, package.md, folders.md), (4) coding/\* rules.
+- **Audit checklist (task a5a13afe):** When building a checklist, use §2 (generator → rules) to define per-artifact checks (e.g. “React Router component: named export, PascalCase, Form/Modal/Table suffix if applicable, import \* as React”).
 
 This mapping is the single reference for the “Map coding rules to generator templates” task and for downstream agent workflow and audit checklist work.

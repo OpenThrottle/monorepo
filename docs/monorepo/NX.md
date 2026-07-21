@@ -9,10 +9,19 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
 - **Tags**: projects are expected to have at least one `technology:*` tag, plus `type:*` and `name:*` tags in most cases.
   - See `docs/monorepo/NX/tags.md`.
   - Validate with `pnpm nx:validate-tags`.
-- **Caching**: remote caching is configured via `@nx/gcs-cache` with a **two-bucket model** in CI (staging vs production).
+- **Caching**: remote caching is configured via `@nx/gcs-cache` against a single self-hosted GCS bucket (`openthrottle-staging-nx-cache`) with `localMode: "read-only"` everywhere. Main-branch CI does **not** currently populate the remote cache, so it is effectively cold — a documented status-quo tradeoff (see [Operational decisions](#operational-decisions-2026-07-21)).
   - Setup notes: `docs/infra/gcs-nx-cache-verify.md`.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
+- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
+
+### Operational decisions (2026-07-21)
+
+Recorded from the Nx implementation audit:
+
+- **Remote cache writes — status quo.** The GCS cache stays `read-only` everywhere and main CI does not write entries, so cross-run cache hits are unavailable and the remote cache is effectively cold. The "two-bucket CREEP-safe model" (CVE-2025-36852) was never actually wired — every staging/production ternary in the workflows and `scripts/gcs-nx-cache-*.sh` resolves to the same `openthrottle-staging-nx-cache` bucket. Accepted for now; revisit (single-bucket main-only writes, or the real two-bucket model) if cache misses become a CI-time problem.
+- **Nx Cloud — not adopted.** The workspace stays on self-hosted `@nx/gcs-cache`. The CI sharding infra (`scripts/parallelize-tasks.ts`, the matrix, the `merge_group` trigger) is built but pinned to a single runner as a deliberate cost tradeoff; **enable it when CI wall-time regularly approaches the 15-minute job timeout** (rough trigger: sustained > ~12 min). Distributed task execution, the test atomizer, flaky-task retries, and self-healing CI remain unavailable. The `monitor-ci` agent skill depends on Nx Cloud; it self-detects the missing connection (its "Step 0") and reports itself inoperable here, so it is a no-op until/unless Nx Cloud is adopted.
+- **Releases — manual only.** `nx release` stays invocable via the `workflow_dispatch`-only `nx-release.yml`; the duplicate commented-out release job in `continuous-integration.yml` has been removed. Nothing is `publish:true` today (nothing is being published), so there is no automated release on `main`. Flip a package to `publish:true` and revisit if publishing resumes.
 
 **Features:**
 
@@ -73,7 +82,6 @@ We make heavy use of generators in this monorepo, from generating a React Compon
 
 - [@nx/nest](https://nx.dev/nx-api/nest)
 - [@nx/react](https://nx.dev/nx-api/react)
-- [@nx/remix](https://nx.dev/nx-api/remix)
 
 ## 🧩 Plugins
 
@@ -82,27 +90,22 @@ We make heavy use of generators in this monorepo, from generating a React Compon
 - https://nx.dev/nx-api/powerpack-owners
 - [@nx/eslint-plugin](https://nx.dev/nx-api/eslint-plugin)
 
-## Custom Generator via a NX Plugin
+## Local Nx inference plugins (`tools/nx-plugins/`)
 
-```bash
-# Create a new plugin in our tools directory
-nx g @nx/plugin:plugin tools/tailwind-sync-plugin
+This workspace ships two local `createNodesV2` inference plugins, registered in `nx.json`:
 
-# In the plugin, create a new generator that we can run
-nx g @nx/plugin:generator --name=update-tailwind-globs --path=tools/tailwind-sync-plugin/src/generators/update-tailwind-globs
+```jsonc
+// nx.json
+"plugins": [
+  // ...
+  { "plugin": "./tools/nx-plugins/react-router-typecheck.ts" },
+  { "plugin": "./tools/nx-plugins/package-typecheck.ts" }
+]
 ```
 
-```json
-// ...
-"nx": {
-  "targets": {
-    "build": {
-      "syncGenerators": ["@aishop/tailwind-sync-plugin:update-tailwind-globs"]
-    },
-    "serve": {
-      "syncGenerators": ["@aishop/tailwind-sync-plugin:update-tailwind-globs"]
-    }
-  }
-}
-// ...
-```
+Both infer a real `typecheck` target so the policy lives once at the workspace root instead of drifting per project:
+
+- **`react-router-typecheck.ts`** — matches `applications/*/react-router.config.ts`. React Router apps are source-first (no dist emit), so the target runs `react-router typegen && tsc --noEmit` over source + tests, with `outputs: []`.
+- **`package-typecheck.ts`** — matches projects with a `tsconfig.lib.json`/`tsconfig.app.json` (buildable packages and the NestJS server). The target runs `tsc --build --emitDeclarationOnly` (emitting dist `.d.ts` as outputs), then `tsc --noEmit -p tsconfig.test.json` when a test tsconfig exists.
+
+`nx.json` `targetDefaults.typecheck` still layers `cache`/`dependsOn` (`^typecheck`) on top of what these plugins infer.

@@ -30,13 +30,12 @@
   "module": "./src/index.ts",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
       "name:@openthrottle/nestjs-bullmq-board",
       "production:true",
-      "publish:true",
+      "publish:false",
       "technology:nestjs",
       "type:package"
     ],

@@ -74,13 +74,32 @@ export const eslintConfig = tslint.config([
    * @link https://nx.dev/nx-api/eslint-plugin/documents/enforce-module-boundaries
    */
   {
-    files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    // Module boundaries are a production-code concern. Test files legitimately
+    // import their own package's public entry (e.g. *PackageExports* tests that
+    // assert the barrel resolves), which the same-project relative-import check
+    // would flag; exclude test files from boundary enforcement.
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.js',
+      '**/*.test.jsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+    ],
     rules: {
       '@nx/dependency-checks': 'error',
       '@nx/enforce-module-boundaries': [
         'error',
         {
           allow: [],
+          // `vi.mock()` + `await import()` in test files makes Nx classify the
+          // whole dependency edge as lazy-loaded, which then flags every static
+          // import of that lib in production source ("Static imports of
+          // lazy-loaded libraries are forbidden"). The repo does no intentional
+          // code-splitting this check would protect, so waive the static/dynamic
+          // consistency check for all imports (`.*` is a regex matching any
+          // import). Tag depConstraints + dependency-checks remain fully enforced.
+          checkDynamicDependenciesExceptions: ['.*'],
           depConstraints: [
             {
               onlyDependOnLibsWithTags: ['type:package'],
@@ -102,10 +121,6 @@ export const eslintConfig = tslint.config([
         },
       ],
     },
-  },
-
-  {
-    files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
   },
 
   js.configs.recommended,
