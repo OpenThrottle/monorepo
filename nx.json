@@ -196,33 +196,6 @@
       },
       "outputs": ["{projectRoot}/dist/package.json"]
     },
-    "codegen": {
-      "description": "Run code generation for the project (configurations: graphql, graphql-watch, react-router, react-router-watch).",
-      "executor": "nx:run-commands",
-      "configurations": {
-        "graphql": {
-          "command": "graphql-codegen",
-          "dependsOn": ["^build"]
-        },
-        "graphql-watch": {
-          "command": "graphql-codegen --watch",
-          "continuous": true,
-          "dependsOn": ["^build"]
-        },
-        "react-router": {
-          "command": "react-router typegen",
-          "dependsOn": ["^build"]
-        },
-        "react-router-watch": {
-          "command": "react-router typegen --watch",
-          "continuous": true,
-          "dependsOn": ["^build"]
-        }
-      },
-      "options": {
-        "cwd": "{projectRoot}"
-      }
-    },
     "codegen-graphql": {
       "cache": true,
       "description": "Generate GraphQL types and typed operations for the project with graphql-codegen.",
@@ -436,26 +409,6 @@
       "options": {
         "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
         "cwd": "{projectRoot}/tests/e2e"
-      }
-    },
-    "___test-e2e": {
-      "configurations": {
-        "record": {
-          "command": "maestro record --local"
-        },
-        "studio": {
-          "command": "maestro studio"
-        },
-        "watch": {
-          "command": "maestro test --config tests/maestro.yml -c"
-        }
-      },
-      "dependsOn": ["^build"],
-      "description": "Run the project end-to-end suite (configurations: record, studio, watch).",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "maestro test --config tests/maestro.yml",
-        "cwd": "{projectRoot}"
       }
     },
     "typecheck": {

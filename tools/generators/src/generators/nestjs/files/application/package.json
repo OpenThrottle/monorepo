@@ -13,7 +13,6 @@
   "module": "./src/main.ts",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
     "projectType": "application",
     "sourceRoot": "./",
     "tags": [

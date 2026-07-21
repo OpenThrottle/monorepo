@@ -254,19 +254,14 @@
     "@nestjs/schematics": "catalog:",
     "@nestjs/testing": "catalog:",
     "@nx/devkit": "catalog:",
-    "@nx/docker": "catalog:",
     "@nx/eslint": "catalog:",
     "@nx/eslint-plugin": "catalog:",
     "@nx/gcs-cache": "catalog:",
     "@nx/js": "catalog:",
-    "@nx/nest": "catalog:",
-    "@nx/node": "catalog:",
     "@nx/plugin": "catalog:",
     "@nx/react": "catalog:",
     "@nx/vite": "catalog:",
     "@nx/vitest": "catalog:",
-    "@nx/web": "catalog:",
-    "@nx/webpack": "catalog:",
     "@parcel/watcher": "catalog:",
     "@pnpm/exportable-manifest": "catalog:",
     "@pnpm/read-project-manifest": "catalog:",
@@ -358,7 +353,6 @@
     "webpack-cli": "catalog:"
   },
   "nx": {
-    "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
