@@ -136,8 +136,8 @@ jobs:
 
       - name: '🧩 Codegen Tasks'
         run: |
-          # pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          # pnpm exec nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
       # 💰 Folded in from a separate job to avoid spinning a second runner per push.
@@ -149,13 +149,13 @@ jobs:
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
       # - name: '🧪 NX affected Vitest (phased gate)'
       #   run: |
-      #     pnpm dlx nx@${{ env.NX_VERSION }} affected \
+      #     pnpm exec nx affected \
       #       --target=test \
       #       --exclude='*,!openthrottle-server,!@openthrottle/openthrottle-mcp,!@tools/workflows' \
       #       --parallel \
@@ -165,19 +165,19 @@ jobs:
 
       - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
+          pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
       - name: '🔗 Agent assets SSOT (symlink drift guard)'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-agent-assets-ssot
+        run: pnpm exec nx run monorepo:check-agent-assets-ssot
 
       - name: '📋 Agent assets frontmatter validation (D5)'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
+        run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
       - name: '🎨 Prettier format-check'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:format-check --verbose
+        run: pnpm exec nx run monorepo:format-check --verbose
 
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
-      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
+      #   run: pnpm exec nx run monorepo:check-migration-table-comments
       #   env:
       #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
@@ -191,7 +191,7 @@ jobs:
       #       do
       #         read -r tags target <<< `echo $line`;
       #         echo "🧠 Running for $tags | $target";
-      #         pnpm dlx nx@${{ env.NX_VERSION }} affected --exclude="*,$tags" --target=$target --parallel --verbose
+      #         pnpm exec nx affected --exclude="*,$tags" --target=$target --parallel --verbose
       #     done
 
   nx-dependency-graph:
@@ -263,7 +263,7 @@ jobs:
   #         git config user.name "visormatt"
 
   #     - name: "🔍 Print Environment Info"
-  #       run: pnpm dlx nx@${{ env.NX_VERSION }} report
+  #       run: pnpm exec nx report
 
   #     - name: "🚀 Release"
-  #       run: pnpm dlx nx@${{ env.NX_VERSION }} release ${{ env.RELEASE_DRY_RUN }} ${{ env.RELEASE_PUBLISH }}
+  #       run: pnpm exec nx release ${{ env.RELEASE_DRY_RUN }} ${{ env.RELEASE_PUBLISH }}
