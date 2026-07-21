@@ -43,6 +43,7 @@ import {
  * top of what is inferred here (target defaults override inferred fields) — keep
  * `^typecheck`/`^build` there so referenced packages emit their dist
  * declarations before this pass runs.
+ *
  */
 const SOURCE_CONFIG_GLOB = `{applications,packages,tools}/*/tsconfig.{lib,app}.json`;
 

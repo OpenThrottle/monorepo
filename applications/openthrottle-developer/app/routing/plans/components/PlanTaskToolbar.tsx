@@ -1,5 +1,4 @@
 import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   DropdownMenu,
@@ -16,6 +15,7 @@ import { Link, useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
 import { action } from '~/routes/plans.$planId.tasks.$taskId._index';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
@@ -115,44 +115,8 @@ export const PlanTaskToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('flex flex-col gap-3', className)}
-      data-testid="PlanTaskToolbar"
-    >
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        {/* Status group */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tooltip delayDuration={1_000}>
-            <TooltipTrigger asChild={true}>
-              <fetcherSetStatus.Form method="post">
-                <Input name="intent" type="hidden" value="setTaskStatus" />
-                <Input name="status" type="hidden" value="COMPLETED" />
-                <Button
-                  disabled={fetcherSetStatus.state !== 'idle' || isCompleted}
-                  size="xs"
-                  type="submit"
-                  variant="ghost"
-                >
-                  <CheckCircle />
-                  {fetcherSetStatus.state !== 'idle'
-                    ? 'Marking…'
-                    : 'Mark Complete'}
-                </Button>
-              </fetcherSetStatus.Form>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {isCompleted
-                ? 'Task is already completed'
-                : 'Mark this task as completed'}
-            </TooltipContent>
-          </Tooltip>
-
-          <PromoteTaskButton isPromoted={isPromoted} />
-        </div>
-
-        <div className="flex-1" />
-
-        {/* Actions dropdown */}
+    <OpenThrottleToolbar
+      actionsMenu={
         <DropdownMenu>
           <Tooltip delayDuration={1_000}>
             <TooltipTrigger asChild={true}>
@@ -179,20 +143,50 @@ export const PlanTaskToolbar = (
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-muted-foreground text-xs font-medium uppercase">
-          {PLAN_TASK_TOOLBAR_COPY.tagsHeading}
-        </h2>
-        <PlanTagChips
-          onAddTag={onAddTag}
-          onRemoveTag={onRemoveTag}
-          pending={tagsPending}
-          tags={tags}
-          vocabulary={tagVocabulary}
-        />
-      </div>
-    </div>
+      }
+      className={className}
+      dataTestId="PlanTaskToolbar"
+      primaryActions={<PromoteTaskButton isPromoted={isPromoted} />}
+      statusAction={
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <fetcherSetStatus.Form method="post">
+              <Input name="intent" type="hidden" value="setTaskStatus" />
+              <Input name="status" type="hidden" value="COMPLETED" />
+              <Button
+                disabled={fetcherSetStatus.state !== 'idle' || isCompleted}
+                size="xs"
+                type="submit"
+                variant="ghost"
+              >
+                <CheckCircle />
+                {fetcherSetStatus.state !== 'idle'
+                  ? 'Marking…'
+                  : 'Mark Complete'}
+              </Button>
+            </fetcherSetStatus.Form>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isCompleted
+              ? 'Task is already completed'
+              : 'Mark this task as completed'}
+          </TooltipContent>
+        </Tooltip>
+      }
+      tags={
+        <div className="flex flex-col gap-2">
+          <h2 className="text-muted-foreground text-xs font-medium uppercase">
+            {PLAN_TASK_TOOLBAR_COPY.tagsHeading}
+          </h2>
+          <PlanTagChips
+            onAddTag={onAddTag}
+            onRemoveTag={onRemoveTag}
+            pending={tagsPending}
+            tags={tags}
+            vocabulary={tagVocabulary}
+          />
+        </div>
+      }
+    />
   );
 };

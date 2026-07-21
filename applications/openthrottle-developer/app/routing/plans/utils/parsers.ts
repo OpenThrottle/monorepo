@@ -44,6 +44,33 @@ export const parsePlanDetailTab = (
   return isPlanDetailTab(raw) ? raw : null;
 };
 
+/** Valid tab keys for the task detail page (`/plans/:planId/tasks/:taskId`). */
+export type TaskDetailTab = 'artifacts' | 'details' | 'hooks' | 'output';
+
+const TASK_DETAIL_TAB_VALUES: readonly TaskDetailTab[] = [
+  'artifacts',
+  'details',
+  'hooks',
+  'output',
+];
+
+const isTaskDetailTab = (raw: string): raw is TaskDetailTab =>
+  TASK_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+
+/**
+ * @description Parses the `tab` search param for task detail primary tabs
+ * (Details, Output, Artifacts, Hooks). Shares {@link PLANS_DETAIL_TAB_SEARCH_PARAM}.
+ */
+export const parseTaskDetailTab = (
+  raw: string | null,
+): TaskDetailTab | null => {
+  if (raw === null || raw === '') {
+    return null;
+  }
+
+  return isTaskDetailTab(raw) ? raw : null;
+};
+
 /**
  * @description Parses `view` query/localStorage values for the plan tasks table vs board switcher.
  */

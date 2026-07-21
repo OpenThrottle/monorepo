@@ -30,4 +30,11 @@ export class PlanOutputStreamChunkObject {
 
   @Field(() => String)
   planId!: string;
+
+  @Field(() => String, {
+    description:
+      'Task this chunk is attributed to (task-scoped output); null for plan-scoped chunks and historical rows.',
+    nullable: true,
+  })
+  taskId!: string | null;
 }

@@ -61,6 +61,7 @@ describe('PlanOutputStreamResolver', () => {
     iteration: 1,
     plan: mockPlan,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+    taskId: null,
   };
 
   beforeAll(async () => {
@@ -200,6 +201,7 @@ describe('PlanOutputStreamResolver', () => {
         content: 'New output',
         iteration: 2,
         planId: mockChunk.planId,
+        taskId: null,
       });
 
       expect(result).not.toBeNull();
@@ -220,6 +222,7 @@ describe('PlanOutputStreamResolver', () => {
         id: 'id-2',
         iteration: null,
         planId: mockChunk.planId,
+        taskId: null,
       };
       vi.mocked(planOutputStreamRepo.create).mockReturnValue(created);
       vi.mocked(planOutputStreamRepo.save).mockResolvedValue(created);
@@ -228,9 +231,60 @@ describe('PlanOutputStreamResolver', () => {
         content: 'No iteration',
         iteration: null,
         planId: mockChunk.planId,
+        taskId: null,
       });
 
       expect(result.iteration).toBeNull();
+    });
+
+    test('forwards taskId into create and returns it when provided', async () => {
+      const taskId = '9b1f0c3a-2d4e-4f6a-8b0c-1d2e3f4a5b6c';
+      const created = {
+        content: 'Task-scoped output',
+        createdAt: new Date('2026-02-01T23:30:00.000Z'),
+        id: 'task-chunk-id',
+        iteration: 3,
+        planId: mockChunk.planId,
+        taskId,
+      };
+      vi.mocked(planOutputStreamRepo.create).mockReturnValue(created);
+      vi.mocked(planOutputStreamRepo.save).mockResolvedValue(created);
+
+      const result = await resolver.appendPlanOutput({
+        content: 'Task-scoped output',
+        iteration: 3,
+        planId: mockChunk.planId,
+        taskId,
+      });
+
+      expect(planOutputStreamRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ taskId }),
+      );
+      expect(result.taskId).toBe(taskId);
+    });
+
+    test('defaults taskId to null when omitted', async () => {
+      const created = {
+        content: 'Plan-scoped output',
+        createdAt: new Date(),
+        id: 'id-3',
+        iteration: null,
+        planId: mockChunk.planId,
+        taskId: null,
+      };
+      vi.mocked(planOutputStreamRepo.create).mockReturnValue(created);
+      vi.mocked(planOutputStreamRepo.save).mockResolvedValue(created);
+
+      await resolver.appendPlanOutput({
+        content: 'Plan-scoped output',
+        iteration: null,
+        planId: mockChunk.planId,
+        taskId: null,
+      });
+
+      expect(planOutputStreamRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ taskId: null }),
+      );
     });
   });
 
