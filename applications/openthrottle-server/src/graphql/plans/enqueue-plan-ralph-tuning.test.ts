@@ -1,15 +1,12 @@
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
 import {
-  buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
-  DEFAULT_PLAN_RUN_KIND,
   parseEnqueueRalphTuning,
   ralphTuningForChildJob,
-  resolveDefaultPlanRunKind,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
 
@@ -159,66 +156,6 @@ describe('parseEnqueueRalphTuning', () => {
       skipWorktreeSetup: true,
       worktree: 'target-one',
       worktreeBase: 'main',
-    });
-  });
-});
-
-describe('buildRunPlanJobData', () => {
-  test('returns default execution backend when ralph is omitted', () => {
-    expect(buildRunPlanJobData({ planId: 'p1', ralph: null })).toEqual({
-      executionBackend: 'cursor',
-      planId: 'p1',
-    });
-  });
-
-  test('includes jobRunHooks from plan storage on enqueue payload', () => {
-    const result = buildRunPlanJobData({
-      planId: 'p1',
-      planJobRunHooks: {
-        hooks: [
-          {
-            kind: 'prompt_profile',
-            phase: 'before_run',
-            prompt: '/agents/ralph',
-            promptDelivery: 'named',
-          },
-        ],
-      },
-      ralph: null,
-    });
-    expect(result.jobRunHooks?.hooks).toHaveLength(1);
-    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('beforeAll');
-  });
-
-  test('includes ralph when tuning is present', () => {
-    expect(
-      buildRunPlanJobData({
-        planId: 'p1',
-        ralph: {
-          ...emptyTuningInput(),
-          iterations: 2,
-        },
-      }),
-    ).toEqual({
-      executionBackend: 'cursor',
-      planId: 'p1',
-      ralph: { iterations: 2 },
-    });
-  });
-
-  test('uses explicit execution backend for the whole run', () => {
-    expect(
-      buildRunPlanJobData({
-        planId: 'p1',
-        ralph: {
-          ...emptyTuningInput(),
-          backend: 'claude',
-        },
-      }),
-    ).toEqual({
-      executionBackend: 'claude',
-      planId: 'p1',
-      ralph: { backend: 'claude' },
     });
   });
 });
@@ -380,81 +317,5 @@ describe('validateWorkingDirectory', () => {
     expect(() => validateWorkingDirectory(longPath)).toThrow(
       /at most 4096 characters/,
     );
-  });
-});
-
-describe('buildRunPlanJobData with workingDirectory', () => {
-  test('omits workingDirectory when null or undefined', () => {
-    const result = buildRunPlanJobData({
-      planId: 'p1',
-      ralph: null,
-      workingDirectory: null,
-    });
-    expect(result).toEqual({ executionBackend: 'cursor', planId: 'p1' });
-    expect(result).not.toHaveProperty('workingDirectory');
-  });
-
-  test('includes workingDirectory for a valid Nx workspace directory', () => {
-    const tempDir = makeNxWorkspaceDir();
-    const result = buildRunPlanJobData({
-      planId: 'p1',
-      ralph: null,
-      workingDirectory: tempDir,
-    });
-    expect(result).toEqual({
-      executionBackend: 'cursor',
-      planId: 'p1',
-      workingDirectory: tempDir,
-    });
-  });
-
-  test('accepts a non-Nx workingDirectory when the path exists', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
-    const data = buildRunPlanJobData({
-      planId: 'p1',
-      ralph: null,
-      workingDirectory: tempDir,
-    });
-    expect(data.workingDirectory).toBe(tempDir);
-  });
-
-  test('throws for an invalid workingDirectory', () => {
-    expect(() =>
-      buildRunPlanJobData({
-        planId: 'p1',
-        ralph: null,
-        workingDirectory: '/no/such/dir/ot-test',
-      }),
-    ).toThrow(/does not exist/);
-  });
-});
-
-describe('resolveDefaultPlanRunKind', () => {
-  const ORIGINAL = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-
-  afterEach(() => {
-    if (ORIGINAL === undefined) {
-      delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-    } else {
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = ORIGINAL;
-    }
-  });
-
-  test('defaults to orchestrator when unset', () => {
-    delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
-    expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
-    expect(DEFAULT_PLAN_RUN_KIND).toBe('orchestrator');
-  });
-
-  describe('when OPENTHROTTLE_DEFAULT_RUN_KIND is set', () => {
-    test('returns spawn for the explicit spawn rollback value (case-insensitive)', () => {
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'SPAWN';
-      expect(resolveDefaultPlanRunKind()).toBe('spawn');
-    });
-
-    test('falls back to orchestrator for any other value', () => {
-      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'nonsense';
-      expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
-    });
   });
 });

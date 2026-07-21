@@ -3,8 +3,9 @@ import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.c
 export const PLANS_QUEUE_NAME = 'Plans';
 
 /**
- * @description BullMQ **job name** for spawn plan runs (nested `workflow-ralph`). Same string as historical
- * GraphQL enqueue; use this in `queue.add` for {@link RunPlanSpawnJobData}.
+ * @description Historical BullMQ **job name** for the removed nested-`workflow-ralph` spawn path
+ * (OT plan 2ab62876). No longer enqueued, but retained so cancellation/observability filters still
+ * match any legacy `run-plan` jobs persisted in Redis, and so queue display can label them.
  */
 export const RUN_PLAN_SPAWN_JOB_NAME = 'run-plan';
 

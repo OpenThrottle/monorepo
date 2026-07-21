@@ -8,14 +8,16 @@ import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
 
 type CancelPlanRunPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 
-const { toastError, toastSuccess } = vi.hoisted(() => ({
+const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),
+  toastInfo: vi.fn(),
   toastSuccess: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), {
     error: toastError,
+    info: toastInfo,
     success: toastSuccess,
   }),
 }));
@@ -24,6 +26,7 @@ describe('KillPlanRunButton', () => {
   beforeEach(() => {
     toastSuccess.mockClear();
     toastError.mockClear();
+    toastInfo.mockClear();
   });
 
   test('renders nothing when show is false', () => {
@@ -146,11 +149,13 @@ describe('KillPlanRunButton', () => {
     const cancelPayload: CancelPlanRunPayload = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
-      noMatchingJob: true,
+      cancelRequested: true,
+      noMatchingJob: false,
+      outcome: 'RUN_STOPPING',
       planId: 'p1',
-      planStatusAfter: null,
+      planStatusAfter: 'PENDING',
       removedJobIds: [],
-      signaledActiveRunToStop: false,
+      signaledActiveRunToStop: true,
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
@@ -185,9 +190,57 @@ describe('KillPlanRunButton', () => {
 
     await waitFor(() => {
       expect(toastSuccess).toHaveBeenCalledWith(
-        'No queued or active plan run was found for this plan.',
+        'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).',
       );
     });
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  test('shows an info (not success) toast on a no-op cancel (NO_ACTIVE_RUN)', async () => {
+    const user = userEvent.setup();
+    const cancelPayload: CancelPlanRunPayload = {
+      __typename: 'CancelPlanRunResultObject',
+      activeJobIdsCouldNotCancel: [],
+      cancelRequested: false,
+      noMatchingJob: true,
+      outcome: 'NO_ACTIVE_RUN',
+      planId: 'p1',
+      planStatusAfter: null,
+      removedJobIds: [],
+      signaledActiveRunToStop: false,
+    };
+
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            return { cancelPlanRun: cancelPayload };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+
+    await waitFor(() => {
+      expect(toastInfo).toHaveBeenCalledWith(
+        'No queued or active plan run was found to cancel.',
+      );
+    });
+    expect(toastSuccess).not.toHaveBeenCalled();
     expect(toastError).not.toHaveBeenCalled();
   });
 
@@ -242,11 +295,13 @@ describe('KillPlanRunButton', () => {
     const cancelPayload: CancelPlanRunPayload = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
-      noMatchingJob: true,
+      cancelRequested: true,
+      noMatchingJob: false,
+      outcome: 'RUN_STOPPING',
       planId: 'p1',
-      planStatusAfter: null,
+      planStatusAfter: 'PENDING',
       removedJobIds: [],
-      signaledActiveRunToStop: false,
+      signaledActiveRunToStop: true,
     };
 
     let releaseCancel: (() => void) | undefined;
@@ -340,11 +395,13 @@ describe('KillPlanRunButton', () => {
     const cancelPayload: CancelPlanRunPayload = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
-      noMatchingJob: true,
+      cancelRequested: true,
+      noMatchingJob: false,
+      outcome: 'RUN_STOPPING',
       planId: 'p1',
-      planStatusAfter: null,
+      planStatusAfter: 'PENDING',
       removedJobIds: [],
-      signaledActiveRunToStop: false,
+      signaledActiveRunToStop: true,
     };
 
     let cancelPlanRunPosts = 0;

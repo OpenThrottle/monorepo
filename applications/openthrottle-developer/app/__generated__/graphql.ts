@@ -341,8 +341,12 @@ export type CancelPlanRunResultObject = {
   __typename?: 'CancelPlanRunResultObject';
   /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan. */
   activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
+  /** True when a durable cancel marker was stamped on a live run (the cross-process/host/CLI guarantee). The run stops at its next iteration boundary even if the low-latency pub/sub signal was missed. */
+  cancelRequested: Scalars['Boolean']['output'];
   /** True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state. */
   noMatchingJob: Scalars['Boolean']['output'];
+  /** Machine-readable primary outcome for UI messaging: RUN_CANCELLED (queued job removed), RUN_STOPPING (active run signaled to stop), CANCELLATION_REQUESTED (durable cancel requested; stops at next checkpoint), or NO_ACTIVE_RUN (nothing to cancel). */
+  outcome: Scalars['String']['output'];
   /** Plan id from the request. */
   planId: Scalars['String']['output'];
   /** Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied. */
@@ -1946,12 +1950,18 @@ export type PlanRunMetricsEntry = {
 
 export type PlanRunObject = {
   __typename?: 'PlanRunObject';
-  /** BullMQ job id for this run. */
-  bullmqJobId: Scalars['String']['output'];
+  /** BullMQ job id for this run. Null for detached-CLI runs that carry no queue job. */
+  bullmqJobId?: Maybe<Scalars['String']['output']>;
+  /** Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary. */
+  cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   /** Execution backend selected once for the whole run: cursor or claude. */
   executionBackend: Scalars['String']['output'];
+  /** Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope. */
+  hostname?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** OS process id of the worker executing this run. Null when not actively executing. */
+  pid?: Maybe<Scalars['Int']['output']>;
   planId: Scalars['String']['output'];
   queueName: Scalars['String']['output'];
   /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
@@ -1960,6 +1970,8 @@ export type PlanRunObject = {
   runKind: Scalars['String']['output'];
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  /** Identifier of the worker instance executing this run. Null when not actively executing. */
+  workerId?: Maybe<Scalars['String']['output']>;
 };
 
 export type PlanRunsByPlanIdInput = {
@@ -4936,7 +4948,9 @@ export type PlanDetailCancelPlanRunMutation = {
   cancelPlanRun: {
     __typename?: 'CancelPlanRunResultObject';
     activeJobIdsCouldNotCancel: Array<string>;
+    cancelRequested: boolean;
     noMatchingJob: boolean;
+    outcome: string;
     planId: string;
     planStatusAfter?: string | null;
     removedJobIds: Array<string>;
@@ -5136,7 +5150,7 @@ export type PlanDetailIndexLoaderQuery = {
   };
   planRunsByPlanId: Array<{
     __typename?: 'PlanRunObject';
-    bullmqJobId: string;
+    bullmqJobId?: string | null;
     createdAt: any;
     executionBackend: string;
     id: string;
@@ -6029,7 +6043,9 @@ export type QueueJobDetailCancelPlanRunMutation = {
   cancelPlanRun: {
     __typename?: 'CancelPlanRunResultObject';
     activeJobIdsCouldNotCancel: Array<string>;
+    cancelRequested: boolean;
     noMatchingJob: boolean;
+    outcome: string;
     planId: string;
     planStatusAfter?: string | null;
     removedJobIds: Array<string>;
@@ -10748,8 +10764,13 @@ export const PlanDetailCancelPlanRunDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'cancelRequested' },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'noMatchingJob' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 {
                   kind: 'Field',
@@ -14197,8 +14218,13 @@ export const QueueJobDetailCancelPlanRunDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'cancelRequested' },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'noMatchingJob' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 {
                   kind: 'Field',

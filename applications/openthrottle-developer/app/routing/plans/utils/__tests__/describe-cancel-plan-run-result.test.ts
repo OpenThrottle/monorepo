@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { describeCancelPlanRunResult } from '../describe-cancel-plan-run-result';
+import {
+  cancelPlanRunToastTone,
+  describeCancelPlanRunResult,
+} from '../describe-cancel-plan-run-result';
 import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
 
 type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
@@ -9,7 +12,9 @@ const basePayload = (
 ): CancelPayload => ({
   __typename: 'CancelPlanRunResultObject',
   activeJobIdsCouldNotCancel: [],
+  cancelRequested: false,
   noMatchingJob: false,
+  outcome: 'NO_ACTIVE_RUN',
   planId: 'p1',
   planStatusAfter: null,
   removedJobIds: [],
@@ -18,76 +23,65 @@ const basePayload = (
 });
 
 describe('describeCancelPlanRunResult', () => {
-  test('returns no-job message when noMatchingJob is true', () => {
+  test('RUN_CANCELLED describes a single removed job', () => {
     expect(
       describeCancelPlanRunResult(
-        basePayload({ noMatchingJob: true, removedJobIds: ['x'] }),
+        basePayload({ outcome: 'RUN_CANCELLED', removedJobIds: ['job-a'] }),
       ),
-    ).toBe('No queued or active plan run was found for this plan.');
+    ).toBe('Run cancelled — removed 1 queued job from the queue.');
   });
 
-  test('describes a single removed job', () => {
+  test('RUN_CANCELLED pluralizes multiple removed jobs', () => {
     expect(
       describeCancelPlanRunResult(
-        basePayload({ noMatchingJob: false, removedJobIds: ['job-a'] }),
+        basePayload({ outcome: 'RUN_CANCELLED', removedJobIds: ['a', 'b'] }),
       ),
-    ).toBe('Removed 1 queued job.');
+    ).toBe('Run cancelled — removed 2 queued jobs from the queue.');
   });
 
-  test('uses plural when multiple jobs removed', () => {
-    expect(
-      describeCancelPlanRunResult(basePayload({ removedJobIds: ['a', 'b'] })),
-    ).toBe('Removed 2 queued jobs.');
-  });
-
-  test('describes signaled active stop without listing locked ids', () => {
+  test('RUN_STOPPING describes signaling the active run (no locked ids leaked)', () => {
     expect(
       describeCancelPlanRunResult(
         basePayload({
           activeJobIdsCouldNotCancel: ['locked-1'],
-          removedJobIds: [],
+          outcome: 'RUN_STOPPING',
           signaledActiveRunToStop: true,
         }),
       ),
     ).toBe(
-      'Signaled the worker to stop the in-flight run (Ralph may take a moment to shut down).',
+      'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).',
     );
   });
 
-  test('combines removed jobs and signal message', () => {
+  test('CANCELLATION_REQUESTED describes a checkpoint stop', () => {
     expect(
       describeCancelPlanRunResult(
         basePayload({
-          removedJobIds: ['w1'],
-          signaledActiveRunToStop: true,
+          cancelRequested: true,
+          outcome: 'CANCELLATION_REQUESTED',
         }),
       ),
-    ).toBe(
-      'Removed 1 queued job. Signaled the worker to stop the in-flight run (Ralph may take a moment to shut down).',
-    );
+    ).toBe('Cancellation requested — the run stops at its next checkpoint.');
   });
 
-  test('lists locked active job ids when not signaled', () => {
+  test('NO_ACTIVE_RUN describes an explicit no-op', () => {
     expect(
-      describeCancelPlanRunResult(
-        basePayload({
-          activeJobIdsCouldNotCancel: ['j1', 'j2'],
-          signaledActiveRunToStop: false,
-        }),
-      ),
-    ).toBe('Some jobs could not be removed while active (j1, j2).');
+      describeCancelPlanRunResult(basePayload({ outcome: 'NO_ACTIVE_RUN' })),
+    ).toBe('No queued or active plan run was found to cancel.');
+  });
+});
+
+describe('cancelPlanRunToastTone', () => {
+  test('NO_ACTIVE_RUN is info (never a misleading success)', () => {
+    expect(
+      cancelPlanRunToastTone(basePayload({ outcome: 'NO_ACTIVE_RUN' })),
+    ).toBe('info');
   });
 
-  test('returns generic completion when nothing specific applied', () => {
-    expect(
-      describeCancelPlanRunResult(
-        basePayload({
-          activeJobIdsCouldNotCancel: [],
-          noMatchingJob: false,
-          removedJobIds: [],
-          signaledActiveRunToStop: false,
-        }),
-      ),
-    ).toBe('Plan run cancellation completed.');
-  });
+  test.each(['RUN_CANCELLED', 'RUN_STOPPING', 'CANCELLATION_REQUESTED'])(
+    '%s is success',
+    (outcome) => {
+      expect(cancelPlanRunToastTone(basePayload({ outcome }))).toBe('success');
+    },
+  );
 });

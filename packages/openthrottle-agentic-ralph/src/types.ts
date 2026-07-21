@@ -38,6 +38,17 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
    */
   readonly correlation?: WorkflowCorrelation;
 
+  /**
+   * Durable cancel-marker poll (Channel 1). When provided, the run loop awaits this at the same
+   * iteration boundaries it checks {@link abortSignal}; a truthy result stops the run
+   * (`workflow_cancelled`). This is the cross-process/host/CLI guarantee: even if the low-latency
+   * Redis pub/sub signal was missed, the owning process still observes the persisted cancel request
+   * at its next boundary. Kept as an injected callback so this package stays storage-agnostic — the
+   * server backs it with `plan_runs.cancel_requested_at`, the CLI with its own reader. A thrown or
+   * rejected check is treated as "not cancelled" so a transient read failure never crashes the run.
+   */
+  readonly isCancellationRequested?: () => boolean | Promise<boolean>;
+
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';
   /**

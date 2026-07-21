@@ -15,6 +15,7 @@ import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
@@ -235,6 +236,12 @@ describe('PlansResolver', () => {
         {
           provide: PlanRunCancellationService,
           useValue: { abort: mockPlanRunCancellationAbort },
+        },
+        {
+          provide: PlanCancelChannelService,
+          useValue: createMock<PlanCancelChannelService>({
+            publishCancel: vi.fn().mockResolvedValue(undefined),
+          }),
         },
         { provide: PlanEnqueueService, useValue: mockPlanEnqueueService },
         // Real PlanStatusService wired to the existing mocks: updatePlan's merge + transition

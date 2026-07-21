@@ -82,8 +82,19 @@ export class PlanStatusCountObject {
 
 @ObjectType()
 export class PlanRunObject implements PlanRunData {
-  @Field(() => String, { description: 'BullMQ job id for this run.' })
-  bullmqJobId!: string;
+  @Field(() => String, {
+    description:
+      'BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.',
+    nullable: true,
+  })
+  bullmqJobId!: string | null;
+
+  @Field(() => Date, {
+    description:
+      'Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary.',
+    nullable: true,
+  })
+  cancelRequestedAt!: Date | null;
 
   @Field(() => Date)
   createdAt!: Date;
@@ -93,14 +104,35 @@ export class PlanRunObject implements PlanRunData {
   })
   executionBackend!: 'claude' | 'cursor' | 'opencode';
 
+  @Field(() => String, {
+    description:
+      'Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.',
+    nullable: true,
+  })
+  hostname!: string | null;
+
   @Field(() => String)
   id!: string;
+
+  @Field(() => Int, {
+    description:
+      'OS process id of the worker executing this run. Null when not actively executing.',
+    nullable: true,
+  })
+  pid!: number | null;
 
   @Field(() => String)
   planId!: string;
 
   @Field(() => String)
   queueName!: string;
+
+  @Field(() => String, {
+    description:
+      'Identifier of the worker instance executing this run. Null when not actively executing.',
+    nullable: true,
+  })
+  workerId!: string | null;
 
   @Field(() => String, {
     description: `Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
@@ -177,6 +209,16 @@ export class CancelPlanRunResultObject {
     description: `True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.`,
   })
   signaledActiveRunToStop!: boolean;
+
+  @Field(() => Boolean, {
+    description: `True when a durable cancel marker was stamped on a live run (the cross-process/host/CLI guarantee). The run stops at its next iteration boundary even if the low-latency pub/sub signal was missed.`,
+  })
+  cancelRequested!: boolean;
+
+  @Field(() => String, {
+    description: `Machine-readable primary outcome for UI messaging: RUN_CANCELLED (queued job removed), RUN_STOPPING (active run signaled to stop), CANCELLATION_REQUESTED (durable cancel requested; stops at next checkpoint), or NO_ACTIVE_RUN (nothing to cancel).`,
+  })
+  outcome!: string;
 
   @Field(() => Boolean, {
     description: `True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.`,

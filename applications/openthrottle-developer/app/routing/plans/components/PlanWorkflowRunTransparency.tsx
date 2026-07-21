@@ -220,12 +220,18 @@ export const PlanWorkflowRunTransparency = (
                         key={row.id}
                       >
                         <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                          <Link
-                            className="text-primary underline-offset-2 hover:underline"
-                            to={planRunJobDetailPath(row.bullmqJobId)}
-                          >
-                            {row.bullmqJobId}
-                          </Link>
+                          {row.bullmqJobId == null ? (
+                            <span className="text-muted-foreground">
+                              CLI run
+                            </span>
+                          ) : (
+                            <Link
+                              className="text-primary underline-offset-2 hover:underline"
+                              to={planRunJobDetailPath(row.bullmqJobId)}
+                            >
+                              {row.bullmqJobId}
+                            </Link>
+                          )}
                         </td>
                         <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
                           {new Date(row.createdAt).toISOString()}

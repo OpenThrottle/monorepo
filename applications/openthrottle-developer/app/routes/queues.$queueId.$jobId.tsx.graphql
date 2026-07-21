@@ -39,7 +39,9 @@ mutation QueueJobDetailRetry($input: RetryJobInput!) {
 mutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {
   cancelPlanRun(input: $input) {
     activeJobIdsCouldNotCancel
+    cancelRequested
     noMatchingJob
+    outcome
     planId
     planStatusAfter
     removedJobIds
