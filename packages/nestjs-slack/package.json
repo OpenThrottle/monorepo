@@ -33,6 +33,7 @@
     "tags": [
       "name:@openthrottle/nestjs-slack",
       "production:true",
+      "publish:false",
       "technology:nestjs",
       "type:package"
     ],

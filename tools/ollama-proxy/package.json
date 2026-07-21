@@ -16,6 +16,7 @@
     "tags": [
       "name:@tools/ollama-proxy",
       "production:false",
+      "publish:false",
       "technology:nodejs",
       "technology:typescript",
       "type:tool"

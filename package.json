@@ -364,6 +364,7 @@
     "tags": [
       "name:@openthrottle/monorepo",
       "production:true",
+      "publish:false",
       "technology:nodejs",
       "type:package"
     ],

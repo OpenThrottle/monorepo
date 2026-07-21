@@ -45,6 +45,7 @@
     "tags": [
       "name:@tools/workflows",
       "production:true",
+      "publish:false",
       "technology:nodejs",
       "technology:typescript",
       "type:package"

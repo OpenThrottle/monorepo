@@ -34,7 +34,7 @@
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:templates",
+      "name:@tools/generators",
       "production:true",
       "publish:false",
       "technology:nodejs",
