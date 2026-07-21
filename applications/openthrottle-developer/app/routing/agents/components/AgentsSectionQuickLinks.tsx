@@ -70,8 +70,7 @@ export const AgentsSectionQuickLinks = (
             </Link>
             <p className="text-muted-foreground mt-1">
               In-repo paths under{' '}
-              <code className="text-xs">.agents/skills</code> and{' '}
-              <code className="text-xs">.cursor/skills</code>—match slugs to
+              <code className="text-xs">.agents/skills</code>—match slugs to
               files when the IDE or runner picks the wrong skill.
             </p>
           </li>

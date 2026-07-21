@@ -59,6 +59,7 @@ export const KillPlanRunButton = (
         if ('cancelPlanRun' in data && data.cancelPlanRun != null) {
           toast.success(describeCancelPlanRunResult(data.cancelPlanRun));
           revalidator.revalidate();
+
           setOpen(false);
         } else if (
           'cancelPlanRunError' in data &&
@@ -92,6 +93,7 @@ export const KillPlanRunButton = (
           {isSubmitting ? 'Stopping…' : 'Kill run'}
         </Button>
       </AlertDialogTrigger>
+
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Kill plan run?</AlertDialogTitle>

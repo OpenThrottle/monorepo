@@ -32,15 +32,13 @@ const LAYOUT_SCAN_TARGETS: ReadonlyArray<{
 }> = [
   { layout: 'agents', skillsDir: '.agents/skills' },
   { layout: 'claude', skillsDir: '.claude/skills' },
-  { layout: 'cursor', skillsDir: '.cursor/skills' },
   { layout: 'opencode', skillsDir: '.opencode/skills' },
 ] as const;
 
 const LAYOUT_SORT_ORDER: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
   claude: 1,
-  cursor: 2,
-  opencode: 3,
+  opencode: 2,
 };
 
 const sortRepoSkillEntries = (
@@ -220,7 +218,8 @@ const scanSkillsLayout = (
 };
 
 /**
- * @description Discovers repo skills under `.agents/skills` and `.cursor/skills`.
+ * @description Discovers repo skills under `.agents/skills` (the SSOT view;
+ * `.claude/skills` fan-out is scanned too and deduped by slug, preferring `.agents`).
  * Returns an empty list when `monorepoRoot` is null or skill directories are absent.
  *
  * Pass the result of {@link getMonorepoRoot} (honors `WORKSPACE_ROOT`, then cwd walk-up).

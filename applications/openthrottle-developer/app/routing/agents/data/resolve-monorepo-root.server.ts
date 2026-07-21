@@ -59,7 +59,7 @@ const isExistingDirectory = (
  * finds the repo without setting env. Override with `WORKSPACE_ROOT` in `.env` when needed.
  *
  * **Deploy:** Vercel and minimal Docker images typically have no monorepo checkout; set
- * `WORKSPACE_ROOT` to a mounted volume that includes `.agents/skills` and `.cursor/skills`,
+ * `WORKSPACE_ROOT` to a mounted volume that includes `.agents/skills`,
  * or expect zero skills on `/skills`.
  *
  * @see applications/openthrottle-developer/docs/repo-skills-discovery-design.md

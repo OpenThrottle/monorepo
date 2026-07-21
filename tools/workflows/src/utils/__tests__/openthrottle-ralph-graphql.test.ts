@@ -9,9 +9,19 @@ import {
   GetPlanDocument,
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
+  WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
 
 const executeWorkflowGraphqlV2Mock = vi.hoisted(() => vi.fn());
+
+/**
+ * @description Wraps mock data in a successful {@link GraphqlV2Result} envelope, matching the
+ * non-throwing shape `executeWorkflowGraphqlV2` now returns.
+ */
+const ok = <TData>(data: TData): { data: TData; ok: true } => ({
+  data,
+  ok: true,
+});
 
 vi.mock('@openthrottle/openthrottle-agentic-ralph', async () => {
   const actual = await vi.importActual<
@@ -42,14 +52,16 @@ describe('openthrottle-ralph-graphql', () => {
   });
 
   it('ensureGraphqlIsReachable throws when database is unreachable', async () => {
-    executeWorkflowGraphqlV2Mock.mockResolvedValue({
-      serverHealth: {
-        api: 'ok',
-        database: 'unreachable',
-        redis: 'ok',
-        websocket: 'ok',
-      },
-    });
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({
+        serverHealth: {
+          api: 'ok',
+          database: 'unreachable',
+          redis: 'ok',
+          websocket: 'ok',
+        },
+      }),
+    );
 
     const { ensureGraphqlIsReachable: ensureGraphqlIsReachable } =
       await import('../openthrottle-ralph-graphql.js');
@@ -59,13 +71,48 @@ describe('openthrottle-ralph-graphql', () => {
     );
   });
 
+  it('ensureGraphqlIsReachable classifies a transport failure via the structured GraphqlV2Failure', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue({
+      error: {
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: undefined,
+        kind: 'network',
+        message: 'fetch failed',
+      },
+      ok: false,
+    });
+
+    const { ensureGraphqlIsReachable } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await expect(ensureGraphqlIsReachable()).rejects.toBeInstanceOf(
+      WorkflowGraphqlError,
+    );
+
+    executeWorkflowGraphqlV2Mock.mockResolvedValue({
+      error: {
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: undefined,
+        kind: 'network',
+        message: 'fetch failed',
+      },
+      ok: false,
+    });
+
+    await expect(ensureGraphqlIsReachable()).rejects.toThrow(/unreachable/);
+  });
+
   it('updatePlanStatusGraphql returns null when plan is already IN_PROGRESS', async () => {
     executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
       if (document === GetPlanDocument) {
-        return { plan: { ...planRow, status: 'IN_PROGRESS' } };
+        return ok({ plan: { ...planRow, status: 'IN_PROGRESS' } });
       }
 
-      return {};
+      return ok({});
     });
 
     const { updatePlanStatusGraphql } =
@@ -80,24 +127,24 @@ describe('openthrottle-ralph-graphql', () => {
   it('insertCommitLinkGraphql orchestrates the generic ledger primitives (no linkCommit)', async () => {
     executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
       if (document === RalphStartWorkSessionDocument) {
-        return { startWorkSession: { id: 'session-1' } };
+        return ok({ startWorkSession: { id: 'session-1' } });
       }
       if (document === RalphAttachWorkSessionSubjectDocument) {
-        return { attachWorkSessionSubject: { id: 'subject-1' } };
+        return ok({ attachWorkSessionSubject: { id: 'subject-1' } });
       }
       if (document === RalphRecordWorkArtifactDocument) {
-        return {
+        return ok({
           recordWorkArtifact: {
             createdAt: '2026-07-19T00:00:00.000Z',
             id: 'artifact-1',
             message: 'PR title',
           },
-        };
+        });
       }
       if (document === RalphEndWorkSessionDocument) {
-        return { endWorkSession: { id: 'session-1' } };
+        return ok({ endWorkSession: { id: 'session-1' } });
       }
-      return {};
+      return ok({});
     });
 
     const { insertCommitLinkGraphql } =

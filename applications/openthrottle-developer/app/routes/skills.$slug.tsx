@@ -17,8 +17,14 @@ import type { Route } from '@/app/routes/+types/skills.$slug';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.params.slug ?? 'Skill',
-  links: (_match) => [],
+  breadcrumb: (match) => match.params.slug,
+  links: (_match) => [
+    {
+      children: 'Skills',
+      label: 'Skills',
+      to: '/skills',
+    },
+  ],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {

@@ -15,12 +15,11 @@ import {
 
 const monorepoRootCandidate = join(import.meta.dirname, '../../../../../../..');
 
-// Fan-out layouts skill-sync materializes; discoverRepoSkills scans these, not
-// the canonical `skills/` root.
+// Layouts discoverRepoSkills scans: the `.agents/skills` SSOT view plus the
+// generated fan-out, not the canonical `skills/` root.
 const SKILL_LAYOUT_DIRS = [
   '.agents/skills',
   '.claude/skills',
-  '.cursor/skills',
   '.opencode/skills',
 ] as const;
 
@@ -58,7 +57,7 @@ describe('discoverRepoSkills monorepo integration', () => {
   const monorepoRoot = findMonorepoRootFromPath(monorepoRootCandidate);
 
   test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
-    'dedupes symlinked cursor skills and reports unique slugs per layout',
+    'dedupes symlinked fan-out skills and reports unique slugs',
     () => {
       if (monorepoRoot === null) {
         throw new Error('monorepoRoot should be resolved when test runs');
@@ -71,7 +70,7 @@ describe('discoverRepoSkills monorepo integration', () => {
       expect(counts.agents).toBe(
         countOnDiskSkillFolders(monorepoRoot, '.agents/skills'),
       );
-      expect(counts.agents + counts.cursor).toBe(entries.length);
+      expect(counts.agents).toBe(entries.length);
     },
   );
 

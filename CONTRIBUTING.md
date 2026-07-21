@@ -190,33 +190,26 @@ If you need to update technology tags for an existing project:
 
 ## Agent assets (skills & rules)
 
-OpenThrottle uses **`.agents/` as the single source of truth** for skill and rule bodies. Editor folders (`.cursor/`, `.claude/`, repo-root `skills/`) are **symlink views** only — edit `.agents/` in your PR.
+**Skills** are managed by the **`skill-sync`** skill; **rules / personas / prompts** use `.agents/` as their source of truth. See [`skills/skill-sync/SKILL.md`](skills/skill-sync/SKILL.md) (mechanism) and [docs/Skills.md](docs/Skills.md) (adoption policy + installed set).
 
-| Asset              | Write (SSOT)                                        | Load (symlink view)                             |
-| ------------------ | --------------------------------------------------- | ----------------------------------------------- |
-| Skills             | [`.agents/skills/<slug>/SKILL.md`](.agents/skills/) | `.cursor/skills/`, `.claude/skills/`, `skills/` |
-| Rules              | [`.agents/rules/**/*.mdc`](.agents/rules/)          | `.cursor/rules/`                                |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`             | Ralph `--prompt-file`                           |
+| Asset              | Author here (SSOT)                                                                      | Generated (never hand-edit)                          |
+| ------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| OT-owned skills    | [`skills/<slug>/SKILL.md`](skills/)                                                     | `.agents/skills/<slug>` (symlink), `.claude/skills/` |
+| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json`) | `.claude/skills/` fan-out                            |
+| Rules              | [`.agents/rules/**/*.mdc`](.agents/rules/)                                              | `.cursor/rules/`                                     |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                 | Ralph `--prompt-file`                                |
 
 **Workflow:**
 
-1. Add or change content under `.agents/skills/` or `.agents/rules/` only.
-2. Run `pnpm nx run monorepo:check-agent-assets-ssot` before pushing (also: `pnpm run check:local:agent-assets`).
-3. Open a git PR — **do not** edit agent assets in the `custom_prompts` DB; disk is write authority and DB ingest is plan 1.5.
+1. Author an OT-owned skill under `skills/<slug>/` (add its `skill-tag-overlays.json` entry), or install an external one via `npx skills add … --agent universal`. Edit rules under `.agents/rules/` only. **Never** hand-edit `.agents/skills/` or `.claude/skills/` — they're generated.
+2. Run `bash skills/skill-sync/scripts/sync.sh` to (re)generate the layout, then `pnpm nx run monorepo:check-agent-assets-ssot` before pushing (also: `pnpm run check:local:agent-assets`).
+3. Open a git PR — **do not** edit agent assets in the `custom_prompts` DB; disk is write authority.
 
-**Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, local `.cursor/mcp.json` (copy from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) for the full tree.
+**Editor-native (not generated):** `.cursor/hooks.json`, local `.cursor/mcp.json` (copy from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) for the full tree.
 
-**Windows clones:** Enable symlink support — `git config core.symlinks true` — or clone inside WSL. Without symlinks, editor trees may appear as plain files and CI will fail.
+**Windows clones:** Enable symlink support — `git config core.symlinks true` — or clone inside WSL. Without symlinks, generated trees may appear as plain files and CI will fail.
 
-**Recreate symlinks** after adding a skill slug (from repo root):
-
-```bash
-ln -s ../../.agents/skills/<slug> .cursor/skills/<slug>
-ln -s ../../.agents/skills/<slug> .claude/skills/<slug>
-ln -s ../.agents/skills/<slug> skills/<slug>
-```
-
-For rules, symlink each new `.mdc` from `.agents/rules/` into the matching `.cursor/rules/` path. Details: [agent-assets-canonical-layout.md](docs/monorepo/agent-assets-canonical-layout.md).
+**To customize an external skill:** don't edit the vendored copy (it stays 1:1 with upstream and re-sync would overwrite it) — author a companion skill or rule in `skills/` / `.agents/rules/` that references it (exemplar: `.agents/rules/coding/frontend-design-openthrottle.mdc`). See [docs/Skills.md](docs/Skills.md).
 
 ## General Guidelines
 

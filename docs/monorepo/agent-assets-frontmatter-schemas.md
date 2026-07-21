@@ -87,6 +87,6 @@ Script: [`scripts/validate-agent-assets-frontmatter.ts`](../../scripts/validate-
 
 ## Related docs
 
-- [agent-assets-canonical-layout.md](./agent-assets-canonical-layout.md) — SSOT layout
+- [docs/Skills.md](../Skills.md) — skill adoption policy + layout; [skill-sync SKILL.md](../../skills/skill-sync/SKILL.md) — the skill-layout mechanism
 - Plan output ADR (task `b7a44bc8`) — D2 disk vs DB authority
 - [`.agents/personas/README.md`](../../.agents/personas/README.md) — persona format

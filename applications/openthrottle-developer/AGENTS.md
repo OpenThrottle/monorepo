@@ -49,7 +49,7 @@ for devtools/profiling/troubleshooting.
   flipping `reportOnly` only affects prod. Add third-party origins via the `additional*Src` arrays,
   never by loosening the shared builder.
 - **Skills route reads the filesystem, not a TS registry.** `/skills` and the agents area discover
-  skills from `.agents/skills` + `.cursor/skills` at request time via
+  skills from `.agents/skills` (the SSOT view; `.claude/skills` fan-out deduped in) at request time via
   `app/routing/agents/data/resolve-monorepo-root.server.ts`. Root resolution: `WORKSPACE_ROOT` env
   (same var as the server — never invent `MONOREPO_ROOT`), else walk up ≤12 levels for a dir with
   both `nx.json` and `pnpm-workspace.yaml`, else `null` (empty list, no throw — deployed builds

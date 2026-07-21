@@ -19,11 +19,11 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   },
   {
     disableModelInvocation: undefined,
-    layout: 'cursor',
-    repoRelativePath: '.cursor/skills/unique-beta/SKILL.md',
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/unique-beta/SKILL.md',
     slug: 'unique-beta',
     source: 'external',
-    summary: 'Beta summary only in cursor tree.',
+    summary: 'Beta summary for registry tests.',
     tags: undefined,
   },
 ];
@@ -40,12 +40,11 @@ describe('AgentsSkillsRegistry', () => {
     render(<RoutesStub />);
 
     expect(screen.getByText(/0 skills under/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 under/i)).toBeInTheDocument();
 
     const emptyMessages = screen.getAllByText(
       /No matching entries in this section/i,
     );
-    expect(emptyMessages).toHaveLength(2);
+    expect(emptyMessages).toHaveLength(1);
   });
 
   test('renders layout counts and entry slugs for provided entries', () => {
@@ -59,8 +58,7 @@ describe('AgentsSkillsRegistry', () => {
 
     render(<RoutesStub />);
 
-    expect(screen.getByText(/1 skills under/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 under/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 skills under/i)).toBeInTheDocument();
     expect(screen.getByText('unique-alpha')).toBeInTheDocument();
     expect(screen.getByText('unique-beta')).toBeInTheDocument();
   });

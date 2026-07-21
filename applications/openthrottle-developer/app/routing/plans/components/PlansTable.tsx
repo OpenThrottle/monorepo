@@ -1,7 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { ArrowRightIcon, SlidersHorizontal } from 'lucide-react';
 import {
   Button,
   DataTable,
@@ -11,16 +10,17 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
+import { PlayCircleIcon, SlidersHorizontal } from 'lucide-react';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
-import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import { Link, useFetcher, useSearchParams } from 'react-router';
 import {
   isPlanStatusKey,
   PlanStatusBadge,
 } from '~/routing/plans/components/PlanStatusBadge';
+import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { Link, useFetcher, useSearchParams } from 'react-router';
+import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { PlanStatusKey } from '~/routing/plans/types';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
-import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 
@@ -72,39 +72,6 @@ PlansTable.buildTable = (
   runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
-    // {
-    //   accessorKey: 'status',
-    //   cell: ({ row }) => {
-    //     const status = row.original.status;
-    //     const statusRaw = status ?? '';
-    //     const statusKey: PlanStatusKey = isPlanStatusKey(statusRaw)
-    //       ? statusRaw
-    //       : 'PENDING';
-
-    //     const isNull = status === null;
-    //     const url = !isNull ? statusFilterUrls?.[status] : undefined;
-    //     const badge = <PlanStatusBadge status={statusKey} />;
-
-    //     if (!url) {
-    //       return badge;
-    //     }
-
-    //     return (
-    //       <div className="text-center">
-    //         <Link
-    //           aria-label={`Filter by ${getPlanStatusLabel(status)}`}
-    //           to={url}
-    //           viewTransition={true}
-    //         >
-    //           {badge}
-    //         </Link>
-    //       </div>
-    //     );
-    //   },
-    //   header: () => (
-    //     <span className="inline-block w-full text-center">Status</span>
-    //   ),
-    // },
     {
       accessorKey: 'taskCount',
       cell: ({ row }) => {
@@ -231,18 +198,7 @@ PlansTable.buildTable = (
         const RunPlanForm = runPlanFetcher.Form;
 
         return (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              asChild={true}
-              className="text-xs"
-              size="xs"
-              variant="outline"
-            >
-              <Link to={`/plans/${planId}`} viewTransition={true}>
-                {/* Plan Details */}
-                <ArrowRightIcon className="size-4" />
-              </Link>
-            </Button>
+          <div className="flex flex-nowrap items-center gap-2">
             <KillPlanRunButton
               planId={planId}
               planTitle={row.original.title ?? 'Untitled'}
@@ -259,7 +215,11 @@ PlansTable.buildTable = (
                 type="submit"
                 variant="outline"
               >
-                {isQueuing ? 'Queuing…' : 'Queue Plan'}
+                <PlayCircleIcon
+                  aria-hidden={true}
+                  className="size-3.5 shrink-0"
+                />
+                {isQueuing ? 'Queuing…' : 'Queue'}
               </Button>
             </RunPlanForm>
           </div>
