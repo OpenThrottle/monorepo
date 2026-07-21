@@ -13,6 +13,7 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
   - Setup notes: `docs/infra/gcs-nx-cache-verify.md`.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
+- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
 
 **Features:**
 
@@ -73,7 +74,6 @@ We make heavy use of generators in this monorepo, from generating a React Compon
 
 - [@nx/nest](https://nx.dev/nx-api/nest)
 - [@nx/react](https://nx.dev/nx-api/react)
-- [@nx/remix](https://nx.dev/nx-api/remix)
 
 ## 🧩 Plugins
 
@@ -82,27 +82,22 @@ We make heavy use of generators in this monorepo, from generating a React Compon
 - https://nx.dev/nx-api/powerpack-owners
 - [@nx/eslint-plugin](https://nx.dev/nx-api/eslint-plugin)
 
-## Custom Generator via a NX Plugin
+## Local Nx inference plugins (`tools/nx-plugins/`)
 
-```bash
-# Create a new plugin in our tools directory
-nx g @nx/plugin:plugin tools/tailwind-sync-plugin
+This workspace ships two local `createNodesV2` inference plugins, registered in `nx.json`:
 
-# In the plugin, create a new generator that we can run
-nx g @nx/plugin:generator --name=update-tailwind-globs --path=tools/tailwind-sync-plugin/src/generators/update-tailwind-globs
+```jsonc
+// nx.json
+"plugins": [
+  // ...
+  { "plugin": "./tools/nx-plugins/react-router-typecheck.ts" },
+  { "plugin": "./tools/nx-plugins/package-typecheck.ts" }
+]
 ```
 
-```json
-// ...
-"nx": {
-  "targets": {
-    "build": {
-      "syncGenerators": ["@aishop/tailwind-sync-plugin:update-tailwind-globs"]
-    },
-    "serve": {
-      "syncGenerators": ["@aishop/tailwind-sync-plugin:update-tailwind-globs"]
-    }
-  }
-}
-// ...
-```
+Both infer a real `typecheck` target so the policy lives once at the workspace root instead of drifting per project:
+
+- **`react-router-typecheck.ts`** — matches `applications/*/react-router.config.ts`. React Router apps are source-first (no dist emit), so the target runs `react-router typegen && tsc --noEmit` over source + tests, with `outputs: []`.
+- **`package-typecheck.ts`** — matches projects with a `tsconfig.lib.json`/`tsconfig.app.json` (buildable packages and the NestJS server). The target runs `tsc --build --emitDeclarationOnly` (emitting dist `.d.ts` as outputs), then `tsc --noEmit -p tsconfig.test.json` when a test tsconfig exists.
+
+`nx.json` `targetDefaults.typecheck` still layers `cache`/`dependsOn` (`^typecheck`) on top of what these plugins infer.

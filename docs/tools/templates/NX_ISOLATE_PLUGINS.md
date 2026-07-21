@@ -2,7 +2,7 @@
 
 ## What It Is
 
-`NX_ISOLATE_PLUGINS` is **not an official Nx environment variable**. It appears to be a workaround for sandboxed execution environments where Nx cannot spawn plugin worker processes.
+`NX_ISOLATE_PLUGINS` is a **real Nx environment variable** that controls whether Nx loads project-graph plugins in isolated worker processes. Setting it to `false` forces plugins to load in-process. This workspace requires it for generator commands because `@tools/generators` ships **uncompiled-TypeScript generator factories** (`generators.json` points at `./src/...`), which Nx's isolated plugin workers can't resolve (see `tools/generators/AGENTS.md`). It also doubles as a workaround for sandboxed execution environments where Nx cannot spawn plugin worker processes.
 
 ## What It Does
 
@@ -110,7 +110,7 @@ export NX_ISOLATE_PLUGINS=false
 ### Option 3: Per-Command Prefix (Current Approach)
 
 ```bash
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix ...
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router ...
 ```
 
 **Pros:**

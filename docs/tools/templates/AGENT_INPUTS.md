@@ -82,13 +82,13 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --describe
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --list=<key>
 # Examples: --list=destinations, --list=applications, --list=componentFolders --application=openthrottle-developer
 
-# 4. Run generator (use --subGenerator for react/remix/nestjs)
+# 4. Run generator (use --subGenerator for react/react-router/nestjs)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --subGenerator=<type> --<option>=<value> --name=<Name>
 ```
 
 ### 2.2 Per-generator examples
 
-See **[EXAMPLES.md](./EXAMPLES.md)** for copy-paste examples (React, Remix, NestJS, package, folders). **Caveat:** EXAMPLES.md currently omits the `NX_ISOLATE_PLUGINS=false` prefix in some blocks; agents must **always** add it. The authoritative command reference is **[AGENT_USAGE.md](./AGENT_USAGE.md)**.
+See **[EXAMPLES.md](./EXAMPLES.md)** for copy-paste examples (React, React Router, NestJS, package, folders). **Caveat:** EXAMPLES.md currently omits the `NX_ISOLATE_PLUGINS=false` prefix in some blocks; agents must **always** add it. The authoritative command reference is **[AGENT_USAGE.md](./AGENT_USAGE.md)**.
 
 ### 2.3 Other agent-relevant commands
 

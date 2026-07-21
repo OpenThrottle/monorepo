@@ -1,21 +1,21 @@
-# Remix Generator Reference
+# React Router Generator Reference
 
-Generate Remix applications, components, forms, modals, routes, and tables.
+Generate React Router applications, components, forms, modals, routes, and tables.
 
 ## Quick Start
 
 ```bash
 # Get schema
-nx g @tools/generators:remix --describe
+nx g @tools/generators:react-router --describe
 
 # List applications
-nx g @tools/generators:remix --list=applications
+nx g @tools/generators:react-router --list=applications
 
 # List folders for an application
-nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer
+nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 
 # Generate component
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -24,11 +24,11 @@ nx g @tools/generators:remix \
 
 ## Sub-Generators
 
-- `application` - Generate a Remix application
-- `component` - Generate a Remix component
+- `application` - Generate a React Router application
+- `component` - Generate a React Router component
 - `form` - Generate a Formik form
 - `modal` - Generate a modal component
-- `route` - Generate a Remix route
+- `route` - Generate a React Router route
 - `table` - Generate a table component
 
 ## Parameters
@@ -51,7 +51,7 @@ nx g @tools/generators:remix \
 ### Application
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=application \
   --name=new-app
 ```
@@ -59,7 +59,7 @@ nx g @tools/generators:remix \
 ### Component
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -69,7 +69,7 @@ nx g @tools/generators:remix \
 ### Form (must end with 'Form')
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
@@ -79,7 +79,7 @@ nx g @tools/generators:remix \
 ### Modal (must end with 'Modal')
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=modal \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -89,7 +89,7 @@ nx g @tools/generators:remix \
 ### Route
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=api.users
@@ -98,7 +98,7 @@ nx g @tools/generators:remix \
 ### Table (must end with 'Table')
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=table \
   --application=openthrottle-developer \
   --folder=routing/users/components \

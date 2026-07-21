@@ -12,7 +12,7 @@ Ground truth for project names: `nx show projects` and `nx graph` in this reposi
 
 | Application                               | Type         | Tags / stack                                                      | In scope for audit     |
 | ----------------------------------------- | ------------ | ----------------------------------------------------------------- | ---------------------- |
-| **React Router (Remix-style generators)** | Web UI       | `type:application`, `technology:react`, `technology:react-router` | Yes                    |
+| **React Router (react-router generator)** | Web UI       | `type:application`, `technology:react`, `technology:react-router` | Yes                    |
 | openthrottle                              | React Router | ✓                                                                 | Yes                    |
 | openthrottle-admin                        | React Router | ✓                                                                 | Yes                    |
 | openthrottle-developer                    | React Router | ✓                                                                 | Yes                    |
@@ -36,13 +36,13 @@ Ground truth for project names: `nx show projects` and `nx graph` in this reposi
 
 Align with **@tools/generators** generators:
 
-| Generator   | Sub-types / types                                    | Typical locations                                       | Audit checks                                                            |
-| ----------- | ---------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **remix**   | component, form, modal, route, table                 | `applications/<app>/app/**/*.tsx`                       | Naming (PascalCase, *Form, *Modal, \*Table), structure, generator usage |
-| **react**   | component, hook, util                                | `packages/*/src/components`, `hooks`, `utils`           | Naming, default exports, generator usage                                |
-| **nestjs**  | graphql-service, simple-service, module, application | `applications/openthrottle-server/**`, `packages/*/src` | Naming (kebab-case), ListResult/Result patterns                         |
-| **folders** | folder set                                           | Under app route/service                                 | Structure matches generator                                             |
-| **package** | react, nestjs, node, tools                           | New packages                                            | Only when auditing “was this scaffolded?”                               |
+| Generator        | Sub-types / types                                    | Typical locations                                       | Audit checks                                                            |
+| ---------------- | ---------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **react-router** | component, form, modal, route, table                 | `applications/<app>/app/**/*.tsx`                       | Naming (PascalCase, *Form, *Modal, \*Table), structure, generator usage |
+| **react**        | component, hook, util                                | `packages/*/src/components`, `hooks`, `utils`           | Naming, default exports, generator usage                                |
+| **nestjs**       | graphql-service, simple-service, module, application | `applications/openthrottle-server/**`, `packages/*/src` | Naming (kebab-case), ListResult/Result patterns                         |
+| **folders**      | folder set                                           | Under app route/service                                 | Structure matches generator                                             |
+| **package**      | react, nestjs, node, tools                           | New packages                                            | Only when auditing “was this scaffolded?”                               |
 
 ---
 
