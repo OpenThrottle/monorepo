@@ -6,6 +6,7 @@ import {
   AgenticWorkflowRalph,
   NestjsAgenticWorkflowModule,
 } from '@openthrottle/nestjs-agentic-workflow';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import { buildWorkflowExecuteGraphqlV2Options } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
@@ -25,6 +26,7 @@ import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic
 @Module({
   exports: [AgenticRalphOrchestratorService],
   imports: [
+    NestjsRepositoriesModule,
     NestjsAgenticWorkflowModule.registerWorkflow({
       executeGraphqlV2,
       providers: [

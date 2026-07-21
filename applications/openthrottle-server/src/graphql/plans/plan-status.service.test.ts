@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import {
   Plan,
+  PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -8,6 +9,7 @@ import { NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanStatusService } from './plan-status.service';
@@ -54,6 +56,8 @@ describe('PlanStatusService', () => {
   });
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
+  const mockPublishCancel = vi.fn().mockResolvedValue(undefined);
+  const mockStampCancelRequested = vi.fn().mockResolvedValue(null);
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(repo),
   });
@@ -63,8 +67,14 @@ describe('PlanStatusService', () => {
 
   const service = new PlanStatusService(
     mockNotificationsService,
+    createMock<PlanCancelChannelService>({
+      publishCancel: mockPublishCancel,
+    }),
     createMock<PlanRunCancellationService>({
       abort: mockPlanRunCancellationAbort,
+    }),
+    createMock<PlanRunsService>({
+      stampCancelRequested: mockStampCancelRequested,
     }),
     mockPlansService,
     mockTasksService,
@@ -79,6 +89,10 @@ describe('PlanStatusService', () => {
     mockGetJobs.mockReset();
     mockGetJobs.mockResolvedValue([]);
     mockPlanRunCancellationAbort.mockReturnValue(false);
+    mockPublishCancel.mockClear();
+    mockPublishCancel.mockResolvedValue(undefined);
+    mockStampCancelRequested.mockClear();
+    mockStampCancelRequested.mockResolvedValue(null);
     mockEmitTaskStatusChanged.mockClear();
     mockTaskUpdateExecute.mockResolvedValue({
       affected: 0,
@@ -271,16 +285,56 @@ describe('PlanStatusService', () => {
       );
     });
 
-    test('returns noMatchingJob when the queue has no matching jobs', async () => {
-      repo.findOne.mockResolvedValue(mockPlan);
+    test('returns NO_ACTIVE_RUN when there is no job and the plan is not cancelable', async () => {
+      // A PENDING plan has no live run; cancel is a no-op and must not stamp/publish.
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
       mockGetJobs.mockResolvedValue([]);
 
       const result = await service.cancelRun(mockPlan.id);
 
       expect(result.noMatchingJob).toBe(true);
-      expect(result.removedJobIds).toEqual([]);
+      expect(result.outcome).toBe('NO_ACTIVE_RUN');
+      expect(result.cancelRequested).toBe(false);
       expect(result.planStatusAfter).toBeNull();
       expect(result.signaledActiveRunToStop).toBe(false);
+      expect(mockStampCancelRequested).not.toHaveBeenCalled();
+      expect(mockPublishCancel).not.toHaveBeenCalled();
+    });
+
+    test('signals an active (IN_PROGRESS) run cross-process and reports RUN_STOPPING', async () => {
+      // No local controller and no removable job, but the plan is executing: the durable marker +
+      // pub/sub reach a run owned by another process/host (the cross-process guarantee).
+      repo.findOne
+        .mockResolvedValueOnce({ ...mockPlan, status: 'IN_PROGRESS' })
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      mockGetJobs.mockResolvedValue([]);
+      mockPlanRunCancellationAbort.mockReturnValue(false);
+      mockStampCancelRequested.mockResolvedValue('run-1');
+
+      const result = await service.cancelRun(mockPlan.id, 'user-42');
+
+      expect(mockStampCancelRequested).toHaveBeenCalledWith(
+        mockPlan.id,
+        'user-42',
+      );
+      expect(mockPublishCancel).toHaveBeenCalledWith(mockPlan.id);
+      expect(result.cancelRequested).toBe(true);
+      expect(result.outcome).toBe('RUN_STOPPING');
+      expect(result.planStatusAfter).toBe('PENDING');
+    });
+
+    test('reports RUN_STOPPING when the local controller aborts (same process)', async () => {
+      repo.findOne
+        .mockResolvedValueOnce({ ...mockPlan, status: 'IN_PROGRESS' })
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      mockGetJobs.mockResolvedValue([]);
+      mockPlanRunCancellationAbort.mockReturnValue(true);
+      mockStampCancelRequested.mockResolvedValue('run-1');
+
+      const result = await service.cancelRun(mockPlan.id);
+
+      expect(result.signaledActiveRunToStop).toBe(true);
+      expect(result.outcome).toBe('RUN_STOPPING');
     });
 
     test('removes a waiting job and sets plan and tasks to PENDING', async () => {
@@ -307,6 +361,7 @@ describe('PlanStatusService', () => {
 
       expect(remove).toHaveBeenCalledOnce();
       expect(result.removedJobIds).toEqual(['job-99']);
+      expect(result.outcome).toBe('RUN_CANCELLED');
       expect(result.planStatusAfter).toBe('PENDING');
       expect(repo.update).toHaveBeenCalledWith(
         { id: mockPlan.id },
@@ -357,7 +412,7 @@ describe('PlanStatusService', () => {
         },
       ]);
       repo.findOne
-        .mockResolvedValueOnce(mockPlan)
+        .mockResolvedValueOnce({ ...mockPlan, status: 'IN_PROGRESS' })
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
       mockTaskUpdateExecute.mockResolvedValueOnce({
         affected: 1,

@@ -29,18 +29,13 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
-  RUN_PLAN_SPAWN_JOB_NAME,
 } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import {
   normalizeIdempotencyKey,
   QueuesService,
 } from '../queues/queues.service';
-import {
-  buildRunPlanJobData,
-  buildRunPlanOrchestratorJobData,
-  resolveDefaultPlanRunKind,
-} from './enqueue-plan-ralph-tuning';
+import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning';
 import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 import type { RalphPlanRunTuningInput } from './plan.input';
 
@@ -121,9 +116,13 @@ export class PlanEnqueueService {
   }
 
   /**
-   * @description Enqueue a spawn plan-run (nested workflow-ralph in the worker). When the deployment
-   * defaults to the in-process orchestrator (resolveDefaultPlanRunKind), this delegates to
-   * {@link PlanEnqueueService.enqueueOrchestrator}, preserving the resolver's prior routing.
+   * @description Enqueue a plan-run for the `enqueuePlanRun` mutation. The nested-`workflow-ralph`
+   * spawn worker path was removed (OT plan 2ab62876): `PlansProcessor` only runs the in-process
+   * GraphQL orchestrator, so every queued run is enqueued as an orchestrator run. Kept as a named
+   * method (delegating to {@link PlanEnqueueService.enqueueOrchestrator}) so the resolver's
+   * `enqueuePlanRun`/`workflowPlanRun` entry points stay stable; the old
+   * `OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` rollback knob is gone because there is no spawn worker to
+   * roll back to.
    */
   async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
     const {
@@ -136,83 +135,17 @@ export class PlanEnqueueService {
       workingDirectory,
     } = params;
 
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-
-    if (!plan) {
-      throw new NotFoundException(`🟡 3 - Plan not found: ${planId}`);
-    }
-
-    // Orchestrator-by-default: queued runs use the in-process GraphQL orchestrator unless the
-    // deployment opts back into spawn via OPENTHROTTLE_DEFAULT_RUN_KIND=spawn (Stage (a) rollback).
-    if (resolveDefaultPlanRunKind() === 'orchestrator') {
-      return this.enqueueOrchestrator({
-        actorUserId,
-        idempotencyKey: idempotencyKey ?? null,
-        jobRunHooksJson,
-        mode: null,
-        planId,
-        priority,
-        ralph,
-        taskId: null,
-        workingDirectory,
-      });
-    }
-
-    const materializedHookEntries =
-      await this.resolveMaterializedHookEntries(planId);
-
-    let jobData: RunPlanJobData;
-    try {
-      jobData = buildRunPlanJobData({
-        jobRunHooksJson,
-        materializedHookEntries,
-        planId,
-        planJobRunHooks: plan.jobRunHooks,
-        ralph,
-        workingDirectory,
-      });
-    } catch (error) {
-      throw new BadRequestException(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-
-    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    // Validate the caller idempotency key before the transaction so we never commit then fail.
-    const normalizedKey = normalizeIdempotencyKey(idempotencyKey);
-    if ('error' in normalizedKey) {
-      throw new BadRequestException(normalizedKey.error);
-    }
-    const jobId = normalizedKey.key ?? randomUUID();
-    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
-
-    await this.commitEnqueueTransaction({
+    return this.enqueueOrchestrator({
       actorUserId,
-      bullmqJobId: jobId,
-      executionBackend: jobData.executionBackend ?? 'cursor',
+      idempotencyKey: idempotencyKey ?? null,
+      jobRunHooksJson,
+      mode: null,
       planId,
-      runConfigSnapshot,
-      runKind: 'spawn',
+      priority,
+      ralph,
+      taskId: null,
+      workingDirectory,
     });
-
-    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
-      jobId,
-      priority: jobPriority,
-    });
-
-    const { queuePosition, queueTotal } = await this.emitQueuePosition(
-      planId,
-      String(job.id),
-    );
-
-    return {
-      executionBackend: jobData.executionBackend ?? 'cursor',
-      jobId,
-      planId,
-      queuePosition,
-      queueTotal,
-    };
   }
 
   /**

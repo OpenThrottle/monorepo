@@ -2,11 +2,12 @@ import { describe, expect, test } from 'vitest';
 import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 
 describe('buildPlanRunConfigSnapshotFromJobData', () => {
-  test('maps spawn job data to plan-target snapshot', () => {
+  test('maps orchestrator job data to plan-target snapshot', () => {
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
       executionBackend: 'cursor',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
       ralph: { iterations: 5 },
+      runKind: 'orchestrator',
       workingDirectory: '/tmp/repo',
     });
 

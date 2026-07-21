@@ -35,7 +35,7 @@ import { QueuesService } from './queues.service';
 
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
   return createMock<Job<RunPlanJobData, void>>({
-    data: { planId: 'plan-1' },
+    data: { planId: 'plan-1', runKind: 'orchestrator' },
     failedReason: undefined,
     finishedOn: undefined,
     getState: vi.fn().mockResolvedValue('completed'),
@@ -361,7 +361,9 @@ describe('QueuesService', () => {
         name: 'run-plan',
         state: 'completed',
       });
-      expect(result.jobs[0].data).toBe(JSON.stringify({ planId: 'plan-1' }));
+      expect(result.jobs[0].data).toBe(
+        JSON.stringify({ planId: 'plan-1', runKind: 'orchestrator' }),
+      );
     });
 
     test('sets hasNext when more jobs than limit returned', async () => {
@@ -417,7 +419,9 @@ describe('QueuesService', () => {
         name: 'run-plan',
         state: 'completed',
       });
-      expect(result?.data).toBe(JSON.stringify({ planId: 'plan-1' }));
+      expect(result?.data).toBe(
+        JSON.stringify({ planId: 'plan-1', runKind: 'orchestrator' }),
+      );
       expect(mockGetJob).toHaveBeenCalledWith('job-99');
     });
   });
@@ -486,17 +490,17 @@ describe('QueuesService', () => {
 
     test('filters completed jobs by planId and caps limit', async () => {
       const jobPlanA1 = createMockJob({
-        data: { planId: 'plan-a' },
+        data: { planId: 'plan-a', runKind: 'orchestrator' },
         getState: vi.fn().mockResolvedValue('completed'),
         id: 'j1',
       });
       const jobPlanB = createMockJob({
-        data: { planId: 'plan-b' },
+        data: { planId: 'plan-b', runKind: 'orchestrator' },
         getState: vi.fn().mockResolvedValue('completed'),
         id: 'j2',
       });
       const jobPlanA2 = createMockJob({
-        data: { planId: 'plan-a' },
+        data: { planId: 'plan-a', runKind: 'orchestrator' },
         getState: vi.fn().mockResolvedValue('completed'),
         id: 'j3',
       });
@@ -509,12 +513,18 @@ describe('QueuesService', () => {
       expect(result[0].id).toBe('j1');
       expect(result[1].id).toBe('j3');
       expect(result[0].executionBackend).toBe('cursor');
-      expect(result[0].data).toBe(JSON.stringify({ planId: 'plan-a' }));
+      expect(result[0].data).toBe(
+        JSON.stringify({ planId: 'plan-a', runKind: 'orchestrator' }),
+      );
     });
 
     test('reads execution backend from completed plan run job data', async () => {
       const job = createMockJob({
-        data: { executionBackend: 'claude', planId: 'plan-a' },
+        data: {
+          executionBackend: 'claude',
+          planId: 'plan-a',
+          runKind: 'orchestrator',
+        },
         id: 'j1',
       });
       mockGetJobs.mockResolvedValueOnce([job]);
@@ -878,7 +888,7 @@ describe('QueuesService', () => {
 
     test('returns new jobId when duplicate succeeds', async () => {
       const mockJob = createMockJob({
-        data: { planId: 'plan-99' },
+        data: { planId: 'plan-99', runKind: 'orchestrator' },
         id: 'job-1',
         name: 'run-plan',
       });
@@ -891,7 +901,10 @@ describe('QueuesService', () => {
 
       expect(result).toEqual({ jobId: 'duplicated-job-id' });
       expect(mockGetJob).toHaveBeenCalledWith('job-1');
-      expect(mockAdd).toHaveBeenCalledWith('run-plan', { planId: 'plan-99' });
+      expect(mockAdd).toHaveBeenCalledWith('run-plan', {
+        planId: 'plan-99',
+        runKind: 'orchestrator',
+      });
     });
 
     test('returns error when add returns job without id', async () => {
@@ -904,7 +917,10 @@ describe('QueuesService', () => {
       const result = await service.duplicateJob(PLANS_QUEUE_NAME, 'job-1');
 
       expect(result).toEqual({ error: 'Failed to get new job id' });
-      expect(mockAdd).toHaveBeenCalledWith('run-plan', { planId: 'plan-1' });
+      expect(mockAdd).toHaveBeenCalledWith('run-plan', {
+        planId: 'plan-1',
+        runKind: 'orchestrator',
+      });
     });
   });
 

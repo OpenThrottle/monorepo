@@ -103,7 +103,9 @@ mutation PlanDetailEvaluatePlanRules($planId: ID!) {
 mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
   cancelPlanRun(input: $input) {
     activeJobIdsCouldNotCancel
+    cancelRequested
     noMatchingJob
+    outcome
     planId
     planStatusAfter
     removedJobIds

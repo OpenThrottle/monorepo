@@ -95,6 +95,44 @@ export function systemAlertTopic(): string {
 }
 
 /**
+ * Cross-process cancel signal for a single plan's active run: `plan:<planId>:cancel`.
+ * Published by `cancelRun` and delivered to every worker's dedicated control-plane
+ * subscriber, which fires the owning process's in-memory AbortController. Best-effort
+ * fast path; the durable `plan_runs.cancel_requested_at` marker is the guaranteed
+ * fallback. See OT plan 2ab62876 (Channel 2).
+ *
+ * @public
+ */
+export function planCancelTopic(planId: string): string {
+  return instanceTopic('plan', planId, 'cancel');
+}
+
+/**
+ * Redis glob pattern matching every {@link planCancelTopic}: `plan:*:cancel`.
+ * Plan ids are UUIDs (no colons), so the single `*` never over-matches. Used by
+ * the control-plane subscriber's `psubscribe` so a worker need not know which
+ * plan ids it owns ahead of time.
+ *
+ * @public
+ */
+export const PLAN_CANCEL_TOPIC_PATTERN = 'plan:*:cancel';
+
+/**
+ * Extract the plan id from a {@link planCancelTopic} channel name, or null when
+ * the channel is not a well-formed `plan:<id>:cancel`.
+ *
+ * @public
+ */
+export function parsePlanIdFromCancelTopic(channel: string): string | null {
+  const parts = channel.split(':');
+  if (parts.length !== 3 || parts[0] !== 'plan' || parts[2] !== 'cancel') {
+    return null;
+  }
+  const planId = parts[1];
+  return planId.length > 0 ? planId : null;
+}
+
+/**
  * Live tail of a single BullMQ job's keyed run-output lines:
  * `bullmq:<queueName>:<jobId>:logs`. Keyed by both the queue and the job id (a
  * job id is only unique within its queue), so this is not a plain

@@ -15,9 +15,11 @@ import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import {
   PlanOutputStreamService,
+  PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import * as os from 'node:os';
 import {
   runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
@@ -110,6 +112,7 @@ export class PlansProcessor
     private readonly notifications: NotificationsService,
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
+    private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
     private readonly plansService: PlansService,
@@ -424,6 +427,11 @@ export class PlansProcessor
     // Work-ledger run session (best-effort; opened after the plan resolves, closed in finally).
     let workSessionId: string | null = null;
 
+    // Stamp run-location so a cancel request from another process/host can observe
+    // where the run lives (Channel 0 is the in-memory attach above; this is the
+    // durable, cross-process observability half). Cleared in finally alongside detach.
+    await this.stampRunLocation(queueName, jobId);
+
     try {
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
@@ -530,9 +538,53 @@ export class PlansProcessor
       });
       this.bullMqRunOutputRetention.maybePruneAfterJobClose();
       this.planRunCancellation.detach(planId);
+      await this.clearRunLocationSafe(queueName, jobId);
       await this.workLedgerRun.closeRalphSession(
         workSessionId,
         `workflow-ralph run ${jobId}`,
+      );
+    }
+  }
+
+  /**
+   * Best-effort: stamp hostname/pid/worker_id on the plan_runs row for this job
+   * so cross-process cancel can observe where the run executes. Never throws —
+   * location is diagnostic, not on the critical path.
+   */
+  private async stampRunLocation(
+    queueName: string,
+    bullmqJobId: string,
+  ): Promise<void> {
+    try {
+      await this.planRunsService.markRunStarted({
+        bullmqJobId,
+        hostname: os.hostname(),
+        pid: process.pid,
+        queueName,
+        workerId: this.worker?.id ?? null,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to stamp plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /**
+   * Best-effort: clear hostname/pid/worker_id on the plan_runs row when the job
+   * finishes (the cancel marker is intentionally left intact). Never throws.
+   */
+  private async clearRunLocationSafe(
+    queueName: string,
+    bullmqJobId: string,
+  ): Promise<void> {
+    try {
+      await this.planRunsService.clearRunLocation(queueName, bullmqJobId);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
       );
     }
   }

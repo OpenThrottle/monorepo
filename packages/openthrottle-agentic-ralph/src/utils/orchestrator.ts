@@ -344,8 +344,34 @@ export const createWorkflowRalphOrchestrator = (
         );
       }
 
-      const { abortSignal, iterationTimeout, timeout } = context;
+      const {
+        abortSignal,
+        isCancellationRequested,
+        iterationTimeout,
+        timeout,
+      } = context;
       const maxIterations = resolveMaxIterations(context.iterations);
+
+      /**
+       * Cooperative stop check at an iteration boundary. Combines the in-memory
+       * abort signal (Channel 0/2 — set locally or by the pub/sub subscriber)
+       * with the durable cancel marker (Channel 1 — polled here so a missed
+       * pub/sub message still stops the run at the next boundary). A failing
+       * marker read is swallowed to "not cancelled" so it can never crash a run.
+       */
+      const shouldStop = async (): Promise<boolean> => {
+        if (abortSignal?.aborted) {
+          return true;
+        }
+        if (isCancellationRequested === undefined) {
+          return false;
+        }
+        try {
+          return await isCancellationRequested();
+        } catch {
+          return false;
+        }
+      };
 
       const iterationTimeoutSeconds = iterationTimeout ?? timeout ?? undefined;
       const timeoutMs =
@@ -370,7 +396,7 @@ export const createWorkflowRalphOrchestrator = (
             ? startedAtMs + derivedTotalMs
             : undefined;
 
-      if (abortSignal?.aborted) {
+      if (await shouldStop()) {
         return onFinished('workflow_cancelled');
       }
 
@@ -385,7 +411,7 @@ export const createWorkflowRalphOrchestrator = (
        */
       for (let iteration = 1; iteration <= maxIterations; iteration++) {
         // iteration.guard
-        if (abortSignal?.aborted) {
+        if (await shouldStop()) {
           return onFinished('workflow_cancelled');
         }
 
@@ -510,7 +536,7 @@ export const createWorkflowRalphOrchestrator = (
           return onFailure('workflow_unhandled');
         }
 
-        if (abortSignal?.aborted) {
+        if (await shouldStop()) {
           return onFinished('workflow_cancelled');
         }
 

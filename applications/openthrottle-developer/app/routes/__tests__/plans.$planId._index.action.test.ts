@@ -340,7 +340,9 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
     const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
+      cancelRequested: false,
       noMatchingJob: false,
+      outcome: 'RUN_CANCELLED',
       planId: '80864bba-630a-451d-bfd2-4b25ec202381',
       planStatusAfter: 'PENDING',
       removedJobIds: ['job-1'],

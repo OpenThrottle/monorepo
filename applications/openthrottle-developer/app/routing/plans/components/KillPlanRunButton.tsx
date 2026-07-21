@@ -15,7 +15,10 @@ import {
 import { StopCircle } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
+import {
+  cancelPlanRunToastTone,
+  describeCancelPlanRunResult,
+} from '~/routing/plans/utils/describe-cancel-plan-run-result';
 
 interface KillPlanRunButtonProps {
   readonly planId: string;
@@ -57,7 +60,13 @@ export const KillPlanRunButton = (
 
       if (data != null && typeof data === 'object') {
         if ('cancelPlanRun' in data && data.cancelPlanRun != null) {
-          toast.success(describeCancelPlanRunResult(data.cancelPlanRun));
+          const message = describeCancelPlanRunResult(data.cancelPlanRun);
+          // A no-op cancel (NO_ACTIVE_RUN) is surfaced as info, not a misleading success toast.
+          if (cancelPlanRunToastTone(data.cancelPlanRun) === 'success') {
+            toast.success(message);
+          } else {
+            toast.info(message);
+          }
           revalidator.revalidate();
 
           setOpen(false);
