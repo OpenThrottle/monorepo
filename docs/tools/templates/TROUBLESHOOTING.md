@@ -94,11 +94,11 @@ cat tools/generators/generators.json
 
 ```bash
 # Get available list keys from describe
-nx g @tools/generators:remix --describe
+nx g @tools/generators:react-router --describe
 # Check the "list" object in the output
 
 # Some list keys require additional params
-nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer
+nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 ```
 
 ### Issue: "Target not found" or "Invalid destination"
@@ -114,7 +114,7 @@ nx g @tools/generators:remix --list=componentFolders --application=openthrottle-
 ```bash
 # List valid targets
 nx g @tools/generators:react --list=destinations
-nx g @tools/generators:remix --list=applications
+nx g @tools/generators:react-router --list=applications
 
 # Verify target exists in workspace
 nx show project <target-name>
@@ -184,15 +184,15 @@ This workspace is configured to automatically set `NX_ISOLATE_PLUGINS=false` in 
 
 ```bash
 # For generator execution
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-website \
   --folder=routing/sandbox/components \
   --name=ExampleAgentComponent
 
 # For describe/list operations
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix --describe
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 ```
 
 **Note**: This workaround is commonly needed in:
@@ -212,7 +212,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix --list=applications
 
 ```bash
 export NX_ISOLATE_PLUGINS=false
-pnpm nx g @tools/generators:remix --subGenerator=component ...
+pnpm nx g @tools/generators:react-router --subGenerator=component ...
 ```
 
 ## Getting Help

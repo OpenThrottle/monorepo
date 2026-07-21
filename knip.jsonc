@@ -48,7 +48,6 @@
     "**/vitest.setup.ts",
     "**/codegen.{ts,js}",
     "tools/generators/src/generators/*/files/**",
-    "vitest.workspace.ts",
     // openthrottle-developer: kept for commented JSX / intentional rollback (see @deprecated)
     "applications/openthrottle-developer/app/routing/agents/components/AgentsSectionQuickLinks.tsx",
     "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQueueStats.tsx",

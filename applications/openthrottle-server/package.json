@@ -63,7 +63,6 @@
   "name": "openthrottle-server",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
     "projectType": "application",
     "sourceRoot": "./",
     "tags": [

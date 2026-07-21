@@ -17,7 +17,6 @@
   "module": "./src/index.ts",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [

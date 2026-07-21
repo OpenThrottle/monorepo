@@ -21,7 +21,7 @@ The app uses **React Router v7** with **flat file-based routes** (`@react-router
 | `trash._index.tsx`    | `/trash`     | Trash folder list.                                              |
 | `settings._index.tsx` | `/settings`  | Settings (already exists).                                      |
 
-**Generator:** Use **@tools/generators:remix** with `--subGenerator=route`, `--application=openthrottle-email`, and `--name=<routeName>` (e.g. `inbox._index`, `inbox.$id`, `compose`, `sent._index`, `drafts._index`, `trash._index`). Run one invocation per route or comma-separated names where the generator allows. Skip or adjust if a route already exists (e.g. `_index` for inbox).
+**Generator:** Use **@tools/generators:react-router** with `--subGenerator=route`, `--application=openthrottle-email`, and `--name=<routeName>` (e.g. `inbox._index`, `inbox.$id`, `compose`, `sent._index`, `drafts._index`, `trash._index`). Run one invocation per route or comma-separated names where the generator allows. Skip or adjust if a route already exists (e.g. `_index` for inbox).
 
 ---
 
@@ -35,7 +35,7 @@ The app uses **React Router v7** with **flat file-based routes** (`@react-router
   1. **Layout component (recommended):** A **MailLayout** component (sidebar + `<Outlet />`) is used by each mail route page. No layout route file is required; each route renders `<MailLayout><Outlet /></MailLayout>` or the route component itself includes `<MailLayout>` and renders its content in the main area. Easiest to adopt with existing flat routes.
   2. **Layout route:** A pathless layout route (e.g. `_layout.mail.tsx`) with `<Outlet />` and child route files (e.g. `_layout.mail.inbox._index.tsx`) under the same layout. Requires organizing route file names to match the flat route convention.
 
-- **Recommendation:** Use the **layout component** approach: **MailLayout** (and **MailSidebar**) are built with **@tools/generators:remix** (`--subGenerator=component`). Mail routes then wrap their content with `<MailLayout>` so the sidebar and chrome appear on inbox, compose, sent, drafts, and trash. Settings can use the same layout or the existing root layout, as desired.
+- **Recommendation:** Use the **layout component** approach: **MailLayout** (and **MailSidebar**) are built with **@tools/generators:react-router** (`--subGenerator=component`). Mail routes then wrap their content with `<MailLayout>` so the sidebar and chrome appear on inbox, compose, sent, drafts, and trash. Settings can use the same layout or the existing root layout, as desired.
 
 - **Implementation (chosen):** A **pathless layout route** `_layout.mail.tsx` renders **MailLayout** with `<Outlet />`. Child routes are named `_layout.mail._index.tsx` (inbox at `/`), `_layout.mail.compose.tsx`, and so on. This way all mail routes automatically render inside the mail chrome (sidebar + main) without each route wrapping itself. The root `_index.tsx` was removed so `/` is served only by the mail layout’s index (inbox).
 
@@ -62,14 +62,14 @@ Run once per slug: `inbox`, `compose`, `sent`, `drafts`, `trash`. This creates `
 
 ---
 
-## 4. Components to generate (remix generator)
+## 4. Components to generate (react-router generator)
 
-All components must be scaffolded with **@tools/generators:remix** (`--subGenerator=component`), then customized. Use **@openthrottle/react-router-shadcn** for all UI (tables, cards, forms, navigation, etc.).
+All components must be scaffolded with **@tools/generators:react-router** (`--subGenerator=component`), then customized. Use **@openthrottle/react-router-shadcn** for all UI (tables, cards, forms, navigation, etc.).
 
 **Generator command pattern:**
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix \
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-email \
   --folder=<folder> \
@@ -79,7 +79,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix \
 Discover valid `--folder` values:
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix \
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
   --list=componentFolders \
   --application=openthrottle-email
 ```
@@ -93,9 +93,9 @@ After creating new `app/routing/<name>/` folders (via the folders generator), re
 | **MoveToFolderDropdown** | `global/components`                                         | "Move to folder" submenu for reading pane and list bulk actions; lists folders, calls onSelect for API wiring.                            |
 | **MessageList**          | `routing/inbox/components`                                  | List of messages/threads for inbox (and optionally sent/drafts/trash).                                                                    |
 | **MessageDetail**        | `routing/inbox/components`                                  | Single message/thread view.                                                                                                               |
-| **ComposeForm**          | `routing/compose/components` (or use `--subGenerator=form`) | New-message form. Use remix **form** generator if preferred: `--subGenerator=form`, `--name=ComposeForm`.                                 |
+| **ComposeForm**          | `routing/compose/components` (or use `--subGenerator=form`) | New-message form. Use the react-router **form** generator if preferred: `--subGenerator=form`, `--name=ComposeForm`.                      |
 
-**Forms/tables:** For ComposeForm, use either `--subGenerator=form` or `--subGenerator=component`; for list UIs (e.g. message list table), use **@tools/generators:remix** `--subGenerator=table` if a table generator exists and fits, or a **component** (e.g. MessageList) built with shadcn-ui Table/Card primitives.
+**Forms/tables:** For ComposeForm, use either `--subGenerator=form` or `--subGenerator=component`; for list UIs (e.g. message list table), use **@tools/generators:react-router** `--subGenerator=table` if a table generator exists and fits, or a **component** (e.g. MessageList) built with shadcn-ui Table/Card primitives.
 
 ---
 
@@ -108,13 +108,13 @@ After creating new `app/routing/<name>/` folders (via the folders generator), re
 
 ## 6. Generator reference summary
 
-| Generator                               | Purpose                               | Key options                                                                                          |
-| --------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **@tools/generators:folders**           | Create `app/routing/<name>/`          | `--application=openthrottle-email`, `--folder=routing`, `--name=<slug>`                              |
-| **@tools/generators:remix** (route)     | Create route modules in `app/routes/` | `--subGenerator=route`, `--application=openthrottle-email`, `--name=<routeName>`                     |
-| **@tools/generators:remix** (component) | Create components                     | `--subGenerator=component`, `--application=openthrottle-email`, `--folder=<folder>`, `--name=<Name>` |
-| **@tools/generators:remix** (form)      | Create forms                          | `--subGenerator=form`, `--application=openthrottle-email`, `--folder=<folder>`, `--name=<FormName>`  |
-| **@tools/generators:remix** (table)     | Create tables                         | `--subGenerator=table`, same application/folder/name pattern if supported                            |
+| Generator                                      | Purpose                               | Key options                                                                                          |
+| ---------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **@tools/generators:folders**                  | Create `app/routing/<name>/`          | `--application=openthrottle-email`, `--folder=routing`, `--name=<slug>`                              |
+| **@tools/generators:react-router** (route)     | Create route modules in `app/routes/` | `--subGenerator=route`, `--application=openthrottle-email`, `--name=<routeName>`                     |
+| **@tools/generators:react-router** (component) | Create components                     | `--subGenerator=component`, `--application=openthrottle-email`, `--folder=<folder>`, `--name=<Name>` |
+| **@tools/generators:react-router** (form)      | Create forms                          | `--subGenerator=form`, `--application=openthrottle-email`, `--folder=<folder>`, `--name=<FormName>`  |
+| **@tools/generators:react-router** (table)     | Create tables                         | `--subGenerator=table`, same application/folder/name pattern if supported                            |
 
 Always prefix with **`NX_ISOLATE_PLUGINS=false`**. Discover schemas and dynamic values with `--describe` and `--list=<key>` (e.g. `--list=applications`, `--list=componentFolders --application=openthrottle-email`). See **docs/tools/templates/AGENT_USAGE.md** for full workflow.
 

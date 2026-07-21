@@ -3,6 +3,7 @@
  * Re-exports canonical helpers from `@openthrottle/nestjs-repositories` plan-run-config (monorepo source path).
  */
 
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Isomorphic plan-run-config helpers are deliberately deep-imported from nestjs-repositories source to avoid pulling the server barrel (TypeORM/NestJS) into the browser bundle. Proper fix: extract a shared isomorphic package (tracked as a follow-up task on this plan).
 import {
   getDefaultPlanRunConfigStorage,
   planRunConfigFromPlanStorage,

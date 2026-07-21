@@ -48,19 +48,19 @@ nx g @tools/generators:react \
   --name=formatDate
 ```
 
-## Remix Generator Examples
+## React Router Generator Examples
 
 ### Creating a Component
 
 ```bash
 # 1. List available applications
-nx g @tools/generators:remix --list=applications
+nx g @tools/generators:react-router --list=applications
 
 # 2. List available folders
-nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer
+nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 
 # 3. Generate component
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -70,7 +70,7 @@ nx g @tools/generators:remix \
 ### Creating a Form
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
@@ -80,7 +80,7 @@ nx g @tools/generators:remix \
 ### Creating a Route
 
 ```bash
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=api.users
@@ -187,27 +187,27 @@ nx g @tools/generators:folders \
   --name=users
 
 # 2. Create a route
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=users
 
 # 3. Create components
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserList,UserCard
 
 # 4. Create a form
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserForm
 
 # 5. Create a table
-nx g @tools/generators:remix \
+nx g @tools/generators:react-router \
   --subGenerator=table \
   --application=openthrottle-developer \
   --folder=routing/users/components \

@@ -26,7 +26,14 @@
       }
     ],
     "noMarkdown": ["!{projectRoot}/**/*.md"],
-    "production": ["default", "!{projectRoot}/jest.config.ts"]
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.test.{js,jsx,ts,tsx}",
+      "!{projectRoot}/**/*.spec.{js,jsx,ts,tsx}",
+      "!{projectRoot}/**/__tests__/**",
+      "!{projectRoot}/vitest.config.{js,ts}",
+      "!{projectRoot}/**/*.md"
+    ]
   },
   "plugins": [
     {
@@ -188,33 +195,6 @@
         "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
       },
       "outputs": ["{projectRoot}/dist/package.json"]
-    },
-    "codegen": {
-      "description": "Run code generation for the project (configurations: graphql, graphql-watch, react-router, react-router-watch).",
-      "executor": "nx:run-commands",
-      "configurations": {
-        "graphql": {
-          "command": "graphql-codegen",
-          "dependsOn": ["^build"]
-        },
-        "graphql-watch": {
-          "command": "graphql-codegen --watch",
-          "continuous": true,
-          "dependsOn": ["^build"]
-        },
-        "react-router": {
-          "command": "react-router typegen",
-          "dependsOn": ["^build"]
-        },
-        "react-router-watch": {
-          "command": "react-router typegen --watch",
-          "continuous": true,
-          "dependsOn": ["^build"]
-        }
-      },
-      "options": {
-        "cwd": "{projectRoot}"
-      }
     },
     "codegen-graphql": {
       "cache": true,
@@ -397,7 +377,7 @@
       "dependsOn": ["^build"],
       "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}.",
       "executor": "@nx/vitest:test",
-      "inputs": ["default", "^default", "^production"],
+      "inputs": ["default", "^production"],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
@@ -431,26 +411,6 @@
         "cwd": "{projectRoot}/tests/e2e"
       }
     },
-    "___test-e2e": {
-      "configurations": {
-        "record": {
-          "command": "maestro record --local"
-        },
-        "studio": {
-          "command": "maestro studio"
-        },
-        "watch": {
-          "command": "maestro test --config tests/maestro.yml -c"
-        }
-      },
-      "dependsOn": ["^build"],
-      "description": "Run the project end-to-end suite (configurations: record, studio, watch).",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "maestro test --config tests/maestro.yml",
-        "cwd": "{projectRoot}"
-      }
-    },
     "typecheck": {
       "cache": true,
       "dependsOn": [
@@ -460,12 +420,7 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Type-check the project with tsc, emitting declarations to dist; runs after build and codegen.",
-      "outputs": [
-        "{projectRoot}/dist/**/*.d.ts",
-        "{projectRoot}/dist/**/*.d.ts.map",
-        "{projectRoot}/tsconfig.tsbuildinfo"
-      ]
+      "description": "Type-check the project with tsc; runs after build and codegen. Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
     }
   },
   "tui": {

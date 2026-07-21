@@ -10,8 +10,8 @@ PRODUCTION=false
 
 BUCKET_PRODUCTION="openthrottle-staging-nx-cache"
 BUCKET_STAGING="openthrottle-staging-nx-cache"
-PROJECT_ID_PRODUCTION="monorepo-staging"
-PROJECT_ID_STAGING="monorepo-staging"
+PROJECT_ID_PRODUCTION="openthrottle-production"
+PROJECT_ID_STAGING="openthrottle-staging"
 REGION="us-central1"  # Matching the region used in CI/CD
 
 if [ "$PRODUCTION" = true ]; then
