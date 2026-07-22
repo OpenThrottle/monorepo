@@ -18,6 +18,9 @@ import {
   insertCommitLinkGraphql,
   listPlansByStatusGraphql,
   listProjectsGraphql,
+  readPlanRunCancelMarkerGraphql,
+  registerCliPlanRunGraphql,
+  settleCliPlanRunGraphql,
   updatePlanProjectIdGraphql,
   updatePlanStatusGraphql,
   updateTaskStatusGraphql,
@@ -33,16 +36,22 @@ import {
   listPlansByStatusPostgres,
   listProjectsPostgres,
   RALPH_FATAL_UNREACHABLE_SUFFIX,
+  readPlanRunCancelMarkerPostgres,
+  registerCliPlanRunPostgres,
+  settleCliPlanRunPostgres,
   updatePlanProjectIdPostgres,
   updatePlanStatusPostgres,
   updateTaskStatusPostgres,
 } from './openthrottle-ralph-postgres';
 import type {
+  CliPlanRunCancelMarker,
   CommitLinkInput,
   CommitLinkRow,
   ListPlansByStatusRow,
   PlanRow,
   ProjectRow,
+  RegisterCliRunInput,
+  RunLocation,
   TaskRow,
   WorkflowRalphConfig,
 } from './openthrottle-ralph-types';
@@ -53,13 +62,17 @@ import {
 } from './openthrottle-ralph-types';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import os from 'node:os';
 
 export type {
+  CliPlanRunCancelMarker,
   CommitLinkInput,
   CommitLinkRow,
   ListPlansByStatusRow,
   PlanRow,
   ProjectRow,
+  RegisterCliRunInput,
+  RunLocation,
   TaskRow,
   WorkflowRalphConfig,
 };
@@ -290,3 +303,52 @@ export const insertCommitLink = async (
   isPostgresTransport(config)
     ? insertCommitLinkPostgres(config, input)
     : insertCommitLinkGraphql(input);
+
+/**
+ * @description Captures where this CLI run is executing ({ hostname, pid, workerId }), mirroring the
+ * location shape {@link markRunStarted} stamps for queued runs so a detached CLI run renders the same
+ * in the UI run-audit view. `workerId` is optional (the CLI has no BullMQ worker id); pass a stable
+ * run identifier or leave it null.
+ */
+export const captureRunLocation = (workerId?: string | null): RunLocation => ({
+  hostname: os.hostname(),
+  pid: process.pid,
+  workerId: workerId ?? null,
+});
+
+/**
+ * @description Registers a detached CLI run as a first-class plan_runs row so the UI Kill has a row
+ * to stamp the durable cancel marker on. Returns the new plan_run id. No BullMQ job is created.
+ */
+export const registerCliPlanRun = async (
+  config: WorkflowRalphConfig,
+  input: RegisterCliRunInput,
+): Promise<string> =>
+  isPostgresTransport(config)
+    ? registerCliPlanRunPostgres(config, input)
+    : registerCliPlanRunGraphql(input);
+
+/**
+ * @description Reads the newest plan_runs row's cancel marker for a plan (the CLI loop polls this at
+ * each iteration boundary). Returns null when the plan has no run row.
+ */
+export const readPlanRunCancelMarker = async (
+  config: WorkflowRalphConfig,
+  planId: string,
+): Promise<CliPlanRunCancelMarker | null> =>
+  isPostgresTransport(config)
+    ? readPlanRunCancelMarkerPostgres(config, planId)
+    : readPlanRunCancelMarkerGraphql(planId);
+
+/**
+ * @description Settles a detached CLI run row on exit: terminal status (COMPLETED/CANCELLED/FAILED)
+ * + cleared location columns, keyed on the run id.
+ */
+export const settleCliPlanRun = async (
+  config: WorkflowRalphConfig,
+  planRunId: string,
+  status: string,
+): Promise<void> =>
+  isPostgresTransport(config)
+    ? settleCliPlanRunPostgres(config, planRunId, status)
+    : settleCliPlanRunGraphql(planRunId, status);

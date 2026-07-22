@@ -66,6 +66,34 @@ export interface ListPlansByStatusRow {
   readonly title: string;
 }
 
+/**
+ * @description Where a detached CLI run is executing. Mirrors the location columns
+ * (hostname/pid/worker_id) that {@link markRunStarted} stamps for queued runs, so the
+ * UI's run-audit view renders a CLI run the same way.
+ */
+export interface RunLocation {
+  readonly hostname: string | null;
+  readonly pid: number | null;
+  readonly workerId: string | null;
+}
+
+/** @description Input for registering a detached CLI run as a first-class plan_runs row. */
+export interface RegisterCliRunInput {
+  readonly executionBackend: string;
+  readonly location: RunLocation;
+  readonly planId: string;
+}
+
+/**
+ * @description The newest plan_runs row's durable cancel marker for a plan — what the
+ * server's stampCancelRequested stamps and the CLI loop polls each iteration boundary.
+ */
+export interface CliPlanRunCancelMarker {
+  readonly cancelRequestedAt: string | null;
+  readonly planRunId: string;
+  readonly status: string;
+}
+
 export interface CommitLinkInput {
   readonly message: string | null;
   readonly planId: string;
