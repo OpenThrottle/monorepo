@@ -205,7 +205,7 @@ export interface ChildJobInput {
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */
   readonly timeoutMs?: number;
   /**
-   * Agent CLI worktree name. When omitted inside `runChildJob`, defaults to `handoff.targetId`.
+   * Agent CLI worktree name. When omitted, callers default it to `handoff.targetId`.
    */
   readonly worktree?: string;
   /** Cursor-only: `--worktree-base`. */

@@ -32,7 +32,6 @@ export type {
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
 } from './types/worktree';
-export { runChildJob } from './utils/child-job';
 export {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,

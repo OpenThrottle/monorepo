@@ -27,7 +27,6 @@ export type {
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
 } from './types/worktree';
-export { runChildJob } from './utils/child-job';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,

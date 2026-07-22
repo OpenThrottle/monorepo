@@ -1,5 +1,5 @@
 /**
- * @description Builds `workflow-ralph` argv segments for nested spawns (runChildJob, BullMQ processors)
+ * @description Builds `workflow-ralph` argv segments for nested spawns (BullMQ processors)
  * so automated runs match CLI omission rules: omit flags when values equal defaults so
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */

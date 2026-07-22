@@ -268,10 +268,10 @@ export const updatePlanStatus = async (
 /**
  * @description Terminal reconcile for plan completion. Re-fetches the plan's tasks and,
  * if the set is non-empty and every task is terminal (`COMPLETED`/`SKIPPED`), flips the
- * plan to `COMPLETED`. Safe to call on any clean exit path (successful child run, end of
- * the Ralph loop, max-iterations) so a plan whose tasks are all done is never stranded in
- * `IN_PROGRESS`. Returns `true` when it set the plan to `COMPLETED`, `false` otherwise.
- * Shares the {@link areAllTasksTerminal} predicate so the CLI and child-job stay in sync.
+ * plan to `COMPLETED`. Safe to call on any clean exit path (end of the Ralph loop,
+ * max-iterations) so a plan whose tasks are all done is never stranded in `IN_PROGRESS`.
+ * Returns `true` when it set the plan to `COMPLETED`, `false` otherwise. Uses the
+ * {@link areAllTasksTerminal} predicate.
  */
 export const reconcilePlanCompletionIfAllTasksTerminal = async (
   config: WorkflowRalphConfig,
