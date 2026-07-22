@@ -20,6 +20,7 @@ describe('buildCursorAgentArgv', () => {
       '--trust',
       '--resume',
       'chat-1',
+      '--',
       'do the thing',
     ]);
   });
@@ -45,5 +46,15 @@ describe('buildCursorAgentArgv', () => {
     // The dangerous string is exactly one argv element, never split or expanded.
     expect(argv.at(-1)).toBe('"; rm -rf / #');
     expect(argv.filter((part) => part.includes('rm -rf'))).toHaveLength(1);
+  });
+
+  it('inserts -- before the prompt so YAML frontmatter is not parsed as a flag', () => {
+    const argv = buildCursorAgentArgv({
+      cwd: '/repo',
+      prompt: '---\nname: product\n---\n\nBe concise.',
+      sessionId: 'c',
+    });
+    expect(argv.at(-2)).toBe('--');
+    expect(argv.at(-1)).toBe('---\nname: product\n---\n\nBe concise.');
   });
 });

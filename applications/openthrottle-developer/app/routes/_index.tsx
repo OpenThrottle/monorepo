@@ -132,18 +132,21 @@ export default function Component(
   const threadMessages = useMemo(() => {
     return messages.map((message) => {
       const streamed = streamedById.get(message.id);
-      if (streamed === undefined) {
-        // No chunk has arrived for this message yet. If it is the turn we just
-        // started, flag it pending so the row shows a running indicator instead
-        // of an empty "(No content)" body during the backend's think time.
-        return message.id === pendingAssistantId
-          ? { ...message, pending: true }
-          : message;
-      }
+      // Overlay streamed body/events when present. Keep `pending` while this is
+      // the in-flight assistant turn and nothing renderable has arrived yet —
+      // including when the reducer already has an empty streamed entry.
+      const base =
+        streamed === undefined
+          ? message
+          : streamed.events !== undefined
+            ? { ...message, body: streamed.body, events: streamed.events }
+            : { ...message, body: streamed.body };
 
-      return streamed.events !== undefined
-        ? { ...message, body: streamed.body, events: streamed.events }
-        : { ...message, body: streamed.body };
+      const hasTimeline = base.events !== undefined && base.events.length > 0;
+      const stillEmpty = (base.body?.trim() ?? '') === '' && !hasTimeline;
+      const isPendingTurn = message.id === pendingAssistantId && stillEmpty;
+
+      return isPendingTurn ? { ...base, pending: true } : base;
     });
   }, [messages, pendingAssistantId, streamedById]);
 
