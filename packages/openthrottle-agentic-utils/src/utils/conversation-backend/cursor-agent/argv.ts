@@ -52,7 +52,10 @@ export function buildCursorAgentArgv(
     argv.push('--model', options.model);
   }
 
-  argv.push(options.prompt);
+  // End-of-options marker: persona system prompts are skill markdown that often
+  // starts with YAML frontmatter (`---`), which commander/yargs would otherwise
+  // treat as an unknown flag (`error: unknown option '---'`).
+  argv.push('--', options.prompt);
 
   return argv;
 }
