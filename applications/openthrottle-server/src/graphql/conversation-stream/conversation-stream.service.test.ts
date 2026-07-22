@@ -53,11 +53,17 @@ function buildService(): {
     updateModelSnapshot: vi.fn().mockResolvedValue(undefined),
   });
   const publish = vi.fn().mockResolvedValue(undefined);
+  // A live iterator that ends immediately, so subscribe() yields only its
+  // replay buffer in these tests.
+  const asyncIterator = vi.fn(() => ({
+    next: () => Promise.resolve({ done: true as const, value: undefined }),
+    return: () => Promise.resolve({ done: true as const, value: undefined }),
+  }));
   const service = new ConversationStreamService(
     conversations,
     createMock<LoggerService>(),
     {
-      asyncIterator: vi.fn(),
+      asyncIterator,
       publish,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
@@ -211,5 +217,45 @@ describe('ConversationStreamService', () => {
     expect(abortObserved).toBe(true);
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true });
+  });
+});
+
+describe('ConversationStreamService.subscribe (replay buffer)', () => {
+  it('replays the finished turn to a late subscriber (incl. the terminal chunk)', async () => {
+    openAiStreamMock.mockReturnValue(fakeStream(['Hel', 'lo']));
+    const { service } = buildService();
+
+    // Turn runs to completion before anyone subscribes.
+    await service.runStream(baseRun);
+
+    const replayed: Array<{ delta: string; done: boolean; sortOrder: number }> =
+      [];
+    for await (const value of service.subscribe('conv-1')) {
+      replayed.push(value.conversationStreamChunkAdded);
+    }
+
+    expect(replayed).toEqual([
+      expect.objectContaining({ delta: 'Hel', done: false, sortOrder: 0 }),
+      expect.objectContaining({ delta: 'lo', done: false, sortOrder: 1 }),
+      expect.objectContaining({ delta: '', done: true, sortOrder: 2 }),
+    ]);
+  });
+
+  it('starts a fresh buffer for a new turn (does not replay the prior turn)', async () => {
+    const { service } = buildService();
+
+    openAiStreamMock.mockReturnValueOnce(fakeStream(['old']));
+    await service.runStream(baseRun);
+
+    openAiStreamMock.mockReturnValueOnce(fakeStream(['new']));
+    await service.runStream(baseRun);
+
+    const replayed: string[] = [];
+    for await (const value of service.subscribe('conv-1')) {
+      replayed.push(value.conversationStreamChunkAdded.delta);
+    }
+
+    expect(replayed).toContain('new');
+    expect(replayed).not.toContain('old');
   });
 });

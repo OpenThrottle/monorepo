@@ -112,6 +112,14 @@ export interface ChatMessage {
   readonly events?: readonly ChatTurnEvent[];
   readonly footer?: string | null;
   readonly id: string;
+  /**
+   * True while an assistant turn has been started but no content has streamed
+   * yet (the request is in flight). Renders a subtle running indicator in place
+   * of an empty body, so a slow backend (e.g. an agent CLI that emits its whole
+   * turn in one end-of-turn burst) does not read as a blank "(No content)" reply.
+   * Ignored once `events` or a non-empty `body` are present.
+   */
+  readonly pending?: boolean;
   readonly role: ChatMessageRole;
 }
 

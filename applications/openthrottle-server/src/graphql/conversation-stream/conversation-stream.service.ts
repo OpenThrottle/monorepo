@@ -25,11 +25,26 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
+  type ConversationStreamChunkEnvelope,
   type ConversationStreamChunkPayload,
 } from './conversation-stream.types';
 
 /** CLI backend that spawns cursor-agent; openai is the default HTTP path. */
 const CURSOR_BACKEND = 'cursor';
+
+/**
+ * How long a finished turn's chunk buffer is retained after its terminal chunk,
+ * so a subscriber that attaches slightly late (the home route only subscribes
+ * once the start mutation has returned the conversation id) — or a turn that
+ * completed entirely before the client subscribed — still replays in full.
+ */
+const BUFFER_GRACE_MS = 30_000;
+
+/**
+ * Hard cap on buffered chunks per conversation. A turn larger than this drops
+ * its oldest chunks from replay (the live stream is unaffected); bounds memory.
+ */
+const BUFFER_MAX_CHUNKS = 5_000;
 
 /** Everything needed to run one streamed assistant turn. */
 export interface StartConversationStreamRun {
@@ -61,11 +76,55 @@ export interface StartConversationStreamRun {
 export class ConversationStreamService {
   private readonly controllers = new Map<string, AbortController>();
 
+  // Per-conversation replay buffer of the current/most-recent turn's chunks, so
+  // a late subscriber does not miss chunks published before it attached. Evicted
+  // BUFFER_GRACE_MS after the turn's terminal chunk. Single-process only (mirrors
+  // the in-process PubSub); a multi-process deployment would need shared storage.
+  private readonly buffers = new Map<
+    string,
+    ConversationStreamChunkPayload[]
+  >();
+  private readonly evictionTimers = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly conversations: AgentConversationsService,
     private readonly logger: LoggerService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
+
+  /**
+   * Subscribe to a conversation's stream, replaying any buffered chunks of the
+   * current/most-recent turn before switching to live deltas. The live iterator
+   * is attached BEFORE the buffer is snapshotted so no chunk slips through the
+   * gap; the client dedupes the (small) overlap by `messageId:sortOrder`.
+   */
+  subscribe(
+    conversationId: string,
+  ): AsyncGenerator<ConversationStreamChunkEnvelope> {
+    const live = this.pubSub.asyncIterator<ConversationStreamChunkEnvelope>(
+      conversationStreamTopic(conversationId),
+    );
+    const buffered = [...(this.buffers.get(conversationId) ?? [])];
+
+    return this.replayThenLive(buffered, live);
+  }
+
+  private async *replayThenLive(
+    buffered: ReadonlyArray<ConversationStreamChunkPayload>,
+    live: AsyncIterator<ConversationStreamChunkEnvelope>,
+  ): AsyncGenerator<ConversationStreamChunkEnvelope> {
+    for (const chunk of buffered) {
+      yield { [CONVERSATION_STREAM_CHUNK_FIELD]: chunk };
+    }
+
+    // Delegate to the live PubSub iterator. `yield*` forwards a consumer
+    // `.return()` (graphql-ws unsubscribe) to `live`, tearing down the
+    // underlying PubSub subscription.
+    const liveIterable: AsyncIterable<ConversationStreamChunkEnvelope> = {
+      [Symbol.asyncIterator]: () => live,
+    };
+    yield* liveIterable;
+  }
 
   /**
    * Abort an in-flight stream for a conversation. Returns whether one was aborted.
@@ -92,6 +151,10 @@ export class ConversationStreamService {
   async runStream(run: StartConversationStreamRun): Promise<void> {
     const controller = new AbortController();
     this.controllers.set(run.conversationId, controller);
+
+    // A new turn starts a fresh replay buffer (and cancels any pending eviction
+    // of the previous turn's buffer).
+    this.resetBuffer(run.conversationId);
 
     let accumulated = '';
     let sortOrder = 0;
@@ -221,6 +284,10 @@ export class ConversationStreamService {
   private async publishChunk(
     chunk: ConversationStreamChunkPayload,
   ): Promise<void> {
+    // Buffer before publishing so a subscriber attaching mid-publish still finds
+    // the chunk in the replay snapshot.
+    this.recordChunk(chunk);
+
     try {
       await this.pubSub.publish(conversationStreamTopic(chunk.conversationId), {
         [CONVERSATION_STREAM_CHUNK_FIELD]: chunk,
@@ -231,5 +298,46 @@ export class ConversationStreamService {
 
       this.logger.error(`conversation-stream publish failed: ${message}`);
     }
+  }
+
+  /** Append a chunk to the conversation's replay buffer; evict after the terminal chunk. */
+  private recordChunk(chunk: ConversationStreamChunkPayload): void {
+    const buffer = this.buffers.get(chunk.conversationId) ?? [];
+    buffer.push(chunk);
+    // Drop oldest beyond the cap so a very long turn cannot grow unbounded.
+    if (buffer.length > BUFFER_MAX_CHUNKS) {
+      buffer.splice(0, buffer.length - BUFFER_MAX_CHUNKS);
+    }
+    this.buffers.set(chunk.conversationId, buffer);
+
+    if (chunk.done) {
+      this.scheduleEviction(chunk.conversationId);
+    }
+  }
+
+  /** Reset the replay buffer for a new turn and cancel any pending eviction. */
+  private resetBuffer(conversationId: string): void {
+    const timer = this.evictionTimers.get(conversationId);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      this.evictionTimers.delete(conversationId);
+    }
+    this.buffers.set(conversationId, []);
+  }
+
+  /** Evict a finished turn's buffer after a grace window for late subscribers. */
+  private scheduleEviction(conversationId: string): void {
+    const existing = this.evictionTimers.get(conversationId);
+    if (existing !== undefined) {
+      clearTimeout(existing);
+    }
+
+    const timer = setTimeout(() => {
+      this.buffers.delete(conversationId);
+      this.evictionTimers.delete(conversationId);
+    }, BUFFER_GRACE_MS);
+    timer.unref();
+
+    this.evictionTimers.set(conversationId, timer);
   }
 }

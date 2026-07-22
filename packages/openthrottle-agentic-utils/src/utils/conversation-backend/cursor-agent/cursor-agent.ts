@@ -25,7 +25,11 @@ import {
 } from './argv.ts';
 import { mapCursorEvent } from './events.ts';
 import { NdjsonBuffer } from './ndjson.ts';
-import { resolveAgentTimeouts, terminateChild } from './teardown.ts';
+import {
+  resolveAgentTimeouts,
+  resolveSessionCreateTimeoutMs,
+  terminateChild,
+} from './teardown.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [
@@ -130,10 +134,30 @@ export async function createCursorAgentSession(
     stderr += data.toString('utf8');
   });
 
-  const code = await new Promise<number | null>((resolve, reject) => {
-    child.on('error', reject);
-    child.on('close', resolve);
-  });
+  // Bound the mint: a blocked create-chat must never hang the caller (the start
+  // mutation awaits this). On timeout, tear the child down (SIGTERM→SIGKILL).
+  const timeoutMs = resolveSessionCreateTimeoutMs();
+  const { graceMs } = resolveAgentTimeouts();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    terminateChild(child, graceMs);
+  }, timeoutMs);
+  timer.unref();
+
+  let code: number | null;
+  try {
+    code = await new Promise<number | null>((resolve, reject) => {
+      child.on('error', reject);
+      child.on('close', resolve);
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (timedOut) {
+    throw new Error(`cursor-agent create-chat timed out after ${timeoutMs}ms.`);
+  }
 
   if (code !== 0) {
     throw new Error(

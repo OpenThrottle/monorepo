@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
+import { RunningIndicator } from './RunningIndicator';
 import { formatChatTimestamp } from '../utils/index';
 import type { ChatMessage } from '../types';
 
@@ -31,6 +32,13 @@ const ChatThreadMessageComponent = (
     message.role === 'assistant' &&
     message.events !== undefined &&
     message.events.length > 0;
+  // In-flight turn with nothing streamed yet: show the running indicator rather
+  // than an empty "(No content)" body. Once a timeline or body arrives, those win.
+  const isPending =
+    message.role === 'assistant' &&
+    message.pending === true &&
+    !hasTimeline &&
+    message.body.trim() === '';
 
   // Handlers
 
@@ -77,6 +85,8 @@ const ChatThreadMessageComponent = (
       >
         {hasTimeline && message.events !== undefined ? (
           <ChatTurnTimeline events={message.events} />
+        ) : isPending ? (
+          <RunningIndicator />
         ) : (
           <ChatMessageBody body={message.body} role={message.role} />
         )}
