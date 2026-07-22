@@ -182,9 +182,13 @@ describe('PlansResolver', () => {
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
   const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
   const mockFindRecentByPlanId = vi.fn().mockResolvedValue([]);
+  const mockRegisterCliRun = vi.fn().mockResolvedValue({});
+  const mockSettleCliRun = vi.fn().mockResolvedValue({});
   const mockPlanRunsService = createMock<PlanRunsService>({
     findRecentByPlanId: mockFindRecentByPlanId,
     recordQueuedRun: mockRecordQueuedRun,
+    registerCliRun: mockRegisterCliRun,
+    settleCliRun: mockSettleCliRun,
   });
 
   // Enqueue mechanics now live in PlanEnqueueService (covered by plan-enqueue.service.test.ts);
@@ -826,6 +830,120 @@ describe('PlansResolver', () => {
           runConfigSnapshotJson: expect.stringContaining('"iterations":3'),
         }),
       ]);
+    });
+  });
+
+  describe('registerCliPlanRun', () => {
+    const cliRunRow = {
+      bullmqJobId: null,
+      createdAt: new Date('2026-07-22T00:00:00.000Z'),
+      executionBackend: 'claude',
+      hostname: 'laptop-1',
+      id: 'cli-run-1',
+      pid: 9999,
+      planId: mockPlan.id,
+      queueName: PLANS_QUEUE_NAME,
+      runConfigSnapshot: null,
+      runKind: 'orchestrator',
+      status: 'IN_PROGRESS',
+      updatedAt: new Date('2026-07-22T00:00:00.000Z'),
+      workerId: 'cli-abc',
+    };
+
+    test('delegates to registerCliRun and maps the null-job-id row', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+
+      const result = await resolver.registerCliPlanRun({
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 9999,
+        planId: mockPlan.id,
+        workerId: 'cli-abc',
+      });
+
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          executionBackend: 'claude',
+          hostname: 'laptop-1',
+          pid: 9999,
+          planId: mockPlan.id,
+          workerId: 'cli-abc',
+        }),
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          bullmqJobId: null,
+          id: 'cli-run-1',
+          runKind: 'orchestrator',
+          status: 'IN_PROGRESS',
+        }),
+      );
+    });
+
+    test('rejects an invalid executionBackend without touching the service', async () => {
+      mockRegisterCliRun.mockClear();
+      await expect(
+        resolver.registerCliPlanRun({
+          executionBackend: 'gpt',
+          hostname: null,
+          pid: null,
+          planId: mockPlan.id,
+          workerId: null,
+        }),
+      ).rejects.toThrow(/Invalid executionBackend/);
+      expect(mockRegisterCliRun).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('settleCliPlanRun', () => {
+    test('normalizes status to uppercase, settles by id, and maps the row', async () => {
+      mockSettleCliRun.mockResolvedValueOnce({
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'CANCELLED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        workerId: null,
+      });
+
+      const result = await resolver.settleCliPlanRun({
+        planRunId: 'cli-run-1',
+        status: 'cancelled',
+      });
+
+      expect(mockSettleCliRun).toHaveBeenCalledWith('cli-run-1', 'CANCELLED');
+      expect(result).toEqual(
+        expect.objectContaining({ hostname: null, status: 'CANCELLED' }),
+      );
+    });
+
+    test('rejects a non-terminal status without touching the service', async () => {
+      mockSettleCliRun.mockClear();
+      await expect(
+        resolver.settleCliPlanRun({
+          planRunId: 'cli-run-1',
+          status: 'IN_PROGRESS',
+        }),
+      ).rejects.toThrow(/Invalid settle status/);
+      expect(mockSettleCliRun).not.toHaveBeenCalled();
+    });
+
+    test('returns null when the run row no longer exists', async () => {
+      mockSettleCliRun.mockResolvedValueOnce(null);
+
+      const result = await resolver.settleCliPlanRun({
+        planRunId: 'missing',
+        status: 'COMPLETED',
+      });
+
+      expect(result).toBeNull();
     });
   });
 

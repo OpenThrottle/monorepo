@@ -370,6 +370,50 @@ export class PlanRunsByPlanIdInput {
   planId!: string;
 }
 
+/** Input for {@link PlansResolver.registerCliPlanRun}: a detached workflow-ralph CLI run. */
+@InputType()
+export class RegisterCliPlanRunInput {
+  @Field(() => String, {
+    description: `Execution backend for this detached-CLI run: claude, cursor, or opencode.`,
+  })
+  executionBackend!: string;
+
+  @Field(() => String, {
+    description: `Host the CLI is running on (diagnostic; cleared on settle). Null when unknown.`,
+    nullable: true,
+  })
+  hostname?: string | null;
+
+  @Field(() => Int, {
+    description: `OS process id of the CLI process (cleared on settle). Null when unknown.`,
+    nullable: true,
+  })
+  pid?: number | null;
+
+  @Field(() => ID, { description: `Plan id this detached-CLI run executes.` })
+  planId!: string;
+
+  @Field(() => String, {
+    description: `Worker/run identifier for the CLI (cleared on settle). Null when unknown.`,
+    nullable: true,
+  })
+  workerId?: string | null;
+}
+
+/** Input for {@link PlansResolver.settleCliPlanRun}: settle a detached-CLI run on exit. */
+@InputType()
+export class SettleCliPlanRunInput {
+  @Field(() => ID, {
+    description: `Plan-run row id to settle (returned by registerCliPlanRun).`,
+  })
+  planRunId!: string;
+
+  @Field(() => String, {
+    description: `Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.`,
+  })
+  status!: string;
+}
+
 @InputType()
 export class SetPlanStatusInput {
   @Field(() => ID, { description: `Plan id to update status for` })
