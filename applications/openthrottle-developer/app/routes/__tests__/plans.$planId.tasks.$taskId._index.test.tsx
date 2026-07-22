@@ -38,6 +38,7 @@ const mockTask = {
 const loaderData = {
   linkedArtifacts: [],
   plan: null,
+  planOutputChunks: [],
   tagVocabulary: [
     { dimension: 'domain', id: 'v-1', tag: 'backend' },
     { dimension: 'phase', id: 'v-2', tag: 'design' },
@@ -152,7 +153,10 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks
   };
 
   test('renders the task hooks section with its before-hook', async () => {
+    const user = userEvent.setup();
     renderWithHook();
+    // Hooks now live behind the Hooks tab on the task detail page.
+    await user.click(await screen.findByRole('tab', { name: /hooks/i }));
     expect(await screen.findByText('Task hooks')).toBeInTheDocument();
     expect(screen.getByText('before: /seed-db')).toBeInTheDocument();
   });
@@ -160,6 +164,7 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks
   test('removing a task hook submits the detachHook intent', async () => {
     const user = userEvent.setup();
     const { submitted } = renderWithHook();
+    await user.click(await screen.findByRole('tab', { name: /hooks/i }));
     await user.click(
       await screen.findByRole('button', {
         name: 'Remove hook: before: /seed-db',

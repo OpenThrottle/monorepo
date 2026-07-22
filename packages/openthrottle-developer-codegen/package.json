@@ -27,7 +27,13 @@
     "targets": {
       "__build": {},
       "__build-package": {},
-      "codegen-graphql": {},
+      "codegen-graphql": {
+        "inputs": [
+          "codegenGraphqlInputs",
+          "{workspaceRoot}/applications/openthrottle-developer/app/**/*.graphql",
+          "!{workspaceRoot}/applications/openthrottle-developer/app/**/__generated__/**"
+        ]
+      },
       "codegen-graphql-watch": {},
       "lint": {},
       "test": {},

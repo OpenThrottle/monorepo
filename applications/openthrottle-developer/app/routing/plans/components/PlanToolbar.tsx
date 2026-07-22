@@ -1,5 +1,4 @@
 import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   DropdownMenu,
@@ -24,6 +23,7 @@ import { Link, useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
@@ -230,41 +230,46 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('flex flex-col gap-3', className)}
-      data-testid="PlanToolbar"
-    >
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        {/* Status / run group */}
-        <div className="flex flex-wrap items-center gap-2">
+    <OpenThrottleToolbar
+      actionsMenu={
+        <DropdownMenu>
           <Tooltip delayDuration={1_000}>
             <TooltipTrigger asChild={true}>
-              <fetcherSetPlanStatus.Form method="post">
-                <Input name="intent" type="hidden" value="setPlanStatus" />
-                <Input name="planId" type="hidden" value={planId} />
-                <Input name="status" type="hidden" value="COMPLETED" />
-                <Button
-                  disabled={
-                    fetcherSetPlanStatus.state !== 'idle' || isCompleted
-                  }
-                  size="xs"
-                  type="submit"
-                  variant="ghost"
-                >
-                  <CheckCircle />
-                  {fetcherSetPlanStatus.state !== 'idle'
-                    ? 'Marking…'
-                    : 'Mark Complete'}
+              <DropdownMenuTrigger asChild={true}>
+                <Button id="plan-actions-trigger" size="xs" variant="ghost">
+                  Actions
+                  <ChevronDown />
                 </Button>
-              </fetcherSetPlanStatus.Form>
+              </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top">
-              {isCompleted
-                ? 'Plan is already completed'
-                : 'Mark this plan as completed'}
-            </TooltipContent>
+            <TooltipContent side="top">Add task or edit plan</TooltipContent>
           </Tooltip>
-
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild={true}>
+              <Link
+                className="flex items-center gap-2"
+                to={`/plans/${planId}/tasks/create`}
+              >
+                <PlusCircle size={14} />
+                Add Task
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild={true}>
+              <Link
+                className="flex items-center gap-2"
+                to={`/plans/${planId}/edit`}
+              >
+                <PencilIcon size={14} />
+                Edit Plan
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
+      className={className}
+      dataTestId="PlanToolbar"
+      primaryActions={
+        <>
           <Tooltip delayDuration={1_000}>
             <TooltipTrigger asChild={true}>
               <fetcherRunPlan.Form method="post">
@@ -342,65 +347,57 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             // show={true}
             size="xs"
           />
-        </div>
-
-        <div className="flex-1" />
-
+        </>
+      }
+      statusAction={
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <fetcherSetPlanStatus.Form method="post">
+              <Input name="intent" type="hidden" value="setPlanStatus" />
+              <Input name="planId" type="hidden" value={planId} />
+              <Input name="status" type="hidden" value="COMPLETED" />
+              <Button
+                disabled={fetcherSetPlanStatus.state !== 'idle' || isCompleted}
+                size="xs"
+                type="submit"
+                variant="ghost"
+              >
+                <CheckCircle />
+                {fetcherSetPlanStatus.state !== 'idle'
+                  ? 'Marking…'
+                  : 'Mark Complete'}
+              </Button>
+            </fetcherSetPlanStatus.Form>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isCompleted
+              ? 'Plan is already completed'
+              : 'Mark this plan as completed'}
+          </TooltipContent>
+        </Tooltip>
+      }
+      tags={
+        onAddTag != null &&
+        onRemoveTag != null &&
+        tags != null &&
+        tagVocabulary != null ? (
+          <PlanTagChips
+            onAddTag={onAddTag}
+            onRemoveTag={onRemoveTag}
+            pending={tagsPending}
+            tags={tags}
+            vocabulary={tagVocabulary}
+          />
+        ) : null
+      }
+      utilityContent={
         <Link
           className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
           to="#plan-workflow-run-transparency"
         >
           CLI preview and history
         </Link>
-
-        {/* Add / edit group: DropdownMenu for secondary actions */}
-        <DropdownMenu>
-          <Tooltip delayDuration={1_000}>
-            <TooltipTrigger asChild={true}>
-              <DropdownMenuTrigger asChild={true}>
-                <Button id="plan-actions-trigger" size="xs" variant="ghost">
-                  Actions
-                  <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">Add task or edit plan</TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/tasks/create`}
-              >
-                <PlusCircle size={14} />
-                Add Task
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/edit`}
-              >
-                <PencilIcon size={14} />
-                Edit Plan
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {onAddTag != null &&
-      onRemoveTag != null &&
-      tags != null &&
-      tagVocabulary != null ? (
-        <PlanTagChips
-          onAddTag={onAddTag}
-          onRemoveTag={onRemoveTag}
-          pending={tagsPending}
-          tags={tags}
-          vocabulary={tagVocabulary}
-        />
-      ) : null}
-    </div>
+      }
+    />
   );
 };

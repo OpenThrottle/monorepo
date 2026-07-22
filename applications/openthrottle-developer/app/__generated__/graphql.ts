@@ -293,6 +293,8 @@ export type AppendPlanOutputInput = {
   iteration?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
+  /** Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 /** Optional filter: apply only to these local repository ids. Omit to apply to all linked repos. */
@@ -1927,6 +1929,8 @@ export type PlanOutputStreamChunkObject = {
   /** Resolved plan entity when planId is set */
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
+  /** Task this chunk is attributed to (task-scoped output); null for plan-scoped chunks and historical rows. */
+  taskId?: Maybe<Scalars['String']['output']>;
 };
 
 /** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
@@ -5134,6 +5138,7 @@ export type PlanDetailIndexLoaderQuery = {
     createdAt: any;
     iteration?: number | null;
     planId: string;
+    taskId?: string | null;
   }>;
   metrics: {
     __typename?: 'MetricsObject';
@@ -5198,6 +5203,7 @@ export type PlanOutputChunkAddedSubscription = {
     createdAt: any;
     iteration?: number | null;
     planId: string;
+    taskId?: string | null;
   };
 };
 
@@ -5439,6 +5445,23 @@ export type TaskLinkedArtifactsQuery = {
       verification: string;
     }>;
   };
+};
+
+export type TaskOutputStreamChunksQueryVariables = Exact<{
+  planId: Scalars['ID']['input'];
+}>;
+
+export type TaskOutputStreamChunksQuery = {
+  __typename?: 'Query';
+  planOutputStreamChunks: Array<{
+    __typename?: 'PlanOutputStreamChunkObject';
+    id: string;
+    content: string;
+    createdAt: any;
+    iteration?: number | null;
+    planId: string;
+    taskId?: string | null;
+  }>;
 };
 
 export type GetTaskForEditByIdQueryVariables = Exact<{
@@ -11223,6 +11246,7 @@ export const PlanDetailIndexLoaderDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
             },
           },
@@ -11619,6 +11643,7 @@ export const PlanOutputChunkAddedDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
             },
           },
@@ -12498,6 +12523,71 @@ export const TaskLinkedArtifactsDocument = {
 } as unknown as DocumentNode<
   TaskLinkedArtifactsQuery,
   TaskLinkedArtifactsQueryVariables
+>;
+export const TaskOutputStreamChunksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TaskOutputStreamChunks' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planOutputStreamChunks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskOutputStreamChunksQuery,
+  TaskOutputStreamChunksQueryVariables
 >;
 export const GetTaskForEditByIdDocument = {
   kind: 'Document',

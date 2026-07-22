@@ -45,4 +45,10 @@ export class AppendPlanOutputInput {
     description: `Plan id to append output to`,
   })
   planId!: string;
+
+  @Field(() => ID, {
+    description: `Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks.`,
+    nullable: true,
+  })
+  taskId!: string | null;
 }

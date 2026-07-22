@@ -92,6 +92,7 @@ export class PlanOutputStreamResolver {
       content: input.content,
       iteration: input.iteration ?? null,
       planId: input.planId,
+      taskId: input.taskId ?? null,
     });
 
     const saved = await repo.save(entity);

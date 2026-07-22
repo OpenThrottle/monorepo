@@ -1627,6 +1627,11 @@ type PlanOutputStreamChunkObject {
   """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
+
+  """
+  Task this chunk is attributed to (task-scoped output); null for plan-scoped chunks and historical rows.
+  """
+  taskId: String
 }
 
 type WorkSessionObject {
@@ -3670,6 +3675,11 @@ input AppendPlanOutputInput {
 
   """Plan id to append output to"""
   planId: ID!
+
+  """
+  Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks.
+  """
+  taskId: ID
 }
 
 input CreatePlanInput {

@@ -44,6 +44,7 @@ describe('PlanOutputStreamFieldsResolver', () => {
     iteration: 1,
     plan: null,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
+    taskId: null,
   };
 
   beforeAll(async () => {
