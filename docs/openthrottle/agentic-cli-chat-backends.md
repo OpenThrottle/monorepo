@@ -41,6 +41,28 @@ stream for liveness (richer inline rendering of tool/thinking is a follow-up).
 4. (Optional) pick a **persona** — it becomes the agent's system prompt.
 5. Send. The agent streams back; **Stop** cancels and kills the process.
 
+**What you should see on send:** a **Working…** indicator on the assistant
+placeholder (and a **Stop** button) from submit until the terminal chunk — even
+when `cursor-agent` buffers the whole turn and emits NDJSON in one end-of-turn
+burst (~several seconds). An empty "(No content)" bubble with Send re-enabled
+mid-turn means the pending-state wiring regressed.
+
+**Repository / cwd:** production always needs a registered repository. In
+development, if none is registered, set `OPENTHROTTLE_AGENT_DEV_CWD` to an
+absolute checkout path on the server host (ignored in production); the composer
+otherwise points you at Settings.
+
+**Subscription race:** the home route only learns the conversation id after
+`startConversationStream` returns, so the client subscribes after the server
+may already be publishing. `ConversationStreamService` keeps a per-conversation
+replay buffer and replays on subscribe; the client dedupes by
+`messageId:sortOrder`. Details:
+[cursor-agent-stream-json-schema.md §8](./cursor-agent-stream-json-schema.md).
+
+**Persona prompts:** skill-style personas often start with YAML frontmatter
+(`---`). The cursor adapter passes `--` before the prompt so that frontmatter is
+not parsed as a CLI option (which previously produced an immediate empty turn).
+
 One OT conversation maps to one cursor chat session (minted via
 `cursor-agent create-chat`, persisted in `conversation.metadata.cursorSessionId`
 and resumed each turn) — so multi-turn context is owned by the CLI; we send only
@@ -77,6 +99,7 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 | `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Kill after this much silence                                  | 120000         |
 | `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                  | 900000         |
 | `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                         | 5000           |
+| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)      | 30000          |
 
 ## Adding a new CLI to the allowlist
 

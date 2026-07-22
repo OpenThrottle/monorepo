@@ -91,7 +91,21 @@ export const createNodesV2: CreateNodesV2 = [
                   outputs: [
                     '{projectRoot}/dist/**/*.d.ts',
                     '{projectRoot}/dist/**/*.d.ts.map',
-                    '{projectRoot}/tsconfig.tsbuildinfo',
+                    // The incremental `tsc --build` state MUST be cached
+                    // atomically with the `.d.ts` it describes. `tsc --build`
+                    // trusts this buildinfo to decide whether to re-emit; if Nx
+                    // restores cached declarations while the on-disk buildinfo is
+                    // out of sync (or vice-versa), the next `tsc --build` sees
+                    // "up to date" and skips emitting — leaving STALE `.d.ts` that
+                    // silently break dependents' typechecks on a cache hit. The
+                    // source pass writes it next to outDir
+                    // (`dist/tsconfig.lib.tsbuildinfo`, or `dist/tsconfig.tsbuildinfo`
+                    // for a few packages); the test pass writes
+                    // `{projectRoot}/tsconfig.test.tsbuildinfo`. (The prior
+                    // `{projectRoot}/tsconfig.tsbuildinfo` matched neither and
+                    // captured nothing.)
+                    '{projectRoot}/dist/**/*.tsbuildinfo',
+                    '{projectRoot}/tsconfig.test.tsbuildinfo',
                   ],
                   syncGenerators: ['@nx/js:typescript-sync'],
                 },
