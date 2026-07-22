@@ -89,6 +89,11 @@ export default function Component(
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [mode, setMode] = useState<ChatComposerMode>(ChatComposerMode.plan);
   const [modelId, setModelId] = useState<string | undefined>(models[0]?.id);
+  // The assistant turn that has been started but not yet reached a terminal
+  // chunk. Keeps the composer in its streaming state and renders a running
+  // indicator on the placeholder while a slow backend (e.g. cursor-agent, which
+  // emits its whole turn in one end-of-turn burst) has produced nothing yet.
+  const [pendingAssistantId, setPendingAssistantId] = useState<string | null>(null); // prettier-ignore
   const [personaId, setPersonaId] = useState<string | undefined>(personas[0]?.id); // prettier-ignore
   const [repositoryId, setRepositoryId] = useState<string | undefined>(repositories[0]?.id); // prettier-ignore
   const cancelFetcher = useFetcher();
@@ -128,16 +133,24 @@ export default function Component(
     return messages.map((message) => {
       const streamed = streamedById.get(message.id);
       if (streamed === undefined) {
-        return message;
+        // No chunk has arrived for this message yet. If it is the turn we just
+        // started, flag it pending so the row shows a running indicator instead
+        // of an empty "(No content)" body during the backend's think time.
+        return message.id === pendingAssistantId
+          ? { ...message, pending: true }
+          : message;
       }
 
       return streamed.events !== undefined
         ? { ...message, body: streamed.body, events: streamed.events }
         : { ...message, body: streamed.body };
     });
-  }, [messages, streamedById]);
+  }, [messages, pendingAssistantId, streamedById]);
 
-  const isStreaming = startFetcher.state !== 'idle' || stream.isStreaming;
+  const isStreaming =
+    startFetcher.state !== 'idle' ||
+    stream.isStreaming ||
+    pendingAssistantId !== null;
   const isEmptyThread = threadMessages.length === 0;
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
@@ -195,6 +208,10 @@ export default function Component(
     if (!conversationId) {
       return;
     }
+
+    // Leave the streaming state immediately; the terminal chunk may be missed
+    // if the cancel lands before the stream published anything.
+    setPendingAssistantId(null);
 
     cancelFetcher.submit(
       { conversationId, intent: 'cancel' },
@@ -261,6 +278,7 @@ export default function Component(
 
     if (result.assistantMessageId) {
       const assistantId = result.assistantMessageId;
+      setPendingAssistantId(assistantId);
       setMessages((previous) =>
         previous.some((message) => message.id === assistantId)
           ? previous
@@ -268,6 +286,17 @@ export default function Component(
       );
     }
   }, [startFetcher.data]);
+
+  // Clear the pending flag once the started turn reaches its terminal `done`
+  // chunk (success or error), so the composer leaves its streaming state.
+  useEffect(() => {
+    if (
+      pendingAssistantId !== null &&
+      stream.completedIds.has(pendingAssistantId)
+    ) {
+      setPendingAssistantId(null);
+    }
+  }, [pendingAssistantId, stream.completedIds]);
 
   // 🔌 Short Circuit
 

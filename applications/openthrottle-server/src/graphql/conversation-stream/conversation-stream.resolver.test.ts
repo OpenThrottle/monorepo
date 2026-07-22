@@ -65,7 +65,6 @@ const userMessage = agentConversationMessagesFactory.build({
 });
 
 function build(): {
-  asyncIterator: ReturnType<typeof vi.fn>;
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
@@ -94,8 +93,8 @@ function build(): {
   const streamService = createMock<ConversationStreamService>({
     cancel: vi.fn().mockReturnValue(true),
     start: vi.fn(),
+    subscribe: vi.fn().mockReturnValue({ next: vi.fn() }),
   });
-  const asyncIterator = vi.fn().mockReturnValue({ next: vi.fn() });
   const logger = createMock<LoggerService>({
     debug: vi.fn(),
     warn: vi.fn(),
@@ -105,17 +104,10 @@ function build(): {
     customPrompts,
     logger,
     modelDiscovery,
-    {
-      asyncIterator,
-      publish: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-    },
     repositories,
     streamService,
   );
   return {
-    asyncIterator,
     conversations,
     modelDiscovery,
     personaFindOne,
@@ -330,8 +322,8 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
     vi.clearAllMocks();
   });
 
-  it('subscribes to the conversation topic for an authenticated owner', async () => {
-    const { asyncIterator, conversations, resolver } = build();
+  it('subscribes (with replay) for an authenticated owner', async () => {
+    const { conversations, resolver, streamService } = build();
 
     await resolver.conversationStreamChunkAdded('conv-1', { userId: 'user-1' });
 
@@ -339,20 +331,20 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
       'user-1',
       'conv-1',
     );
-    expect(asyncIterator).toHaveBeenCalledWith('conversation:conv-1:stream');
+    expect(streamService.subscribe).toHaveBeenCalledWith('conv-1');
   });
 
   it('throws when the connection is unauthenticated', async () => {
-    const { asyncIterator, resolver } = build();
+    const { resolver, streamService } = build();
 
     await expect(
       resolver.conversationStreamChunkAdded('conv-1', {}),
     ).rejects.toThrow('authenticated connection');
-    expect(asyncIterator).not.toHaveBeenCalled();
+    expect(streamService.subscribe).not.toHaveBeenCalled();
   });
 
   it('rejects when the caller does not own the conversation', async () => {
-    const { asyncIterator, conversations, resolver } = build();
+    const { conversations, resolver, streamService } = build();
     vi.mocked(conversations.getConversationForUser).mockRejectedValueOnce(
       new Error('Agent conversation not found'),
     );
@@ -360,6 +352,6 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
     await expect(
       resolver.conversationStreamChunkAdded('conv-1', { userId: 'user-1' }),
     ).rejects.toThrow('not found');
-    expect(asyncIterator).not.toHaveBeenCalled();
+    expect(streamService.subscribe).not.toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { ForbiddenException, Inject } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Args,
@@ -22,11 +22,6 @@ import {
   CurrentUser,
   Public,
 } from '@openthrottle/nestjs-auth';
-import {
-  PUB_SUB,
-  conversationStreamTopic,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
@@ -45,7 +40,7 @@ import {
   StartConversationStreamResult,
 } from './conversation-stream.object';
 import { ConversationStreamService } from './conversation-stream.service';
-import { type ConversationStreamChunkPayload } from './conversation-stream.types';
+import { type ConversationStreamChunkEnvelope } from './conversation-stream.types';
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.
@@ -133,7 +128,6 @@ export class ConversationStreamResolver {
     private readonly customPrompts: CustomPromptsService,
     private readonly logger: LoggerService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
-    @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
     private readonly repositories: WorkspaceLocalRepositoriesService,
     private readonly streamService: ConversationStreamService,
   ) {}
@@ -147,7 +141,7 @@ export class ConversationStreamResolver {
   async conversationStreamChunkAdded(
     @Args('conversationId', { type: () => ID }) conversationId: string,
     @Context() context: { userId?: string },
-  ): Promise<AsyncIterator<ConversationStreamChunkPayload>> {
+  ): Promise<AsyncIterator<ConversationStreamChunkEnvelope>> {
     if (!context.userId) {
       throw new ForbiddenException(
         'A subscription requires an authenticated connection',
@@ -160,9 +154,10 @@ export class ConversationStreamResolver {
       conversationId,
     );
 
-    return this.pubSub.asyncIterator<ConversationStreamChunkPayload>(
-      conversationStreamTopic(conversationId),
-    );
+    // Replays any buffered chunks of the current turn before live deltas, so a
+    // subscriber attaching after the stream started (the home route only knows
+    // the conversation id once the start mutation returns) misses nothing.
+    return this.streamService.subscribe(conversationId);
   }
 
   @Mutation(() => StartConversationStreamResult, {
@@ -329,6 +324,10 @@ export class ConversationStreamResolver {
         sessionId = await createCursorAgentSession({ cwd });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `startConversationStream: cursor session start failed (cwd=${cwd}): ${message}`,
+          ConversationStreamResolver.name,
+        );
         return `Failed to start a cursor-agent session: ${message}`;
       }
 

@@ -9,7 +9,10 @@ import {
   createCursorAgentSession,
   cursorAgentConversationBackend,
 } from '../cursor-agent.ts';
-import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../teardown.ts';
+import {
+  AGENT_IDLE_TIMEOUT_MS_ENV,
+  AGENT_SESSION_TIMEOUT_MS_ENV,
+} from '../teardown.ts';
 import type { ConversationStreamChunk } from '../../types.ts';
 
 let dir: string;
@@ -211,5 +214,21 @@ describe('createCursorAgentSession', () => {
     await expect(createCursorAgentSession({ cwd: dir })).rejects.toThrow(
       'create-chat failed',
     );
+  });
+
+  it('times out (killing the child) when create-chat hangs', async () => {
+    // A create-chat that never prints and never exits.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-hang.js',
+      `setInterval(() => {}, 1000000);`,
+    );
+    process.env[AGENT_SESSION_TIMEOUT_MS_ENV] = '200';
+    try {
+      await expect(createCursorAgentSession({ cwd: dir })).rejects.toThrow(
+        'timed out',
+      );
+    } finally {
+      delete process.env[AGENT_SESSION_TIMEOUT_MS_ENV];
+    }
   });
 });

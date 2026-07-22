@@ -14,10 +14,14 @@ export const AGENT_IDLE_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`;
 export const AGENT_WALLCLOCK_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS`;
 /** Env override: grace period before SIGKILL after SIGTERM, in ms. */
 export const AGENT_KILL_GRACE_MS_ENV = 'OPENTHROTTLE_AGENT_KILL_GRACE_MS';
+/** Env override: timeout for minting a CLI session (e.g. cursor create-chat), in ms. */
+export const AGENT_SESSION_TIMEOUT_MS_ENV =
+  'OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS';
 
 const DEFAULT_IDLE_TIMEOUT_MS = 120_000;
 const DEFAULT_WALLCLOCK_TIMEOUT_MS = 900_000;
 const DEFAULT_KILL_GRACE_MS = 5_000;
+const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 
 /** Resolved resource bounds for one spawned agent run. */
 export interface AgentTimeouts {
@@ -53,6 +57,18 @@ export function resolveAgentTimeouts(
       DEFAULT_WALLCLOCK_TIMEOUT_MS,
     ),
   };
+}
+
+/**
+ * Read the (env-overridable) timeout for minting a CLI session; safe default.
+ */
+export function resolveSessionCreateTimeoutMs(
+  env: NodeJS.ProcessEnv = process.env,
+): number {
+  return positiveIntOr(
+    env[AGENT_SESSION_TIMEOUT_MS_ENV],
+    DEFAULT_SESSION_TIMEOUT_MS,
+  );
 }
 
 /**
