@@ -7,6 +7,7 @@
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
 import {
+  captureRunLocation,
   ensureDatabaseReachableOrExit,
   formatPlanAndTasksForPrompt,
   getOpenThrottleConfigOrExit,
@@ -14,7 +15,10 @@ import {
   getTaskById,
   getTasksByPlanId,
   RALPH_WORKFLOW_FATAL_PREFIX,
+  readPlanRunCancelMarker,
   reconcilePlanCompletionIfAllTasksTerminal,
+  registerCliPlanRun,
+  settleCliPlanRun,
   updatePlanStatus,
   updateTaskStatus,
 } from '../utils/openthrottle-ralph';
@@ -22,6 +26,7 @@ import { isComplete, showConfiguration, showRalphUsage } from '../utils/index';
 import { logWorkflowRalphOtDiagnostics } from '../utils/ot-diagnostics';
 import type { RalphArgs } from '../utils/parsers';
 import {
+  getRalphOutputMarkerFlags,
   parseRalphArgs,
   parseRalphCompleteTaskSignals,
   parseRalphResponse,
@@ -32,6 +37,17 @@ import type { RunIterationConfig } from './run-iteration';
 import { runIteration, runIterationAsync } from './run-iteration';
 
 export type { CursorAgentChunk, RunIterationConfig } from './run-iteration';
+
+/** Poll interval for the detached-CLI durable cancel marker (covers during- and between-iteration). */
+const CLI_CANCEL_POLL_INTERVAL_MS = 3000;
+
+/**
+ * Outer safety net: main() sets this to its run-settle closure after registering a
+ * detached CLI run, so the top-level catch can settle the run FAILED on an otherwise
+ * uncaught error before exiting. Null when no run is tracked (TTY / register failed).
+ */
+let settleActiveCliRunOnFatal: ((status: string) => Promise<void>) | null =
+  null;
 
 /**
  * @description Main entry point. Single flow:
@@ -142,6 +158,141 @@ export const main = async (): Promise<void> => {
     await updateTaskStatus(openthrottleConfig, task, 'IN_PROGRESS');
   }
 
+  // ── Detached-CLI cancelable run wiring ────────────────────────────────────
+  // A non-TTY (detached) run registers a first-class plan_runs row so the UI Kill
+  // has a row to stamp the durable cancel marker on, then polls that marker and
+  // aborts the in-flight agent child when it is set. A TTY run stays UNTRACKED by
+  // design (a human at the terminal can Ctrl-C; the UI honestly reports NO_ACTIVE_RUN).
+  const isDetached = process.stdin.isTTY !== true;
+  let planRunId: string | null = null;
+  const abortController = new AbortController();
+  let killRequested = false;
+  let runSettled = false;
+  let markerPollTimer: ReturnType<typeof setInterval> | undefined;
+
+  const stopMarkerPolling = (): void => {
+    if (markerPollTimer) {
+      clearInterval(markerPollTimer);
+      markerPollTimer = undefined;
+    }
+  };
+
+  /** Settle the run row exactly once (no-op when the run was never tracked). */
+  const settleCliRunSafely = async (status: string): Promise<void> => {
+    if (!planRunId || runSettled) {
+      return;
+    }
+    runSettled = true;
+    stopMarkerPolling();
+    try {
+      await settleCliPlanRun(openthrottleConfig, planRunId, status);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `⚠️ Could not settle CLI run ${planRunId} (${status}): ${msg}`,
+      );
+    }
+  };
+  settleActiveCliRunOnFatal = settleCliRunSafely;
+
+  if (isDetached) {
+    try {
+      planRunId = await registerCliPlanRun(openthrottleConfig, {
+        executionBackend: parsedArgs.backend,
+        location: captureRunLocation(),
+        planId: effectivePlanId,
+      });
+      console.log(
+        ` - 🏃 Registered detached CLI run ${COLORS.green}${planRunId}${COLORS.reset} (cancelable from the UI).`,
+      );
+    } catch (error) {
+      // Graceful degrade: run un-tracked (today's NO_ACTIVE_RUN behavior). Never abort real work.
+      planRunId = null;
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `⚠️ Could not register a cancelable CLI run for plan ${effectivePlanId}; continuing UN-TRACKED (UI Kill will report NO_ACTIVE_RUN). ${msg}`,
+      );
+    }
+  }
+
+  /** Finalize a UI Kill: settle CANCELLED, reset the in-flight task + plan to PENDING, exit. */
+  const finishKilledRun = async (
+    inFlightTaskId: string | undefined,
+  ): Promise<void> => {
+    console.log(
+      ` - 🛑 UI Kill received; stopping detached CLI run ${planRunId ?? ''}.`,
+    );
+    await settleCliRunSafely('CANCELLED');
+
+    // The server's cancelRun returns CANCELLATION_REQUESTED for a detached run and
+    // deliberately does NOT reset the plan, so the CLI resets task + plan to PENDING
+    // itself — else the plan is stranded IN_PROGRESS (plan-completion-no-downward-reconcile).
+    if (inFlightTaskId) {
+      try {
+        await updateTaskStatus(openthrottleConfig, inFlightTaskId, 'PENDING');
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(
+          `⚠️ Could not reset task ${inFlightTaskId} to PENDING: ${msg}`,
+        );
+      }
+    }
+    try {
+      await updatePlanStatus(openthrottleConfig, effectivePlanId, 'PENDING');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `⚠️ Could not reset plan ${effectivePlanId} to PENDING: ${msg}`,
+      );
+    }
+    console.log(ARTWORK_THANK_YOU);
+    process.exit(0);
+  };
+
+  if (isDetached && planRunId) {
+    const myRunId = planRunId;
+
+    // Best-effort settle on graceful termination signals. SIGKILL / power-loss is a
+    // KNOWN LIMITATION (stale IN_PROGRESS row) covered by the heartbeat follow-up plan.
+    const settleOnSignal = (signalName: string, code: number): void => {
+      console.warn(
+        ` - 🛑 ${signalName} received; settling CLI run ${myRunId} (CANCELLED) best-effort.`,
+      );
+      void settleCliRunSafely('CANCELLED').finally(() => process.exit(code));
+    };
+    process.once('SIGINT', () => settleOnSignal('SIGINT', 130));
+    process.once('SIGTERM', () => settleOnSignal('SIGTERM', 143));
+    process.once('beforeExit', () => {
+      void settleCliRunSafely('CANCELLED');
+    });
+
+    // Single long-lived poll (during- and between-iteration). Aborts the active agent
+    // child (run-iteration wires signal → escalateKill) and flags the loop to stop when
+    // the marker is set OR another run superseded mine (newest run id !== my run id).
+    markerPollTimer = setInterval(() => {
+      void (async () => {
+        try {
+          const marker = await readPlanRunCancelMarker(
+            openthrottleConfig,
+            effectivePlanId,
+          );
+          if (!marker) {
+            return;
+          }
+          const superseded = marker.planRunId !== myRunId;
+          if (marker.cancelRequestedAt !== null || superseded) {
+            killRequested = true;
+            stopMarkerPolling();
+            abortController.abort();
+          }
+        } catch {
+          // Transient poll failure: retry next tick.
+        }
+      })();
+    }, CLI_CANCEL_POLL_INTERVAL_MS);
+    markerPollTimer.unref?.();
+  }
+
   /**
    * Task-centric mode runs a single task once by default (the single-task rule). The opt-in
    * `--task-iterations <n>` / `WORKFLOW_RALPH_TASK_ITERATIONS` override lets a caller loop the same
@@ -162,6 +313,15 @@ export const main = async (): Promise<void> => {
       maxIterations,
       mode: task ? 'task-centric' : 'plan-centric',
     });
+
+    // Kill arrived while idle between iterations: stop before starting a new agent.
+    // Reset the previous iteration's task only if it was left in-flight (not completed).
+    if (killRequested) {
+      // eslint-disable-next-line no-await-in-loop
+      await finishKilledRun(
+        lastIterationTaskCompleted ? undefined : lastIterationTaskId,
+      );
+    }
 
     let agentPrompt = basePrompt;
     /** In plan-centric mode, the task id we set to IN_PROGRESS this iteration (for diagnostic if agent omits signal). */
@@ -185,6 +345,8 @@ export const main = async (): Promise<void> => {
           effectivePlanId,
           'COMPLETED',
         );
+        // eslint-disable-next-line no-await-in-loop
+        await settleCliRunSafely('COMPLETED');
         console.log(
           ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has no remaining tasks; Ralph is exiting.`,
         );
@@ -247,14 +409,31 @@ export const main = async (): Promise<void> => {
     });
 
     // Iterations are intentionally sequential (each depends on previous task updates).
-    const result =
-      process.stdin.isTTY !== true
+    // The detached path passes the AbortController signal so the marker poll can kill
+    // the in-flight agent child mid-iteration (run-iteration wires signal → escalateKill).
+    let result: string;
+    try {
+      result = isDetached
         ? // eslint-disable-next-line no-await-in-loop -- iterations must run sequentially
           await runIterationAsync({
             ...iterationConfig,
+            signal: abortController.signal,
             timeoutMs: parsedArgs.iterationTimeoutMs,
           })
         : runIteration(iterationConfig);
+    } catch (error) {
+      // Iteration threw (not an abort): settle the tracked run FAILED, then rethrow.
+      // eslint-disable-next-line no-await-in-loop
+      await settleCliRunSafely('FAILED');
+      throw error;
+    }
+
+    // The poll fired mid-iteration (marker set or superseded): abort the loop before
+    // marking any task complete, reset task + plan to PENDING, settle CANCELLED, exit.
+    if (killRequested) {
+      // eslint-disable-next-line no-await-in-loop
+      await finishKilledRun(task ?? firstPendingForIteration);
+    }
 
     ralphDebugLogger.debug(
       'main: iteration runner finished (buffer ready for parse)',
@@ -338,6 +517,20 @@ export const main = async (): Promise<void> => {
       ? completeTaskIds.some((id) => id === currentTaskId.toLowerCase())
       : false;
 
+    // parseRalphResponse may process.exit synchronously on a terminal marker; settle the
+    // tracked run row first so a detached CLI run is never left IN_PROGRESS on those exits.
+    const terminalFlags = getRalphOutputMarkerFlags(result);
+    if (terminalFlags.hasPromiseComplete) {
+      // eslint-disable-next-line no-await-in-loop
+      await settleCliRunSafely('COMPLETED');
+    } else if (
+      terminalFlags.hasPromiseError ||
+      terminalFlags.hasPromiseInputRequired
+    ) {
+      // eslint-disable-next-line no-await-in-loop
+      await settleCliRunSafely('FAILED');
+    }
+
     parseRalphResponse(result, iteration, contextLabel);
   }
 
@@ -387,12 +580,17 @@ export const main = async (): Promise<void> => {
     }
   }
 
+  await settleCliRunSafely('COMPLETED');
   console.log(MESSAGE_COMPLETED);
   process.exit(0);
 };
 
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch(async (error) => {
+    // Settle a tracked detached run FAILED before exiting on an otherwise uncaught error.
+    if (settleActiveCliRunOnFatal) {
+      await settleActiveCliRunOnFatal('FAILED');
+    }
     console.error(`${RALPH_WORKFLOW_FATAL_PREFIX}Fatal error:`, error);
     process.exit(1);
   });

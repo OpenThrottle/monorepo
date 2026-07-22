@@ -3,7 +3,7 @@
  * in emission order, retries transient append failures a bounded number of times, and
  * tracks ultimate failures so a job can surface lost output instead of reporting a
  * silent success. Replaces the previous fire-and-forget, unordered append behavior in
- * the Ralph child-job chunk handler.
+ * the Ralph iteration chunk handler.
  */
 
 /** Outcome of draining the streamer: how many appends were attempted and how many were lost. */
@@ -92,7 +92,7 @@ export function createPlanOutputStreamer(
       firstFailureMessage = message;
     }
     logger.error(
-      `[child-job] append_plan_output failed after ${maxAttempts} attempts: ${message}`,
+      `[plan-output] append_plan_output failed after ${maxAttempts} attempts: ${message}`,
     );
   };
 
@@ -102,7 +102,7 @@ export function createPlanOutputStreamer(
 
       if (failed > 0) {
         logger.warn(
-          `[child-job] ${failed}/${attempted} plan-output appends were lost (first error: ${firstFailureMessage}).`,
+          `[plan-output] ${failed}/${attempted} plan-output appends were lost (first error: ${firstFailureMessage}).`,
         );
       }
 

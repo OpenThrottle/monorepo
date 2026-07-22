@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPlanOutputStreamer } from '../plan-output-streamer';
 
 /**
- * Unit tests for the Ralph child-job chunk handler's append behavior: in-order
+ * Unit tests for the Ralph iteration chunk handler's append behavior: in-order
  * (serialized) delivery, bounded retry of transient failures, and surfacing
  * ultimately-lost output instead of silently succeeding.
  */

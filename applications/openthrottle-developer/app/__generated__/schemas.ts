@@ -74,6 +74,7 @@ import {
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RecordWorkArtifactInput,
+  RegisterCliPlanRunInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
@@ -93,6 +94,7 @@ import {
   SearchPlansInput,
   SetPlanStatusInput,
   SetWorkspaceLocalRepositoryProjectInput,
+  SettleCliPlanRunInput,
   SkillAvailabilityRuleInput,
   StartConversationStreamInput,
   StartWorkSessionInput,
@@ -864,6 +866,18 @@ export function RecordWorkArtifactInputSchema(): z.ZodObject<
   });
 }
 
+export function RegisterCliPlanRunInputSchema(): z.ZodObject<
+  Properties<RegisterCliPlanRunInput>
+> {
+  return z.object({
+    executionBackend: z.string(),
+    hostname: z.string().nullish(),
+    pid: z.number().nullish(),
+    planId: z.string(),
+    workerId: z.string().nullish(),
+  });
+}
+
 export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
   return z.object({
     email: z.string(),
@@ -1029,6 +1043,15 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   return z.object({
     id: z.string(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function SettleCliPlanRunInputSchema(): z.ZodObject<
+  Properties<SettleCliPlanRunInput>
+> {
+  return z.object({
+    planRunId: z.string(),
+    status: z.string(),
   });
 }
 

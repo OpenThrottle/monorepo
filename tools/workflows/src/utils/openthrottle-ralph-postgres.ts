@@ -8,11 +8,13 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 import type {
+  CliPlanRunCancelMarker,
   CommitLinkInput,
   CommitLinkRow,
   ListPlansByStatusRow,
   PlanRow,
   ProjectRow,
+  RegisterCliRunInput,
   TaskRow,
   WorkflowRalphConfig,
 } from './openthrottle-ralph-types';
@@ -412,6 +414,100 @@ export async function updateTaskStatusPostgres(
       await updatePlanStatusPostgres(config, taskRow.planId, 'IN_PROGRESS');
     }
     return taskRow;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * @description Registers a detached CLI run as a first-class plan_runs row (postgres-direct twin of
+ * {@link registerCliPlanRunGraphql}). Direct INSERT with bullmq_job_id NULL (permitted by the partial
+ * unique index from migration 076), run_kind 'orchestrator', status 'IN_PROGRESS', and the location
+ * columns set. No BullMQ job. Returns the new plan_run id.
+ */
+export async function registerCliPlanRunPostgres(
+  config: WorkflowRalphConfig,
+  input: RegisterCliRunInput,
+): Promise<string> {
+  const connectionString = requireConnectionString(config);
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  try {
+    const res = await client.query<{ id: string }>(
+      `INSERT INTO plan_runs
+         (plan_id, bullmq_job_id, execution_backend, run_kind, status, hostname, pid, worker_id)
+       VALUES ($1, NULL, $2, 'orchestrator', 'IN_PROGRESS', $3, $4, $5)
+       RETURNING id`,
+      [
+        input.planId,
+        input.executionBackend,
+        input.location.hostname,
+        input.location.pid,
+        input.location.workerId,
+      ],
+    );
+    const row = res.rows[0];
+    if (!row) throw new Error('registerCliPlanRun: no row returned');
+    return row.id;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * @description Reads the NEWEST plan_runs row's cancel marker for a plan (postgres-direct twin of
+ * {@link readPlanRunCancelMarkerGraphql}). Ordered by created_at DESC — the newest row is the one
+ * stampCancelRequested marks. Returns null when the plan has no run row.
+ */
+export async function readPlanRunCancelMarkerPostgres(
+  config: WorkflowRalphConfig,
+  planId: string,
+): Promise<CliPlanRunCancelMarker | null> {
+  const connectionString = requireConnectionString(config);
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  try {
+    const res = await client.query<{
+      cancel_requested_at: Date | string | null;
+      id: string;
+      status: string;
+    }>(
+      `SELECT id, cancel_requested_at, status FROM plan_runs WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [planId],
+    );
+    const row = res.rows[0];
+    if (!row) return null;
+    return {
+      cancelRequestedAt:
+        row.cancel_requested_at instanceof Date
+          ? row.cancel_requested_at.toISOString()
+          : (row.cancel_requested_at ?? null),
+      planRunId: row.id,
+      status: row.status,
+    };
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * @description Settles a detached CLI run row on exit (postgres-direct twin of
+ * {@link settleCliPlanRunGraphql}): sets the terminal status and clears the location columns, keyed
+ * on the run id.
+ */
+export async function settleCliPlanRunPostgres(
+  config: WorkflowRalphConfig,
+  planRunId: string,
+  status: string,
+): Promise<void> {
+  const connectionString = requireConnectionString(config);
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  try {
+    await client.query(
+      `UPDATE plan_runs SET status = $2, hostname = NULL, pid = NULL, worker_id = NULL, updated_at = NOW() WHERE id = $1`,
+      [planRunId, status],
+    );
   } finally {
     await client.end();
   }

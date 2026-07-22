@@ -122,6 +122,33 @@ mutation ralphEndWorkSession($input: EndWorkSessionInput!) {
   }
 }
 
+mutation registerCliPlanRun($input: RegisterCliPlanRunInput!) {
+  registerCliPlanRun(input: $input) {
+    bullmqJobId
+    cancelRequestedAt
+    createdAt
+    executionBackend
+    hostname
+    id
+    pid
+    planId
+    runKind
+    status
+    workerId
+  }
+}
+
+mutation settleCliPlanRun($input: SettleCliPlanRunInput!) {
+  settleCliPlanRun(input: $input) {
+    hostname
+    id
+    pid
+    planId
+    status
+    workerId
+  }
+}
+
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     ...Project

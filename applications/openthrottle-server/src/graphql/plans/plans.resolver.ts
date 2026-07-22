@@ -42,6 +42,7 @@ import type {
   PlanJobRunHooksStorage,
   PlanRun,
   PlanRunConfigStorage,
+  PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project, Task } from '@openthrottle/nestjs-repositories';
@@ -73,8 +74,10 @@ import {
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   PlanRunsByPlanIdInput,
+  RegisterCliPlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
+  SettleCliPlanRunInput,
   UpdatePlanInput,
 } from './plan.input';
 import {
@@ -150,6 +153,18 @@ function isCancelPlanRunResult(
     typeof value.planId === 'string' &&
     Array.isArray(value.removedJobIds)
   );
+}
+
+/** @description Narrows a client-supplied backend string to a {@link PlanRunExecutionBackend}. */
+function isPlanRunExecutionBackend(
+  value: string,
+): value is PlanRunExecutionBackend {
+  return value === 'claude' || value === 'cursor' || value === 'opencode';
+}
+
+/** @description Terminal statuses a detached-CLI run may be settled to. */
+function isTerminalCliRunStatus(value: string): boolean {
+  return value === 'CANCELLED' || value === 'COMPLETED' || value === 'FAILED';
 }
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
@@ -289,6 +304,57 @@ export class PlansResolver {
     );
 
     return runs.map((run) => this.mapPlanRunObject(run));
+  }
+
+  @Mutation(() => PlanRunObject, {
+    description: `Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.`,
+  })
+  async registerCliPlanRun(
+    @Args('input', { type: () => RegisterCliPlanRunInput })
+    input: RegisterCliPlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
+  ): Promise<PlanRunObject> {
+    if (!isPlanRunExecutionBackend(input.executionBackend)) {
+      throw new BadRequestException(
+        `Invalid executionBackend: ${input.executionBackend} (expected claude, cursor, or opencode)`,
+      );
+    }
+
+    const run = await this.planRunsService.registerCliRun({
+      actorUserId: resolveActorUserId(actorSub, actorKind),
+      executionBackend: input.executionBackend,
+      hostname: input.hostname ?? null,
+      pid: input.pid ?? null,
+      planId: input.planId,
+      workerId: input.workerId ?? null,
+    });
+
+    return this.mapPlanRunObject(run);
+  }
+
+  @Mutation(() => PlanRunObject, {
+    description: `Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists.`,
+    nullable: true,
+  })
+  async settleCliPlanRun(
+    @Args('input', { type: () => SettleCliPlanRunInput })
+    input: SettleCliPlanRunInput,
+  ): Promise<PlanRunObject | null> {
+    const status = input.status.trim().toUpperCase();
+
+    if (!isTerminalCliRunStatus(status)) {
+      throw new BadRequestException(
+        `Invalid settle status: ${input.status} (expected COMPLETED, CANCELLED, or FAILED)`,
+      );
+    }
+
+    const run = await this.planRunsService.settleCliRun(
+      input.planRunId,
+      status,
+    );
+
+    return run ? this.mapPlanRunObject(run) : null;
   }
 
   // @ProfileResponseTime('PlansResolver.plan')

@@ -1,5 +1,5 @@
 /**
- * @description Tests for nested workflow-ralph argv (runChildJob / queue processors).
+ * @description Tests for nested workflow-ralph argv (queue processors).
  */
 
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';

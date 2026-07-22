@@ -1330,6 +1330,8 @@ export type Mutation = {
   recordWorkArtifact: WorkArtifactObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
+  /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
+  registerCliPlanRun: PlanRunObject;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
@@ -1364,6 +1366,8 @@ export type Mutation = {
   setPlanStatus?: Maybe<PlanObject>;
   /** Assign, change, or clear the OpenThrottle project link for a local repository. */
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
+  /** Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists. */
+  settleCliPlanRun?: Maybe<PlanRunObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
   /** Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures. */
@@ -1639,6 +1643,10 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRegisterCliPlanRunArgs = {
+  input: RegisterCliPlanRunInput;
+};
+
 export type MutationRemovePermissionFromRoleArgs = {
   input: RemovePermissionFromRoleInput;
 };
@@ -1707,6 +1715,10 @@ export type MutationSetPlanStatusArgs = {
 
 export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
   input: SetWorkspaceLocalRepositoryProjectInput;
+};
+
+export type MutationSettleCliPlanRunArgs = {
+  input: SettleCliPlanRunInput;
 };
 
 export type MutationStartConversationStreamArgs = {
@@ -2844,6 +2856,19 @@ export type RecordWorkArtifactInput = {
   type: Scalars['String']['input'];
 };
 
+export type RegisterCliPlanRunInput = {
+  /** Execution backend for this detached-CLI run: claude, cursor, or opencode. */
+  executionBackend: Scalars['String']['input'];
+  /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */
+  hostname?: InputMaybe<Scalars['String']['input']>;
+  /** OS process id of the CLI process (cleared on settle). Null when unknown. */
+  pid?: InputMaybe<Scalars['Int']['input']>;
+  /** Plan id this detached-CLI run executes. */
+  planId: Scalars['ID']['input'];
+  /** Worker/run identifier for the CLI (cleared on settle). Null when unknown. */
+  workerId?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RegisterInput = {
   /** User email (must be unique) */
   email: Scalars['String']['input'];
@@ -3151,6 +3176,13 @@ export type SetWorkspaceLocalRepositoryProjectInput = {
   id: Scalars['ID']['input'];
   /** OpenThrottle project id, or null to clear the link. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type SettleCliPlanRunInput = {
+  /** Plan-run row id to settle (returned by registerCliPlanRun). */
+  planRunId: Scalars['ID']['input'];
+  /** Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase. */
+  status: Scalars['String']['input'];
 };
 
 export type SignoutResultObject = {
