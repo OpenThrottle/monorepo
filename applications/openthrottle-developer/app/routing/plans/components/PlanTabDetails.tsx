@@ -4,7 +4,6 @@ import { useAtomValue } from 'jotai';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
@@ -121,13 +120,7 @@ export const PlanTabDetails = (
                       .join('\n')}
                   />
                 </>
-              ) : (
-                <OpenThrottleEmptyState
-                  className="p-0!"
-                  description="This plan and its tasks have no requirements. Modify the plan and its tasks to add requirements."
-                  title="No Requirements"
-                />
-              )}
+              ) : null}
             </div>
           )}
         </div>
