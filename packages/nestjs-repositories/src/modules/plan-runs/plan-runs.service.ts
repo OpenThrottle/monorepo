@@ -5,7 +5,7 @@ import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-wo
 import { Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
-import type { PlanRunKind } from './plan-run.entity';
+import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
 interface RecordQueuedPlanRunInput {
@@ -17,6 +17,21 @@ interface RecordQueuedPlanRunInput {
   readonly queueName: string;
   readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
   readonly runKind: PlanRunKind;
+}
+
+/**
+ * Input for a detached workflow-ralph CLI run row. The CLI carries no BullMQ job
+ * and drives its own iteration loop, so the row is inserted with a null
+ * bullmqJobId and runKind 'orchestrator'.
+ */
+interface RegisterCliPlanRunInput {
+  /** User who started the CLI run (auth sub for a user principal); null for service-account/system. */
+  readonly actorUserId?: string | null;
+  readonly executionBackend: PlanRunExecutionBackend;
+  readonly hostname: string | null;
+  readonly pid: number | null;
+  readonly planId: string;
+  readonly workerId: string | null;
 }
 
 /** Where a run is executing; stamped at job start, cleared at finish. */
@@ -96,6 +111,55 @@ export class PlanRunsService {
     }
 
     return repo.save(repo.create(rowInput));
+  }
+
+  /**
+   * @description Registers a detached workflow-ralph CLI run as a first-class plan_runs row so
+   * {@link PlanRunsService.stampCancelRequested} (via PlanStatusService.cancelRun) has a row to
+   * stamp the durable cancel marker on. Inserts with bullmqJobId NULL (permitted by the partial
+   * unique index from migration 076 — see the entity note), runKind 'orchestrator' (the CLI drives
+   * its own iteration loop, NOT the dead spawn worker), status 'IN_PROGRESS', and the run-location
+   * columns (hostname/pid/workerId) stamped at creation. Creates NO BullMQ job — this is an
+   * in-process laptop run, not a queued job. Returns the created run.
+   */
+  async registerCliRun(input: RegisterCliPlanRunInput): Promise<PlanRun> {
+    const repo = this.getRepository();
+
+    return repo.save(
+      repo.create({
+        actorUserId: input.actorUserId ?? null,
+        bullmqJobId: null,
+        executionBackend: input.executionBackend,
+        hostname: input.hostname,
+        pid: input.pid,
+        planId: input.planId,
+        queueName: 'plans',
+        runKind: 'orchestrator',
+        status: 'IN_PROGRESS',
+        workerId: input.workerId,
+      }),
+    );
+  }
+
+  /**
+   * @description Settles a detached-CLI run on exit, keyed on the RUN ID (not the
+   * (queueName, bullmqJobId) pair, which {@link clearRunLocation} uses and which cannot address a
+   * null-job-id CLI row). Sets the terminal status (COMPLETED / CANCELLED / FAILED) and nulls the
+   * run-location columns; leaves the cancel marker intact (audit record). Returns the updated run,
+   * or null when no row matched the id.
+   */
+  async settleCliRun(
+    planRunId: string,
+    status: string,
+  ): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+
+    await repo.update(
+      { id: planRunId },
+      { hostname: null, pid: null, status, workerId: null },
+    );
+
+    return repo.findOne({ where: { id: planRunId } });
   }
 
   /**

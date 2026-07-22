@@ -3205,6 +3205,16 @@ type Mutation {
   """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
   appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
+  """
+  Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.
+  """
+  registerCliPlanRun(input: RegisterCliPlanRunInput!): PlanRunObject!
+
+  """
+  Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists.
+  """
+  settleCliPlanRun(input: SettleCliPlanRunInput!): PlanRunObject
+
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
 
@@ -3680,6 +3690,41 @@ input AppendPlanOutputInput {
   Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks.
   """
   taskId: ID
+}
+
+input RegisterCliPlanRunInput {
+  """
+  Execution backend for this detached-CLI run: claude, cursor, or opencode.
+  """
+  executionBackend: String!
+
+  """
+  Host the CLI is running on (diagnostic; cleared on settle). Null when unknown.
+  """
+  hostname: String
+
+  """
+  OS process id of the CLI process (cleared on settle). Null when unknown.
+  """
+  pid: Int
+
+  """Plan id this detached-CLI run executes."""
+  planId: ID!
+
+  """
+  Worker/run identifier for the CLI (cleared on settle). Null when unknown.
+  """
+  workerId: String
+}
+
+input SettleCliPlanRunInput {
+  """Plan-run row id to settle (returned by registerCliPlanRun)."""
+  planRunId: ID!
+
+  """
+  Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.
+  """
+  status: String!
 }
 
 input CreatePlanInput {

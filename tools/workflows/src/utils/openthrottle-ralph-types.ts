@@ -32,10 +32,9 @@ export interface TaskRow {
 /**
  * @description True when a plan's task set is non-empty and every task is in a
  * terminal state (`COMPLETED` or `SKIPPED`). This is the single source of truth
- * for the "all tasks terminal ⇒ plan should be COMPLETED" rule, shared by both
- * the Ralph CLI loop and the child-job runner so they cannot drift. An empty
- * task set is intentionally NOT considered terminal (a plan with no tasks is not
- * "done").
+ * for the "all tasks terminal ⇒ plan should be COMPLETED" rule used by the Ralph
+ * CLI loop's terminal reconcile. An empty task set is intentionally NOT considered
+ * terminal (a plan with no tasks is not "done").
  */
 export const areAllTasksTerminal = (tasks: readonly TaskRow[]): boolean =>
   tasks.length > 0 &&
@@ -64,6 +63,34 @@ export interface ListPlansByStatusRow {
   readonly id: string;
   readonly status: string;
   readonly title: string;
+}
+
+/**
+ * @description Where a detached CLI run is executing. Mirrors the location columns
+ * (hostname/pid/worker_id) that {@link markRunStarted} stamps for queued runs, so the
+ * UI's run-audit view renders a CLI run the same way.
+ */
+export interface RunLocation {
+  readonly hostname: string | null;
+  readonly pid: number | null;
+  readonly workerId: string | null;
+}
+
+/** @description Input for registering a detached CLI run as a first-class plan_runs row. */
+export interface RegisterCliRunInput {
+  readonly executionBackend: string;
+  readonly location: RunLocation;
+  readonly planId: string;
+}
+
+/**
+ * @description The newest plan_runs row's durable cancel marker for a plan — what the
+ * server's stampCancelRequested stamps and the CLI loop polls each iteration boundary.
+ */
+export interface CliPlanRunCancelMarker {
+  readonly cancelRequestedAt: string | null;
+  readonly planRunId: string;
+  readonly status: string;
 }
 
 export interface CommitLinkInput {

@@ -97,6 +97,68 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('detached-CLI run lifecycle', () => {
+    it('registerCliRun inserts a null-job-id orchestrator row IN_PROGRESS with location cols', async () => {
+      const result = await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 9999,
+        planId: 'plan-1',
+        workerId: 'cli-abc',
+      });
+
+      expect(repo.save).toHaveBeenCalledTimes(1);
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bullmqJobId: null,
+          executionBackend: 'claude',
+          hostname: 'laptop-1',
+          pid: 9999,
+          planId: 'plan-1',
+          runKind: 'orchestrator',
+          status: 'IN_PROGRESS',
+          workerId: 'cli-abc',
+        }),
+      );
+      expect(result.runKind).toBe('orchestrator');
+      expect(result.status).toBe('IN_PROGRESS');
+    });
+
+    it('registerCliRun defaults actorUserId to null when omitted', async () => {
+      await service.registerCliRun({
+        executionBackend: 'cursor',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: null }),
+      );
+    });
+
+    it('settleCliRun sets terminal status by id and clears location columns', async () => {
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ id: 'run-cli', status: 'CANCELLED' }),
+      );
+
+      const result = await service.settleCliRun('run-cli', 'CANCELLED');
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-cli' },
+        { hostname: null, pid: null, status: 'CANCELLED', workerId: null },
+      );
+      expect(result?.status).toBe('CANCELLED');
+    });
+
+    it('settleCliRun returns null when no row matched the id', async () => {
+      repo.findOne.mockResolvedValueOnce(null);
+
+      expect(await service.settleCliRun('missing', 'COMPLETED')).toBeNull();
+    });
+  });
+
   describe('run-location lifecycle', () => {
     it('markRunStarted stamps hostname/pid/worker_id by (queue, job)', async () => {
       await service.markRunStarted({

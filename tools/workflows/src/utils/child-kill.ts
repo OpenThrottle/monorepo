@@ -1,10 +1,8 @@
 /**
- * @description Shared SIGTERM→SIGKILL escalation for spawned children, used by both the Ralph
- * child-job runner ({@link file://./child-job.ts}) and the per-iteration shell runner
- * ({@link file://../bin/run-iteration.ts}). These two spawn/kill paths were near-identical and
- * each carried their own copy of the grace period and escalation logic, so a fix to one (e.g.
- * the grace duration) could silently miss the other. Centralizing the constant and the escalation
- * keeps them from diverging.
+ * @description Shared SIGTERM→SIGKILL escalation for spawned children, used by the per-iteration
+ * shell runner ({@link file://../bin/run-iteration.ts}) — including when the detached-CLI cancel
+ * poll aborts an in-flight agent child. Centralizing the grace period and escalation logic keeps a
+ * fix to one spawn/kill path from silently missing another.
  */
 
 import type { ChildProcess } from 'child_process';

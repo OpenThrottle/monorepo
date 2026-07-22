@@ -9,6 +9,9 @@ import {
   GetPlanDocument,
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
+  ReadPlanRunCancelMarkerDocument,
+  RegisterCliPlanRunDocument,
+  SettleCliPlanRunDocument,
   WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
 
@@ -192,6 +195,96 @@ describe('openthrottle-ralph-graphql', () => {
       landedSha: 'abc123',
       repo: 'OpenThrottle/monorepo',
       sha: 'abc123',
+    });
+  });
+
+  it('registerCliPlanRunGraphql sends location + backend and returns the new run id', async () => {
+    executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
+      if (document === RegisterCliPlanRunDocument) {
+        return ok({ registerCliPlanRun: { id: 'cli-run-1' } });
+      }
+      return ok({});
+    });
+
+    const { registerCliPlanRunGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    const planRunId = await registerCliPlanRunGraphql({
+      executionBackend: 'claude',
+      location: { hostname: 'laptop-1', pid: 4242, workerId: 'cli-abc' },
+      planId: 'plan-1',
+    });
+
+    expect(planRunId).toBe('cli-run-1');
+    const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(document).toBe(RegisterCliPlanRunDocument);
+    expect(vars).toEqual({
+      input: {
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 4242,
+        planId: 'plan-1',
+        workerId: 'cli-abc',
+      },
+    });
+  });
+
+  it('readPlanRunCancelMarkerGraphql returns the newest run marker', async () => {
+    executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
+      if (document === ReadPlanRunCancelMarkerDocument) {
+        return ok({
+          planRunsByPlanId: [
+            {
+              cancelRequestedAt: '2026-07-22T00:05:00.000Z',
+              createdAt: '2026-07-22T00:00:00.000Z',
+              id: 'cli-run-2',
+              status: 'IN_PROGRESS',
+            },
+          ],
+        });
+      }
+      return ok({});
+    });
+
+    const { readPlanRunCancelMarkerGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    const marker = await readPlanRunCancelMarkerGraphql('plan-1');
+
+    expect(marker).toEqual({
+      cancelRequestedAt: '2026-07-22T00:05:00.000Z',
+      planRunId: 'cli-run-2',
+      status: 'IN_PROGRESS',
+    });
+    const [, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(vars).toEqual({ input: { limit: 1, planId: 'plan-1' } });
+  });
+
+  it('readPlanRunCancelMarkerGraphql returns null when the plan has no run row', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({ planRunsByPlanId: [] }),
+    );
+
+    const { readPlanRunCancelMarkerGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    expect(await readPlanRunCancelMarkerGraphql('plan-1')).toBeNull();
+  });
+
+  it('settleCliPlanRunGraphql calls the settle mutation with run id + status', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({ settleCliPlanRun: { id: 'cli-run-1', status: 'CANCELLED' } }),
+    );
+
+    const { settleCliPlanRunGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await settleCliPlanRunGraphql('cli-run-1', 'CANCELLED');
+
+    const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(document).toBe(SettleCliPlanRunDocument);
+    expect(vars).toEqual({
+      input: { planRunId: 'cli-run-1', status: 'CANCELLED' },
     });
   });
 });

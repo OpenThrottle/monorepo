@@ -225,6 +225,15 @@ query listSources {
   }
 }
 
+query readPlanRunCancelMarker($input: PlanRunsByPlanIdInput!) {
+  planRunsByPlanId(input: $input) {
+    cancelRequestedAt
+    createdAt
+    id
+    status
+  }
+}
+
 query getProjects {
   projects {
     ...Project

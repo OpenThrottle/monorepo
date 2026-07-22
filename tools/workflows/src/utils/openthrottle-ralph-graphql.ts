@@ -20,6 +20,9 @@ import {
   RalphEndWorkSessionDocument,
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
+  ReadPlanRunCancelMarkerDocument,
+  RegisterCliPlanRunDocument,
+  SettleCliPlanRunDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
@@ -30,11 +33,13 @@ import {
 } from '@openthrottle/openthrottle-agentic-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import type {
+  CliPlanRunCancelMarker,
   CommitLinkInput,
   CommitLinkRow,
   ListPlansByStatusRow,
   PlanRow,
   ProjectRow,
+  RegisterCliRunInput,
   TaskRow,
 } from './openthrottle-ralph-types';
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
@@ -298,6 +303,72 @@ export async function appendPlanOutputGraphql(
   unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(AppendPlanOutputDocument, {
       input: { content, iteration: iteration ?? null, planId },
+    }),
+  );
+}
+
+/**
+ * @description Registers a detached CLI run as a first-class plan_runs row (bullmq_job_id NULL,
+ * run_kind 'orchestrator', status IN_PROGRESS) via the registerCliPlanRun mutation, so the UI Kill
+ * has a row to stamp the durable cancel marker on. Returns the new plan_run id.
+ */
+export async function registerCliPlanRunGraphql(
+  input: RegisterCliRunInput,
+): Promise<string> {
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RegisterCliPlanRunDocument, {
+      input: {
+        executionBackend: input.executionBackend,
+        hostname: input.location.hostname,
+        pid: input.location.pid,
+        planId: input.planId,
+        workerId: input.location.workerId,
+      },
+    }),
+  );
+
+  return result.registerCliPlanRun.id;
+}
+
+/**
+ * @description Reads the NEWEST plan_runs row's cancel marker for a plan (planRunsByPlanId is
+ * server-ordered newest-first — this is the row stampCancelRequested marks). Returns null when the
+ * plan has no run row.
+ */
+export async function readPlanRunCancelMarkerGraphql(
+  planId: string,
+): Promise<CliPlanRunCancelMarker | null> {
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(ReadPlanRunCancelMarkerDocument, {
+      input: { limit: 1, planId },
+    }),
+  );
+
+  const newest = result.planRunsByPlanId[0];
+  if (!newest) {
+    return null;
+  }
+
+  return {
+    cancelRequestedAt: newest.cancelRequestedAt
+      ? toIsoString(newest.cancelRequestedAt)
+      : null,
+    planRunId: newest.id,
+    status: newest.status,
+  };
+}
+
+/**
+ * @description Settles a detached CLI run row on exit via the settleCliPlanRun mutation: terminal
+ * status (COMPLETED/CANCELLED/FAILED) + cleared location columns. Keyed on the run id.
+ */
+export async function settleCliPlanRunGraphql(
+  planRunId: string,
+  status: string,
+): Promise<void> {
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(SettleCliPlanRunDocument, {
+      input: { planRunId, status },
     }),
   );
 }
