@@ -29,3 +29,12 @@ export interface ConversationStreamChunkPayload {
   /** Monotonic index within the stream. */
   readonly sortOrder: number;
 }
+
+/**
+ * PubSub publish envelope. The key MUST equal {@link CONVERSATION_STREAM_CHUNK_FIELD}
+ * (the subscription field name) so @nestjs/graphql resolves the payload. Buffered
+ * replay yields the same envelope shape as the live PubSub iterator.
+ */
+export interface ConversationStreamChunkEnvelope {
+  readonly conversationStreamChunkAdded: ConversationStreamChunkPayload;
+}

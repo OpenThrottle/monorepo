@@ -195,3 +195,12 @@ cursor-agent --print --output-format stream-json --stream-partial-output \
 
 Inspect with `jq -r '.type' out.ndjson | sort | uniq -c` and
 `jq -c 'select(.type=="assistant") | {ts: has("timestamp_ms"), text: .message.content[0].text}' out.ndjson`.
+
+## 8. Server / home-chat integration behavior
+
+Notes for the developer home chat (`applications/openthrottle-developer/app/routes/_index.tsx` → `startConversationStream`), added when fixing "Cursor Agent selected but nothing appears to happen" (OT plan `67ceec0b`).
+
+- **Repository is required.** A CLI backend needs a `cwd`. It resolves from the selected registered repository, or — only when `NODE_ENV !== 'production'` — from `OPENTHROTTLE_AGENT_DEV_CWD`. With neither, the start mutation returns an `errorMessage` and the composer shows "Register a local repository in Settings".
+- **cursor-agent buffers to end-of-turn.** Even with `--stream-partial-output`, a turn's thinking/text/result often land in a single burst seconds in (≈9s observed). The composer therefore shows a **pending "Working…" indicator** for the started assistant turn (kept visible via `isStreaming` until the terminal chunk) instead of an empty "(No content)" bubble.
+- **Subscription replay closes the connect race.** The home route only learns the conversation id once the start mutation returns, so its `conversationStreamChunkAdded` subscription attaches after the stream began publishing. `ConversationStreamService` keeps a bounded per-conversation replay buffer (reset at turn start, evicted 30s after the terminal chunk) and `subscribe()` replays buffered-then-live; the client dedupes by `messageId:sortOrder`. This also delivers a turn that completed before the client subscribed.
+- **Session-create is bounded.** `createCursorAgentSession` (`cursor-agent create-chat`) is bounded by `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS` (default 30 000 ms); on timeout the child is torn down (SIGTERM→SIGKILL) and a clear error surfaces — the start mutation can never hang. Stream turns remain bounded by the idle / wall-clock timeouts in §1.

@@ -44,6 +44,34 @@ describe('ChatThreadMessage Component', () => {
     expect(component.getByText('still flat')).toBeInTheDocument();
   });
 
+  test('renders a running indicator for a pending assistant turn with no content yet', () => {
+    const component = renderMessage({
+      body: '',
+      id: 'assistant-pending',
+      pending: true,
+      role: 'assistant',
+    });
+
+    expect(
+      component.getByTestId('ChatTurnTimeline-running'),
+    ).toBeInTheDocument();
+    expect(component.queryByText('(No content)')).not.toBeInTheDocument();
+  });
+
+  test('stops showing the running indicator once the pending turn has body text', () => {
+    const component = renderMessage({
+      body: 'first token',
+      id: 'assistant-pending-2',
+      pending: true,
+      role: 'assistant',
+    });
+
+    expect(
+      component.queryByTestId('ChatTurnTimeline-running'),
+    ).not.toBeInTheDocument();
+    expect(component.getByText('first token')).toBeInTheDocument();
+  });
+
   test('never renders a timeline for a user message', () => {
     const component = renderMessage({
       body: 'a user question',

@@ -86,6 +86,24 @@ describe('reduceStreamChunk', () => {
     expect(state.bodies.get('assistant-1')).toBe('done?');
   });
 
+  it('records the messageId in completedIds only on the terminal done chunk', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'hi', sortOrder: 0 }));
+    expect(state.completedIds.has('assistant-1')).toBe(false);
+
+    state = reduceStreamChunk(state, chunk({ done: true, sortOrder: 1 }));
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+  });
+
+  it('records completedIds on a terminal error chunk too', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({ done: true, error: 'boom', sortOrder: 0 }),
+    );
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+  });
+
   it('appends an error note on a terminal error chunk', () => {
     let state = INITIAL_STREAM_STATE;
     state = reduceStreamChunk(state, chunk({ delta: 'partial', sortOrder: 0 }));

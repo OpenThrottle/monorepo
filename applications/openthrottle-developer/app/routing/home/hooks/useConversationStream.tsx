@@ -32,6 +32,8 @@ type StreamChunk =
 export interface StreamState {
   /** Accumulated assistant body keyed by messageId (flat markdown fallback). */
   readonly bodies: ReadonlyMap<string, string>;
+  /** messageIds that have received their terminal `done` chunk. */
+  readonly completedIds: ReadonlySet<string>;
   /** Structured, ordered turn events keyed by messageId. */
   readonly events: ReadonlyMap<string, readonly ChatTurnEvent[]>;
   /** True while a stream is in flight (between the first delta and `done`). */
@@ -42,6 +44,7 @@ export interface StreamState {
 
 export const INITIAL_STREAM_STATE: StreamState = {
   bodies: new Map(),
+  completedIds: new Set(),
   events: new Map(),
   isStreaming: false,
   seen: new Set(),
@@ -88,7 +91,10 @@ export function reduceStreamChunk(
       chunk.error ? failRunningTurnTools(withUsage, chunk.error) : withUsage,
     );
 
-    return { bodies, events, isStreaming: false, seen };
+    const completedIds = new Set(state.completedIds);
+    completedIds.add(chunk.messageId);
+
+    return { bodies, completedIds, events, isStreaming: false, seen };
   }
 
   // Assistant text accumulates into the flat body; tool calls show a dim
@@ -143,7 +149,13 @@ export function reduceStreamChunk(
     ]);
   }
 
-  return { bodies, events, isStreaming: true, seen };
+  return {
+    bodies,
+    completedIds: state.completedIds,
+    events,
+    isStreaming: true,
+    seen,
+  };
 }
 
 /**
@@ -174,6 +186,8 @@ export interface UseConversationStreamArgs {
 }
 
 export interface UseConversationStreamResult {
+  /** messageIds whose stream has reached its terminal `done` chunk. */
+  readonly completedIds: ReadonlySet<string>;
   readonly isStreaming: boolean;
   readonly messages: ChatMessage[];
 }
@@ -219,6 +233,7 @@ export function useConversationStream(
   );
 
   return {
+    completedIds: state.completedIds,
     isStreaming: state.isStreaming,
     messages,
   };
