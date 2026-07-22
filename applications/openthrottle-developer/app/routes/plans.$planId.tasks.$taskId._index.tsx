@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -14,26 +13,20 @@ import {
   TaskDetailPromoteToPlanDocument,
   TaskDetailRemoveTaskTagDocument,
   TaskLinkedArtifactsDocument,
+  TaskOutputStreamChunksDocument,
   UpdateTaskDocument,
 } from '~/__generated__/graphql';
 import {
   AddHookInputSchema,
   DetachHookInputSchema,
 } from '~/__generated__/schemas';
-import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
-import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { Badge } from '@openthrottle/react-router-shadcn';
-import { ListOrderedIcon } from 'lucide-react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { PlanTaskToolbar } from '~/routing/plans/components/PlanTaskToolbar';
-import { redirect, useFetcher } from 'react-router';
+import { redirect } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
-import { TaskDetails } from '~/routing/plans/components/TaskDetails';
+import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -62,7 +55,13 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
 
   if (taskId == null || taskId === '') {
-    return { linkedArtifacts: [], plan: null, tagVocabulary: [], task: null };
+    return {
+      linkedArtifacts: [],
+      plan: null,
+      planOutputChunks: [],
+      tagVocabulary: [],
+      task: null,
+    };
   }
 
   const taskResult = await executeGraphqlWithAuth(
@@ -98,7 +97,20 @@ export const loader = async (args: Route.LoaderArgs) => {
         ).workArtifactsByTask.artifacts ?? [])
       : [];
 
-  return { linkedArtifacts, plan, tagVocabulary, task };
+  // Task-scoped output (v1): fetch the plan's chunks; the Output tab filters
+  // client-side by taskId (see useTaskOutputStream).
+  const planOutputChunks =
+    task?.planId != null
+      ? ((
+          await executeGraphqlWithAuth(
+            args.request,
+            TaskOutputStreamChunksDocument,
+            { planId: task.planId },
+          )
+        ).planOutputStreamChunks ?? [])
+      : [];
+
+  return { linkedArtifacts, plan, planOutputChunks, tagVocabulary, task };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -117,26 +129,8 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { linkedArtifacts, tagVocabulary, task } = loaderData;
-
-  // Hooks
-  const tagFetcher = useFetcher();
-
-  // Setup
-  const _taskId = params.taskId ?? '';
-  const effectivePlanId = task != null ? (task.planId ?? '') : '';
-  const color = parseTaskStatusColor(task?.status ?? '');
-  const isPromoted =
-    task != null &&
-    task.status === 'SKIPPED' &&
-    task.tags.some((tag) => tag.tag === 'promoted');
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
+  const { loaderData, params } = props;
+  const { task } = loaderData;
 
   // 🔌 Short Circuit
   if (task == null) {
@@ -148,47 +142,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          icon={ListOrderedIcon}
-          title={`Task: ${task.title}`}
-        />
-        <div className="text-muted-foreground line-clamp-3 text-sm">
-          <Badge color={color} size="xs">
-            {task.status}
-          </Badge>
-        </div>
-      </div>
-      <PlanTaskToolbar
-        isPromoted={isPromoted}
-        onAddTag={(tag) =>
-          tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
-        }
-        onRemoveTag={(tag) =>
-          tagFetcher.submit(
-            { intent: 'removeTaskTag', tag },
-            { method: 'post' },
-          )
-        }
-        planId={effectivePlanId}
-        tagVocabulary={tagVocabulary}
-        tags={task.tags}
-        tagsPending={tagFetcher.state !== 'idle'}
-        taskId={task.id}
-        taskStatus={task.status}
-      />
-      <TaskDetails planId={effectivePlanId} task={task} />
-      <PlanLifecycleHooksSection
-        afterHooks={task.afterHooks}
-        anchorTaskId={task.id}
-        beforeHooks={task.beforeHooks}
-        heading={PLAN_LIFECYCLE_HOOKS_COPY.taskSectionTitle}
-        planId={effectivePlanId}
-      />
-      <LinkedArtifactsPanel artifacts={linkedArtifacts} />
-    </GlobalScreen>
+    <TaskDetailRoute loaderData={loaderData} params={params} task={task} />
   );
 }
 

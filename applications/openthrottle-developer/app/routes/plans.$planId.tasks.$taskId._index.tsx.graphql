@@ -57,3 +57,18 @@ query TaskLinkedArtifacts($taskId: ID!) {
     totalCount
   }
 }
+
+# Task-scoped output (v1): the server list query filters by planId only, so the
+# task route fetches the plan's chunks here and the Task Output tab filters them
+# client-side by taskId (live deltas reuse the PlanOutputChunkAdded subscription).
+# A server-side taskId filter is a possible follow-up if plan streams grow large.
+query TaskOutputStreamChunks($planId: ID!) {
+  planOutputStreamChunks(input: { planId: $planId }) {
+    id
+    content
+    createdAt
+    iteration
+    planId
+    taskId
+  }
+}

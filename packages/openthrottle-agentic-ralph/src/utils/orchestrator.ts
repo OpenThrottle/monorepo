@@ -502,7 +502,7 @@ export const createWorkflowRalphOrchestrator = (
               );
             }
 
-            agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
+            agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you log progress via append_plan_output, pass taskId: ${taskForIteration.id} — the task you are actively working — so the output is attributed to that task and not just the iteration. (One iteration can touch several tasks; if you switch tasks mid-iteration, tag the id of the task you are actually working.) When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
           }
         }
 

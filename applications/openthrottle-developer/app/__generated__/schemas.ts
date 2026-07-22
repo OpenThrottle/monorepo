@@ -257,6 +257,7 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
     content: z.string(),
     iteration: z.number().nullish(),
     planId: z.string(),
+    taskId: z.string().nullish(),
   });
 }
 

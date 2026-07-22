@@ -43,6 +43,7 @@ import {
  * top of what is inferred here (target defaults override inferred fields) — keep
  * `^typecheck`/`^build` there so referenced packages emit their dist
  * declarations before this pass runs.
+ *
  */
 const SOURCE_CONFIG_GLOB = `{applications,packages,tools}/*/tsconfig.{lib,app}.json`;
 
@@ -78,6 +79,21 @@ export const createNodesV2: CreateNodesV2 = [
                       dependentTasksOutputFiles:
                         '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
                       transitive: true,
+                    },
+                    // Generated GraphQL sources this project type-checks live under
+                    // `__generated__/` and are gitignored, so Nx's git-derived file
+                    // map never hashes them as project inputs. Without this, a
+                    // `codegen-graphql` re-run that changes the generated `.ts`
+                    // does NOT change the `typecheck` hash — so a stale cached
+                    // `dist/*.d.ts` is restored and dependents' typechecks break on
+                    // content that no longer matches the schema/documents. Keying on
+                    // the codegen output files (read from disk, not git) forces a
+                    // re-emit whenever the generated source changes. Non-transitive:
+                    // only THIS project's `codegen-graphql` output (a direct
+                    // dependsOn) is relevant.
+                    {
+                      dependentTasksOutputFiles:
+                        '**/__generated__/**/*.{ts,tsx}',
                     },
                   ],
                   metadata: {

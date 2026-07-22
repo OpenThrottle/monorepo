@@ -66,7 +66,14 @@ describe('appendPlanOutputToolHandler', () => {
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
-        { input: { content: 'iteration log', iteration: null, planId } },
+        {
+          input: {
+            content: 'iteration log',
+            iteration: null,
+            planId,
+            taskId: null,
+          },
+        },
       );
     });
 
@@ -85,7 +92,27 @@ describe('appendPlanOutputToolHandler', () => {
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
-        { input: { content: 'log', iteration: 7, planId } },
+        { input: { content: 'log', iteration: 7, planId, taskId: null } },
+      );
+    });
+
+    it('forwards taskId when provided (task-scoped output)', async () => {
+      const taskId = 'a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7';
+      const chunk = { content: 'task log', id: 'chunk-3', planId, taskId };
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        appendPlanOutput: chunk,
+      });
+
+      await appendPlanOutputToolHandler({
+        content: 'task log',
+        planId,
+        taskId,
+      });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { content: 'task log', iteration: null, planId, taskId } },
       );
     });
   });
