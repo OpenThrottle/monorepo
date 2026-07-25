@@ -3,6 +3,7 @@ export * from './map-persisted-messages';
 export * from './components/ChatComposer';
 export * from './components/ChatComposerToolbar';
 export * from './components/ChatModelPicker';
+export * from './components/ChatPermissionModeControl';
 export * from './components/ChatReasoningTierControl';
 export * from './components/ChatDialog';
 export * from './components/ChatMessageBody';
