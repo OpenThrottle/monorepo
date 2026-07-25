@@ -58,6 +58,8 @@ export const getDefaultPlanRunConfigStorage = (options?: {
   },
   version: PLAN_RUN_CONFIG_VERSION,
   workspace: {
+    checkoutId: '',
+    repositoryId: '',
     workingDirectory: '',
   },
 });

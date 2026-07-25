@@ -53,6 +53,8 @@ const planRunConfigSnapshotV1Schema = z
     version: z.literal(PLAN_RUN_CONFIG_SNAPSHOT_VERSION),
     workspace: z
       .object({
+        checkoutId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
+        repositoryId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
         workingDirectory: trimToMax(MAX_PLAN_RUN_WORKING_DIRECTORY_LEN),
       })
       .strict(),

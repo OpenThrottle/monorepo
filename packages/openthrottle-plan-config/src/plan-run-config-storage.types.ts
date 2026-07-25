@@ -50,6 +50,16 @@ export interface PlanRunConfigStorageV1 {
   };
   readonly version: typeof PLAN_RUN_CONFIG_VERSION;
   readonly workspace: {
+    /**
+     * @description Explicit registered checkout id (highest precedence). Empty when unset.
+     * Resolved to a filesystem path at enqueue; see the enqueue resolution order.
+     */
+    readonly checkoutId: string;
+    /**
+     * @description Portable repository intent, resolved to the enqueuing user's checkout at
+     * enqueue (used when `checkoutId` is empty). Empty when unset.
+     */
+    readonly repositoryId: string;
     readonly workingDirectory: string;
   };
 }
@@ -82,7 +92,11 @@ export interface PlanWorkflowRalphRunOptions {
  * @description Plan Configuration tab state persisted via `run_config` (excludes `job_run_hooks`).
  */
 export interface PlanWorkflowUiState {
+  /** @description Registered checkout id selected in the UI (optional; empty/absent = unset). */
+  readonly checkoutId?: string;
   readonly iterationTimeoutText: string;
+  /** @description Registered repository id selected in the UI (optional; empty/absent = unset). */
+  readonly repositoryId?: string;
   readonly workflowInput: PlanWorkflowRalphRunOptions;
   readonly workingDirectory: string;
 }
