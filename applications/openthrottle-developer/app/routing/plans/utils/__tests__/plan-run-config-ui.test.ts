@@ -58,7 +58,9 @@ describe('serializePlanRunConfigUiState', () => {
   test('round-trips with hydrate', () => {
     const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
     const state = {
+      checkoutId: '11111111-1111-4111-8111-111111111111',
       iterationTimeoutText: '90',
+      repositoryId: '22222222-2222-4222-8222-222222222222',
       workflowInput: {
         ...workflowInput,
         executionBackend: 'claude' as const,
@@ -80,5 +82,7 @@ describe('serializePlanRunConfigUiState', () => {
       '/Users/matt/Development/openthrottle',
     );
     expect(hydrated.iterationTimeoutText).toBe('90');
+    expect(hydrated.checkoutId).toBe('11111111-1111-4111-8111-111111111111');
+    expect(hydrated.repositoryId).toBe('22222222-2222-4222-8222-222222222222');
   });
 });

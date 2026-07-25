@@ -63,6 +63,19 @@ export const workflowRunIterationTimeoutTextAtom = atom<string>('');
 export const workflowWorkingDirectoryAtom = atom<string>('');
 
 /**
+ * @description Selected registered checkout id (empty = none). Highest-precedence
+ * workspace reference: resolved server-side to a filesystem path at enqueue,
+ * ahead of {@link workflowRepositoryIdAtom} and {@link workflowWorkingDirectoryAtom}.
+ */
+export const workflowCheckoutIdAtom = atom<string>('');
+
+/**
+ * @description Selected registered repository id (empty = none). Resolved to the
+ * enqueuing user's single checkout of that repository when no explicit checkout is set.
+ */
+export const workflowRepositoryIdAtom = atom<string>('');
+
+/**
  * @description Job-run lifecycle hook draft rows (editable form state); serialized
  * into `jobRunHooksJson` for save + enqueue via {@link jobRunHooksJsonAtom}.
  */
@@ -205,7 +218,9 @@ export const runConfigJsonAtom = atom((get): string => {
 
   try {
     return serializePlanRunConfigUiState({
+      checkoutId: get(workflowCheckoutIdAtom),
       iterationTimeoutText: get(workflowRunIterationTimeoutTextAtom),
+      repositoryId: get(workflowRepositoryIdAtom),
       workflowInput: runOptions,
       workingDirectory: get(workflowWorkingDirectoryAtom),
     });
@@ -231,6 +246,8 @@ export const resetWorkflowRunToDefaultsAtom = atom(
     set(workflowRalphRunOptionsAtom, defaults.runOptions);
     set(workflowRunIterationTimeoutTextAtom, defaults.iterationTimeoutText);
     set(workflowWorkingDirectoryAtom, '');
+    set(workflowCheckoutIdAtom, '');
+    set(workflowRepositoryIdAtom, '');
   },
 );
 
@@ -250,8 +267,10 @@ export interface WorkflowRunSeedPlan {
  * former re-seed effect. Single source of truth for seeding.
  */
 export interface WorkflowRunSeedValues {
+  readonly checkoutId: string;
   readonly iterationTimeoutText: string;
   readonly jobRunHookRows: JobRunHookDraftRow[];
+  readonly repositoryId: string;
   readonly runOptions: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }
@@ -275,8 +294,10 @@ export const getWorkflowRunSeedValues = (
   }
 
   return {
+    checkoutId: hydrated.checkoutId,
     iterationTimeoutText: hydrated.iterationTimeoutText,
     jobRunHookRows,
+    repositoryId: hydrated.repositoryId,
     runOptions: hydrated.workflowInput,
     workingDirectory: hydrated.workingDirectory,
   };

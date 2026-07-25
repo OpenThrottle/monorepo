@@ -947,11 +947,13 @@ export class PlansResolver {
   ): Promise<EnqueuePlanRunResultObject> {
     const outcome = await this.planEnqueueService.enqueueSpawn({
       actorUserId: resolveActorUserId(actorSub, actorKind),
+      checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
       planId: input.planId,
       priority: input.priority,
       ralph: input.ralph,
+      repositoryId: input.repositoryId,
       workingDirectory: input.workingDirectory,
     });
 
@@ -1031,12 +1033,14 @@ export class PlansResolver {
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
       actorUserId: resolveActorUserId(actorSub, actorKind),
+      checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
       mode,
       planId,
       priority: input.priority,
       ralph: input.ralph,
+      repositoryId: input.repositoryId,
       taskId,
       workingDirectory: input.workingDirectory,
     });

@@ -36,6 +36,7 @@ describe('routes/plans.$planId._index loader', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     });
   });
 
@@ -87,6 +88,7 @@ describe('routes/plans.$planId._index loader', () => {
       ruleApplications,
       tagVocabulary: vocabularyTags,
       tasks,
+      workspaceRepositories: [],
     });
   });
 
@@ -120,6 +122,7 @@ describe('routes/plans.$planId._index loader', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     });
   });
 });

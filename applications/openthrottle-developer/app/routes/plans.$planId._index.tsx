@@ -65,6 +65,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     };
   }
 
@@ -83,6 +84,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     ruleApplications: page.ruleApplications ?? [],
     tagVocabulary: page.skillTagVocabulary.tags ?? [],
     tasks: page.tasksByPlanId ?? [],
+    workspaceRepositories: page.workspaceRepositories ?? [],
   };
 };
 
@@ -434,6 +436,18 @@ export const action = async (args: Route.ActionArgs) => {
         ? workingDirectoryRaw.trim()
         : undefined;
 
+    const checkoutIdRaw = formData.get('checkoutId');
+    const checkoutId =
+      typeof checkoutIdRaw === 'string' && checkoutIdRaw.trim() !== ''
+        ? checkoutIdRaw.trim()
+        : undefined;
+
+    const repositoryIdRaw = formData.get('repositoryId');
+    const repositoryId =
+      typeof repositoryIdRaw === 'string' && repositoryIdRaw.trim() !== ''
+        ? repositoryIdRaw.trim()
+        : undefined;
+
     const jobRunHooksRaw = formData.get('jobRunHooksJson');
     let jobRunHooksJson: string | undefined;
     if (typeof jobRunHooksRaw === 'string' && jobRunHooksRaw.trim() !== '') {
@@ -452,7 +466,9 @@ export const action = async (args: Route.ActionArgs) => {
       const input = EnqueuePlanRunInputSchema().parse({
         planId,
         priority,
+        ...(checkoutId !== undefined ? { checkoutId } : {}),
         ...(ralph !== undefined ? { ralph } : {}),
+        ...(repositoryId !== undefined ? { repositoryId } : {}),
         ...(workingDirectory !== undefined ? { workingDirectory } : {}),
         ...(jobRunHooksJson !== undefined ? { jobRunHooksJson } : {}),
       });

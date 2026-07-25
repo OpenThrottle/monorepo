@@ -38,6 +38,11 @@ export interface PlanRunConfigSnapshotV1 {
   };
   readonly version: typeof PLAN_RUN_CONFIG_SNAPSHOT_VERSION;
   readonly workspace: {
+    /** @description Registered checkout id the run was resolved from (omitted when a raw path was used). */
+    readonly checkoutId?: string;
+    /** @description Registered repository id the run was resolved from (omitted when unused). */
+    readonly repositoryId?: string;
+    /** @description The concrete resolved working directory the run actually used. */
     readonly workingDirectory: string;
   };
 }
@@ -48,6 +53,7 @@ export type PlanRunConfigSnapshot = PlanRunConfigSnapshotV1;
  * @description Input for building a snapshot from validated BullMQ job data at enqueue.
  */
 export interface BuildPlanRunConfigSnapshotInput {
+  readonly checkoutId?: string | null;
   readonly executionBackend: WorkflowConfigRunner;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;
@@ -63,6 +69,7 @@ export interface BuildPlanRunConfigSnapshotInput {
     readonly worktree?: string | null;
     readonly worktreeBase?: string | null;
   } | null;
+  readonly repositoryId?: string | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }

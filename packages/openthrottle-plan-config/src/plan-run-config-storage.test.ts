@@ -105,6 +105,48 @@ describe('parsePlanRunConfigStorage', () => {
       }),
     ).toThrow(/iterationTimeoutText/);
   });
+
+  it('defaults workspace checkout/repository ids to empty for legacy configs', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ...getDefaultPlanRunConfigStorage({ planId }),
+      workspace: { workingDirectory: '/Users/matt/Development/repo' },
+    });
+    expect(parsed.workspace.checkoutId).toBe('');
+    expect(parsed.workspace.repositoryId).toBe('');
+    expect(parsed.workspace.workingDirectory).toBe(
+      '/Users/matt/Development/repo',
+    );
+  });
+
+  it('preserves valid workspace checkout/repository ids', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ...getDefaultPlanRunConfigStorage({ planId }),
+      workspace: {
+        checkoutId: '11111111-1111-4111-8111-111111111111',
+        repositoryId: '22222222-2222-4222-8222-222222222222',
+        workingDirectory: '',
+      },
+    });
+    expect(parsed.workspace.checkoutId).toBe(
+      '11111111-1111-4111-8111-111111111111',
+    );
+    expect(parsed.workspace.repositoryId).toBe(
+      '22222222-2222-4222-8222-222222222222',
+    );
+  });
+
+  it('rejects a non-UUID workspace checkoutId', () => {
+    expect(() =>
+      parsePlanRunConfigStorage({
+        ...getDefaultPlanRunConfigStorage({ planId }),
+        workspace: {
+          checkoutId: 'nope',
+          repositoryId: '',
+          workingDirectory: '',
+        },
+      }),
+    ).toThrow(/checkoutId must be a UUID/);
+  });
 });
 
 describe('parsePlanRunConfigJson', () => {
@@ -148,7 +190,9 @@ describe('serializePlanRunConfigForGraphql', () => {
 
 describe('planRunConfig round-trip', () => {
   const fullUi = (): PlanWorkflowUiState => ({
+    checkoutId: '11111111-1111-4111-8111-111111111111',
     iterationTimeoutText: '120',
+    repositoryId: '22222222-2222-4222-8222-222222222222',
     workflowInput: {
       debugCli: 'debug',
       executionBackend: 'claude',

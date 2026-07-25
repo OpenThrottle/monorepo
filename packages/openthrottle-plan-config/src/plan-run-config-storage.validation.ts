@@ -55,6 +55,10 @@ const planRunConfigStorageV1Schema = z
     version: z.literal(PLAN_RUN_CONFIG_VERSION),
     workspace: z
       .object({
+        checkoutId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(''),
+        repositoryId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(
+          '',
+        ),
         workingDirectory: trimToMax(MAX_PLAN_RUN_WORKING_DIRECTORY_LEN),
       })
       .strict(),
@@ -92,6 +96,24 @@ const planRunConfigStorageV1Schema = z
         message:
           'workspace.workingDirectory must be empty (monorepo root) or an absolute path',
         path: ['workspace', 'workingDirectory'],
+      });
+    }
+
+    const checkoutId = value.workspace.checkoutId;
+    if (checkoutId !== '' && !PLAN_RUN_CONFIG_UUID_REGEX.test(checkoutId)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'workspace.checkoutId must be a UUID when set',
+        path: ['workspace', 'checkoutId'],
+      });
+    }
+
+    const repositoryId = value.workspace.repositoryId;
+    if (repositoryId !== '' && !PLAN_RUN_CONFIG_UUID_REGEX.test(repositoryId)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'workspace.repositoryId must be a UUID when set',
+        path: ['workspace', 'repositoryId'],
       });
     }
   });

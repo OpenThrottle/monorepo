@@ -413,6 +413,14 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+/** Clone a git repository into the managed checkout root and register it. */
+export type CloneRepositoryInput = {
+  /** Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets. */
+  gitUrl: Scalars['String']['input'];
+  /** Optional folder/display name; defaults to the repository name derived from the URL. */
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CodeIndexStatusObject = {
   __typename?: 'CodeIndexStatusObject';
   /** Number of indexed code chunks for the repository (0 when not indexed). */
@@ -866,6 +874,8 @@ export type EnqueueDocIngestionResultObject = {
 };
 
 export type EnqueuePlanRalphOrchestratorInput = {
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. */
@@ -878,13 +888,17 @@ export type EnqueuePlanRalphOrchestratorInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
-  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunInput = {
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
@@ -895,7 +909,9 @@ export type EnqueuePlanRunInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
-  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1293,6 +1309,8 @@ export type Mutation = {
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
+  cloneRepository: AddWorkspaceFolderPayloadObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
   /** Create a new custom prompt */
@@ -1546,6 +1564,10 @@ export type MutationCancelConversationStreamArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCloneRepositoryArgs = {
+  input: CloneRepositoryInput;
 };
 
 export type MutationCreateAgentConversationArgs = {
@@ -5250,6 +5272,29 @@ export type PlanDetailUpdatePlanRunConfigMutation = {
   } | null;
 };
 
+export type PlanRunConfigRepositoryFieldsFragment = {
+  __typename?: 'RepositoryObject';
+  id: string;
+  name: string;
+  normalizedRemoteUrl?: string | null;
+  projectId?: string | null;
+  checkouts: Array<{
+    __typename?: 'RepositoryCheckoutObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+    kind: string;
+    managed: boolean;
+    inspection?: {
+      __typename?: 'RepositoryInspectionObject';
+      git: {
+        __typename?: 'RepositoryInspectionGitObject';
+        currentBranch?: string | null;
+      };
+    } | null;
+  }>;
+};
+
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
 }>;
@@ -5306,6 +5351,28 @@ export type PlanDetailIndexLoaderQuery = {
       name: string;
     } | null;
   } | null;
+  workspaceRepositories: Array<{
+    __typename?: 'RepositoryObject';
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+    projectId?: string | null;
+    checkouts: Array<{
+      __typename?: 'RepositoryCheckoutObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+      kind: string;
+      managed: boolean;
+      inspection?: {
+        __typename?: 'RepositoryInspectionObject';
+        git: {
+          __typename?: 'RepositoryInspectionGitObject';
+          currentBranch?: string | null;
+        };
+      } | null;
+    }>;
+  }>;
   ruleApplications: Array<{
     __typename?: 'RuleApplicationObject';
     createdAt: any;
@@ -6992,6 +7059,121 @@ export type AddWorkspaceFolderMutation = {
   };
 };
 
+export type CloneRepositoryMutationVariables = Exact<{
+  input: CloneRepositoryInput;
+}>;
+
+export type CloneRepositoryMutation = {
+  __typename?: 'Mutation';
+  cloneRepository: {
+    __typename?: 'AddWorkspaceFolderPayloadObject';
+    projectCreated: boolean;
+    reconciliation: WorkspaceFolderReconciliation;
+    checkout: {
+      __typename?: 'RepositoryCheckoutObject';
+      createdAt: any;
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+      kind: string;
+      managed: boolean;
+      repositoryId: string;
+      scannedAt?: any | null;
+      updatedAt: any;
+      userId: string;
+      inspection?: {
+        __typename?: 'RepositoryInspectionObject';
+        scannedAt: any;
+        warnings: Array<string>;
+        agentConfig: {
+          __typename?: 'RepositoryInspectionAgentConfigObject';
+          agentsMd: boolean;
+          claudeMd: boolean;
+          cursorRules: boolean;
+          mcpJson: boolean;
+          skillsDir: boolean;
+        };
+        git: {
+          __typename?: 'RepositoryInspectionGitObject';
+          currentBranch?: string | null;
+          defaultBranch?: string | null;
+          dirty?: boolean | null;
+          isRepo: boolean;
+          linkedWorktrees: Array<string>;
+          normalizedRemoteUrl?: string | null;
+        };
+        stack: {
+          __typename?: 'RepositoryInspectionStackObject';
+          languages: Array<string>;
+          nxWorkspace: boolean;
+          packageManager?: string | null;
+          pnpmWorkspace: boolean;
+          turbo: boolean;
+        };
+      } | null;
+    };
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+    repository: {
+      __typename?: 'RepositoryObject';
+      createdAt: any;
+      defaultBranch?: string | null;
+      id: string;
+      name: string;
+      normalizedRemoteUrl?: string | null;
+      projectId?: string | null;
+      updatedAt: any;
+      checkouts: Array<{
+        __typename?: 'RepositoryCheckoutObject';
+        createdAt: any;
+        displayName: string;
+        filesystemPath: string;
+        id: string;
+        kind: string;
+        managed: boolean;
+        repositoryId: string;
+        scannedAt?: any | null;
+        updatedAt: any;
+        userId: string;
+        inspection?: {
+          __typename?: 'RepositoryInspectionObject';
+          scannedAt: any;
+          warnings: Array<string>;
+          agentConfig: {
+            __typename?: 'RepositoryInspectionAgentConfigObject';
+            agentsMd: boolean;
+            claudeMd: boolean;
+            cursorRules: boolean;
+            mcpJson: boolean;
+            skillsDir: boolean;
+          };
+          git: {
+            __typename?: 'RepositoryInspectionGitObject';
+            currentBranch?: string | null;
+            defaultBranch?: string | null;
+            dirty?: boolean | null;
+            isRepo: boolean;
+            linkedWorktrees: Array<string>;
+            normalizedRemoteUrl?: string | null;
+          };
+          stack: {
+            __typename?: 'RepositoryInspectionStackObject';
+            languages: Array<string>;
+            nxWorkspace: boolean;
+            packageManager?: string | null;
+            pnpmWorkspace: boolean;
+            turbo: boolean;
+          };
+        } | null;
+      }>;
+      project?: {
+        __typename?: 'ProjectObject';
+        id: string;
+        name: string;
+      } | null;
+    };
+  };
+};
+
 export type RefreshCheckoutMutationVariables = Exact<{
   input: RefreshCheckoutInput;
 }>;
@@ -8016,6 +8198,70 @@ export const PlanDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanDetailsFragment, unknown>;
+export const PlanRunConfigRepositoryFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'inspection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'git' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'currentBranch' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunConfigRepositoryFieldsFragment, unknown>;
 export const LinkedArtifactFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -12011,6 +12257,22 @@ export const PlanDetailIndexLoaderDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'PlanRunConfigRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'ruleApplications' },
             arguments: [
               {
@@ -12410,6 +12672,65 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'inspection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'git' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'currentBranch' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
         ],
       },
     },
@@ -16790,6 +17111,276 @@ export const AddWorkspaceFolderDocument = {
 } as unknown as DocumentNode<
   AddWorkspaceFolderMutation,
   AddWorkspaceFolderMutationVariables
+>;
+export const CloneRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'cloneRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CloneRepositoryInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cloneRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'checkout' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'RepositoryCheckoutFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'project' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'projectCreated' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'reconciliation' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repository' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'WorkspaceRepositoryFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryCheckoutObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'inspection' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agentConfig' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'agentsMd' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'claudeMd' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'cursorRules' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'mcpJson' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'skillsDir' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'git' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentBranch' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultBranch' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'dirty' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'isRepo' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'linkedWorktrees' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'stack' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'languages' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nxWorkspace' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'packageManager' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pnpmWorkspace' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'turbo' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RepositoryCheckoutFields' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CloneRepositoryMutation,
+  CloneRepositoryMutationVariables
 >;
 export const RefreshCheckoutDocument = {
   kind: 'Document',
