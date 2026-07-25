@@ -6,12 +6,49 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { ChatComposerToolbar } from '../ChatComposerToolbar';
 import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
-import { ChatComposerMicState, ChatComposerMode } from '../../types';
-import type { ChatModelOption, ChatPersonaOption } from '../../types';
+import {
+  ChatComposerMicState,
+  ChatComposerMode,
+  ChatPermissionMode,
+  ChatReasoningLevel,
+  ChatServiceTier,
+} from '../../types';
+import type {
+  ChatBackendCapabilities,
+  ChatCheckoutOption,
+  ChatModelGroup,
+  ChatModelOption,
+  ChatPersonaOption,
+} from '../../types';
 
 const MODELS: readonly ChatModelOption[] = [
   { id: 'opus', label: 'Opus 4.8' },
   { id: 'sonnet', label: 'Sonnet 4.6' },
+];
+
+const GROUPED_MODELS: readonly ChatModelOption[] = [
+  { groupId: 'claude', id: 'claude::opus', label: 'Opus 4.8' },
+  { groupId: 'codex', id: 'codex::gpt5', label: 'GPT-5', subLabel: 'Codex' },
+];
+
+const MODEL_GROUPS: readonly ChatModelGroup[] = [
+  { id: 'claude', label: 'Claude Code' },
+  { id: 'codex', label: 'Codex' },
+];
+
+const CLI_CAPS: ChatBackendCapabilities = {
+  permissionModes: [
+    ChatPermissionMode.supervised,
+    ChatPermissionMode.fullAccess,
+  ],
+  reasoningLevels: [ChatReasoningLevel.low, ChatReasoningLevel.high],
+  requiresRepository: true,
+  serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  supportsModelFlag: true,
+};
+
+const CHECKOUTS: readonly ChatCheckoutOption[] = [
+  { branch: 'main', id: 'repo-a', label: 'openthrottle' },
 ];
 
 const PERSONAS: readonly ChatPersonaOption[] = [
@@ -92,6 +129,98 @@ describe('ChatComposerToolbar Component', () => {
       await user.click(component.getByRole('option', { name: 'Builder' }));
 
       expect(onPersonaChange).toHaveBeenCalledWith('builder');
+    });
+  });
+
+  describe('grouped model picker (T3 cluster)', () => {
+    test('keeps the flat Select when no modelGroups are supplied', () => {
+      const component = renderToolbar({ modelId: 'opus', models: MODELS });
+
+      expect(
+        component.getByTestId('ChatComposerToolbar-model-select'),
+      ).toBeInTheDocument();
+      expect(
+        component.queryByTestId('ChatModelPicker-trigger'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('upgrades to ChatModelPicker when modelGroups are supplied', () => {
+      const component = renderToolbar({
+        modelGroups: MODEL_GROUPS,
+        modelId: 'claude::opus',
+        models: GROUPED_MODELS,
+      });
+
+      expect(
+        component.getByTestId('ChatModelPicker-trigger'),
+      ).toBeInTheDocument();
+      expect(
+        component.queryByTestId('ChatComposerToolbar-model-select'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('capability-gated controls', () => {
+    test('renders reasoning/tier + permission controls when capabilities are supplied', () => {
+      const component = renderToolbar({ capabilities: CLI_CAPS });
+
+      expect(
+        component.getByTestId('ChatReasoningTierControl-trigger'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('ChatPermissionModeControl-trigger'),
+      ).toBeInTheDocument();
+    });
+
+    test('omits the new controls entirely when no capabilities are supplied', () => {
+      const component = renderToolbar({ modelId: 'opus', models: MODELS });
+
+      expect(
+        component.queryByTestId('ChatReasoningTierControl-trigger'),
+      ).not.toBeInTheDocument();
+      expect(
+        component.queryByTestId('ChatPermissionModeControl-trigger'),
+      ).not.toBeInTheDocument();
+      expect(
+        component.queryByTestId('ChatCheckoutSelector-trigger'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('shows the checkout selector when the backend requires a repository', () => {
+      const component = renderToolbar({
+        capabilities: CLI_CAPS,
+        checkouts: CHECKOUTS,
+        selectedCheckoutId: 'repo-a',
+      });
+
+      expect(
+        component.getByTestId('ChatCheckoutSelector-trigger'),
+      ).toHaveTextContent('openthrottle');
+    });
+
+    test('hides the checkout selector when the backend does not require a repository', () => {
+      const component = renderToolbar({
+        capabilities: { ...CLI_CAPS, requiresRepository: false },
+        checkouts: CHECKOUTS,
+      });
+
+      expect(
+        component.queryByTestId('ChatCheckoutSelector-trigger'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('hides the reasoning/tier control when the backend exposes neither', () => {
+      const component = renderToolbar({
+        capabilities: {
+          ...CLI_CAPS,
+          reasoningLevels: [],
+          serviceTiers: [],
+        },
+      });
+
+      expect(
+        component.queryByTestId('ChatReasoningTierControl-trigger'),
+      ).not.toBeInTheDocument();
     });
   });
 

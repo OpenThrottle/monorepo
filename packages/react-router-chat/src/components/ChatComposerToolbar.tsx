@@ -18,43 +18,92 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Loader2, Mic, Paperclip } from 'lucide-react';
 import clsx from 'clsx';
+import { ChatCheckoutSelector } from './ChatCheckoutSelector';
+import { ChatModelPicker } from './ChatModelPicker';
+import { ChatPermissionModeControl } from './ChatPermissionModeControl';
+import { ChatReasoningTierControl } from './ChatReasoningTierControl';
 import { ChatComposerMicState, ChatComposerMode } from '../types';
 import type {
+  ChatBackendCapabilities,
+  ChatCheckoutOption,
   ChatContextSource,
+  ChatModelGroup,
   ChatModelOption,
+  ChatPermissionMode,
   ChatPersonaOption,
+  ChatReasoningLevel,
+  ChatServiceTier,
 } from '../types';
 
 export interface ChatComposerToolbarProps {
+  /**
+   * Selected backend's capabilities. When supplied, the toolbar gates the new
+   * reasoning/tier, permission, and checkout controls by it. When omitted, none
+   * of those controls render and the toolbar behaves exactly as before.
+   */
+  readonly capabilities?: ChatBackendCapabilities;
+  /**
+   * Repositories/checkouts for {@link ChatCheckoutSelector}. Rendered only when
+   * {@link capabilities} reports `requiresRepository` and this list is supplied.
+   */
+  readonly checkouts?: readonly ChatCheckoutOption[];
   readonly className?: string;
   /** Context sources for the attach control; omit to hide the control. */
   readonly contextSources?: readonly ChatContextSource[];
+  /** Model ids the caller has gated off; forwarded to {@link ChatModelPicker}. */
+  readonly disabledModelIds?: readonly string[];
   /** Voice-input state reflected by the mic control; pair with {@link onMicToggle}. */
   readonly micState?: ChatComposerMicState;
   /** Selected agent mode; omit to hide the mode toggle. */
   readonly mode?: ChatComposerMode;
+  /**
+   * Provider/CLI groups. When supplied, the model control upgrades from the
+   * flat Select to the grouped, searchable {@link ChatModelPicker} (using
+   * {@link models} as the option list). Omit for the legacy flat control.
+   */
+  readonly modelGroups?: readonly ChatModelGroup[];
   /** Selected model id; pair with {@link models}. */
   readonly modelId?: string;
   /** Selectable models; omit to hide the model control. */
   readonly models?: readonly ChatModelOption[];
   readonly onAddContext?: (sourceId: string) => void;
+  readonly onCheckoutChange?: (checkoutId: string) => void;
   /** Toggle voice input (click starts / click stops); omit to hide the mic control. */
   readonly onMicToggle?: () => void;
   readonly onModeChange?: (mode: ChatComposerMode) => void;
   readonly onModelChange?: (modelId: string) => void;
+  readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
   readonly onPersonaChange?: (personaId: string) => void;
+  readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
+  readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
+  /** Toggle a model's favorite flag; forwarded to {@link ChatModelPicker}. */
+  readonly onToggleFavorite?: (modelId: string) => void;
+  /** Selected permission mode; pair with {@link capabilities}. */
+  readonly permissionMode?: ChatPermissionMode;
   /** Selected persona id; pair with {@link personas}. */
   readonly personaId?: string;
   /** Selectable personas; omit to hide the persona control. */
   readonly personas?: readonly ChatPersonaOption[];
+  /** Selected reasoning level; pair with {@link capabilities}. */
+  readonly reasoning?: ChatReasoningLevel;
+  /** Selected checkout id; pair with {@link checkouts}. */
+  readonly selectedCheckoutId?: string;
+  /** Selected service tier; pair with {@link capabilities}. */
+  readonly serviceTier?: ChatServiceTier;
 }
 
 /**
- * @description Controlled, presentational toolbar for the chat composer:
- * model / persona selectors, a Plan↔Build mode toggle, an attach control, and
- * a toggle-only voice-input mic. Each control is independently optional —
- * supply its props to render it. The package hardcodes no model/persona data;
- * consumers own state and content (including all capture/transcription logic).
+ * @description Controlled, presentational toolbar for the chat composer. Legacy
+ * cluster: model / persona selectors, a Plan↔Build mode toggle, an attach
+ * control, and a toggle-only voice-input mic. T3-style cluster (all additive
+ * and independently optional): a grouped {@link ChatModelPicker} (engaged by
+ * supplying `modelGroups`), a {@link ChatReasoningTierControl}, a
+ * {@link ChatPermissionModeControl}, and a {@link ChatCheckoutSelector}. The
+ * three capability-gated controls render only when `capabilities` is supplied
+ * (checkout additionally requires `requiresRepository` + a `checkouts` list);
+ * with none of the new props the toolbar renders exactly as before. The
+ * package hardcodes no model/persona/capability data; consumers own state and
+ * content (including all capture/transcription logic).
  *
  * @public
  */
@@ -62,28 +111,46 @@ export const ChatComposerToolbar = (
   props: ChatComposerToolbarProps,
 ): React.ReactElement => {
   const {
+    capabilities,
+    checkouts,
     className,
     contextSources,
+    disabledModelIds,
     micState = ChatComposerMicState.idle,
     mode,
+    modelGroups,
     modelId,
     models,
     onAddContext,
+    onCheckoutChange,
     onMicToggle,
     onModeChange,
     onModelChange,
+    onPermissionModeChange,
     onPersonaChange,
+    onReasoningChange,
+    onServiceTierChange,
+    onToggleFavorite,
+    permissionMode,
     personaId,
     personas,
+    reasoning,
+    selectedCheckoutId,
+    serviceTier,
   } = props;
 
   // Hooks
 
   // Setup
   const hasModels = models != null && models.length > 0;
+  const useGroupedPicker = hasModels && modelGroups != null;
   const hasPersonas = personas != null && personas.length > 0;
   const hasContextSources = contextSources != null && contextSources.length > 0;
   const showAttach = onAddContext != null;
+  const showReasoningTier = capabilities != null;
+  const showPermission = capabilities != null;
+  const showCheckout =
+    capabilities?.requiresRepository === true && checkouts != null;
   const showMic = onMicToggle != null;
   const isMicFinalizing = micState === ChatComposerMicState.finalizing;
   const isMicRecording = micState === ChatComposerMicState.recording;
@@ -103,7 +170,16 @@ export const ChatComposerToolbar = (
   };
 
   // Markup
-  const modelControl = hasModels ? (
+  const modelControl = useGroupedPicker ? (
+    <ChatModelPicker
+      disabledModelIds={disabledModelIds}
+      groups={modelGroups ?? []}
+      models={models ?? []}
+      onModelChange={onModelChange ?? (() => undefined)}
+      onToggleFavorite={onToggleFavorite}
+      selectedModelId={modelId}
+    />
+  ) : hasModels ? (
     <Select onValueChange={onModelChange} value={modelId}>
       <Tooltip delayDuration={500}>
         <TooltipTrigger asChild={true}>
@@ -187,6 +263,35 @@ export const ChatComposerToolbar = (
           <TooltipContent side="top">Build — agentic execution</TooltipContent>
         </Tooltip>
       </ToggleGroup>
+    ) : null;
+
+  const reasoningTierControl =
+    showReasoningTier && capabilities != null ? (
+      <ChatReasoningTierControl
+        capabilities={capabilities}
+        onReasoningChange={onReasoningChange}
+        onServiceTierChange={onServiceTierChange}
+        reasoning={reasoning}
+        serviceTier={serviceTier}
+      />
+    ) : null;
+
+  const permissionControl =
+    showPermission && capabilities != null ? (
+      <ChatPermissionModeControl
+        capabilities={capabilities}
+        onPermissionModeChange={onPermissionModeChange}
+        permissionMode={permissionMode}
+      />
+    ) : null;
+
+  const checkoutControl =
+    showCheckout && checkouts != null ? (
+      <ChatCheckoutSelector
+        checkouts={checkouts}
+        onCheckoutChange={onCheckoutChange ?? (() => undefined)}
+        selectedCheckoutId={selectedCheckoutId}
+      />
     ) : null;
 
   const attachControl = !showAttach ? null : hasContextSources ? (
@@ -280,6 +385,9 @@ export const ChatComposerToolbar = (
       data-testid="ChatComposerToolbar"
     >
       {modelControl}
+      {reasoningTierControl}
+      {permissionControl}
+      {checkoutControl}
       {personaControl}
       {modeControl}
       {attachControl}
