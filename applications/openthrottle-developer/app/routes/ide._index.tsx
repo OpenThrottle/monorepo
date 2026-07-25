@@ -103,7 +103,7 @@ export default function Component(
   const { listing, query, repositories, search, selectedId } = props.loaderData;
 
   // Hooks
-  const [, setSearchParams] = useSearchParams();
+  const [_searchParams, setSearchParams] = useSearchParams();
   const exportsFetcher = useFetcher<IdeExportsResult>();
   const semanticFetcher = useFetcher<IdeSemanticResult>();
   const indexFetcher = useFetcher<{ repositoryId: string; status: string }>();
@@ -111,6 +111,7 @@ export default function Component(
   const [selectedSymbol, setSelectedSymbol] = React.useState<
     ExportedSymbol | undefined
   >(undefined);
+
   const {
     details,
     loading: detailsLoading,
@@ -136,6 +137,7 @@ export default function Component(
   const handleSearch = (nextQuery: string): void => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
+
       if (nextQuery === '') {
         next.delete('q');
       } else {
@@ -151,10 +153,12 @@ export default function Component(
       if (selectedId === null) {
         return;
       }
+
       const params = new URLSearchParams({ repositoryId: selectedId });
       if (nextQuery !== '') {
         params.set('q', nextQuery);
       }
+
       semanticFetcher.load(`/ide/semantic?${params.toString()}`);
     },
     [selectedId, semanticFetcher],
@@ -189,6 +193,7 @@ export default function Component(
     if (selectedId === null) {
       return;
     }
+
     indexFetcher.submit(
       { repositoryId: selectedId },
       { action: '/ide/semantic', method: 'post' },
@@ -203,6 +208,7 @@ export default function Component(
   // Markup
 
   // Life Cycle
+
   // After an index is enqueued, refresh status so the tab reflects "indexing".
   React.useEffect(() => {
     if (indexFetcher.state === 'idle' && indexFetcher.data !== undefined) {

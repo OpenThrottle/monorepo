@@ -208,6 +208,7 @@ export {
 } from './modules/repositories/repository-checkout.entity';
 export { RepositoriesModule } from './modules/repositories/repositories.module';
 export { RepositoriesService } from './modules/repositories/repositories.service';
+export type { MergeDetectedRemoteResult } from './modules/repositories/repositories.service';
 export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts.service';
 export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config.service';
 export type {

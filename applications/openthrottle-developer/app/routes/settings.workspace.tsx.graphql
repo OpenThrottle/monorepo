@@ -1,3 +1,59 @@
+fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
+  createdAt
+  displayName
+  filesystemPath
+  id
+  inspection {
+    agentConfig {
+      agentsMd
+      claudeMd
+      cursorRules
+      mcpJson
+      skillsDir
+    }
+    git {
+      currentBranch
+      defaultBranch
+      dirty
+      isRepo
+      linkedWorktrees
+      normalizedRemoteUrl
+    }
+    scannedAt
+    stack {
+      languages
+      nxWorkspace
+      packageManager
+      pnpmWorkspace
+      turbo
+    }
+    warnings
+  }
+  kind
+  managed
+  repositoryId
+  scannedAt
+  updatedAt
+  userId
+}
+
+fragment WorkspaceRepositoryFields on RepositoryObject {
+  checkouts {
+    ...RepositoryCheckoutFields
+  }
+  createdAt
+  defaultBranch
+  id
+  name
+  normalizedRemoteUrl
+  project {
+    id
+    name
+  }
+  projectId
+  updatedAt
+}
+
 fragment WorkspaceLocalRepositoryFields on WorkspaceLocalRepositoryObject {
   createdAt
   displayName
@@ -24,6 +80,18 @@ fragment UserWorkspaceProfileFields on UserWorkspaceProfileObject {
 }
 
 query getWorkspaceSettings {
+  discoveredFolders {
+    alreadyRegistered
+    name
+    path
+  }
+  projects {
+    id
+    name
+  }
+  workspaceRepositories {
+    ...WorkspaceRepositoryFields
+  }
   workspaceSettings {
     localRepositories {
       ...WorkspaceLocalRepositoryFields
@@ -32,31 +100,53 @@ query getWorkspaceSettings {
       ...UserWorkspaceProfileFields
     }
   }
-  projects {
-    id
+}
+
+query browseWorkspaceDirectory($path: String!) {
+  browseDirectory(path: $path) {
     name
+    path
+  }
+}
+
+mutation addWorkspaceFolder($input: AddWorkspaceFolderInput!) {
+  addWorkspaceFolder(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    project {
+      id
+      name
+    }
+    projectCreated
+    reconciliation
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+  }
+}
+
+mutation refreshCheckout($input: RefreshCheckoutInput!) {
+  refreshCheckout(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    drift {
+      branchMoved
+      pathMissing
+      remoteChanged
+    }
+    merged
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+    supersededProjectId
   }
 }
 
 mutation updateWorkspaceProfile($input: UpdateWorkspaceProfileInput!) {
   updateWorkspaceProfile(input: $input) {
     ...UserWorkspaceProfileFields
-  }
-}
-
-mutation createWorkspaceLocalRepository(
-  $input: CreateWorkspaceLocalRepositoryInput!
-) {
-  createWorkspaceLocalRepository(input: $input) {
-    ...WorkspaceLocalRepositoryFields
-  }
-}
-
-mutation updateWorkspaceLocalRepository(
-  $input: UpdateWorkspaceLocalRepositoryInput!
-) {
-  updateWorkspaceLocalRepository(input: $input) {
-    ...WorkspaceLocalRepositoryFields
   }
 }
 

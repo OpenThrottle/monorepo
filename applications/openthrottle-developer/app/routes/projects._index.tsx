@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { FoldersIcon } from 'lucide-react';
+import { Link } from 'react-router';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { FolderPlusIcon, FoldersIcon } from 'lucide-react';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
@@ -140,7 +142,15 @@ export default function Component(
       />
 
       <div className="flex flex-col gap-4">
-        <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
+          <Button asChild={true} variant="outline">
+            <Link to="/settings/workspace">
+              <FolderPlusIcon aria-hidden={true} className="size-4" />
+              Add folder
+            </Link>
+          </Button>
+        </div>
         <p className="text-muted-foreground text-sm">
           Projects group plans and tasks by Nx application in this monorepo.
           Each row maps to one app (for example openthrottle-developer or

@@ -11,7 +11,7 @@ import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { WorkspaceEditorId } from './workspace-editor-id';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
-import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
 import {
   getWorkspaceEditorConfigPaths,
   OPENTHROTTLE_MANIFEST_RELATIVE_PATH,
@@ -24,6 +24,12 @@ import {
 
 export interface ApplyWorkspaceEditorConfigOptions {
   readonly apiBaseUrl: string;
+  /**
+   * Scope the apply to specific checkouts by their id. Empty/undefined applies
+   * to every checkout the user owns (unchanged apply-all behavior). The field
+   * name is `repositoryIds` for GraphQL-contract stability; the ids are
+   * checkout ids (a checkout is the per-user on-disk instance being configured).
+   */
   readonly repositoryIds?: readonly string[];
 }
 
@@ -31,6 +37,7 @@ export interface WorkspaceEditorConfigApplication {
   readonly editor: WorkspaceEditorId;
   readonly filesWritten: readonly string[];
   readonly filesystemPath: string;
+  /** Checkout id the config was applied to (stable external contract). */
   readonly repositoryId: string;
   readonly warnings: readonly string[];
 }
@@ -62,7 +69,7 @@ export class WorkspaceEditorConfigService {
   constructor(
     private readonly logger: LoggerService,
     private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
-    private readonly workspaceLocalRepositoriesService: WorkspaceLocalRepositoriesService,
+    private readonly checkoutsService: RepositoryCheckoutsService,
   ) {
     this.logger.debug('🧩 workspace-editor-config 🧩');
   }
@@ -82,26 +89,26 @@ export class WorkspaceEditorConfigService {
       return [];
     }
 
-    const repositories =
-      await this.workspaceLocalRepositoriesService.listByUserId(userId);
-    const targetRepositories =
+    const checkouts = await this.checkoutsService.listByUserId(userId);
+    const targetCheckouts =
       options.repositoryIds == null || options.repositoryIds.length === 0
-        ? repositories
-        : repositories.filter((repo) =>
-            options.repositoryIds?.includes(repo.id),
+        ? checkouts
+        : checkouts.filter((checkout) =>
+            options.repositoryIds?.includes(checkout.id),
           );
 
     const results: WorkspaceEditorConfigApplication[] = [];
 
-    for (const repository of targetRepositories) {
+    for (const checkout of targetCheckouts) {
       for (const editor of enabledEditors) {
         results.push(
           // eslint-disable-next-line no-await-in-loop
           await this.applyForRepositoryEditor({
             apiBaseUrl: options.apiBaseUrl,
+            checkoutId: checkout.id,
             editor,
-            filesystemPath: repository.filesystemPath,
-            repositoryId: repository.id,
+            filesystemPath: checkout.filesystemPath,
+            repositoryId: checkout.repositoryId,
           }),
         );
       }
@@ -112,6 +119,7 @@ export class WorkspaceEditorConfigService {
 
   private async applyForRepositoryEditor(params: {
     readonly apiBaseUrl: string;
+    readonly checkoutId: string;
     readonly editor: WorkspaceEditorId;
     readonly filesystemPath: string;
     readonly repositoryId: string;
@@ -133,7 +141,7 @@ export class WorkspaceEditorConfigService {
         editor: params.editor,
         filesWritten: [],
         filesystemPath: repositoryRoot,
-        repositoryId: params.repositoryId,
+        repositoryId: params.checkoutId,
         warnings: [
           `Repository path is not readable/writable: ${repositoryRoot}`,
         ],
@@ -176,11 +184,16 @@ export class WorkspaceEditorConfigService {
       });
     }
 
+    // repositoryId + checkoutId make this manifest OT's on-disk identity anchor
+    // (design decision 2): RepositoryInspectionService reads them back to
+    // reconcile a moved or re-added folder to its existing rows.
     const manifest = {
       appliedAt: new Date().toISOString(),
+      checkoutId: params.checkoutId,
       editor: params.editor,
       enabledSkillPaths: skillPaths,
       mcpConfigPath: paths.mcpConfigRelativePath,
+      repositoryId: params.repositoryId,
       rulesDirectory: paths.rulesDirectoryRelativePath,
     };
 
@@ -195,7 +208,7 @@ export class WorkspaceEditorConfigService {
       editor: params.editor,
       filesWritten,
       filesystemPath: repositoryRoot,
-      repositoryId: params.repositoryId,
+      repositoryId: params.checkoutId,
       warnings,
     };
   }
