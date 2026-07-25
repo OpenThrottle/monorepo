@@ -7,6 +7,9 @@
     "agents-ralph": {
       "tags": ["commit", "openthrottle", "planning"]
     },
+    "agentic-ralph": {
+      "tags": ["commit", "openthrottle", "planning"]
+    },
     "brag-sheet": {
       "tags": ["docs", "git", "github"]
     },

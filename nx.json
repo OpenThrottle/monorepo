@@ -205,7 +205,10 @@
         "command": "graphql-codegen",
         "cwd": "{projectRoot}"
       },
-      "outputs": ["{projectRoot}/**/__generated__"]
+      "outputs": [
+        "{projectRoot}/app/__generated__",
+        "{projectRoot}/src/__generated__"
+      ]
     },
     "codegen-graphql-watch": {
       "continuous": true,

@@ -17,9 +17,15 @@
       "description": "Maestro E2E testing (maestro.dev). Drive the openthrottle-developer app: list_devices, inspect_screen, take_screenshot, run flows, cheat_sheet, and Maestro Cloud tools. Requires the Maestro CLI on PATH and a running app/device."
     },
     "openthrottle-mcp": {
-      "args": ["scripts/run-openthrottle-mcp.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
       "command": "bash",
-      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."
+      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
+      "env": {
+        "ANTHROPIC_API_KEY": "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",
+        "API_URL": "http://localhost:6021",
+        "API_URL_INTERNAL": "http://localhost:6021",
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "ot_sa_GfXyXoORxnle_6VRYsA73TUrWDmGSJU7T0rXovhq7OeTa"
+      }
     },
     "shadcn": {
       "args": ["shadcn@latest", "mcp"],

@@ -34,12 +34,21 @@ export const ChatThinkingBlock = (
 ): React.ReactElement | null => {
   const { defaultOpen = false, text } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
   if (text.trim() === '') {
     return null;
   }
 
-  // Markup
   return (
     <Collapsible
       className="border-border/50 text-muted-foreground my-1 rounded-md border border-dashed"

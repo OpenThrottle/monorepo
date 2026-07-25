@@ -53,8 +53,10 @@ installSoftware () {
   installBrewPackage "terraform"
 
   # 👨‍💻 IDE's
-  brew install anomalyco/tap/opencode
-  curl -fsSL https://claude.ai/install.sh | bash
+  curl -fsSL https://claude.ai/install.sh | bash # CLAUDE CLI
+  curl -fsSL https://chatgpt.com/codex/install.sh | sh # CODEX CLI
+  curl -fsSL https://x.ai/cli/install.sh | bash # GROK CLI
+  curl -fsSL https://opencode.ai/install | bash # OPENCODE CLI
 
   # Install the dependencies
   # pnpm install --stream=false --silent

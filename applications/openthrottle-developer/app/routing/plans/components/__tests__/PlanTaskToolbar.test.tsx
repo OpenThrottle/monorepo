@@ -49,7 +49,7 @@ describe('PlanTaskToolbar Component', () => {
     component = renderToolbar(props);
   });
 
-  test('renders the status group, Promote, actions, and tags section', () => {
+  test('renders the status group, Promote, actions, and tag chips', () => {
     expect(component.getByTestId('PlanTaskToolbar')).toBeInTheDocument();
     expect(
       component.getByRole('button', { name: /mark complete/i }),
@@ -60,7 +60,6 @@ describe('PlanTaskToolbar Component', () => {
     expect(
       component.getByRole('button', { name: /^actions$/i }),
     ).toBeInTheDocument();
-    expect(component.getByText('Tags')).toBeInTheDocument();
     expect(component.getByText('backend')).toBeInTheDocument();
   });
 

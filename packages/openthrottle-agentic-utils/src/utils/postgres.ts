@@ -49,6 +49,17 @@ export function getPostgresUrl(env: NodeJS.ProcessEnv = process.env): string {
   return connectionString;
 }
 
+export function getPostgresLoggingLevel(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const isDev = env.NODE_ENV === 'development';
+  const logLevel = env.POSTGRES_LOGGING ?? 'info';
+
+  console.log('🎯 🎯 logLevel 🎯 🎯', { isDev, logLevel });
+
+  return true;
+}
+
 /**
  * Verifies Postgres is reachable (connect + `SELECT 1`). Throws when the
  * connection string is missing or the check fails.
