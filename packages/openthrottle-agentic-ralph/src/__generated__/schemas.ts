@@ -8,7 +8,6 @@ import {
   AddProjectTagInput,
   AddSkillTagInput,
   AddTaskTagInput,
-  AddWorkspaceFolderInput,
   AgentAssetSearchInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
@@ -75,7 +74,6 @@ import {
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RecordWorkArtifactInput,
-  RefreshCheckoutInput,
   RegisterCliPlanRunInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
@@ -122,7 +120,6 @@ import {
   WorkArtifactsByTaskInput,
   WorkSessionsByPlanInput,
   WorkspaceEditorId,
-  WorkspaceFolderReconciliation,
 } from './graphql.js';
 
 type Properties<T> = Required<{
@@ -153,10 +150,6 @@ export const WallClockInterpretationSchema = z.nativeEnum(
 );
 
 export const WorkspaceEditorIdSchema = z.nativeEnum(WorkspaceEditorId);
-
-export const WorkspaceFolderReconciliationSchema = z.nativeEnum(
-  WorkspaceFolderReconciliation,
-);
 
 export function ActivityByDateInputSchema(): z.ZodObject<
   Properties<ActivityByDateInput>
@@ -235,15 +228,6 @@ export function AddTaskTagInputSchema(): z.ZodObject<
   return z.object({
     tag: z.string(),
     taskId: z.string(),
-  });
-}
-
-export function AddWorkspaceFolderInputSchema(): z.ZodObject<
-  Properties<AddWorkspaceFolderInput>
-> {
-  return z.object({
-    displayName: z.string().nullish(),
-    path: z.string(),
   });
 }
 
@@ -879,14 +863,6 @@ export function RecordWorkArtifactInputSchema(): z.ZodObject<
     payloadJson: z.string(),
     sessionId: z.string(),
     type: z.string(),
-  });
-}
-
-export function RefreshCheckoutInputSchema(): z.ZodObject<
-  Properties<RefreshCheckoutInput>
-> {
-  return z.object({
-    id: z.string(),
   });
 }
 
