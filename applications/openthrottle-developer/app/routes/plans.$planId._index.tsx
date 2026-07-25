@@ -65,6 +65,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     };
   }
 
@@ -83,6 +84,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     ruleApplications: page.ruleApplications ?? [],
     tagVocabulary: page.skillTagVocabulary.tags ?? [],
     tasks: page.tasksByPlanId ?? [],
+    workspaceRepositories: page.workspaceRepositories ?? [],
   };
 };
 

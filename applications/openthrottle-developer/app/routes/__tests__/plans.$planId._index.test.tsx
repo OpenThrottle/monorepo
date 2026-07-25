@@ -116,6 +116,7 @@ describe('routes/plans.$planId.tsx', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [mockTask],
+      workspaceRepositories: [],
     };
     const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
@@ -162,6 +163,7 @@ describe('routes/plans.$planId.tsx', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     };
     const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
@@ -200,6 +202,7 @@ describe('routes/plans.$planId.tsx', () => {
             ruleApplications: [],
             tagVocabulary: [],
             tasks: [],
+            workspaceRepositories: [],
           }}
           matches={buildPlanDetailMatches({
             linkedArtifacts: [],
@@ -210,6 +213,7 @@ describe('routes/plans.$planId.tsx', () => {
             ruleApplications: [],
             tagVocabulary: [],
             tasks: [],
+            workspaceRepositories: [],
           })}
           params={{ planId: mockPlan.id }}
         />
@@ -233,6 +237,7 @@ describe('routes/plans.$planId.tsx', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [mockTask],
+      workspaceRepositories: [],
     };
     renderWithPlanDetailRouteData(
       <TooltipProvider>
@@ -279,6 +284,7 @@ describe('routes/plans.$planId.tsx', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     };
     renderWithPlanDetailRouteData(
       <TooltipProvider>

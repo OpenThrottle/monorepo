@@ -13,11 +13,14 @@ import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflo
 import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
 import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
-import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
+import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   jobRunHookDraftRowsAtom,
+  workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRalphRunOptionsValidationAtom,
+  workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
@@ -46,6 +49,15 @@ export interface PlanTabConfigurationProps {
 
   onSaveRunConfig?: () => void;
 
+  /** @description The plan's linked project id; pre-fills the workspace repository. */
+  planProjectId?: string | null;
+
+  /**
+   * @description Registered repositories (with the user's checkouts) for the
+   * workspace run-config selector. Defaults to empty (monorepo-root / custom-path only).
+   */
+  repositories?: readonly PlanRunConfigRepositoryFieldsFragment[];
+
   saveJobRunHooksDisabled?: boolean;
   saveJobRunHooksPending?: boolean;
   saveRunConfigDisabled?: boolean;
@@ -60,6 +72,8 @@ export const PlanTabConfiguration = (
     onResetToDefaults,
     onSaveJobRunHooks,
     onSaveRunConfig,
+    planProjectId,
+    repositories = [],
     saveJobRunHooksDisabled,
     saveJobRunHooksPending,
     saveRunConfigDisabled,
@@ -74,6 +88,8 @@ export const PlanTabConfiguration = (
   const [workingDirectory, setWorkingDirectory] = useAtom(
     workflowWorkingDirectoryAtom,
   );
+  const [checkoutId, setCheckoutId] = useAtom(workflowCheckoutIdAtom);
+  const [repositoryId, setRepositoryId] = useAtom(workflowRepositoryIdAtom);
   const [jobRunHookRows, setJobRunHookRows] = useAtom(jobRunHookDraftRowsAtom);
   const validation = useAtomValue(workflowRalphRunOptionsValidationAtom);
 
@@ -127,10 +143,16 @@ export const PlanTabConfiguration = (
           setInput={setInput}
         />
 
-        <PlanWorkflowConfigWorkspace
+        <PlanWorkflowConfigWorkspaceSelector
+          checkoutId={checkoutId}
           heading="02. Workspace"
-          onChange={setWorkingDirectory}
-          value={workingDirectory}
+          onCheckoutIdChange={setCheckoutId}
+          onRepositoryIdChange={setRepositoryId}
+          onWorkingDirectoryChange={setWorkingDirectory}
+          planProjectId={planProjectId}
+          repositories={repositories}
+          repositoryId={repositoryId}
+          workingDirectory={workingDirectory}
         />
 
         <PlanWorkflowConfigHooks
