@@ -2,13 +2,13 @@
  * @description Builds resolved enqueue snapshots from validated plan-run job data.
  */
 
-import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from './plan-run-config-storage.constants';
-import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants';
+import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from './plan-run-config-storage.constants.ts';
+import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   BuildPlanRunConfigSnapshotInput,
   PlanRunConfigSnapshot,
   PlanRunConfigSnapshotDebugCli,
-} from './plan-run-config-snapshot.types';
+} from './plan-run-config-snapshot.types.ts';
 
 const trimOptionalString = (
   value: string | null | undefined,
