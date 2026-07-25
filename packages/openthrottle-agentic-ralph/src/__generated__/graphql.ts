@@ -171,6 +171,8 @@ export type AddWorkspaceFolderPayloadObject = {
   checkout: RepositoryCheckoutObject;
   /** Project linked at the repository level, when present. */
   project?: Maybe<ProjectObject>;
+  /** True when the project was auto-created by this call (new repository); false when an existing link was inherited. */
+  projectCreated: Scalars['Boolean']['output'];
   reconciliation: WorkspaceFolderReconciliation;
   repository: RepositoryObject;
 };
@@ -2938,11 +2940,17 @@ export type RefreshCheckoutInput = {
   id: Scalars['ID']['input'];
 };
 
-/** Result of refreshCheckout: the checkout with its updated snapshot plus drift flags. */
+/** Result of refreshCheckout: the checkout with its updated snapshot, drift flags, and the (possibly merged) repository. */
 export type RefreshCheckoutPayloadObject = {
   __typename?: 'RefreshCheckoutPayloadObject';
   checkout: RepositoryCheckoutObject;
   drift: CheckoutDriftObject;
+  /** True when a provisional repository gained a remote and merged into an existing canonical repository (its checkouts re-pointed; the canonical project link won). */
+  merged: Scalars['Boolean']['output'];
+  /** The checkout's repository after any promotion or merge. */
+  repository: RepositoryObject;
+  /** Project link that was dropped from the provisional repository when the merge kept the canonical link. */
+  supersededProjectId?: Maybe<Scalars['String']['output']>;
 };
 
 export type RegisterCliPlanRunInput = {

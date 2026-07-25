@@ -69,6 +69,11 @@ export class AddWorkspaceFolderPayloadObject {
   })
   project?: ProjectObject | null;
 
+  @Field(() => Boolean, {
+    description: `True when the project was auto-created by this call (new repository); false when an existing link was inherited.`,
+  })
+  projectCreated!: boolean;
+
   @Field(() => WorkspaceFolderReconciliationEnum)
   reconciliation!: WorkspaceFolderReconciliationEnum;
 
@@ -91,7 +96,7 @@ export class CheckoutDriftObject {
 }
 
 @ObjectType({
-  description: `Result of refreshCheckout: the checkout with its updated snapshot plus drift flags.`,
+  description: `Result of refreshCheckout: the checkout with its updated snapshot, drift flags, and the (possibly merged) repository.`,
 })
 export class RefreshCheckoutPayloadObject {
   @Field(() => RepositoryCheckoutObject)
@@ -99,4 +104,20 @@ export class RefreshCheckoutPayloadObject {
 
   @Field(() => CheckoutDriftObject)
   drift!: CheckoutDriftObject;
+
+  @Field(() => Boolean, {
+    description: `True when a provisional repository gained a remote and merged into an existing canonical repository (its checkouts re-pointed; the canonical project link won).`,
+  })
+  merged!: boolean;
+
+  @Field(() => RepositoryObject, {
+    description: `The checkout's repository after any promotion or merge.`,
+  })
+  repository!: RepositoryObject;
+
+  @Field(() => String, {
+    description: `Project link that was dropped from the provisional repository when the merge kept the canonical link.`,
+    nullable: true,
+  })
+  supersededProjectId!: string | null;
 }

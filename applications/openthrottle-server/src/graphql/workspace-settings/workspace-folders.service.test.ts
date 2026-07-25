@@ -7,6 +7,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  Project,
   Repository,
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
@@ -45,6 +46,7 @@ describe('WorkspaceFoldersService', () => {
     updateFilesystemPath: vi.fn(),
   });
   const mockProjectsService = createMock<ProjectsService>({
+    create: vi.fn(),
     findById: vi.fn(),
   });
   const mockRepositoriesService = createMock<RepositoriesService>({
@@ -52,6 +54,8 @@ describe('WorkspaceFoldersService', () => {
     delete: vi.fn(),
     findById: vi.fn(),
     findByNormalizedRemoteUrl: vi.fn(),
+    mergeDetectedRemote: vi.fn(),
+    update: vi.fn(),
   });
 
   const inspectionService = new RepositoryInspectionService(
@@ -98,9 +102,15 @@ describe('WorkspaceFoldersService', () => {
     vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([]);
     vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
     vi.mocked(mockCheckoutsService.saveInspection).mockReset();
+    vi.mocked(mockProjectsService.create).mockReset();
+    vi.mocked(mockProjectsService.create).mockResolvedValue(
+      asMock<Project>({ id: 'auto-project', name: 'Fixture' }),
+    );
     vi.mocked(mockRepositoriesService.create).mockReset();
     vi.mocked(mockRepositoriesService.delete).mockReset();
     vi.mocked(mockRepositoriesService.findById).mockReset();
+    vi.mocked(mockRepositoriesService.mergeDetectedRemote).mockReset();
+    vi.mocked(mockRepositoriesService.update).mockReset();
     vi.mocked(
       mockRepositoriesService.findByNormalizedRemoteUrl,
     ).mockResolvedValue(null);
@@ -206,6 +216,14 @@ describe('WorkspaceFoldersService', () => {
           normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
         }),
       );
+      expect(payload.projectCreated).toBe(true);
+      expect(payload.project?.id).toBe('auto-project');
+      expect(mockProjectsService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Fixture' }),
+      );
+      expect(mockRepositoriesService.update).toHaveBeenCalledWith('repo-1', {
+        projectId: 'auto-project',
+      });
       expect(payload.checkout.inspection?.git.normalizedRemoteUrl).toBe(
         'https://github.com/OpenThrottle/Fixture',
       );
@@ -238,7 +256,9 @@ describe('WorkspaceFoldersService', () => {
       });
 
       expect(payload.reconciliation).toBe('matched_remote');
+      expect(payload.projectCreated).toBe(false);
       expect(mockRepositoriesService.create).not.toHaveBeenCalled();
+      expect(mockProjectsService.create).not.toHaveBeenCalled();
     });
 
     it('rejects invalid paths before any registration', async () => {
@@ -281,6 +301,10 @@ describe('WorkspaceFoldersService', () => {
           filesystemPath: join(workspaceRoot, 'deleted-checkout'),
           id: 'checkout-gone',
           inspection: null,
+          repository: asMock<Repository>({
+            id: 'repo-1',
+            normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
+          }),
           scannedAt: null,
         }),
       );
@@ -289,6 +313,7 @@ describe('WorkspaceFoldersService', () => {
 
       expect(payload.drift.pathMissing).toBe(true);
       expect(payload.drift.remoteChanged).toBe(false);
+      expect(payload.merged).toBe(false);
       expect(mockCheckoutsService.saveInspection).not.toHaveBeenCalled();
     });
 
@@ -307,6 +332,10 @@ describe('WorkspaceFoldersService', () => {
             stack: {},
             warnings: [],
           },
+          repository: asMock<Repository>({
+            id: 'repo-1',
+            normalizedRemoteUrl: 'https://github.com/other/repo',
+          }),
           scannedAt: new Date('2026-07-01T00:00:00.000Z'),
         }),
       );
@@ -315,7 +344,52 @@ describe('WorkspaceFoldersService', () => {
 
       expect(payload.drift.pathMissing).toBe(false);
       expect(payload.drift.remoteChanged).toBe(true);
+      expect(payload.merged).toBe(false);
       expect(mockCheckoutsService.saveInspection).toHaveBeenCalled();
+      expect(
+        mockRepositoriesService.mergeDetectedRemote,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('merges a provisional repository that gained a remote into the canonical row', async () => {
+      const provisional = asMock<Repository>({
+        id: 'prov-repo',
+        normalizedRemoteUrl: null,
+        projectId: 'prov-project',
+      });
+      const canonical = asMock<Repository>({
+        id: 'canon-repo',
+        name: 'Fixture',
+        normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
+        projectId: 'canon-project',
+      });
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        asMock<RepositoryCheckout>({
+          filesystemPath: gitRepoDir,
+          id: 'checkout-merge',
+          inspection: null,
+          repository: provisional,
+          repositoryId: 'prov-repo',
+          scannedAt: null,
+        }),
+      );
+      vi.mocked(mockRepositoriesService.mergeDetectedRemote).mockResolvedValue({
+        merged: true,
+        repository: canonical,
+        supersededProjectId: 'prov-project',
+      });
+
+      const payload = await service.refreshCheckout(userId, 'checkout-merge');
+
+      expect(mockRepositoriesService.mergeDetectedRemote).toHaveBeenCalledWith(
+        'prov-repo',
+        'https://github.com/OpenThrottle/Fixture',
+      );
+      expect(payload.merged).toBe(true);
+      expect(payload.repository.id).toBe('canon-repo');
+      expect(payload.repository.projectId).toBe('canon-project');
+      expect(payload.supersededProjectId).toBe('prov-project');
+      expect(payload.checkout.repositoryId).toBe('canon-repo');
     });
   });
 });

@@ -328,14 +328,32 @@ export class WorkspaceFoldersService {
       new Date(snapshot.scannedAt),
     );
 
-    const project =
+    // Auto-provision: a NEW repository gets a project named from the remote
+    // repo name (fallback: folder name); existing repositories inherit their
+    // link untouched (task 108bca14 / plan decision 1).
+    let project =
       repository.projectId === null
         ? null
         : await this.projectsService.findById(repository.projectId);
+    let projectCreated = false;
+    if (createdRepository && repository.projectId === null) {
+      project = await this.projectsService.create({
+        description: `Auto-created by the add-folder onboarding flow for ${
+          repository.normalizedRemoteUrl ?? checkout.filesystemPath
+        }.`,
+        name: repository.name,
+      });
+      const linked = await this.repositoriesService.update(repository.id, {
+        projectId: project.id,
+      });
+      repository = linked ?? repository;
+      projectCreated = true;
+    }
 
     return {
       checkout: this.toCheckoutObject(checkout, snapshot),
       project,
+      projectCreated,
       reconciliation,
       repository: this.toRepositoryObject(repository),
     };
@@ -373,6 +391,31 @@ export class WorkspaceFoldersService {
       );
     }
 
+    // Provisional → canonical resolution (design doc §4): a local-only
+    // repository that gained a remote merges into the canonical row (its
+    // project link wins) or promotes in place.
+    let repository = await this.repositoryFor(checkout);
+    let merged = false;
+    let supersededProjectId: string | null = null;
+    if (
+      snapshot !== null &&
+      repository.normalizedRemoteUrl === null &&
+      snapshot.git.normalizedRemoteUrl !== null
+    ) {
+      const result = await this.repositoriesService.mergeDetectedRemote(
+        repository.id,
+        snapshot.git.normalizedRemoteUrl,
+      );
+      if (result !== null) {
+        merged = result.merged;
+        repository = result.repository;
+        supersededProjectId = result.supersededProjectId;
+        // The row was re-pointed inside the merge transaction; reflect it on
+        // the already-loaded entity so the payload is consistent.
+        checkout.repositoryId = repository.id;
+      }
+    }
+
     const drift: CheckoutDriftObject = {
       branchMoved:
         previous !== null &&
@@ -388,6 +431,9 @@ export class WorkspaceFoldersService {
     return {
       checkout: this.toCheckoutObject(checkout, snapshot ?? previous),
       drift,
+      merged,
+      repository: this.toRepositoryObject(repository),
+      supersededProjectId,
     };
   }
 
