@@ -16,7 +16,6 @@ export interface TaskDetailsProps {
   task: PlanTaskRowFragment;
 }
 
-const DESCRIPTION_PREVIEW_LINES = 4;
 const SUMMARY_PREVIEW_LINES = 3;
 
 /**
@@ -35,28 +34,18 @@ function formatTaskDate(value: string | number | unknown): string {
 
 export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
   const { className, planId, task } = props;
+  const { projectRelation: project } = task;
 
   // Hooks
-  const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
 
   // Setup
-  const { projectRelation: project } = task;
-
   const hasDescription = task.description != null && task.description !== '';
   const hasSummary = task.summary != null && task.summary !== '';
-  const descriptionLines = hasDescription
-    ? task.description!.split('\n').length
-    : 0;
   const summaryLines = hasSummary ? (task.summary!.split('\n').length ?? 0) : 0;
-  const isLongDescription = descriptionLines > DESCRIPTION_PREVIEW_LINES;
   const isLongSummary = summaryLines > SUMMARY_PREVIEW_LINES;
 
   // Handlers
-  const handleToggleDescription = (): void => {
-    setDescriptionExpanded((expanded) => !expanded);
-  };
-
   const handleToggleSummary = (): void => {
     setSummaryExpanded((expanded) => !expanded);
   };
@@ -124,18 +113,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
         {(hasDescription || hasSummary) && (
           <CardContent className="space-y-4">
             {hasDescription && (
-              <div className="space-y-1">
-                <MarkdownRenderer source={task.description ?? ''} />
-                {isLongDescription && (
-                  <button
-                    className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={handleToggleDescription}
-                    type="button"
-                  >
-                    {descriptionExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </div>
+              <MarkdownRenderer source={task.description ?? ''} />
             )}
             {hasDescription && hasSummary && <Separator />}
             {hasSummary && (
@@ -152,17 +130,6 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
                 )}
               </div>
             )}
-
-            <div className="mt-8">
-              <h3 className="mb-4 text-lg">Requirements</h3>
-              <ul className="text-muted-foreground text-sm">
-                {JSON.parse(task.requirementsJson).map(
-                  (requirement: string) => (
-                    <li key={requirement}>{requirement}</li>
-                  ),
-                )}
-              </ul>
-            </div>
           </CardContent>
         )}
       </Card>

@@ -174,18 +174,13 @@ export const PlanTaskToolbar = (
         </Tooltip>
       }
       tags={
-        <div className="flex flex-col gap-2">
-          {/* <h2 className="text-muted-foreground text-xs font-medium uppercase">
-            {PLAN_TASK_TOOLBAR_COPY.tagsHeading}
-          </h2> */}
-          <PlanTagChips
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-            pending={tagsPending}
-            tags={tags}
-            vocabulary={tagVocabulary}
-          />
-        </div>
+        <PlanTagChips
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+          pending={tagsPending}
+          tags={tags}
+          vocabulary={tagVocabulary}
+        />
       }
     />
   );

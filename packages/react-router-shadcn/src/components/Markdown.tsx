@@ -29,9 +29,9 @@ export const Markdown = (props: MarkdownProps): React.ReactElement => {
       className={clsx('markdown max-w-full overflow-auto', className)}
       contentEditable={contentEditable}
     >
-      <code>
-        <pre>{value}</pre>
-      </code>
+      <pre>
+        <code>{value}</code>
+      </pre>
     </div>
   );
 };

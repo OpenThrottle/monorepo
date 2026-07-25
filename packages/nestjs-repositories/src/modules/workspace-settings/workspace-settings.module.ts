@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { ProjectsModule } from '../projects/projects.module';
+import { RepositoriesModule } from '../repositories/repositories.module';
 import { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
-import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
 import { WorkspaceEditorConfigService } from './workspace-editor-config.service';
 
@@ -18,7 +18,8 @@ import { WorkspaceEditorConfigService } from './workspace-editor-config.service'
   imports: [
     LoggerModule,
     ProjectsModule,
-    TypeOrmModule.forFeature([UserWorkspaceSettings, WorkspaceLocalRepository]),
+    RepositoriesModule,
+    TypeOrmModule.forFeature([UserWorkspaceSettings]),
   ],
   providers: [
     UserWorkspaceSettingsService,
