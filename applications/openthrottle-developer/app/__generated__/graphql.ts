@@ -866,6 +866,8 @@ export type EnqueueDocIngestionResultObject = {
 };
 
 export type EnqueuePlanRalphOrchestratorInput = {
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. */
@@ -878,13 +880,17 @@ export type EnqueuePlanRalphOrchestratorInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
-  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunInput = {
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
@@ -895,7 +901,9 @@ export type EnqueuePlanRunInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
-  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 

@@ -598,12 +598,14 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRalphOrchestratorInput>
 > {
   return z.object({
+    checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
     mode: PlanRalphWorkflowModeSchema.nullish(),
     planId: z.string(),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
     taskId: z.string().nullish(),
     workingDirectory: z.string().nullish(),
   });
@@ -613,11 +615,13 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
+    checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
     planId: z.string(),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
     workingDirectory: z.string().nullish(),
   });
 }
