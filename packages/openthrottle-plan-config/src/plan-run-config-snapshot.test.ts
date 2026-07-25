@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { buildPlanRunConfigSnapshot } from './plan-run-config-snapshot.build';
-import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants';
-import { parsePlanRunConfigSnapshot } from './plan-run-config-snapshot.validation';
+import { buildPlanRunConfigSnapshot } from './plan-run-config-snapshot.build.ts';
+import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
+import { parsePlanRunConfigSnapshot } from './plan-run-config-snapshot.validation.ts';
 
 describe('buildPlanRunConfigSnapshot', () => {
   test('defaults spawn plan run to plan target and empty workspace', () => {

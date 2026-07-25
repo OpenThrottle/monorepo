@@ -2,13 +2,13 @@
  * @description Round-trip between Plan Configuration UI state and `plans.run_config`.
  */
 
-import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults';
-import { parsePlanRunConfigStorage } from './plan-run-config-storage.validation';
+import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
+import { parsePlanRunConfigStorage } from './plan-run-config-storage.validation.ts';
 import type {
   PlanRunConfigStorage,
   PlanWorkflowRalphRunOptions,
   PlanWorkflowUiState,
-} from './plan-run-config-storage.types';
+} from './plan-run-config-storage.types.ts';
 
 /**
  * @description Parses optional per-iteration timeout text (seconds); empty omits the CLI flag.

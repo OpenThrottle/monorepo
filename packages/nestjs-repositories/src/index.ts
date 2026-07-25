@@ -230,10 +230,7 @@ export type { PermissionData } from './modules/roles/permission.entity';
 export type { RoleData } from './modules/roles/role.entity';
 export type { ServiceAccountCredentialData } from './modules/service-accounts/service-account-credential.entity';
 export type { ServiceAccountData } from './modules/service-accounts/service-account.entity';
-export type {
-  PlanData,
-  PlanJobRunHooksStorage,
-} from './modules/plans/plan.entity';
+export type { PlanData } from './modules/plans/plan.entity';
 export {
   buildPlanRunConfigSnapshot,
   buildRalphPlanRunTuningFromPlanRunConfig,
@@ -256,9 +253,10 @@ export {
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   workflowUiStateFromPlanRunConfig,
-} from './modules/plans/plan-run-config';
+} from '@openthrottle/openthrottle-plan-config';
 export type {
   BuildPlanRunConfigSnapshotInput,
+  PlanJobRunHooksStorage,
   PlanRunConfigDebugCli,
   PlanRunConfigExecutionBackend,
   PlanRunConfigPromptLayer,
@@ -272,7 +270,7 @@ export type {
   PlanRunConfigWorktreeCli,
   PlanWorkflowRalphRunOptions,
   PlanWorkflowUiState,
-} from './modules/plans/plan-run-config';
+} from '@openthrottle/openthrottle-plan-config';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,

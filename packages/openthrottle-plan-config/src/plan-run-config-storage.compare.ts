@@ -2,9 +2,9 @@
  * @description Compares persisted `plans.run_config` to canonical defaults.
  */
 
-import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults';
-import type { PlanRunConfigStorage } from './plan-run-config-storage.types';
-import { planRunConfigFromPlanStorage } from './plan-run-config-storage.validation';
+import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
+import type { PlanRunConfigStorage } from './plan-run-config-storage.types.ts';
+import { planRunConfigFromPlanStorage } from './plan-run-config-storage.validation.ts';
 
 const planRunConfigStorageDeepEqual = (
   left: PlanRunConfigStorage,

@@ -198,6 +198,9 @@
     },
     {
       "path": "./packages/nestjs-testing"
+    },
+    {
+      "path": "./packages/openthrottle-plan-config"
     }
   ]
 }

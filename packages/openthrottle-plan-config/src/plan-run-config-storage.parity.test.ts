@@ -3,12 +3,12 @@
  * `buildRalphPlanRunTuningInputFromWorkflowRunOptions` (same omission rules as nested argv).
  */
 import { describe, expect, it } from 'vitest';
-import { getDefaultPlanWorkflowUiState } from './plan-run-config-storage.defaults';
+import { getDefaultPlanWorkflowUiState } from './plan-run-config-storage.defaults.ts';
 import {
   buildRalphPlanRunTuningFromPlanRunConfig,
   planRunConfigFromWorkflowUiState,
-} from './plan-run-config-storage.round-trip';
-import type { PlanWorkflowUiState } from './plan-run-config-storage.types';
+} from './plan-run-config-storage.round-trip.ts';
+import type { PlanWorkflowUiState } from './plan-run-config-storage.types.ts';
 
 const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
 

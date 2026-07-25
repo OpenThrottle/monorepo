@@ -3,31 +3,20 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
-    "rootDirs": ["./src", "./tests"]
+    "rootDirs": ["./src"]
   },
-  "include": ["src/**/*.json", "src/**/*", "tests/**/*"],
+  "include": ["src/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "dist"
+    "dist",
+    "tests/**"
   ],
   "references": [
     {
-      "path": "../openthrottle-skills/tsconfig.lib.json"
-    },
-    {
-      "path": "../openthrottle-plan-config/tsconfig.lib.json"
-    },
-    {
       "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
-    },
-    {
-      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-testing/tsconfig.lib.json"

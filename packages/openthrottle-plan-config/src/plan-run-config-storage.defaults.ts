@@ -4,14 +4,14 @@ import {
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
   PLAN_RUN_CONFIG_VERSION,
-} from './plan-run-config-storage.constants';
+} from './plan-run-config-storage.constants.ts';
 import type {
   PlanRunConfigRalphV1,
   PlanRunConfigStorage,
   PlanRunConfigTargetMode,
   PlanWorkflowRalphRunOptions,
   PlanWorkflowUiState,
-} from './plan-run-config-storage.types';
+} from './plan-run-config-storage.types.ts';
 
 /**
  * @description Default Ralph subsection for v1 `run_config` (matches Configuration tab defaults).
