@@ -175,9 +175,9 @@ export const PlanTaskToolbar = (
       }
       tags={
         <div className="flex flex-col gap-2">
-          <h2 className="text-muted-foreground text-xs font-medium uppercase">
+          {/* <h2 className="text-muted-foreground text-xs font-medium uppercase">
             {PLAN_TASK_TOOLBAR_COPY.tagsHeading}
-          </h2>
+          </h2> */}
           <PlanTagChips
             onAddTag={onAddTag}
             onRemoveTag={onRemoveTag}
