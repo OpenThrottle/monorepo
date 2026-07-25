@@ -1,44 +1,62 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { QueryFailedError } from 'typeorm';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Project } from '../projects/project.entity';
 import { ProjectsService } from '../projects/projects.service';
-import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
+import { RepositoriesService } from '../repositories/repositories.service';
+import type { Repository } from '../repositories/repository.entity';
+import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
 import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
 
 describe('WorkspaceLocalRepositoriesService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
-  const repoId = '22222222-2222-4222-8222-222222222222';
+  const checkoutId = '44444444-4444-4444-8444-444444444444';
+  const repositoryId = '22222222-2222-4222-8222-222222222222';
+  const projectId = '33333333-3333-4333-8333-333333333333';
 
-  const mockEntity = asMock<WorkspaceLocalRepository>({
+  const mockRepositoryEntity = asMock<Repository>({
+    defaultBranch: 'main',
+    id: repositoryId,
+    name: 'OpenThrottle',
+    normalizedRemoteUrl: 'https://github.com/openthrottle/monorepo',
+    projectId: null,
+  });
+
+  const mockCheckoutEntity = asMock<RepositoryCheckout>({
     createdAt: new Date('2026-05-18T12:00:00.000Z'),
     displayName: 'OpenThrottle',
     filesystemPath: '/Users/dev/openthrottle',
-    gitDefaultBranch: 'main',
-    gitRemoteUrl: 'https://github.com/org/repo.git',
-    id: repoId,
-    projectId: null,
+    id: checkoutId,
+    kind: 'primary',
+    managed: false,
+    repository: mockRepositoryEntity,
+    repositoryId,
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
   });
 
-  const mockRepository = {
-    create: vi.fn((data: Partial<WorkspaceLocalRepository>) => ({
-      ...mockEntity,
-      ...data,
-    })),
+  const mockCheckoutsService = createMock<RepositoryCheckoutsService>({
+    countByRepositoryId: vi.fn(),
+    create: vi.fn(),
     delete: vi.fn(),
-    find: vi.fn(),
-    findOne: vi.fn(),
-    save: vi.fn((entity: WorkspaceLocalRepository) => Promise.resolve(entity)),
-  };
+    findByIdForUser: vi.fn(),
+    listByUserId: vi.fn(),
+    repointRepository: vi.fn(),
+    updateDisplayName: vi.fn(),
+  });
 
-  const projectId = '33333333-3333-4333-8333-333333333333';
+  const mockRepositoriesService = createMock<RepositoriesService>({
+    create: vi.fn(),
+    delete: vi.fn(),
+    findById: vi.fn(),
+    findByNormalizedRemoteUrl: vi.fn(),
+    findOrCreateByRemoteUrl: vi.fn(),
+    update: vi.fn(),
+  });
 
   const mockProjectsService = createMock<ProjectsService>({
     findById: vi.fn(),
@@ -55,8 +73,12 @@ describe('WorkspaceLocalRepositoriesService', () => {
           useValue: createMock<LoggerService>(),
         },
         {
-          provide: getRepositoryToken(WorkspaceLocalRepository),
-          useValue: mockRepository,
+          provide: RepositoryCheckoutsService,
+          useValue: mockCheckoutsService,
+        },
+        {
+          provide: RepositoriesService,
+          useValue: mockRepositoriesService,
         },
         {
           provide: ProjectsService,
@@ -68,83 +90,115 @@ describe('WorkspaceLocalRepositoriesService', () => {
     service = app.get(WorkspaceLocalRepositoriesService);
   });
 
+  beforeEach(() => {
+    vi.mocked(mockCheckoutsService.findByIdForUser).mockReset();
+    vi.mocked(mockRepositoriesService.findById).mockReset();
+    vi.mocked(mockRepositoriesService.update).mockReset();
+    vi.mocked(mockProjectsService.findById).mockReset();
+  });
+
   describe('listByUserId', () => {
-    it('returns repositories ordered by the repository query with default bounds', async () => {
-      vi.mocked(mockRepository.find).mockResolvedValue([mockEntity]);
+    it('maps checkout + repository pairs to the legacy view', async () => {
+      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+        mockCheckoutEntity,
+      ]);
 
       const result = await service.listByUserId(userId);
 
-      expect(result).toEqual([mockEntity]);
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        order: { createdAt: 'DESC' },
-        skip: 0,
-        take: 50,
-        where: { userId },
-      });
-    });
-
-    it('clamps caller-supplied pagination into take/skip bounds', async () => {
-      vi.mocked(mockRepository.find).mockResolvedValue([mockEntity]);
-
-      await service.listByUserId(userId, { limit: 10_000, offset: 25 });
-
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        order: { createdAt: 'DESC' },
-        skip: 25,
-        take: 200,
-        where: { userId },
-      });
+      expect(result).toEqual([
+        {
+          createdAt: mockCheckoutEntity.createdAt,
+          displayName: 'OpenThrottle',
+          filesystemPath: '/Users/dev/openthrottle',
+          gitDefaultBranch: 'main',
+          gitRemoteUrl: 'https://github.com/openthrottle/monorepo',
+          id: checkoutId,
+          projectId: null,
+          updatedAt: mockCheckoutEntity.updatedAt,
+          userId,
+        },
+      ]);
     });
   });
 
   describe('findByIdForUser', () => {
-    it('scopes lookup to user id', async () => {
-      vi.mocked(mockRepository.findOne).mockResolvedValue(mockEntity);
+    it('returns null when the checkout is not owned by the user', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
 
-      const result = await service.findByIdForUser(repoId, userId);
+      await expect(
+        service.findByIdForUser(checkoutId, userId),
+      ).resolves.toBeNull();
+    });
 
-      expect(result).toBe(mockEntity);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { id: repoId, userId },
-      });
+    it('maps an owned checkout to the legacy view', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
+      );
+
+      const result = await service.findByIdForUser(checkoutId, userId);
+
+      expect(result?.id).toBe(checkoutId);
+      expect(result?.gitRemoteUrl).toBe(
+        'https://github.com/openthrottle/monorepo',
+      );
     });
   });
 
   describe('create', () => {
-    it('persists a new repository for the user', async () => {
-      vi.mocked(mockRepository.save).mockResolvedValue(mockEntity);
+    it('resolves the repository from the remote and creates the checkout', async () => {
+      vi.mocked(
+        mockRepositoriesService.findOrCreateByRemoteUrl,
+      ).mockResolvedValue({ ...mockRepositoryEntity });
+      vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+        mockCheckoutEntity,
+      );
 
       const result = await service.create(userId, {
         displayName: 'OpenThrottle',
         filesystemPath: '/Users/dev/openthrottle',
         gitDefaultBranch: 'main',
-        gitRemoteUrl: 'https://github.com/org/repo.git',
+        gitRemoteUrl: 'git@github.com:openthrottle/monorepo.git',
         projectId: null,
       });
 
-      expect(result).toBe(mockEntity);
-      expect(mockRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ userId }),
-      );
+      expect(result.id).toBe(checkoutId);
+      expect(
+        mockRepositoriesService.findOrCreateByRemoteUrl,
+      ).toHaveBeenCalledWith('git@github.com:openthrottle/monorepo.git', {
+        defaultBranch: 'main',
+        name: 'OpenThrottle',
+        projectId: null,
+      });
+      expect(mockCheckoutsService.create).toHaveBeenCalledWith(userId, {
+        displayName: 'OpenThrottle',
+        filesystemPath: '/Users/dev/openthrottle',
+        repositoryId,
+      });
     });
 
-    it('throws ConflictException on duplicate filesystem path', async () => {
-      const uniqueError = new QueryFailedError(
-        'INSERT',
-        [],
-        Object.assign(new Error('duplicate'), { code: '23505' }),
+    it('lets an existing repository project link win over the input', async () => {
+      vi.mocked(mockProjectsService.findById).mockResolvedValue(
+        asMock<Project>({ id: projectId }),
       );
-      vi.mocked(mockRepository.save).mockRejectedValue(uniqueError);
+      vi.mocked(
+        mockRepositoriesService.findOrCreateByRemoteUrl,
+      ).mockResolvedValue({
+        ...mockRepositoryEntity,
+        projectId: 'existing-project',
+      });
+      vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+        mockCheckoutEntity,
+      );
 
-      await expect(
-        service.create(userId, {
-          displayName: 'OpenThrottle',
-          filesystemPath: '/Users/dev/openthrottle',
-          gitDefaultBranch: null,
-          gitRemoteUrl: null,
-          projectId: null,
-        }),
-      ).rejects.toBeInstanceOf(ConflictException);
+      await service.create(userId, {
+        displayName: 'OpenThrottle',
+        filesystemPath: '/Users/dev/openthrottle',
+        gitDefaultBranch: null,
+        gitRemoteUrl: 'https://github.com/openthrottle/monorepo',
+        projectId,
+      });
+
+      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
     });
 
     it('throws NotFoundException when projectId does not exist', async () => {
@@ -156,102 +210,155 @@ describe('WorkspaceLocalRepositoriesService', () => {
           filesystemPath: '/Users/dev/openthrottle',
           gitDefaultBranch: null,
           gitRemoteUrl: null,
-          projectId: '33333333-3333-4333-8333-333333333333',
+          projectId,
         }),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('cleans up an orphan provisional repository when the checkout conflicts', async () => {
+      const provisional = {
+        ...mockRepositoryEntity,
+        id: 'prov-repo',
+        normalizedRemoteUrl: null,
+      };
+      vi.mocked(
+        mockRepositoriesService.findOrCreateByRemoteUrl,
+      ).mockResolvedValue(provisional);
+      vi.mocked(mockCheckoutsService.create).mockRejectedValue(
+        new ConflictException('duplicate'),
+      );
+      vi.mocked(mockRepositoriesService.findById).mockResolvedValue(
+        provisional,
+      );
+      vi.mocked(mockCheckoutsService.countByRepositoryId).mockResolvedValue(0);
+
+      await expect(
+        service.create(userId, {
+          displayName: 'Local',
+          filesystemPath: '/Users/dev/local',
+          gitDefaultBranch: null,
+          gitRemoteUrl: null,
+          projectId: null,
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(mockRepositoriesService.delete).toHaveBeenCalledWith('prov-repo');
     });
   });
 
   describe('update', () => {
-    it('throws NotFoundException when repository is not owned by user', async () => {
-      vi.mocked(mockRepository.findOne).mockResolvedValue(null);
+    it('throws NotFoundException when the checkout is not owned by the user', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
 
       await expect(
-        service.update(userId, repoId, { displayName: 'Renamed' }),
+        service.update(userId, checkoutId, { displayName: 'Renamed' }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('updates fields on an owned repository', async () => {
-      vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
-      vi.mocked(mockRepository.save).mockImplementation(
-        async (entity) => entity,
+    it('updates the display name on the checkout', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
       );
+      vi.mocked(mockCheckoutsService.updateDisplayName).mockResolvedValue({
+        ...mockCheckoutEntity,
+        displayName: 'Renamed',
+      });
 
-      const result = await service.update(userId, repoId, {
+      const result = await service.update(userId, checkoutId, {
         displayName: 'Renamed',
       });
 
       expect(result.displayName).toBe('Renamed');
     });
 
-    it('assigns a project when projectId exists', async () => {
+    it('assigns a validated project on the repository', async () => {
       vi.mocked(mockProjectsService.findById).mockResolvedValue(
         asMock<Project>({ id: projectId }),
       );
-      vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
-      vi.mocked(mockRepository.save).mockImplementation(
-        async (entity) => entity,
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
       );
+      vi.mocked(mockRepositoriesService.update).mockResolvedValue({
+        ...mockRepositoryEntity,
+        projectId,
+      });
 
-      const result = await service.update(userId, repoId, { projectId });
+      const result = await service.update(userId, checkoutId, { projectId });
 
       expect(result.projectId).toBe(projectId);
-      expect(mockProjectsService.findById).toHaveBeenCalledWith(projectId);
+      expect(mockRepositoriesService.update).toHaveBeenCalledWith(
+        repositoryId,
+        { projectId },
+      );
     });
 
     it('throws NotFoundException when updating to a missing project', async () => {
       vi.mocked(mockProjectsService.findById).mockResolvedValue(null);
-      vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
+      );
 
       await expect(
-        service.update(userId, repoId, { projectId }),
+        service.update(userId, checkoutId, { projectId }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('setProject', () => {
-    it('clears the project link when projectId is null', async () => {
-      vi.mocked(mockProjectsService.findById).mockClear();
-      vi.mocked(mockRepository.findOne).mockResolvedValue({
-        ...mockEntity,
-        projectId,
-      });
-      vi.mocked(mockRepository.save).mockImplementation(
-        async (entity) => entity,
+    it('clears the project link without a project lookup', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
       );
+      vi.mocked(mockRepositoriesService.update).mockResolvedValue({
+        ...mockRepositoryEntity,
+        projectId: null,
+      });
 
-      const result = await service.setProject(userId, repoId, null);
+      const result = await service.setProject(userId, checkoutId, null);
 
       expect(result.projectId).toBeNull();
       expect(mockProjectsService.findById).not.toHaveBeenCalled();
     });
-
-    it('assigns a project when projectId exists', async () => {
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(
-        asMock<Project>({ id: projectId }),
-      );
-      vi.mocked(mockRepository.findOne).mockResolvedValue({ ...mockEntity });
-      vi.mocked(mockRepository.save).mockImplementation(
-        async (entity) => entity,
-      );
-
-      const result = await service.setProject(userId, repoId, projectId);
-
-      expect(result.projectId).toBe(projectId);
-    });
   });
 
   describe('delete', () => {
-    it('returns true when a row is removed', async () => {
-      vi.mocked(mockRepository.delete).mockResolvedValue({ affected: 1 });
+    it('returns false when the checkout is not owned by the user', async () => {
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
 
-      await expect(service.delete(userId, repoId)).resolves.toBe(true);
+      await expect(service.delete(userId, checkoutId)).resolves.toBe(false);
     });
 
-    it('returns false when no row is removed', async () => {
-      vi.mocked(mockRepository.delete).mockResolvedValue({ affected: 0 });
+    it('deletes the checkout and removes an orphaned provisional repository', async () => {
+      const provisional = {
+        ...mockRepositoryEntity,
+        normalizedRemoteUrl: null,
+      };
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue({
+        ...mockCheckoutEntity,
+        repository: provisional,
+      });
+      vi.mocked(mockCheckoutsService.delete).mockResolvedValue(true);
+      vi.mocked(mockRepositoriesService.findById).mockResolvedValue(
+        provisional,
+      );
+      vi.mocked(mockCheckoutsService.countByRepositoryId).mockResolvedValue(0);
 
-      await expect(service.delete(userId, repoId)).resolves.toBe(false);
+      await expect(service.delete(userId, checkoutId)).resolves.toBe(true);
+      expect(mockRepositoriesService.delete).toHaveBeenCalledWith(repositoryId);
+    });
+
+    it('keeps a canonical repository when its checkout is deleted', async () => {
+      vi.mocked(mockRepositoriesService.delete).mockClear();
+      vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(
+        mockCheckoutEntity,
+      );
+      vi.mocked(mockCheckoutsService.delete).mockResolvedValue(true);
+      vi.mocked(mockRepositoriesService.findById).mockResolvedValue(
+        mockRepositoryEntity,
+      );
+
+      await expect(service.delete(userId, checkoutId)).resolves.toBe(true);
+      expect(mockRepositoriesService.delete).not.toHaveBeenCalled();
     });
   });
 });

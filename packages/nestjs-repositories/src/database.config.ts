@@ -19,6 +19,8 @@ import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-
 import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Project } from './modules/projects/project.entity';
 import { ProjectSkill } from './modules/project-skills/project-skill.entity';
+import { Repository } from './modules/repositories/repository.entity';
+import { RepositoryCheckout } from './modules/repositories/repository-checkout.entity';
 import { ProjectTag } from './modules/tags/project-tag.entity';
 import { Role } from './modules/roles/role.entity';
 import { ServiceAccount } from './modules/service-accounts/service-account.entity';
@@ -38,7 +40,6 @@ import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspa
 import { WorkArtifact } from './modules/work-ledger/work-artifact.entity';
 import { WorkSession } from './modules/work-ledger/work-session.entity';
 import { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity';
-import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
 /**
  * @description Resolves a positive integer from an env var, or undefined when
@@ -81,6 +82,8 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Project,
       ProjectSkill,
       ProjectTag,
+      Repository,
+      RepositoryCheckout,
       Role,
       RuleApplication,
       ServiceAccount,
@@ -98,7 +101,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
       WorkArtifact,
       WorkSession,
       WorkSessionSubject,
-      WorkspaceLocalRepository,
     ],
 
     // logger?: "advanced-console" | "simple-console" | "formatted-console" | "file" | "debug" | Logger;

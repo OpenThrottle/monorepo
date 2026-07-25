@@ -11,6 +11,7 @@ import { PlanRunsModule } from './modules/plan-runs/plan-runs.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { RepositoriesModule } from './modules/repositories/repositories.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module';
@@ -38,6 +39,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     PlansModule,
     ProjectSkillsModule,
     ProjectsModule,
+    RepositoriesModule,
     RolesModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
@@ -68,6 +70,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     PlansModule,
     ProjectSkillsModule,
     ProjectsModule,
+    RepositoriesModule,
     RolesModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
