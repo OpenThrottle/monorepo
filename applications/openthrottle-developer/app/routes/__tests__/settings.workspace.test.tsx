@@ -21,22 +21,28 @@ const mockProfile = {
 };
 
 const mockLoaderPayload = {
+  discoveredFolders: [
+    {
+      alreadyRegistered: false,
+      name: 'openthrottle',
+      path: '/Users/dev/openthrottle',
+    },
+  ],
   projects: [{ id: 'proj-1', name: 'openthrottle-developer' }],
+  workspaceRepositories: [
+    {
+      checkouts: [],
+      createdAt: '2026-05-18T12:00:00.000Z',
+      defaultBranch: 'main',
+      id: 'repo-1',
+      name: 'OpenThrottle',
+      normalizedRemoteUrl: 'https://github.com/openthrottle/monorepo',
+      project: null,
+      projectId: null,
+      updatedAt: '2026-05-18T12:00:00.000Z',
+    },
+  ],
   workspaceSettings: {
-    localRepositories: [
-      {
-        createdAt: '2026-05-18T12:00:00.000Z',
-        displayName: 'OpenThrottle',
-        filesystemPath: '/Users/dev/openthrottle',
-        gitDefaultBranch: null,
-        gitRemoteUrl: null,
-        id: 'repo-1',
-        project: null,
-        projectId: null,
-        updatedAt: '2026-05-18T12:00:00.000Z',
-        userId: mockProfile.userId,
-      },
-    ],
     profile: mockProfile,
   },
 };
@@ -62,7 +68,8 @@ describe('routes/settings.workspace.tsx', () => {
       const result = await loader(args);
 
       expect(result.profile).toEqual(mockProfile);
-      expect(result.localRepositories).toHaveLength(1);
+      expect(result.discoveredFolders).toHaveLength(1);
+      expect(result.repositories).toHaveLength(1);
       expect(result.projects).toEqual(mockLoaderPayload.projects);
     });
   });
@@ -106,41 +113,94 @@ describe('routes/settings.workspace.tsx', () => {
       );
     });
 
-    test('createRepo returns error when path is missing', async () => {
+    test('addFolder returns error when path is missing', async () => {
       const formData = new FormData();
-      formData.set('intent', 'createRepo');
-      formData.set('displayName', 'My repo');
+      formData.set('intent', 'addFolder');
 
       const result = await action(actionArgs(formData));
 
-      expect(result).toEqual({ error: 'Absolute path is required.' });
+      expect(result).toEqual({ error: 'A folder path is required.' });
     });
 
-    test('createRepo calls createWorkspaceLocalRepository mutation', async () => {
+    test('addFolder calls addWorkspaceFolder and returns the payload', async () => {
+      const payload = {
+        checkout: { id: 'checkout-1' },
+        project: null,
+        projectCreated: false,
+        reconciliation: 'matched_remote',
+        repository: { id: 'repo-1' },
+      };
       mockExecuteGraphqlWithAuth.mockResolvedValue({
-        createWorkspaceLocalRepository: { id: 'new-repo' },
+        addWorkspaceFolder: payload,
       });
 
       const formData = new FormData();
-      formData.set('intent', 'createRepo');
-      formData.set('displayName', 'OpenThrottle');
-      formData.set('filesystemPath', '/Users/dev/openthrottle');
-      formData.set('projectId', 'proj-1');
+      formData.set('intent', 'addFolder');
+      formData.set('path', '/Users/dev/openthrottle');
 
       const result = await action(actionArgs(formData));
 
-      expect(result).toEqual({ ok: true });
+      expect(result).toEqual({ addedFolder: payload });
       expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
         expect.any(Request),
         expect.any(Object),
         {
-          input: {
-            displayName: 'OpenThrottle',
-            filesystemPath: '/Users/dev/openthrottle',
-            projectId: 'proj-1',
-          },
+          input: { displayName: null, path: '/Users/dev/openthrottle' },
         },
       );
+    });
+
+    test('refreshCheckout returns drift for the checkout', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        refreshCheckout: {
+          checkout: { id: 'checkout-1' },
+          drift: {
+            branchMoved: false,
+            pathMissing: true,
+            remoteChanged: false,
+          },
+          merged: false,
+          repository: { id: 'repo-1' },
+          supersededProjectId: null,
+        },
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'refreshCheckout');
+      formData.set('id', 'checkout-1');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({
+        refreshed: {
+          checkoutId: 'checkout-1',
+          drift: {
+            branchMoved: false,
+            pathMissing: true,
+            remoteChanged: false,
+          },
+          merged: false,
+        },
+      });
+    });
+
+    test('browseDirectory returns entries for the requested path', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        browseDirectory: [{ name: 'repo', path: '/Users/dev/repo' }],
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'browseDirectory');
+      formData.set('path', '/Users/dev');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({
+        browse: {
+          entries: [{ name: 'repo', path: '/Users/dev/repo' }],
+          path: '/Users/dev',
+        },
+      });
     });
 
     test('applyEditorConfig calls applyWorkspaceEditorConfiguration mutation', async () => {
