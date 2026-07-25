@@ -37,6 +37,10 @@ import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanToolbarProps {
+  /**
+   * @description Optional registered checkout id, submitted to the enqueuePlanRun mutation.
+   */
+  checkoutId?: string;
   className?: string;
   /**
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
@@ -61,6 +65,10 @@ export interface PlanToolbarProps {
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
   ralphTuningJson?: string;
+  /**
+   * @description Optional registered repository id, submitted to the enqueuePlanRun mutation.
+   */
+  repositoryId?: string;
   /**
    * @description Available tag vocabulary for the add-tag dropdown. See {@link onAddTag}.
    */
@@ -105,6 +113,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     tags,
     tagsPending = false,
     tagVocabulary,
+    checkoutId,
+    repositoryId,
     workingDirectory,
     workflowRunBlocked = false,
     workflowRunBlockedReason,
@@ -291,6 +301,16 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                     name="workingDirectory"
                     type="hidden"
                     value={workingDirectory}
+                  />
+                )}
+                {checkoutId != null && checkoutId !== '' && (
+                  <Input name="checkoutId" type="hidden" value={checkoutId} />
+                )}
+                {repositoryId != null && repositoryId !== '' && (
+                  <Input
+                    name="repositoryId"
+                    type="hidden"
+                    value={repositoryId}
                   />
                 )}
                 <Button

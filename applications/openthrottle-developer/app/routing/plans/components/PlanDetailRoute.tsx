@@ -53,6 +53,8 @@ import {
   runConfigSaveBlockedAtom,
   runConfigSaveBlockedReasonAtom,
   workflowRalphTuningJsonAtom,
+  workflowCheckoutIdAtom,
+  workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
@@ -91,6 +93,8 @@ export const PlanDetailRoute = (
     runConfigSaveBlockedReasonAtom,
   );
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
+  const checkoutId = useAtomValue(workflowCheckoutIdAtom);
+  const repositoryId = useAtomValue(workflowRepositoryIdAtom);
 
   // Setup
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -211,6 +215,7 @@ export const PlanDetailRoute = (
         </div>
 
         <PlanToolbar
+          checkoutId={checkoutId}
           className="bg-card border-card-border rounded-lg border p-4"
           jobRunHooksJson={jobRunHooksJson}
           onAddTag={(tag) =>
@@ -226,6 +231,7 @@ export const PlanDetailRoute = (
           planStatus={plan.status}
           planTitle={plan.title ?? 'Untitled'}
           ralphTuningJson={ralphTuningJson}
+          repositoryId={repositoryId}
           tagVocabulary={tagVocabulary}
           tags={plan.tags}
           tagsPending={tagFetcher.state !== 'idle'}
