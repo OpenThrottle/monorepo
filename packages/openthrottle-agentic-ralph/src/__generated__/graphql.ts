@@ -3488,10 +3488,16 @@ export type StartConversationStreamInput = {
   message: Scalars['String']['input'];
   /** Model id to complete with. Required for the openai backend; optional model override for CLI backends. */
   modelId?: InputMaybe<Scalars['String']['input']>;
+  /** Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive; enforcement is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT honored yet. */
+  permissionMode?: InputMaybe<Scalars['String']['input']>;
   /** Persona to steer the turn; CLI backends inject it as a system prompt. */
   personaId?: InputMaybe<Scalars['ID']['input']>;
+  /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive; whether a backend honors it is owned by openthrottle-drivers (dde67342) and is NOT applied yet. */
+  reasoning?: InputMaybe<Scalars['String']['input']>;
   /** Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path). */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Service tier for the turn: "standard" or "fast". Nullable + additive; honored by openthrottle-drivers (dde67342) once it lands, NOT applied yet. */
+  serviceTier?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type StartConversationStreamResult = {
