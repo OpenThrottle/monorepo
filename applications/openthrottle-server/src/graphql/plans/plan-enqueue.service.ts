@@ -19,6 +19,7 @@ import {
   Plan,
   PlansService,
   PlanRunsService,
+  RepositoryCheckoutsService,
   Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -55,11 +56,15 @@ type ExecutionBackend = 'claude' | 'cursor' | 'opencode';
 interface EnqueueSpawnParams {
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
+  /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
+  readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly planId: string;
   readonly priority?: number | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
+  /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
+  readonly repositoryId?: string | null;
   readonly workingDirectory?: string | null;
 }
 
@@ -67,12 +72,16 @@ interface EnqueueSpawnParams {
 interface EnqueueOrchestratorParams {
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
+  /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
+  readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
   readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
   readonly planId: string;
   readonly priority?: number | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
+  /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
+  readonly repositoryId?: string | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }
@@ -98,6 +107,7 @@ export class PlanEnqueueService {
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly queuesService: QueuesService,
+    private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
@@ -127,22 +137,26 @@ export class PlanEnqueueService {
   async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
     const {
       actorUserId,
+      checkoutId,
       idempotencyKey,
       jobRunHooksJson,
       planId,
       priority,
       ralph,
+      repositoryId,
       workingDirectory,
     } = params;
 
     return this.enqueueOrchestrator({
       actorUserId,
+      checkoutId,
       idempotencyKey: idempotencyKey ?? null,
       jobRunHooksJson,
       mode: null,
       planId,
       priority,
       ralph,
+      repositoryId,
       taskId: null,
       workingDirectory,
     });
@@ -158,12 +172,14 @@ export class PlanEnqueueService {
   ): Promise<EnqueueOutcome> {
     const {
       actorUserId,
+      checkoutId,
       idempotencyKey,
       jobRunHooksJson,
       mode,
       planId,
       priority,
       ralph,
+      repositoryId,
       taskId,
       workingDirectory,
     } = params;
@@ -174,6 +190,13 @@ export class PlanEnqueueService {
     if (!plan) {
       throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
     }
+
+    const resolvedWorkspace = await this.resolveWorkspace({
+      actorUserId,
+      checkoutId,
+      repositoryId,
+      workingDirectory,
+    });
 
     const materializedHookEntries =
       await this.resolveMaterializedHookEntries(planId);
@@ -188,7 +211,7 @@ export class PlanEnqueueService {
         planJobRunHooks: plan.jobRunHooks,
         ralph,
         taskId,
-        workingDirectory,
+        workingDirectory: resolvedWorkspace.workingDirectory,
       });
     } catch (error) {
       throw new BadRequestException(
@@ -203,7 +226,10 @@ export class PlanEnqueueService {
       throw new BadRequestException(normalizedKey.error);
     }
     const effectiveJobId = normalizedKey.key ?? randomUUID();
-    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
+    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData, {
+      checkoutId: resolvedWorkspace.checkoutId,
+      repositoryId: resolvedWorkspace.repositoryId,
+    });
 
     await this.commitEnqueueTransaction({
       actorUserId,
@@ -237,6 +263,86 @@ export class PlanEnqueueService {
       planId,
       queuePosition,
       queueTotal,
+    };
+  }
+
+  /**
+   * @description Resolves the run's working directory using the locked run_config precedence
+   * order: an explicit `checkoutId` → a portable `repositoryId` (resolved to the enqueuing
+   * user's single checkout of it) → the raw `workingDirectory` escape hatch. Returns the
+   * resolved path plus the canonical ids to snapshot on the run. The resolved path is
+   * re-validated downstream by {@link buildRunPlanOrchestratorJobData}'s
+   * `validateWorkingDirectory`. Checkout/repository references are scoped to `actorUserId`;
+   * an unauthenticated (service-account/system) enqueue may only use the raw path.
+   */
+  private async resolveWorkspace(input: {
+    readonly actorUserId?: string | null;
+    readonly checkoutId?: string | null;
+    readonly repositoryId?: string | null;
+    readonly workingDirectory?: string | null;
+  }): Promise<{
+    readonly checkoutId: string | null;
+    readonly repositoryId: string | null;
+    readonly workingDirectory: string | null | undefined;
+  }> {
+    const checkoutId = input.checkoutId?.trim() ?? '';
+    const repositoryId = input.repositoryId?.trim() ?? '';
+
+    if (checkoutId !== '') {
+      if (!input.actorUserId) {
+        throw new BadRequestException(
+          'checkoutId can only be resolved for an authenticated user',
+        );
+      }
+      const checkout = await this.repositoryCheckoutsService.findByIdForUser(
+        checkoutId,
+        input.actorUserId,
+      );
+      if (!checkout) {
+        throw new BadRequestException(
+          `Checkout not found for this user: ${checkoutId}`,
+        );
+      }
+      return {
+        checkoutId: checkout.id,
+        repositoryId: checkout.repositoryId,
+        workingDirectory: checkout.filesystemPath,
+      };
+    }
+
+    if (repositoryId !== '') {
+      if (!input.actorUserId) {
+        throw new BadRequestException(
+          'repositoryId can only be resolved for an authenticated user',
+        );
+      }
+      const checkouts =
+        await this.repositoryCheckoutsService.findByRepositoryIdForUser(
+          repositoryId,
+          input.actorUserId,
+        );
+      const [only] = checkouts;
+      if (!only) {
+        throw new BadRequestException(
+          `No checkout for repository ${repositoryId}; add a folder for it first`,
+        );
+      }
+      if (checkouts.length > 1) {
+        throw new BadRequestException(
+          `Repository ${repositoryId} has multiple checkouts; specify a checkoutId`,
+        );
+      }
+      return {
+        checkoutId: only.id,
+        repositoryId,
+        workingDirectory: only.filesystemPath,
+      };
+    }
+
+    return {
+      checkoutId: null,
+      repositoryId: null,
+      workingDirectory: input.workingDirectory,
     };
   }
 
