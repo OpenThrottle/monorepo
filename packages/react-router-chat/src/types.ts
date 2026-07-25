@@ -1,3 +1,5 @@
+import type * as React from 'react';
+
 /** Who authored a chat message in the thread. */
 export type ChatMessageRole = 'assistant' | 'system' | 'user';
 
@@ -147,12 +149,142 @@ export interface ChatTurnResult {
  * A selectable model in the composer toolbar's model control. Presentational
  * only — consumers supply the list; the package hardcodes no models.
  *
+ * The original flat `{ id, label, description }` shape keeps working (the flat
+ * `Select` in {@link ChatComposerToolbar} still renders it). The additive
+ * `groupId` / `subLabel` / `favorite` / `shortcut` fields drive the grouped,
+ * searchable {@link ChatModelPicker} — supply `groupId` (matching a
+ * {@link ChatModelGroup} `id`) to place a model under a provider/CLI rail.
+ *
  * @public
  */
 export interface ChatModelOption {
   readonly description?: string;
+  /**
+   * True when the model is pinned to the picker's "Favorites" group. The
+   * package renders the flag; toggling is a consumer concern
+   * (`ChatModelPicker`'s `onToggleFavorite`).
+   */
+  readonly favorite?: boolean;
+  /**
+   * Id of the {@link ChatModelGroup} (provider/CLI) this model belongs to in
+   * the grouped picker. Omit for the flat control or an ungrouped model.
+   */
+  readonly groupId?: string;
   readonly id: string;
   readonly label: string;
+  /**
+   * Optional keyboard shortcut hint shown on the model's row (e.g. `⌘1`). The
+   * package only displays it; wiring the accelerator is a consumer concern.
+   */
+  readonly shortcut?: string;
+  /**
+   * Short muted sub-label rendered under {@link label} (e.g. `Codex`), used to
+   * disambiguate same-named models across CLIs.
+   */
+  readonly subLabel?: string;
+}
+
+/**
+ * A provider/CLI grouping for the grouped model picker (e.g. Claude Code,
+ * Codex, Cursor, a local OpenAI-compatible endpoint). Presentational — the
+ * consumer supplies the groups and their icons; the package hardcodes none.
+ *
+ * @public
+ */
+export interface ChatModelGroup {
+  /** Optional leading glyph/icon rendered in the picker's left rail. */
+  readonly icon?: React.ReactNode;
+  readonly id: string;
+  readonly label: string;
+}
+
+/**
+ * Reasoning-effort levels a backend may expose in the composer's
+ * reasoning/tier control. As-const object (no enum, repo rule). Which levels
+ * are actually selectable is gated per-backend by
+ * {@link ChatBackendCapabilities.reasoningLevels}.
+ *
+ * @public
+ */
+export const ChatReasoningLevel = {
+  extraHigh: 'extraHigh',
+  high: 'high',
+  low: 'low',
+  max: 'max',
+  medium: 'medium',
+  ultra: 'ultra',
+} as const;
+
+/** Union of {@link ChatReasoningLevel} values. @public */
+export type ChatReasoningLevel =
+  (typeof ChatReasoningLevel)[keyof typeof ChatReasoningLevel];
+
+/**
+ * Service tier a backend may expose in the reasoning/tier control. `standard`
+ * = default queue; `fast` = priority/low-latency. As-const object (no enum).
+ * Gated per-backend by {@link ChatBackendCapabilities.serviceTiers}.
+ *
+ * @public
+ */
+export const ChatServiceTier = {
+  fast: 'fast',
+  standard: 'standard',
+} as const;
+
+/** Union of {@link ChatServiceTier} values. @public */
+export type ChatServiceTier =
+  (typeof ChatServiceTier)[keyof typeof ChatServiceTier];
+
+/**
+ * Permission posture for an agent backend. `supervised` asks before commands
+ * and file changes; `autoAcceptEdits` auto-approves edits but asks before
+ * other actions; `fullAccess` runs commands and edits without prompts.
+ * As-const object (no enum). Gated per-backend by
+ * {@link ChatBackendCapabilities.permissionModes}.
+ *
+ * @public
+ */
+export const ChatPermissionMode = {
+  autoAcceptEdits: 'autoAcceptEdits',
+  fullAccess: 'fullAccess',
+  supervised: 'supervised',
+} as const;
+
+/** Union of {@link ChatPermissionMode} values. @public */
+export type ChatPermissionMode =
+  (typeof ChatPermissionMode)[keyof typeof ChatPermissionMode];
+
+/**
+ * What a selected backend (agent CLI or model endpoint) supports, so the
+ * composer can gate its controls. Presentational contract only — the consumer
+ * builds one descriptor per backend and passes it in; the package hardcodes no
+ * capability data.
+ *
+ * This shape is deliberately parallel to (and INTENDED to be derived from)
+ * `@openthrottle/openthrottle-drivers` once plan dde67342 lands — see the
+ * package README's "Capability descriptors" note. Until then consumers
+ * hand-seed it from `loadAgentClis` / `loadDiscoveredModels`.
+ *
+ * @public
+ */
+export interface ChatBackendCapabilities {
+  /** Permission modes the backend honors; empty hides the permission control. */
+  readonly permissionModes: readonly ChatPermissionMode[];
+  /** Reasoning levels the backend honors; empty hides the reasoning section. */
+  readonly reasoningLevels: readonly ChatReasoningLevel[];
+  /**
+   * True when the backend runs against a repository/checkout (agent CLIs), so
+   * the composer shows {@link ChatCheckoutSelector}. False for stateless
+   * model endpoints.
+   */
+  readonly requiresRepository: boolean;
+  /** Service tiers the backend honors; empty hides the tier section. */
+  readonly serviceTiers: readonly ChatServiceTier[];
+  /**
+   * True when the backend accepts an explicit model selection (a `--model`
+   * flag or equivalent). False for CLIs whose model is fixed.
+   */
+  readonly supportsModelFlag: boolean;
 }
 
 /**
