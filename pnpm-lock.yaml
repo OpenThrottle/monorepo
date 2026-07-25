@@ -2684,6 +2684,9 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:^
         version: link:../openthrottle-agentic-workflow
+      '@openthrottle/openthrottle-plan-config':
+        specifier: workspace:^
+        version: link:../openthrottle-plan-config
       '@openthrottle/openthrottle-skills':
         specifier: workspace:^
         version: link:../openthrottle-skills
@@ -2968,7 +2971,18 @@ importers:
 
   packages/openthrottle-notifications: {}
 
-  packages/openthrottle-plan-config: {}
+  packages/openthrottle-plan-config:
+    dependencies:
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-workflow
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@openthrottle/nestjs-testing':
+        specifier: workspace:^
+        version: link:../nestjs-testing
 
   packages/openthrottle-skills:
     dependencies:

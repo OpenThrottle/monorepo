@@ -4,9 +4,14 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "zod": "catalog:"
+  },
   "description": "Isomorphic plan-run-config helpers shared by the OpenThrottle server (via nestjs-repositories) and the developer app: storage defaults, plan/workflow-UI conversion, and GraphQL serialization.",
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",

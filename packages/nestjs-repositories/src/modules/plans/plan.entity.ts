@@ -16,14 +16,12 @@ import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
 import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
 import type { Project } from '../projects/project.entity';
 import type { Task } from '../tasks/task.entity';
-import type { PlanRunConfigStorage } from './plan-run-config/plan-run-config-storage.types';
+import type {
+  PlanJobRunHooksStorage,
+  PlanRunConfigStorage,
+} from '@openthrottle/openthrottle-plan-config';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
-/** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
-export interface PlanJobRunHooksStorage {
-  readonly hooks: readonly unknown[];
-}
-
 export type PlanData = Pick<
   Plan,
   | 'assignee'

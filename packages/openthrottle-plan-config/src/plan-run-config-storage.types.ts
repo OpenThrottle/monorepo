@@ -16,6 +16,11 @@ export type PlanRunConfigWorktreeCli = 'flag-only' | 'named' | 'omit';
 
 export type PlanRunConfigExecutionBackend = 'claude' | 'cursor';
 
+/** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
+export interface PlanJobRunHooksStorage {
+  readonly hooks: readonly unknown[];
+}
+
 /**
  * @description UI-native Ralph tuning persisted on the plan (not GraphQL `RalphPlanRunTuningInput`).
  * Maps to {@link PlanWorkflowRalphRunOptions} / developer `WorkflowRalphRunOptionsInput`.

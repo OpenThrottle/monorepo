@@ -4,7 +4,7 @@
 
 import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import { getDefaultPlanRunConfigStorage } from './plan-run-config';
+import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import type { Plan } from './plan.entity';
 
 // /** Column-only shape for building plan test data (no relations). */

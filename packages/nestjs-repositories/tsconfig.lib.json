@@ -15,13 +15,16 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-skills/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-plan-config/tsconfig.lib.json"
+    },
+    {
       "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
     },
     {
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../openthrottle-skills/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-modules/tsconfig.lib.json"

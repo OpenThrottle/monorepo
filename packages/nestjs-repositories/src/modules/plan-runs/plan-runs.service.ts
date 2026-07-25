@@ -4,7 +4,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
-import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
+import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
 import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
