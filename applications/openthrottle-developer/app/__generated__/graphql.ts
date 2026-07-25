@@ -5258,6 +5258,29 @@ export type PlanDetailUpdatePlanRunConfigMutation = {
   } | null;
 };
 
+export type PlanRunConfigRepositoryFieldsFragment = {
+  __typename?: 'RepositoryObject';
+  id: string;
+  name: string;
+  normalizedRemoteUrl?: string | null;
+  projectId?: string | null;
+  checkouts: Array<{
+    __typename?: 'RepositoryCheckoutObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+    kind: string;
+    managed: boolean;
+    inspection?: {
+      __typename?: 'RepositoryInspectionObject';
+      git: {
+        __typename?: 'RepositoryInspectionGitObject';
+        currentBranch?: string | null;
+      };
+    } | null;
+  }>;
+};
+
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
 }>;
@@ -5314,6 +5337,28 @@ export type PlanDetailIndexLoaderQuery = {
       name: string;
     } | null;
   } | null;
+  workspaceRepositories: Array<{
+    __typename?: 'RepositoryObject';
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+    projectId?: string | null;
+    checkouts: Array<{
+      __typename?: 'RepositoryCheckoutObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+      kind: string;
+      managed: boolean;
+      inspection?: {
+        __typename?: 'RepositoryInspectionObject';
+        git: {
+          __typename?: 'RepositoryInspectionGitObject';
+          currentBranch?: string | null;
+        };
+      } | null;
+    }>;
+  }>;
   ruleApplications: Array<{
     __typename?: 'RuleApplicationObject';
     createdAt: any;
@@ -8024,6 +8069,70 @@ export const PlanDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanDetailsFragment, unknown>;
+export const PlanRunConfigRepositoryFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'inspection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'git' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'currentBranch' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunConfigRepositoryFieldsFragment, unknown>;
 export const LinkedArtifactFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -12019,6 +12128,22 @@ export const PlanDetailIndexLoaderDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'PlanRunConfigRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'ruleApplications' },
             arguments: [
               {
@@ -12418,6 +12543,65 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunConfigRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkouts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'inspection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'git' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'currentBranch' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
         ],
       },
     },
