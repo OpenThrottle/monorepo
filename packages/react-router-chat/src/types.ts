@@ -199,6 +199,21 @@ export interface ChatModelGroup {
 }
 
 /**
+ * A selectable repository/checkout for the composer's checkout selector (the
+ * screenshots' "Current checkout" affordance). Presentational — the consumer
+ * supplies the list from its own repository registry; the package resolves
+ * nothing.
+ *
+ * @public
+ */
+export interface ChatCheckoutOption {
+  /** Current branch shown alongside the checkout (e.g. `main`), when known. */
+  readonly branch?: string;
+  readonly id: string;
+  readonly label: string;
+}
+
+/**
  * Reasoning-effort levels a backend may expose in the composer's
  * reasoning/tier control. As-const object (no enum, repo rule). Which levels
  * are actually selectable is gated per-backend by
