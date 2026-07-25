@@ -19,9 +19,17 @@ export const ChatTurnUsageSummary = (
 ): React.ReactElement | null => {
   const { event } = props;
 
+  // Hooks
+
   // Setup
   const usage = formatJsonPayload(event.usageJson);
   const hasError = event.error !== null && event.error.trim() !== '';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // 🔌 Short Circuit
   if (hasError) {
@@ -36,7 +44,6 @@ export const ChatTurnUsageSummary = (
     return null;
   }
 
-  // Markup
   return (
     <Collapsible className="text-muted-foreground" data-testid="ChatTurnUsage">
       <CollapsibleTrigger

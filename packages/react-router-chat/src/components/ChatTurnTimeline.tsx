@@ -26,14 +26,23 @@ export const ChatTurnTimeline = (
 ): React.ReactElement => {
   const { events } = props;
 
+  // Hooks
+
   // Setup
+  const isDone = events.some((event) => event.kind === 'usage');
   const ordered = React.useMemo(
     () => [...events].sort((a, b) => a.sortOrder - b.sortOrder),
     [events],
   );
-  const isDone = events.some((event) => event.kind === 'usage');
+
+  // Handlers
 
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div className="flex flex-col gap-1" data-testid="ChatTurnTimeline">
       {ordered.map((event) => {

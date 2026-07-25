@@ -8,7 +8,7 @@ import { spawn } from 'child_process';
 import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
+import { DEFAULT_WORKFLOW_RUNNER } from '@openthrottle/openthrottle-agentic-utils';
 import { escalateKill } from '../utils/child-kill';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import {
@@ -27,7 +27,7 @@ export interface CursorAgentChunk {
 export interface RunIterationConfig {
   /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
   agentPrompt: string;
-  /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
+  /** @description Execution backend; defaults to {@link DEFAULT_WORKFLOW_RUNNER}. */
   backend?: WorkflowConfigRunner;
   /**
    * @description Process cwd for the runner subprocess. When omitted, inherits `process.cwd()`
@@ -120,9 +120,9 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
     modelNorm !== '' && modelNorm !== 'auto'
       ? ` --model ${escapeShellArg(modelNorm)}`
       : '';
-  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
 
-  const base = `claude --bare -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
+  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+  const base = `claude -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
 
   return appendRalphWorktreeShellFlags(base, 'claude', { worktree });
 };
@@ -178,6 +178,7 @@ const runShellIterationSync = (
       message: child.error.message,
       runnerLabel,
     });
+
     return child.error.message;
   }
 
@@ -197,7 +198,7 @@ const runShellIterationSync = (
  * @description Executes a single iteration of the agentic process (sync). Use when running interactively (TTY).
  */
 export const runIteration = (config: RunIterationConfig): string => {
-  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
+  const { backend = DEFAULT_WORKFLOW_RUNNER, iteration } = config;
   const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
 
   console.log(`\n${ARTWORK_LINE}\n`);
@@ -224,6 +225,8 @@ const runShellIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
   const { cwd, iteration, timeoutMs, signal, onChunk } = config;
+
+  console.log('----> runShellIterationAsync command 🎯 🎯', command);
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
@@ -413,7 +416,7 @@ const runClaudeIterationAsync = (
 export const runIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
-  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
+  const { backend = DEFAULT_WORKFLOW_RUNNER, iteration } = config;
   const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
 
   console.log(`\n${ARTWORK_LINE}\n`);
