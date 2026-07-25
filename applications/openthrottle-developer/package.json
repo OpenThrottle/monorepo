@@ -13,6 +13,7 @@
     "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/openthrottle-plan-config": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/react-router-auth": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",

@@ -1,16 +1,15 @@
 /**
  * @description Client-side plan run configuration: parse, hydrate, and serialize for Plan Configuration tab.
- * Re-exports canonical helpers from `@openthrottle/nestjs-repositories` plan-run-config (monorepo source path).
+ * Re-exports canonical helpers from the isomorphic `@openthrottle/openthrottle-plan-config` package.
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries -- Isomorphic plan-run-config helpers are deliberately deep-imported from nestjs-repositories source to avoid pulling the server barrel (TypeORM/NestJS) into the browser bundle. Proper fix: extract a shared isomorphic package (tracked as a follow-up task on this plan).
 import {
   getDefaultPlanRunConfigStorage,
   planRunConfigFromPlanStorage,
   planRunConfigFromWorkflowUiState,
   serializePlanRunConfigForGraphql,
   workflowUiStateFromPlanRunConfig,
-} from '../../../../../../packages/nestjs-repositories/src/modules/plans/plan-run-config/index.ts';
+} from '@openthrottle/openthrottle-plan-config';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanRunConfigUiState {
