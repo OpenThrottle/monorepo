@@ -157,6 +157,24 @@ export type AddTaskTagInput = {
   taskId: Scalars['ID']['input'];
 };
 
+/** Register a server-host folder as a workspace checkout. */
+export type AddWorkspaceFolderInput = {
+  /** Optional display name; defaults to the folder name. */
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  /** Absolute path on the server host. */
+  path: Scalars['String']['input'];
+};
+
+/** Result of the addWorkspaceFolder gesture: the resolved repository, the created or relinked checkout, and the linked project when one exists. */
+export type AddWorkspaceFolderPayloadObject = {
+  __typename?: 'AddWorkspaceFolderPayloadObject';
+  checkout: RepositoryCheckoutObject;
+  /** Project linked at the repository level, when present. */
+  project?: Maybe<ProjectObject>;
+  reconciliation: WorkspaceFolderReconciliation;
+  repository: RepositoryObject;
+};
+
 /** A ranked agent-asset match from semantic search over custom_prompt embeddings. */
 export type AgentAssetChunk = {
   __typename?: 'AgentAssetChunk';
@@ -334,6 +352,13 @@ export type AttachWorkSessionSubjectInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** A subdirectory listed by browseDirectory (server-host path). */
+export type BrowseDirectoryEntryObject = {
+  __typename?: 'BrowseDirectoryEntryObject';
+  name: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -357,6 +382,14 @@ export type CancelPlanRunResultObject = {
   removedJobIds: Array<Scalars['String']['output']>;
   /** True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes. */
   signaledActiveRunToStop: Scalars['Boolean']['output'];
+};
+
+/** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
+export type CheckoutDriftObject = {
+  __typename?: 'CheckoutDriftObject';
+  branchMoved: Scalars['Boolean']['output'];
+  pathMissing: Scalars['Boolean']['output'];
+  remoteChanged: Scalars['Boolean']['output'];
 };
 
 /** Aggregated CPU and memory metrics for a child process over its lifetime. */
@@ -747,6 +780,16 @@ export type DiscoverLocalModelsResult = {
   scannedHosts: Array<Scalars['String']['output']>;
   /** Number of discovered endpoints. */
   totalCount: Scalars['Int']['output'];
+};
+
+/** A folder found under a configured workspace root (server-host path) that looks like a git repository. */
+export type DiscoveredFolderObject = {
+  __typename?: 'DiscoveredFolderObject';
+  /** True when this folder is already registered (matched by OT manifest id or by path). */
+  alreadyRegistered: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** Absolute path on the server host. */
+  path: Scalars['String']['output'];
 };
 
 export type DuplicateJobInput = {
@@ -1229,6 +1272,8 @@ export type Mutation = {
   addSkillTag: SkillTagObject;
   /** Attach a tag to a task. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. */
   addTaskTag: TaskTagObject;
+  /** Register a server-host folder: validates and inspects the path, reconciles identity via the OT manifest or normalized git remote, creates or relinks the checkout, and returns the enriched graph. */
+  addWorkspaceFolder: AddWorkspaceFolderPayloadObject;
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
@@ -1272,7 +1317,10 @@ export type Mutation = {
   createTasks: CreateTasksResultObject;
   /** Create a user */
   createUser: UserObject;
-  /** Register a local filesystem repository for the authenticated user. */
+  /**
+   * Register a local filesystem repository for the authenticated user.
+   * @deprecated Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).
+   */
   createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
@@ -1290,7 +1338,10 @@ export type Mutation = {
   deleteTagActionRule: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
-  /** Remove a local repository owned by the authenticated user. */
+  /**
+   * Remove a local repository owned by the authenticated user.
+   * @deprecated Replaced by the repository/checkout model; checkout removal moves to the new surface.
+   */
   deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
   /** Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way. */
   detachHook: Scalars['Boolean']['output'];
@@ -1328,6 +1379,8 @@ export type Mutation = {
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   recordWorkArtifact: WorkArtifactObject;
+  /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
+  refreshCheckout: RefreshCheckoutPayloadObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
   /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
@@ -1364,7 +1417,10 @@ export type Mutation = {
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
-  /** Assign, change, or clear the OpenThrottle project link for a local repository. */
+  /**
+   * Assign, change, or clear the OpenThrottle project link for a local repository.
+   * @deprecated Project links now live on the repository row; use the repository-level surface.
+   */
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
   /** Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists. */
   settleCliPlanRun?: Maybe<PlanRunObject>;
@@ -1401,7 +1457,10 @@ export type Mutation = {
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
-  /** Update metadata for a local repository owned by the authenticated user. */
+  /**
+   * Update metadata for a local repository owned by the authenticated user.
+   * @deprecated Replaced by the repository/checkout model (refreshCheckout re-derives git metadata from disk).
+   */
   updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
   updateWorkspaceProfile: UserWorkspaceProfileObject;
@@ -1445,6 +1504,10 @@ export type MutationAddSkillTagArgs = {
 
 export type MutationAddTaskTagArgs = {
   input: AddTaskTagInput;
+};
+
+export type MutationAddWorkspaceFolderArgs = {
+  input: AddWorkspaceFolderInput;
 };
 
 export type MutationAgentsRunChatTurnArgs = {
@@ -1637,6 +1700,10 @@ export type MutationPromoteTaskToPlanArgs = {
 
 export type MutationRecordWorkArtifactArgs = {
   input: RecordWorkArtifactInput;
+};
+
+export type MutationRefreshCheckoutArgs = {
+  input: RefreshCheckoutInput;
 };
 
 export type MutationRegisterArgs = {
@@ -2250,6 +2317,8 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
+  /** Immediate subdirectories of a path within the configured workspace roots (server-host paths). */
+  browseDirectory: Array<BrowseDirectoryEntryObject>;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
@@ -2272,6 +2341,8 @@ export type Query = {
   discoverAgentClis: DiscoverAgentClisResult;
   /** Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request. */
   discoverLocalModels: DiscoverLocalModelsResult;
+  /** Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset. */
+  discoveredFolders: Array<DiscoveredFolderObject>;
   /** Get a generator by name (includes schema JSON) */
   generator?: Maybe<GeneratorDetailObject>;
   /** List available NX generators from @tools/generators */
@@ -2426,6 +2497,8 @@ export type Query = {
   workspaceLocalRepositories: Array<WorkspaceLocalRepositoryObject>;
   /** Get a local repository by id for the authenticated user. */
   workspaceLocalRepository?: Maybe<WorkspaceLocalRepositoryObject>;
+  /** The authenticated user's repositories with their checkouts and inspection snapshots (snapshots refresh on view past the 15-minute TTL). */
+  workspaceRepositories: Array<RepositoryObject>;
   /** Workspace settings for the authenticated user (profile and local repositories). */
   workspaceSettings: WorkspaceSettingsObject;
 };
@@ -2436,6 +2509,10 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryBrowseDirectoryArgs = {
+  path: Scalars['String']['input'];
 };
 
 export type QueryCodeIndexStatusArgs = {
@@ -2856,6 +2933,18 @@ export type RecordWorkArtifactInput = {
   type: Scalars['String']['input'];
 };
 
+/** Re-run inspection on an owned checkout. */
+export type RefreshCheckoutInput = {
+  id: Scalars['ID']['input'];
+};
+
+/** Result of refreshCheckout: the checkout with its updated snapshot plus drift flags. */
+export type RefreshCheckoutPayloadObject = {
+  __typename?: 'RefreshCheckoutPayloadObject';
+  checkout: RepositoryCheckoutObject;
+  drift: CheckoutDriftObject;
+};
+
 export type RegisterCliPlanRunInput = {
   /** Execution backend for this detached-CLI run: claude, cursor, or opencode. */
   executionBackend: Scalars['String']['input'];
@@ -2996,6 +3085,84 @@ export type RepeatableJobsInput = {
   queueName: Scalars['String']['input'];
   /** Start index for pagination. */
   start?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A per-user on-disk instance of a repository. Paths are on the server host. */
+export type RepositoryCheckoutObject = {
+  __typename?: 'RepositoryCheckoutObject';
+  createdAt: Scalars['DateTime']['output'];
+  displayName: Scalars['String']['output'];
+  /** Absolute path on the server host. */
+  filesystemPath: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Cached inspection snapshot; null until the first scan completes. */
+  inspection?: Maybe<RepositoryInspectionObject>;
+  /** 'primary' or 'worktree' (worktree reserved for future workflow unification). */
+  kind: Scalars['String']['output'];
+  /** True when OpenThrottle cloned this checkout into the managed checkout root. */
+  managed: Scalars['Boolean']['output'];
+  repositoryId: Scalars['ID']['output'];
+  scannedAt?: Maybe<Scalars['DateTime']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+/** Presence of agent configuration files at the checkout root. */
+export type RepositoryInspectionAgentConfigObject = {
+  __typename?: 'RepositoryInspectionAgentConfigObject';
+  agentsMd: Scalars['Boolean']['output'];
+  claudeMd: Scalars['Boolean']['output'];
+  cursorRules: Scalars['Boolean']['output'];
+  mcpJson: Scalars['Boolean']['output'];
+  skillsDir: Scalars['Boolean']['output'];
+};
+
+/** Git state detected at the checkout root; nulls mean the probe failed or does not apply. */
+export type RepositoryInspectionGitObject = {
+  __typename?: 'RepositoryInspectionGitObject';
+  currentBranch?: Maybe<Scalars['String']['output']>;
+  defaultBranch?: Maybe<Scalars['String']['output']>;
+  dirty?: Maybe<Scalars['Boolean']['output']>;
+  isRepo: Scalars['Boolean']['output'];
+  linkedWorktrees: Array<Scalars['String']['output']>;
+  normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
+};
+
+/** Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout. */
+export type RepositoryInspectionObject = {
+  __typename?: 'RepositoryInspectionObject';
+  agentConfig: RepositoryInspectionAgentConfigObject;
+  git: RepositoryInspectionGitObject;
+  scannedAt: Scalars['DateTime']['output'];
+  stack: RepositoryInspectionStackObject;
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** Stack markers detected at the checkout root (root-level heuristics only). */
+export type RepositoryInspectionStackObject = {
+  __typename?: 'RepositoryInspectionStackObject';
+  languages: Array<Scalars['String']['output']>;
+  nxWorkspace: Scalars['Boolean']['output'];
+  packageManager?: Maybe<Scalars['String']['output']>;
+  pnpmWorkspace: Scalars['Boolean']['output'];
+  turbo: Scalars['Boolean']['output'];
+};
+
+/** A repository identity shared across users, keyed by normalized git remote URL; provisional (no remote) until one is detected. */
+export type RepositoryObject = {
+  __typename?: 'RepositoryObject';
+  /** The authenticated user's checkouts of this repository. */
+  checkouts: Array<RepositoryCheckoutObject>;
+  createdAt: Scalars['DateTime']['output'];
+  defaultBranch?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Canonical https form of the remote; null for provisional local-only repositories. */
+  normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
+  project?: Maybe<ProjectObject>;
+  /** OpenThrottle project linked at the repository level. */
+  projectId?: Maybe<Scalars['ID']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type RetryJobInput = {
@@ -3891,6 +4058,15 @@ export enum WorkspaceEditorId {
   Cursor = 'CURSOR',
   /** Visual Studio Code */
   Vscode = 'VSCODE',
+}
+
+/** How addWorkspaceFolder resolved the folder's identity: via the on-disk OT manifest (checkout or repository id), via the normalized git remote, or by creating a new canonical/provisional repository. */
+export enum WorkspaceFolderReconciliation {
+  CreatedCanonical = 'CREATED_CANONICAL',
+  CreatedProvisional = 'CREATED_PROVISIONAL',
+  MatchedManifestCheckout = 'MATCHED_MANIFEST_CHECKOUT',
+  MatchedManifestRepository = 'MATCHED_MANIFEST_REPOSITORY',
+  MatchedRemote = 'MATCHED_REMOTE',
 }
 
 /** A local filesystem checkout registered under the user's workspace settings. */

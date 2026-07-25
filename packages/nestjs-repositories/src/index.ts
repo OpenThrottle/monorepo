@@ -198,8 +198,17 @@ export {
 } from './modules/workspace-settings/workspace-editor-id';
 export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
 export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings.service';
-export { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
+export type { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories.service';
+export { normalizeRemoteUrl } from './modules/repositories/normalize-remote-url';
+export { Repository } from './modules/repositories/repository.entity';
+export {
+  REPOSITORY_CHECKOUT_KINDS,
+  RepositoryCheckout,
+} from './modules/repositories/repository-checkout.entity';
+export { RepositoriesModule } from './modules/repositories/repositories.module';
+export { RepositoriesService } from './modules/repositories/repositories.service';
+export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts.service';
 export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config.service';
 export type {
   ApplyWorkspaceEditorConfigOptions,
@@ -277,6 +286,11 @@ export type { TaskEmbeddingSearchRow } from './modules/task-embeddings/task-embe
 export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-editor-id';
 export type { UserWorkspaceSettingsData } from './modules/workspace-settings/user-workspace-settings.entity';
 export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity';
+export type { RepositoryData } from './modules/repositories/repository.entity';
+export type {
+  RepositoryCheckoutData,
+  RepositoryCheckoutKind,
+} from './modules/repositories/repository-checkout.entity';
 export type { UserData } from './modules/users/user.entity';
 // export type { PlanEmbeddingFactoryData } from './modules/plan-embeddings/plan-embeddings.factory';
 // export type { PlanFactoryData } from './modules/plans/plans.factory';

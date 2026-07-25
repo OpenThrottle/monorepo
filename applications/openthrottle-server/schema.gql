@@ -2262,6 +2262,161 @@ type ApplyWorkspaceEditorConfigurationResultObject {
   applications: [WorkspaceEditorConfigApplicationObject!]!
 }
 
+"""Presence of agent configuration files at the checkout root."""
+type RepositoryInspectionAgentConfigObject {
+  agentsMd: Boolean!
+  claudeMd: Boolean!
+  cursorRules: Boolean!
+  mcpJson: Boolean!
+  skillsDir: Boolean!
+}
+
+"""
+Git state detected at the checkout root; nulls mean the probe failed or does not apply.
+"""
+type RepositoryInspectionGitObject {
+  currentBranch: String
+  defaultBranch: String
+  dirty: Boolean
+  isRepo: Boolean!
+  linkedWorktrees: [String!]!
+  normalizedRemoteUrl: String
+}
+
+"""
+Stack markers detected at the checkout root (root-level heuristics only).
+"""
+type RepositoryInspectionStackObject {
+  languages: [String!]!
+  nxWorkspace: Boolean!
+  packageManager: String
+  pnpmWorkspace: Boolean!
+  turbo: Boolean!
+}
+
+"""
+Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout.
+"""
+type RepositoryInspectionObject {
+  agentConfig: RepositoryInspectionAgentConfigObject!
+  git: RepositoryInspectionGitObject!
+  scannedAt: DateTime!
+  stack: RepositoryInspectionStackObject!
+  warnings: [String!]!
+}
+
+"""
+A per-user on-disk instance of a repository. Paths are on the server host.
+"""
+type RepositoryCheckoutObject {
+  id: ID!
+  repositoryId: ID!
+  userId: ID!
+
+  """Absolute path on the server host."""
+  filesystemPath: String!
+  displayName: String!
+
+  """
+  True when OpenThrottle cloned this checkout into the managed checkout root.
+  """
+  managed: Boolean!
+
+  """
+  'primary' or 'worktree' (worktree reserved for future workflow unification).
+  """
+  kind: String!
+
+  """Cached inspection snapshot; null until the first scan completes."""
+  inspection: RepositoryInspectionObject
+  scannedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A repository identity shared across users, keyed by normalized git remote URL; provisional (no remote) until one is detected.
+"""
+type RepositoryObject {
+  id: ID!
+
+  """
+  Canonical https form of the remote; null for provisional local-only repositories.
+  """
+  normalizedRemoteUrl: String
+  name: String!
+  defaultBranch: String
+
+  """OpenThrottle project linked at the repository level."""
+  projectId: ID
+  project: ProjectObject
+
+  """The authenticated user's checkouts of this repository."""
+  checkouts: [RepositoryCheckoutObject!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A folder found under a configured workspace root (server-host path) that looks like a git repository.
+"""
+type DiscoveredFolderObject {
+  """
+  True when this folder is already registered (matched by OT manifest id or by path).
+  """
+  alreadyRegistered: Boolean!
+  name: String!
+
+  """Absolute path on the server host."""
+  path: String!
+}
+
+"""A subdirectory listed by browseDirectory (server-host path)."""
+type BrowseDirectoryEntryObject {
+  name: String!
+  path: String!
+}
+
+"""
+Result of the addWorkspaceFolder gesture: the resolved repository, the created or relinked checkout, and the linked project when one exists.
+"""
+type AddWorkspaceFolderPayloadObject {
+  checkout: RepositoryCheckoutObject!
+
+  """Project linked at the repository level, when present."""
+  project: ProjectObject
+  reconciliation: WorkspaceFolderReconciliation!
+  repository: RepositoryObject!
+}
+
+"""
+How addWorkspaceFolder resolved the folder's identity: via the on-disk OT manifest (checkout or repository id), via the normalized git remote, or by creating a new canonical/provisional repository.
+"""
+enum WorkspaceFolderReconciliation {
+  CREATED_CANONICAL
+  CREATED_PROVISIONAL
+  MATCHED_MANIFEST_CHECKOUT
+  MATCHED_MANIFEST_REPOSITORY
+  MATCHED_REMOTE
+}
+
+"""
+Drift detected by refreshCheckout, diffing the new scan against the previous snapshot.
+"""
+type CheckoutDriftObject {
+  branchMoved: Boolean!
+  pathMissing: Boolean!
+  remoteChanged: Boolean!
+}
+
+"""
+Result of refreshCheckout: the checkout with its updated snapshot plus drift flags.
+"""
+type RefreshCheckoutPayloadObject {
+  checkout: RepositoryCheckoutObject!
+  drift: CheckoutDriftObject!
+}
+
 type Query {
   """
   Database health: ok | unconfigured | unreachable. Used by app status page.
@@ -2648,6 +2803,21 @@ type Query {
 
   """List all users, ordered by createdAt descending"""
   users: [UserObject!]!
+
+  """
+  Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset.
+  """
+  discoveredFolders: [DiscoveredFolderObject!]!
+
+  """
+  Immediate subdirectories of a path within the configured workspace roots (server-host paths).
+  """
+  browseDirectory(path: String!): [BrowseDirectoryEntryObject!]!
+
+  """
+  The authenticated user's repositories with their checkouts and inspection snapshots (snapshots refresh on view past the 15-minute TTL).
+  """
+  workspaceRepositories: [RepositoryObject!]!
 
   """
   Workspace settings for the authenticated user (profile and local repositories).
@@ -3463,22 +3633,32 @@ type Mutation {
   enableUser(id: ID!): UserObject
 
   """
+  Register a server-host folder: validates and inspects the path, reconciles identity via the OT manifest or normalized git remote, creates or relinks the checkout, and returns the enriched graph.
+  """
+  addWorkspaceFolder(input: AddWorkspaceFolderInput!): AddWorkspaceFolderPayloadObject!
+
+  """
+  Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved).
+  """
+  refreshCheckout(input: RefreshCheckoutInput!): RefreshCheckoutPayloadObject!
+
+  """
   Update contact fields and/or enabled editors on the authenticated user's workspace profile.
   """
   updateWorkspaceProfile(input: UpdateWorkspaceProfileInput!): UserWorkspaceProfileObject!
 
   """Register a local filesystem repository for the authenticated user."""
-  createWorkspaceLocalRepository(input: CreateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
+  createWorkspaceLocalRepository(input: CreateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject! @deprecated(reason: "Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).")
 
   """
   Update metadata for a local repository owned by the authenticated user.
   """
-  updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
+  updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject! @deprecated(reason: "Replaced by the repository/checkout model (refreshCheckout re-derives git metadata from disk).")
 
   """
   Assign, change, or clear the OpenThrottle project link for a local repository.
   """
-  setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject!
+  setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject! @deprecated(reason: "Project links now live on the repository row; use the repository-level surface.")
 
   """
   Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.
@@ -3486,7 +3666,7 @@ type Mutation {
   applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigurationInput): ApplyWorkspaceEditorConfigurationResultObject!
 
   """Remove a local repository owned by the authenticated user."""
-  deleteWorkspaceLocalRepository(id: ID!): Boolean!
+  deleteWorkspaceLocalRepository(id: ID!): Boolean! @deprecated(reason: "Replaced by the repository/checkout model; checkout removal moves to the new surface.")
 }
 
 input CreateAgentConversationInput {
@@ -4380,6 +4560,20 @@ input UpdateUserInput {
   githubUsername: String
 
   """User id to update"""
+  id: ID!
+}
+
+"""Register a server-host folder as a workspace checkout."""
+input AddWorkspaceFolderInput {
+  """Optional display name; defaults to the folder name."""
+  displayName: String
+
+  """Absolute path on the server host."""
+  path: String!
+}
+
+"""Re-run inspection on an owned checkout."""
+input RefreshCheckoutInput {
   id: ID!
 }
 

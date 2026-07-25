@@ -1,21 +1,22 @@
 /**
- * @description CRUD for workspace_local_repositories scoped to the authenticated user.
+ * @description Compatibility façade over repositories + repository_checkouts,
+ * keeping the pre-split WorkspaceLocalRepository API (list/find/create/update/
+ * setProject/delete) so existing callers keep working until the new GraphQL
+ * surface replaces them. `id` in every view is the checkout id.
+ *
+ * @deprecated Use RepositoriesService / RepositoryCheckoutsService directly.
  */
 
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { QueryFailedError, Repository } from 'typeorm';
-import {
-  type ListPaginationInput,
-  resolveListPagination,
-} from '../../common/list-pagination';
+import type { ListPaginationInput } from '../../common/list-pagination';
 import { ProjectsService } from '../projects/projects.service';
-import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
+import { normalizeRemoteUrl } from '../repositories/normalize-remote-url';
+import { RepositoriesService } from '../repositories/repositories.service';
+import type { Repository } from '../repositories/repository.entity';
+import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
+import type { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 
 interface CreateWorkspaceLocalRepositoryData {
   readonly displayName: string;
@@ -32,64 +33,65 @@ interface UpdateWorkspaceLocalRepositoryData {
   readonly projectId?: string | null;
 }
 
-const isUniqueViolation = (error: unknown): boolean => {
-  if (!(error instanceof QueryFailedError)) return false;
-  const driverError: unknown = error.driverError;
-  return (
-    typeof driverError === 'object' &&
-    driverError !== null &&
-    'code' in driverError &&
-    driverError.code === '23505'
-  );
-};
+const toView = (
+  checkout: RepositoryCheckout,
+  repository: Repository,
+): WorkspaceLocalRepository => ({
+  createdAt: checkout.createdAt,
+  displayName: checkout.displayName,
+  filesystemPath: checkout.filesystemPath,
+  gitDefaultBranch: repository.defaultBranch,
+  gitRemoteUrl: repository.normalizedRemoteUrl,
+  id: checkout.id,
+  projectId: repository.projectId,
+  updatedAt: checkout.updatedAt,
+  userId: checkout.userId,
+});
 
 @Injectable()
 export class WorkspaceLocalRepositoriesService {
   constructor(
     private readonly logger: LoggerService,
-    @InjectRepository(WorkspaceLocalRepository)
-    private readonly repository: Repository<WorkspaceLocalRepository>,
+    private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly projectsService: ProjectsService,
+    private readonly repositoriesService: RepositoriesService,
   ) {
     this.logger.debug('🧩 workspace-local-repositories 🧩');
   }
 
   /**
-   * @description Returns the TypeORM repository for workspace local repositories.
-   */
-  getRepository(): Repository<WorkspaceLocalRepository> {
-    return this.repository;
-  }
-
-  /**
-   * @description Lists repositories for a user, newest first. Accepts an
-   * optional clamped `{ limit, offset }` so the result set stays bounded.
+   * @description Lists the user's checkouts as legacy views, newest first.
    */
   async listByUserId(
     userId: string,
     pagination?: ListPaginationInput,
   ): Promise<WorkspaceLocalRepository[]> {
-    const { skip, take } = resolveListPagination(pagination);
-    return this.repository.find({
-      order: { createdAt: 'DESC' },
-      skip,
-      take,
-      where: { userId },
-    });
+    const checkouts = await this.checkoutsService.listByUserId(
+      userId,
+      pagination,
+    );
+    return Promise.all(
+      checkouts.map(async (checkout) =>
+        toView(checkout, await this.repositoryFor(checkout)),
+      ),
+    );
   }
 
   /**
-   * @description Finds a repository by id when owned by the user.
+   * @description Finds a checkout by id when owned by the user.
    */
   async findByIdForUser(
     id: string,
     userId: string,
   ): Promise<WorkspaceLocalRepository | null> {
-    return this.repository.findOne({ where: { id, userId } });
+    const checkout = await this.checkoutsService.findByIdForUser(id, userId);
+    if (!checkout) return null;
+    return toView(checkout, await this.repositoryFor(checkout));
   }
 
   /**
-   * @description Creates a local repository row for the user.
+   * @description Registers a folder: find-or-create the repository row from the
+   * remote URL (provisional when none), then create the user's checkout.
    */
   async create(
     userId: string,
@@ -97,68 +99,90 @@ export class WorkspaceLocalRepositoriesService {
   ): Promise<WorkspaceLocalRepository> {
     await this.assertProjectExistsWhenSet(data.projectId);
 
-    const entity = this.repository.create({
-      displayName: data.displayName,
-      filesystemPath: data.filesystemPath,
-      gitDefaultBranch: data.gitDefaultBranch,
-      gitRemoteUrl: data.gitRemoteUrl,
-      projectId: data.projectId,
-      userId,
-    });
+    const repository = await this.repositoriesService.findOrCreateByRemoteUrl(
+      data.gitRemoteUrl,
+      {
+        defaultBranch: data.gitDefaultBranch,
+        name: data.displayName,
+        projectId: data.projectId,
+      },
+    );
+
+    // An existing repository without a link inherits the explicit one; an
+    // existing link wins (repository-level ownership, design doc §4).
+    if (data.projectId !== null && repository.projectId === null) {
+      await this.repositoriesService.update(repository.id, {
+        projectId: data.projectId,
+      });
+      repository.projectId = data.projectId;
+    }
 
     try {
-      return await this.repository.save(entity);
+      const checkout = await this.checkoutsService.create(userId, {
+        displayName: data.displayName,
+        filesystemPath: data.filesystemPath,
+        repositoryId: repository.id,
+      });
+      return toView(checkout, repository);
     } catch (error) {
-      if (isUniqueViolation(error)) {
-        throw new ConflictException(
-          'A local repository with this filesystem path is already registered',
-        );
-      }
+      await this.cleanupOrphanProvisional(repository.id);
       throw error;
     }
   }
 
   /**
-   * @description Updates metadata for an owned repository. Does not change filesystem_path.
+   * @description Updates a checkout and/or its repository. Display name lands
+   * on the checkout; branch, remote, and project link land on the repository.
    */
   async update(
     userId: string,
     id: string,
     data: UpdateWorkspaceLocalRepositoryData,
   ): Promise<WorkspaceLocalRepository> {
-    const existing = await this.findByIdForUser(id, userId);
-    if (!existing) {
+    let checkout = await this.checkoutsService.findByIdForUser(id, userId);
+    if (!checkout) {
       throw new NotFoundException('Workspace local repository not found');
     }
+    let repository = await this.repositoryFor(checkout);
 
     if (data.projectId !== undefined) {
       await this.assertProjectExistsWhenSet(data.projectId);
-      existing.projectId = data.projectId;
-    }
-    if (data.displayName !== undefined) {
-      existing.displayName = data.displayName;
-    }
-    if (data.gitRemoteUrl !== undefined) {
-      existing.gitRemoteUrl = data.gitRemoteUrl;
+      repository =
+        (await this.repositoriesService.update(repository.id, {
+          projectId: data.projectId,
+        })) ?? repository;
     }
     if (data.gitDefaultBranch !== undefined) {
-      existing.gitDefaultBranch = data.gitDefaultBranch;
+      repository =
+        (await this.repositoriesService.update(repository.id, {
+          defaultBranch: data.gitDefaultBranch,
+        })) ?? repository;
+    }
+    if (data.gitRemoteUrl !== undefined) {
+      const result = await this.reresolveRemote(
+        userId,
+        checkout,
+        repository,
+        data.gitRemoteUrl,
+      );
+      checkout = result.checkout;
+      repository = result.repository;
+    }
+    if (data.displayName !== undefined) {
+      checkout =
+        (await this.checkoutsService.updateDisplayName(
+          userId,
+          id,
+          data.displayName,
+        )) ?? checkout;
     }
 
-    try {
-      return await this.repository.save(existing);
-    } catch (error) {
-      if (isUniqueViolation(error)) {
-        throw new ConflictException(
-          'A local repository with this filesystem path is already registered',
-        );
-      }
-      throw error;
-    }
+    return toView(checkout, repository);
   }
 
   /**
-   * @description Assigns, changes, or clears the OpenThrottle project link for an owned repository.
+   * @description Assigns, changes, or clears the OpenThrottle project link on
+   * the checkout's repository.
    */
   async setProject(
     userId: string,
@@ -169,11 +193,98 @@ export class WorkspaceLocalRepositoriesService {
   }
 
   /**
-   * @description Deletes an owned repository. Returns false when not found.
+   * @description Deletes an owned checkout; a provisional repository left with
+   * no checkouts is removed too. Returns false when not found.
    */
   async delete(userId: string, id: string): Promise<boolean> {
-    const result = await this.repository.delete({ id, userId });
-    return (result.affected ?? 0) > 0;
+    const checkout = await this.checkoutsService.findByIdForUser(id, userId);
+    if (!checkout) return false;
+
+    const deleted = await this.checkoutsService.delete(userId, id);
+    if (deleted) {
+      await this.cleanupOrphanProvisional(checkout.repositoryId);
+    }
+    return deleted;
+  }
+
+  /**
+   * @description Moves a checkout onto the repository row matching a changed
+   * remote URL: reuse the canonical row when one exists (its project link
+   * wins), promote a solely-owned provisional row in place, or split off a
+   * fresh row when the current one is shared.
+   */
+  private async reresolveRemote(
+    userId: string,
+    checkout: RepositoryCheckout,
+    repository: Repository,
+    rawRemoteUrl: string | null,
+  ): Promise<{ checkout: RepositoryCheckout; repository: Repository }> {
+    const normalized =
+      rawRemoteUrl === null ? null : normalizeRemoteUrl(rawRemoteUrl);
+    if (normalized === repository.normalizedRemoteUrl) {
+      return { checkout, repository };
+    }
+
+    if (normalized !== null) {
+      const canonical =
+        await this.repositoriesService.findByNormalizedRemoteUrl(normalized);
+      if (canonical) {
+        const repointed = await this.checkoutsService.repointRepository(
+          userId,
+          checkout.id,
+          canonical.id,
+        );
+        await this.cleanupOrphanProvisional(repository.id);
+        return { checkout: repointed ?? checkout, repository: canonical };
+      }
+
+      const checkoutCount = await this.checkoutsService.countByRepositoryId(
+        repository.id,
+      );
+      if (repository.normalizedRemoteUrl === null && checkoutCount === 1) {
+        const promoted = await this.repositoriesService.update(repository.id, {
+          normalizedRemoteUrl: normalized,
+        });
+        return { checkout, repository: promoted ?? repository };
+      }
+    }
+
+    const split = await this.repositoriesService.create({
+      defaultBranch: repository.defaultBranch,
+      name: repository.name,
+      normalizedRemoteUrl: normalized,
+      projectId: repository.projectId,
+    });
+    const repointed = await this.checkoutsService.repointRepository(
+      userId,
+      checkout.id,
+      split.id,
+    );
+    await this.cleanupOrphanProvisional(repository.id);
+    return { checkout: repointed ?? checkout, repository: split };
+  }
+
+  private async repositoryFor(
+    checkout: RepositoryCheckout,
+  ): Promise<Repository> {
+    const repository =
+      checkout.repository ??
+      (await this.repositoriesService.findById(checkout.repositoryId));
+    if (!repository) {
+      throw new NotFoundException(
+        `Repository not found for checkout: ${checkout.id}`,
+      );
+    }
+    return repository;
+  }
+
+  private async cleanupOrphanProvisional(repositoryId: string): Promise<void> {
+    const repository = await this.repositoriesService.findById(repositoryId);
+    if (!repository || repository.normalizedRemoteUrl !== null) return;
+    const count = await this.checkoutsService.countByRepositoryId(repositoryId);
+    if (count === 0) {
+      await this.repositoriesService.delete(repositoryId);
+    }
   }
 
   private async assertProjectExistsWhenSet(
