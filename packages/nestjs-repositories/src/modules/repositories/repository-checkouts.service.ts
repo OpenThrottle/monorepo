@@ -120,6 +120,29 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description Moves an owned checkout to a new filesystem path (manifest
+   * reconciliation of a moved folder). Throws ConflictException when the
+   * (user, path) pair is already registered; returns null when not found.
+   */
+  async updateFilesystemPath(
+    userId: string,
+    id: string,
+    filesystemPath: string,
+  ): Promise<RepositoryCheckout | null> {
+    const existing = await this.findByIdForUser(id, userId);
+    if (!existing) return null;
+    existing.filesystemPath = filesystemPath;
+    try {
+      return await this.repository.save(existing);
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(DUPLICATE_PATH_MESSAGE);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * @description Re-points an owned checkout at a different repository row
    * (provisional→canonical moves). Returns null when not found.
    */

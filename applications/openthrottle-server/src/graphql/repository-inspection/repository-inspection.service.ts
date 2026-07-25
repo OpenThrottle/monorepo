@@ -147,6 +147,17 @@ export class RepositoryInspectionService {
     return snapshot;
   }
 
+  /**
+   * @description Reads only the OT-manifest identity anchor from a folder
+   * (no git probes) — used to annotate discovered folders cheaply. The path
+   * must already be validated; pass the process-view path.
+   */
+  async readManifestIdentity(
+    root: string,
+  ): Promise<RepositoryInspectionManifest> {
+    return this.readManifest(root, []);
+  }
+
   private inspectAgentConfig(root: string): RepositoryInspectionAgentConfig {
     return {
       agentsMd: existsSync(join(root, 'AGENTS.md')),

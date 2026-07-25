@@ -153,6 +153,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @Mutation(() => WorkspaceLocalRepositoryObject, {
+    deprecationReason: `Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).`,
     description: `Register a local filesystem repository for the authenticated user.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
@@ -171,6 +172,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @Mutation(() => WorkspaceLocalRepositoryObject, {
+    deprecationReason: `Replaced by the repository/checkout model (refreshCheckout re-derives git metadata from disk).`,
     description: `Update metadata for a local repository owned by the authenticated user.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
@@ -207,6 +209,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @Mutation(() => WorkspaceLocalRepositoryObject, {
+    deprecationReason: `Project links now live on the repository row; use the repository-level surface.`,
     description: `Assign, change, or clear the OpenThrottle project link for a local repository.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
@@ -258,6 +261,7 @@ export class WorkspaceSettingsResolver {
   }
 
   @Mutation(() => Boolean, {
+    deprecationReason: `Replaced by the repository/checkout model; checkout removal moves to the new surface.`,
     description: `Remove a local repository owned by the authenticated user.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
