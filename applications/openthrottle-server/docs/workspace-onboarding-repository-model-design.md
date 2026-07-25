@@ -11,10 +11,10 @@ validation-rule shapes, authorization table, and "Apply editor configuration" me
 unchanged and still authoritative — only `workspace_local_repositories` and the mutations built
 directly on it are replaced.
 
-**Status: PROPOSED, pending human sign-off.** Sections marked 🔒 restate decisions already locked
-with Matt on 2026-07-24 in the plan description. Sections marked 🟡 are this doc's proposed
-resolution of the plan's "remaining open questions" — these are NOT yet locked and must be
-confirmed before implementation tasks (schema, inspection service, GraphQL, UI) begin.
+**Status: SIGNED OFF (Matt, 2026-07-24).** Sections marked 🔒 restate decisions locked in the
+plan description on 2026-07-24. The formerly-open questions (§§4–7) were reviewed and signed off
+by Matt on 2026-07-24: §§4–6 confirmed as drafted, §7 amended — the old table is **dropped
+immediately** in the migration, not renamed. Implementation tasks are unblocked.
 
 ## 1. Identity model 🔒
 
@@ -150,7 +150,7 @@ clone: normalize URL,      │   task 29b4f86e)           │      → attach to
 Auth v1 for clone: ambient host credentials only (SSH agent / `gh auth`). OT never stores git
 credentials in the database or anywhere else.
 
-## 4. Provisional → canonical merge semantics 🟡 (proposed)
+## 4. Provisional → canonical merge semantics 🔒
 
 Triggered when a `refreshCheckout` or re-inspection on a provisional repository (`repositories.
 normalized_remote_url IS NULL`) detects a remote that didn't exist before (e.g. user ran
@@ -178,7 +178,7 @@ UPDATE`) for the duration of the merge.
 true, the ids of the repository/project that were superseded, so the UI can show "This folder
 turned out to be the same repo as X — linked to the existing project."
 
-## 5. Inspection refresh cadence 🟡 (proposed: TTL-on-view + manual refresh)
+## 5. Inspection refresh cadence 🔒 (TTL-on-view + manual refresh)
 
 - **TTL-on-view (recommended default):** when a checkout's `scanned_at` is older than
   **15 minutes**, the GraphQL read path (`workspaceSettings` / checkout resolvers) triggers a
@@ -194,7 +194,7 @@ turned out to be the same repo as X — linked to the existing project."
 - Drift flags (path missing, remote changed, branch moved) are computed by diffing the new scan
   against the previous `inspection` snapshot at write time, not stored as a separate column.
 
-## 6. Security posture for fs inspection/browse 🟡 (proposed)
+## 6. Security posture for fs inspection/browse 🔒
 
 - **Allowlist:** a new **workspace-roots config** (`OPENTHROTTLE_WORKSPACE_ROOTS`, comma-separated
   absolute paths, e.g. `~/Development`) is the allowlist for `discoveredFolders` (shallow scan)
@@ -223,7 +223,7 @@ turned out to be the same repo as X — linked to the existing project."
   allowlist is configured in host-view paths and compared in this-process view when the Docker
   workspace bridge is active.
 
-## 7. Migration mechanics for `workspace_local_repositories` 🟡 (proposed)
+## 7. Migration mechanics for `workspace_local_repositories` 🔒
 
 - Migration runs in the same file as the `CREATE TABLE IF NOT EXISTS` statements above (idempotent
   re-run safe), as a data-migration block after DDL:
@@ -243,15 +243,14 @@ turned out to be the same repo as X — linked to the existing project."
      `user_id` carried over unchanged, `repository_id` pointing at the row created/matched in
      steps 1–3, `managed = false`, `kind = 'primary'`, `inspection = NULL`, `scanned_at = NULL`
      (first read triggers the TTL-on-view scan from §5).
-- **Old table:** `workspace_local_repositories` is **renamed** to
-  `workspace_local_repositories_deprecated_<migration-number>` in the same migration (not
-  dropped, not view-shimmed). Rationale: a rename is trivially reversible during the rollout
-  window, requires no application code to keep working against two schemas simultaneously (a view
-  shim would need INSTEAD OF triggers to stay writable, which is more code than the actual
-  service migration), and a straight drop loses the pre-migration data if the migration mechanics
-  above miss an edge case. Drop the renamed table in a follow-up cleanup migration once the new
-  path has run in production for a full plan-run cycle (tracked as a follow-up, not a task in
-  this plan).
+- **Old table:** `workspace_local_repositories` is **dropped** in the same migration, immediately
+  after the data-lift block (decision: Matt, 2026-07-24 — amended from this doc's drafted
+  rename-then-drop proposal). The DDL, data lift, and `DROP TABLE IF EXISTS` run in one
+  transaction, so a failed lift rolls back whole rather than leaving a half-migrated state;
+  recovery from a lift that succeeds but is later found wrong is via database backup, not a
+  retained copy of the old table. There is no dual-schema window: the service layer is re-backed
+  by the new tables in the same change (schema task `1c6b9500…`), so no code path reads the old
+  table after the migration runs.
 - `WorkspaceLocalRepositoriesService` and its GraphQL surface
   (`createWorkspaceLocalRepository`, `updateWorkspaceLocalRepository`,
   `deleteWorkspaceLocalRepository`, `setWorkspaceLocalRepositoryProject`) are marked
@@ -314,8 +313,10 @@ depends on §1's tables existing.
 ## Sign-off record
 
 - Decisions 1–6 (plan description, §§1–3, 8, 9 here): **locked with Matt, 2026-07-24.**
-- Proposed resolutions in §§4–7 (provisional merge, refresh cadence, security allowlist,
-  migration mechanics): **drafted by Ralph autonomous iteration, not yet reviewed by Matt.**
-  Downstream implementation tasks (`1c6b9500…` onward) should not start until this doc's §§4–7
-  are explicitly confirmed or amended — this is the human sign-off gate this task exists to
-  enforce, and it is not satisfied by this doc's existence alone.
+- §§4–6 (provisional merge — canonical project link wins; refresh cadence — 15-min TTL-on-view +
+  manual refresh; security — separate `OPENTHROTTLE_WORKSPACE_ROOTS` allowlist, empty-by-default):
+  **confirmed as drafted by Matt, 2026-07-24.**
+- §7 (migration mechanics): **amended by Matt, 2026-07-24** — the old table is dropped
+  immediately in the same migration rather than renamed; §7 above reflects the amended decision.
+- The human sign-off gate is **satisfied**; downstream implementation tasks (`1c6b9500…` onward)
+  are unblocked.
