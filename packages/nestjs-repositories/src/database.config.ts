@@ -100,7 +100,14 @@ export function getTypeOrmOptions(): DataSourceOptions {
       WorkSessionSubject,
       WorkspaceLocalRepository,
     ],
-    logging: process.env.NODE_ENV === 'development',
+
+    // logger?: "advanced-console" | "simple-console" | "formatted-console" | "file" | "debug" | Logger;
+    logger: 'advanced-console',
+
+    // logging: ['query', 'schema', 'error', 'warn', 'info', 'log', 'migration'],
+    logging: ['error', 'warn', 'info'],
+    // logging: getPostgresLoggingLevel(),
+
     ...(slowQueryMs != null && { maxQueryExecutionTime: slowQueryMs }),
     type: 'postgres',
     url: getPostgresUrl(),

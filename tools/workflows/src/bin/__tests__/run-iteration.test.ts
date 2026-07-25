@@ -77,9 +77,7 @@ describe('runIteration (sync) backend dispatch', () => {
     });
     expect(spawnSync).toHaveBeenCalledTimes(1);
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
-    expect(firstArg).toMatch(
-      /^claude --bare -p --permission-mode acceptEdits "/,
-    );
+    expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
     expect(firstArg).not.toContain('--model');
   });
 
@@ -164,9 +162,7 @@ describe('runIteration (sync) backend dispatch', () => {
       worktree: 'my-wt',
     });
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
-    expect(firstArg).toMatch(
-      /^claude --bare -p --permission-mode acceptEdits "/,
-    );
+    expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
     expect(firstArg).toContain('-w my-wt');
     expect(firstArg).not.toContain('--worktree-base');
   });
@@ -244,9 +240,7 @@ describe('runIterationAsync backend dispatch', () => {
     });
     expect(spawn).toHaveBeenCalledTimes(1);
     const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
-    expect(firstArg).toMatch(
-      /^claude --bare -p --permission-mode acceptEdits "/,
-    );
+    expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
   });
 
   it('spawns cursor-agent for --backend cursor', async () => {

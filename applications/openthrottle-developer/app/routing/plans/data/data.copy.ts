@@ -77,5 +77,4 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   promoteLabel: `Promote to Plan`,
   promoteTooltip: `Create a first-class plan from this task and close the task out.`,
   promotedDisabledTooltip: `This task has already been promoted to a plan.`,
-  tagsHeading: `Tags`,
 } as const;

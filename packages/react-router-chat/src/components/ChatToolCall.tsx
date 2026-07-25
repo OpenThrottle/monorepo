@@ -65,6 +65,8 @@ const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
 export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const { defaultOpen, event } = props;
 
+  // Hooks
+
   // Setup
   const status = STATUS_CONFIG[event.status];
   const args = formatJsonPayload(event.argsJson);
@@ -72,9 +74,14 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const hasError = event.error !== null && event.error.trim() !== '';
   const startOpen = defaultOpen ?? event.status === ChatToolStatus.failed;
 
-  // 🔌 Short Circuit
+  // Handlers
 
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <Collapsible
       className="border-border/50 my-1 rounded-md border"
