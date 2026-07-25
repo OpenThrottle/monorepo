@@ -127,6 +127,45 @@ describe('ChatModelPicker Component', () => {
     expect(onModelChange).not.toHaveBeenCalled();
   });
 
+  test('renders a favorites-only picker (every model favorited)', async () => {
+    const onModelChange = vi.fn();
+    const user = userEvent.setup();
+    const favouriteModels: readonly ChatModelOption[] = MODELS.map((model) => ({
+      ...model,
+      favorite: true,
+    }));
+    const component = renderPicker({
+      models: favouriteModels,
+      onModelChange,
+    });
+    await openPicker(component, user);
+
+    expect(
+      component.getByTestId('ChatModelPicker-group-__favorites__'),
+    ).toBeInTheDocument();
+    // The favorited model still appears under its provider group too, so it is
+    // selectable from either — pick it from the Favorites group.
+    await user.click(
+      component.getByTestId('ChatModelPicker-option-__favorites__-codex::gpt5'),
+    );
+    expect(onModelChange).toHaveBeenCalledWith('codex::gpt5');
+  });
+
+  test('shows the empty state and a placeholder trigger with no models', async () => {
+    const user = userEvent.setup();
+    const component = renderPicker({
+      models: [],
+      placeholder: 'Select model',
+      selectedModelId: undefined,
+    });
+
+    expect(component.getByTestId('ChatModelPicker-trigger')).toHaveTextContent(
+      'Select model',
+    );
+    await openPicker(component, user);
+    expect(component.getByText('No models found.')).toBeInTheDocument();
+  });
+
   test('supports keyboard navigation to select a filtered row', async () => {
     const onModelChange = vi.fn();
     const user = userEvent.setup();

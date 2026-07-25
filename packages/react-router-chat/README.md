@@ -158,6 +158,17 @@ hardcodes **no data**: consumers supply options and own state.
 | `ChatPermissionModeControl` | Supervised / Auto-accept edits / Full access, with lock icons + descriptions          |
 | `ChatCheckoutSelector`      | Repository/checkout + branch affordance (shown when the backend requires a repo)      |
 
+Every primitive is **controlled** — you pass the current value + an `onXChange`
+callback and (where relevant) a `ChatBackendCapabilities` descriptor; the
+component owns no state beyond its own open/closed popover. See each exported
+`…Props` interface for the full JSDoc:
+
+- `ChatModelPicker` — `groups`, `models`, `selectedModelId`, `onModelChange`, optional `onToggleFavorite`, `disabledModelIds` (capability gating).
+- `ChatReasoningTierControl` — `capabilities`, `reasoning`/`onReasoningChange`, `serviceTier`/`onServiceTierChange`.
+- `ChatPermissionModeControl` — `capabilities`, `permissionMode`/`onPermissionModeChange`.
+- `ChatCheckoutSelector` — `checkouts`, `selectedCheckoutId`, `onCheckoutChange`.
+- `ChatComposerToolbar` — composes all of the above via additive props (`modelGroups`, `capabilities`, `checkouts`, `reasoning`, `serviceTier`, `permissionMode`, …); omit them and it renders exactly as before.
+
 Supporting types (`src/types.ts`, all `@public`):
 
 - `ChatReasoningLevel` (`low` · `medium` · `high` · `extraHigh` · `max` · `ultra`), `ChatServiceTier` (`standard` · `fast`), `ChatPermissionMode` (`supervised` · `autoAcceptEdits` · `fullAccess`) — as-const objects (no TS enums).
