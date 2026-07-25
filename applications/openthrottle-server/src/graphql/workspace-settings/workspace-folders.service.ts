@@ -7,16 +7,23 @@
  * nothing; addWorkspaceFolder keeps the explicit-path escape hatch.
  */
 
+import { execFile } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
-import { readdir } from 'node:fs/promises';
+import { mkdir, readdir, rm } from 'node:fs/promises';
 import { basename, isAbsolute, join } from 'node:path';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { promisify } from 'node:util';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Repository,
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import {
+  normalizeRemoteUrl,
   ProjectsService,
   RepositoriesService,
   RepositoryCheckoutsService,
@@ -95,6 +102,52 @@ const toInspectionObject = (
 /** Last path segment of a normalized remote URL, for repository naming. */
 const repositoryNameFromRemote = (normalizedRemoteUrl: string): string | null =>
   normalizedRemoteUrl.split('/').filter(Boolean).pop() ?? null;
+
+/** Env var: absolute host-view directory OT clones managed checkouts into. */
+export const CHECKOUT_ROOT_ENV = 'OPENTHROTTLE_CHECKOUT_ROOT';
+
+/** Max wall-clock for a single `git clone` before it is aborted. */
+const CLONE_TIMEOUT_MS = 10 * 60 * 1000;
+
+/** Upper bound on clone target-dir collision suffixes before giving up. */
+const MAX_CLONE_COLLISION_SUFFIX = 50;
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * @description Configured managed-checkout root in the host view, or null when
+ * OPENTHROTTLE_CHECKOUT_ROOT is unset/blank/non-absolute (clone is then disabled).
+ */
+export const getCheckoutRoot = (
+  env: NodeJS.ProcessEnv = process.env,
+): string | null => {
+  const raw = env[CHECKOUT_ROOT_ENV];
+  if (raw == null) return null;
+  const trimmed = raw.trim();
+  return trimmed !== '' && isAbsolute(trimmed) ? trimmed : null;
+};
+
+/** Last path segment of a raw git URL, `.git` suffix stripped. */
+const repositoryNameFromGitUrl = (gitUrl: string): string | null => {
+  const withoutSuffix = gitUrl.trim().replace(/\.git\/?$/, '');
+  const segment = withoutSuffix.split(/[/:]/).filter(Boolean).pop();
+  return segment != null && segment !== '' ? segment : null;
+};
+
+/** Restrict a derived folder name to a safe single path segment. */
+const sanitizeCloneDirName = (name: string): string | null => {
+  const safe = name
+    .trim()
+    .replace(/[^A-Za-z0-9._-]/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return safe !== '' && safe !== '.' && safe !== '..' ? safe : null;
+};
+
+/** Plausible git clone URL: ssh (scp-like or ssh://), https, git, or file protocol. */
+const isPlausibleGitUrl = (gitUrl: string): boolean =>
+  /^(https?:\/\/|git:\/\/|ssh:\/\/|file:\/\/|git@|[\w.-]+@[\w.-]+:)/.test(
+    gitUrl.trim(),
+  );
 
 @Injectable()
 export class WorkspaceFoldersService {
@@ -225,13 +278,30 @@ export class WorkspaceFoldersService {
     userId: string,
     input: { displayName?: string | null; path: string },
   ): Promise<AddWorkspaceFolderPayloadObject> {
-    const hostPath = input.path.trim();
+    return this.registerCheckout(userId, input.path.trim(), {
+      displayName: input.displayName ?? null,
+      managed: false,
+    });
+  }
+
+  /**
+   * @description Shared post-materialization pipeline for add-folder and clone:
+   * scan → reconcile (manifest ids → normalized remote → provisional/canonical) →
+   * create/relink the checkout → persist inspection → auto-provision the project.
+   * `managed` distinguishes an OT-cloned checkout (true) from a user-registered
+   * existing folder (false).
+   */
+  private async registerCheckout(
+    userId: string,
+    hostPath: string,
+    opts: { displayName?: string | null; managed: boolean },
+  ): Promise<AddWorkspaceFolderPayloadObject> {
     const snapshot = await this.inspectionService.scan(hostPath);
 
     const displayName =
-      input.displayName == null || input.displayName.trim() === ''
+      opts.displayName == null || opts.displayName.trim() === ''
         ? basename(hostPath)
-        : input.displayName.trim();
+        : opts.displayName.trim();
 
     let checkout: RepositoryCheckout | null = null;
     let repository: Repository | null = null;
@@ -312,6 +382,7 @@ export class WorkspaceFoldersService {
         checkout = await this.checkoutsService.create(userId, {
           displayName,
           filesystemPath: hostPath,
+          managed: opts.managed,
           repositoryId: repository.id,
         });
       } catch (error) {
@@ -357,6 +428,92 @@ export class WorkspaceFoldersService {
       reconciliation,
       repository: this.toRepositoryObject(repository),
     };
+  }
+
+  /**
+   * @description Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT and register
+   * it as a managed checkout, converging into the same pipeline as addWorkspaceFolder.
+   * Auth is ambient (host SSH agent / gh) — OT reads and stores no credentials. A
+   * failed clone removes any partial directory and creates no rows (no orphans).
+   */
+  async cloneRepository(
+    userId: string,
+    input: { gitUrl: string; name?: string | null },
+  ): Promise<AddWorkspaceFolderPayloadObject> {
+    const gitUrl = input.gitUrl.trim();
+    if (gitUrl === '' || !isPlausibleGitUrl(gitUrl)) {
+      throw new BadRequestException('A valid git clone URL is required');
+    }
+
+    const root = getCheckoutRoot();
+    if (root === null) {
+      throw new BadRequestException(
+        `Cloning requires ${CHECKOUT_ROOT_ENV} to be set to an absolute directory`,
+      );
+    }
+
+    const normalized = normalizeRemoteUrl(gitUrl);
+    const derivedName =
+      (input.name != null && input.name.trim() !== ''
+        ? input.name.trim()
+        : normalized !== null
+          ? repositoryNameFromRemote(normalized)
+          : null) ?? repositoryNameFromGitUrl(gitUrl);
+    const safeName =
+      derivedName !== null ? sanitizeCloneDirName(derivedName) : null;
+    if (safeName === null) {
+      throw new BadRequestException(
+        'Could not derive a folder name from the git URL; pass an explicit name',
+      );
+    }
+
+    const rootProcessView = toContainerPath(root);
+    const targetProcessView = await this.reserveClonePath(
+      rootProcessView,
+      safeName,
+    );
+
+    try {
+      await execFileAsync('git', ['clone', '--', gitUrl, targetProcessView], {
+        // Ambient host credentials (SSH agent / gh); never persisted by OT.
+        env: process.env,
+        timeout: CLONE_TIMEOUT_MS,
+      });
+    } catch (error) {
+      // No DB rows exist yet, so there is nothing to orphan; drop the partial dir.
+      await rm(targetProcessView, { force: true, recursive: true });
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`git clone failed: ${message}`);
+    }
+
+    return this.registerCheckout(userId, toHostPath(targetProcessView), {
+      displayName: safeName,
+      managed: true,
+    });
+  }
+
+  /**
+   * @description Reserves a non-existing clone target under the (process-view)
+   * managed root: <root>/<name>, then <name>-2, -3, … up to a bounded cap.
+   * Creates the root if missing. Returns the absolute process-view path.
+   */
+  private async reserveClonePath(
+    rootProcessView: string,
+    name: string,
+  ): Promise<string> {
+    await mkdir(rootProcessView, { recursive: true });
+
+    const first = join(rootProcessView, name);
+    if (!existsSync(first)) return first;
+
+    for (let suffix = 2; suffix <= MAX_CLONE_COLLISION_SUFFIX; suffix += 1) {
+      const candidate = join(rootProcessView, `${name}-${suffix}`);
+      if (!existsSync(candidate)) return candidate;
+    }
+
+    throw new BadRequestException(
+      `Too many existing clones named ${name} under the checkout root`,
+    );
   }
 
   /**

@@ -21,6 +21,22 @@ export class AddWorkspaceFolderInput {
 }
 
 @InputType({
+  description: `Clone a git repository into the managed checkout root and register it.`,
+})
+export class CloneRepositoryInput {
+  @Field(() => String, {
+    description: `Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets.`,
+  })
+  gitUrl!: string;
+
+  @Field(() => String, {
+    description: `Optional folder/display name; defaults to the repository name derived from the URL.`,
+    nullable: true,
+  })
+  name?: string | null;
+}
+
+@InputType({
   description: `Re-run inspection on an owned checkout.`,
 })
 export class RefreshCheckoutInput {

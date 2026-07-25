@@ -3656,6 +3656,11 @@ type Mutation {
   addWorkspaceFolder(input: AddWorkspaceFolderInput!): AddWorkspaceFolderPayloadObject!
 
   """
+  Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials.
+  """
+  cloneRepository(input: CloneRepositoryInput!): AddWorkspaceFolderPayloadObject!
+
+  """
   Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved).
   """
   refreshCheckout(input: RefreshCheckoutInput!): RefreshCheckoutPayloadObject!
@@ -4608,6 +4613,19 @@ input AddWorkspaceFolderInput {
 
   """Absolute path on the server host."""
   path: String!
+}
+
+"""Clone a git repository into the managed checkout root and register it."""
+input CloneRepositoryInput {
+  """
+  Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets.
+  """
+  gitUrl: String!
+
+  """
+  Optional folder/display name; defaults to the repository name derived from the URL.
+  """
+  name: String
 }
 
 """Re-run inspection on an owned checkout."""

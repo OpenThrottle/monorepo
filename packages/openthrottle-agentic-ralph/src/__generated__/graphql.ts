@@ -413,6 +413,14 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+/** Clone a git repository into the managed checkout root and register it. */
+export type CloneRepositoryInput = {
+  /** Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets. */
+  gitUrl: Scalars['String']['input'];
+  /** Optional folder/display name; defaults to the repository name derived from the URL. */
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CodeIndexStatusObject = {
   __typename?: 'CodeIndexStatusObject';
   /** Number of indexed code chunks for the repository (0 when not indexed). */
@@ -1301,6 +1309,8 @@ export type Mutation = {
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
+  cloneRepository: AddWorkspaceFolderPayloadObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
   /** Create a new custom prompt */
@@ -1554,6 +1564,10 @@ export type MutationCancelConversationStreamArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCloneRepositoryArgs = {
+  input: CloneRepositoryInput;
 };
 
 export type MutationCreateAgentConversationArgs = {

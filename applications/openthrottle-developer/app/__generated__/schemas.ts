@@ -18,6 +18,7 @@ import {
   AssignRoleToUserInput,
   AttachWorkSessionSubjectInput,
   CancelPlanRunInput,
+  CloneRepositoryInput,
   CodeSemanticSearchInput,
   CommitsPerPrInput,
   CreateAgentConversationInput,
@@ -328,6 +329,15 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
+  });
+}
+
+export function CloneRepositoryInputSchema(): z.ZodObject<
+  Properties<CloneRepositoryInput>
+> {
+  return z.object({
+    gitUrl: z.string(),
+    name: z.string().nullish(),
   });
 }
 
