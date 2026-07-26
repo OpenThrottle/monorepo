@@ -31,6 +31,8 @@ import {
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import {
   CHECKOUT_ROOT_ENV,
+  repositoryNameFromGitUrl,
+  repositoryNameFromRemote,
   WorkspaceFoldersService,
   WORKSPACE_ROOTS_ENV,
 } from './workspace-folders.service';
@@ -218,7 +220,7 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.reconciliation).toBe('created_canonical');
       expect(mockRepositoriesService.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'Fixture',
+          name: 'OpenThrottle/Fixture',
           normalizedRemoteUrl: 'https://github.com/OpenThrottle/Fixture',
         }),
       );
@@ -396,6 +398,56 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.repository.projectId).toBe('canon-project');
       expect(payload.supersededProjectId).toBe('prov-project');
       expect(payload.checkout.repositoryId).toBe('canon-repo');
+    });
+  });
+
+  describe('repositoryNameFromRemote', () => {
+    it('keeps the last two path segments (owner/repo)', () => {
+      expect(repositoryNameFromRemote('https://github.com/acme/monorepo')).toBe(
+        'acme/monorepo',
+      );
+    });
+
+    it('disambiguates repos that share a bare last segment', () => {
+      expect(
+        repositoryNameFromRemote('https://github.com/other/monorepo'),
+      ).toBe('other/monorepo');
+    });
+
+    it('falls back to the single segment when only one exists', () => {
+      expect(repositoryNameFromRemote('monorepo')).toBe('monorepo');
+    });
+
+    it('returns null for an empty string', () => {
+      expect(repositoryNameFromRemote('')).toBeNull();
+    });
+  });
+
+  describe('repositoryNameFromGitUrl', () => {
+    it('derives owner/repo from an https url with a .git suffix', () => {
+      expect(
+        repositoryNameFromGitUrl('https://github.com/acme/monorepo.git'),
+      ).toBe('acme/monorepo');
+    });
+
+    it('derives owner/repo from an scp-like ssh url with a .git suffix', () => {
+      expect(repositoryNameFromGitUrl('git@github.com:acme/monorepo.git')).toBe(
+        'acme/monorepo',
+      );
+    });
+
+    it('derives owner/repo from an ssh:// url', () => {
+      expect(
+        repositoryNameFromGitUrl('ssh://git@github.com/acme/monorepo'),
+      ).toBe('acme/monorepo');
+    });
+
+    it('falls back to the single segment when only one exists', () => {
+      expect(repositoryNameFromGitUrl('monorepo.git')).toBe('monorepo');
+    });
+
+    it('returns null for an empty string', () => {
+      expect(repositoryNameFromGitUrl('')).toBeNull();
     });
   });
 
@@ -579,7 +631,10 @@ describe('WorkspaceFoldersService', () => {
 
     it('clones into the checkout root and registers a managed checkout', async () => {
       const payload = await service.cloneRepository(userId, {
+        // Explicit name keeps the on-disk folder deterministic; the derived
+        // owner/repo name is covered by the helper unit tests below.
         gitUrl: `file://${gitRepoDir}`,
+        name: 'fixture-repo',
       });
 
       // Landed in the managed root as a real git working copy.

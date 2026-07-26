@@ -99,9 +99,19 @@ const toInspectionObject = (
   warnings: snapshot.warnings,
 });
 
-/** Last path segment of a normalized remote URL, for repository naming. */
-const repositoryNameFromRemote = (normalizedRemoteUrl: string): string | null =>
-  normalizedRemoteUrl.split('/').filter(Boolean).pop() ?? null;
+/**
+ * @description Owner/repo name from a normalized remote URL — the last two
+ * non-empty path segments joined by `/` (e.g. `github.com/acme/monorepo` →
+ * `acme/monorepo`), so repos that share a bare last segment stay
+ * distinguishable. Falls back to the single segment when only one exists.
+ */
+export const repositoryNameFromRemote = (
+  normalizedRemoteUrl: string,
+): string | null => {
+  const segments = normalizedRemoteUrl.split('/').filter(Boolean);
+  if (segments.length === 0) return null;
+  return segments.slice(-2).join('/');
+};
 
 /** Env var: absolute host-view directory OT clones managed checkouts into. */
 export const CHECKOUT_ROOT_ENV = 'OPENTHROTTLE_CHECKOUT_ROOT';
@@ -127,11 +137,17 @@ export const getCheckoutRoot = (
   return trimmed !== '' && isAbsolute(trimmed) ? trimmed : null;
 };
 
-/** Last path segment of a raw git URL, `.git` suffix stripped. */
-const repositoryNameFromGitUrl = (gitUrl: string): string | null => {
+/**
+ * @description Owner/repo name from a raw git URL (`.git` stripped) — the last
+ * two non-empty segments joined by `/`, matching repositoryNameFromRemote so
+ * the clone fallback name is org-disambiguated too. Single segment when only
+ * one exists.
+ */
+export const repositoryNameFromGitUrl = (gitUrl: string): string | null => {
   const withoutSuffix = gitUrl.trim().replace(/\.git\/?$/, '');
-  const segment = withoutSuffix.split(/[/:]/).filter(Boolean).pop();
-  return segment != null && segment !== '' ? segment : null;
+  const segments = withoutSuffix.split(/[/:]/).filter(Boolean);
+  if (segments.length === 0) return null;
+  return segments.slice(-2).join('/');
 };
 
 /** Restrict a derived folder name to a safe single path segment. */
