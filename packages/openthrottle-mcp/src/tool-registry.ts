@@ -70,6 +70,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.appendPlanOutputToolHandler,
     ),
     defineTool(
+      'delete_plan_output',
+      Th.deletePlanOutputToolDescription,
+      Th.deletePlanOutputToolParameters,
+      Th.deletePlanOutputToolHandler,
+    ),
+    defineTool(
       'agent_conversation_get',
       Th.getAgentConversationToolDescription,
       Th.getAgentConversationToolParameters,
