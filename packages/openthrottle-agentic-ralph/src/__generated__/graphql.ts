@@ -4603,6 +4603,20 @@ export type SettleCliPlanRunMutation = {
   } | null;
 };
 
+export type RecordPlanRunHeartbeatMutationVariables = Exact<{
+  input: RecordPlanRunHeartbeatInput;
+}>;
+
+export type RecordPlanRunHeartbeatMutation = {
+  __typename?: 'Mutation';
+  recordPlanRunHeartbeat?: {
+    __typename?: 'PlanRunObject';
+    id: string;
+    lastHeartbeatAt?: any | null;
+    status: string;
+  } | null;
+};
+
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
 }>;
@@ -6607,6 +6621,65 @@ export const SettleCliPlanRunDocument = {
 } as unknown as DocumentNode<
   SettleCliPlanRunMutation,
   SettleCliPlanRunMutationVariables
+>;
+export const RecordPlanRunHeartbeatDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'recordPlanRunHeartbeat' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RecordPlanRunHeartbeatInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'recordPlanRunHeartbeat' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'lastHeartbeatAt' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RecordPlanRunHeartbeatMutation,
+  RecordPlanRunHeartbeatMutationVariables
 >;
 export const CreateProjectDocument = {
   kind: 'Document',

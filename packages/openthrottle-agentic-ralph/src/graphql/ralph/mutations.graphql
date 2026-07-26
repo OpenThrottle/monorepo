@@ -149,6 +149,14 @@ mutation settleCliPlanRun($input: SettleCliPlanRunInput!) {
   }
 }
 
+mutation recordPlanRunHeartbeat($input: RecordPlanRunHeartbeatInput!) {
+  recordPlanRunHeartbeat(input: $input) {
+    id
+    lastHeartbeatAt
+    status
+  }
+}
+
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     ...Project
