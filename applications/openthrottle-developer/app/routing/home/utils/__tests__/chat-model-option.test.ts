@@ -86,8 +86,9 @@ describe('toAgentChatOptions', () => {
       agents: [
         { backend: 'cursor', label: 'Cursor', version: '1.2.3' },
         { backend: 'claude', label: 'Claude Code', version: null },
+        { backend: 'opencode', label: 'OpenCode', version: '1.18.5' },
       ],
-      totalCount: 2,
+      totalCount: 3,
     });
 
     expect(options).toEqual([
@@ -104,6 +105,13 @@ describe('toAgentChatOptions', () => {
         id: 'claude',
         label: 'Claude Code',
         subLabel: 'Agent CLI',
+      },
+      {
+        description: 'Agent CLI · 1.18.5',
+        groupId: CLI_MODEL_GROUP_ID,
+        id: 'opencode',
+        label: 'OpenCode',
+        subLabel: 'Agent CLI · 1.18.5',
       },
     ]);
   });
@@ -149,5 +157,13 @@ describe('capabilitiesForChatOption', () => {
     expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
     expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
     expect(caps.serviceTiers).toContain(ChatServiceTier.fast);
+  });
+
+  it('treats every discovered CLI backend (claude, opencode) as a repo-scoped agent', () => {
+    for (const backend of ['claude', 'opencode']) {
+      const decoded = decodeChatOption(backend);
+      expect(decoded).toEqual({ backend });
+      expect(capabilitiesForChatOption(decoded).requiresRepository).toBe(true);
+    }
   });
 });

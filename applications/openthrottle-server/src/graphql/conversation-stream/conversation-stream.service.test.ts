@@ -8,15 +8,21 @@ import {
   type StartConversationStreamRun,
 } from './conversation-stream.service';
 
-const { openAiStreamMock } = vi.hoisted(() => ({
-  openAiStreamMock: vi.fn(),
-}));
+const { claudeStreamMock, openAiStreamMock, opencodeStreamMock } = vi.hoisted(
+  () => ({
+    claudeStreamMock: vi.fn(),
+    openAiStreamMock: vi.fn(),
+    opencodeStreamMock: vi.fn(),
+  }),
+);
 
 vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
   ...(await importOriginal<
     typeof import('@openthrottle/openthrottle-agentic-utils')
   >()),
+  claudeConversationBackend: { stream: claudeStreamMock },
   openAiConversationBackend: { stream: openAiStreamMock },
+  opencodeConversationBackend: { stream: opencodeStreamMock },
 }));
 
 /** Build a fake backend stream yielding the given text deltas + a terminal done. */
@@ -38,6 +44,7 @@ const baseRun: StartConversationStreamRun = {
   messages: [{ content: 'hi', role: 'user' }],
   model: 'llama3',
   provider: 'ollama',
+  resumeSession: false,
   sessionId: null,
   systemPrompt: null,
   userId: 'user-1',
@@ -217,6 +224,86 @@ describe('ConversationStreamService', () => {
     expect(abortObserved).toBe(true);
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true });
+  });
+
+  it('routes the claude backend to the claude adapter', async () => {
+    claudeStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'claude',
+      cwd: '/repo',
+      sessionId: 'uuid-1',
+    });
+
+    expect(claudeStreamMock).toHaveBeenCalledOnce();
+    expect(openAiStreamMock).not.toHaveBeenCalled();
+    // The resume flag is threaded through to the adapter run.
+    expect(claudeStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      resumeSession: false,
+      sessionId: 'uuid-1',
+    });
+  });
+
+  it('persists an opencode-minted session id from the session chunk', async () => {
+    async function* opencodeStream(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: '',
+        done: false,
+        kind: 'session',
+        metadata: { sessionId: 'ses_new' },
+      };
+      yield { delta: 'hi', done: false, kind: 'text' };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    opencodeStreamMock.mockImplementation(opencodeStream);
+    const { conversations, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'opencode',
+      cwd: '/repo',
+      sessionId: null,
+    });
+
+    expect(opencodeStreamMock).toHaveBeenCalledOnce();
+    expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
+      opencodeSessionId: 'ses_new',
+    });
+  });
+
+  it('does not re-persist a session id the CLI merely echoes back', async () => {
+    async function* echoSession(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: '',
+        done: false,
+        kind: 'session',
+        metadata: { sessionId: 'ses_known' },
+      };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    opencodeStreamMock.mockImplementation(echoSession);
+    const { conversations, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'opencode',
+      cwd: '/repo',
+      sessionId: 'ses_known',
+    });
+
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
   });
 });
 

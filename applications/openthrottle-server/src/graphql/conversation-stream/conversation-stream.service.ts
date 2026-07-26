@@ -20,8 +20,10 @@ import {
   type ChatCompletionMessage,
   type ConversationBackend,
   type ConversationBackendRun,
+  claudeConversationBackend,
   cursorAgentConversationBackend,
   openAiConversationBackend,
+  opencodeConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
@@ -29,8 +31,18 @@ import {
   type ConversationStreamChunkPayload,
 } from './conversation-stream.types';
 
-/** CLI backend that spawns cursor-agent; openai is the default HTTP path. */
-const CURSOR_BACKEND = 'cursor';
+/**
+ * CLI backends (spawned agent adapters) keyed by discriminator; openai is the
+ * default HTTP path when a backend is not in this map.
+ */
+const CLI_BACKENDS: Record<string, ConversationBackend> = {
+  claude: claudeConversationBackend,
+  cursor: cursorAgentConversationBackend,
+  opencode: opencodeConversationBackend,
+};
+
+/** Conversation-metadata key holding a backend's persisted session id. */
+const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
 
 /**
  * How long a finished turn's chunk buffer is retained after its terminal chunk,
@@ -64,7 +76,9 @@ export interface StartConversationStreamRun {
   readonly model: string;
   /** Provider/backend label persisted on the conversation, or null. */
   readonly provider: string | null;
-  /** CLI session handle to resume (e.g. cursor chat id). */
+  /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
+  readonly resumeSession: boolean;
+  /** CLI session handle to resume (e.g. cursor chat id), or null when the CLI mints it (opencode first turn). */
   readonly sessionId: string | null;
   /** System prompt (persona) injected by CLI backends. */
   readonly systemPrompt: string | null;
@@ -158,21 +172,21 @@ export class ConversationStreamService {
 
     let accumulated = '';
     let sortOrder = 0;
+    let sessionPersisted = false;
 
     // Non-text events (thinking/tool/usage/session) collected for persistence
     // into the assistant message's tool_metadata on completion.
     const toolEvents: Array<Record<string, unknown>> = [];
 
     const backend: ConversationBackend =
-      run.backend === CURSOR_BACKEND
-        ? cursorAgentConversationBackend
-        : openAiConversationBackend;
+      CLI_BACKENDS[run.backend] ?? openAiConversationBackend;
 
     const backendRun: ConversationBackendRun = {
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
       messages: run.messages,
       model: run.model,
+      resumeSession: run.resumeSession,
       sessionId: run.sessionId ?? undefined,
       signal: controller.signal,
       systemPrompt: run.systemPrompt ?? undefined,
@@ -194,6 +208,17 @@ export class ConversationStreamService {
             kind: chunk.kind,
             metadata: chunk.metadata ?? null,
           });
+        }
+
+        // Persist a CLI-minted session id the first time the backend surfaces
+        // one that differs from what we passed in (opencode mints it on the
+        // first run). Cursor/claude echo the id we already hold → no-op.
+        if (
+          !sessionPersisted &&
+          chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.session
+        ) {
+          sessionPersisted = true;
+          await this.maybePersistMintedSession(run, chunk.metadata);
         }
 
         await this.publishChunk({
@@ -248,6 +273,38 @@ export class ConversationStreamService {
       });
     } finally {
       this.controllers.delete(run.conversationId);
+    }
+  }
+
+  /**
+   * Persist a session id the CLI minted mid-stream (opencode) into
+   * `conversation.metadata[<backend>SessionId]`, so the next turn resumes it.
+   * A no-op when the surfaced id matches the one we already passed in
+   * (cursor/claude) or is absent. Failures are logged, never thrown — a
+   * metadata write must not kill an in-flight stream.
+   */
+  private async maybePersistMintedSession(
+    run: StartConversationStreamRun,
+    metadata: Readonly<Record<string, unknown>> | undefined,
+  ): Promise<void> {
+    const minted = metadata?.['sessionId'];
+    if (
+      typeof minted !== 'string' ||
+      minted === '' ||
+      minted === run.sessionId
+    ) {
+      return;
+    }
+
+    try {
+      await this.conversations.updateMetadata(run.conversationId, {
+        [sessionMetadataKey(run.backend)]: minted,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `conversation-stream session persist failed: ${message}`,
+      );
     }
   }
 

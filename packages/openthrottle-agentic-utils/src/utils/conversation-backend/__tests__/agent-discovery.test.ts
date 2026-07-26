@@ -4,8 +4,10 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { discoverAgentClis } from '../agent-discovery.ts';
+import { AGENT_CLI_ALLOWLIST, discoverAgentClis } from '../agent-discovery.ts';
+import { CLAUDE_BIN_ENV } from '../claude/argv.ts';
 import { CURSOR_AGENT_BIN_ENV } from '../cursor-agent/argv.ts';
+import { OPENCODE_BIN_ENV } from '../opencode/argv.ts';
 
 let dir: string;
 
@@ -73,5 +75,72 @@ describe('discoverAgentClis', () => {
     expect(
       result.agents.find((agent) => agent.backend === 'cursor')?.available,
     ).toBe(false);
+  });
+
+  it('probes every allowlisted backend (claude, cursor, opencode)', async () => {
+    // Point all three bins at missing paths so the scan is hermetic (no PATH
+    // lookup of a really-installed CLI).
+    const result = await discoverAgentClis({
+      env: {
+        [CLAUDE_BIN_ENV]: join(dir, 'missing-claude'),
+        [CURSOR_AGENT_BIN_ENV]: join(dir, 'missing-cursor'),
+        HOME: process.env.HOME,
+        [OPENCODE_BIN_ENV]: join(dir, 'missing-opencode'),
+        PATH: process.env.PATH,
+      },
+    });
+
+    expect(result.agents.map((agent) => agent.backend).sort()).toEqual([
+      'claude',
+      'cursor',
+      'opencode',
+    ]);
+    // With missing binaries none are available — discovery hides them.
+    expect(result.agents.every((agent) => agent.available === false)).toBe(
+      true,
+    );
+    expect(AGENT_CLI_ALLOWLIST.map((entry) => entry.backend).sort()).toEqual([
+      'claude',
+      'cursor',
+      'opencode',
+    ]);
+  });
+
+  it('reports claude available with its version when the binary responds', async () => {
+    const bin = writeFakeBin(
+      'claude-version.js',
+      `process.stdout.write('2.1.220 (Claude Code)\\n');`,
+    );
+
+    const result = await discoverAgentClis({
+      env: {
+        [CLAUDE_BIN_ENV]: bin,
+        HOME: process.env.HOME,
+        PATH: process.env.PATH,
+      },
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'claude'),
+    ).toMatchObject({ available: true, version: '2.1.220 (Claude Code)' });
+  });
+
+  it('reports opencode available with its version when the binary responds', async () => {
+    const bin = writeFakeBin(
+      'opencode-version.js',
+      `process.stdout.write('1.18.5\\n');`,
+    );
+
+    const result = await discoverAgentClis({
+      env: {
+        HOME: process.env.HOME,
+        [OPENCODE_BIN_ENV]: bin,
+        PATH: process.env.PATH,
+      },
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'opencode'),
+    ).toMatchObject({ available: true, version: '1.18.5' });
   });
 });
