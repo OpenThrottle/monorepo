@@ -2,8 +2,9 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ChatComposerMode } from '@openthrottle/react-router-chat';
-import { getDefaultStore } from 'jotai';
+import { createStore, getDefaultStore, Provider } from 'jotai';
 import {
+  CHAT_TOOLBAR_STORAGE_KEY,
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '~/routing/home/data/atom.chat-toolbar';
@@ -110,5 +111,67 @@ describe('routes/_index.tsx toolbar persistence', () => {
       ...DEFAULT_CHAT_TOOLBAR_STATE,
       mode: ChatComposerMode.build,
     });
+  });
+
+  // A page reload = a fresh JS context whose atom re-reads localStorage via
+  // `getOnInit`. A fresh jotai store (mounted over the route via a Provider)
+  // reproduces that hydration path faithfully, so these stand in for the live
+  // reload proof (the home route is auth-gated; see the task summary).
+  test('rehydrates the toolbar from localStorage on a fresh store (reload)', () => {
+    localStorage.setItem(
+      CHAT_TOOLBAR_STORAGE_KEY,
+      JSON.stringify({ mode: ChatComposerMode.build, version: 1 }),
+    );
+    const freshStore = createStore();
+
+    const component = renderRoutesStub(
+      <Provider store={freshStore}>
+        <Index
+          actionData={undefined}
+          loaderData={seededLoaderData}
+          matches={matches}
+          params={{}}
+        />
+      </Provider>,
+    );
+
+    expect(
+      component.getByTestId('ChatComposerToolbar-mode-build'),
+    ).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('falls back cleanly when persisted state references removed options', () => {
+    localStorage.setItem(
+      CHAT_TOOLBAR_STORAGE_KEY,
+      JSON.stringify({
+        modelId: 'ghost-endpoint::model',
+        personaId: 'ghost-persona',
+        repositoryId: 'ghost-repo',
+        version: 1,
+      }),
+    );
+    const freshStore = createStore();
+
+    const component = renderRoutesStub(
+      <Provider store={freshStore}>
+        <Index
+          actionData={undefined}
+          loaderData={seededLoaderData}
+          matches={matches}
+          params={{}}
+        />
+      </Provider>,
+    );
+
+    // Renders without crashing despite the stale ids...
+    expect(
+      component.getByText('What would you like to build today?'),
+    ).toBeInTheDocument();
+
+    // ...and reconciliation is derive-only: the stale blob is NOT rewritten.
+    const stored: { modelId: string } = JSON.parse(
+      localStorage.getItem(CHAT_TOOLBAR_STORAGE_KEY) ?? '{}',
+    );
+    expect(stored.modelId).toBe('ghost-endpoint::model');
   });
 });
