@@ -1,33 +1,55 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Form, useNavigation } from 'react-router';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import type { WorkspaceLocalRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { FolderGit2Icon } from 'lucide-react';
-import { WorkspaceRepositoriesProjectSelect } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
+import type {
+  AddWorkspaceFolderMutation,
+  DiscoveredFolderObject,
+  WorkspaceRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WorkspaceAddFolderDialog } from '~/routing/settings/components/WorkspaceAddFolderDialog';
+import { WorkspaceAddFolderResult } from '~/routing/settings/components/WorkspaceAddFolderResult';
+import { WorkspaceRepositoryCard } from '~/routing/settings/components/WorkspaceRepositoryCard';
+import type { CheckoutDrift } from '~/routing/settings/components/WorkspaceRepositoryCard';
 import type { ProjectOption } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
-import { WorkspaceRepositoriesLocalRepositoryRow } from '~/routing/settings/components/WorkspaceRepositoriesLocalRepositoryRow';
 
 export interface SettingsWorkspaceRepositoriesSectionProps {
   actionError?: string | null;
+  addedFolder?: AddWorkspaceFolderMutation['addWorkspaceFolder'] | null;
   className?: string;
-  localRepositories: WorkspaceLocalRepositoryFieldsFragment[];
+  discoveredFolders: Pick<
+    DiscoveredFolderObject,
+    'alreadyRegistered' | 'name' | 'path'
+  >[];
   projects: ProjectOption[];
+  refreshed?: {
+    checkoutId: string;
+    drift: CheckoutDrift;
+    merged: boolean;
+  } | null;
+  repositories: WorkspaceRepositoryFieldsFragment[];
 }
 
 export const SettingsWorkspaceRepositoriesSection = (
   props: SettingsWorkspaceRepositoriesSectionProps,
 ): React.ReactElement => {
-  const { actionError, className, localRepositories, projects } = props;
+  const {
+    actionError,
+    addedFolder,
+    className,
+    discoveredFolders,
+    projects,
+    refreshed,
+    repositories,
+  } = props;
 
   // Hooks
-  const navigation = useNavigation();
-  const isCreating =
-    navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'createRepo';
 
   // Setup
+  const driftByCheckoutId = refreshed
+    ? { [refreshed.checkoutId]: refreshed.drift }
+    : undefined;
 
   // Handlers
 
@@ -41,74 +63,50 @@ export const SettingsWorkspaceRepositoriesSection = (
     <OpenThrottleFieldset
       icon={FolderGit2Icon}
       id="local-repositories"
-      legend="Local Repositories"
+      legend="Repositories"
     >
       <section
-        className={clsx('space-y-4 md:space-y-8', className)}
+        className={clsx('space-y-4 md:space-y-6', className)}
         data-testid="SettingsWorkspaceRepositoriesSection"
       >
-        <p className="text-muted-foreground text-sm">
-          Register directories on the machine running openthrottle-server. Paths
-          must exist on that host and are validated when you add them.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground max-w-prose text-sm">
+            {WORKSPACE_FOLDERS_COPY.sectionDescription}
+          </p>
+          <WorkspaceAddFolderDialog
+            actionError={actionError}
+            discoveredFolders={discoveredFolders}
+          />
+        </div>
 
-        <Form className="space-y-4" method="post">
-          <input name="intent" type="hidden" value="createRepo" />
+        {addedFolder ? (
+          <WorkspaceAddFolderResult payload={addedFolder} />
+        ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="new-repo-display-name">Label</Label>
-            <Input
-              id="new-repo-display-name"
-              name="displayName"
-              placeholder="OpenThrottle monorepo"
-              required={true}
-              type="text"
-            />
-          </div>
+        {refreshed?.merged ? (
+          <p className="text-muted-foreground text-sm" role="status">
+            {WORKSPACE_FOLDERS_COPY.mergedNotice}
+          </p>
+        ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="new-repo-filesystem-path">Absolute path</Label>
-            <Input
-              id="new-repo-filesystem-path"
-              name="filesystemPath"
-              placeholder="/Users/you/Development/openthrottle"
-              required={true}
-              type="text"
-            />
-          </div>
+        {actionError && !addedFolder ? (
+          <p className="text-destructive text-sm" role="alert">
+            {actionError}
+          </p>
+        ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="new-repo-project">Linked project (optional)</Label>
-            <WorkspaceRepositoriesProjectSelect
-              currentProjectId={null}
-              name="projectId"
-              projects={projects}
-            />
-          </div>
-
-          {actionError ? (
-            <p className="text-destructive text-sm" role="alert">
-              {actionError}
-            </p>
-          ) : null}
-
-          <Button disabled={isCreating} type="submit" variant="outline">
-            {isCreating ? 'Adding…' : 'Add repository'}
-          </Button>
-        </Form>
-
-        {localRepositories.length === 0 ? (
+        {repositories.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No local repositories yet. Add one above.
+            {WORKSPACE_FOLDERS_COPY.repositoriesEmpty}
           </p>
         ) : (
           <ul className="space-y-4">
-            {localRepositories.map((repo) => (
-              <li key={repo.id}>
-                <WorkspaceRepositoriesLocalRepositoryRow
-                  actionError={actionError}
+            {repositories.map((repository) => (
+              <li key={repository.id}>
+                <WorkspaceRepositoryCard
+                  driftByCheckoutId={driftByCheckoutId}
                   projects={projects}
-                  repo={repo}
+                  repository={repository}
                 />
               </li>
             ))}

@@ -9,12 +9,22 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
 import { normalizeRemoteUrl } from './normalize-remote-url';
 import { Repository } from './repository.entity';
+import { RepositoryCheckout } from './repository-checkout.entity';
 
 interface CreateRepositoryData {
   readonly defaultBranch: string | null;
   readonly name: string;
   readonly normalizedRemoteUrl: string | null;
   readonly projectId: string | null;
+}
+
+export interface MergeDetectedRemoteResult {
+  /** True when the provisional row merged into an existing canonical row. */
+  readonly merged: boolean;
+  /** The surviving repository (canonical on merge, promoted otherwise). */
+  readonly repository: Repository;
+  /** Project link dropped from the provisional row on merge (canonical wins). */
+  readonly supersededProjectId: string | null;
 }
 
 interface UpdateRepositoryData {
@@ -110,6 +120,55 @@ export class RepositoriesService {
     }
 
     return this.repository.save(existing);
+  }
+
+  /**
+   * @description Resolves a provisional repository that gained a remote
+   * (design doc §4): merge into the existing canonical row when one matches
+   * (all checkouts re-point, the provisional row is deleted, and the
+   * canonical project link wins) or promote the provisional row in place.
+   * Runs in one transaction with the provisional row locked so concurrent
+   * refreshes serialize. Returns null when the repository does not exist.
+   */
+  async mergeDetectedRemote(
+    repositoryId: string,
+    normalizedRemoteUrl: string,
+  ): Promise<MergeDetectedRemoteResult | null> {
+    return this.repository.manager.transaction(async (manager) => {
+      const provisional = await manager.findOne(Repository, {
+        lock: { mode: 'pessimistic_write' },
+        where: { id: repositoryId },
+      });
+      if (!provisional) return null;
+      if (provisional.normalizedRemoteUrl !== null) {
+        return {
+          merged: false,
+          repository: provisional,
+          supersededProjectId: null,
+        };
+      }
+
+      const canonical = await manager.findOne(Repository, {
+        where: { normalizedRemoteUrl },
+      });
+      if (canonical) {
+        await manager.update(
+          RepositoryCheckout,
+          { repositoryId },
+          { repositoryId: canonical.id },
+        );
+        await manager.delete(Repository, { id: repositoryId });
+        return {
+          merged: true,
+          repository: canonical,
+          supersededProjectId: provisional.projectId,
+        };
+      }
+
+      provisional.normalizedRemoteUrl = normalizedRemoteUrl;
+      const promoted = await manager.save(provisional);
+      return { merged: false, repository: promoted, supersededProjectId: null };
+    });
   }
 
   /**

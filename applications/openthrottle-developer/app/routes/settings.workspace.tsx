@@ -8,11 +8,13 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
+  AddWorkspaceFolderDocument,
   ApplyWorkspaceEditorConfigurationDocument,
-  CreateWorkspaceLocalRepositoryDocument,
+  BrowseWorkspaceDirectoryDocument,
   DeleteWorkspaceLocalRepositoryDocument,
   GetWorkspaceSettingsDocument,
-  UpdateWorkspaceLocalRepositoryDocument,
+  RefreshCheckoutDocument,
+  SetWorkspaceLocalRepositoryProjectDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
 import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
@@ -41,9 +43,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   return {
-    localRepositories: data.workspaceSettings.localRepositories,
+    discoveredFolders: data.discoveredFolders,
     profile: data.workspaceSettings.profile,
     projects: data.projects,
+    repositories: data.workspaceRepositories,
   };
 };
 
@@ -59,11 +62,15 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { localRepositories, profile, projects } = loaderData;
+  const { discoveredFolders, profile, projects, repositories } = loaderData;
   const actionError =
     actionData && 'error' in actionData ? actionData.error : null;
   const actionMessage =
     actionData && 'message' in actionData ? actionData.message : null;
+  const addedFolder =
+    actionData && 'addedFolder' in actionData ? actionData.addedFolder : null;
+  const refreshed =
+    actionData && 'refreshed' in actionData ? actionData.refreshed : null;
   const canApplyEditors = profile.enabledEditors.length > 0;
 
   return (
@@ -82,8 +89,11 @@ export default function Component(
         />
         <SettingsWorkspaceRepositoriesSection
           actionError={actionError}
-          localRepositories={localRepositories}
+          addedFolder={addedFolder}
+          discoveredFolders={discoveredFolders}
           projects={projects}
+          refreshed={refreshed}
+          repositories={repositories}
         />
       </div>
     </GlobalScreen>
@@ -121,79 +131,107 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
-  if (intent === 'createRepo') {
+  if (intent === 'addFolder') {
+    const path = optionalTrimmedString(formData.get('path'));
     const displayName = optionalTrimmedString(formData.get('displayName'));
-    const filesystemPath = optionalTrimmedString(
-      formData.get('filesystemPath'),
-    );
-    const projectId = parseProjectIdFromFormData(formData.get('projectId'));
 
-    if (!displayName) {
-      return { error: 'Repository label is required.' };
-    }
-    if (!filesystemPath) {
-      return { error: 'Absolute path is required.' };
+    if (!path) {
+      return { error: 'A folder path is required.' };
     }
 
     try {
-      await executeGraphqlWithAuth(
+      const data = await executeGraphqlWithAuth(
         args.request,
-        CreateWorkspaceLocalRepositoryDocument,
-        {
-          input: {
-            displayName,
-            filesystemPath,
-            projectId: projectId ?? null,
-          },
-        },
+        AddWorkspaceFolderDocument,
+        { input: { displayName: displayName ?? null, path } },
       );
-      return { ok: true };
+      return { addedFolder: data.addWorkspaceFolder };
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Failed to add repository.';
+        error instanceof Error ? error.message : 'Failed to add folder.';
       return { error: message };
     }
   }
 
-  if (intent === 'updateRepo') {
+  if (intent === 'browseDirectory') {
+    const path = optionalTrimmedString(formData.get('path'));
+    if (!path) {
+      return { error: 'A directory path is required.' };
+    }
+
+    try {
+      const data = await executeGraphqlWithAuth(
+        args.request,
+        BrowseWorkspaceDirectoryDocument,
+        { path },
+      );
+      return { browse: { entries: data.browseDirectory, path } };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to browse directory.';
+      return { error: message };
+    }
+  }
+
+  if (intent === 'refreshCheckout') {
     const id = formData.get('id');
     if (typeof id !== 'string' || !id.trim()) {
-      return { error: 'Missing repository id.' };
+      return { error: 'Missing checkout id.' };
     }
 
-    const displayName = optionalTrimmedString(formData.get('displayName'));
+    try {
+      const data = await executeGraphqlWithAuth(
+        args.request,
+        RefreshCheckoutDocument,
+        { input: { id: id.trim() } },
+      );
+      return {
+        refreshed: {
+          checkoutId: data.refreshCheckout.checkout.id,
+          drift: data.refreshCheckout.drift,
+          merged: data.refreshCheckout.merged,
+        },
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to refresh checkout.';
+      return { error: message };
+    }
+  }
+
+  if (intent === 'setRepoProject') {
+    const id = formData.get('id');
+    if (typeof id !== 'string' || !id.trim()) {
+      return { error: 'Missing checkout id.' };
+    }
     const projectId = parseProjectIdFromFormData(formData.get('projectId'));
-
-    if (!displayName) {
-      return { error: 'Repository label is required.' };
-    }
 
     try {
       await executeGraphqlWithAuth(
         args.request,
-        UpdateWorkspaceLocalRepositoryDocument,
-        {
-          input: {
-            displayName,
-            id: id.trim(),
-            projectId,
-          },
-        },
+        SetWorkspaceLocalRepositoryProjectDocument,
+        { input: { id: id.trim(), projectId } },
       );
       return { ok: true };
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Failed to update repository.';
+        error instanceof Error
+          ? error.message
+          : 'Failed to update the project link.';
       return { error: message };
     }
   }
 
   if (intent === 'applyEditorConfig') {
+    const repositoryId = optionalTrimmedString(formData.get('repositoryId'));
+
     try {
       const data = await executeGraphqlWithAuth(
         args.request,
         ApplyWorkspaceEditorConfigurationDocument,
-        { input: {} },
+        {
+          input: repositoryId ? { repositoryIds: [repositoryId] } : {},
+        },
       );
       return { message: formatEditorConfigApplyMessage(data) };
     } catch (error) {

@@ -2385,6 +2385,11 @@ type AddWorkspaceFolderPayloadObject {
 
   """Project linked at the repository level, when present."""
   project: ProjectObject
+
+  """
+  True when the project was auto-created by this call (new repository); false when an existing link was inherited.
+  """
+  projectCreated: Boolean!
   reconciliation: WorkspaceFolderReconciliation!
   repository: RepositoryObject!
 }
@@ -2410,11 +2415,24 @@ type CheckoutDriftObject {
 }
 
 """
-Result of refreshCheckout: the checkout with its updated snapshot plus drift flags.
+Result of refreshCheckout: the checkout with its updated snapshot, drift flags, and the (possibly merged) repository.
 """
 type RefreshCheckoutPayloadObject {
   checkout: RepositoryCheckoutObject!
   drift: CheckoutDriftObject!
+
+  """
+  True when a provisional repository gained a remote and merged into an existing canonical repository (its checkouts re-pointed; the canonical project link won).
+  """
+  merged: Boolean!
+
+  """The checkout's repository after any promotion or merge."""
+  repository: RepositoryObject!
+
+  """
+  Project link that was dropped from the provisional repository when the merge kept the canonical link.
+  """
+  supersededProjectId: String
 }
 
 type Query {

@@ -18,10 +18,25 @@ describe('RepositoriesService', () => {
     projectId: null,
   });
 
+  const mockManager = {
+    delete: vi.fn(),
+    findOne: vi.fn(),
+    save: vi.fn((_entity: unknown, value?: unknown) =>
+      Promise.resolve(value ?? _entity),
+    ),
+    update: vi.fn(),
+  };
+
   const mockOrmRepository = {
     create: vi.fn((data: Partial<Repository>) => ({ ...mockEntity, ...data })),
     delete: vi.fn(),
     findOne: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        async (callback: (manager: typeof mockManager) => Promise<unknown>) =>
+          callback(mockManager),
+      ),
+    },
     save: vi.fn((entity: Repository) => Promise.resolve(entity)),
   };
 
@@ -127,6 +142,84 @@ describe('RepositoriesService', () => {
 
       expect(result?.projectId).toBe('33333333-3333-4333-8333-333333333333');
       expect(result?.name).toBe('OpenThrottle');
+    });
+  });
+
+  describe('mergeDetectedRemote', () => {
+    const provisional = asMock<Repository>({
+      id: 'prov-repo',
+      name: 'Local only',
+      normalizedRemoteUrl: null,
+      projectId: 'prov-project',
+    });
+
+    it('merges into the canonical row: checkouts re-point, provisional deleted, canonical project wins', async () => {
+      vi.mocked(mockManager.findOne)
+        .mockReset()
+        .mockResolvedValueOnce({ ...provisional })
+        .mockResolvedValueOnce({ ...mockEntity, projectId: 'canon-project' });
+
+      const result = await service.mergeDetectedRemote(
+        'prov-repo',
+        'https://github.com/openthrottle/monorepo',
+      );
+
+      expect(result?.merged).toBe(true);
+      expect(result?.repository.projectId).toBe('canon-project');
+      expect(result?.supersededProjectId).toBe('prov-project');
+      expect(mockManager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        { repositoryId: 'prov-repo' },
+        { repositoryId: repositoryId },
+      );
+      expect(mockManager.delete).toHaveBeenCalledWith(expect.anything(), {
+        id: 'prov-repo',
+      });
+    });
+
+    it('promotes the provisional row in place when no canonical row matches', async () => {
+      vi.mocked(mockManager.findOne)
+        .mockReset()
+        .mockResolvedValueOnce({ ...provisional })
+        .mockResolvedValueOnce(null);
+      vi.mocked(mockManager.save).mockImplementation(async (entity) =>
+        Promise.resolve(entity),
+      );
+
+      const result = await service.mergeDetectedRemote(
+        'prov-repo',
+        'https://github.com/org/new-remote',
+      );
+
+      expect(result?.merged).toBe(false);
+      expect(result?.repository.normalizedRemoteUrl).toBe(
+        'https://github.com/org/new-remote',
+      );
+      expect(result?.repository.projectId).toBe('prov-project');
+    });
+
+    it('no-ops for a repository that is already canonical', async () => {
+      vi.mocked(mockManager.findOne)
+        .mockReset()
+        .mockResolvedValueOnce({ ...mockEntity });
+      vi.mocked(mockManager.delete).mockClear();
+
+      const result = await service.mergeDetectedRemote(
+        repositoryId,
+        'https://github.com/org/other',
+      );
+
+      expect(result?.merged).toBe(false);
+      expect(result?.repository).toEqual(mockEntity);
+      expect(mockManager.delete).not.toHaveBeenCalled();
+    });
+
+    it('returns null when the repository does not exist', async () => {
+      vi.mocked(mockManager.findOne).mockReset().mockResolvedValueOnce(null);
+
+      await expect(
+        service.mergeDetectedRemote('missing', 'https://github.com/o/r'),
+      ).resolves.toBeNull();
     });
   });
 
