@@ -244,6 +244,113 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     );
   });
 
+  it('routes a claude backend: mints a UUID session (no create round-trip), resumeSession false', async () => {
+    const { conversations, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'do the thing',
+      modelId: null,
+      personaId: 'architect',
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    // claude does not use cursor's create-chat round-trip.
+    expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
+    expect(conversations.updateMetadata).toHaveBeenCalledWith(
+      'conv-1',
+      expect.objectContaining({ claudeSessionId: expect.any(String) }),
+    );
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'claude',
+        cwd: '/repo/checkout',
+        provider: 'claude',
+        resumeSession: false,
+        sessionId: expect.any(String),
+        systemPrompt: expect.stringContaining('Architect'),
+      }),
+    );
+  });
+
+  it('routes an opencode backend: no session id up front (opencode mints it), resumeSession false', async () => {
+    const { conversations, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'opencode',
+      baseUrl: null,
+      conversationId: null,
+      message: 'do the thing',
+      modelId: null,
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
+    // Only the repository id is persisted up front; opencode mints the session.
+    expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
+      opencodeRepositoryId: 'repo-1',
+    });
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'opencode',
+        cwd: '/repo/checkout',
+        provider: 'opencode',
+        resumeSession: false,
+        sessionId: null,
+      }),
+    );
+  });
+
+  it('resumes an existing CLI session from conversation metadata without re-minting', async () => {
+    const { conversations, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+    vi.mocked(conversations.getConversationForUser).mockResolvedValue(
+      agentConversationsFactory.build({
+        id: 'conv-1',
+        metadata: { claudeSessionId: 'uuid-existing' },
+        userId: 'user-1',
+      }),
+    );
+
+    await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: 'conv-1',
+      message: 'again',
+      modelId: null,
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'claude',
+        resumeSession: true,
+        sessionId: 'uuid-existing',
+      }),
+    );
+  });
+
   it('rejects a cursor backend when the repository is not owned/found', async () => {
     const { resolver, streamService } = build();
 

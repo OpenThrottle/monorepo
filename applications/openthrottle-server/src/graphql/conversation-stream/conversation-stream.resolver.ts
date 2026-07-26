@@ -31,6 +31,7 @@ import {
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import {
+  AGENT_CLI_ALLOWLIST,
   type ChatCompletionMessage,
   createCursorAgentSession,
 } from '@openthrottle/openthrottle-agentic-utils';
@@ -81,10 +82,22 @@ const resolveHumanUserId = (
   principal?.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
 
 /**
- * Supported backends. CLI runners beyond cursor are not wired in v1.
+ * Supported backends. `openai` is the HTTP path; every CLI backend comes from
+ * the shared discovery allowlist (cursor, claude, opencode) — the resolver
+ * accepts exactly what discovery can surface and rejects anything else.
  */
 const OPENAI_BACKEND = 'openai';
 const CURSOR_BACKEND = 'cursor';
+const CLAUDE_BACKEND = 'claude';
+const CLI_BACKENDS = new Set<string>(
+  AGENT_CLI_ALLOWLIST.map((descriptor) => descriptor.backend),
+);
+
+/** Conversation-metadata key holding a backend's persisted session id. */
+const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+/** Conversation-metadata key holding a backend's persisted repository id. */
+const repositoryMetadataKey = (backend: string): string =>
+  `${backend}RepositoryId`;
 
 /**
  * Env var holding a dev-only working directory for CLI backends. Honored ONLY
@@ -114,6 +127,8 @@ interface ResolvedBackendRun {
   readonly cwd: string | null;
   readonly model: string;
   readonly provider: string | null;
+  /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
+  readonly resumeSession: boolean;
   readonly sessionId: string | null;
   readonly systemPrompt: string | null;
 }
@@ -180,7 +195,7 @@ export class ConversationStreamResolver {
     }
 
     const backend = (input.backend ?? OPENAI_BACKEND).trim() || OPENAI_BACKEND;
-    if (backend !== OPENAI_BACKEND && backend !== CURSOR_BACKEND) {
+    if (backend !== OPENAI_BACKEND && !CLI_BACKENDS.has(backend)) {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
@@ -252,6 +267,7 @@ export class ConversationStreamResolver {
       messages,
       model: resolved.model,
       provider: resolved.provider,
+      resumeSession: resolved.resumeSession,
       sessionId: resolved.sessionId,
       systemPrompt: resolved.systemPrompt,
       userId,
@@ -300,13 +316,15 @@ export class ConversationStreamResolver {
         cwd: null,
         model: input.modelId,
         provider: endpoint.provider,
+        resumeSession: false,
         sessionId: null,
         systemPrompt: null,
       };
     }
 
-    // CLI backend (cursor): resolve a scoped cwd from a registered repository,
-    // or — only in development, behind an env flag — a configured dev directory.
+    // CLI backend (cursor | claude | opencode): resolve a scoped cwd from a
+    // registered repository, or — only in development, behind an env flag — a
+    // configured dev directory. Same gate for every CLI backend.
     let cwd: string | null = null;
     if (input.repositoryId != null && input.repositoryId !== '') {
       const repository = await this.repositories.findByIdForUser(
@@ -329,18 +347,70 @@ export class ConversationStreamResolver {
         : `A repository is required to run an agent CLI (or set ${DEV_CWD_ENV} for local development).`;
     }
 
-    // One OT conversation ↔ one cursor chat: reuse the persisted id, else mint.
+    const session = await this.resolveCliSession(
+      backend,
+      userId,
+      conversationId,
+      cwd,
+      input.repositoryId ?? null,
+    );
+
+    if (typeof session === 'string') {
+      return session;
+    }
+
+    const systemPrompt = await this.resolvePersonaSystemPrompt(
+      input.personaId ?? null,
+    );
+
+    return {
+      baseUrl: null,
+      cwd,
+      model: input.modelId ?? '',
+      provider: backend,
+      resumeSession: session.resumeSession,
+      sessionId: session.sessionId,
+      systemPrompt,
+    };
+  }
+
+  /**
+   * Resolve the CLI session id + resume flag for a conversation, minting or
+   * persisting as each backend requires. One OT conversation ↔ one CLI session,
+   * keyed in `conversation.metadata` by backend:
+   *
+   * - **cursor**: pre-minted via `create-chat`; persisted and always resumed.
+   * - **claude**: a UUID we mint up front; persisted, created with `--session-id`
+   *   on the first turn (`resumeSession:false`) then resumed thereafter.
+   * - **opencode**: minted by opencode on the first run (no id yet →
+   *   `sessionId:null`); the `ConversationStreamService` persists the id it
+   *   surfaces, and later turns resume it.
+   *
+   * Returns an error message string on failure (e.g. cursor session start).
+   */
+  private async resolveCliSession(
+    backend: string,
+    userId: string,
+    conversationId: string,
+    cwd: string,
+    repositoryId: string | null,
+  ): Promise<{ resumeSession: boolean; sessionId: string | null } | string> {
     const conversation = await this.conversations.getConversationForUser(
       userId,
       conversationId,
     );
 
-    const existingSessionId = conversation.metadata?.['cursorSessionId'];
-    let sessionId: string;
+    const persisted = conversation.metadata?.[sessionMetadataKey(backend)];
+    const existingSessionId =
+      typeof persisted === 'string' && persisted !== '' ? persisted : null;
 
-    if (typeof existingSessionId === 'string' && existingSessionId !== '') {
-      sessionId = existingSessionId;
-    } else {
+    if (existingSessionId != null) {
+      // Every backend resumes an already-known session id.
+      return { resumeSession: true, sessionId: existingSessionId };
+    }
+
+    if (backend === CURSOR_BACKEND) {
+      let sessionId: string;
       try {
         sessionId = await createCursorAgentSession({ cwd });
       } catch (error: unknown) {
@@ -353,23 +423,31 @@ export class ConversationStreamResolver {
       }
 
       await this.conversations.updateMetadata(conversationId, {
-        cursorRepositoryId: input.repositoryId ?? null,
-        cursorSessionId: sessionId,
+        [repositoryMetadataKey(backend)]: repositoryId,
+        [sessionMetadataKey(backend)]: sessionId,
       });
+
+      return { resumeSession: true, sessionId };
     }
 
-    const systemPrompt = await this.resolvePersonaSystemPrompt(
-      input.personaId ?? null,
-    );
+    if (backend === CLAUDE_BACKEND) {
+      // claude sets the id itself on turn one; we mint + persist the UUID.
+      const sessionId = randomUUID();
+      await this.conversations.updateMetadata(conversationId, {
+        [repositoryMetadataKey(backend)]: repositoryId,
+        [sessionMetadataKey(backend)]: sessionId,
+      });
 
-    return {
-      baseUrl: null,
-      cwd,
-      model: input.modelId ?? '',
-      provider: CURSOR_BACKEND,
-      sessionId,
-      systemPrompt,
-    };
+      return { resumeSession: false, sessionId };
+    }
+
+    // opencode: no pre-mint. Run without a session id; the service persists the
+    // id opencode surfaces in the stream so later turns can resume it.
+    await this.conversations.updateMetadata(conversationId, {
+      [repositoryMetadataKey(backend)]: repositoryId,
+    });
+
+    return { resumeSession: false, sessionId: null };
   }
 
   @Mutation(() => Boolean, {
