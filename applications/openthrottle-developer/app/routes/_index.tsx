@@ -32,6 +32,7 @@ import {
   loadRepositories,
 } from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
+import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 import { capabilitiesForChatOption } from '~/routing/home/utils/chat-capabilities';
 import {
@@ -116,6 +117,10 @@ export default function Component(
     conversationId,
     seedMessages: EMPTY_SEED,
   });
+
+  // Backs the composer's @-mention file picker for the selected checkout;
+  // undefined (trigger disabled) until a repository is chosen.
+  const mentionProvider = useFileMentionProvider(repositoryId);
 
   const voice = useVoiceInput({
     draft,
@@ -361,6 +366,7 @@ export default function Component(
           disabled={!hasModels}
           draft={draft}
           isStreaming={isStreaming}
+          mentionProvider={mentionProvider}
           onDraftChange={setDraft}
           onStop={onStop}
           onSubmit={onSubmit}
