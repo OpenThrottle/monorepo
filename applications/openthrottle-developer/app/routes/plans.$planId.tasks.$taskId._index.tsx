@@ -200,8 +200,12 @@ export const action = async (args: Route.ActionArgs) => {
       }
       return { setTaskStatus: result.updateTask };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { setTaskStatusError: message };
+      return {
+        setTaskStatusError: toErrorMessage(
+          error,
+          'Failed to update task status.',
+        ),
+      };
     }
   }
 
@@ -225,8 +229,9 @@ export const action = async (args: Route.ActionArgs) => {
       }
       return { taskTagUpdated: true };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { taskTagError: message };
+      return {
+        taskTagError: toErrorMessage(error, 'Failed to update task tag.'),
+      };
     }
   }
 
