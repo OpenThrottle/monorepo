@@ -10,6 +10,7 @@ Wires the headless [`@openthrottle/openthrottle-ide`](../../../../../packages/op
   - Page loader (`ide._index.tsx`) runs only the cheap ripgrep tier: `listFilesVM` + `searchVM` (when `?q=`).
   - `ide.symbols.tsx` (resource route) runs the lazy ts-morph `exportsVM` when the Symbols tab opens.
   - `ide.symbol.tsx` (resource route) runs `symbolTargetVM` for a clicked symbol's definition + references (`useSymbolDetails` fetcher).
+  - `ide.files.tsx` (resource route, `/ide/files?repositoryId=&q=`) runs the cheap `listFilesVM` tier for the chat composer's `@`-mention file picker. Same secure resolution as the rest of `/ide`: the repository is resolved from the **user-scoped** `getWorkspaceSettings` (an unowned/unknown `repositoryId` → 400), the server-stored `filesystemPath` is bridged via `toContainerPath`, and `listFilesVM`→`listFiles` inherits gitignore scoping + the `filterRealPathsInsideRoot` symlink-escape guard — a client path is never trusted. Consumed by `~/routing/home/hooks/useFileMentionProvider`, which fetches the listing once per repository and fuzzy-filters client-side.
   - Semantic tab is **gated** (the components render; real data is a follow-up — see below).
 
 ## How to view it
