@@ -5,8 +5,10 @@
  */
 
 export * from './drivers/index.ts';
+export * from './engine/index.ts';
 export * from './errors/index.ts';
 export * from './registry/index.ts';
 export * from './types/index.ts';
+export * from './utils/child-kill.ts';
 export * from './utils/logger.ts';
 export * from './utils/shell.ts';
