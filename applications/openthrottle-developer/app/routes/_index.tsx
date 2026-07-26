@@ -42,6 +42,7 @@ import {
   buildModelGroups,
   decodeChatOption,
 } from '~/routing/home/utils/chat-model-option';
+import { reconcileChatToolbarState } from '~/routing/home/utils/chat-toolbar-reconcile';
 import type { Route } from '@/app/routes/+types/_index';
 
 /**
@@ -126,13 +127,29 @@ export default function Component(
   const setServiceTier = (serviceTier: ChatServiceTier): void =>
     setToolbarState((previous) => ({ ...previous, serviceTier }));
 
-  const mode = toolbarState.mode;
-  const modelId = toolbarState.modelId ?? models[0]?.id;
-  const permissionMode = toolbarState.permissionMode;
-  const personaId = toolbarState.personaId ?? personas[0]?.id;
-  const reasoning = toolbarState.reasoning;
-  const repositoryId = toolbarState.repositoryId ?? repositories[0]?.id;
-  const serviceTier = toolbarState.serviceTier;
+  // Effective (reconciled) toolbar values feed both the toolbar and the submit
+  // payload: persisted selections are re-validated against the current loader
+  // lists and the selected backend's capabilities on every render, so a stale
+  // model/repo/persona id or a capability-invalid reasoning/tier/permission
+  // never reaches the toolbar or onSubmit. Derive-only — reconciliation never
+  // writes back to storage (see reconcileChatToolbarState).
+  const effectiveToolbar = useMemo(
+    () =>
+      reconcileChatToolbarState(toolbarState, {
+        models,
+        personas,
+        repositories,
+      }),
+    [models, personas, repositories, toolbarState],
+  );
+
+  const mode = effectiveToolbar.mode;
+  const modelId = effectiveToolbar.modelId;
+  const permissionMode = effectiveToolbar.permissionMode;
+  const personaId = effectiveToolbar.personaId;
+  const reasoning = effectiveToolbar.reasoning;
+  const repositoryId = effectiveToolbar.repositoryId;
+  const serviceTier = effectiveToolbar.serviceTier;
 
   const cancelFetcher = useFetcher();
   const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
