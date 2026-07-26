@@ -46,9 +46,27 @@ export class StartConversationStreamInput {
   })
   personaId?: string | null;
 
+  @Field(() => String, {
+    description: `Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive; enforcement is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT honored yet.`,
+    nullable: true,
+  })
+  permissionMode?: string | null;
+
+  @Field(() => String, {
+    description: `Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive; whether a backend honors it is owned by openthrottle-drivers (dde67342) and is NOT applied yet.`,
+    nullable: true,
+  })
+  reasoning?: string | null;
+
   @Field(() => ID, {
     description: `Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).`,
     nullable: true,
   })
   repositoryId?: string | null;
+
+  @Field(() => String, {
+    description: `Service tier for the turn: "standard" or "fast". Nullable + additive; honored by openthrottle-drivers (dde67342) once it lands, NOT applied yet.`,
+    nullable: true,
+  })
+  serviceTier?: string | null;
 }

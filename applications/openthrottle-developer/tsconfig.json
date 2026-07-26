@@ -32,7 +32,7 @@
       "path": "../../packages/react-router-scheduling"
     },
     {
-      "path": "../../packages/nestjs-repositories"
+      "path": "../../packages/openthrottle-plan-config"
     },
     {
       "path": "../../packages/react-router-markdown"
