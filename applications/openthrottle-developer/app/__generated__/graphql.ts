@@ -750,6 +750,21 @@ export type DeletePlanInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DeletePlanOutputInput = {
+  /** Delete a single chunk by id (must belong to planId). Omit to clear all chunks for planId instead. */
+  chunkId?: InputMaybe<Scalars['ID']['input']>;
+  /** Plan id to delete output chunks for */
+  planId: Scalars['ID']['input'];
+  /** When clearing (chunkId omitted), scope the clear to chunks attributed to this task id. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type DeletePlanOutputResult = {
+  __typename?: 'DeletePlanOutputResult';
+  /** Number of plan output stream chunks deleted */
+  deletedCount: Scalars['Int']['output'];
+};
+
 export type DeleteProjectInput = {
   /** Project id to delete */
   id: Scalars['ID']['input'];
@@ -1348,6 +1363,8 @@ export type Mutation = {
   deleteNote: Scalars['Boolean']['output'];
   /** Delete a plan by ID */
   deletePlan: Scalars['Boolean']['output'];
+  /** Delete a plan's output chunks. With chunkId, deletes that single chunk (must belong to planId). Without chunkId, clears all chunks for planId, optionally scoped to taskId. */
+  deletePlanOutput: DeletePlanOutputResult;
   /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
@@ -1636,6 +1653,10 @@ export type MutationDeleteNoteArgs = {
 
 export type MutationDeletePlanArgs = {
   input: DeletePlanInput;
+};
+
+export type MutationDeletePlanOutputArgs = {
+  input: DeletePlanOutputInput;
 };
 
 export type MutationDeleteProjectArgs = {

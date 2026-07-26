@@ -20,6 +20,7 @@ const mockPubSub = {
 
 const planOutputStreamRepo = {
   create: vi.fn(),
+  delete: vi.fn(),
   find: vi.fn(),
   findOne: vi.fn(),
   save: vi.fn(),
@@ -285,6 +286,97 @@ describe('PlanOutputStreamResolver', () => {
       expect(planOutputStreamRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ taskId: null }),
       );
+    });
+  });
+
+  describe('deletePlanOutput', () => {
+    test('deletes a single chunk by id when it belongs to the plan', async () => {
+      vi.mocked(planOutputStreamRepo.findOne).mockResolvedValue(mockChunk);
+      vi.mocked(planOutputStreamRepo.delete).mockResolvedValue({ affected: 1 });
+
+      const result = await resolver.deletePlanOutput({
+        chunkId: mockChunk.id,
+        planId: mockChunk.planId,
+      });
+
+      expect(planOutputStreamRepo.delete).toHaveBeenCalledWith({
+        id: mockChunk.id,
+      });
+      expect(result.deletedCount).toBe(1);
+    });
+
+    test('clears all chunks for a plan when no chunkId is given', async () => {
+      // Shared module-level mocks accumulate calls across tests; clear findOne
+      // so the "no chunk lookup on the clear path" assertion is meaningful.
+      vi.mocked(planOutputStreamRepo.findOne).mockClear();
+      vi.mocked(planOutputStreamRepo.delete).mockResolvedValue({ affected: 3 });
+
+      const result = await resolver.deletePlanOutput({
+        planId: mockChunk.planId,
+      });
+
+      expect(planOutputStreamRepo.findOne).not.toHaveBeenCalled();
+      expect(planOutputStreamRepo.delete).toHaveBeenCalledWith({
+        planId: mockChunk.planId,
+      });
+      expect(result.deletedCount).toBe(3);
+    });
+
+    test('scopes the clear to a taskId when provided', async () => {
+      const taskId = '9b1f0c3a-2d4e-4f6a-8b0c-1d2e3f4a5b6c';
+      vi.mocked(planOutputStreamRepo.delete).mockResolvedValue({ affected: 2 });
+
+      const result = await resolver.deletePlanOutput({
+        planId: mockChunk.planId,
+        taskId,
+      });
+
+      expect(planOutputStreamRepo.delete).toHaveBeenCalledWith({
+        planId: mockChunk.planId,
+        taskId,
+      });
+      expect(result.deletedCount).toBe(2);
+    });
+
+    test('returns deletedCount 0 when the clear affects nothing', async () => {
+      vi.mocked(planOutputStreamRepo.delete).mockResolvedValue({
+        affected: null,
+      });
+
+      const result = await resolver.deletePlanOutput({
+        planId: mockChunk.planId,
+      });
+
+      expect(result.deletedCount).toBe(0);
+    });
+
+    test('throws when the chunk does not exist', async () => {
+      vi.mocked(planOutputStreamRepo.findOne).mockResolvedValue(null);
+      vi.mocked(planOutputStreamRepo.delete).mockClear();
+
+      await expect(
+        resolver.deletePlanOutput({
+          chunkId: 'missing-chunk-id',
+          planId: mockChunk.planId,
+        }),
+      ).rejects.toThrow(/not found/);
+      expect(planOutputStreamRepo.delete).not.toHaveBeenCalled();
+    });
+
+    test('throws when the chunk belongs to a different plan', async () => {
+      vi.mocked(planOutputStreamRepo.findOne).mockResolvedValue({
+        ...mockChunk,
+        planId: 'a-different-plan-id',
+      });
+      vi.mocked(planOutputStreamRepo.delete).mockClear();
+
+      await expect(
+        resolver.deletePlanOutput({
+          chunkId: mockChunk.id,
+          planId: mockChunk.planId,
+        }),
+      ).rejects.toThrow(/does not belong/);
+      expect(planOutputStreamRepo.delete).not.toHaveBeenCalled();
     });
   });
 

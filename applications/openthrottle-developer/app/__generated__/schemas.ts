@@ -38,6 +38,7 @@ import {
   CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
   DeletePlanInput,
+  DeletePlanOutputInput,
   DeleteProjectInput,
   DeleteTagActionRuleInput,
   DeleteTaskInput,
@@ -539,6 +540,16 @@ export function DeletePlanInputSchema(): z.ZodObject<
 > {
   return z.object({
     id: z.string(),
+  });
+}
+
+export function DeletePlanOutputInputSchema(): z.ZodObject<
+  Properties<DeletePlanOutputInput>
+> {
+  return z.object({
+    chunkId: z.string().nullish(),
+    planId: z.string(),
+    taskId: z.string().nullish(),
   });
 }
 

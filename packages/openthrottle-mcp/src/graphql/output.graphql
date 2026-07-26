@@ -1,0 +1,5 @@
+mutation deletePlanOutput($input: DeletePlanOutputInput!) {
+  deletePlanOutput(input: $input) {
+    deletedCount
+  }
+}

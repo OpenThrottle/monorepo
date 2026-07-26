@@ -6,12 +6,15 @@ import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   type AppendPlanOutputMutation,
+  type DeletePlanOutputMutation,
   type GetPlanOutputStreamChunksQuery,
   AppendPlanOutputDocument,
+  DeletePlanOutputDocument,
   GetPlanOutputStreamChunksDocument,
 } from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,
+  DeletePlanOutputInputSchema,
   ListPlanOutputStreamChunksInputSchema,
 } from '../__generated__/schemas.ts';
 import type { GenericResult } from '../types/index.ts';
@@ -25,6 +28,10 @@ type AppendPlanOutputResult = GenericResult<{
 
 type GetPlanOutputResult = GenericResult<{
   chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
+}>;
+
+type DeletePlanOutputResult = GenericResult<{
+  deletedCount: DeletePlanOutputMutation['deletePlanOutput']['deletedCount'];
 }>;
 
 export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema();
@@ -99,5 +106,45 @@ export async function getPlanOutputToolHandler(
         : JSON.stringify(chunks, null, 2);
 
     return { structuredContent: { chunks }, text };
+  });
+}
+
+export const deletePlanOutputToolParameters = DeletePlanOutputInputSchema();
+
+export const deletePlanOutputToolDescription =
+  'Delete plan output stream chunks. With chunkId, delete that single chunk (it must belong to planId). Without chunkId, clear all chunks for planId, optionally scoped to taskId. Returns the number of chunks deleted. Use to remove stale or incorrect output (e.g. when resetting a plan back to PENDING). GraphQL-only: delegates to the deletePlanOutput mutation.';
+
+export async function deletePlanOutputToolHandler(
+  args: z.infer<typeof deletePlanOutputToolParameters>,
+): Promise<DeletePlanOutputResult> {
+  const parsed = deletePlanOutputToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ deletedCount: number }>('delete_plan_output', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      DeletePlanOutputDocument,
+      {
+        input: {
+          chunkId: parsed.data.chunkId ?? null,
+          planId: parsed.data.planId,
+          taskId: parsed.data.taskId ?? null,
+        },
+      },
+    );
+
+    const deletedCount = result?.deletePlanOutput?.deletedCount ?? null;
+    if (deletedCount === null) return null;
+
+    const scope = parsed.data.chunkId
+      ? `chunk ${parsed.data.chunkId} (plan ${parsed.data.planId})`
+      : parsed.data.taskId
+        ? `task ${parsed.data.taskId} on plan ${parsed.data.planId}`
+        : `plan ${parsed.data.planId}`;
+    const text = `Deleted ${deletedCount} plan output chunk(s) for ${scope}.`;
+    return { structuredContent: { deletedCount }, text };
   });
 }
