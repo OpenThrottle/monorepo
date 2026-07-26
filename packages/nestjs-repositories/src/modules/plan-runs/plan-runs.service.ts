@@ -5,6 +5,7 @@ import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-wo
 import { Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
+import { PLAN_RUN_STATUS } from './plan-runs.constants';
 import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
@@ -131,6 +132,9 @@ export class PlanRunsService {
         bullmqJobId: null,
         executionBackend: input.executionBackend,
         hostname: input.hostname,
+        // Stamp the initial heartbeat at creation so the run is immediately alive
+        // (avoids a false-stale window before the CLI's first heartbeat tick).
+        lastHeartbeatAt: new Date(),
         pid: input.pid,
         planId: input.planId,
         queueName: 'plans',
@@ -196,6 +200,9 @@ export class PlanRunsService {
       { bullmqJobId: location.bullmqJobId, queueName: location.queueName },
       {
         hostname: location.hostname,
+        // Stamp the initial heartbeat when the worker picks up the job, so the run
+        // is immediately alive before the processor's first heartbeat tick.
+        lastHeartbeatAt: new Date(),
         pid: location.pid,
         workerId: location.workerId,
       },
@@ -270,5 +277,83 @@ export class PlanRunsService {
       cancelRequestedAt: run.cancelRequestedAt,
       cancelRequestedBy: run.cancelRequestedBy,
     };
+  }
+
+  /**
+   * @description Bumps the liveness heartbeat on a run keyed by RUN ID — the CLI path,
+   * whose row has a null bullmqJobId that {@link recordHeartbeatByJob} cannot address.
+   * Best-effort telemetry: returns the number of rows updated (0 for an unknown id).
+   */
+  async recordHeartbeatById(planRunId: string): Promise<number> {
+    const result = await this.getRepository().update(
+      { id: planRunId },
+      { lastHeartbeatAt: new Date() },
+    );
+
+    return result.affected ?? 0;
+  }
+
+  /**
+   * @description Bumps the liveness heartbeat on a run keyed by (queueName, bullmqJobId)
+   * — the in-server worker path, symmetric with {@link markRunStarted}. Best-effort
+   * telemetry: returns the number of rows updated (0 for an unrecorded/legacy run).
+   */
+  async recordHeartbeatByJob(
+    queueName: string,
+    bullmqJobId: string,
+  ): Promise<number> {
+    const result = await this.getRepository().update(
+      { bullmqJobId, queueName },
+      { lastHeartbeatAt: new Date() },
+    );
+
+    return result.affected ?? 0;
+  }
+
+  /**
+   * @description Finds IN_PROGRESS runs whose liveness is older than `cutoff` — i.e.
+   * stranded by a hard crash (SIGKILL/power-loss) that skipped the graceful settle path.
+   * Uses COALESCE(last_heartbeat_at, created_at) so rows that never heartbeated (legacy,
+   * or crashed before their first tick) are also caught once old enough. Newest-relevant
+   * ordering is irrelevant to a sweep, so returns oldest-first, capped at `limit`.
+   */
+  async findStaleInProgressRuns(
+    cutoff: Date,
+    limit: number,
+  ): Promise<PlanRun[]> {
+    return this.getRepository()
+      .createQueryBuilder('run')
+      .where('run.status = :status', {
+        status: PLAN_RUN_STATUS.IN_PROGRESS,
+      })
+      .andWhere('COALESCE(run.last_heartbeat_at, run.created_at) < :cutoff', {
+        cutoff,
+      })
+      .orderBy('run.created_at', 'ASC')
+      .take(limit)
+      .getMany();
+  }
+
+  /**
+   * @description Settles a stale run to the terminal STALE status and clears its
+   * run-location columns. Guarded on status = IN_PROGRESS so a concurrent settle (a
+   * graceful exit landing between the sweep's find and this update) never clobbers a
+   * row that already reached a terminal status. Idempotent. Returns the updated run, or
+   * null when the row no longer matched (already settled elsewhere).
+   */
+  async settleStaleRun(planRunId: string): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+
+    await repo.update(
+      { id: planRunId, status: PLAN_RUN_STATUS.IN_PROGRESS },
+      {
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.STALE,
+        workerId: null,
+      },
+    );
+
+    return repo.findOne({ where: { id: planRunId } });
   }
 }
