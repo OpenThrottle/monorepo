@@ -109,6 +109,9 @@
     "ot-plans": {
       "tags": ["openthrottle"]
     },
+    "ot-plan-loop": {
+      "tags": ["openthrottle"]
+    },
     "ot-postgres": {
       "tags": ["database", "openthrottle"]
     },
