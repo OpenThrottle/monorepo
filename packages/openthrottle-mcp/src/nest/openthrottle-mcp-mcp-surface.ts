@@ -236,6 +236,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.deletePlanOutputToolDescription,
+    name: 'delete_plan_output',
+    parameters: asMcpParameters(Th.deletePlanOutputToolParameters),
+  })
+  deletePlanOutput(
+    args: Parameters<typeof Th.deletePlanOutputToolHandler>[0],
+  ): ReturnType<typeof Th.deletePlanOutputToolHandler> {
+    return Th.deletePlanOutputToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getPlanToolDescription,
     name: 'get_plan',
     parameters: asMcpParameters(Th.getPlanToolParameters),

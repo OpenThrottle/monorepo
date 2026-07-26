@@ -18,7 +18,7 @@ Hard rules:
 - update_task takes the task id (UUID), not the title. Move a task through its lifecycle by updating status (e.g. in_progress → completed), not by recreating.
 - Record a merged squash commit on the work ledger, not via a dedicated link tool: attach_session_subject (planId, optional taskId) then record_artifact (type 'git_commit', payload {repo, sha}) under an open session — one artifact per task per merged commit, NOT per intermediate work commit. Per-task work commits carry traceability via the Plan-Id: / Task-Id: footers instead.
 - Author/assignee fields expect the GitHub username, not a display name.
-- Use append_plan_output / get_plan_output for progress narration on a running plan; use semantic_search / list_sources / get_document to read the knowledge base before searching ad hoc.
+- Use append_plan_output / get_plan_output for progress narration on a running plan; delete_plan_output removes a single chunk (chunkId) or clears a plan's output (optionally scoped to taskId) when resetting stale output. Use semantic_search / list_sources / get_document to read the knowledge base before searching ad hoc.
 
 When to use which server:
 - Plans & tasks → these OpenThrottle tools (here).

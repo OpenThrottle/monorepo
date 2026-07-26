@@ -52,3 +52,23 @@ export class AppendPlanOutputInput {
   })
   taskId!: string | null;
 }
+
+@InputType()
+export class DeletePlanOutputInput {
+  @Field(() => ID, {
+    description: `Plan id to delete output chunks for`,
+  })
+  planId!: string;
+
+  @Field(() => ID, {
+    description: `Delete a single chunk by id (must belong to planId). Omit to clear all chunks for planId instead.`,
+    nullable: true,
+  })
+  chunkId?: string | null;
+
+  @Field(() => ID, {
+    description: `When clearing (chunkId omitted), scope the clear to chunks attributed to this task id.`,
+    nullable: true,
+  })
+  taskId?: string | null;
+}

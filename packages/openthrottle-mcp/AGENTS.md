@@ -40,7 +40,9 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
   chosen live URL and reads `OPENTHROTTLE_MCP_AUTH_TOKEN` from `.env` (worktree then root). Don't
   reintroduce `source ./.env` — the targeted-read rewrite exists to avoid worktree env side effects.
 - `agent_conversation_*` (web chat threads) and `plan_output_stream` (`get_plan_output` /
-  `append_plan_output`, Ralph/plan iteration logs) are distinct data sources — don't cross them.
+  `append_plan_output` / `delete_plan_output`, Ralph/plan iteration logs) are distinct data
+  sources — don't cross them. `delete_plan_output` removes a single chunk (`chunkId`) or clears a
+  plan's output (optionally scoped to `taskId`); it delegates to the `deletePlanOutput` mutation.
 
 ## Don't
 

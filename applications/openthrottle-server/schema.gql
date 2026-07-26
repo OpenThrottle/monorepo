@@ -1634,6 +1634,11 @@ type PlanOutputStreamChunkObject {
   taskId: String
 }
 
+type DeletePlanOutputResult {
+  """Number of plan output stream chunks deleted"""
+  deletedCount: Int!
+}
+
 type WorkSessionObject {
   actorServiceAccountId: String
   actorUserId: String
@@ -3394,6 +3399,11 @@ type Mutation {
   appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
   """
+  Delete a plan's output chunks. With chunkId, deletes that single chunk (must belong to planId). Without chunkId, clears all chunks for planId, optionally scoped to taskId.
+  """
+  deletePlanOutput(input: DeletePlanOutputInput!): DeletePlanOutputResult!
+
+  """
   Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.
   """
   registerCliPlanRun(input: RegisterCliPlanRunInput!): PlanRunObject!
@@ -3906,6 +3916,21 @@ input AppendPlanOutputInput {
 
   """
   Optional task id to attribute this output chunk to (task-scoped output). Omit for plan-scoped chunks.
+  """
+  taskId: ID
+}
+
+input DeletePlanOutputInput {
+  """Plan id to delete output chunks for"""
+  planId: ID!
+
+  """
+  Delete a single chunk by id (must belong to planId). Omit to clear all chunks for planId instead.
+  """
+  chunkId: ID
+
+  """
+  When clearing (chunkId omitted), scope the clear to chunks attributed to this task id.
   """
   taskId: ID
 }

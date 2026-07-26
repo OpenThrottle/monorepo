@@ -30,10 +30,10 @@ pnpm nx run @openthrottle/openthrottle-mcp:serve
 
 ## Tools overview
 
-| Category                                                      | MCP tools                                                                                     | Auth                                       |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Plans, tasks, notes, activity, output stream, semantic search | `create_plan`, `get_plan`, `list_plans_by_status`, `get_plan_output`, `append_plan_output`, … | Service account (recommended) or human JWT |
-| Agent conversations (web chat threads)                        | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages`        | **Human JWT only** (user-scoped)           |
+| Category                                                      | MCP tools                                                                                                           | Auth                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Plans, tasks, notes, activity, output stream, semantic search | `create_plan`, `get_plan`, `list_plans_by_status`, `get_plan_output`, `append_plan_output`, `delete_plan_output`, … | Service account (recommended) or human JWT |
+| Agent conversations (web chat threads)                        | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages`                              | **Human JWT only** (user-scoped)           |
 
 GraphQL-only — no direct Postgres access. Prerequisite for conversation tools: v1 persistence from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (`agent_conversations` / `agent_conversation_messages` tables, `agentsRunChatTurn` with `persist: true`).
 
@@ -48,11 +48,28 @@ Three **read-only** MCP tools expose persisted **web chat** thread history from 
 | Data                   | MCP tools                                                                              | Use for                                                                  |
 | ---------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `agent_conversation_*` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` | Developer UI web chat threads (`agentsRunChatTurn` with `persist: true`) |
-| `plan_output_stream`   | `get_plan_output`, `append_plan_output`                                                | Ralph / workflow iteration logs tied to a plan                           |
+| `plan_output_stream`   | `get_plan_output`, `append_plan_output`, `delete_plan_output`                          | Ralph / workflow iteration logs tied to a plan                           |
 
 Each tool description ends with: _Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs._
 
 Do **not** use conversation tools for Ralph logs; do **not** expose `plan_output_stream` through conversation tools.
+
+#### `delete_plan_output`
+
+Removes chunks from a plan's `plan_output_stream` — used to clean up stale or
+incorrect output (e.g. when resetting a plan back to `PENDING`). GraphQL-only:
+it delegates to the `deletePlanOutput` mutation and never touches Postgres
+directly. Returns `deletedCount`.
+
+| Param     | Required | Semantics                                                                          |
+| --------- | -------- | ---------------------------------------------------------------------------------- |
+| `planId`  | yes      | Plan whose output is affected.                                                     |
+| `chunkId` | no       | Delete this single chunk. It must belong to `planId`, else the call is rejected.   |
+| `taskId`  | no       | Only when `chunkId` is omitted: scope the clear to chunks attributed to this task. |
+
+- **Single chunk:** pass `chunkId` (+ `planId`) → deletes exactly that chunk.
+- **Clear a plan:** omit `chunkId` → deletes every chunk for `planId`.
+- **Clear a task's chunks:** omit `chunkId`, pass `taskId` → deletes that plan's chunks attributed to the task.
 
 ### Tool reference
 
