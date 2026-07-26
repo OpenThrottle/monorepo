@@ -38,7 +38,7 @@ export function formatChartDate(value: string): string {
 
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    : d.toLocaleDateString('en-US', { dateStyle: 'full' });
 }
 
 /**

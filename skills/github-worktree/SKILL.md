@@ -10,11 +10,8 @@ Your job is to use a reserved worktree to create a new branch and open it in Cur
 
 This monorepo maintains four reserved worktrees that are pre-configured and ready to use:
 
-- `monorepo` - Default branch and installation
-- `monorepo-hotfix` - Reserved for hotfixes and urgent one-off fixes
-- `monorepo-worktree-one` - For feature branches and general development
-- `monorepo-worktree-two` - For feature branches and general development
-- `monorepo-worktree-three` - For feature branches and general development
+- `openthrottle` - Default branch and installation
+- `openthrottle-base` - A single worktree we keep around for 1-off usage.
 
 ## Workflow
 
@@ -73,6 +70,7 @@ When syncing a branch with main, **ALWAYS** follow this workflow:
    ```
 
 2. **Rebase your branch** onto the updated main:
+
    ```bash
    git rebase origin/main
    ```
@@ -98,10 +96,8 @@ When syncing a branch with main, **ALWAYS** follow this workflow:
 
 The reserved worktrees are located at:
 
-- `/Users/matt/Development/monorepo-worktree-one`
-- `/Users/matt/Development/monorepo-worktree-two`
-- `/Users/matt/Development/monorepo-worktree-three`
-- `/Users/matt/Development/monorepo-hotfix`
+- `/Users/matt/Development/openthrottle-worktrees/base`
+- `/Users/matt/Development/openthrottle-worktrees/*`
 
 ## Error Handling
 
