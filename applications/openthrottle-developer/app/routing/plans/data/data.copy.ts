@@ -63,6 +63,17 @@ export const PLAN_TAB_OUTPUT_COPY = {
 } as const;
 
 /**
+ * @description Tooltip copy for the plan-level toolbar (PlanToolbar) explaining
+ * why the mutating actions are disabled while a plan run is active (QUEUED or
+ * IN_PROGRESS). Kill run stays available and is the intended mid-run action.
+ */
+export const PLAN_TOOLBAR_COPY = {
+  evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
+  markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
+  runRunningTooltip: `A run is already active for this plan — kill it before starting another.`,
+} as const;
+
+/**
  * @description Labels for the task-detail toolbar (PlanTaskToolbar): the tag
  * section heading and the secondary actions. Mirrors the plan-level toolbar so
  * task and plan surfaces read the same.
@@ -71,10 +82,12 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   actionsLabel: `Actions`,
   actionsTooltip: `Task actions`,
   editTaskLabel: `Edit Task`,
+  markCompleteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
   promoteConfirmLabel: `Promote`,
   promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it SKIPPED and tags it "promoted"). This cannot be undone from here.`,
   promoteDialogTitle: `Promote task to a plan?`,
   promoteLabel: `Promote to Plan`,
+  promoteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
   promoteTooltip: `Create a first-class plan from this task and close the task out.`,
   promotedDisabledTooltip: `This task has already been promoted to a plan.`,
 } as const;
