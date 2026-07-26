@@ -7,6 +7,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { useSearchParams } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
+import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   CreateServiceAccountCredentialDocument,
@@ -204,9 +205,7 @@ export const action = async (
         token: result.token,
       };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to create credential.';
-      return { error: message };
+      return { error: toErrorMessage(error, 'Failed to create credential.') };
     }
   }
 
@@ -227,9 +226,7 @@ export const action = async (
       );
       return { ok: true };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to revoke credential.';
-      return { error: message };
+      return { error: toErrorMessage(error, 'Failed to revoke credential.') };
     }
   }
 
