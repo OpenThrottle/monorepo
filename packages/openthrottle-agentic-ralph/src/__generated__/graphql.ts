@@ -1486,6 +1486,8 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
+  /** Edit an owned repository's name, default branch, and/or project link. Requires the authenticated user to own a checkout of the repository. */
+  updateRepository: RepositoryObject;
   /** Update a role */
   updateRole?: Maybe<RoleObject>;
   /** Update a service account (admin, human only). */
@@ -1869,6 +1871,10 @@ export type MutationUpdatePlanArgs = {
 
 export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateRepositoryArgs = {
+  input: UpdateRepositoryInput;
 };
 
 export type MutationUpdateRoleArgs = {
@@ -2554,6 +2560,8 @@ export type Query = {
   workspaceLocalRepository?: Maybe<WorkspaceLocalRepositoryObject>;
   /** The authenticated user's repositories with their checkouts and inspection snapshots (snapshots refresh on view past the 15-minute TTL). */
   workspaceRepositories: Array<RepositoryObject>;
+  /** A single repository the authenticated user has a checkout of, with those checkouts and inspection snapshots; null when the user owns no checkout of it. */
+  workspaceRepository?: Maybe<RepositoryObject>;
   /** Workspace settings for the authenticated user (profile and local repositories). */
   workspaceSettings: WorkspaceSettingsObject;
 };
@@ -2837,6 +2845,10 @@ export type QueryWorkSessionsByPlanArgs = {
 };
 
 export type QueryWorkspaceLocalRepositoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryWorkspaceRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -3901,6 +3913,18 @@ export type UpdateProjectInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** NX project name (e.g. applications/openthrottle-server) */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged. */
+export type UpdateRepositoryInput = {
+  /** New default branch; omit to leave unchanged. */
+  defaultBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Repository id. */
+  id: Scalars['ID']['input'];
+  /** New display name; omit to leave unchanged. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** OpenThrottle project to link, or null to clear; omit to leave unchanged. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type UpdateRoleInput = {
