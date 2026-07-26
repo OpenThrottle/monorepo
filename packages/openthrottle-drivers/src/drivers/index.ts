@@ -7,12 +7,17 @@
 import { lookupDriver } from '../registry/index.ts';
 import type { DriverId, DriverRegistry } from '../registry/index.ts';
 import type { AgentDriver } from '../types/index.ts';
+import { claudeDriver } from './claude.ts';
+import { cursorDriver } from './cursor.ts';
+
+export { claudeDriver } from './claude.ts';
+export { cursorDriver } from './cursor.ts';
 
 /**
- * @description Every registered driver, in id order. Extend as driver modules land (tasks 5-7).
+ * @description Every registered driver, in id order. Extend as driver modules land (tasks 6-7).
  * @public
  */
-export const ALL_DRIVERS: readonly AgentDriver[] = [];
+export const ALL_DRIVERS: readonly AgentDriver[] = [claudeDriver, cursorDriver];
 
 /**
  * @description Registry map assembled from {@link ALL_DRIVERS}.
