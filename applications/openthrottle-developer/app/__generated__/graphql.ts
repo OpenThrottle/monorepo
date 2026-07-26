@@ -5486,6 +5486,8 @@ export type PlanDetailIndexLoaderQuery = {
     createdAt: any;
     executionBackend: string;
     id: string;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
     runConfigSnapshotJson?: string | null;
     runKind: string;
     status: string;
@@ -12533,6 +12535,11 @@ export const PlanDetailIndexLoaderDocument = {
                   name: { kind: 'Name', value: 'executionBackend' },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'lastHeartbeatAt' },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'runConfigSnapshotJson' },

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,12 @@ export interface PlanToolbarProps {
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
    */
   jobRunHooksJson?: string;
+  /**
+   * @description Whether the plan's newest run is stale — its owning process crashed hard and its
+   * heartbeat went quiet past the cutoff. When true the Kill control is replaced by a 'Stale'
+   * badge: the run is already dead, so Kill cannot work; a sweeper will settle it.
+   */
+  newestRunIsStale?: boolean;
   /**
    * @description Add a plan tag. When provided alongside {@link onRemoveTag},
    * {@link tags}, and {@link tagVocabulary}, the toolbar renders the tag chips.
@@ -103,6 +110,7 @@ export interface PlanToolbarProps {
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
     className,
+    newestRunIsStale = false,
     onAddTag,
     onRemoveTag,
     planId,
@@ -360,13 +368,27 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             </TooltipContent>
           </Tooltip>
 
-          <KillPlanRunButton
-            planId={planId}
-            planTitle={planTitle}
-            show={getPlanIsCancelable(planStatus)}
-            // show={true}
-            size="xs"
-          />
+          {getPlanIsCancelable(planStatus) && newestRunIsStale ? (
+            <Tooltip delayDuration={1_000}>
+              <TooltipTrigger asChild={true}>
+                <Badge color="amber" size="xs">
+                  Stale
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs" side="top">
+                This run lost contact (its heartbeat went quiet) — the owning
+                process likely crashed. Kill is unavailable because there is
+                nothing live to stop; a background sweeper will settle it.
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <KillPlanRunButton
+              planId={planId}
+              planTitle={planTitle}
+              show={getPlanIsCancelable(planStatus)}
+              size="xs"
+            />
+          )}
         </>
       }
       statusAction={

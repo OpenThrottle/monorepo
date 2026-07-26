@@ -74,4 +74,28 @@ describe('PlanToolbar Component', () => {
       planId: PLAN_ID,
     });
   });
+
+  test('offers Kill run for a cancelable plan with a healthy newest run', () => {
+    const { component } = renderToolbar({
+      newestRunIsStale: false,
+      planStatus: 'IN_PROGRESS',
+    });
+
+    expect(
+      component.getByRole('button', { name: /kill plan run/i }),
+    ).toBeInTheDocument();
+    expect(component.queryByText('Stale')).not.toBeInTheDocument();
+  });
+
+  test('replaces Kill run with a Stale badge when the newest run is stale', () => {
+    const { component } = renderToolbar({
+      newestRunIsStale: true,
+      planStatus: 'IN_PROGRESS',
+    });
+
+    expect(
+      component.queryByRole('button', { name: /kill plan run/i }),
+    ).not.toBeInTheDocument();
+    expect(component.getByText('Stale')).toBeInTheDocument();
+  });
 });
