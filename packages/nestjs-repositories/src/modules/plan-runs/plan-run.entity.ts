@@ -88,6 +88,20 @@ export class PlanRun {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  /**
+   * Liveness heartbeat: bumped by the owning run process (~every 15s) while
+   * executing and stamped at run start. An IN_PROGRESS row whose heartbeat is
+   * older than the staleness cutoff is treated as dead (see migration 080).
+   * Dedicated column rather than reusing updatedAt (an @UpdateDateColumn bumped
+   * by unrelated writes -> false liveness). Null for legacy / never-started rows.
+   */
+  @Column({
+    name: 'last_heartbeat_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  lastHeartbeatAt!: Date | null;
+
   /** OS process id of the executing worker; populated at job start, cleared at finish. Null when not actively executing. */
   @Column({ name: 'pid', nullable: true, type: 'integer' })
   pid!: number | null;

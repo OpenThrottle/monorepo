@@ -16,6 +16,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     executionBackend: 'claude',
     hostname: null,
     id: 'run-1',
+    lastHeartbeatAt: null,
     pid: null,
     planId: 'plan-1',
     queueName: 'plans',
