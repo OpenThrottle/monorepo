@@ -1,0 +1,42 @@
+/**
+ * @description OpenAI Codex CLI driver: non-interactive mode (`codex exec …`). Verified against the
+ * installed CLI (codex-cli 0.145.0, `codex exec --help`): `codex exec [OPTIONS] [PROMPT]` runs
+ * autonomously, `-m/--model` selects the model, and `-s/--sandbox` selects the filesystem policy.
+ * We pass `--sandbox workspace-write` so the agent can edit the workspace without approval prompts
+ * (the headless analog of Claude's `--permission-mode acceptEdits`). Codex exec exposes no
+ * agent-worktree flags.
+ */
+
+import { defineDriver } from '../registry/index.ts';
+import type { DriverCapabilities } from '../types/index.ts';
+import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+
+const capabilities: DriverCapabilities = {
+  permissionMode: true,
+  skipWorktreeSetup: false,
+  supportsModelFlag: true,
+  worktree: false,
+  worktreeBase: false,
+};
+
+/**
+ * @description Codex driver (`codex`, label `codex`). Model flag is placed before the positional
+ * prompt and omitted when unset or `auto`.
+ * @public
+ */
+export const codexDriver = defineDriver({
+  buildShellCommand: (config) => {
+    const modelNorm = config.model?.trim() ?? '';
+    const modelFlag =
+      modelNorm !== '' && modelNorm !== 'auto'
+        ? ` --model ${escapeShellArg(modelNorm)}`
+        : '';
+
+    const safePrompt = escapeForShellDoubleQuoted(config.prompt);
+
+    return `codex exec --sandbox workspace-write${modelFlag} "${safePrompt}"`;
+  },
+  capabilities,
+  id: 'codex',
+  label: 'codex',
+});
