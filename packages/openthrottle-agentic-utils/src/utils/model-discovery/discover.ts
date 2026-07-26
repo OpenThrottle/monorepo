@@ -79,6 +79,7 @@ export async function discoverModels(
       probeTimeoutMs: options.probeTimeoutMs,
     }),
   );
+
   return {
     endpoints,
     scannedAt: options.scannedAt ?? new Date().toISOString(),

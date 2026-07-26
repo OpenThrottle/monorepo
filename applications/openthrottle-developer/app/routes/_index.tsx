@@ -5,6 +5,9 @@ import {
   ChatComposerToolbar,
   ChatThread,
   type ChatMessage,
+  type ChatPermissionMode,
+  type ChatReasoningLevel,
+  type ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -30,7 +33,11 @@ import {
 } from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
-import { decodeChatOption } from '~/routing/home/utils/chat-model-option';
+import { capabilitiesForChatOption } from '~/routing/home/utils/chat-capabilities';
+import {
+  buildModelGroups,
+  decodeChatOption,
+} from '~/routing/home/utils/chat-model-option';
 import type { Route } from '@/app/routes/+types/_index';
 
 /**
@@ -94,8 +101,11 @@ export default function Component(
   // indicator on the placeholder while a slow backend (e.g. cursor-agent, which
   // emits its whole turn in one end-of-turn burst) has produced nothing yet.
   const [pendingAssistantId, setPendingAssistantId] = useState<string | null>(null); // prettier-ignore
+  const [permissionMode, setPermissionMode] = useState<ChatPermissionMode | undefined>(undefined); // prettier-ignore
   const [personaId, setPersonaId] = useState<string | undefined>(personas[0]?.id); // prettier-ignore
+  const [reasoning, setReasoning] = useState<ChatReasoningLevel | undefined>(undefined); // prettier-ignore
   const [repositoryId, setRepositoryId] = useState<string | undefined>(repositories[0]?.id); // prettier-ignore
+  const [serviceTier, setServiceTier] = useState<ChatServiceTier | undefined>(undefined); // prettier-ignore
   const cancelFetcher = useFetcher();
   const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const localIdRef = useRef(0);
@@ -160,6 +170,20 @@ export default function Component(
   const isCliBackend =
     decodedOption !== null && decodedOption.backend !== 'openai';
 
+  // Capability descriptor for the selected backend gates the reasoning/tier,
+  // permission, and checkout controls. Grouped model list + checkouts feed the
+  // T3 composer primitives.
+  const capabilities = capabilitiesForChatOption(decodedOption);
+  const modelGroups = useMemo(() => buildModelGroups(models), [models]);
+  const checkouts = useMemo(
+    () =>
+      repositories.map((repository) => ({
+        id: repository.id,
+        label: repository.displayName,
+      })),
+    [repositories],
+  );
+
   // Handlers
   const onSubmit = (message: string): void => {
     const trimmed = message.trim();
@@ -200,8 +224,11 @@ export default function Component(
             conversationId: conversationId ?? '',
             intent: 'start',
             message: trimmed,
+            permissionMode: permissionMode ?? '',
             personaId: personaId ?? '',
+            reasoning: reasoning ?? '',
             repositoryId: repositoryId ?? '',
+            serviceTier: serviceTier ?? '',
           },
       { method: 'post' },
     );
@@ -226,41 +253,34 @@ export default function Component(
   const toolbar = (
     <div className="flex flex-col gap-2">
       <ChatComposerToolbar
+        capabilities={capabilities}
+        checkouts={checkouts}
         contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
         micState={voice.micState}
         mode={mode}
+        modelGroups={modelGroups}
         modelId={modelId}
         models={models}
         onAddContext={() => {}}
+        onCheckoutChange={setRepositoryId}
         onMicToggle={() => void voice.toggle()}
         onModeChange={setMode}
         onModelChange={setModelId}
+        onPermissionModeChange={setPermissionMode}
         onPersonaChange={setPersonaId}
+        onReasoningChange={setReasoning}
+        onServiceTierChange={setServiceTier}
+        permissionMode={permissionMode}
         personaId={personaId}
         personas={personas}
+        reasoning={reasoning}
+        selectedCheckoutId={repositoryId}
+        serviceTier={serviceTier}
       />
-      {isCliBackend ? (
-        hasRepositories ? (
-          <select
-            aria-label="Repository"
-            className="border-input bg-background text-foreground w-fit rounded-md border px-2 py-1 text-sm"
-            onChange={(event) =>
-              setRepositoryId(event.target.value || undefined)
-            }
-            value={repositoryId ?? ''}
-          >
-            <option value="">Select a repository…</option>
-            {repositories.map((repository) => (
-              <option key={repository.id} value={repository.id}>
-                {repository.displayName}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <p className="text-muted-foreground text-xs">
-            Register a local repository in Settings to run an agent CLI.
-          </p>
-        )
+      {isCliBackend && !hasRepositories ? (
+        <p className="text-muted-foreground text-xs">
+          Register a local repository in Settings to run an agent CLI.
+        </p>
       ) : null}
     </div>
   );
@@ -386,8 +406,11 @@ export const action = async (
     conversationId: conversationId || null,
     message: String(formData.get('message') ?? ''),
     modelId: String(formData.get('modelId') ?? '') || null,
+    permissionMode: String(formData.get('permissionMode') ?? '') || null,
     personaId: String(formData.get('personaId') ?? '') || null,
+    reasoning: String(formData.get('reasoning') ?? '') || null,
     repositoryId: String(formData.get('repositoryId') ?? '') || null,
+    serviceTier: String(formData.get('serviceTier') ?? '') || null,
   };
 
   try {

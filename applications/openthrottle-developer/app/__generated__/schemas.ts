@@ -1114,8 +1114,11 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
     conversationId: z.string().nullish(),
     message: z.string(),
     modelId: z.string().nullish(),
+    permissionMode: z.string().nullish(),
     personaId: z.string().nullish(),
+    reasoning: z.string().nullish(),
     repositoryId: z.string().nullish(),
+    serviceTier: z.string().nullish(),
   });
 }
 

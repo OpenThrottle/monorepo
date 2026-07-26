@@ -184,6 +184,27 @@ export class ConversationStreamResolver {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
+    // T3 composer control selections (reasoning effort, service tier, permission
+    // mode) are nullable + additive on the input. They are surfaced here but NOT
+    // yet honored: enforcing them is owned by the agent driver registry (plan
+    // dde67342, @openthrottle/openthrottle-drivers).
+    // TODO(dde67342): feed reasoning/serviceTier/permissionMode into the
+    // resolved driver run instead of only logging them.
+    if (
+      input.permissionMode != null ||
+      input.reasoning != null ||
+      input.serviceTier != null
+    ) {
+      this.logger.debug(
+        `startConversationStream: control selections (not yet honored — see dde67342) reasoning=${
+          input.reasoning ?? '∅'
+        } serviceTier=${input.serviceTier ?? '∅'} permissionMode=${
+          input.permissionMode ?? '∅'
+        }`,
+        ConversationStreamResolver.name,
+      );
+    }
+
     const conversationId = await this.resolveConversationId(
       userId,
       input.conversationId ?? null,

@@ -143,6 +143,56 @@ Root action handlers:
 
 Server design (GraphQL CRUD, `persist` contract, pagination): [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md). Database schema: [databases/README.md](../../databases/README.md) § Agent conversations.
 
+## Composer controls & capability descriptors
+
+The composer toolbar can surface a **T3-Code-style** control cluster in addition
+to the legacy flat `models` / `personas` selects. Every control is
+**presentational and independently optional** — supply its props to render it,
+omit them and the toolbar degrades to its previous shape. The package still
+hardcodes **no data**: consumers supply options and own state.
+
+| Primitive                   | Purpose                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `ChatModelPicker`           | Grouped, searchable model/CLI palette (provider rail, sub-labels, favorites, ⌘-hints) |
+| `ChatReasoningTierControl`  | The `Low · Standard` dropdown — Reasoning + Service Tier sections                     |
+| `ChatPermissionModeControl` | Supervised / Auto-accept edits / Full access, with lock icons + descriptions          |
+| `ChatCheckoutSelector`      | Repository/checkout + branch affordance (shown when the backend requires a repo)      |
+
+Every primitive is **controlled** — you pass the current value + an `onXChange`
+callback and (where relevant) a `ChatBackendCapabilities` descriptor; the
+component owns no state beyond its own open/closed popover. See each exported
+`…Props` interface for the full JSDoc:
+
+- `ChatModelPicker` — `groups`, `models`, `selectedModelId`, `onModelChange`, optional `onToggleFavorite`, `disabledModelIds` (capability gating).
+- `ChatReasoningTierControl` — `capabilities`, `reasoning`/`onReasoningChange`, `serviceTier`/`onServiceTierChange`.
+- `ChatPermissionModeControl` — `capabilities`, `permissionMode`/`onPermissionModeChange`.
+- `ChatCheckoutSelector` — `checkouts`, `selectedCheckoutId`, `onCheckoutChange`.
+- `ChatComposerToolbar` — composes all of the above via additive props (`modelGroups`, `capabilities`, `checkouts`, `reasoning`, `serviceTier`, `permissionMode`, …); omit them and it renders exactly as before.
+
+Supporting types (`src/types.ts`, all `@public`):
+
+- `ChatReasoningLevel` (`low` · `medium` · `high` · `extraHigh` · `max` · `ultra`), `ChatServiceTier` (`standard` · `fast`), `ChatPermissionMode` (`supervised` · `autoAcceptEdits` · `fullAccess`) — as-const objects (no TS enums).
+- `ChatModelOption` gains additive `groupId` / `subLabel` / `favorite` / `shortcut`; `ChatModelGroup` (`id`, `label`, optional `icon`) describes a provider/CLI rail. The flat `{ id, label, description }` shape keeps working.
+- `ChatBackendCapabilities` — `{ supportsModelFlag, reasoningLevels, serviceTiers, permissionModes, requiresRepository }` — one per backend; the toolbar gates which controls (and which options within them) render.
+
+### Capability descriptors are derived from the driver registry (planned)
+
+`ChatBackendCapabilities` is deliberately a **parallel, self-contained** contract
+today. Consumers hand-seed one descriptor per discovered agent CLI /
+OpenAI-compatible endpoint (in `openthrottle-developer`, from `loadAgentClis` /
+`loadDiscoveredModels`).
+
+Once **`@openthrottle/openthrottle-drivers`** (plan `dde67342`) lands, the driver
+registry becomes the single source of truth for per-backend capability flags.
+The reconciliation is a **pure mapping**, not a redesign: a small adapter reads
+`DRIVER_IDS` + each driver's capability metadata (which reasoning levels /
+service tiers / permission modes it honors, whether it takes a `--model` flag,
+whether it needs a checkout) and produces a `ChatBackendCapabilities` per driver
+id. The composer's props and the four presentational primitives are unchanged —
+only the _source_ of the descriptor moves from hand-seeded consumer code to the
+registry. This shape was chosen to make that swap a one-file change; until it
+lands, neither plan blocks the other.
+
 ## Dependencies
 
 | Package                             | Role                                                                          |

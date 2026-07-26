@@ -42,6 +42,7 @@ function intFromEnv(
 ): number {
   const parsed = value === undefined ? Number.NaN : Number.parseInt(value, 10);
   const min = allowZero ? 0 : 1;
+
   return Number.isInteger(parsed) && parsed >= min ? parsed : fallback;
 }
 
@@ -78,6 +79,7 @@ export function buildModelDiscoveryConfig(
   const { error } = configValidationSchema.validate(env, {
     abortEarly: false,
   });
+
   if (error !== undefined) {
     throw new Error(
       `Invalid model-discovery env configuration: ${error.message}`,
