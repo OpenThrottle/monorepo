@@ -43,11 +43,13 @@ export class NestjsModelDiscoveryService {
     const config = this.configService.get<ModelDiscoveryConfig>(
       MODEL_DISCOVERY_CONFIG_NAMESPACE,
     );
+
     if (config === undefined) {
       throw new Error(
         `Missing '${MODEL_DISCOVERY_CONFIG_NAMESPACE}' config namespace — register NestjsModelDiscoveryModule (or its ConfigModule.forFeature) before resolving NestjsModelDiscoveryService.`,
       );
     }
+
     return config;
   }
 
@@ -73,6 +75,7 @@ export class NestjsModelDiscoveryService {
 
     const scan = this.scan(now);
     this.inFlight = scan;
+
     try {
       return await scan;
     } finally {
@@ -103,6 +106,7 @@ export class NestjsModelDiscoveryService {
     this.logger.debug(
       `🔭 model-discovery: ${result.endpoints.length} endpoint(s) across ${result.scannedHosts.length} host(s)`,
     );
+
     return result;
   }
 }

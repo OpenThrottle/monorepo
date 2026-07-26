@@ -42,6 +42,7 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
   const timer = setTimeout(() => {
     controller.abort();
   }, timeoutMs);
+
   try {
     const response = await fetch(url, {
       headers: { accept: `application/json` },
@@ -68,12 +69,14 @@ function extractModelIds(payload: unknown): string[] | null {
   if (!isObject(payload) || !Array.isArray(payload.data)) {
     return null;
   }
+
   const ids = new Set<string>();
   for (const item of payload.data) {
     if (isObject(item) && typeof item.id === `string` && item.id.length > 0) {
       ids.add(item.id);
     }
   }
+
   return [...ids].sort();
 }
 
@@ -82,6 +85,7 @@ function isLmStudioShape(payload: unknown): boolean {
   if (!isObject(payload) || !Array.isArray(payload.data)) {
     return false;
   }
+
   return payload.data.some(
     (item) => isObject(item) && (`architecture` in item || `key` in item),
   );
@@ -155,11 +159,12 @@ export async function probeEndpoint(
  */
 export function createLimiter(concurrency: number): LimitFunction {
   const max = Math.max(1, Math.floor(concurrency));
-  let active = 0;
   const queue: Array<() => void> = [];
+  let active = 0;
 
   const drain = (): void => {
     active -= 1;
+
     const run = queue.shift();
     if (run) {
       run();
@@ -170,6 +175,7 @@ export function createLimiter(concurrency: number): LimitFunction {
     new Promise<T>((resolve, reject) => {
       const run = async (): Promise<void> => {
         active += 1;
+
         try {
           resolve(await task());
         } catch (error) {
@@ -178,6 +184,7 @@ export function createLimiter(concurrency: number): LimitFunction {
           drain();
         }
       };
+
       if (active < max) {
         void run();
       } else {
@@ -198,12 +205,15 @@ export async function probeAll(
   const limit = createLimiter(
     options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY,
   );
+
   const probes: Array<Promise<ModelEndpoint | null>> = [];
   for (const host of hosts) {
     for (const port of ports) {
       probes.push(limit(() => probeEndpoint(host, port, options)));
     }
   }
+
   const results = await Promise.all(probes);
+
   return results.filter((result): result is ModelEndpoint => result !== null);
 }
