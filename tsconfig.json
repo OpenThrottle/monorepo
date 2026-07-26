@@ -201,6 +201,9 @@
     },
     {
       "path": "./packages/openthrottle-plan-config"
+    },
+    {
+      "path": "./packages/openthrottle-drivers"
     }
   ]
 }

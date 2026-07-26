@@ -1161,6 +1161,9 @@ importers:
       '@openthrottle/openthrottle-developer-codegen':
         specifier: workspace:^
         version: link:packages/openthrottle-developer-codegen
+      '@openthrottle/openthrottle-drivers':
+        specifier: workspace:^
+        version: link:packages/openthrottle-drivers
       '@openthrottle/openthrottle-ide':
         specifier: workspace:^
         version: link:packages/openthrottle-ide
@@ -2929,6 +2932,8 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../graphql-codegen
+
+  packages/openthrottle-drivers: {}
 
   packages/openthrottle-ide:
     dependencies:
