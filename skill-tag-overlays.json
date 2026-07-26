@@ -109,15 +109,6 @@
     "ot-list-by-status": {
       "tags": ["openthrottle"]
     },
-    "ot-list-sources": {
-      "tags": ["openthrottle"]
-    },
-    "ot-pending": {
-      "tags": ["openthrottle"]
-    },
-    "ot-planning-mode": {
-      "tags": ["openthrottle", "planning"]
-    },
     "ot-plans": {
       "tags": ["openthrottle"]
     },
