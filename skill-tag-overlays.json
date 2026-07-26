@@ -7,9 +7,6 @@
     "agents-ralph": {
       "tags": ["commit", "openthrottle", "planning"]
     },
-    "agentic-ralph": {
-      "tags": ["commit", "openthrottle", "planning"]
-    },
     "brag-sheet": {
       "tags": ["docs", "git", "github"]
     },
@@ -126,9 +123,6 @@
     },
     "validate-plan": {
       "tags": []
-    },
-    "workflow-ralph": {
-      "tags": ["openthrottle"]
     },
     "writing-great-skills": {
       "tags": ["docs"]
