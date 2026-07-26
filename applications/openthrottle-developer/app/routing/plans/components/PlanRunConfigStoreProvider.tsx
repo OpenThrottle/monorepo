@@ -11,7 +11,9 @@ import { createStore, Provider } from 'jotai';
 import {
   getWorkflowRunSeedValues,
   jobRunHookDraftRowsAtom,
+  workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
+  workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
   type WorkflowRunSeedPlan,
@@ -37,6 +39,8 @@ export const PlanRunConfigStoreProvider = (
     seeded.set(workflowRalphRunOptionsAtom, seed.runOptions);
     seeded.set(workflowRunIterationTimeoutTextAtom, seed.iterationTimeoutText);
     seeded.set(workflowWorkingDirectoryAtom, seed.workingDirectory);
+    seeded.set(workflowCheckoutIdAtom, seed.checkoutId);
+    seeded.set(workflowRepositoryIdAtom, seed.repositoryId);
     seeded.set(jobRunHookDraftRowsAtom, seed.jobRunHookRows);
 
     return seeded;

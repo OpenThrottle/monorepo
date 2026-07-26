@@ -63,6 +63,8 @@ export const planRunConfigFromWorkflowUiState = (
       taskId: workflowInput.taskId.trim(),
     },
     workspace: {
+      checkoutId: (ui.checkoutId ?? '').trim(),
+      repositoryId: (ui.repositoryId ?? '').trim(),
       workingDirectory: workingDirectory.trim(),
     },
   };
@@ -102,7 +104,9 @@ export const workflowUiStateFromPlanRunConfig = (
   };
 
   return {
+    checkoutId: parsed.workspace.checkoutId,
     iterationTimeoutText: parsed.ralph.iterationTimeoutText,
+    repositoryId: parsed.workspace.repositoryId,
     workflowInput,
     workingDirectory: parsed.workspace.workingDirectory,
   };

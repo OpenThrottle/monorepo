@@ -16,6 +16,12 @@ export const WORKSPACE_FOLDERS_COPY = {
   browseEmpty: 'No subdirectories found here.',
   browseHint:
     'Browse inside your workspace roots when the folder is nested deeper than one level.',
+  cloneRepoButton: 'Clone repo',
+  cloneRepoDescription:
+    'Clone a git repository onto the machine running openthrottle-server. It is cloned with ambient host credentials (SSH agent / gh) into the configured checkout root — OpenThrottle stores no secrets.',
+  cloneRepoNameLabel: 'Folder name (optional)',
+  cloneRepoTitle: 'Clone a repository',
+  cloneRepoUrlLabel: 'Git URL',
   discoveredEmpty:
     'No git repositories found under the configured workspace roots. Set OPENTHROTTLE_WORKSPACE_ROOTS on the server to enable discovery, or enter a path manually below.',
   driftBranchMoved: 'Branch changed since last scan',

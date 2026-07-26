@@ -144,9 +144,31 @@ mutation PlanDetailUpdatePlanRunConfig($input: UpdatePlanInput!) {
   }
 }
 
+fragment PlanRunConfigRepositoryFields on RepositoryObject {
+  checkouts {
+    displayName
+    filesystemPath
+    id
+    inspection {
+      git {
+        currentBranch
+      }
+    }
+    kind
+    managed
+  }
+  id
+  name
+  normalizedRemoteUrl
+  projectId
+}
+
 query PlanDetailIndexLoader($planId: ID!) {
   plan(id: $planId) {
     ...PlanDetails
+  }
+  workspaceRepositories {
+    ...PlanRunConfigRepositoryFields
   }
   ruleApplications(planId: $planId) {
     createdAt

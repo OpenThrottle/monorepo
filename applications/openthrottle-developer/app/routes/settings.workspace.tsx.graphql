@@ -126,6 +126,23 @@ mutation addWorkspaceFolder($input: AddWorkspaceFolderInput!) {
   }
 }
 
+mutation cloneRepository($input: CloneRepositoryInput!) {
+  cloneRepository(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    project {
+      id
+      name
+    }
+    projectCreated
+    reconciliation
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+  }
+}
+
 mutation refreshCheckout($input: RefreshCheckoutInput!) {
   refreshCheckout(input: $input) {
     checkout {

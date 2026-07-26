@@ -2,9 +2,11 @@ import { createMock } from '@golevelup/ts-vitest';
 import {
   PlansService,
   PlanRunsService,
+  RepositoryCheckoutsService,
   Task,
   TasksService,
   type Plan,
+  type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -102,11 +104,21 @@ describe('PlanEnqueueService', () => {
     getPlanHooks: mockGetPlanHooks,
   });
 
+  const mockFindByIdForUser = vi.fn().mockResolvedValue(null);
+  const mockFindByRepositoryIdForUser = vi.fn().mockResolvedValue([]);
+  const mockRepositoryCheckoutsService = createMock<RepositoryCheckoutsService>(
+    {
+      findByIdForUser: mockFindByIdForUser,
+      findByRepositoryIdForUser: mockFindByRepositoryIdForUser,
+    },
+  );
+
   const service = new PlanEnqueueService(
     mockNotificationsService,
     mockPlanRunsService,
     mockPlansService,
     mockQueuesService,
+    mockRepositoryCheckoutsService,
     mockTasksService,
     mockPlansQueue,
   );
@@ -168,6 +180,148 @@ describe('PlanEnqueueService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(mockAdd).not.toHaveBeenCalled();
       expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('workspace resolution (checkoutId → repositoryId → workingDirectory)', () => {
+    // process.cwd() is a real existing directory so the resolved path survives the reused
+    // validateWorkingDirectory existence check in buildRunPlanOrchestratorJobData.
+    const existingDir = process.cwd();
+    const checkout = createMock<RepositoryCheckout>({
+      filesystemPath: existingDir,
+      id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      repositoryId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    });
+
+    const snapshotWorkspace = (): Record<string, unknown> => {
+      const call = mockRecordQueuedRun.mock.calls[0]?.[0];
+      const snapshot = isRecord(call) ? call.runConfigSnapshot : undefined;
+      const workspace = isRecord(snapshot) ? snapshot.workspace : undefined;
+      return isRecord(workspace) ? workspace : {};
+    };
+
+    beforeEach(() => {
+      mockFindByIdForUser.mockReset();
+      mockFindByRepositoryIdForUser.mockReset();
+    });
+
+    test('resolves checkoutId to its filesystem path and snapshots both ids', async () => {
+      mockFindByIdForUser.mockResolvedValue(checkout);
+
+      await service.enqueueOrchestrator({
+        actorUserId: 'user-1',
+        checkoutId: checkout.id,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(mockFindByIdForUser).toHaveBeenCalledWith(checkout.id, 'user-1');
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobData: expect.objectContaining({ workingDirectory: existingDir }),
+        }),
+      );
+      expect(snapshotWorkspace()).toMatchObject({
+        checkoutId: checkout.id,
+        repositoryId: checkout.repositoryId,
+        workingDirectory: existingDir,
+      });
+    });
+
+    test('resolves repositoryId to the user single checkout', async () => {
+      mockFindByRepositoryIdForUser.mockResolvedValue([checkout]);
+
+      await service.enqueueOrchestrator({
+        actorUserId: 'user-1',
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        repositoryId: checkout.repositoryId,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(mockFindByRepositoryIdForUser).toHaveBeenCalledWith(
+        checkout.repositoryId,
+        'user-1',
+      );
+      expect(snapshotWorkspace()).toMatchObject({
+        checkoutId: checkout.id,
+        repositoryId: checkout.repositoryId,
+        workingDirectory: existingDir,
+      });
+    });
+
+    test('rejects a repositoryId with no checkout for the user', async () => {
+      mockFindByRepositoryIdForUser.mockResolvedValue([]);
+
+      await expect(
+        service.enqueueOrchestrator({
+          actorUserId: 'user-1',
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          repositoryId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('rejects an ambiguous repositoryId with multiple checkouts', async () => {
+      mockFindByRepositoryIdForUser.mockResolvedValue([checkout, checkout]);
+
+      await expect(
+        service.enqueueOrchestrator({
+          actorUserId: 'user-1',
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          repositoryId: checkout.repositoryId,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('rejects an unknown checkoutId', async () => {
+      mockFindByIdForUser.mockResolvedValue(null);
+
+      await expect(
+        service.enqueueOrchestrator({
+          actorUserId: 'user-1',
+          checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
+    test('uses the raw workingDirectory escape hatch when no ids are given', async () => {
+      await service.enqueueOrchestrator({
+        actorUserId: 'user-1',
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: existingDir,
+      });
+
+      expect(mockFindByIdForUser).not.toHaveBeenCalled();
+      expect(mockFindByRepositoryIdForUser).not.toHaveBeenCalled();
+      const workspace = snapshotWorkspace();
+      expect(workspace.workingDirectory).toBe(existingDir);
+      expect(workspace.checkoutId).toBeUndefined();
+      expect(workspace.repositoryId).toBeUndefined();
     });
   });
 

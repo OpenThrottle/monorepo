@@ -108,6 +108,7 @@ describe('routes/plans.$planId._index run config hydration', () => {
       ruleApplications: [],
       tagVocabulary: [],
       tasks: [],
+      workspaceRepositories: [],
     };
     renderWithPlanDetailRouteData(
       <TooltipProvider>

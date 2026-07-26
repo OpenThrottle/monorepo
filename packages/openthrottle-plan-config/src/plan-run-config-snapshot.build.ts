@@ -35,6 +35,8 @@ export const buildPlanRunConfigSnapshot = (
   const taskId =
     mode === 'task' ? (trimOptionalString(input.taskId) ?? '') : '';
   const workingDirectory = trimOptionalString(input.workingDirectory) ?? '';
+  const checkoutId = trimOptionalString(input.checkoutId);
+  const repositoryId = trimOptionalString(input.repositoryId);
   const ralphInput = input.ralph ?? null;
 
   const ralph = {
@@ -80,6 +82,10 @@ export const buildPlanRunConfigSnapshot = (
     ralph,
     target: { mode, taskId },
     version: PLAN_RUN_CONFIG_SNAPSHOT_VERSION,
-    workspace: { workingDirectory },
+    workspace: {
+      ...(checkoutId !== undefined ? { checkoutId } : {}),
+      ...(repositoryId !== undefined ? { repositoryId } : {}),
+      workingDirectory,
+    },
   };
 };

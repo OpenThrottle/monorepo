@@ -21,6 +21,7 @@ import { ProjectObject } from '../projects/project.object';
 import { RepositoryObject } from './repository.object';
 import {
   AddWorkspaceFolderInput,
+  CloneRepositoryInput,
   RefreshCheckoutInput,
 } from './workspace-folders.input';
 import {
@@ -89,6 +90,18 @@ export class WorkspaceFoldersResolver {
     input: AddWorkspaceFolderInput,
   ): Promise<AddWorkspaceFolderPayloadObject> {
     return this.workspaceFoldersService.addWorkspaceFolder(userId, input);
+  }
+
+  @Mutation(() => AddWorkspaceFolderPayloadObject, {
+    description: `Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async cloneRepository(
+    @CurrentUser('sub') userId: string,
+    @Args('input', { type: () => CloneRepositoryInput })
+    input: CloneRepositoryInput,
+  ): Promise<AddWorkspaceFolderPayloadObject> {
+    return this.workspaceFoldersService.cloneRepository(userId, input);
   }
 
   @Mutation(() => RefreshCheckoutPayloadObject, {

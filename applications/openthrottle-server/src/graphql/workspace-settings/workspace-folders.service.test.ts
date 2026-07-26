@@ -1,10 +1,11 @@
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { createMock } from '@golevelup/ts-vitest';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Project,
@@ -29,6 +30,7 @@ import {
 } from 'vitest';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import {
+  CHECKOUT_ROOT_ENV,
   WorkspaceFoldersService,
   WORKSPACE_ROOTS_ENV,
 } from './workspace-folders.service';
@@ -391,5 +393,74 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.supersededProjectId).toBe('prov-project');
       expect(payload.checkout.repositoryId).toBe('canon-repo');
     });
+  });
+
+  describe('cloneRepository', () => {
+    let cloneRoot: string;
+
+    beforeEach(async () => {
+      cloneRoot = await mkdtemp(join(tmpdir(), 'ot-clone-root-'));
+      process.env[CHECKOUT_ROOT_ENV] = cloneRoot;
+      vi.mocked(mockCheckoutsService.create).mockImplementation(
+        async (_userId, data) =>
+          asMock<RepositoryCheckout>({
+            displayName: data.displayName,
+            filesystemPath: data.filesystemPath,
+            id: 'clone-checkout',
+            managed: data.managed ?? false,
+            repositoryId: data.repositoryId,
+          }),
+      );
+      vi.mocked(mockRepositoriesService.create).mockResolvedValue(
+        asMock<Repository>({ id: 'clone-repo', name: 'fixture-repo' }),
+      );
+    });
+
+    afterEach(async () => {
+      delete process.env[CHECKOUT_ROOT_ENV];
+      await rm(cloneRoot, { force: true, recursive: true });
+    });
+
+    it('clones into the checkout root and registers a managed checkout', async () => {
+      const payload = await service.cloneRepository(userId, {
+        gitUrl: `file://${gitRepoDir}`,
+      });
+
+      // Landed in the managed root as a real git working copy.
+      expect(existsSync(join(cloneRoot, 'fixture-repo', '.git'))).toBe(true);
+      // Registered as a managed checkout through the shared pipeline.
+      expect(vi.mocked(mockCheckoutsService.create)).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({ managed: true }),
+      );
+      expect(payload.checkout).toBeDefined();
+    }, 30_000);
+
+    it('throws when OPENTHROTTLE_CHECKOUT_ROOT is unset', async () => {
+      delete process.env[CHECKOUT_ROOT_ENV];
+
+      await expect(
+        service.cloneRepository(userId, { gitUrl: `file://${gitRepoDir}` }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+    });
+
+    it('rejects an implausible git url', async () => {
+      await expect(
+        service.cloneRepository(userId, { gitUrl: 'not a git url' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+    });
+
+    it('leaves no partial directory or rows when the clone fails', async () => {
+      const missing = join(workspaceRoot, 'does-not-exist-repo');
+
+      await expect(
+        service.cloneRepository(userId, { gitUrl: `file://${missing}` }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(existsSync(join(cloneRoot, 'does-not-exist-repo'))).toBe(false);
+      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+    }, 30_000);
   });
 });

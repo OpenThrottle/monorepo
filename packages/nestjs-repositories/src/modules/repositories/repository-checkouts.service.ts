@@ -78,6 +78,22 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description Lists a user's checkouts of a given repository, newest first,
+   * with the repository relation loaded. Used to resolve a portable
+   * `repositoryId` run-config reference to the enqueuing user's checkout.
+   */
+  async findByRepositoryIdForUser(
+    repositoryId: string,
+    userId: string,
+  ): Promise<RepositoryCheckout[]> {
+    return this.repository.find({
+      order: { createdAt: 'DESC' },
+      relations: { repository: true },
+      where: { repositoryId, userId },
+    });
+  }
+
+  /**
    * @description Creates a checkout row for the user. Throws ConflictException
    * when the (user, filesystem path) pair is already registered.
    */

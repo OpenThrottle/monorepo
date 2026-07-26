@@ -10,6 +10,7 @@ import type {
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { WorkspaceAddFolderDialog } from '~/routing/settings/components/WorkspaceAddFolderDialog';
 import { WorkspaceAddFolderResult } from '~/routing/settings/components/WorkspaceAddFolderResult';
+import { WorkspaceCloneRepoDialog } from '~/routing/settings/components/WorkspaceCloneRepoDialog';
 import { WorkspaceRepositoryCard } from '~/routing/settings/components/WorkspaceRepositoryCard';
 import type { CheckoutDrift } from '~/routing/settings/components/WorkspaceRepositoryCard';
 import type { ProjectOption } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
@@ -73,10 +74,13 @@ export const SettingsWorkspaceRepositoriesSection = (
           <p className="text-muted-foreground max-w-prose text-sm">
             {WORKSPACE_FOLDERS_COPY.sectionDescription}
           </p>
-          <WorkspaceAddFolderDialog
-            actionError={actionError}
-            discoveredFolders={discoveredFolders}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <WorkspaceCloneRepoDialog actionError={actionError} />
+            <WorkspaceAddFolderDialog
+              actionError={actionError}
+              discoveredFolders={discoveredFolders}
+            />
+          </div>
         </div>
 
         {addedFolder ? (

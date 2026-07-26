@@ -13,7 +13,9 @@ import {
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanRunConfigUiState {
+  readonly checkoutId: string;
   readonly iterationTimeoutText: string;
+  readonly repositoryId: string;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }
@@ -40,7 +42,9 @@ export const hydratePlanRunConfigUiState = (
     const ui = workflowUiStateFromPlanRunConfig(trimmedPlanId, stored);
 
     return {
+      checkoutId: ui.checkoutId ?? '',
       iterationTimeoutText: ui.iterationTimeoutText,
+      repositoryId: ui.repositoryId ?? '',
       workflowInput: {
         ...ui.workflowInput,
         iterationTimeoutSeconds: undefined,
@@ -52,7 +56,9 @@ export const hydratePlanRunConfigUiState = (
     const ui = workflowUiStateFromPlanRunConfig(trimmedPlanId, defaults);
 
     return {
+      checkoutId: ui.checkoutId ?? '',
       iterationTimeoutText: ui.iterationTimeoutText,
+      repositoryId: ui.repositoryId ?? '',
       workflowInput: {
         ...ui.workflowInput,
         iterationTimeoutSeconds: undefined,
@@ -69,10 +75,18 @@ export const hydratePlanRunConfigUiState = (
 export const serializePlanRunConfigUiState = (
   state: PlanRunConfigUiState,
 ): string => {
-  const { iterationTimeoutText, workflowInput, workingDirectory } = state;
+  const {
+    checkoutId,
+    iterationTimeoutText,
+    repositoryId,
+    workflowInput,
+    workingDirectory,
+  } = state;
 
   const stored = planRunConfigFromWorkflowUiState({
+    checkoutId,
     iterationTimeoutText,
+    repositoryId,
     workflowInput: {
       debugCli: workflowInput.debugCli,
       executionBackend: workflowInput.executionBackend,

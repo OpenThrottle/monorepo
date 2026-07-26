@@ -11,6 +11,7 @@ import {
   AddWorkspaceFolderDocument,
   ApplyWorkspaceEditorConfigurationDocument,
   BrowseWorkspaceDirectoryDocument,
+  CloneRepositoryDocument,
   DeleteWorkspaceLocalRepositoryDocument,
   GetWorkspaceSettingsDocument,
   RefreshCheckoutDocument,
@@ -149,6 +150,28 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to add folder.';
+      return { error: message };
+    }
+  }
+
+  if (intent === 'cloneRepo') {
+    const gitUrl = optionalTrimmedString(formData.get('gitUrl'));
+    const name = optionalTrimmedString(formData.get('name'));
+
+    if (!gitUrl) {
+      return { error: 'A git repository URL is required.' };
+    }
+
+    try {
+      const data = await executeGraphqlWithAuth(
+        args.request,
+        CloneRepositoryDocument,
+        { input: { gitUrl, name: name ?? null } },
+      );
+      return { addedFolder: data.cloneRepository };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to clone repository.';
       return { error: message };
     }
   }

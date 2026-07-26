@@ -122,6 +122,7 @@ function renderPlanDetail(planId: string): ReturnType<typeof render> {
     ruleApplications: [],
     tagVocabulary: [],
     tasks: [],
+    workspaceRepositories: [],
   };
   return renderWithPlanDetailRouteData(
     <TooltipProvider>

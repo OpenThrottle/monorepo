@@ -295,8 +295,20 @@ export class EnqueuePlanRunInput {
   })
   ralph?: RalphPlanRunTuningInput | null;
 
+  @Field(() => ID, {
+    description: `Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.`,
+    nullable: true,
+  })
+  checkoutId?: string | null;
+
+  @Field(() => ID, {
+    description: `Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.`,
+    nullable: true,
+  })
+  repositoryId?: string | null;
+
   @Field(() => String, {
-    description: `Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
+    description: `Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
     nullable: true,
   })
   workingDirectory?: string | null;
@@ -343,8 +355,20 @@ export class EnqueuePlanRalphOrchestratorInput {
   })
   taskId?: string | null;
 
+  @Field(() => ID, {
+    description: `Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.`,
+    nullable: true,
+  })
+  checkoutId?: string | null;
+
+  @Field(() => ID, {
+    description: `Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.`,
+    nullable: true,
+  })
+  repositoryId?: string | null;
+
   @Field(() => String, {
-    description: `Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
+    description: `Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
     nullable: true,
   })
   workingDirectory?: string | null;
