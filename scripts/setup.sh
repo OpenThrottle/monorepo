@@ -19,6 +19,9 @@ echo "- setup_environment.sh"
 echo "- setup_software.sh"
 echo ""
 
+# 0. Setup our skills
+./skills/skill-sync/scripts/sync.sh
+
 # 1. Run our troubleshooting script
 ./scripts/setup_troubleshooting.sh
 
