@@ -159,7 +159,13 @@ function isCancelPlanRunResult(
 function isPlanRunExecutionBackend(
   value: string,
 ): value is PlanRunExecutionBackend {
-  return value === 'claude' || value === 'cursor' || value === 'opencode';
+  return (
+    value === 'claude' ||
+    value === 'codex' ||
+    value === 'cursor' ||
+    value === 'grok' ||
+    value === 'opencode'
+  );
 }
 
 /** @description Terminal statuses a detached-CLI run may be settled to. */
@@ -317,7 +323,7 @@ export class PlansResolver {
   ): Promise<PlanRunObject> {
     if (!isPlanRunExecutionBackend(input.executionBackend)) {
       throw new BadRequestException(
-        `Invalid executionBackend: ${input.executionBackend} (expected claude, cursor, or opencode)`,
+        `Invalid executionBackend: ${input.executionBackend} (expected claude, codex, cursor, grok, or opencode)`,
       );
     }
 

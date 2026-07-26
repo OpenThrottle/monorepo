@@ -1,13 +1,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDriverId, parseDriverId } from '@openthrottle/openthrottle-drivers';
+import type { DriverId } from '@openthrottle/openthrottle-drivers';
 import {
-  DEFAULT_WORKFLOW_RUNNER,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
-  WORKFLOW_RUNNER_IDS,
 } from '../config/index.ts';
 import { toContainerPath } from './workspace-paths.ts';
 
@@ -210,37 +210,18 @@ export const readWorkflowDebugLevelFromEnv = (
 
 /**
  * Which CLI/process runs each agentic iteration.
+ * @deprecated Use {@link DriverId} from `@openthrottle/openthrottle-drivers`.
  */
-export type WorkflowRunnerId = (typeof WORKFLOW_RUNNER_IDS)[number];
+export type WorkflowRunnerId = DriverId;
 
 /**
  * Returns true when `value` is a supported {@link WorkflowRunnerId}.
+ * @deprecated Use `isDriverId` from `@openthrottle/openthrottle-drivers`.
  */
-export const isWorkflowRunnerId = (
-  value: string,
-): value is WorkflowRunnerId => {
-  return WORKFLOW_RUNNER_IDS.some((id) => id === value);
-};
+export const isWorkflowRunnerId = isDriverId;
 
 /**
  * Normalizes and validates a runner id from CLI, env, or defaults file.
+ * @deprecated Use `parseDriverId` from `@openthrottle/openthrottle-drivers`.
  */
-export const parseWorkflowRunnerId = (
-  raw: string,
-  source: `cli` | `env` | `file` = `cli`,
-): WorkflowRunnerId => {
-  const normalized = raw.trim().toLowerCase();
-  if (normalized === ``) {
-    throw new Error(
-      `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_WORKFLOW_RUNNER})`,
-    );
-  }
-
-  if (!isWorkflowRunnerId(normalized)) {
-    throw new Error(
-      `Unknown execution backend "${raw.trim()}". Supported: ${WORKFLOW_RUNNER_IDS.join(', ')}`,
-    );
-  }
-
-  return normalized;
-};
+export const parseWorkflowRunnerId = parseDriverId;

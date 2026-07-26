@@ -28,6 +28,9 @@
       "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
       "path": "../dotfiles/tsconfig.lib.json"
     }
   ]

@@ -4,6 +4,7 @@ import type {
   WorkflowConfigRunner,
   WorkflowConfig,
 } from '@openthrottle/openthrottle-agentic-workflow';
+import { isDriverId } from '@openthrottle/openthrottle-drivers';
 import {
   DEFAULT_WORKFLOW_DEBUG,
   DEFAULT_WORKFLOW_ITERATIONS,
@@ -112,17 +113,11 @@ export const safeParseIterations = (iterations: string): number => {
 export const safeParseRunner = (
   runner: string | undefined,
 ): WorkflowConfigRunner => {
-  switch (runner) {
-    case 'claude':
-      return 'claude';
-    case 'cursor':
-      return 'cursor';
-    case 'opencode':
-      return 'opencode';
-
-    default:
-      return DEFAULT_WORKFLOW_RUNNER;
+  if (runner !== undefined && isDriverId(runner)) {
+    return runner;
   }
+
+  return DEFAULT_WORKFLOW_RUNNER;
 };
 
 export const safeParseString = (value: string): string => {

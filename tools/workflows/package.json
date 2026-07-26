@@ -9,6 +9,7 @@
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "@openthrottle/openthrottle-drivers": "workspace:^",
     "@tools/generators": "workspace:^",
     "commander": "catalog:",
     "pg": "catalog:",
