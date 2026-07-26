@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { FILE_MENTION_TRIGGER, parseFileMentions } from '../file-mentions';
+import {
+  detectActiveMention,
+  FILE_MENTION_TRIGGER,
+  insertFileMention,
+  parseFileMentions,
+} from '../file-mentions';
 
 describe('parseFileMentions', () => {
   test('exposes the @ trigger marker', () => {
@@ -65,5 +70,61 @@ describe('parseFileMentions', () => {
     expect(parseFileMentions('line one\n@src/two.ts\nline three')).toEqual([
       { path: 'src/two.ts' },
     ]);
+  });
+});
+
+describe('detectActiveMention', () => {
+  test('detects a mention with the caret at the end of the query', () => {
+    const value = 'look at @src/ap';
+    expect(detectActiveMention(value, value.length)).toEqual({
+      anchor: 8,
+      query: 'src/ap',
+    });
+  });
+
+  test('detects an empty query right after a bare @', () => {
+    expect(detectActiveMention('hi @', 4)).toEqual({ anchor: 3, query: '' });
+  });
+
+  test('reads the query only up to the caret, not the whole token', () => {
+    const value = 'go @src/app.ts';
+    expect(detectActiveMention(value, 6)).toEqual({ anchor: 3, query: 'sr' });
+  });
+
+  test('returns null once a space follows the @ before the caret', () => {
+    expect(detectActiveMention('@src/a done', 11)).toBeNull();
+  });
+
+  test('returns null for an email local-part', () => {
+    const value = 'user@example';
+    expect(detectActiveMention(value, value.length)).toBeNull();
+  });
+
+  test('returns null when the caret is not after any @', () => {
+    expect(detectActiveMention('plain text', 5)).toBeNull();
+  });
+
+  test('opens a mention after an opening delimiter', () => {
+    const value = '(@lib/x';
+    expect(detectActiveMention(value, value.length)).toEqual({
+      anchor: 1,
+      query: 'lib/x',
+    });
+  });
+});
+
+describe('insertFileMention', () => {
+  test('replaces the @query with the @path token plus a trailing space', () => {
+    // 'go @src/ap' with caret after 'ap' (index 10), choosing src/app.ts
+    const result = insertFileMention('go @src/ap', 3, 10, 'src/app.ts');
+    expect(result.value).toBe('go @src/app.ts ');
+    expect(result.caret).toBe(result.value.length);
+  });
+
+  test('preserves text after the caret and lands the caret after the space', () => {
+    // 'a @sr rest' with the mention query 'sr' spanning [2,5)
+    const result = insertFileMention('a @sr rest', 2, 5, 'src/b.ts');
+    expect(result.value).toBe('a @src/b.ts  rest');
+    expect(result.caret).toBe('a @src/b.ts '.length);
   });
 });

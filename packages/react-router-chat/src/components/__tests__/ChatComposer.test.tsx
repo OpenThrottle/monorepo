@@ -194,4 +194,131 @@ describe('ChatComposer Component', () => {
       expect(ref.current).toBeInstanceOf(HTMLTextAreaElement);
     });
   });
+
+  describe('@-mention file linking', () => {
+    const makeProvider = (paths: readonly string[]) => ({
+      onQueryFiles: vi.fn(async (query: string) =>
+        paths.filter((path) =>
+          path.toLowerCase().includes(query.toLowerCase()),
+        ),
+      ),
+    });
+
+    test('typing @ opens the popover with provider results', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts', 'lib/util.ts']);
+      mountComposer({ mentionProvider });
+
+      await user.type(component!.getByLabelText('Message'), '@');
+
+      expect(
+        await component!.findByTestId('ChatMentionPopover'),
+      ).toBeInTheDocument();
+      expect(await component!.findByText('src/app.ts')).toBeInTheDocument();
+      expect(mentionProvider.onQueryFiles).toHaveBeenCalledWith('');
+    });
+
+    test('typing after @ passes the query to the provider and filters', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider([
+        'src/app.ts',
+        'src/app-shell.tsx',
+        'lib/util.ts',
+      ]);
+      mountComposer({ mentionProvider });
+
+      await user.type(component!.getByLabelText('Message'), '@app');
+
+      expect(mentionProvider.onQueryFiles).toHaveBeenLastCalledWith('app');
+      expect(await component!.findByText('src/app.ts')).toBeInTheDocument();
+      expect(component!.queryByText('lib/util.ts')).not.toBeInTheDocument();
+    });
+
+    test('Enter inserts the active path and closes the popover without submitting', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts', 'lib/util.ts']);
+      mountComposer({ mentionProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, 'see @');
+      await component!.findByText('src/app.ts');
+      await user.keyboard('{Enter}');
+
+      expect(input.value).toBe('see @src/app.ts ');
+      expect(
+        component!.queryByTestId('ChatMentionPopover'),
+      ).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    test('ArrowDown then Enter inserts the second result', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts', 'lib/util.ts']);
+      mountComposer({ mentionProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '@');
+      await component!.findByText('lib/util.ts');
+      await user.keyboard('{ArrowDown}{Enter}');
+
+      expect(input.value).toBe('@lib/util.ts ');
+    });
+
+    test('clicking a result inserts its path', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts', 'lib/util.ts']);
+      mountComposer({ mentionProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '@');
+      await user.click(await component!.findByText('lib/util.ts'));
+
+      expect(input.value).toBe('@lib/util.ts ');
+    });
+
+    test('Escape closes the popover without inserting', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts']);
+      mountComposer({ mentionProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '@');
+      await component!.findByText('src/app.ts');
+      await user.keyboard('{Escape}');
+
+      expect(
+        component!.queryByTestId('ChatMentionPopover'),
+      ).not.toBeInTheDocument();
+      expect(input.value).toBe('@');
+    });
+
+    test('submit still works after a mention is inserted (popover closed)', async () => {
+      const user = userEvent.setup();
+      const mentionProvider = makeProvider(['src/app.ts']);
+      mountComposer({ mentionProvider });
+      const input = component!.getByLabelText('Message');
+
+      await user.type(input, '@');
+      await component!.findByText('src/app.ts');
+      await user.keyboard('{Enter}'); // inserts the mention
+      await user.keyboard('{Enter}'); // now submits
+
+      expect(onSubmit).toHaveBeenCalledWith('@src/app.ts');
+    });
+
+    test('does not open a popover when no provider is supplied', async () => {
+      const user = userEvent.setup();
+      mountComposer();
+
+      await user.type(component!.getByLabelText('Message'), '@');
+
+      expect(
+        component!.queryByTestId('ChatMentionPopover'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
