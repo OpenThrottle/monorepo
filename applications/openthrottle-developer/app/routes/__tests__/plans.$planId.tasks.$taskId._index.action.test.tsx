@@ -76,6 +76,36 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx action', () => {
 
       expect(result).toEqual({ promoteTaskError: 'network down' });
     });
+
+    test('falls back when the failure carries an empty error string', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        promoteTaskToPlan: { error: '', jobId: null, success: false },
+      });
+
+      const result = await invokeAction({ intent: 'promoteTask' });
+
+      // An empty error must never reach the toast (the boundary guard would
+      // suppress it and show nothing) — a fallback is returned instead.
+      expect(result).toEqual({ promoteTaskError: 'Failed to promote task.' });
+    });
+
+    test('falls back when the failure carries a whitespace error string', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        promoteTaskToPlan: { error: '   ', jobId: null, success: false },
+      });
+
+      const result = await invokeAction({ intent: 'promoteTask' });
+
+      expect(result).toEqual({ promoteTaskError: 'Failed to promote task.' });
+    });
+
+    test('falls back when the thrown error has an empty message', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(new Error(''));
+
+      const result = await invokeAction({ intent: 'promoteTask' });
+
+      expect(result).toEqual({ promoteTaskError: 'Failed to promote task.' });
+    });
   });
 
   describe('setTaskStatus intent', () => {
@@ -115,6 +145,19 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx action', () => {
       });
 
       expect(result).toEqual({ setTaskStatusError: 'boom' });
+    });
+
+    test('falls back when the thrown error has an empty message', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(new Error(''));
+
+      const result = await invokeAction({
+        intent: 'setTaskStatus',
+        status: 'COMPLETED',
+      });
+
+      expect(result).toEqual({
+        setTaskStatusError: 'Failed to update task status.',
+      });
     });
   });
 });

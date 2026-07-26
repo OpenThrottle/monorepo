@@ -32,6 +32,7 @@ import { cancelPlanRun } from '~/routing/plans/actions/planId';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
 import { SITE_TITLE } from '~/global/config/settings';
+import { toErrorMessage } from '~/global/utils/utils.error-message';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
@@ -318,10 +319,9 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { ok: true };
     } catch (error) {
-      const isError = error instanceof Error;
-      const message = isError ? error.message : String(error);
-
-      return { updateTaskError: message };
+      return {
+        updateTaskError: toErrorMessage(error, 'Failed to update task status.'),
+      };
     }
   }
 

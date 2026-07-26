@@ -1,6 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import { CancelPlanRunInputSchema } from '~/__generated__/schemas';
+import { toErrorMessage } from '~/global/utils/utils.error-message';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
 export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
@@ -18,9 +19,8 @@ export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
 
     return { cancelPlanRun: result.cancelPlanRun };
   } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    return { cancelPlanRunError: message };
+    return {
+      cancelPlanRunError: toErrorMessage(error, 'Failed to cancel plan run.'),
+    };
   }
 };
