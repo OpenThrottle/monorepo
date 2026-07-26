@@ -1,0 +1,5 @@
+query getWorkspaceRepository($repositoryId: ID!) {
+  workspaceRepository(id: $repositoryId) {
+    ...WorkspaceRepositoryFields
+  }
+}

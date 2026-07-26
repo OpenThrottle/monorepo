@@ -39,3 +39,29 @@ export const WORKSPACE_FOLDERS_COPY = {
   sectionDescription:
     'Repositories are identified by their git remote; each entry below groups your on-disk checkouts on the server host.',
 } as const;
+
+/**
+ * @description Copy for the workspace repository details and edit routes.
+ */
+export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
+  backToWorkspace: 'Back to Workspace',
+  branchHelp: 'The branch runs and checkouts default to.',
+  branchLabel: 'Default branch',
+  branchPlaceholder: 'e.g. main',
+  cancelButton: 'Cancel',
+  checkoutsEmpty: 'No checkouts registered for this repository.',
+  checkoutsHeading: 'Checkouts',
+  editButton: 'Edit',
+  editDescription:
+    'Rename this repository, set its default branch, and link it to an OpenThrottle project. Renaming is display-only and does not touch the git remote.',
+  editTitle: 'Edit repository',
+  nameHelp:
+    'A human-readable label. Include the org (e.g. acme/monorepo) to tell repositories with the same name apart.',
+  nameLabel: 'Name',
+  namePlaceholder: 'e.g. acme/monorepo',
+  noProject: 'No project linked',
+  projectLabel: 'Linked project',
+  remoteLabel: 'Remote',
+  remoteLocalOnly: 'Local only (no remote detected)',
+  saveButton: 'Save changes',
+} as const;
