@@ -178,8 +178,13 @@ describe('parseWorkflowRunnerId', () => {
     expect(parseWorkflowRunnerId('  Claude  ', 'file')).toBe('claude');
   });
 
+  it('accepts the widened ids codex and grok', () => {
+    expect(parseWorkflowRunnerId('codex', 'cli')).toBe('codex');
+    expect(parseWorkflowRunnerId('grok', 'env')).toBe('grok');
+  });
+
   it('rejects unknown backends', () => {
-    expect(() => parseWorkflowRunnerId('codex', 'cli')).toThrow(
+    expect(() => parseWorkflowRunnerId('gemini', 'cli')).toThrow(
       /Unknown execution backend/,
     );
   });
@@ -191,7 +196,7 @@ describe('parseWorkflowRunnerId', () => {
   });
 
   it('lists known backends in error message', () => {
-    expect(() => parseWorkflowRunnerId('codex', 'cli')).toThrow(
+    expect(() => parseWorkflowRunnerId('gemini', 'cli')).toThrow(
       /claude.*cursor|cursor.*claude/,
     );
   });
@@ -203,7 +208,7 @@ describe('isWorkflowRunnerId', () => {
   });
 
   it('returns false for unknown ids', () => {
-    expect(isWorkflowRunnerId('codex')).toBe(false);
+    expect(isWorkflowRunnerId('gemini')).toBe(false);
     expect(isWorkflowRunnerId('')).toBe(false);
   });
 });

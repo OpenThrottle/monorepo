@@ -2,7 +2,11 @@
  * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
  */
 
-import type { PlanData, PlanRunData } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanData,
+  PlanRunData,
+  PlanRunExecutionBackend,
+} from '@openthrottle/nestjs-repositories';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ProjectObject } from '../projects/project.object';
 
@@ -102,7 +106,7 @@ export class PlanRunObject implements PlanRunData {
   @Field(() => String, {
     description: `Execution backend selected once for the whole run: cursor or claude.`,
   })
-  executionBackend!: 'claude' | 'cursor' | 'opencode';
+  executionBackend!: PlanRunExecutionBackend;
 
   @Field(() => String, {
     description:
@@ -178,7 +182,7 @@ export class EnqueuePlanRunResultObject {
   @Field(() => String, {
     description: `Execution backend selected once for the whole run: cursor or claude.`,
   })
-  executionBackend!: 'claude' | 'cursor' | 'opencode';
+  executionBackend!: PlanRunExecutionBackend;
 
   @Field(() => String, { description: 'BullMQ job id' })
   jobId!: string;

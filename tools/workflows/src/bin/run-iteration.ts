@@ -1,28 +1,32 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
- * Dispatches to a {@link RalphExecutionBackendId} implementation: `cursor` (Cursor `cursor-agent`) and
- * `claude` (Anthropic Claude Code CLI, `claude --bare -p …` — see code.claude.com headless docs).
+ * Thin adapter over `@openthrottle/openthrottle-drivers`: resolves the backend from the driver registry
+ * and delegates to the shared execution engine (`runDriverSync` / `runDriverAsync`), wiring the Ralph
+ * debug logger in as the injected logger. All shell-command building, escaping, and process handling now
+ * live in the drivers package.
  */
 
-import { spawn } from 'child_process';
-import { spawnSync } from 'child_process';
-import type { ChildProcess } from 'child_process';
+import {
+  getDriver,
+  runDriverAsync,
+  runDriverSync,
+} from '@openthrottle/openthrottle-drivers';
+import type {
+  DriverChunk,
+  DriverInvocationConfig,
+  DriverWorktreeOptions,
+} from '@openthrottle/openthrottle-drivers';
 import { ARTWORK_LINE, COLORS } from '../config/index';
 import { DEFAULT_WORKFLOW_RUNNER } from '@openthrottle/openthrottle-agentic-utils';
-import { escalateKill } from '../utils/child-kill';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
-import {
-  appendRalphWorktreeShellFlags,
-  escapeShellArg,
-} from '../utils/ralph-worktree-cli';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
 import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
-/** Chunk from runner stdout or stderr when using async spawn. */
-export interface CursorAgentChunk {
-  readonly data: string;
-  readonly stream: 'stdout' | 'stderr';
-}
+/**
+ * @description Chunk from runner stdout or stderr when using async spawn.
+ * @deprecated Use `DriverChunk` from `@openthrottle/openthrottle-drivers`.
+ */
+export type CursorAgentChunk = DriverChunk;
 
 export interface RunIterationConfig {
   /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
@@ -52,146 +56,47 @@ export interface RunIterationConfig {
   worktreeBase?: string;
 }
 
-const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
-  switch (backend) {
-    case 'claude':
-      return 'claude-code';
-
-    case 'cursor':
-      return 'cursor-agent';
-
-    // `opencode` is a member of WorkflowConfigRunner but has no runner/shell-builder
-    // implementation here (runIteration/runIterationAsync throw `Unsupported execution
-    // backend`). Throw the same error from the label so the two stay consistent rather
-    // than minting a label for a backend that can never run.
-    case 'opencode':
-      throw new Error(`Unsupported execution backend: ${backend}`);
-
-    default: {
-      const _exhaustive: never = backend;
-      return _exhaustive;
-    }
-  }
-};
-
 /**
- * @description Escapes a string for safe use inside a double-quoted shell argument.
- * Neutralizes every character that retains special meaning inside a double-quoted
- * POSIX shell word — `\`, `` ` ``, `"`, and `$` — so injected plan/task text
- * containing `$(...)`, `` `...` ``, or `${...}` can never trigger command/parameter
- * substitution. The backslash replacement runs first so the escapes it adds are not
- * double-escaped by the later passes.
+ * @description Maps Ralph's flat worktree fields onto the drivers package's grouped
+ * {@link DriverWorktreeOptions}. Returns undefined when no worktree is configured (so drivers emit
+ * no `-w` flag), matching the legacy `appendRalphWorktreeShellFlags` behavior.
  */
-function escapeForShellDoubleQuoted(prompt: string): string {
-  return prompt
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\$/g, '\\$')
-    .replace(/"/g, '\\"');
-}
-
-/**
- * @description Cursor: non-interactive iteration (`cursor-agent --force -p …`).
- */
-const buildCursorShellCommand = (config: RunIterationConfig): string => {
-  const { agentPrompt, model, skipWorktreeSetup, worktree, worktreeBase } =
-    config;
-  const modelFlag = model ? ` --model ${escapeShellArg(model)}` : '';
-  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
-
-  return appendRalphWorktreeShellFlags(base, 'cursor', {
-    skipWorktreeSetup,
-    worktree,
-    worktreeBase,
-  });
-};
-
-/**
- * @description Claude Code CLI: scripted / headless mode (`claude --bare -p …`).
- * Uses `--bare` for reproducible startup (see code.claude.com docs); `--permission-mode acceptEdits`
- * avoids blocking prompts for common file edits while keeping bash/tool rules otherwise intact.
- * Omits `--model` when unset or `auto` (Claude uses its own defaults / aliases).
- */
-const buildClaudeShellCommand = (config: RunIterationConfig): string => {
-  const { agentPrompt, model, worktree } = config;
-  const modelNorm = model?.trim() ?? '';
-  const modelFlag =
-    modelNorm !== '' && modelNorm !== 'auto'
-      ? ` --model ${escapeShellArg(modelNorm)}`
-      : '';
-
-  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const base = `claude -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
-
-  return appendRalphWorktreeShellFlags(base, 'claude', { worktree });
-};
-
-/**
- * @description Cursor backend: one sync iteration.
- */
-const runCursorIterationSync = (config: RunIterationConfig): string => {
-  const command = buildCursorShellCommand(config);
-
-  return runShellIterationSync(
-    command,
-    'cursor-agent',
-    config.iteration,
-    config.cwd,
-  );
-};
-
-/**
- * @description Claude Code backend: one sync iteration.
- */
-const runClaudeIterationSync = (config: RunIterationConfig): string => {
-  const command = buildClaudeShellCommand(config);
-
-  return runShellIterationSync(
-    command,
-    'claude-code',
-    config.iteration,
-    config.cwd,
-  );
-};
-
-const runShellIterationSync = (
-  command: string,
-  runnerLabel: string,
-  iteration: number,
-  cwd?: string,
-): string => {
-  const child = spawnSync(command, [], {
-    cwd,
-    encoding: 'utf-8',
-    shell: true,
-    stdio: ['inherit', 'pipe', 'pipe'],
-  });
-
-  const stdout = child.stdout?.trim() ?? '';
-  const stderr = child.stderr?.trim() ?? '';
-  const result = stderr ? `${stdout}\n${stderr}` : stdout;
-
-  if (child.error) {
-    ralphDebugLogger.debug('runIteration (sync): spawn error', {
-      iteration,
-      message: child.error.message,
-      runnerLabel,
-    });
-
-    return child.error.message;
+const toWorktreeOptions = (
+  config: RunIterationConfig,
+): DriverWorktreeOptions | undefined => {
+  if (config.worktree === undefined) {
+    return undefined;
   }
 
-  ralphDebugLogger.debug('runIteration (sync): runner exited', {
-    exitCode: child.status,
-    iteration,
-    resultLen: result.length,
-    runnerLabel,
-    stderrLen: stderr.length,
-    stdoutLen: stdout.length,
-  });
+  return {
+    skipWorktreeSetup: config.skipWorktreeSetup,
+    worktree: config.worktree,
+    worktreeBase: config.worktreeBase,
+  };
+};
 
-  return result;
+/**
+ * @description Maps a Ralph {@link RunIterationConfig} onto the driver-agnostic
+ * {@link DriverInvocationConfig}.
+ */
+const toDriverConfig = (
+  config: RunIterationConfig,
+): DriverInvocationConfig => ({
+  cwd: config.cwd,
+  iteration: config.iteration,
+  model: config.model,
+  onChunk: config.onChunk,
+  prompt: config.agentPrompt,
+  signal: config.signal,
+  timeoutMs: config.timeoutMs,
+  worktree: toWorktreeOptions(config),
+});
+
+const logIterationBanner = (iteration: number): void => {
+  console.log(`\n${ARTWORK_LINE}\n`);
+  console.log(
+    `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`,
+  );
 };
 
 /**
@@ -199,215 +104,13 @@ const runShellIterationSync = (
  */
 export const runIteration = (config: RunIterationConfig): string => {
   const { backend = DEFAULT_WORKFLOW_RUNNER, iteration } = config;
-  const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
+  logIterationBanner(iteration);
 
-  console.log(`\n${ARTWORK_LINE}\n`);
-  console.log(message);
+  const driver = getDriver(backend);
 
-  switch (backend) {
-    case 'claude':
-      return runClaudeIterationSync(config);
-    case 'cursor':
-      return runCursorIterationSync(config);
-
-    default: {
-      throw new Error(`Unsupported execution backend: ${backend}`);
-    }
-  }
-};
-
-/**
- * @description Shared async iteration: streaming, timeout, abort — same behavior for any shell-backed runner.
- */
-const runShellIterationAsync = (
-  command: string,
-  runnerLabel: string,
-  config: RunIterationConfig,
-): Promise<string> => {
-  const { cwd, iteration, timeoutMs, signal, onChunk } = config;
-
-  console.log('----> runShellIterationAsync command 🎯 🎯', command);
-
-  return new Promise((resolve, reject) => {
-    ralphDebugLogger.debug('runIterationAsync: spawning runner', {
-      // config, // TODO: remove this
-      cwd: cwd ?? process.cwd(),
-      iteration,
-      runnerLabel,
-      timeoutMs: timeoutMs ?? null,
-    });
-
-    const child: ChildProcess = spawn(command, [], {
-      cwd,
-      shell: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
-    });
-
-    let chunkCount = 0;
-    let killReason: 'timeout' | 'abort' | undefined;
-    let resolved = false;
-    let stderr = '';
-    let stdout = '';
-
-    const push = (stream: 'stdout' | 'stderr', data: string): void => {
-      if (stream === 'stdout') {
-        stdout += data;
-      } else {
-        stderr += data;
-      }
-
-      chunkCount += 1;
-
-      ralphDebugLogger.verbose('runIterationAsync: chunk', {
-        chunkIndex: chunkCount,
-        chunkLen: data.length,
-        runnerLabel,
-        stderrLen: stderr.length,
-        stdoutLen: stdout.length,
-        stream,
-      });
-
-      onChunk?.({ data, stream });
-    };
-
-    if (child.stdout) {
-      child.stdout.setEncoding('utf8');
-      child.stdout.on('data', (chunk: string) => push('stdout', chunk));
-    }
-
-    if (child.stderr) {
-      child.stderr.setEncoding('utf8');
-      child.stderr.on('data', (chunk: string) => push('stderr', chunk));
-    }
-
-    const killChild = (reason: 'timeout' | 'abort'): void => {
-      if (killReason !== undefined) return;
-      killReason = reason;
-
-      escalateKill(child);
-    };
-
-    const onAbort = (): void => {
-      if (signal?.aborted) killChild('abort');
-    };
-
-    const done = (_status: number | null): void => {
-      if (resolved) return;
-
-      resolved = true;
-      clearTimeout(timeoutId);
-      signal?.removeEventListener('abort', onAbort);
-
-      if (killReason === 'timeout') {
-        ralphDebugLogger.debug(
-          'runIterationAsync: resolved after kill (timeout)',
-          {
-            chunkCount,
-            iteration,
-            runnerLabel,
-            stderrLen: stderr.length,
-            stdoutLen: stdout.length,
-          },
-        );
-        resolve(
-          `<promise>ERROR</promise>\n${runnerLabel} iteration timed out after ${timeoutMs}ms`,
-        );
-        return;
-      }
-
-      if (killReason === 'abort') {
-        ralphDebugLogger.debug(
-          'runIterationAsync: resolved after kill (abort)',
-          {
-            chunkCount,
-            iteration,
-            runnerLabel,
-            stderrLen: stderr.length,
-            stdoutLen: stdout.length,
-          },
-        );
-
-        resolve(
-          `<promise>ERROR</promise>\n${runnerLabel} iteration was cancelled`,
-        );
-
-        return;
-      }
-
-      const stdoutTrim = stdout.trim();
-      const stderrTrim = stderr.trim();
-      const result = stderrTrim ? `${stdoutTrim}\n${stderrTrim}` : stdoutTrim;
-
-      ralphDebugLogger.debug('runIterationAsync: child closed (normal)', {
-        chunkCount,
-        exitCode: _status,
-        iteration,
-        resultLen: result.length,
-        runnerLabel,
-        stderrLen: stderr.length,
-        stdoutLen: stdout.length,
-      });
-
-      resolve(result);
-    };
-
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    if (timeoutMs !== undefined && timeoutMs > 0) {
-      timeoutId = setTimeout(() => killChild('timeout'), timeoutMs);
-    }
-
-    signal?.addEventListener('abort', onAbort);
-    if (signal?.aborted) {
-      killChild('abort');
-    }
-
-    child.on('close', (code) => done(code ?? null));
-    child.on('error', (err) => {
-      ralphDebugLogger.debug('runIterationAsync: child process error', {
-        chunkCount,
-        err,
-        iteration,
-        runnerLabel,
-        stderrLen: stderr.length,
-        stdoutLen: stdout.length,
-      });
-      if (!resolved) {
-        resolved = true;
-        clearTimeout(timeoutId);
-        signal?.removeEventListener('abort', onAbort);
-        reject(err);
-      }
-    });
+  return runDriverSync(driver, toDriverConfig(config), {
+    logger: ralphDebugLogger,
   });
-};
-
-/**
- * @description Cursor backend: one async iteration with streaming and timeout.
- */
-const runCursorIterationAsync = (
-  config: RunIterationConfig,
-): Promise<string> => {
-  const command = buildCursorShellCommand(config);
-  return runShellIterationAsync(
-    command,
-    backendIterationLabel('cursor'),
-    config,
-  );
-};
-
-/**
- * @description Claude Code backend: one async iteration with streaming and timeout.
- */
-const runClaudeIterationAsync = (
-  config: RunIterationConfig,
-): Promise<string> => {
-  const command = buildClaudeShellCommand(config);
-
-  return runShellIterationAsync(
-    command,
-    backendIterationLabel('claude'),
-    config,
-  );
 };
 
 /**
@@ -417,21 +120,11 @@ export const runIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
   const { backend = DEFAULT_WORKFLOW_RUNNER, iteration } = config;
-  const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
+  logIterationBanner(iteration);
 
-  console.log(`\n${ARTWORK_LINE}\n`);
-  console.log(message);
+  const driver = getDriver(backend);
 
-  switch (backend) {
-    case 'claude':
-      return runClaudeIterationAsync(config);
-    case 'cursor':
-      return runCursorIterationAsync(config);
-
-    default: {
-      return Promise.reject(
-        new Error(`Unsupported execution backend: ${backend}`),
-      );
-    }
-  }
+  return runDriverAsync(driver, toDriverConfig(config), {
+    logger: ralphDebugLogger,
+  });
 };

@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

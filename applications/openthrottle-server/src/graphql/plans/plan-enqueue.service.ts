@@ -23,6 +23,7 @@ import {
   Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
@@ -50,7 +51,7 @@ const ENQUEUE_TASK_STATUSES_TO_RESET = [
   'CANCELED',
 ] as const;
 
-type ExecutionBackend = 'claude' | 'cursor' | 'opencode';
+type ExecutionBackend = PlanRunExecutionBackend;
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
 interface EnqueueSpawnParams {

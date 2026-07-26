@@ -7,7 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/openthrottle-drivers": "workspace:^"
+  },
   "devDependencies": {},
   "exports": {
     ".": {

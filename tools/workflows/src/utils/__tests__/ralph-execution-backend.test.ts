@@ -23,7 +23,7 @@ describe('parseRalphExecutionBackendId', () => {
   });
 
   it('rejects unknown backends', () => {
-    expect(() => parseRalphExecutionBackendId('codex', 'cli')).toThrow(
+    expect(() => parseRalphExecutionBackendId('gemini', 'cli')).toThrow(
       /Unknown execution backend/,
     );
   });
@@ -35,7 +35,7 @@ describe('parseRalphExecutionBackendId', () => {
   });
 
   it('lists known backends in error message', () => {
-    expect(() => parseRalphExecutionBackendId('codex', 'cli')).toThrow(
+    expect(() => parseRalphExecutionBackendId('gemini', 'cli')).toThrow(
       /claude.*cursor|cursor.*claude/,
     );
   });
@@ -47,7 +47,7 @@ describe('isRalphExecutionBackendId', () => {
   });
 
   it('returns false for unknown ids', () => {
-    expect(isRalphExecutionBackendId('codex')).toBe(false);
+    expect(isRalphExecutionBackendId('gemini')).toBe(false);
     expect(isRalphExecutionBackendId('')).toBe(false);
   });
 });
