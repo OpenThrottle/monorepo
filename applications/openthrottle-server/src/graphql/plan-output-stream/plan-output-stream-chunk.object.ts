@@ -38,3 +38,11 @@ export class PlanOutputStreamChunkObject {
   })
   taskId!: string | null;
 }
+
+@ObjectType()
+export class DeletePlanOutputResult {
+  @Field(() => Int, {
+    description: `Number of plan output stream chunks deleted`,
+  })
+  deletedCount!: number;
+}

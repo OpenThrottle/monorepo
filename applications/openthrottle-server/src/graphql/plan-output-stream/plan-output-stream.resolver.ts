@@ -19,10 +19,18 @@ import {
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 import { Public } from '@openthrottle/nestjs-auth';
-import { ForbiddenException, Inject } from '@nestjs/common';
-import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
+import {
+  DeletePlanOutputResult,
+  PlanOutputStreamChunkObject,
+} from './plan-output-stream-chunk.object';
 import {
   AppendPlanOutputInput,
+  DeletePlanOutputInput,
   GetPlanOutputStreamChunkInput,
   ListPlanOutputStreamChunksInput,
 } from './plan-output-stream.input';
@@ -105,6 +113,40 @@ export class PlanOutputStreamResolver {
     });
 
     return saved;
+  }
+
+  @Mutation(() => DeletePlanOutputResult, {
+    description: `Delete a plan's output chunks. With chunkId, deletes that single chunk (must belong to planId). Without chunkId, clears all chunks for planId, optionally scoped to taskId.`,
+  })
+  async deletePlanOutput(
+    @Args('input', { type: () => DeletePlanOutputInput })
+    input: DeletePlanOutputInput,
+  ): Promise<DeletePlanOutputResult> {
+    const repo = this.planOutputStreamService.getRepository();
+
+    if (input.chunkId) {
+      const chunk = await repo.findOne({ where: { id: input.chunkId } });
+      if (!chunk) {
+        throw new BadRequestException(
+          `Plan output chunk not found: ${input.chunkId}`,
+        );
+      }
+      if (chunk.planId !== input.planId) {
+        throw new BadRequestException(
+          `Plan output chunk ${input.chunkId} does not belong to plan ${input.planId}`,
+        );
+      }
+
+      const result = await repo.delete({ id: input.chunkId });
+      return { deletedCount: result.affected ?? 0 };
+    }
+
+    const result = await repo.delete({
+      planId: input.planId,
+      ...(input.taskId ? { taskId: input.taskId } : {}),
+    });
+
+    return { deletedCount: result.affected ?? 0 };
   }
 
   // 🔌 graphql-ws only: connection auth (onConnect) already validated the token
