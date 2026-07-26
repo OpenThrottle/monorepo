@@ -36,9 +36,8 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
   {
     Agents: [
       {
-        beta: true,
         children: 'Chats',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false, // 🔴 🟠 🟡
         end: true,
         icon: MessageCircleCode,
         to: '/',
