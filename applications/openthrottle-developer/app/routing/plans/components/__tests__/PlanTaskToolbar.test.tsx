@@ -30,6 +30,7 @@ describe('PlanTaskToolbar Component', () => {
       onAddTag,
       onRemoveTag,
       planId: 'plan-1',
+      planIsRunning: false,
       tagVocabulary: [
         { dimension: 'domain', tag: 'backend' },
         { dimension: 'domain', tag: 'frontend' },
@@ -99,5 +100,29 @@ describe('PlanTaskToolbar Component', () => {
         name: /promote to plan/i,
       }),
     ).toBeDisabled();
+  });
+
+  test('disables Mark Complete and Promote while the plan run is active', () => {
+    const running = within(
+      renderToolbar({ ...props, planIsRunning: true }).container,
+    );
+    expect(
+      running.getByRole('button', { name: /mark complete/i }),
+    ).toBeDisabled();
+    expect(
+      running.getByRole('button', { name: /promote to plan/i }),
+    ).toBeDisabled();
+  });
+
+  test('leaves Mark Complete and Promote enabled when the plan run is not active', () => {
+    const idle = within(
+      renderToolbar({ ...props, planIsRunning: false }).container,
+    );
+    expect(
+      idle.getByRole('button', { name: /mark complete/i }),
+    ).not.toBeDisabled();
+    expect(
+      idle.getByRole('button', { name: /promote to plan/i }),
+    ).not.toBeDisabled();
   });
 });

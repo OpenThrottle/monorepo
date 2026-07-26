@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -100,6 +101,70 @@ describe('PlanToolbar Component', () => {
   test('does not render tag chips when tag props are omitted', () => {
     expect(component.queryByTestId('PlanTagChips')).not.toBeInTheDocument();
   });
+
+  // Accessible name of the Run/Queue button varies by status (getRunButtonLabel).
+  const runButtonName: Record<string, RegExp> = {
+    COMPLETED: /^Completed$/i,
+    IN_PROGRESS: /^In progress$/i,
+    PENDING: /^Add to Queue$/i,
+    QUEUED: /^Queued$/i,
+  };
+
+  test.each(['QUEUED', 'IN_PROGRESS'] as const)(
+    'disables Run, Evaluate rules, and Mark Complete while the plan run is active (%s)',
+    (planStatus) => {
+      const r = within(
+        renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
+          .container,
+      );
+      expect(
+        r.getByRole('button', { name: runButtonName[planStatus] }),
+      ).toBeDisabled();
+      expect(r.getByRole('button', { name: /evaluate rules/i })).toBeDisabled();
+      expect(r.getByRole('button', { name: /mark complete/i })).toBeDisabled();
+    },
+  );
+
+  test('keeps Run and Evaluate rules enabled when no run is active (PENDING, COMPLETED)', () => {
+    for (const planStatus of ['PENDING', 'COMPLETED'] as const) {
+      const r = within(
+        renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
+          .container,
+      );
+      expect(
+        r.getByRole('button', { name: runButtonName[planStatus] }),
+      ).not.toBeDisabled();
+      expect(
+        r.getByRole('button', { name: /evaluate rules/i }),
+      ).not.toBeDisabled();
+    }
+  });
+
+  test('keeps Mark Complete enabled for a PENDING (not-running) plan', () => {
+    const r = within(
+      renderToolbar({
+        planId: 'p1',
+        planStatus: 'PENDING',
+        planTitle: 'My Plan',
+      }).container,
+    );
+    expect(
+      r.getByRole('button', { name: /mark complete/i }),
+    ).not.toBeDisabled();
+  });
+
+  test.each(['QUEUED', 'IN_PROGRESS'] as const)(
+    'keeps Kill run available while the plan run is active (%s)',
+    (planStatus) => {
+      const r = within(
+        renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
+          .container,
+      );
+      expect(
+        r.getByRole('button', { name: /Kill plan run for My Plan/i }),
+      ).not.toBeDisabled();
+    },
+  );
 
   test('renders tag chips and wires removal when the tag contract is provided', async () => {
     const user = userEvent.setup();
