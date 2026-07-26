@@ -43,6 +43,7 @@ describe('WorkspaceFoldersService', () => {
   const mockCheckoutsService = createMock<RepositoryCheckoutsService>({
     create: vi.fn(),
     findByIdForUser: vi.fn(),
+    findByRepositoryIdForUser: vi.fn(),
     listByUserId: vi.fn(),
     saveInspection: vi.fn(),
     updateFilesystemPath: vi.fn(),
@@ -103,6 +104,9 @@ describe('WorkspaceFoldersService', () => {
     vi.mocked(mockCheckoutsService.create).mockReset();
     vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([]);
     vi.mocked(mockCheckoutsService.findByIdForUser).mockResolvedValue(null);
+    vi.mocked(mockCheckoutsService.findByRepositoryIdForUser).mockResolvedValue(
+      [],
+    );
     vi.mocked(mockCheckoutsService.saveInspection).mockReset();
     vi.mocked(mockProjectsService.create).mockReset();
     vi.mocked(mockProjectsService.create).mockResolvedValue(
@@ -392,6 +396,158 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.repository.projectId).toBe('canon-project');
       expect(payload.supersededProjectId).toBe('prov-project');
       expect(payload.checkout.repositoryId).toBe('canon-repo');
+    });
+  });
+
+  describe('workspaceRepository', () => {
+    const ownedCheckout = (repository: Repository): RepositoryCheckout =>
+      asMock<RepositoryCheckout>({
+        displayName: 'monorepo',
+        filesystemPath: join(workspaceRoot, 'gone'),
+        id: 'checkout-detail',
+        // Fresh stored snapshot so resolveInspection serves it without a scan.
+        inspection: {
+          agentConfig: {},
+          git: { normalizedRemoteUrl: repository.normalizedRemoteUrl },
+          scannedAt: '2026-07-26T00:00:00.000Z',
+          stack: {},
+          warnings: [],
+        },
+        repository,
+        repositoryId: repository.id,
+        scannedAt: new Date(),
+        userId,
+      });
+
+    it('returns the repository with the user checkouts for an owned repo', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-detail',
+        name: 'acme/monorepo',
+        normalizedRemoteUrl: 'https://github.com/acme/monorepo',
+        projectId: 'proj-1',
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+
+      const result = await service.workspaceRepository(userId, 'repo-detail');
+
+      expect(result?.id).toBe('repo-detail');
+      expect(result?.name).toBe('acme/monorepo');
+      expect(result?.checkouts).toHaveLength(1);
+      expect(result?.checkouts?.[0]?.id).toBe('checkout-detail');
+      expect(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).toHaveBeenCalledWith('repo-detail', userId);
+    });
+
+    it('returns null when the user owns no checkout of the repository', async () => {
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([]);
+
+      await expect(
+        service.workspaceRepository(userId, 'repo-unowned'),
+      ).resolves.toBeNull();
+      expect(mockRepositoriesService.findById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateRepository', () => {
+    const ownedCheckout = (repository: Repository): RepositoryCheckout =>
+      asMock<RepositoryCheckout>({
+        displayName: 'monorepo',
+        filesystemPath: join(workspaceRoot, 'gone'),
+        id: 'checkout-edit',
+        inspection: null,
+        repository,
+        repositoryId: repository.id,
+        scannedAt: null,
+        userId,
+      });
+
+    it('updates name, default branch, and project link for an owned repo', async () => {
+      const before = asMock<Repository>({
+        id: 'repo-edit',
+        name: 'monorepo',
+        normalizedRemoteUrl: 'https://github.com/acme/monorepo',
+        projectId: null,
+      });
+      const after = asMock<Repository>({
+        id: 'repo-edit',
+        name: 'acme/monorepo',
+        normalizedRemoteUrl: 'https://github.com/acme/monorepo',
+        projectId: 'proj-2',
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(before)]);
+      vi.mocked(mockRepositoriesService.update).mockResolvedValue(after);
+
+      const result = await service.updateRepository(userId, {
+        defaultBranch: 'develop',
+        id: 'repo-edit',
+        name: '  acme/monorepo  ',
+        projectId: 'proj-2',
+      });
+
+      expect(mockRepositoriesService.update).toHaveBeenCalledWith('repo-edit', {
+        defaultBranch: 'develop',
+        name: 'acme/monorepo',
+        projectId: 'proj-2',
+      });
+      expect(result.name).toBe('acme/monorepo');
+      expect(result.projectId).toBe('proj-2');
+    });
+
+    it('clears the project link when projectId is null', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-clear',
+        name: 'acme/monorepo',
+        projectId: 'proj-old',
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+      vi.mocked(mockRepositoriesService.update).mockResolvedValue(
+        asMock<Repository>({ ...repository, projectId: null }),
+      );
+
+      await service.updateRepository(userId, {
+        id: 'repo-clear',
+        projectId: null,
+      });
+
+      expect(mockRepositoriesService.update).toHaveBeenCalledWith(
+        'repo-clear',
+        {
+          projectId: null,
+        },
+      );
+    });
+
+    it('rejects an edit when the user owns no checkout of the repository', async () => {
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([]);
+
+      await expect(
+        service.updateRepository(userId, { id: 'repo-x', name: 'nope' }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects an empty name', async () => {
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([
+        ownedCheckout(asMock<Repository>({ id: 'repo-empty' })),
+      ]);
+
+      await expect(
+        service.updateRepository(userId, { id: 'repo-empty', name: '   ' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
     });
   });
 
