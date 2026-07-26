@@ -76,6 +76,7 @@ Discover available values for dynamic options:
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --list=destinations
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=applications
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=hookFolders --application=openthrottle-developer
 ```
 
 ### 4. Create New Code — Always With Generators
@@ -94,6 +95,12 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
   --application=openthrottle-developer \
   --folder=global/components \
   --name=UserProfile
+# React Router app hook example (area folders via --list=hookFolders; camelCase --name, comma batching OK)
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
+  --subGenerator=hook \
+  --application=openthrottle-developer \
+  --folder=routing/plans \
+  --name=usePlanOutputStream
 # NestJS GraphQL service
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
@@ -142,12 +149,13 @@ Use for destinations, folders, and more — ensure you select valid targets!
 
 Nx project name: **`openthrottle-developer`**. Prefix all generator commands with **`NX_ISOLATE_PLUGINS=false`**.
 
-| Generator                        | Purpose                                          | Key flags                                                                                                                                                                                                                                                   |
-| -------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@tools/generators:react-router` | Route files under `app/routes/`                  | `--subGenerator=route --application=openthrottle-developer --name=<segment>` (comma-separated names allowed). No `--folder`; routes always land in `applications/openthrottle-developer/app/routes/`.                                                       |
-| `@tools/generators:react-router` | Components under `app/`                          | `--subGenerator=component --application=openthrottle-developer --folder=<path> --name=<Name>` (comma-separated names allowed). Valid `--folder` values: `nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer`. |
-| `@tools/generators:folders`      | New `routing/<slug>/` or `services/<slug>/` tree | `--application=openthrottle-developer --name=<slug>` with `--folder=routing` or `--folder=services`. Run **before** generating components into a new `routing/<slug>/components` folder so that path appears in `componentFolders`.                         |
-| `@tools/generators:react`        | Package or app components                        | `--destination=<project>` (not `--folder`). Shared UI: `--destination=@openthrottle/react-router-shadcn`. App-local: `--destination=openthrottle-developer`. List: `--list=destinations`. `--name` accepts comma-separated component names.                 |
+| Generator                        | Purpose                                          | Key flags                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@tools/generators:react-router` | Route files under `app/routes/`                  | `--subGenerator=route --application=openthrottle-developer --name=<segment>` (comma-separated names allowed). No `--folder`; routes always land in `applications/openthrottle-developer/app/routes/`.                                                                                                                                |
+| `@tools/generators:react-router` | Components under `app/`                          | `--subGenerator=component --application=openthrottle-developer --folder=<path> --name=<Name>` (comma-separated names allowed). Valid `--folder` values: `nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer`.                                                                          |
+| `@tools/generators:react-router` | Hooks under `app/<area>/hooks/`                  | `--subGenerator=hook --application=openthrottle-developer --folder=<area> --name=<camelCase>` (comma-separated names allowed). Area paths via `--list=hookFolders` (e.g. `global`, `routing/plans` → `app/<folder>/hooks/`). Do **not** use `@tools/generators:react --subGenerator=hook` for app hooks (that lands in `src/hooks`). |
+| `@tools/generators:folders`      | New `routing/<slug>/` or `services/<slug>/` tree | `--application=openthrottle-developer --name=<slug>` with `--folder=routing` or `--folder=services`. Run **before** generating components into a new `routing/<slug>/components` folder so that path appears in `componentFolders`.                                                                                                  |
+| `@tools/generators:react`        | Package or app components                        | `--destination=<project>` (not `--folder`). Shared UI: `--destination=@openthrottle/react-router-shadcn`. App-local: `--destination=openthrottle-developer`. List: `--list=destinations`. `--name` accepts comma-separated component names.                                                                                          |
 
 ### Generator Execution
 
@@ -168,7 +176,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 ## Generator References
 
 - **[React Generator](./react.md)** – Components, hooks, utils, etc.
-- **[React Router Generator](./react-router.md)** – Apps, components, forms, modals, routes, etc. (registered as `@tools/generators:react-router`)
+- **[React Router Generator](./react-router.md)** – Apps, components, forms, hooks, modals, routes, etc. (registered as `@tools/generators:react-router`)
 - **[NestJS Generator](./nestjs.md)** – Apps, services, modules, agents, etc.
 - **[React Native](./react-native.md)** — not registered in this repo; see file
 - **[Package Generator](./package.md)**
