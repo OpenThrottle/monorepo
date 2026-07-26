@@ -87,6 +87,7 @@
     "@openthrottle/openthrottle-ide": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/openthrottle-plan-config": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@openthrottle/openthrottle-vscode": "workspace:^",
     "@openthrottle/react-router-auth": "workspace:^",

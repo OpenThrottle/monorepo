@@ -2,7 +2,7 @@
  * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076).
  */
 
-import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
+import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
 import {
   Column,
   CreateDateColumn,

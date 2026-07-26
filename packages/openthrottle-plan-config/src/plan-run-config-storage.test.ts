@@ -6,28 +6,28 @@ import {
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
   PLAN_RUN_CONFIG_VERSION,
-} from './plan-run-config-storage.constants';
+} from './plan-run-config-storage.constants.ts';
 import {
   getDefaultPlanRunConfigStorage,
   getDefaultPlanWorkflowUiState,
-} from './plan-run-config-storage.defaults';
+} from './plan-run-config-storage.defaults.ts';
 import {
   buildRalphPlanRunTuningFromPlanRunConfig,
   parsePlanRunIterationTimeoutSeconds,
   planRunConfigFromWorkflowUiState,
   workflowUiStateFromPlanRunConfig,
-} from './plan-run-config-storage.round-trip';
-import { planHasCustomRunConfig } from './plan-run-config-storage.compare';
+} from './plan-run-config-storage.round-trip.ts';
+import { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 import type {
   PlanRunConfigStorage,
   PlanWorkflowUiState,
-} from './plan-run-config-storage.types';
+} from './plan-run-config-storage.types.ts';
 import {
   parsePlanRunConfigJson,
   parsePlanRunConfigStorage,
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
-} from './plan-run-config-storage.validation';
+} from './plan-run-config-storage.validation.ts';
 
 const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
 const taskId = '18142b71-cca2-4242-a4e5-a5b984c7e61d';

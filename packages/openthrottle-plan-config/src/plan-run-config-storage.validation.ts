@@ -15,9 +15,9 @@ import {
   PLAN_RUN_KNOWN_BACKENDS,
   PLAN_RUN_PROMPT_LAYERS,
   PLAN_RUN_WORKTREE_CLI,
-} from './plan-run-config-storage.constants';
-import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults';
-import type { PlanRunConfigStorage } from './plan-run-config-storage.types';
+} from './plan-run-config-storage.constants.ts';
+import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
+import type { PlanRunConfigStorage } from './plan-run-config-storage.types.ts';
 
 const trimToMax = (max: number) =>
   z
