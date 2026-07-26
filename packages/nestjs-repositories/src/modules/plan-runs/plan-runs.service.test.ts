@@ -259,6 +259,16 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('findById', () => {
+    it('returns the run for an id, or null when none matches', async () => {
+      repo.findOne.mockResolvedValueOnce(buildRun({ id: 'run-x' }));
+      expect((await service.findById('run-x'))?.id).toBe('run-x');
+
+      repo.findOne.mockResolvedValueOnce(null);
+      expect(await service.findById('missing')).toBeNull();
+    });
+  });
+
   describe('heartbeat + staleness', () => {
     it('registerCliRun stamps an initial heartbeat so a fresh run is immediately alive', async () => {
       await service.registerCliRun({

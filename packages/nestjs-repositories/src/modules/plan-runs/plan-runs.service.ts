@@ -180,6 +180,13 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Returns a single run by its id, or null when none matches.
+   */
+  async findById(planRunId: string): Promise<PlanRun | null> {
+    return this.getRepository().findOne({ where: { id: planRunId } });
+  }
+
+  /**
    * @description Returns recent plan runs newest first for GraphQL/UI audit views.
    */
   async findRecentByPlanId(planId: string, limit: number): Promise<PlanRun[]> {

@@ -34,6 +34,7 @@ export type PlanRunData = Pick<
   | 'executionBackend'
   | 'hostname'
   | 'id'
+  | 'lastHeartbeatAt'
   | 'pid'
   | 'planId'
   | 'queueName'

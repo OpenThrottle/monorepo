@@ -438,6 +438,15 @@ export class SettleCliPlanRunInput {
   status!: string;
 }
 
+/** Input for {@link PlansResolver.recordPlanRunHeartbeat}: bump a detached-CLI run's liveness. */
+@InputType()
+export class RecordPlanRunHeartbeatInput {
+  @Field(() => ID, {
+    description: `Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun).`,
+  })
+  planRunId!: string;
+}
+
 @InputType()
 export class SetPlanStatusInput {
   @Field(() => ID, { description: `Plan id to update status for` })

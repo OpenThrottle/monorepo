@@ -118,6 +118,19 @@ export class PlanRunObject implements PlanRunData {
   @Field(() => String)
   id!: string;
 
+  @Field(() => Boolean, {
+    description:
+      'Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs.',
+  })
+  isStale!: boolean;
+
+  @Field(() => Date, {
+    description:
+      'Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale.',
+    nullable: true,
+  })
+  lastHeartbeatAt!: Date | null;
+
   @Field(() => Int, {
     description:
       'OS process id of the worker executing this run. Null when not actively executing.',
