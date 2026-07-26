@@ -20,12 +20,15 @@ export const DEFAULT_RALPH_ITERATIONS = 10;
 export const DEFAULT_RALPH_MODEL = 'auto';
 
 /**
- * @description Same ids as `tools/workflows/src/utils/ralph-execution-backend.ts`
- * (`RALPH_EXECUTION_BACKEND_IDS`). UI layer-2 must stay aligned with `workflow-ralph --backend`.
+ * @description Same ids as the `openthrottle-drivers` `DRIVER_IDS` set (surfaced via
+ * `WORKFLOW_RUNNER_IDS`). Hand-maintained here because this is browser code and must NOT import the
+ * Node-only drivers package; keep it aligned with `workflow-ralph --backend` when a driver is added.
  */
 export const WORKFLOW_RALPH_KNOWN_BACKENDS = [
   'claude',
+  'codex',
   'cursor',
+  'grok',
   'opencode',
 ] as const;
 
