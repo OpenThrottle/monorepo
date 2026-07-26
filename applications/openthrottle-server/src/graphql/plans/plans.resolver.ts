@@ -36,6 +36,7 @@ import {
   resolveCompletedAtForStatusChange,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
+  STALE_CUTOFF_MS,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type {
@@ -74,6 +75,7 @@ import {
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   PlanRunsByPlanIdInput,
+  RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
@@ -171,6 +173,23 @@ function isPlanRunExecutionBackend(
 /** @description Terminal statuses a detached-CLI run may be settled to. */
 function isTerminalCliRunStatus(value: string): boolean {
   return value === 'CANCELLED' || value === 'COMPLETED' || value === 'FAILED';
+}
+
+/**
+ * @description Derives whether an IN_PROGRESS run is stale (owning process crashed hard,
+ * heartbeat gone quiet past the cutoff). Only IN_PROGRESS rows can be stale — a terminal
+ * row (COMPLETED/CANCELLED/FAILED/STALE) conveys its state through `status`. Falls back to
+ * `createdAt` when the run never heartbeated (legacy/pre-first-tick), matching the sweeper's
+ * COALESCE(last_heartbeat_at, created_at) predicate.
+ */
+function isPlanRunStale(planRun: PlanRun): boolean {
+  if (planRun.status !== 'IN_PROGRESS') {
+    return false;
+  }
+
+  const liveness = planRun.lastHeartbeatAt ?? planRun.createdAt;
+
+  return Date.now() - liveness.getTime() > STALE_CUTOFF_MS;
 }
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
@@ -279,6 +298,8 @@ export class PlansResolver {
     out.executionBackend = planRun.executionBackend;
     out.hostname = planRun.hostname;
     out.id = planRun.id;
+    out.isStale = isPlanRunStale(planRun);
+    out.lastHeartbeatAt = planRun.lastHeartbeatAt;
     out.pid = planRun.pid;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
@@ -359,6 +380,21 @@ export class PlansResolver {
       input.planRunId,
       status,
     );
+
+    return run ? this.mapPlanRunObject(run) : null;
+  }
+
+  @Mutation(() => PlanRunObject, {
+    description: `Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.`,
+    nullable: true,
+  })
+  async recordPlanRunHeartbeat(
+    @Args('input', { type: () => RecordPlanRunHeartbeatInput })
+    input: RecordPlanRunHeartbeatInput,
+  ): Promise<PlanRunObject | null> {
+    await this.planRunsService.recordHeartbeatById(input.planRunId);
+
+    const run = await this.planRunsService.findById(input.planRunId);
 
     return run ? this.mapPlanRunObject(run) : null;
   }

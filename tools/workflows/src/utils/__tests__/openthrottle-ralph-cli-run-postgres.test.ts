@@ -136,4 +136,19 @@ describe('CLI-run postgres helpers', () => {
     expect(update?.sql).toContain('WHERE id = $1');
     expect(update?.params).toEqual(['cli-run-1', 'CANCELLED']);
   });
+
+  it('bumpCliPlanRunHeartbeatPostgres updates last_heartbeat_at, keyed on run id', async () => {
+    const { bumpCliPlanRunHeartbeatPostgres } =
+      await import('../openthrottle-ralph-postgres.js');
+
+    await bumpCliPlanRunHeartbeatPostgres(mockConfig, 'cli-run-1');
+
+    const update = mockState.calls.find((c) =>
+      c.sql.includes('UPDATE plan_runs'),
+    );
+    expect(update).toBeDefined();
+    expect(update?.sql).toContain('last_heartbeat_at = NOW()');
+    expect(update?.sql).toContain('WHERE id = $1');
+    expect(update?.params).toEqual(['cli-run-1']);
+  });
 });

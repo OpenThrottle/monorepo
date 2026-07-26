@@ -100,6 +100,12 @@ export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
 export { planOutputStreamFactory } from './modules/plan-output-stream/plan-output-stream.factory';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service';
+export {
+  HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STATUS,
+  STALE_CUTOFF_MS,
+} from './modules/plan-runs/plan-runs.constants';
+export type { PlanRunStatus } from './modules/plan-runs/plan-runs.constants';
 export { PlanRun } from './modules/plan-runs/plan-run.entity';
 export { PlanRunsService } from './modules/plan-runs/plan-runs.service';
 export { plansFactory } from './modules/plans/plans.factory';

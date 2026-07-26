@@ -1415,6 +1415,8 @@ export type Mutation = {
   mintSubscriptionToken: Scalars['String']['output'];
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
+  /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
+  recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -1741,6 +1743,10 @@ export type MutationLoginArgs = {
 
 export type MutationPromoteTaskToPlanArgs = {
   input: PromoteTaskToPlanInput;
+};
+
+export type MutationRecordPlanRunHeartbeatArgs = {
+  input: RecordPlanRunHeartbeatInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -2088,6 +2094,10 @@ export type PlanRunObject = {
   /** Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope. */
   hostname?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs. */
+  isStale: Scalars['Boolean']['output'];
+  /** Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale. */
+  lastHeartbeatAt?: Maybe<Scalars['DateTime']['output']>;
   /** OS process id of the worker executing this run. Null when not actively executing. */
   pid?: Maybe<Scalars['Int']['output']>;
   planId: Scalars['String']['output'];
@@ -2965,6 +2975,11 @@ export type RalphPlanRunTuningInput = {
   worktree?: InputMaybe<Scalars['String']['input']>;
   /** Cursor-only: branch/ref for --worktree-base. */
   worktreeBase?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordPlanRunHeartbeatInput = {
+  /** Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun). */
+  planRunId: Scalars['ID']['input'];
 };
 
 export type RecordWorkArtifactInput = {
@@ -4585,6 +4600,20 @@ export type SettleCliPlanRunMutation = {
     planId: string;
     status: string;
     workerId?: string | null;
+  } | null;
+};
+
+export type RecordPlanRunHeartbeatMutationVariables = Exact<{
+  input: RecordPlanRunHeartbeatInput;
+}>;
+
+export type RecordPlanRunHeartbeatMutation = {
+  __typename?: 'Mutation';
+  recordPlanRunHeartbeat?: {
+    __typename?: 'PlanRunObject';
+    id: string;
+    lastHeartbeatAt?: any | null;
+    status: string;
   } | null;
 };
 
@@ -6592,6 +6621,65 @@ export const SettleCliPlanRunDocument = {
 } as unknown as DocumentNode<
   SettleCliPlanRunMutation,
   SettleCliPlanRunMutationVariables
+>;
+export const RecordPlanRunHeartbeatDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'recordPlanRunHeartbeat' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RecordPlanRunHeartbeatInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'recordPlanRunHeartbeat' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'lastHeartbeatAt' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RecordPlanRunHeartbeatMutation,
+  RecordPlanRunHeartbeatMutationVariables
 >;
 export const CreateProjectDocument = {
   kind: 'Document',

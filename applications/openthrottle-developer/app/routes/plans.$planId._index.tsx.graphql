@@ -215,6 +215,8 @@ query PlanDetailIndexLoader($planId: ID!) {
     createdAt
     executionBackend
     id
+    isStale
+    lastHeartbeatAt
     runConfigSnapshotJson
     runKind
     status

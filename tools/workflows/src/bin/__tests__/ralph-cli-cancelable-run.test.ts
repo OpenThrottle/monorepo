@@ -18,6 +18,8 @@ const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 const RUN_ID = 'cli-run-1';
 /** Must match CLI_CANCEL_POLL_INTERVAL_MS in ralph.ts. */
 const POLL_MS = 3000;
+/** Must match HEARTBEAT_INTERVAL_MS in openthrottle-ralph.ts. */
+const HEARTBEAT_MS = 15_000;
 
 const graphqlConfig: WorkflowRalphConfig = { transport: 'graphql' };
 const postgresConfig: WorkflowRalphConfig = {
@@ -51,6 +53,7 @@ const pendingTask: TaskRow = {
 };
 
 const {
+  bumpCliPlanRunHeartbeatMock,
   captureRunLocationMock,
   getOpenThrottleConfigOrExitMock,
   readPlanRunCancelMarkerMock,
@@ -60,6 +63,7 @@ const {
   updatePlanStatusMock,
   updateTaskStatusMock,
 } = vi.hoisted(() => ({
+  bumpCliPlanRunHeartbeatMock: vi.fn().mockResolvedValue(undefined),
   captureRunLocationMock: vi.fn(() => ({
     hostname: 'laptop-1',
     pid: 4242,
@@ -81,6 +85,7 @@ vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
     await importOriginal<typeof import('../../utils/openthrottle-ralph')>();
   return {
     ...actual,
+    bumpCliPlanRunHeartbeat: bumpCliPlanRunHeartbeatMock,
     captureRunLocation: captureRunLocationMock,
     ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
     getOpenThrottleConfigOrExit: getOpenThrottleConfigOrExitMock,
@@ -151,6 +156,8 @@ describe('Ralph detached-CLI cancelable run', () => {
     updatePlanStatusMock.mockClear();
     updateTaskStatusMock.mockClear();
     registerCliPlanRunMock.mockClear();
+    bumpCliPlanRunHeartbeatMock.mockClear();
+    bumpCliPlanRunHeartbeatMock.mockResolvedValue(undefined);
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(throwingExit);
   });
 
@@ -335,5 +342,62 @@ describe('Ralph detached-CLI cancelable run', () => {
       RUN_ID,
       'CANCELLED',
     );
+  });
+
+  it('bumps the liveness heartbeat on the interval while the run is in flight', async () => {
+    vi.useFakeTimers();
+    // Keep the run in flight so the heartbeat timer has time to fire.
+    runIterationAsyncMock.mockImplementation(
+      () => new Promise<string>(() => {}),
+    );
+
+    const { main } = await import('../ralph.js');
+    void main().catch(() => {});
+
+    // Let registration complete, then advance past two heartbeat intervals.
+    await vi.advanceTimersByTimeAsync(HEARTBEAT_MS * 2 + 50);
+
+    expect(bumpCliPlanRunHeartbeatMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      RUN_ID,
+    );
+    expect(
+      bumpCliPlanRunHeartbeatMock.mock.calls.length,
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+  it('does NOT start the heartbeat when register fails (untracked run)', async () => {
+    registerCliPlanRunMock.mockRejectedValueOnce(new Error('server down'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.useFakeTimers();
+
+    const { main } = await import('../ralph.js');
+    void main().catch(() => {});
+
+    await vi.advanceTimersByTimeAsync(HEARTBEAT_MS * 2 + 50);
+
+    expect(bumpCliPlanRunHeartbeatMock).not.toHaveBeenCalled();
+  });
+
+  it('warns and continues when a heartbeat bump fails (never aborts the run)', async () => {
+    vi.useFakeTimers();
+    bumpCliPlanRunHeartbeatMock.mockRejectedValue(new Error('bump failed'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    runIterationAsyncMock.mockImplementation(
+      () => new Promise<string>(() => {}),
+    );
+
+    const { main } = await import('../ralph.js');
+    void main().catch(() => {});
+
+    await vi.advanceTimersByTimeAsync(HEARTBEAT_MS + 50);
+
+    expect(bumpCliPlanRunHeartbeatMock).toHaveBeenCalled();
+    expect(
+      warnSpy.mock.calls.some((c) => String(c[0]).includes('Heartbeat bump')),
+    ).toBe(true);
+    // The run was never aborted or settled by the heartbeat failure.
+    expect(settleCliPlanRunMock).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });

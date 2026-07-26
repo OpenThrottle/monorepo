@@ -88,6 +88,7 @@ describe('PlanWorkflowRunTransparency', () => {
           createdAt: '2024-01-02T03:04:05.000Z',
           executionBackend: 'cursor',
           id: 'run-1',
+          isStale: false,
           runConfigSnapshotJson: JSON.stringify({
             ralph: { executionBackend: 'cursor' },
             target: { mode: 'plan', taskId: '' },
@@ -117,6 +118,7 @@ describe('PlanWorkflowRunTransparency', () => {
           createdAt: '2024-01-02T03:04:05.000Z',
           executionBackend: 'claude',
           id: 'run-2',
+          isStale: false,
           runConfigSnapshotJson: JSON.stringify({
             ralph: { executionBackend: 'claude', iterations: 25 },
             target: { mode: 'plan', taskId: '' },
