@@ -87,6 +87,7 @@ describe('toAgentChatOptions', () => {
         { backend: 'cursor', label: 'Cursor', version: '1.2.3' },
         { backend: 'claude', label: 'Claude Code', version: null },
       ],
+      totalCount: 2,
     });
 
     expect(options).toEqual([
