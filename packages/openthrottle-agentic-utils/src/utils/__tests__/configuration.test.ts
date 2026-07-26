@@ -16,12 +16,14 @@ import {
 describe('safeParseRunner', () => {
   it('accepts every known runner id', () => {
     expect(safeParseRunner('claude')).toBe('claude');
+    expect(safeParseRunner('codex')).toBe('codex');
     expect(safeParseRunner('cursor')).toBe('cursor');
+    expect(safeParseRunner('grok')).toBe('grok');
     expect(safeParseRunner('opencode')).toBe('opencode');
   });
 
   it('falls back to the default runner for unknown values', () => {
-    expect(safeParseRunner('codex')).toBe(DEFAULT_WORKFLOW_RUNNER);
+    expect(safeParseRunner('gemini')).toBe(DEFAULT_WORKFLOW_RUNNER);
   });
 
   it('falls back to the default runner for empty/auto values', () => {

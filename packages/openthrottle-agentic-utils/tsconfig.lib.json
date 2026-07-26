@@ -19,6 +19,9 @@
       "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

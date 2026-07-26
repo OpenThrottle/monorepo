@@ -84,6 +84,7 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-developer-codegen": "workspace:^",
+    "@openthrottle/openthrottle-drivers": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",

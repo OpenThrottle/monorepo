@@ -1,6 +1,16 @@
+import {
+  DEFAULT_DRIVER_ID,
+  DRIVER_IDS,
+} from '@openthrottle/openthrottle-drivers';
+
 export const DEFAULT_WORKFLOW_DEBUG = 'omit';
 export const DEFAULT_WORKFLOW_ITERATIONS = 10;
-export const DEFAULT_WORKFLOW_RUNNER = 'cursor';
+
+/**
+ * Default Ralph execution backend.
+ * @deprecated Use {@link DEFAULT_DRIVER_ID} from `@openthrottle/openthrottle-drivers`.
+ */
+export const DEFAULT_WORKFLOW_RUNNER = DEFAULT_DRIVER_ID;
 
 /**
  * Env var for Ralph execution backend (`cursor` | `claude`).
@@ -34,6 +44,7 @@ export const WORKFLOW_RALPH_OT_ROOT_ENV = `WORKFLOW_RALPH_OT_ROOT`;
 export const WORKFLOW_RALPH_VERBOSE_ENV = `WORKFLOW_RALPH_VERBOSE`;
 
 /**
- * Known workflow runner ids; extend when adding a runner implementation.
+ * Known workflow runner ids.
+ * @deprecated Use {@link DRIVER_IDS} from `@openthrottle/openthrottle-drivers`.
  */
-export const WORKFLOW_RUNNER_IDS = [`claude`, `cursor`, 'opencode'] as const;
+export const WORKFLOW_RUNNER_IDS = DRIVER_IDS;

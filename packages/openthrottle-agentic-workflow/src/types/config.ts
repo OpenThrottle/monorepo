@@ -4,6 +4,8 @@
  * via {@link WorkflowRunContext} extensions.
  */
 
+import type { DriverId } from '@openthrottle/openthrottle-drivers';
+
 export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
 /**
  * Any model id string. The `(string & {})` keeps editor autocomplete for the
@@ -11,7 +13,11 @@ export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
  * this to plain `string`, which would drop the suggestion.
  */
 export type WorkflowConfigModel = 'auto' | (string & {});
-export type WorkflowConfigRunner = 'cursor' | 'claude' | 'opencode';
+/**
+ * Which CLI/process runs each agentic iteration.
+ * @deprecated Use `DriverId` from `@openthrottle/openthrottle-drivers`.
+ */
+export type WorkflowConfigRunner = DriverId;
 
 /**
  * @deprecated Use {@link WorkflowConfig} instead.
