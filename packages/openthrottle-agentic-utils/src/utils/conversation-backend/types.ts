@@ -75,9 +75,18 @@ export interface ConversationBackendRun {
   /** Model id to complete with. */
   readonly model: string;
   /**
+   * When true, resume the given `sessionId` rather than create it. Only CLI
+   * backends whose "create" and "resume" invocations differ read this: claude
+   * uses `--session-id` (create) vs `--resume` (continue). Cursor (which always
+   * resumes a pre-minted id) and opencode (which mints on first run when
+   * `sessionId` is absent) ignore it. Defaults to false (create/first turn).
+   */
+  readonly resumeSession?: boolean;
+  /**
    * CLI backend session handle to resume (e.g. a cursor-agent chat id). CLI
    * backends own multi-turn context themselves, so they read only the latest
-   * user message from `messages` and rely on this id for history.
+   * user message from `messages` and rely on this id for history. Optional for
+   * backends that mint the id on the first run (opencode).
    */
   readonly sessionId?: string;
   /** Optional abort signal; cancels the in-flight stream. */

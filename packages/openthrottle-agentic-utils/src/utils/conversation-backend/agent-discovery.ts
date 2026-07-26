@@ -7,7 +7,9 @@
 
 import { spawn } from 'node:child_process';
 
+import { CLAUDE_BIN_ENV } from './claude/argv.ts';
 import { CURSOR_AGENT_BIN_ENV } from './cursor-agent/argv.ts';
+import { OPENCODE_BIN_ENV } from './opencode/argv.ts';
 
 /**
  * A supported agent CLI in the allowlist.
@@ -61,24 +63,30 @@ export interface DiscoverAgentClisOptions {
 
 /**
  * Hardcoded allowlist of supported agent CLIs. Only these binaries are ever
- * probed or spawned. Cursor is wired in v1; claude/opencode are documented
- * compatible and can be appended here as their adapters land.
+ * probed or spawned. Each `backend` maps to a `ConversationBackend` adapter and
+ * to the resolver's routing gate; probing is uniform (`<binary> --version`).
  *
  * @public
  */
 export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] = [
+  {
+    backend: 'claude',
+    binEnv: CLAUDE_BIN_ENV,
+    binary: 'claude',
+    label: 'Claude Code',
+  },
   {
     backend: 'cursor',
     binEnv: CURSOR_AGENT_BIN_ENV,
     binary: 'cursor-agent',
     label: 'Cursor Agent',
   },
-  // {
-  //   backend: 'opencode',
-  //   binEnv: CURSOR_AGENT_BIN_ENV,
-  //   binary: 'cursor-agent',
-  //   label: 'XXXX - OPENCODE',
-  // },
+  {
+    backend: 'opencode',
+    binEnv: OPENCODE_BIN_ENV,
+    binary: 'opencode',
+    label: 'OpenCode',
+  },
 ];
 
 function resolveBinary(

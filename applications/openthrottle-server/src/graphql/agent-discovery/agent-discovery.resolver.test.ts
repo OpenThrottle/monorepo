@@ -26,6 +26,12 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'Claude Code',
       version: null,
     },
+    {
+      available: true,
+      backend: 'opencode',
+      label: 'OpenCode',
+      version: '1.18.5',
+    },
   ],
   scannedAt: '2026-06-19T00:00:00.000Z',
 };
@@ -40,13 +46,14 @@ describe('AgentDiscoveryResolver', () => {
     resolver = new AgentDiscoveryResolver(service);
   });
 
-  it('surfaces only available agents and maps the payload', async () => {
+  it('surfaces only available agents (cursor + opencode, not the unavailable claude)', async () => {
     const result = await resolver.discoverAgentClis();
     expect(service.discover).toHaveBeenCalledWith();
     expect(result.scannedAt).toBe('2026-06-19T00:00:00.000Z');
-    expect(result.totalCount).toBe(1);
+    expect(result.totalCount).toBe(2);
     expect(result.agents).toEqual([
       { backend: 'cursor', label: 'Cursor Agent', version: '2026.06.15' },
+      { backend: 'opencode', label: 'OpenCode', version: '1.18.5' },
     ]);
   });
 
