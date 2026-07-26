@@ -84,7 +84,9 @@ describe('DashboardDailyStatsModal Component', () => {
 
     test('renders the selected day, all metric labels, and the mini chart', () => {
       expect(component.getByTestId('daily-stats-detail')).toBeInTheDocument();
-      expect(component.getByText('Jan 1')).toBeInTheDocument();
+      expect(
+        component.getByText('Thursday, January 1, 2026'),
+      ).toBeInTheDocument();
       expect(
         component.getByTestId('DashboardDailyStatsDayChart'),
       ).toBeInTheDocument();
@@ -123,7 +125,9 @@ describe('DashboardDailyStatsModal Component', () => {
     });
 
     test('falls back to the most-recent day and shows the hint', () => {
-      expect(component.getByText('Jan 2')).toBeInTheDocument();
+      expect(
+        component.getByText('Friday, January 2, 2026'),
+      ).toBeInTheDocument();
       expect(
         component.getByText(DAILY_STATS_MODAL_COPY.mostRecentHint),
       ).toBeInTheDocument();
@@ -136,11 +140,15 @@ describe('DashboardDailyStatsModal Component', () => {
       const component = renderWithProps({}, [
         '/?modal=daily-stats&date=2026-01-01',
       ]);
-      expect(component.getByText('Jan 1')).toBeInTheDocument();
+      expect(
+        component.getByText('Thursday, January 1, 2026'),
+      ).toBeInTheDocument();
 
       await user.keyboard('{ArrowRight}');
 
-      expect(component.getByText('Jan 2')).toBeInTheDocument();
+      expect(
+        component.getByText('Friday, January 2, 2026'),
+      ).toBeInTheDocument();
     });
 
     test('does not step past the most-recent day (clamped to range)', async () => {
@@ -148,11 +156,15 @@ describe('DashboardDailyStatsModal Component', () => {
       const component = renderWithProps({}, [
         '/?modal=daily-stats&date=2026-01-02',
       ]);
-      expect(component.getByText('Jan 2')).toBeInTheDocument();
+      expect(
+        component.getByText('Friday, January 2, 2026'),
+      ).toBeInTheDocument();
 
       await user.keyboard('{ArrowRight}');
 
-      expect(component.getByText('Jan 2')).toBeInTheDocument();
+      expect(
+        component.getByText('Friday, January 2, 2026'),
+      ).toBeInTheDocument();
     });
 
     test('does not step before the earliest day (clamped to range)', async () => {
@@ -160,11 +172,15 @@ describe('DashboardDailyStatsModal Component', () => {
       const component = renderWithProps({}, [
         '/?modal=daily-stats&date=2026-01-01',
       ]);
-      expect(component.getByText('Jan 1')).toBeInTheDocument();
+      expect(
+        component.getByText('Thursday, January 1, 2026'),
+      ).toBeInTheDocument();
 
       await user.keyboard('{ArrowLeft}');
 
-      expect(component.getByText('Jan 1')).toBeInTheDocument();
+      expect(
+        component.getByText('Thursday, January 1, 2026'),
+      ).toBeInTheDocument();
     });
 
     test('ignores arrow keys when the modal is closed', async () => {
