@@ -148,6 +148,34 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     );
   });
 
+  it('accepts additive @-mention fileMentions and still starts the stream', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      fileMentions: ['src/app.ts', 'lib/util.ts'],
+      message: 'check @src/app.ts and @lib/util.ts',
+      modelId: null,
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    // fileMentions is additive + not yet honored (dde67342): it must not change
+    // the run, but the turn must still succeed.
+    expect(result.errorMessage).toBeNull();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({ backend: 'cursor', cwd: '/repo/checkout' }),
+    );
+  });
+
   it('rejects an unauthenticated (non-human) caller', async () => {
     const { resolver, streamService } = build();
 

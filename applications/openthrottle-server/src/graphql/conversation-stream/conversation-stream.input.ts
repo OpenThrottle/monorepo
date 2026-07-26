@@ -29,6 +29,12 @@ export class StartConversationStreamInput {
   })
   conversationId?: string | null;
 
+  @Field(() => [String], {
+    description: `Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens, so a CLI agent already receives them; structured injection (e.g. file-content preloading) is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT applied yet.`,
+    nullable: true,
+  })
+  fileMentions?: string[] | null;
+
   @Field(() => String, {
     description: `User message text for this turn.`,
   })
