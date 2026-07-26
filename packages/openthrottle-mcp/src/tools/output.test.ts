@@ -6,6 +6,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   appendPlanOutputToolHandler,
+  deletePlanOutputToolHandler,
   getPlanOutputToolHandler,
 } from './output.ts';
 
@@ -186,6 +187,108 @@ describe('getPlanOutputToolHandler', () => {
       expect(result).toMatchObject({
         content: [{ text: 'No output chunks for this plan.' }],
         structuredContent: { chunks: [] },
+      });
+    });
+  });
+});
+
+describe('deletePlanOutputToolHandler', () => {
+  const chunkId = 'c1a2b3c4-d5e6-4789-a0b1-c2d3e4f5a6b7';
+  const taskId = 'a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7';
+
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when args are invalid', () => {
+    it('returns an invalid-args error without calling GraphQL', async () => {
+      const result = await deletePlanOutputToolHandler({});
+
+      expect(result).toMatchObject({ isError: true });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when deleting a single chunk by id', () => {
+    it('forwards chunkId and surfaces the deleted count', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        deletePlanOutput: { deletedCount: 1 },
+      });
+
+      const result = await deletePlanOutputToolHandler({ chunkId, planId });
+
+      expect(result).toMatchObject({ structuredContent: { deletedCount: 1 } });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { chunkId, planId, taskId: null } },
+      );
+    });
+  });
+
+  describe('when clearing all chunks for a plan', () => {
+    it('sends null chunkId/taskId and surfaces the count', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        deletePlanOutput: { deletedCount: 4 },
+      });
+
+      const result = await deletePlanOutputToolHandler({ planId });
+
+      expect(result).toMatchObject({ structuredContent: { deletedCount: 4 } });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { chunkId: null, planId, taskId: null } },
+      );
+    });
+  });
+
+  describe('when clearing a plan scoped to a task', () => {
+    it('forwards taskId with a null chunkId', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        deletePlanOutput: { deletedCount: 2 },
+      });
+
+      await deletePlanOutputToolHandler({ planId, taskId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { chunkId: null, planId, taskId } },
+      );
+    });
+  });
+
+  describe('when nothing is deleted', () => {
+    it('surfaces a deleted count of zero', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        deletePlanOutput: { deletedCount: 0 },
+      });
+
+      const result = await deletePlanOutputToolHandler({ planId });
+
+      expect(result).toMatchObject({ structuredContent: { deletedCount: 0 } });
+    });
+  });
+
+  describe('when GraphQL returns no result', () => {
+    it('returns a no-result error', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        deletePlanOutput: null,
+      });
+
+      const result = await deletePlanOutputToolHandler({ planId });
+
+      expect(result).toEqual({
+        content: [
+          { text: 'delete_plan_output returned no result', type: 'text' },
+        ],
+        isError: true,
       });
     });
   });
