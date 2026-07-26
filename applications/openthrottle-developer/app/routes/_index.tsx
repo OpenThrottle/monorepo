@@ -1,16 +1,17 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import {
   ChatComposer,
-  ChatComposerMode,
   ChatComposerToolbar,
   ChatThread,
   parseFileMentions,
+  type ChatComposerMode,
   type ChatMessage,
   type ChatPermissionMode,
   type ChatReasoningLevel,
   type ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { useAtom } from 'jotai';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -22,6 +23,7 @@ import {
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { chatToolbarStateAtom } from '~/routing/home/data/atom.chat-toolbar';
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
@@ -96,18 +98,42 @@ export default function Component(
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [mode, setMode] = useState<ChatComposerMode>(ChatComposerMode.plan);
-  const [modelId, setModelId] = useState<string | undefined>(models[0]?.id);
   // The assistant turn that has been started but not yet reached a terminal
   // chunk. Keeps the composer in its streaming state and renders a running
   // indicator on the placeholder while a slow backend (e.g. cursor-agent, which
   // emits its whole turn in one end-of-turn burst) has produced nothing yet.
   const [pendingAssistantId, setPendingAssistantId] = useState<string | null>(null); // prettier-ignore
-  const [permissionMode, setPermissionMode] = useState<ChatPermissionMode | undefined>(undefined); // prettier-ignore
-  const [personaId, setPersonaId] = useState<string | undefined>(personas[0]?.id); // prettier-ignore
-  const [reasoning, setReasoning] = useState<ChatReasoningLevel | undefined>(undefined); // prettier-ignore
-  const [repositoryId, setRepositoryId] = useState<string | undefined>(repositories[0]?.id); // prettier-ignore
-  const [serviceTier, setServiceTier] = useState<ChatServiceTier | undefined>(undefined); // prettier-ignore
+
+  // Toolbar selections persist across reloads in a localStorage-backed atom.
+  // Each per-field setter writes only its own key; absent id fields fall back to
+  // the loader-derived seed for the effective value handed to the toolbar and to
+  // onSubmit, without overwriting an explicit persisted choice. Stale-value
+  // reconciliation against loader data + capabilities lands in a later task.
+  const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+
+  const setMode = (mode: ChatComposerMode): void =>
+    setToolbarState((previous) => ({ ...previous, mode }));
+  const setModelId = (modelId: string): void =>
+    setToolbarState((previous) => ({ ...previous, modelId }));
+  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
+    setToolbarState((previous) => ({ ...previous, permissionMode }));
+  const setPersonaId = (personaId: string): void =>
+    setToolbarState((previous) => ({ ...previous, personaId }));
+  const setReasoning = (reasoning: ChatReasoningLevel): void =>
+    setToolbarState((previous) => ({ ...previous, reasoning }));
+  const setRepositoryId = (repositoryId: string): void =>
+    setToolbarState((previous) => ({ ...previous, repositoryId }));
+  const setServiceTier = (serviceTier: ChatServiceTier): void =>
+    setToolbarState((previous) => ({ ...previous, serviceTier }));
+
+  const mode = toolbarState.mode;
+  const modelId = toolbarState.modelId ?? models[0]?.id;
+  const permissionMode = toolbarState.permissionMode;
+  const personaId = toolbarState.personaId ?? personas[0]?.id;
+  const reasoning = toolbarState.reasoning;
+  const repositoryId = toolbarState.repositoryId ?? repositories[0]?.id;
+  const serviceTier = toolbarState.serviceTier;
+
   const cancelFetcher = useFetcher();
   const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const localIdRef = useRef(0);
