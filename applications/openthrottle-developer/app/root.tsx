@@ -101,6 +101,7 @@ import {
   handleSendAgentMessageIntent,
 } from '~/global/utils/utils.agents-chat';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
+import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 
 /**
@@ -425,8 +426,13 @@ export default function App(): React.ReactElement {
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
+  // Streaming chat surface for the global header ChatDialog. Runs unconditionally
+  // (hook rules); only injected into GlobalProviders when authenticated, else the
+  // header falls back to the legacy provider.
+  const headerChat = useHeaderChatController({ enabled: data?.user != null });
 
   // Setup
+  const headerChatSurface = data?.user != null ? headerChat : undefined;
   const isAuthRoute = pathname.startsWith('/auth');
   const isIndexRoute = pathname === '/';
   const isLegalRoute = pathname.startsWith('/legal');
@@ -519,7 +525,10 @@ export default function App(): React.ReactElement {
     <>
       <NotificationsStoreProvider>
         <NotificationsSubscriptionBridge>
-          <GlobalProviders chatPersist={data?.user != null}>
+          <GlobalProviders
+            chat={headerChatSurface}
+            chatPersist={data?.user != null}
+          >
             <GlobalLayout
               authenticated={data?.user !== null}
               data={data?.user ? dataNavigationV2 : dataNavigationGuest}
