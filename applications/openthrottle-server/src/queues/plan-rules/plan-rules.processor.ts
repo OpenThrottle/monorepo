@@ -11,7 +11,10 @@
  * A matched rule with no ledger row is dispatched fresh (execute); a matched
  * rule already 'applied' with a live task is handed to the executor's optional
  * reconcile() so continuous invariants (e.g. inject-task placement) are
- * re-established every pass rather than frozen at first apply.
+ * re-established every pass rather than frozen at first apply. A matched rule
+ * whose row stopped pointing at a live result — 'applied' with a NULL task
+ * (deleted) or 'orphaned' (re-matched) — is handed to reinject() so it is not a
+ * permanent no-op.
  *
  * The plan owner is resolved from plan.author (GitHub username → users row);
  * a plan whose author has no user row has no rules and is skipped. The v1
@@ -90,6 +93,7 @@ export class PlanRulesProcessor
         matched: 0,
         orphaned: 0,
         reconciled: 0,
+        reinjected: 0,
         skipped: 'plan-missing',
       };
     }
@@ -105,6 +109,7 @@ export class PlanRulesProcessor
         matched: 0,
         orphaned: 0,
         reconciled: 0,
+        reinjected: 0,
         skipped: 'no-owner',
       };
     }
@@ -213,6 +218,40 @@ export class PlanRulesProcessor
       Promise.resolve(),
     );
     const reconciled = reconcilable.length;
+
+    // Re-injection: a matched rule whose ledger row stopped pointing at a live
+    // result — 'applied' with a NULL task (the injected task was deleted) or
+    // 'orphaned' (un-matched then matched again). Without this such a row is a
+    // permanent no-op. Sequential for the same UNIQUE(plan_id, sort_order)
+    // safety as reconcile.
+    const reinjectable = matched.flatMap((action, index) => {
+      const application = fingerprints[index];
+      if (application == null) return [];
+      const deletedApplied =
+        application.state === RULE_APPLICATION_STATES.APPLIED &&
+        application.taskId == null;
+      const orphaned = application.state === RULE_APPLICATION_STATES.ORPHANED;
+      if (!deletedApplied && !orphaned) return [];
+      const executor = this.executorRegistry.get(action.actionType);
+      const rule = rulesById.get(action.ruleId);
+      if (executor?.reinject == null || rule == null) return [];
+      return [{ action, application, executor, rule }];
+    });
+
+    await reinjectable.reduce<Promise<void>>(
+      (chain, { action, application, executor, rule }) =>
+        chain.then(() =>
+          executor.reinject?.({
+            action,
+            application,
+            ownerUserId: owner.id,
+            plan,
+            rule,
+          }),
+        ),
+      Promise.resolve(),
+    );
+    const reinjected = reinjectable.length;
     const orphaned =
       await this.ruleApplicationsService.orphanUnmatchedApplications(
         planId,
@@ -231,6 +270,7 @@ export class PlanRulesProcessor
       matched: matched.length,
       orphaned,
       reconciled,
+      reinjected,
       skipped: null,
     };
   }

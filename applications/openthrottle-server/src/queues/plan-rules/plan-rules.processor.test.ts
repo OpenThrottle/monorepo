@@ -127,6 +127,7 @@ describe('PlanRulesProcessor.process', () => {
       matched: 1,
       orphaned: 0,
       reconciled: 0,
+      reinjected: 0,
       skipped: null,
     });
   });
@@ -189,6 +190,44 @@ describe('PlanRulesProcessor.process', () => {
 
     expect(reconcilingExecutor.reconcile).not.toHaveBeenCalled();
     expect(result.reconciled).toBe(0);
+  });
+
+  it("re-injects an 'applied' row whose task was deleted (task_id NULL)", async () => {
+    const reinjectingExecutor: ActionExecutor = {
+      actionType: 'inject-task',
+      execute: vi.fn(),
+      reconcile: vi.fn(),
+      reinject: vi.fn(),
+    };
+    registry.register(reinjectingExecutor);
+    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+      asMock<RuleApplication>({ state: 'applied', taskId: null }),
+    );
+
+    const result = await processor.process(buildJob());
+
+    expect(reinjectingExecutor.reinject).toHaveBeenCalledTimes(1);
+    expect(reinjectingExecutor.reconcile).not.toHaveBeenCalled();
+    expect(reinjectingExecutor.execute).not.toHaveBeenCalled();
+    expect(result.reinjected).toBe(1);
+  });
+
+  it('re-injects an orphaned row whose rule matches again', async () => {
+    const reinjectingExecutor: ActionExecutor = {
+      actionType: 'inject-task',
+      execute: vi.fn(),
+      reinject: vi.fn(),
+    };
+    registry.register(reinjectingExecutor);
+    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+      asMock<RuleApplication>({ state: 'orphaned', taskId: 'old-task' }),
+    );
+
+    const result = await processor.process(buildJob());
+
+    expect(reinjectingExecutor.reinject).toHaveBeenCalledTimes(1);
+    expect(reinjectingExecutor.execute).not.toHaveBeenCalled();
+    expect(result.reinjected).toBe(1);
   });
 
   it('skips a matched action with no registered executor WITHOUT writing a ledger row', async () => {

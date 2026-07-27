@@ -42,6 +42,7 @@ import {
   type Plan,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
+  SOFT_CLOSED_TASK_STATUS,
   Task,
   TASK_SORT_ORDER_GAP,
   TasksService,
@@ -116,19 +117,12 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   async execute(context: ActionExecutorContext): Promise<void> {
     const { action, ownerUserId, plan, rule } = context;
     const payload = injectTaskActionPayloadSchema.parse(action.actionPayload);
-    const slugReference = `/${payload.skillSlug}`;
 
     // 1. Pre-satisfied: any task already referencing the skill, any status.
-    const preSatisfying = await this.tasksService
-      .getRepository()
-      .createQueryBuilder('task')
-      .where('task.plan_id = :planId', { planId: plan.id })
-      .andWhere(
-        '(task.title ILIKE :reference OR task.description ILIKE :reference)',
-        { reference: `%${slugReference}%` },
-      )
-      .orderBy('task.sort_order', 'ASC')
-      .getOne();
+    const preSatisfying = await this.findPreSatisfyingTask(
+      plan.id,
+      payload.skillSlug,
+    );
     if (preSatisfying != null) {
       await this.ruleApplicationsService.record({
         details: { matchedTags: action.matchedTags, reason: 'existing-task' },
@@ -185,6 +179,120 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         InjectTaskExecutor.name,
       );
     }
+  }
+
+  /**
+   * @description Re-injection for a ledger row that has stopped pointing at a
+   * live injected task, so a still-matching rule stops being a permanent no-op:
+   *
+   * - Delete-to-reset: an 'applied' row whose task_id was NULLed by a human
+   *   deleting the injected task (FK ON DELETE SET NULL). Re-inject a fresh task
+   *   and re-point the row — the common "I deleted it to reset" case.
+   * - Orphan revive: an 'orphaned' row whose rule matches again. If the task we
+   *   soft-closed on orphan still exists, reopen it (SKIPPED → PENDING) rather
+   *   than injecting a duplicate; otherwise re-inject. Restores symmetry with
+   *   the un-match path.
+   *
+   * The row is moved back to 'applied' via an upsert (the apply-once fingerprint
+   * still exists), or to 'pre-satisfied'/'flagged' if the world now satisfies or
+   * gates the rule. Per-plan pass serialization (T1) means no concurrent
+   * re-inject for the same (rule, plan).
+   */
+  async reinject(context: ActionReconcileContext): Promise<void> {
+    const { action, application, ownerUserId, plan, rule } = context;
+    const payload = injectTaskActionPayloadSchema.parse(action.actionPayload);
+
+    // Orphan revive: reopen the task we previously soft-closed rather than
+    // injecting a duplicate.
+    if (application.taskId != null) {
+      const existing = await this.tasksService
+        .getRepository()
+        .findOne({ where: { id: application.taskId, planId: plan.id } });
+      if (existing != null) {
+        if (existing.status === SOFT_CLOSED_TASK_STATUS) {
+          await this.tasksService
+            .getRepository()
+            .update({ id: existing.id }, { status: 'PENDING' });
+        }
+        await this.ruleApplicationsService.upsertApplication({
+          details: { matchedTags: action.matchedTags, reason: 'revived' },
+          planId: plan.id,
+          ruleId: rule.id,
+          state: RULE_APPLICATION_STATES.APPLIED,
+          taskId: existing.id,
+        });
+        return;
+      }
+    }
+
+    // Pre-satisfied: a task now references the skill (e.g. re-added by hand).
+    const preSatisfying = await this.findPreSatisfyingTask(
+      plan.id,
+      payload.skillSlug,
+    );
+    if (preSatisfying != null) {
+      await this.ruleApplicationsService.upsertApplication({
+        details: { matchedTags: action.matchedTags, reason: 'existing-task' },
+        planId: plan.id,
+        ruleId: rule.id,
+        state: RULE_APPLICATION_STATES.PRE_SATISFIED,
+        taskId: preSatisfying.id,
+      });
+      return;
+    }
+
+    const gated =
+      await this.planContextAvailabilityService.isSkillUnavailableForPlan(
+        plan.id,
+        payload.skillSlug,
+        ownerUserId,
+      );
+    if (gated) {
+      await this.ruleApplicationsService.upsertApplication({
+        details: {
+          matchedTags: action.matchedTags,
+          reason: 'skill-unavailable',
+          skillSlug: payload.skillSlug,
+        },
+        planId: plan.id,
+        ruleId: rule.id,
+        state: RULE_APPLICATION_STATES.FLAGGED,
+      });
+      return;
+    }
+
+    const task = await this.insertInjectedTask(plan, action, payload);
+    await this.ruleApplicationsService.upsertApplication({
+      details: {
+        matchedTags: action.matchedTags,
+        skillSlug: payload.skillSlug,
+      },
+      planId: plan.id,
+      ruleId: rule.id,
+      state: RULE_APPLICATION_STATES.APPLIED,
+      taskId: task.id,
+    });
+  }
+
+  /**
+   * @description The plan's earliest task (by sort_order) whose title or
+   * description references `/<skillSlug>`, any status, or null. A pre-existing
+   * such task means the rule is already satisfied.
+   */
+  private async findPreSatisfyingTask(
+    planId: string,
+    skillSlug: string,
+  ): Promise<Task | null> {
+    return this.tasksService
+      .getRepository()
+      .createQueryBuilder('task')
+      .where('task.plan_id = :planId', { planId })
+      .andWhere(
+        '(task.title ILIKE :reference OR task.description ILIKE :reference)',
+        { reference: `%/${skillSlug}%` },
+      )
+      .orderBy('task.sort_order', 'ASC')
+      .getOne();
   }
 
   /**

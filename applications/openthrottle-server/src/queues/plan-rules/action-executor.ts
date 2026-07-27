@@ -53,6 +53,15 @@ export interface ActionExecutor {
    * continuous invariant omit it.
    */
   reconcile?(context: ActionReconcileContext): Promise<void>;
+  /**
+   * @description Optional re-establish pass for a matched rule whose ledger row
+   * has stopped pointing at a live result: an 'applied' row whose task was
+   * deleted (task_id NULL) or an 'orphaned' row whose rule matches again. The
+   * worker calls this so a still-matching rule is not a permanent no-op.
+   * inject-task uses it to re-inject (or revive) the injected task and move the
+   * row back to 'applied'. Executors whose action cannot be undone omit it.
+   */
+  reinject?(context: ActionReconcileContext): Promise<void>;
 }
 
 /**

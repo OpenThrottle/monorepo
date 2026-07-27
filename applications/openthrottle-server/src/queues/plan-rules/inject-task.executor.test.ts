@@ -620,4 +620,59 @@ describe('InjectTaskExecutor', () => {
       expect(managerUpdate).not.toHaveBeenCalled();
     });
   });
+
+  describe('reinject', () => {
+    const buildReinject = (application: Partial<RuleApplication>) => ({
+      action: buildAction({ placement: 'first', skillSlug: 'grilling' }),
+      application: asMock<RuleApplication>(application),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    it('re-injects a fresh task for a delete-to-reset row (applied, task_id NULL)', async () => {
+      await executor.reinject(
+        buildReinject({ state: 'applied', taskId: null }),
+      );
+
+      expect(taskSave).toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied' }),
+      );
+    });
+
+    it('revives (reopens) the soft-closed task for an orphaned row that matches again', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({ id: 'old-task', planId, status: 'SKIPPED' }),
+      );
+
+      await executor.reinject(
+        buildReinject({ state: 'orphaned', taskId: 'old-task' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: 'old-task' },
+        { status: 'PENDING' },
+      );
+      expect(taskSave).not.toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
+      );
+    });
+
+    it('does not reopen an orphaned task that is already active', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({ id: 'old-task', planId, status: 'PENDING' }),
+      );
+
+      await executor.reinject(
+        buildReinject({ state: 'orphaned', taskId: 'old-task' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
+      );
+    });
+  });
 });
