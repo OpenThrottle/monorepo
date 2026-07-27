@@ -128,11 +128,16 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
     <Sonner
       className="toaster group"
       icons={{
-        error: <OctagonXIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
+        // Icon hue matches each type's surface (see `typedToastClassNames`) so
+        // icon + tint read as one status. Full-strength `text-{hue}-500` — no
+        // `!` needed: Sonner's `[data-icon]` rules set only layout, never color,
+        // so a direct color on the svg simply overrides the inherited text
+        // color. `loading` stays neutral (transient), matching its surface.
+        error: <OctagonXIcon className="size-4 text-red-500" />,
+        info: <InfoIcon className="size-4 text-sky-500" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
-        success: <CircleCheckIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
+        success: <CircleCheckIcon className="size-4 text-green-500" />,
+        warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
       }}
       style={toasterStyle}
       theme={resolvedTheme}
