@@ -52,6 +52,7 @@ export const PlanWorkflowConfigExecution = (
 
   return (
     <OpenThrottleFieldset
+      className="border-0"
       id="workflow-config-execution-legend"
       legend={heading}
     >

@@ -68,7 +68,11 @@ export const PlanWorkflowConfigWorkspace = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-run-workspace-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-run-workspace-legend"
+      legend={heading}
+    >
       <p className="text-muted-foreground text-xs">
         Absolute path to a local repository for cross-repo runs. Use the{' '}
         <strong>repository root</strong> — not a parent folder or an inner

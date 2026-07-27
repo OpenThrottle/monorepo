@@ -43,7 +43,11 @@ export const PlanWorkflowConfigHooks = (
 
   return (
     <>
-      <OpenThrottleFieldset id="job-run-hooks-legend" legend={heading}>
+      <OpenThrottleFieldset
+        className="border-0"
+        id="job-run-hooks-legend"
+        legend={heading}
+      >
         <div className="mb-4 flex flex-row flex-wrap items-center justify-between gap-4 pb-2">
           <p className="text-muted-foreground text-xs font-normal">
             Run a prompt profile or repo skill before or after the main Ralph

@@ -36,3 +36,8 @@ export const FEATURE_BETA_PREVIEW = parseEnvBoolean(
   ENV_SOURCE.FEATURE_BETA_PREVIEW,
   true,
 );
+
+export const FEATURE_CHARLIE_PREVIEW = parseEnvBoolean(
+  ENV_SOURCE.FEATURE_CHARLIE_PREVIEW,
+  true,
+);

@@ -53,7 +53,11 @@ export const PlanWorkflowConfigTarget = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-config-target-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-config-target-legend"
+      legend={heading}
+    >
       <p className="text-muted-foreground text-xs">
         For the CLI preview: one of <code className="text-xs">--plan</code> or{' '}
         <code className="text-xs">--task</code>. Queued runs always target this
