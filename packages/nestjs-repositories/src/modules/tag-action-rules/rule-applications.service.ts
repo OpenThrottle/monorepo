@@ -17,8 +17,13 @@ import {
   type RuleApplicationState,
 } from './rule-application.entity';
 
-/** Status an orphaned injected task is soft-closed to (reversible). */
-const SOFT_CLOSED_TASK_STATUS = 'SKIPPED';
+/**
+ * @description Status an orphaned injected task is soft-closed to (reversible).
+ * Exported so the re-inject/revive path can recognize a task it previously
+ * soft-closed and reopen exactly that state.
+ * @public
+ */
+export const SOFT_CLOSED_TASK_STATUS = 'SKIPPED';
 
 /** Terminal task statuses left untouched by the orphan soft-close. */
 const TERMINAL_TASK_STATUSES = ['CANCELED', 'COMPLETED', 'SKIPPED'] as const;
@@ -104,6 +109,32 @@ export class RuleApplicationsService {
       }
       throw error;
     }
+  }
+
+  /**
+   * @description Upserts the (rule, plan) ledger row to the given state/task,
+   * keyed on the UNIQUE (rule_id, plan_id) fingerprint. Unlike {@link record}
+   * (insert-or-return-existing, for first-time apply), this OVERWRITES an
+   * existing row's state/task_id — the re-inject path uses it to move a
+   * delete-reset ('applied' with NULL task) or 'orphaned' row back to 'applied'
+   * with the freshly injected/revived task.
+   */
+  async upsertApplication(input: RecordRuleApplicationInput): Promise<void> {
+    const existing = await this.findByRuleAndPlan(input.ruleId, input.planId);
+    const entity = this.repository.create({
+      details: input.details ?? null,
+      planId: input.planId,
+      ruleId: input.ruleId,
+      state: input.state,
+      taskId: input.taskId ?? null,
+    });
+    // A set id makes save() an UPDATE of the existing (rule, plan) row; leaving
+    // it unset inserts. create()/save() accept the jsonb `details` (unknown)
+    // that the stricter upsert()/update() partial-entity type rejects.
+    if (existing != null) {
+      entity.id = existing.id;
+    }
+    await this.repository.save(entity);
   }
 
   /**

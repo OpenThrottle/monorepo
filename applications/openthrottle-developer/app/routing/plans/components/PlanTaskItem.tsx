@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
+import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
 import { PlanStatusChip } from '~/routing/plans/components/PlanStatusChip';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 
@@ -10,6 +11,8 @@ const TASK_CONTEXT_TRUNCATE = 120;
 
 export interface PlanTaskItemProps {
   className?: string;
+  /** True when a tag→action rule manages this task's placement (see usePlanManagedTaskIds). */
+  isManaged?: boolean;
   step: number;
   task: PlanTaskRowFragment;
 }
@@ -20,7 +23,7 @@ export interface PlanTaskItemProps {
  * with metadata and context beneath). Pair with {@link PlanTaskItems}.
  */
 export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
-  const { className, step, task } = props;
+  const { className, isManaged = false, step, task } = props;
 
   // Hooks
 
@@ -66,6 +69,8 @@ export const PlanTaskItem = (props: PlanTaskItemProps): React.ReactElement => {
             {title}
           </Link>
         </h2>
+
+        {isManaged ? <PlanManagedTaskBadge className="shrink-0" /> : null}
       </div>
 
       {category || requirementsCount > 0 || task.assignee ? (

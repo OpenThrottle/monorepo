@@ -87,10 +87,20 @@ A pure `evaluateTagActionRules(context, rules): MatchedAction[]` (zero I/O, `res
 
 ### Executor contract (idempotency / un-match)
 
-1. Ledger row exists for (rule, plan) in any state → do nothing.
+The `UNIQUE (rule_id, plan_id)` fingerprint still makes _first_ application
+apply-once, but a matched rule is no longer a permanent no-op once a ledger row
+exists — the worker routes each matched rule by its row's state:
+
+1. No ledger row → **execute** (fresh): pre-satisfied / gating / perform / write `applied`.
 2. World already satisfies the action on first evaluation → write `pre-satisfied`.
 3. Action blocked by its own gating → write `flagged` with details.
-4. Rule stops matching after an `applied` row → flip to `orphaned`; **never undo the action**. Orphaned/flagged rows are the developer-app surfacing queue.
+4. `applied` row with a live `task_id` → **reconcile**: re-establish the action's managed invariant against the current plan state (inject-task repositions its task — see [Placement reconcile](#placement-reconcile-managed-invariant)).
+5. `applied` row whose `task_id` was NULLed (task deleted), or an `orphaned` row whose rule matches again → **reinject**: re-establish the result so a still-matching rule is not a permanent no-op.
+6. Rule stops matching after an `applied` row → flip to `orphaned` and soft-close the injected task; **never hard-undo**. Orphaned/flagged rows are the developer-app surfacing queue.
+
+Reconcile and reinject are dispatched only for executors that implement the
+optional `reconcile` / `reinject` hooks; an executor with a one-shot action
+omits them and keeps the classic apply-once behavior.
 
 ## Action type 1: plan-aware skill availability
 
@@ -103,11 +113,45 @@ The annotated, optionally filtered skill list is the **resolved candidate set** 
 
 ## Action type 2: require/inject-a-task
 
-Payload: `{ skillSlug, placement: 'first' | 'last', titleTemplate?, descriptionTemplate? }` (templates interpolate `{{plan.title}}`, `{{plan.id}}`, `{{matchedTags}}`).
+Payload: `{ skillSlug, placement: 'first' | 'last' | 'before' | 'after', anchor?, titleTemplate?, descriptionTemplate? }` (templates interpolate `{{plan.title}}`, `{{plan.id}}`, `{{matchedTags}}`; `before`/`after` require an `anchor` that names the target task by `taskId`, `skillSlug`, or `titleMatch`).
 
-Executor, in a transaction: fingerprint check → pre-satisfied check (existing task referencing `/<skillSlug>`, any status → `pre-satisfied`) → candidate-set gating (slug unavailable in plan context → `flagged`, never a dead task) → inject (placement `first` = MIN(sort_order) − 1000 with reorder fallback on the `(plan_id, sort_order)` UNIQUE; `last` = MAX + 1000; provenance footer in the description) → ledger `applied`.
+First inject, in a transaction: fingerprint check → pre-satisfied check (existing task referencing `/<skillSlug>`, any status → `pre-satisfied`) → candidate-set gating (slug unavailable in plan context → `flagged`, never a dead task) → inject (placement `first` = MIN(sort_order) − 1000 with reorder fallback on the `(plan_id, sort_order)` UNIQUE; `last` = MAX + 1000; `before`/`after` = midpoint beside the anchor) → ledger `applied`.
 
-Edges: human deletes the injected task → no re-inject (fingerprint holds; deletion is a permanent veto). Triggering tag removed → row flips `orphaned`, task untouched. Rule deleted → ledger CASCADEs; a recreated rule may re-inject (documented).
+Edges (superseded by reconcile/reinject — see below): human deletes the injected task → the `applied` row's `task_id` goes NULL and the next matching pass **re-injects** (delete-to-reset). Triggering tag removed → row flips `orphaned` and the task is soft-closed (SKIPPED); if the rule matches again it is **revived** (the soft-closed task reopened, or re-injected if it was also deleted). Rule deleted → ledger CASCADEs.
+
+### Placement reconcile (managed invariant)
+
+Injection is once, but an injected task's **placement is a continuously
+reconciled managed invariant**, not a one-shot value. The problem it fixes: the
+first pass on a freshly-created (empty) plan resolved both `first` and `last` to
+the plan's only slot, pinning e.g. the GitHub Commit task first; the frozen
+ledger then never moved it as real tasks were added.
+
+- **Authority = managed invariant.** Every evaluation pass re-establishes each
+  `applied` inject-task's `sort_order` from its placement against the _current_
+  task set, overriding a manual reorder. `last` sits past MAX of the other
+  tasks, `first` below MIN, `before`/`after` immediately beside the anchor.
+- **No thrash / no self-retrigger.** Reconcile writes nothing when the task is
+  already in position, skips terminal tasks, and writes via the task repository
+  (not a resolver) so it cannot re-enqueue an evaluation. Passes are
+  **deduplicated per plan** (`deduplication: { id: 'plan:<id>', keepLastIfActive: true }`),
+  so a burst collapses to one active + one waiting pass and two passes for a
+  plan never race the `(plan_id, sort_order)` UNIQUE. Collisions retry once.
+- **Deterministic ordering.** Multiple same-placement injected tasks (two
+  `last`) are placed at fixed, tiebreak-ordered slots (rule `created_at`, then
+  application `created_at`, then rule id), so repeated passes converge instead
+  of leapfrogging.
+- **Kill switch.** `PLAN_RULES_RECONCILE_PLACEMENT_ENABLED` (default on) — set to
+  a falsy value (`false`/`0`/`no`/`off`) to freeze injected tasks at their
+  first-apply position in prod without a code revert.
+- **UI.** Managed tasks (an `applied` rule-application points at them) render a
+  "Managed" badge + tooltip in the developer app's plan views, so it is clear
+  why their position is fixed. The app has no drag-to-reorder for tasks, so
+  there is no manual reorder to silently lose; the badge is the honest signal.
+- **No schema change.** Placement lives in the rule's `action_payload` and the
+  tiebreak reuses existing `created_at` columns, so reconcile, deterministic
+  ordering, and delete-reset/orphan-revive shipped with **no migration**.
+- **Backfilling stuck plans:** see [injected-task-placement-backfill.md](./injected-task-placement-backfill.md).
 
 **Dogfood case:** this very plan — auto-tag `breakdown` at create → rule injects `/grill-me` first. The plan's manually created grill task (sortOrder 500, completed 2026-07-12) is exactly a `pre-satisfied` ledger row.
 

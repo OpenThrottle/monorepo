@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { action, loader } from '../settings.workspace';
-import type { Route } from '@/app/routes/+types/settings.workspace';
+import { action, loader } from '../settings.workspace._index';
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
@@ -46,7 +46,7 @@ const mockLoaderPayload = {
   },
 };
 
-describe('routes/settings.workspace.tsx', () => {
+describe('routes/settings.workspace._index.tsx', () => {
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
   });

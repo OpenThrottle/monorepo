@@ -28,6 +28,10 @@ export interface PlanRulesEvaluateJobResult {
   readonly dispatched: number;
   readonly matched: number;
   readonly orphaned: number;
+  /** Already-'applied' matched rows whose executor reconcile pass ran. */
+  readonly reconciled: number;
+  /** Matched rows re-injected (deleted-task reset or orphan revive). */
+  readonly reinjected: number;
   readonly skipped: string | null;
 }
 
