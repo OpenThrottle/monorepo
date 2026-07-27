@@ -200,22 +200,27 @@ export class ConversationStreamResolver {
     }
 
     // T3 composer control selections (reasoning effort, service tier, permission
-    // mode) are nullable + additive on the input. They are surfaced here but NOT
-    // yet honored: enforcing them is owned by the agent driver registry (plan
-    // dde67342, @openthrottle/openthrottle-drivers).
-    // TODO(dde67342): feed reasoning/serviceTier/permissionMode into the
-    // resolved driver run instead of only logging them.
+    // mode) plus @-mentioned file paths are nullable + additive on the input.
+    // They are surfaced here but NOT yet honored: enforcing them is owned by the
+    // agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers).
+    // The @-mentioned paths already reach a CLI agent as inline `@path` tokens
+    // in `input.message`; the structured `fileMentions` list is for richer
+    // driver-side injection (e.g. file-content preloading) once dde67342 lands.
+    // TODO(dde67342): feed reasoning/serviceTier/permissionMode + fileMentions
+    // into the resolved driver run instead of only logging them.
+    const fileMentionCount = input.fileMentions?.length ?? 0;
     if (
       input.permissionMode != null ||
       input.reasoning != null ||
-      input.serviceTier != null
+      input.serviceTier != null ||
+      fileMentionCount > 0
     ) {
       this.logger.debug(
         `startConversationStream: control selections (not yet honored — see dde67342) reasoning=${
           input.reasoning ?? '∅'
         } serviceTier=${input.serviceTier ?? '∅'} permissionMode=${
           input.permissionMode ?? '∅'
-        }`,
+        } fileMentions=${fileMentionCount}`,
         ConversationStreamResolver.name,
       );
     }

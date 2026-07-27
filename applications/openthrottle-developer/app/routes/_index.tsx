@@ -4,6 +4,7 @@ import {
   ChatComposerMode,
   ChatComposerToolbar,
   ChatThread,
+  parseFileMentions,
   type ChatMessage,
   type ChatPermissionMode,
   type ChatReasoningLevel,
@@ -32,6 +33,7 @@ import {
   loadRepositories,
 } from '~/routing/home/data/models.server';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
+import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 import { capabilitiesForChatOption } from '~/routing/home/utils/chat-capabilities';
 import {
@@ -116,6 +118,10 @@ export default function Component(
     conversationId,
     seedMessages: EMPTY_SEED,
   });
+
+  // Backs the composer's @-mention file picker for the selected checkout;
+  // undefined (trigger disabled) until a repository is chosen.
+  const mentionProvider = useFileMentionProvider(repositoryId);
 
   const voice = useVoiceInput({
     draft,
@@ -209,6 +215,14 @@ export default function Component(
 
     setMessages((previous) => [...previous, newMessage]);
 
+    // @-mentioned files are parsed from the outgoing message and attached to the
+    // payload. The @path tokens also remain inline in `message`, so a CLI agent
+    // receives them directly; the structured list is for driver-side use
+    // (dde67342). Only relevant for CLI backends, which run in a repository.
+    const fileMentions = parseFileMentions(trimmed).map(
+      (mention) => mention.path,
+    );
+
     startFetcher.submit(
       decoded.baseUrl != null
         ? {
@@ -222,6 +236,7 @@ export default function Component(
         : {
             backend: decoded.backend,
             conversationId: conversationId ?? '',
+            fileMentions: JSON.stringify(fileMentions),
             intent: 'start',
             message: trimmed,
             permissionMode: permissionMode ?? '',
@@ -361,6 +376,7 @@ export default function Component(
           disabled={!hasModels}
           draft={draft}
           isStreaming={isStreaming}
+          mentionProvider={mentionProvider}
           onDraftChange={setDraft}
           onStop={onStop}
           onSubmit={onSubmit}
@@ -379,6 +395,32 @@ interface StartActionResult {
   readonly errorMessage: string | null;
   readonly userMessageId: string | null;
 }
+
+/**
+ * Decode the JSON-encoded `fileMentions` form field (workspace-relative paths
+ * parsed from the composer draft) into a string array, or null when absent or
+ * malformed. Defensive: the value is our own JSON.stringify output, but a bad
+ * value must never 500 the turn.
+ */
+const parseFileMentionsField = (
+  value: FormDataEntryValue | null,
+): string[] | null => {
+  if (typeof value !== 'string' || value === '') {
+    return null;
+  }
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const paths = parsed.filter(
+      (entry): entry is string => typeof entry === 'string',
+    );
+    return paths.length > 0 ? paths : null;
+  } catch {
+    return null;
+  }
+};
 
 export const action = async (
   args: Route.ActionArgs,
@@ -404,6 +446,7 @@ export const action = async (
     backend: String(formData.get('backend') ?? '') || null,
     baseUrl: String(formData.get('baseUrl') ?? '') || null,
     conversationId: conversationId || null,
+    fileMentions: parseFileMentionsField(formData.get('fileMentions')),
     message: String(formData.get('message') ?? ''),
     modelId: String(formData.get('modelId') ?? '') || null,
     permissionMode: String(formData.get('permissionMode') ?? '') || null,

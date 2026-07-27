@@ -1123,6 +1123,7 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
     backend: z.string().nullish(),
     baseUrl: z.string().nullish(),
     conversationId: z.string().nullish(),
+    fileMentions: z.array(z.string()).nullish(),
     message: z.string(),
     modelId: z.string().nullish(),
     permissionMode: z.string().nullish(),

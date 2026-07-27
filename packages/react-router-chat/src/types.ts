@@ -360,3 +360,43 @@ export const ChatComposerMicState = {
 /** Union of {@link ChatComposerMicState} values. @public */
 export type ChatComposerMicState =
   (typeof ChatComposerMicState)[keyof typeof ChatComposerMicState];
+
+/**
+ * A workspace file referenced from the composer via an `@`-mention. `path` is
+ * the workspace-relative POSIX path inserted into the draft — the in-draft
+ * token is the plain text `@<path>` (v1 uses no contenteditable chips). `label`
+ * is an optional display string (defaults to the path) for a future chip/menu
+ * rendering. See {@link parseFileMentions} for extracting these from a submitted
+ * message.
+ *
+ * @public
+ */
+export interface ChatFileMention {
+  /** Optional display label; when omitted, renderers fall back to {@link path}. */
+  readonly label?: string;
+  /** Workspace-relative POSIX path, e.g. `src/app/root.tsx`. */
+  readonly path: string;
+}
+
+/**
+ * Async file-source contract the composer consumes to back the `@`-mention
+ * popover. Presentational only — the package embeds NO transport; a consumer
+ * (e.g. openthrottle-developer's `/ide/files` resource route) supplies
+ * {@link onQueryFiles}, keyed on the currently selected repository/checkout.
+ * When no provider is passed, the composer behaves exactly as before (no
+ * `@`-trigger).
+ *
+ * @public
+ */
+export interface ChatMentionProvider {
+  /** Shown in the popover when a query resolves to zero files. */
+  readonly emptyLabel?: string;
+  /** Shown in the popover while {@link onQueryFiles} is pending. */
+  readonly loadingLabel?: string;
+  /**
+   * Resolve workspace-relative POSIX paths matching `query` (the text typed
+   * after `@`, empty string for the initial listing). The consumer owns the
+   * transport, filtering, debouncing across it, and any result cap.
+   */
+  readonly onQueryFiles: (query: string) => Promise<readonly string[]>;
+}

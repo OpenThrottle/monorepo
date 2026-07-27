@@ -193,6 +193,72 @@ only the _source_ of the descriptor moves from hand-seeded consumer code to the
 registry. This shape was chosen to make that swap a one-file change; until it
 lands, neither plan blocks the other.
 
+## `@`-mention file linking
+
+`ChatComposer` can offer a T3-Code-style `@`-mention file picker. It is
+**opt-in and presentational**: pass a `mentionProvider` and the package handles
+the `@`-trigger, the popover, keyboard navigation, and inserting the chosen path
+at the caret. The package **embeds no transport** — the consumer supplies the
+file source, keyed on whatever repository/checkout it considers current.
+
+```tsx
+import {
+  ChatComposer,
+  type ChatMentionProvider,
+} from '@openthrottle/react-router-chat';
+
+const mentionProvider: ChatMentionProvider = {
+  // Resolve workspace-relative POSIX paths for the text typed after `@`
+  // (empty string on first open). The consumer owns the transport, filtering,
+  // debouncing across it, and any result cap.
+  onQueryFiles: async (query) => fetchWorkspacePaths(query),
+  emptyLabel: 'No matching files.', // optional
+  loadingLabel: 'Searching files…', // optional
+};
+
+<ChatComposer mentionProvider={mentionProvider} onSubmit={onSubmit} /* … */ />;
+```
+
+**Behavior when a provider is supplied:**
+
+- Typing `@` at a token boundary (start of line, or after whitespace / an
+  opening delimiter — so `user@host` emails never trigger) opens the popover.
+- The text after `@` up to the caret is the query passed to `onQueryFiles`.
+- `↑`/`↓` move the highlight, `Enter`/`Tab` insert the highlighted path, `Esc`
+  dismisses, and clicking a result inserts it. With the popover closed the
+  composer behaves exactly as before (`Enter` submits, `Shift+Enter` newline).
+- Selecting a file inserts the plain text token `@<workspace-relative/posix/path>`
+  into the draft at the caret (v1 uses plain-text tokens — no contenteditable
+  chips). Omit `mentionProvider` and the composer is a plain textarea.
+
+**Token format & parsing.** A mention lives in the submitted message as the
+plain text `@path`. Extract the referenced files from a submitted string with
+the pure, transport-free helper:
+
+```ts
+import {
+  parseFileMentions,
+  type ChatFileMention,
+} from '@openthrottle/react-router-chat';
+
+const mentions: readonly ChatFileMention[] = parseFileMentions(message);
+// [{ path: 'src/app/root.tsx' }, …] — trailing sentence punctuation trimmed,
+// duplicates collapsed (first wins), whitespace terminates a token.
+```
+
+Because the tokens travel inline in the message text, a CLI agent that receives
+the prompt already sees the `@path` references; `parseFileMentions` is for
+consumers that additionally want the structured list (e.g. to attach it to a
+start-conversation payload). Supporting types (`src/types.ts`, `@public`):
+`ChatFileMention` (`{ path, label? }`) and `ChatMentionProvider`
+(`{ onQueryFiles, loadingLabel?, emptyLabel? }`).
+
+> [!Note]
+> The package resolves nothing. In `openthrottle-developer` the provider is
+> wired (`useFileMentionProvider`) to the `/ide/files` resource route — which
+> reuses the IDE ripgrep tier and resolves the repository path server-side — and
+> the parsed mentions are attached to the `startConversationStream` payload.
+
 ## Dependencies
 
 | Package                             | Role                                                                          |
