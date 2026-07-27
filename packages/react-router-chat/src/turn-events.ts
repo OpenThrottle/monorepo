@@ -9,7 +9,8 @@
  *   {@link foldPersistedTurnEvents}.
  */
 
-import type { ChatTurnEvent } from './types';
+import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
+import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -212,6 +213,55 @@ export const applyTurnToolResult = (
       status: 'succeeded',
     },
   ];
+};
+
+/**
+ * Fold a usage chunk (an opencode mid-stream `kind:'usage'` chunk, a claude/
+ * cursor terminal usage chunk the server now forwards, or a terminal `done`
+ * chunk that still carries usage metadata) into the turn's SINGLE usage event.
+ *
+ * There is never more than one usage event per turn: token counts accumulate
+ * across chunks (opencode reports usage per step, so its per-step counts sum to
+ * a turn total), a terminal `error` supersedes, and the event adopts the latest
+ * sortOrder so it renders at the end of the timeline. Typed `usage` is populated
+ * from the full metadata via {@link normalizeUsage}; the raw {@link
+ * ChatTurnUsageEvent.usageJson} is preserved for back-compat. When nothing was
+ * reported the `usage` field is left absent (renderers hide the row).
+ *
+ * @public
+ */
+export const applyTurnUsage = (
+  events: readonly ChatTurnEvent[],
+  metadataJson: string | null | undefined,
+  sortOrder: number,
+  terminal?: { readonly error?: string | null },
+): readonly ChatTurnEvent[] => {
+  const meta = parseChunkMetadata(metadataJson ?? null);
+  const incomingUsage = normalizeUsage(metadataJson ?? null);
+  const existing = events.find(
+    (event): event is ChatTurnUsageEvent => event.kind === 'usage',
+  );
+
+  const mergedUsage = sumUsage(existing?.usage ?? {}, incomingUsage);
+  const usageField = hasUsageCounts(mergedUsage) ? mergedUsage : undefined;
+
+  const merged: ChatTurnUsageEvent = {
+    error: terminal?.error ?? existing?.error ?? null,
+    kind: 'usage',
+    result: meta.usageResult ?? existing?.result ?? null,
+    sortOrder:
+      existing === undefined
+        ? sortOrder
+        : Math.max(existing.sortOrder, sortOrder),
+    ...(usageField !== undefined ? { usage: usageField } : {}),
+    usageJson: meta.usageJson ?? existing?.usageJson ?? null,
+  };
+
+  if (existing === undefined) {
+    return [...events, merged];
+  }
+
+  return events.map((event) => (event.kind === 'usage' ? merged : event));
 };
 
 /**

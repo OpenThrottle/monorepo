@@ -3,6 +3,7 @@ import {
   appendTurnTextEvent,
   applyTurnToolCall,
   applyTurnToolResult,
+  applyTurnUsage,
   failRunningTurnTools,
   parseChunkMetadata,
   toolLabelFromMetadataJson,
@@ -79,19 +80,19 @@ export function reduceStreamChunk(
       bodies.set(chunk.messageId, `${current}\n\n_Error: ${chunk.error}_`);
     }
 
-    // The terminal chunk carries usage/result metadata; record it as a usage
-    // event and resolve any tool still mid-flight to failed when the turn errored.
-    const meta = parseChunkMetadata(chunk.metadataJson ?? null);
-    const withUsage: readonly ChatTurnEvent[] = [
-      ...currentEvents,
+    // The terminal chunk may still carry usage/result metadata (openai/legacy
+    // backends); fold it into the turn's single usage event — merging with any
+    // usage chunk already folded mid-stream (opencode) or forwarded by the
+    // server (claude/cursor) — and resolve any tool still mid-flight to failed
+    // when the turn errored.
+    const withUsage = applyTurnUsage(
+      currentEvents,
+      chunk.metadataJson ?? null,
+      chunk.sortOrder,
       {
         error: chunk.error ?? null,
-        kind: 'usage',
-        result: meta.usageResult,
-        sortOrder: chunk.sortOrder,
-        usageJson: meta.usageJson,
       },
-    ];
+    );
     events.set(
       chunk.messageId,
       chunk.error ? failRunningTurnTools(withUsage, chunk.error) : withUsage,
@@ -153,6 +154,18 @@ export function reduceStreamChunk(
         sortOrder: chunk.sortOrder,
       },
     ]);
+  } else if (chunk.kind === 'usage') {
+    // Mid-stream usage: opencode emits per-step `usage` chunks, and the server
+    // forwards claude/cursor terminal usage as a discrete `usage` chunk. Fold
+    // into the turn's single (accumulating) usage event.
+    events.set(
+      chunk.messageId,
+      applyTurnUsage(
+        currentEvents,
+        chunk.metadataJson ?? null,
+        chunk.sortOrder,
+      ),
+    );
   }
 
   return {
