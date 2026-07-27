@@ -324,7 +324,6 @@ catalog:
   'typescript': '~6.0.3'
   'typescript-eslint': '^8.60.1'
   'typescript-json-schema': '^0.67.1'
-  'ua-parser-js': '^2.0.8'
   'unplugin-swc': '^1.5.9'
   'use-latest-callback': '^0.3.3'
   'usehooks-ts': '^3.1.1'
