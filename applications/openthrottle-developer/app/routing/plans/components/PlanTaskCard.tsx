@@ -8,6 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
 import {
   isPlanStatusKey,
   PlanStatusBadge,
@@ -19,11 +20,13 @@ const TASK_CARD_CONTEXT_TRUNCATE = 120;
 
 export interface PlanTaskCardProps {
   className?: string;
+  /** True when a tag→action rule manages this task's placement. */
+  isManaged?: boolean;
   task: PlanTaskRowFragment;
 }
 
 export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
-  const { className, task } = props;
+  const { className, isManaged = false, task } = props;
 
   // Hooks
 
@@ -60,6 +63,7 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
               {formatPlanTaskStatus(task.status)}
             </Badge>
           )}
+          {isManaged ? <PlanManagedTaskBadge /> : null}
         </div>
         <h4 className="text-sm leading-snug font-medium">
           <Link

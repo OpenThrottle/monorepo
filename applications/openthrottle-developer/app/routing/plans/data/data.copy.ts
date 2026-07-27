@@ -11,6 +11,17 @@ export const PLAN_TASK_NOT_FOUND_COPY = {
 } as const;
 
 /**
+ * @description Copy for the "managed" badge shown on tag→action rule-injected
+ * tasks (e.g. GitHub Commit). Their placement is a reconciled invariant — a
+ * manual reorder snaps back on the next rule-evaluation pass — so the badge and
+ * its tooltip make that ownership explicit.
+ */
+export const MANAGED_TASK_BADGE_COPY = {
+  label: `Managed`,
+  tooltip: `Kept in place by a rule. Its position is set automatically, so a manual reorder will snap back.`,
+} as const;
+
+/**
  * @description Copy for the lifecycle-hook lists rendered under a plan (beforeAll/
  * afterAll, beforeEach/afterEach) and under each task (per-task before/after).
  */

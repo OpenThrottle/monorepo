@@ -10,6 +10,8 @@ import {
 
 export interface PlanTaskItemsProps {
   className?: string;
+  /** Task ids a tag→action rule manages; those rows render a managed badge. */
+  managedTaskIds?: ReadonlySet<string>;
   tasks: PlanTaskRowFragment[];
 }
 
@@ -21,7 +23,7 @@ export interface PlanTaskItemsProps {
 export const PlanTaskItems = (
   props: PlanTaskItemsProps,
 ): React.ReactElement => {
-  const { className, tasks } = props;
+  const { className, managedTaskIds, tasks } = props;
 
   // Hooks
   const sortedTasks = React.useMemo(
@@ -50,6 +52,7 @@ export const PlanTaskItems = (
       {sortedTasks.map((task, index) => (
         <PlanTaskItem
           className="bg-card border-card-border divide-card-border rounded-lg border p-4 md:p-8"
+          isManaged={managedTaskIds?.has(task.id) ?? false}
           key={task.id}
           step={getPlanTaskStepIndex(index)}
           task={task}

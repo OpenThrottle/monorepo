@@ -16,6 +16,7 @@ import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
@@ -47,11 +48,15 @@ export const PlanTabTasks = (): React.ReactElement => {
     isPlanTasksView,
   );
   const { tasks } = usePlanDetailRouteData();
+  const managedTaskIds = usePlanManagedTaskIds();
   const sortedTasks = React.useMemo(
     () => sortPlanTasksByListOrder(filterOutHookTasks(tasks)),
     [tasks],
   );
-  const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);
+  const columns = React.useMemo(
+    () => PlanTabTasks.buildTable(managedTaskIds),
+    [managedTaskIds],
+  );
 
   // Setup
   const getRowId = React.useCallback(
@@ -108,7 +113,7 @@ export const PlanTabTasks = (): React.ReactElement => {
       </div>
 
       {view === PLAN_TASKS_VIEW.list ? (
-        <PlanTaskItems tasks={sortedTasks} />
+        <PlanTaskItems managedTaskIds={managedTaskIds} tasks={sortedTasks} />
       ) : (
         <div className="bg-card border-card-border rounded-lg border">
           <DataTable<PlanTaskRowFragment, string | null | undefined>
@@ -124,10 +129,9 @@ export const PlanTabTasks = (): React.ReactElement => {
   );
 };
 
-PlanTabTasks.buildTable = (): ColumnDef<
-  PlanTaskRowFragment,
-  string | null | undefined
->[] => {
+PlanTabTasks.buildTable = (
+  managedTaskIds: ReadonlySet<string>,
+): ColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
   return [
     {
       cell: ({ row }) => (
@@ -159,7 +163,12 @@ PlanTabTasks.buildTable = (): ColumnDef<
     },
     {
       accessorKey: 'title',
-      cell: ({ row }) => <PlanTasksTableCellTitle row={row} />,
+      cell: ({ row }) => (
+        <PlanTasksTableCellTitle
+          isManaged={managedTaskIds.has(row.original.id)}
+          row={row}
+        />
+      ),
       header: () => 'Title / Context',
     },
     {

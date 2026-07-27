@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTaskItem } from '../PlanTaskItem';
 import type { PlanTaskItemProps } from '../PlanTaskItem';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { renderWithProviders } from '~/testing/route-fixtures';
 
 const mockTask: PlanTaskRowFragment = {
   __typename: 'TaskObject',
@@ -97,5 +98,20 @@ describe('PlanTaskItem Component', () => {
     expect(component.queryByText('dev')).not.toBeInTheDocument();
     expect(component.queryByText(/assigned to/i)).not.toBeInTheDocument();
     expect(component.queryByText(/requirement/i)).not.toBeInTheDocument();
+  });
+
+  test('shows the managed badge only when isManaged is true', () => {
+    const unmanaged = renderWithProviders(
+      <PlanTaskItem step={1} task={mockTask} />,
+    );
+    expect(
+      unmanaged.queryByTestId('PlanManagedTaskBadge'),
+    ).not.toBeInTheDocument();
+    unmanaged.unmount();
+
+    const managed = renderWithProviders(
+      <PlanTaskItem isManaged={true} step={1} task={mockTask} />,
+    );
+    expect(managed.getByTestId('PlanManagedTaskBadge')).toBeInTheDocument();
   });
 });
