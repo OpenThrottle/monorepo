@@ -306,11 +306,19 @@ export const foldPersistedTurnEvents = (
 
   let events: readonly ChatTurnEvent[] = [];
   let order = 0;
+  // Persisted usage events (written by the server since usage stopped being
+  // dropped) are collected here and folded AFTER the body so the usage summary
+  // renders at the end of the turn — matching live streaming, where the usage
+  // event adopts the terminal sortOrder.
+  const usageMetadataJsons: Array<string | null> = [];
 
   for (const raw of rawEvents) {
     if (isRecord(raw)) {
       const kind = asString(raw.kind);
       const delta = asString(raw.delta) ?? '';
+      const metadataJson = isRecord(raw.metadata)
+        ? JSON.stringify(raw.metadata)
+        : null;
       const meta = normalizeMetadata(
         isRecord(raw.metadata) ? raw.metadata : null,
       );
@@ -326,6 +334,8 @@ export const foldPersistedTurnEvents = (
           ...events,
           { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
         ];
+      } else if (kind === 'usage') {
+        usageMetadataJsons.push(metadataJson);
       }
     }
 
@@ -337,14 +347,26 @@ export const foldPersistedTurnEvents = (
     order += 1;
   }
 
-  return [
-    ...events,
-    {
-      error: null,
-      kind: 'usage',
-      result: null,
-      sortOrder: order,
-      usageJson: null,
-    },
-  ];
+  // Legacy turns (persisted before usage was retained) have no usage events —
+  // synthesize an empty terminal usage marker so the turn still reads complete
+  // (no running indicator), with no counts. Turns with persisted usage fold it
+  // (accumulating across opencode's per-step events) into a single event.
+  if (usageMetadataJsons.length === 0) {
+    return [
+      ...events,
+      {
+        error: null,
+        kind: 'usage',
+        result: null,
+        sortOrder: order,
+        usageJson: null,
+      },
+    ];
+  }
+
+  for (const metadataJson of usageMetadataJsons) {
+    events = applyTurnUsage(events, metadataJson, order);
+  }
+
+  return events;
 };
