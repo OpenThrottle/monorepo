@@ -1,6 +1,6 @@
 /**
  * @description The 'inject-task' ActionExecutor: a matched rule requires the
- * plan to contain a task that runs /<skillSlug>. Runs only for first-time
+ * plan to contain a task that runs /<skillSlug>. execute() runs for first-time
  * (rule, plan) pairs (the worker's fingerprint pre-check), then:
  *
  * 1. pre-satisfied — an existing task referencing /<skillSlug> in its title or
@@ -30,9 +30,11 @@
  * reorders). Reconcile no-ops when the task is already in position, deleted
  * (task_id NULL), or terminal.
  *
- * Actions are never undone: tag removal orphans the ledger row (worker-side),
- * and a human deleting the injected task SET NULLs task_id while the 'applied'
- * row keeps blocking re-injection.
+ * Tag removal orphans the ledger row (worker-side) and soft-closes the task,
+ * and a human deleting the injected task SET NULLs task_id. Neither is
+ * permanent: a still-matching rule is re-established by {@link
+ * InjectTaskExecutor.reinject} (delete-to-reset re-injects; orphan-rematch
+ * revives), so the action is no longer a one-way door.
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
