@@ -104,10 +104,12 @@ describe('PlanToolbar Component', () => {
 
   // Accessible name of the Run/Queue button varies by status (getRunButtonLabel).
   const runButtonName: Record<string, RegExp> = {
+    CANCELED: /^Run plan$/i,
     COMPLETED: /^Completed$/i,
     IN_PROGRESS: /^In progress$/i,
     PENDING: /^Add to Queue$/i,
     QUEUED: /^Queued$/i,
+    SKIPPED: /^Skipped$/i,
   };
 
   test.each(['QUEUED', 'IN_PROGRESS'] as const)(
@@ -125,20 +127,35 @@ describe('PlanToolbar Component', () => {
     },
   );
 
-  test('keeps Run and Evaluate rules enabled when no run is active (PENDING, COMPLETED)', () => {
-    for (const planStatus of ['PENDING', 'COMPLETED'] as const) {
+  test('keeps Run and Evaluate rules enabled for a PENDING (non-terminal, not-running) plan', () => {
+    const r = within(
+      renderToolbar({
+        planId: 'p1',
+        planStatus: 'PENDING',
+        planTitle: 'My Plan',
+      }).container,
+    );
+    expect(
+      r.getByRole('button', { name: runButtonName.PENDING }),
+    ).not.toBeDisabled();
+    expect(
+      r.getByRole('button', { name: /evaluate rules/i }),
+    ).not.toBeDisabled();
+  });
+
+  test.each(['COMPLETED', 'CANCELED', 'SKIPPED'] as const)(
+    'disables Run and Evaluate rules when the plan is terminal (%s)',
+    (planStatus) => {
       const r = within(
         renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
           .container,
       );
       expect(
         r.getByRole('button', { name: runButtonName[planStatus] }),
-      ).not.toBeDisabled();
-      expect(
-        r.getByRole('button', { name: /evaluate rules/i }),
-      ).not.toBeDisabled();
-    }
-  });
+      ).toBeDisabled();
+      expect(r.getByRole('button', { name: /evaluate rules/i })).toBeDisabled();
+    },
+  );
 
   test('keeps Mark Complete enabled for a PENDING (not-running) plan', () => {
     const r = within(
@@ -151,6 +168,29 @@ describe('PlanToolbar Component', () => {
     expect(
       r.getByRole('button', { name: /mark complete/i }),
     ).not.toBeDisabled();
+  });
+
+  test('disables Mark Complete for COMPLETED but keeps it enabled for CANCELED/SKIPPED (recovery path)', () => {
+    const completed = within(
+      renderToolbar({
+        planId: 'p1',
+        planStatus: 'COMPLETED',
+        planTitle: 'My Plan',
+      }).container,
+    );
+    expect(
+      completed.getByRole('button', { name: /mark complete/i }),
+    ).toBeDisabled();
+
+    for (const planStatus of ['CANCELED', 'SKIPPED'] as const) {
+      const r = within(
+        renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
+          .container,
+      );
+      expect(
+        r.getByRole('button', { name: /mark complete/i }),
+      ).not.toBeDisabled();
+    }
   });
 
   test.each(['QUEUED', 'IN_PROGRESS'] as const)(

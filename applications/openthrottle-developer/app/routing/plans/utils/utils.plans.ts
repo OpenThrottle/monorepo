@@ -48,6 +48,32 @@ export const getPlanIsCancelable = (
 };
 
 /**
+ * Terminal plan statuses — the plan is finished or abandoned, so there is no
+ * more work to do here: COMPLETED (done), CANCELED (abandoned), SKIPPED (won't
+ * be worked on). To do more work, fall forward and ship a new plan.
+ */
+const PLAN_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
+  'CANCELED',
+  'COMPLETED',
+  'SKIPPED',
+]);
+
+/**
+ * Canonical "the plan is in a terminal state (no more work here)" check: true
+ * for COMPLETED / CANCELED / SKIPPED. This is the single predicate the plan and
+ * task toolbars gate their mutating actions on when a plan is finished/abandoned
+ * (Run/Queue, Evaluate rules, and the task-level Mark Complete + Promote), the
+ * terminal-status counterpart to {@link getPlanIsRunning}. The plan-level Mark
+ * Complete stays gated on COMPLETED only (the sole recovery path to done for a
+ * mis-canceled/skipped plan), so it deliberately does not use this predicate.
+ */
+export const getPlanIsTerminal = (
+  status: string | null | undefined,
+): boolean => {
+  return status != null && PLAN_TERMINAL_STATUSES.has(status);
+};
+
+/**
  * Returns the color for a plan status badge
  */
 export const getPlanStatusBadgeColor = (

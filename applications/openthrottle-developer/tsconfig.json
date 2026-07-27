@@ -62,6 +62,9 @@
       "path": "../../packages/react-router-chat"
     },
     {
+      "path": "../../packages/react-router-chat-state"
+    },
+    {
       "path": "../../packages/openthrottle-developer-codegen"
     },
     {

@@ -3,6 +3,7 @@ import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import {
   getPlanIsCancelable,
   getPlanIsRunning,
+  getPlanIsTerminal,
   getResolvedTaskCount,
 } from '../utils.plans';
 
@@ -112,6 +113,47 @@ describe('utils.plans', () => {
         undefined,
       ] as const) {
         expect(getPlanIsRunning(status)).toBe(getPlanIsCancelable(status));
+      }
+    });
+  });
+
+  describe('getPlanIsTerminal', () => {
+    test.each([
+      ['COMPLETED', true],
+      ['CANCELED', true],
+      ['SKIPPED', true],
+      ['PENDING', false],
+      ['QUEUED', false],
+      ['IN_PROGRESS', false],
+      ['BACKLOG', false],
+      ['BLOCKED', false],
+      ['', false],
+    ] as const)('status %s -> terminal: %s', (status, expected) => {
+      expect(getPlanIsTerminal(status)).toBe(expected);
+    });
+
+    test('returns false when status is null or undefined', () => {
+      expect(getPlanIsTerminal(null)).toBe(false);
+      expect(getPlanIsTerminal(undefined)).toBe(false);
+    });
+
+    test('is mutually exclusive with getPlanIsRunning across every status', () => {
+      for (const status of [
+        'QUEUED',
+        'IN_PROGRESS',
+        'PENDING',
+        'COMPLETED',
+        'SKIPPED',
+        'BLOCKED',
+        'BACKLOG',
+        'CANCELED',
+        '',
+        null,
+        undefined,
+      ] as const) {
+        expect(getPlanIsTerminal(status) && getPlanIsRunning(status)).toBe(
+          false,
+        );
       }
     });
   });
