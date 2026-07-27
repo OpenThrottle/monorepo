@@ -177,7 +177,10 @@ export type {
   RuleApplicationData,
   RuleApplicationState,
 } from './modules/tag-action-rules/rule-application.entity';
-export { RuleApplicationsService } from './modules/tag-action-rules/rule-applications.service';
+export {
+  RuleApplicationsService,
+  SOFT_CLOSED_TASK_STATUS,
+} from './modules/tag-action-rules/rule-applications.service';
 export type { RecordRuleApplicationInput } from './modules/tag-action-rules/rule-applications.service';
 export { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity';
 export type { TagActionRuleData } from './modules/tag-action-rules/tag-action-rule.entity';

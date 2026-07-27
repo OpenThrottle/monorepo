@@ -6,6 +6,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Plan,
@@ -67,6 +68,10 @@ describe('InjectTaskExecutor', () => {
   let taskCreate: ReturnType<typeof vi.fn>;
   let taskDelete: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
+  let taskUpdate: ReturnType<typeof vi.fn>;
+  let configGet: ReturnType<typeof vi.fn>;
+  let siblingGetRawMany: ReturnType<typeof vi.fn>;
+  let managerUpdate: ReturnType<typeof vi.fn>;
   let allocateSortOrderBesideAnchor: Mock<
     TasksService['allocateSortOrderBesideAnchor']
   >;
@@ -95,6 +100,13 @@ describe('InjectTaskExecutor', () => {
     );
     taskDelete = vi.fn();
     taskFindOne = vi.fn().mockResolvedValue(null);
+    taskUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+    // Transaction manager used by the multi-sibling group reconcile path.
+    managerUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+    const managerTransaction = vi.fn(
+      async (run: (manager: unknown) => Promise<void>) =>
+        run(asMock({ update: managerUpdate })),
+    );
     allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
     const tasksService = createMock<TasksService>({
       allocateSortOrderBesideAnchor,
@@ -104,10 +116,16 @@ describe('InjectTaskExecutor', () => {
           createQueryBuilder: vi.fn(() => queryBuilder),
           delete: taskDelete,
           findOne: taskFindOne,
+          manager: { transaction: managerTransaction },
           save: taskSave,
+          update: taskUpdate,
         }),
       ),
     });
+
+    // Kill switch defaults to enabled (flag unset).
+    configGet = vi.fn().mockReturnValue(undefined);
+    const configService = asMock<ConfigService>({ get: configGet });
 
     isSkillUnavailableForPlan = vi.fn().mockResolvedValue(false);
     const planContextAvailabilityService =
@@ -115,7 +133,37 @@ describe('InjectTaskExecutor', () => {
         isSkillUnavailableForPlan,
       });
 
+    // Same-placement sibling lookup; defaults to a single sibling (the task
+    // under reconcile) so the common single-injected path is exercised.
+    siblingGetRawMany = vi
+      .fn()
+      .mockResolvedValue([{ sortOrder: 1000, taskId }]);
+    const siblingQueryBuilder = {
+      addOrderBy: vi.fn(),
+      addSelect: vi.fn(),
+      andWhere: vi.fn(),
+      getRawMany: siblingGetRawMany,
+      innerJoin: vi.fn(),
+      orderBy: vi.fn(),
+      select: vi.fn(),
+      where: vi.fn(),
+    };
+    for (const key of [
+      'addOrderBy',
+      'addSelect',
+      'andWhere',
+      'innerJoin',
+      'orderBy',
+      'select',
+      'where',
+    ] as const) {
+      siblingQueryBuilder[key].mockReturnValue(siblingQueryBuilder);
+    }
+
     ruleApplicationsService = createMock<RuleApplicationsService>({
+      getRepository: vi.fn(() =>
+        asMock({ createQueryBuilder: vi.fn(() => siblingQueryBuilder) }),
+      ),
       record: vi.fn((input) =>
         Promise.resolve(
           asMock<RuleApplication>({
@@ -129,6 +177,7 @@ describe('InjectTaskExecutor', () => {
     });
 
     executor = new InjectTaskExecutor(
+      configService,
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
       planContextAvailabilityService,
@@ -397,5 +446,370 @@ describe('InjectTaskExecutor', () => {
     });
 
     expect(taskDelete).toHaveBeenCalledWith({ id: taskId });
+  });
+
+  describe('reconcile', () => {
+    const buildReconcile = (
+      payload: Record<string, unknown>,
+      application: Partial<RuleApplication> = { taskId },
+    ) => ({
+      action: buildAction(payload),
+      application: asMock<RuleApplication>({
+        state: 'applied',
+        ...application,
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    it("moves a 'last' task below a newer max back above it", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX of other tasks
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 6000 },
+      );
+    });
+
+    it("does not write when a 'last' task is already above the max (converged → no further churn)", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 6000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it("moves a 'first' task above a newer min back below it", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 3000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '2000' }); // MIN of other tasks
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 1000 },
+      );
+    });
+
+    it('is a no-op when the kill switch is disabled', async () => {
+      configGet.mockReturnValue('false');
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskFindOne).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when the injected task was deleted (task_id NULL)', async () => {
+      await executor.reconcile(
+        buildReconcile(
+          { placement: 'last', skillSlug: 'grilling' },
+          { taskId: null },
+        ),
+      );
+
+      expect(taskFindOne).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op for a task in a terminal status', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'COMPLETED',
+        }),
+      );
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it("orders two 'last' siblings deterministically at base+GAP, base+2·GAP", async () => {
+      const siblingA = '00000000-0000-4000-8000-0000000000aa';
+      const siblingB = '00000000-0000-4000-8000-0000000000bb';
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      // Two 'last' siblings in tiebreak order, both currently below the target band.
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 1000, taskId: siblingA },
+        { sortOrder: 2000, taskId: siblingB },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX excluding siblings
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      // Deterministic slots: rank 0 → 6000, rank 1 → 7000, set inside the tx.
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingA },
+        { sortOrder: 6000 },
+      );
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingB },
+        { sortOrder: 7000 },
+      );
+    });
+
+    it('does not re-write two siblings already at their deterministic slots (no thrash)', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 6000,
+          status: 'PENDING',
+        }),
+      );
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 6000, taskId: '00000000-0000-4000-8000-0000000000aa' },
+        { sortOrder: 7000, taskId: '00000000-0000-4000-8000-0000000000bb' },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(managerUpdate).not.toHaveBeenCalled();
+    });
+
+    it('retries the reposition once when a concurrent write took the slot (human reorder race)', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+      // First update loses the UNIQUE(plan_id, sort_order) race; retry succeeds.
+      taskUpdate
+        .mockRejectedValueOnce(sortOrderViolation())
+        .mockResolvedValueOnce({ affected: 1 });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledTimes(2);
+      expect(taskUpdate).toHaveBeenLastCalledWith(
+        { id: taskId },
+        { sortOrder: 6000 },
+      );
+    });
+
+    it("orders two 'first' siblings deterministically below the min (base − n·GAP)", async () => {
+      const siblingA = '00000000-0000-4000-8000-0000000000aa';
+      const siblingB = '00000000-0000-4000-8000-0000000000bb';
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 9000,
+          status: 'PENDING',
+        }),
+      );
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 9000, taskId: siblingA },
+        { sortOrder: 9500, taskId: siblingB },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MIN excluding siblings
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
+      );
+
+      // rank 0 → 5000 − 2·1000 = 3000, rank 1 → 5000 − 1·1000 = 4000.
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingA },
+        { sortOrder: 3000 },
+      );
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingB },
+        { sortOrder: 4000 },
+      );
+    });
+
+    it("re-allocates an out-of-position 'after' task beside its anchor", async () => {
+      taskFindOne
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 500,
+            status: 'PENDING',
+          }),
+        ) // the injected task under reconcile
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: '00000000-0000-4000-8000-0000000000cc',
+            planId,
+            sortOrder: 1000,
+          }),
+        ); // the resolved anchor
+      aggregateGetRawOne.mockResolvedValue({ value: null }); // no task between anchor and self
+
+      await executor.reconcile({
+        action: buildAction({
+          anchor: { taskId: '00000000-0000-4000-8000-0000000000cc' },
+          placement: 'after',
+          skillSlug: 'grilling',
+        }),
+        application: asMock<RuleApplication>({ state: 'applied', taskId }),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      });
+
+      expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+        planId,
+        '00000000-0000-4000-8000-0000000000cc',
+        'after',
+      );
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 1500 },
+      );
+    });
+
+    it("leaves an already-adjacent 'after' task in place", async () => {
+      taskFindOne
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 2000,
+            status: 'PENDING',
+          }),
+        )
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: '00000000-0000-4000-8000-0000000000cc',
+            planId,
+            sortOrder: 1000,
+          }),
+        );
+      aggregateGetRawOne.mockResolvedValue({ value: null }); // no other task after the anchor
+
+      await executor.reconcile({
+        action: buildAction({
+          anchor: { taskId: '00000000-0000-4000-8000-0000000000cc' },
+          placement: 'after',
+          skillSlug: 'grilling',
+        }),
+        application: asMock<RuleApplication>({ state: 'applied', taskId }),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      });
+
+      expect(allocateSortOrderBesideAnchor).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reinject', () => {
+    const buildReinject = (application: Partial<RuleApplication>) => ({
+      action: buildAction({ placement: 'first', skillSlug: 'grilling' }),
+      application: asMock<RuleApplication>(application),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    it('re-injects a fresh task for a delete-to-reset row (applied, task_id NULL)', async () => {
+      await executor.reinject(
+        buildReinject({ state: 'applied', taskId: null }),
+      );
+
+      expect(taskSave).toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied' }),
+      );
+    });
+
+    it('revives (reopens) the soft-closed task for an orphaned row that matches again', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({ id: 'old-task', planId, status: 'SKIPPED' }),
+      );
+
+      await executor.reinject(
+        buildReinject({ state: 'orphaned', taskId: 'old-task' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: 'old-task' },
+        { status: 'PENDING' },
+      );
+      expect(taskSave).not.toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
+      );
+    });
+
+    it('does not reopen an orphaned task that is already active', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({ id: 'old-task', planId, status: 'PENDING' }),
+      );
+
+      await executor.reinject(
+        buildReinject({ state: 'orphaned', taskId: 'old-task' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+      expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
+      );
+    });
   });
 });

@@ -26,7 +26,7 @@ import {
   optionalTrimmedString,
   parseEnabledEditorsFromFormData,
 } from '~/routing/settings/utils/workspace-settings-action';
-import type { Route } from '@/app/routes/+types/settings.workspace';
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

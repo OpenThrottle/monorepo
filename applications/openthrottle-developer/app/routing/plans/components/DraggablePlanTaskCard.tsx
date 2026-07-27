@@ -7,6 +7,8 @@ import { PLAN_TASK_DRAG_TYPE } from '~/routing/plans/utils/plan-task-drag-type';
 import type { PlanTaskDragItem } from '~/routing/plans/utils/plan-task-drag-type';
 
 export interface DraggablePlanTaskCardProps {
+  /** True when a tag→action rule manages this task's placement. */
+  isManaged?: boolean;
   planId: string;
   task: PlanTaskRowFragment;
 }
@@ -17,7 +19,7 @@ export interface DraggablePlanTaskCardProps {
 export const DraggablePlanTaskCard = (
   props: DraggablePlanTaskCardProps,
 ): React.ReactElement => {
-  const { planId, task } = props;
+  const { isManaged = false, planId, task } = props;
 
   // Hooks
   const [{ isDragging }, drag] = useDrag({
@@ -56,7 +58,7 @@ export const DraggablePlanTaskCard = (
       )}
       ref={dragRef}
     >
-      <PlanTaskCard task={task} />
+      <PlanTaskCard isManaged={isManaged} task={task} />
     </div>
   );
 };

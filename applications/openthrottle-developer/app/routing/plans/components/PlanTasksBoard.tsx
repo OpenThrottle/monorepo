@@ -8,6 +8,7 @@ import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanTaskCard';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import {
@@ -37,6 +38,7 @@ export const PlanTasksBoard = (
 
   // Hooks
   const { plan, tasks } = usePlanDetailRouteData();
+  const managedTaskIds = usePlanManagedTaskIds();
   const planId = plan?.id ?? '';
   const fetcher = useFetcher<PlanDetailActionData>();
   const revalidator = useRevalidator();
@@ -162,6 +164,7 @@ export const PlanTasksBoard = (
             >
               {columnTasks.map((task) => (
                 <DraggablePlanTaskCard
+                  isManaged={managedTaskIds.has(task.id)}
                   key={task.id}
                   planId={planId}
                   task={task}
