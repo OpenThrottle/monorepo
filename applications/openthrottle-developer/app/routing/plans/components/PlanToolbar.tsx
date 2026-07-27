@@ -34,7 +34,11 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import {
+  getPlanIsCancelable,
+  getPlanIsRunning,
+} from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanToolbarProps {
@@ -136,6 +140,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
   // Setup
   const isCompleted = planStatus === 'COMPLETED';
+  // A run is active (QUEUED / IN_PROGRESS): gate mutating actions so they can't
+  // fire out from under the worker. Kill run is the deliberate exception.
+  const isRunning = getPlanIsRunning(planStatus);
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
     setPlanStatusData != null &&
@@ -323,7 +330,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 )}
                 <Button
                   disabled={
-                    fetcherRunPlan.state !== 'idle' || workflowRunBlocked
+                    fetcherRunPlan.state !== 'idle' ||
+                    workflowRunBlocked ||
+                    isRunning
                   }
                   size="xs"
                   type="submit"
@@ -337,10 +346,12 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             <TooltipContent className="max-w-xs" side="top">
               {fetcherRunPlan.state !== 'idle'
                 ? 'Submitting…'
-                : workflowRunBlocked
-                  ? (workflowRunBlockedReason ??
-                    'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
-                  : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+                : isRunning
+                  ? PLAN_TOOLBAR_COPY.runRunningTooltip
+                  : workflowRunBlocked
+                    ? (workflowRunBlockedReason ??
+                      'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
+                    : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
             </TooltipContent>
           </Tooltip>
 
@@ -350,7 +361,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 <Input name="intent" type="hidden" value="evaluatePlanRules" />
                 <Input name="planId" type="hidden" value={planId} />
                 <Button
-                  disabled={fetcherEvaluateRules.state !== 'idle'}
+                  disabled={fetcherEvaluateRules.state !== 'idle' || isRunning}
                   size="xs"
                   type="submit"
                   variant="ghost"
@@ -363,8 +374,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
               </fetcherEvaluateRules.Form>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs" side="top">
-              Queue a tag→action rules evaluation pass for this plan (recomputes
-              skills-via-rules; results appear in the rule applications ledger).
+              {isRunning
+                ? PLAN_TOOLBAR_COPY.evaluateRulesRunningTooltip
+                : 'Queue a tag→action rules evaluation pass for this plan (recomputes skills-via-rules; results appear in the rule applications ledger).'}
             </TooltipContent>
           </Tooltip>
 
@@ -399,7 +411,11 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
               <Input name="planId" type="hidden" value={planId} />
               <Input name="status" type="hidden" value="COMPLETED" />
               <Button
-                disabled={fetcherSetPlanStatus.state !== 'idle' || isCompleted}
+                disabled={
+                  fetcherSetPlanStatus.state !== 'idle' ||
+                  isCompleted ||
+                  isRunning
+                }
                 size="xs"
                 type="submit"
                 variant="ghost"
@@ -414,7 +430,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           <TooltipContent side="top">
             {isCompleted
               ? 'Plan is already completed'
-              : 'Mark this plan as completed'}
+              : isRunning
+                ? PLAN_TOOLBAR_COPY.markCompleteRunningTooltip
+                : 'Mark this plan as completed'}
           </TooltipContent>
         </Tooltip>
       }

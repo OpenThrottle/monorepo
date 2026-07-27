@@ -1,10 +1,14 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { TaskDetailRoute } from '../TaskDetailRoute';
 import type { TaskDetailRouteProps } from '../TaskDetailRoute';
-import type { GetTaskByIdQuery } from '~/__generated__/graphql';
+import type {
+  GetPlanByIdQuery,
+  GetTaskByIdQuery,
+} from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockTask: NonNullable<GetTaskByIdQuery['task']> = {
@@ -32,12 +36,34 @@ const mockTask: NonNullable<GetTaskByIdQuery['task']> = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+const buildPlan = (status: string): NonNullable<GetPlanByIdQuery['plan']> => ({
+  __typename: 'PlanObject',
+  afterHooks: [],
+  assignee: null,
+  author: 'visormatt',
+  beforeHooks: [],
+  category: 'feature',
+  createdAt: '2025-01-01T00:00:00Z',
+  description: null,
+  id: 'plan-1',
+  jobRunHooksJson: '{"hooks":[]}',
+  project: null,
+  projectId: null,
+  runConfigJson: '{}',
+  status,
+  summary: null,
+  tags: [],
+  title: 'Parent Plan',
+  updatedAt: '2025-01-02T00:00:00Z',
+});
+
 const buildProps = (
   task: NonNullable<GetTaskByIdQuery['task']> = mockTask,
+  plan: GetPlanByIdQuery['plan'] = null,
 ): TaskDetailRouteProps => ({
   loaderData: {
     linkedArtifacts: [],
-    plan: null,
+    plan,
     planOutputChunks: [],
     tagVocabulary: [],
     task,
@@ -80,5 +106,31 @@ describe('TaskDetailRoute Component', () => {
     expect(
       await component.findByText('No task output yet'),
     ).toBeInTheDocument();
+  });
+
+  test('disables task Mark Complete and Promote when the parent plan run is active', () => {
+    const running = within(
+      renderRoute(buildProps(mockTask, buildPlan('IN_PROGRESS'))).container,
+    );
+    const toolbar = within(running.getByTestId('PlanTaskToolbar'));
+    expect(
+      toolbar.getByRole('button', { name: /mark complete/i }),
+    ).toBeDisabled();
+    expect(
+      toolbar.getByRole('button', { name: /promote to plan/i }),
+    ).toBeDisabled();
+  });
+
+  test('leaves task actions enabled when the parent plan is not running', () => {
+    const idle = within(
+      renderRoute(buildProps(mockTask, buildPlan('PENDING'))).container,
+    );
+    const toolbar = within(idle.getByTestId('PlanTaskToolbar'));
+    expect(
+      toolbar.getByRole('button', { name: /mark complete/i }),
+    ).not.toBeDisabled();
+    expect(
+      toolbar.getByRole('button', { name: /promote to plan/i }),
+    ).not.toBeDisabled();
   });
 });

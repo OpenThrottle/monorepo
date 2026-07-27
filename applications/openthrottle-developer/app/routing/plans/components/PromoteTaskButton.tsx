@@ -23,6 +23,12 @@ import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 export interface PromoteTaskButtonProps {
   /** True when the task has already been promoted (SKIPPED + `promoted` tag). */
   readonly isPromoted: boolean;
+  /**
+   * True when the parent plan run is active (QUEUED / IN_PROGRESS). Promotion is
+   * disabled with an explanatory tooltip and cannot open the confirm dialog —
+   * closing a task out from under a live worker is unsafe.
+   */
+  readonly planIsRunning?: boolean;
   readonly size?: 'sm' | 'xs';
 }
 
@@ -37,7 +43,7 @@ export interface PromoteTaskButtonProps {
 export const PromoteTaskButton = (
   props: PromoteTaskButtonProps,
 ): React.ReactElement => {
-  const { isPromoted, size = 'xs' } = props;
+  const { isPromoted, planIsRunning = false, size = 'xs' } = props;
 
   // Hooks
   const busyRef = React.useRef(false);
@@ -55,7 +61,7 @@ export const PromoteTaskButton = (
   const triggerButton = (
     <Button
       aria-label={PLAN_TASK_TOOLBAR_COPY.promoteLabel}
-      disabled={isSubmitting || isPromoted}
+      disabled={isSubmitting || isPromoted || planIsRunning}
       size={size}
       type="button"
       variant="ghost"
@@ -109,6 +115,21 @@ export const PromoteTaskButton = (
         </TooltipTrigger>
         <TooltipContent side="top">
           {PLAN_TASK_TOOLBAR_COPY.promotedDisabledTooltip}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (planIsRunning) {
+    return (
+      <Tooltip delayDuration={1_000}>
+        <TooltipTrigger asChild={true}>
+          {/* Wrapper keeps the tooltip working on the disabled button; the
+              disabled trigger also cannot open the confirm dialog. */}
+          <span className="inline-flex">{triggerButton}</span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          {PLAN_TASK_TOOLBAR_COPY.promoteRunningTooltip}
         </TooltipContent>
       </Tooltip>
     );

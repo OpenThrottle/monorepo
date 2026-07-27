@@ -43,6 +43,13 @@ export interface PlanTaskToolbarProps {
    */
   planId: string;
   /**
+   * @description Whether the owning plan's run is active (QUEUED / IN_PROGRESS).
+   * When true, Mark Complete and Promote to Plan are disabled with explanatory
+   * tooltips so they can't fire out from under a live worker. Edit Task stays
+   * enabled. Computed via `getPlanIsRunning` from the plan status.
+   */
+  planIsRunning: boolean;
+  /**
    * @description Available tag vocabulary for the add-tag dropdown.
    */
   tagVocabulary: PlanTagVocabularyOption[];
@@ -79,6 +86,7 @@ export const PlanTaskToolbar = (
     onAddTag,
     onRemoveTag,
     planId,
+    planIsRunning,
     taskId,
     taskStatus,
     tags,
@@ -146,7 +154,12 @@ export const PlanTaskToolbar = (
       }
       className={className}
       dataTestId="PlanTaskToolbar"
-      primaryActions={<PromoteTaskButton isPromoted={isPromoted} />}
+      primaryActions={
+        <PromoteTaskButton
+          isPromoted={isPromoted}
+          planIsRunning={planIsRunning}
+        />
+      }
       statusAction={
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
@@ -154,7 +167,11 @@ export const PlanTaskToolbar = (
               <Input name="intent" type="hidden" value="setTaskStatus" />
               <Input name="status" type="hidden" value="COMPLETED" />
               <Button
-                disabled={fetcherSetStatus.state !== 'idle' || isCompleted}
+                disabled={
+                  fetcherSetStatus.state !== 'idle' ||
+                  isCompleted ||
+                  planIsRunning
+                }
                 size="xs"
                 type="submit"
                 variant="ghost"
@@ -169,7 +186,9 @@ export const PlanTaskToolbar = (
           <TooltipContent side="top">
             {isCompleted
               ? 'Task is already completed'
-              : 'Mark this task as completed'}
+              : planIsRunning
+                ? PLAN_TASK_TOOLBAR_COPY.markCompleteRunningTooltip
+                : 'Mark this task as completed'}
           </TooltipContent>
         </Tooltip>
       }

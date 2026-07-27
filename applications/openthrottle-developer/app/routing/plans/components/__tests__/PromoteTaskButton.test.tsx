@@ -7,13 +7,17 @@ import { renderRouteHarness } from '~/testing/route-fixtures';
 
 const renderButton = (
   isPromoted: boolean,
+  planIsRunning = false,
 ): { submitted: (FormDataEntryValue | null)[] } => {
   const submitted: (FormDataEntryValue | null)[] = [];
 
   renderRouteHarness([
     {
       Component: (): React.ReactElement => (
-        <PromoteTaskButton isPromoted={isPromoted} />
+        <PromoteTaskButton
+          isPromoted={isPromoted}
+          planIsRunning={planIsRunning}
+        />
       ),
       action: async ({ request }: { request: Request }) => {
         const formData = await request.formData();
@@ -52,6 +56,20 @@ describe('PromoteTaskButton', () => {
   test('renders a disabled control that cannot open the dialog when already promoted', async () => {
     const user = userEvent.setup();
     const { submitted } = renderButton(true);
+
+    const button = screen.getByRole('button', { name: /promote to plan/i });
+    expect(button).toBeDisabled();
+
+    await user.click(button);
+    expect(
+      screen.queryByText('Promote task to a plan?'),
+    ).not.toBeInTheDocument();
+    expect(submitted).toHaveLength(0);
+  });
+
+  test('renders a disabled control that cannot open the dialog while the plan run is active', async () => {
+    const user = userEvent.setup();
+    const { submitted } = renderButton(false, true);
 
     const button = screen.getByRole('button', { name: /promote to plan/i });
     expect(button).toBeDisabled();
