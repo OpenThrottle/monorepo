@@ -7,11 +7,23 @@
  * or the file named by `OPENCODE_CONFIG`. So — unlike claude's inline flag — we
  * write a temp config OUTSIDE the user's checkout and point opencode at it, then
  * delete it when the turn ends. Nothing is ever written into the checkout.
+ *
+ * opencode also has no scoped per-tool permission *flag* (only the blanket
+ * `run --auto`), so the composer permission mode is expressed here in the same
+ * temp config's `permission` slice: a scoped `allow` for the injected managed
+ * MCP servers (`<server>*`) so their tools are callable in a headless run,
+ * mirroring claude's `--allowedTools`. `fullAccess` is handled by the `--auto`
+ * flag instead (see argv.ts), so it writes no permission slice.
  */
 
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+import {
+  CONVERSATION_PERMISSION_MODES,
+  type ConversationPermissionMode,
+} from '../types.ts';
 
 /** opencode's per-server MCP config shape (local/stdio server). */
 interface OpencodeMcpServer {
@@ -21,10 +33,14 @@ interface OpencodeMcpServer {
   readonly type: 'local';
 }
 
-/** opencode config file shape (only the `mcp` slice we manage). */
+/** opencode permission action for a tool/category (`ask` is opencode's default). */
+type OpencodePermissionAction = 'allow' | 'ask' | 'deny';
+
+/** opencode config file shape (only the `mcp` + `permission` slices we manage). */
 interface OpencodeConfig {
   readonly $schema: string;
-  readonly mcp: Readonly<Record<string, OpencodeMcpServer>>;
+  readonly mcp?: Readonly<Record<string, OpencodeMcpServer>>;
+  readonly permission?: Readonly<Record<string, OpencodePermissionAction>>;
 }
 
 /** A written temp config and the cleanup that removes it. */
@@ -55,12 +71,42 @@ const toStringRecord = (value: unknown): Record<string, string> | undefined => {
 };
 
 /**
+ * Build opencode's `permission` slice for a permission mode. Every non-
+ * `fullAccess` posture scopes an `allow` to the injected managed MCP servers
+ * (`<server>*`) so their tools are callable in a headless run without a blanket
+ * bypass; `autoAcceptEdits` additionally allows `edit`. `fullAccess` returns
+ * undefined — it is handled by the `--auto` flag, not a permission slice. Left/
+ * unmapped tools keep opencode's default posture. Returns undefined when the
+ * slice would be empty (e.g. `supervised`/default with no managed servers), so
+ * no permission key is written.
+ */
+function buildOpencodePermission(
+  managedNames: readonly string[],
+  permissionMode: ConversationPermissionMode | undefined,
+): Record<string, OpencodePermissionAction> | undefined {
+  if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
+    return undefined;
+  }
+  const permission: Record<string, OpencodePermissionAction> = {};
+  if (permissionMode === CONVERSATION_PERMISSION_MODES.autoAcceptEdits) {
+    permission['edit'] = 'allow';
+  }
+  for (const name of managedNames) {
+    permission[`${name}*`] = 'allow';
+  }
+  return Object.keys(permission).length > 0 ? permission : undefined;
+}
+
+/**
  * Translate a canonical managed map (`{ name: { command, args, env } }`) into
  * opencode's `{ mcp: { name: { type:'local', command:[cmd,...args], environment,
- * enabled:true } } }`. Servers whose `command` is not a string are skipped.
+ * enabled:true } } }`, plus a `permission` slice derived from `permissionMode`
+ * (see {@link buildOpencodePermission}). Servers whose `command` is not a string
+ * are skipped.
  */
 export function translateManagedMcpToOpencode(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  permissionMode?: ConversationPermissionMode,
 ): OpencodeConfig {
   const mcp: Record<string, OpencodeMcpServer> = {};
   for (const [name, definition] of Object.entries(managed)) {
@@ -78,19 +124,29 @@ export function translateManagedMcpToOpencode(
     };
   }
 
-  return { $schema: 'https://opencode.ai/config.json', mcp };
+  const permission = buildOpencodePermission(Object.keys(mcp), permissionMode);
+
+  return {
+    $schema: 'https://opencode.ai/config.json',
+    ...(Object.keys(mcp).length > 0 ? { mcp } : {}),
+    ...(permission !== undefined ? { permission } : {}),
+  };
 }
 
 /**
- * Write the translated managed servers to a fresh temp `opencode.json` outside
- * any checkout and return its path + a cleanup. Returns null when there is
- * nothing to inject (no servers translated).
+ * Write the translated managed servers + permission slice to a fresh temp
+ * `opencode.json` outside any checkout and return its path + a cleanup. Returns
+ * null when there is nothing to write (no servers translated AND no permission
+ * slice to set — e.g. `supervised`/default with no managed servers).
  */
 export function writeOpencodeMcpConfig(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  permissionMode?: ConversationPermissionMode,
 ): OpencodeMcpConfigFile | null {
-  const config = translateManagedMcpToOpencode(managed);
-  if (Object.keys(config.mcp).length === 0) {
+  const config = translateManagedMcpToOpencode(managed, permissionMode);
+  const hasMcp = config.mcp !== undefined && Object.keys(config.mcp).length > 0;
+  const hasPermission = config.permission !== undefined;
+  if (!hasMcp && !hasPermission) {
     return null;
   }
 

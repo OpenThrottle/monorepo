@@ -23,7 +23,7 @@ describe('translateManagedMcpToOpencode', () => {
     const config = translateManagedMcpToOpencode(MANAGED);
 
     expect(config.$schema).toBe('https://opencode.ai/config.json');
-    expect(config.mcp['openthrottle-mcp']).toEqual({
+    expect(config.mcp?.['openthrottle-mcp']).toEqual({
       command: ['bash', './scripts/run-openthrottle-mcp.sh'],
       enabled: true,
       environment: {
@@ -39,19 +39,19 @@ describe('translateManagedMcpToOpencode', () => {
       fetch: { args: ['mcp-server-fetch'], command: 'uvx' },
     });
 
-    expect(config.mcp['fetch']).toEqual({
+    expect(config.mcp?.['fetch']).toEqual({
       command: ['uvx', 'mcp-server-fetch'],
       enabled: true,
       type: 'local',
     });
   });
 
-  it('skips servers whose command is not a string', () => {
+  it('omits the mcp key entirely when no server has a string command', () => {
     const config = translateManagedMcpToOpencode({
       broken: { args: ['x'] },
     });
 
-    expect(config.mcp).toEqual({});
+    expect(config.mcp).toBeUndefined();
   });
 });
 

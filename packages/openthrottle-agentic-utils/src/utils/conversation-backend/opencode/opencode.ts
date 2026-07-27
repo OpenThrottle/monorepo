@@ -18,6 +18,7 @@
 import { spawn } from 'node:child_process';
 
 import {
+  CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
   type ConversationBackendRun,
@@ -110,13 +111,16 @@ async function* streamOpencode(
     throw new Error('The opencode backend requires a cwd.');
   }
 
-  // MCP has no CLI flag on opencode: write a temp config outside the checkout
-  // and point opencode at it via OPENCODE_CONFIG (removed in `finally`). Merge
-  // that path with the run's mcpEnv into the scrubbed child env.
-  const mcpConfigFile: OpencodeMcpConfigFile | null =
-    run.mcpServers !== undefined && Object.keys(run.mcpServers).length > 0
-      ? writeOpencodeMcpConfig(run.mcpServers)
-      : null;
+  // MCP (and the scoped permission slice) have no CLI flag on opencode: write a
+  // temp config outside the checkout and point opencode at it via OPENCODE_CONFIG
+  // (removed in `finally`). The writer returns null when there is nothing to
+  // write (no servers AND no permission slice), so `supervised`/default with no
+  // managed servers adds no config. `fullAccess` is carried by `--auto` below,
+  // not the config. Merge the config path with the run's mcpEnv into the child env.
+  const mcpConfigFile: OpencodeMcpConfigFile | null = writeOpencodeMcpConfig(
+    run.mcpServers ?? {},
+    run.permissionMode,
+  );
   const childEnv =
     run.mcpEnv !== undefined || mcpConfigFile !== null
       ? {
@@ -133,6 +137,7 @@ async function* streamOpencode(
   const child = spawn(
     resolveOpencodeBin(),
     buildOpencodeArgv({
+      auto: run.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess,
       cwd: run.cwd,
       model: run.model,
       prompt: composePrompt(run),
