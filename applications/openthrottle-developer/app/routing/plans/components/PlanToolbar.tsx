@@ -38,6 +38,7 @@ import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import {
   getPlanIsCancelable,
   getPlanIsRunning,
+  getPlanIsTerminal,
 } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
@@ -143,6 +144,11 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   // A run is active (QUEUED / IN_PROGRESS): gate mutating actions so they can't
   // fire out from under the worker. Kill run is the deliberate exception.
   const isRunning = getPlanIsRunning(planStatus);
+  // The plan is finished/abandoned (COMPLETED / CANCELED / SKIPPED): there is no
+  // more work to do here, so gate Run/Queue and Evaluate rules. Mark Complete is
+  // deliberately excluded (stays gated on isCompleted only) so CANCELED/SKIPPED
+  // keep their sole recovery path to done.
+  const isTerminal = getPlanIsTerminal(planStatus);
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
     setPlanStatusData != null &&
@@ -332,7 +338,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                   disabled={
                     fetcherRunPlan.state !== 'idle' ||
                     workflowRunBlocked ||
-                    isRunning
+                    isRunning ||
+                    isTerminal
                   }
                   size="xs"
                   type="submit"
@@ -344,14 +351,18 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
               </fetcherRunPlan.Form>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs" side="top">
+              {/* Precedence: submitting > terminal > running > blocked > default
+                  (terminal and running are mutually exclusive). */}
               {fetcherRunPlan.state !== 'idle'
                 ? 'Submitting…'
-                : isRunning
-                  ? PLAN_TOOLBAR_COPY.runRunningTooltip
-                  : workflowRunBlocked
-                    ? (workflowRunBlockedReason ??
-                      'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
-                    : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+                : isTerminal
+                  ? PLAN_TOOLBAR_COPY.runTerminalTooltip
+                  : isRunning
+                    ? PLAN_TOOLBAR_COPY.runRunningTooltip
+                    : workflowRunBlocked
+                      ? (workflowRunBlockedReason ??
+                        'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
+                      : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
             </TooltipContent>
           </Tooltip>
 
@@ -361,7 +372,11 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 <Input name="intent" type="hidden" value="evaluatePlanRules" />
                 <Input name="planId" type="hidden" value={planId} />
                 <Button
-                  disabled={fetcherEvaluateRules.state !== 'idle' || isRunning}
+                  disabled={
+                    fetcherEvaluateRules.state !== 'idle' ||
+                    isRunning ||
+                    isTerminal
+                  }
                   size="xs"
                   type="submit"
                   variant="ghost"
@@ -374,9 +389,11 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
               </fetcherEvaluateRules.Form>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs" side="top">
-              {isRunning
-                ? PLAN_TOOLBAR_COPY.evaluateRulesRunningTooltip
-                : 'Queue a tag→action rules evaluation pass for this plan (recomputes skills-via-rules; results appear in the rule applications ledger).'}
+              {isTerminal
+                ? PLAN_TOOLBAR_COPY.evaluateRulesTerminalTooltip
+                : isRunning
+                  ? PLAN_TOOLBAR_COPY.evaluateRulesRunningTooltip
+                  : 'Queue a tag→action rules evaluation pass for this plan (recomputes skills-via-rules; results appear in the rule applications ledger).'}
             </TooltipContent>
           </Tooltip>
 

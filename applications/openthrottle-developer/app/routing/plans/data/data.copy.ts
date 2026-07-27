@@ -75,13 +75,18 @@ export const PLAN_TAB_OUTPUT_COPY = {
 
 /**
  * @description Tooltip copy for the plan-level toolbar (PlanToolbar) explaining
- * why the mutating actions are disabled while a plan run is active (QUEUED or
- * IN_PROGRESS). Kill run stays available and is the intended mid-run action.
+ * why the mutating actions are disabled. The `*Running*` strings cover an active
+ * run (QUEUED / IN_PROGRESS) — Kill run stays available and is the intended
+ * mid-run action. The `*Terminal*` strings cover a finished/abandoned plan
+ * (COMPLETED / CANCELED / SKIPPED): there is no more work to do here, so the
+ * fix is to fall forward and ship a new plan rather than to unblock the action.
  */
 export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
+  evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,
   markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   runRunningTooltip: `A run is already active for this plan — kill it before starting another.`,
+  runTerminalTooltip: `This plan is in a terminal state — create a new plan to do more work.`,
 } as const;
 
 /**
