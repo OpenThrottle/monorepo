@@ -79,6 +79,23 @@ const toast: typeof sonnerToast = new Proxy(sonnerToast, {
   },
 });
 
+/**
+ * Per-type toast surface colors, mirroring the shared Badge named-hue contract
+ * (`border-{hue}-500/50 bg-{hue}-500/20`). Written as full literal class strings
+ * so Tailwind's JIT can see and emit them — never build them dynamically. Only
+ * the status types are colored; `loading` and `message`/`default` stay neutral
+ * (they inherit the popover surface from `toasterStyle`) because they are
+ * transient / non-status.
+ */
+const typedToastClassNames: NonNullable<
+  NonNullable<ToasterProps['toastOptions']>['classNames']
+> = {
+  error: 'border-red-500/50 bg-red-500/20',
+  info: 'border-sky-500/50 bg-sky-500/20',
+  success: 'border-green-500/50 bg-green-500/20',
+  warning: 'border-amber-500/50 bg-amber-500/20',
+};
+
 const isToasterTheme = (value: string): value is ToasterTheme =>
   value === 'dark' || value === 'light' || value === 'system';
 
@@ -108,6 +125,7 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
       }}
       style={toasterStyle}
       theme={resolvedTheme}
+      toastOptions={{ classNames: typedToastClassNames }}
       {...props}
     />
   );
