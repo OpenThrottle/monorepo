@@ -79,6 +79,34 @@ const toast: typeof sonnerToast = new Proxy(sonnerToast, {
   },
 });
 
+/**
+ * Per-type toast surface colors, mirroring the shared Badge named-hue contract
+ * (`border-{hue}-500/50 bg-{hue}-500/20`). Written as full literal class strings
+ * so Tailwind's JIT can see and emit them — never build them dynamically. Sonner
+ * applies each key only to toasts of that `data-type`, so `loading` and
+ * `message`/`default` stay neutral (they keep the popover surface from
+ * `toasterStyle`) because they are transient / non-status.
+ *
+ * Why the trailing `!` (important): Sonner paints the surface with an
+ * *unlayered* rule — `[data-sonner-toast][data-styled='true'] { background:
+ * var(--normal-bg); border: 1px solid var(--normal-border) }`. Tailwind v4 emits
+ * every utility inside `@layer utilities`, and an unlayered declaration outranks
+ * ANY layered one regardless of selector specificity — so a plain (or even a
+ * more-specific, data-attribute-scoped) `bg-*` utility loses the cascade to
+ * Sonner's var-driven paint. Specificity cannot win across layers; the important
+ * flag can (an important declaration beats a normal unlayered one), so it is the
+ * necessary override here, not a gratuitous one. We only override the color;
+ * Sonner's `1px solid` border width/style still apply.
+ */
+const typedToastClassNames: NonNullable<
+  NonNullable<ToasterProps['toastOptions']>['classNames']
+> = {
+  error: 'border-red-500/50! bg-red-500/20!',
+  info: 'border-sky-500/50! bg-sky-500/20!',
+  success: 'border-green-500/50! bg-green-500/20!',
+  warning: 'border-amber-500/50! bg-amber-500/20!',
+};
+
 const isToasterTheme = (value: string): value is ToasterTheme =>
   value === 'dark' || value === 'light' || value === 'system';
 
@@ -100,14 +128,20 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
     <Sonner
       className="toaster group"
       icons={{
-        error: <OctagonXIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
+        // Icon hue matches each type's surface (see `typedToastClassNames`) so
+        // icon + tint read as one status. Full-strength `text-{hue}-500` — no
+        // `!` needed: Sonner's `[data-icon]` rules set only layout, never color,
+        // so a direct color on the svg simply overrides the inherited text
+        // color. `loading` stays neutral (transient), matching its surface.
+        error: <OctagonXIcon className="size-4 text-red-500" />,
+        info: <InfoIcon className="size-4 text-sky-500" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
-        success: <CircleCheckIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
+        success: <CircleCheckIcon className="size-4 text-green-500" />,
+        warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
       }}
       style={toasterStyle}
       theme={resolvedTheme}
+      toastOptions={{ classNames: typedToastClassNames }}
       {...props}
     />
   );

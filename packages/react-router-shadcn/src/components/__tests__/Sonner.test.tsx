@@ -67,3 +67,72 @@ describe('toast empty-message guard', () => {
     expect(typeof toast.getToasts).toBe('function');
   });
 });
+
+describe('toast per-type color classNames', () => {
+  // The Toaster wires per-type surface colors via Sonner's
+  // `toastOptions.classNames`; Sonner applies each key only to toasts of that
+  // `data-type`. Assert the rendered toast element carries the mapped hue
+  // classes (status types) and that transient types stay neutral. The classes
+  // use Tailwind's trailing-`!` important — see the Sonner component for why.
+  afterEach(() => {
+    toast.dismiss();
+  });
+
+  const toastElementFor = async (message: string): Promise<Element> => {
+    const body = await screen.findByText(message);
+    const el = body.closest('[data-sonner-toast]');
+    if (!el) {
+      throw new Error(`No [data-sonner-toast] ancestor for "${message}"`);
+    }
+    return el;
+  };
+
+  it('applies the red hue to error toasts', async () => {
+    render(<Toaster />);
+    toast.error('error toast');
+    expect(await toastElementFor('error toast')).toHaveClass(
+      'border-red-500/50!',
+      'bg-red-500/20!',
+    );
+  });
+
+  it('applies the amber hue to warning toasts', async () => {
+    render(<Toaster />);
+    toast.warning('warning toast');
+    expect(await toastElementFor('warning toast')).toHaveClass(
+      'border-amber-500/50!',
+      'bg-amber-500/20!',
+    );
+  });
+
+  it('applies the green hue to success toasts', async () => {
+    render(<Toaster />);
+    toast.success('success toast');
+    expect(await toastElementFor('success toast')).toHaveClass(
+      'border-green-500/50!',
+      'bg-green-500/20!',
+    );
+  });
+
+  it('applies the sky hue to info toasts', async () => {
+    render(<Toaster />);
+    toast.info('info toast');
+    expect(await toastElementFor('info toast')).toHaveClass(
+      'border-sky-500/50!',
+      'bg-sky-500/20!',
+    );
+  });
+
+  it('leaves loading and message toasts neutral', async () => {
+    render(<Toaster />);
+    toast.loading('loading toast');
+    toast.message('message toast');
+    const hueSurface = /(?:bg|border)-(?:red|amber|green|sky)-500\/(?:20|50)!/;
+    expect((await toastElementFor('loading toast')).className).not.toMatch(
+      hueSurface,
+    );
+    expect((await toastElementFor('message toast')).className).not.toMatch(
+      hueSurface,
+    );
+  });
+});
