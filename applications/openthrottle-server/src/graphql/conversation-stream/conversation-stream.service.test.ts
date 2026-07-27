@@ -41,6 +41,8 @@ const baseRun: StartConversationStreamRun = {
   baseUrl: 'http://localhost:11434/v1',
   conversationId: 'conv-1',
   cwd: null,
+  mcpEnv: null,
+  mcpServers: null,
   messages: [{ content: 'hi', role: 'user' }],
   model: 'llama3',
   provider: 'ollama',

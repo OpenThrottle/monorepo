@@ -29,11 +29,13 @@ import {
   AgentConversationsService,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
+  buildManagedMcpServers,
 } from '@openthrottle/nestjs-repositories';
 import {
   AGENT_CLI_ALLOWLIST,
   type ChatCompletionMessage,
   createCursorAgentSession,
+  toContainerPath,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
@@ -125,6 +127,12 @@ const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
 interface ResolvedBackendRun {
   readonly baseUrl: string | null;
   readonly cwd: string | null;
+  /** Extra env the CLI child must pass through (OT MCP token + API URLs); null when no MCP is configured. */
+  readonly mcpEnv: Readonly<Record<string, string>> | null;
+  /** Managed MCP servers (canonical `.mcp.json` schema); null when none apply to this checkout. */
+  readonly mcpServers: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  > | null;
   readonly model: string;
   readonly provider: string | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
@@ -134,6 +142,20 @@ interface ResolvedBackendRun {
 }
 
 const isProduction = (): boolean => process.env.NODE_ENV === 'production';
+
+/**
+ * The base URL a spawned MCP server uses to reach this OpenThrottle server.
+ * Mirrors `applyWorkspaceEditorConfiguration`'s apiBaseUrl resolution so the
+ * chat and editor paths agree.
+ */
+const resolveApiBaseUrl = (): string => {
+  const internal = process.env.API_URL_INTERNAL?.trim();
+  if (internal !== undefined && internal !== '') {
+    return internal;
+  }
+  const port = process.env.PORT?.trim();
+  return `http://localhost:${port !== undefined && port !== '' ? port : '6021'}`;
+};
 
 // @authz-stance: authenticated-only (Path A — human JWT user)
 @Resolver()
@@ -269,6 +291,8 @@ export class ConversationStreamResolver {
       baseUrl: resolved.baseUrl,
       conversationId,
       cwd: resolved.cwd,
+      mcpEnv: resolved.mcpEnv,
+      mcpServers: resolved.mcpServers,
       messages,
       model: resolved.model,
       provider: resolved.provider,
@@ -319,6 +343,8 @@ export class ConversationStreamResolver {
       return {
         baseUrl: endpoint.baseUrl,
         cwd: null,
+        mcpEnv: null,
+        mcpServers: null,
         model: input.modelId,
         provider: endpoint.provider,
         resumeSession: false,
@@ -340,7 +366,12 @@ export class ConversationStreamResolver {
       if (!repository) {
         return 'Repository not found.';
       }
-      cwd = repository.filesystemPath;
+      // The DB filesystemPath is host-truthful. Under a containerized server with
+      // the workspace bridge active, translate to the in-container mount so the
+      // spawn cwd (and the relative run-openthrottle-mcp.sh) resolve to a path
+      // that exists. Identity (no-op) on host-run flows. Mirrors the editor path
+      // (workspace-editor-config.service).
+      cwd = toContainerPath(repository.filesystemPath);
     } else if (!isProduction()) {
       const devCwd = process.env[DEV_CWD_ENV]?.trim();
       cwd = devCwd === undefined || devCwd === '' ? null : devCwd;
@@ -368,9 +399,35 @@ export class ConversationStreamResolver {
       input.personaId ?? null,
     );
 
+    // Build the managed MCP config for this checkout (currently just the OT MCP
+    // server, and only when scripts/run-openthrottle-mcp.sh exists — i.e. the OT
+    // monorepo). Reuses the same builder the editor-config path uses so the two
+    // agree. `mcpEnv` threads the token + API URLs the OT MCP needs; the server
+    // sources the token from its own env (the run script self-sources from .env
+    // as a fallback). Populated only when MCP applies, so a non-OT checkout adds
+    // no config or env. Per-backend injection (argv/env) happens in the adapters.
+    const apiBaseUrl = resolveApiBaseUrl();
+    const managedMcp = buildManagedMcpServers({
+      apiBaseUrl,
+      repositoryRoot: cwd,
+    });
+    const hasMcp = Object.keys(managedMcp).length > 0;
+    const mcpToken = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN?.trim();
+    const mcpEnv: Record<string, string> | null = hasMcp
+      ? {
+          API_URL: apiBaseUrl,
+          API_URL_INTERNAL: apiBaseUrl,
+          ...(mcpToken !== undefined && mcpToken !== ''
+            ? { OPENTHROTTLE_MCP_AUTH_TOKEN: mcpToken }
+            : {}),
+        }
+      : null;
+
     return {
       baseUrl: null,
       cwd,
+      mcpEnv,
+      mcpServers: hasMcp ? managedMcp : null,
       model: input.modelId ?? '',
       provider: backend,
       resumeSession: session.resumeSession,

@@ -67,4 +67,47 @@ describe('buildClaudeArgv', () => {
     expect(argv).not.toContain('--model');
     expect(argv).not.toContain('--append-system-prompt');
   });
+
+  it('injects --mcp-config (inline JSON) + --strict-mcp-config when mcpServers are given, before the prompt', () => {
+    const argv = buildClaudeArgv({
+      mcpServers: {
+        'openthrottle-mcp': {
+          args: ['./scripts/run-openthrottle-mcp.sh'],
+          command: 'bash',
+        },
+      },
+      prompt: 'do it',
+      resume: false,
+      sessionId: 'sid-1',
+    });
+
+    const flagIndex = argv.indexOf('--mcp-config');
+    expect(flagIndex).toBeGreaterThanOrEqual(0);
+    expect(JSON.parse(argv[flagIndex + 1] ?? '')).toEqual({
+      mcpServers: {
+        'openthrottle-mcp': {
+          args: ['./scripts/run-openthrottle-mcp.sh'],
+          command: 'bash',
+        },
+      },
+    });
+    expect(argv).toContain('--strict-mcp-config');
+    // MCP flags must precede the `--` terminator + prompt.
+    expect(flagIndex).toBeLessThan(argv.indexOf('--'));
+    expect(argv.at(-1)).toBe('do it');
+  });
+
+  it('omits MCP flags when mcpServers is absent or empty', () => {
+    expect(
+      buildClaudeArgv({ prompt: 'hi', resume: false, sessionId: 'sid-1' }),
+    ).not.toContain('--mcp-config');
+    expect(
+      buildClaudeArgv({
+        mcpServers: {},
+        prompt: 'hi',
+        resume: false,
+        sessionId: 'sid-1',
+      }),
+    ).not.toContain('--mcp-config');
+  });
 });

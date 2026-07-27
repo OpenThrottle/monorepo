@@ -224,6 +224,7 @@ export type {
   ApplyWorkspaceEditorConfigOptions,
   WorkspaceEditorConfigApplication,
 } from './modules/workspace-settings/workspace-editor-config.service';
+export { buildManagedMcpServers } from './modules/workspace-settings/workspace-editor-mcp-config';
 export { User } from './modules/users/user.entity';
 export { usersFactory } from './modules/users/users.factory';
 export { UsersService } from './modules/users/users.service';

@@ -25,6 +25,9 @@ export const mergeManagedMcpServers = (
 
 /**
  * @description Returns MCP server definitions OpenThrottle manages for a repository.
+ * Reused by both the editor-config apply path and the conversation-stream chat
+ * spawn path, so it is package-public API.
+ * @public
  */
 export const buildManagedMcpServers = (options: {
   readonly apiBaseUrl: string;
