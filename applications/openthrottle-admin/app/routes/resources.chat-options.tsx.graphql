@@ -1,0 +1,38 @@
+query DiscoverAgentClis {
+  discoverAgentClis {
+    agents {
+      backend
+      label
+      version
+    }
+    totalCount
+  }
+}
+
+query DiscoverLocalModels {
+  discoverLocalModels {
+    endpoints {
+      baseUrl
+      host
+      models
+      provider
+    }
+    totalCount
+  }
+}
+
+query PersonaPrompts {
+  customPrompts(input: { promptType: PERSONAS }) {
+    description
+    id
+    title
+  }
+}
+
+query WorkspaceLocalRepositories {
+  workspaceLocalRepositories {
+    displayName
+    filesystemPath
+    id
+  }
+}

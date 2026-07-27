@@ -1954,12 +1954,30 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
+      '@openthrottle/react-router-chat':
+        specifier: workspace:^
+        version: link:../../packages/react-router-chat
+      '@openthrottle/react-router-chat-state':
+        specifier: workspace:^
+        version: link:../../packages/react-router-chat-state
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
+      '@openthrottle/react-router-graphql':
+        specifier: workspace:^
+        version: link:../../packages/react-router-graphql
+      '@openthrottle/react-router-ui-global':
+        specifier: workspace:^
+        version: link:../../packages/react-router-ui-global
+      '@openthrottle/react-router-utils':
+        specifier: workspace:^
+        version: link:../../packages/react-router-utils
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      jotai:
+        specifier: 'catalog:'
+        version: 2.20.0(@babel/core@7.29.7)(@babel/template@7.29.7)(@types/react@19.2.7)(react@19.2.4)
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
