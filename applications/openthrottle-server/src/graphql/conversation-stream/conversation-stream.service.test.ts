@@ -162,6 +162,100 @@ describe('ConversationStreamService', () => {
     );
   });
 
+  it('forwards terminal usage metadata (claude/cursor) as a usage chunk and persists it', async () => {
+    async function* claudeWithUsage(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      error?: string | null;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield { delta: 'Hello', done: false, kind: 'text' };
+      yield {
+        delta: '',
+        done: true,
+        error: null,
+        kind: 'usage',
+        metadata: {
+          result: 'Hello',
+          totalCostUsd: 0.04,
+          usage: { input_tokens: 1200, output_tokens: 340 },
+        },
+      };
+    }
+    claudeStreamMock.mockImplementation(claudeWithUsage);
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
+
+    const published = publish.mock.calls.map(
+      ([, payload]) => payload.conversationStreamChunkAdded,
+    );
+    // text delta, then the forwarded usage chunk, then the terminal done chunk.
+    expect(published).toEqual([
+      expect.objectContaining({ delta: 'Hello', done: false, sortOrder: 0 }),
+      expect.objectContaining({
+        done: false,
+        kind: 'usage',
+        metadataJson: JSON.stringify({
+          result: 'Hello',
+          totalCostUsd: 0.04,
+          usage: { input_tokens: 1200, output_tokens: 340 },
+        }),
+        sortOrder: 1,
+      }),
+      expect.objectContaining({ done: true, error: null, sortOrder: 2 }),
+    ]);
+    // The usage event is persisted into tool_metadata for reload.
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        expect.objectContaining({
+          content: 'Hello',
+          toolMetadata: {
+            events: [
+              {
+                delta: '',
+                kind: 'usage',
+                metadata: {
+                  result: 'Hello',
+                  totalCostUsd: 0.04,
+                  usage: { input_tokens: 1200, output_tokens: 340 },
+                },
+              },
+            ],
+          },
+        }),
+      ],
+    );
+  });
+
+  it('forwards a backend error reported on the terminal chunk', async () => {
+    async function* claudeError(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      error?: string | null;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: '',
+        done: true,
+        error: 'model_not_found',
+        kind: 'usage',
+        metadata: { result: 'model_not_found' },
+      };
+    }
+    claudeStreamMock.mockImplementation(claudeError);
+    const { publish, service } = buildService();
+
+    await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
+
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({ done: true, error: 'model_not_found' });
+  });
+
   it('publishes the topic keyed by conversation id with the resolver field name', async () => {
     openAiStreamMock.mockReturnValue(fakeStream(['x']));
     const { publish, service } = buildService();
