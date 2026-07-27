@@ -6,6 +6,11 @@
  * docs/openthrottle/claude-stream-json-schema.md §1.
  */
 
+import {
+  CONVERSATION_PERMISSION_MODES,
+  type ConversationPermissionMode,
+} from '../types.ts';
+
 /**
  * Env var holding an absolute path to the claude binary; overrides PATH lookup.
  */
@@ -32,6 +37,14 @@ export interface ClaudeArgvOptions {
   >;
   /** Model id; omitted when undefined so claude uses its account default. */
   readonly model?: string;
+  /**
+   * Composer permission posture. Mapped to concrete claude flags:
+   * `fullAccess` → `--permission-mode bypassPermissions`; `autoAcceptEdits` →
+   * `--permission-mode acceptEdits` plus the scoped MCP allowlist;
+   * `supervised` and the no-mode default → the scoped MCP allowlist only.
+   * See {@link buildClaudeArgv}.
+   */
+  readonly permissionMode?: ConversationPermissionMode;
   /** The latest user message (persona goes to `--append-system-prompt`, not here). */
   readonly prompt: string;
   /**
@@ -84,6 +97,38 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
       JSON.stringify({ mcpServers: options.mcpServers }),
       '--strict-mcp-config',
     );
+  }
+
+  // Permission handling. In headless `--print` there is NO interactive approval
+  // UI, so any tool that would need approval and is not pre-allowed is
+  // auto-denied ("user declined the approval"). Every non-`fullAccess` posture
+  // therefore still carries a scoped `--allowedTools` grant for the injected
+  // managed MCP servers (`mcp__<server>__*`), so their tools are callable —
+  // `--strict-mcp-config` already restricts loading to only those vetted
+  // servers, so this grants nothing broader. `acceptEdits` covers file edits
+  // only (NOT MCP), so it is additive on top of the allowlist, never a
+  // replacement for it. All permission flags precede the `--` end-of-options
+  // marker; the allowlist is one comma-joined value so it can never swallow the
+  // following `--`.
+  const mcpAllowlist = Object.keys(options.mcpServers ?? {}).map(
+    (name) => `mcp__${name}__*`,
+  );
+  const pushMcpAllowlist = (): void => {
+    if (mcpAllowlist.length > 0) {
+      argv.push('--allowedTools', mcpAllowlist.join(','));
+    }
+  };
+
+  if (options.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
+    argv.push('--permission-mode', 'bypassPermissions');
+  } else if (
+    options.permissionMode === CONVERSATION_PERMISSION_MODES.autoAcceptEdits
+  ) {
+    argv.push('--permission-mode', 'acceptEdits');
+    pushMcpAllowlist();
+  } else {
+    // `supervised` and the no-mode default: scoped MCP allowlist only.
+    pushMcpAllowlist();
   }
 
   argv.push('--', options.prompt);
