@@ -20,6 +20,16 @@ export const CLAUDE_DEFAULT_BIN = `claude`;
  * Inputs for one streamed claude turn.
  */
 export interface ClaudeArgvOptions {
+  /**
+   * Managed MCP servers (canonical `.mcp.json` schema) to expose to this turn.
+   * When non-empty, they are passed inline via `--mcp-config` + a
+   * `--strict-mcp-config` so only these load (project `.mcp.json` and the
+   * user's `~/.claude.json` are ignored — deterministic in headless spawns).
+   * Empty/undefined ⇒ no MCP flags.
+   */
+  readonly mcpServers?: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  >;
   /** Model id; omitted when undefined so claude uses its account default. */
   readonly model?: string;
   /** The latest user message (persona goes to `--append-system-prompt`, not here). */
@@ -60,6 +70,20 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
   const systemPrompt = options.systemPrompt?.trim();
   if (systemPrompt !== undefined && systemPrompt !== '') {
     argv.push('--append-system-prompt', systemPrompt);
+  }
+
+  // Inject managed MCP servers inline (JSON string, not a file — no checkout
+  // pollution). `--strict-mcp-config` makes this the ONLY source, so the spawn
+  // doesn't depend on an approved project `.mcp.json` or the host `~/.claude.json`.
+  if (
+    options.mcpServers !== undefined &&
+    Object.keys(options.mcpServers).length > 0
+  ) {
+    argv.push(
+      '--mcp-config',
+      JSON.stringify({ mcpServers: options.mcpServers }),
+      '--strict-mcp-config',
+    );
   }
 
   argv.push('--', options.prompt);

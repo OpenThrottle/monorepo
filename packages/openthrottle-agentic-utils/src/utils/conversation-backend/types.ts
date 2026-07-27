@@ -70,6 +70,24 @@ export interface ConversationBackendRun {
   readonly baseUrl?: string;
   /** Working directory the CLI runs in; required by CLI backends. */
   readonly cwd?: string;
+  /**
+   * Extra environment variables a CLI backend must pass through to the spawned
+   * child (and, transitively, to its MCP servers) — the OT MCP auth token + API
+   * URLs, plus any adapter-specific keys (e.g. opencode's config path). Scoped:
+   * the server populates this only when MCP is configured, so an adapter's env
+   * stays allowlisted otherwise. Ignored by the openai backend.
+   */
+  readonly mcpEnv?: Readonly<Record<string, string>>;
+  /**
+   * Managed MCP servers to expose to a CLI backend, keyed by server name in the
+   * canonical `.mcp.json` schema (`command`/`args`/`env`/`description`). Built
+   * server-side via `buildManagedMcpServers`. Empty/undefined ⇒ no MCP
+   * injection. Each CLI adapter formats this for its own config mechanism
+   * (claude `--mcp-config`, opencode `OPENCODE_CONFIG`). Ignored by openai.
+   */
+  readonly mcpServers?: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  >;
   /** Full prompt context (prior history + the new user message), oldest first. */
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
   /** Model id to complete with. */

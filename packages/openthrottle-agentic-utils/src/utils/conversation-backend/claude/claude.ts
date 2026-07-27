@@ -54,15 +54,24 @@ function resolveClaudeBin(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 /**
- * Build a minimal allowlisted environment for the spawned child.
+ * Build a minimal allowlisted environment for the spawned child. `extra` (the
+ * run's `mcpEnv` — OT MCP token + API URLs) is merged on top: the host env stays
+ * allowlisted, and only the explicit server-provided keys are admitted, so the
+ * MCP server the child spawns can authenticate and reach the OT API.
  */
 function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
+  extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
   const scrubbed: NodeJS.ProcessEnv = {};
   for (const key of ALLOWED_ENV_KEYS) {
     const value = env[key];
     if (value !== undefined) {
+      scrubbed[key] = value;
+    }
+  }
+  if (extra !== undefined) {
+    for (const [key, value] of Object.entries(extra)) {
       scrubbed[key] = value;
     }
   }
@@ -112,6 +121,7 @@ async function* streamClaude(
   const child = spawn(
     resolveClaudeBin(),
     buildClaudeArgv({
+      mcpServers: run.mcpServers,
       model: run.model,
       prompt: latestUserMessage(run),
       resume: run.resumeSession === true,
@@ -120,7 +130,7 @@ async function* streamClaude(
     }),
     {
       cwd: run.cwd,
-      env: buildScrubbedEnv(),
+      env: buildScrubbedEnv(process.env, run.mcpEnv),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );

@@ -29,6 +29,10 @@ import {
   buildOpencodeArgv,
 } from './argv.ts';
 import { createOpencodeEventMapper } from './events.ts';
+import {
+  type OpencodeMcpConfigFile,
+  writeOpencodeMcpConfig,
+} from './mcp-config.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,
@@ -58,15 +62,24 @@ function resolveOpencodeBin(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 /**
- * Build a minimal allowlisted environment for the spawned child.
+ * Build a minimal allowlisted environment for the spawned child. `extra` (the
+ * run's `mcpEnv` — OT MCP token + API URLs — plus `OPENCODE_CONFIG`) is merged
+ * on top: the host env stays allowlisted, and only the explicit server-provided
+ * keys are admitted.
  */
 function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
+  extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
   const scrubbed: NodeJS.ProcessEnv = {};
   for (const key of ALLOWED_ENV_KEYS) {
     const value = env[key];
     if (value !== undefined) {
+      scrubbed[key] = value;
+    }
+  }
+  if (extra !== undefined) {
+    for (const [key, value] of Object.entries(extra)) {
       scrubbed[key] = value;
     }
   }
@@ -97,6 +110,23 @@ async function* streamOpencode(
     throw new Error('The opencode backend requires a cwd.');
   }
 
+  // MCP has no CLI flag on opencode: write a temp config outside the checkout
+  // and point opencode at it via OPENCODE_CONFIG (removed in `finally`). Merge
+  // that path with the run's mcpEnv into the scrubbed child env.
+  const mcpConfigFile: OpencodeMcpConfigFile | null =
+    run.mcpServers !== undefined && Object.keys(run.mcpServers).length > 0
+      ? writeOpencodeMcpConfig(run.mcpServers)
+      : null;
+  const childEnv =
+    run.mcpEnv !== undefined || mcpConfigFile !== null
+      ? {
+          ...(run.mcpEnv ?? {}),
+          ...(mcpConfigFile !== null
+            ? { OPENCODE_CONFIG: mcpConfigFile.path }
+            : {}),
+        }
+      : undefined;
+
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. sessionId
   // is optional: absent → opencode mints a new session on this run.
@@ -110,7 +140,7 @@ async function* streamOpencode(
     }),
     {
       cwd: run.cwd,
-      env: buildScrubbedEnv(),
+      env: buildScrubbedEnv(process.env, childEnv),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );
@@ -211,6 +241,7 @@ async function* streamOpencode(
     clearTimeout(wallTimer);
     run.signal?.removeEventListener('abort', onAbort);
     terminateChild(child, timeouts.graceMs);
+    mcpConfigFile?.cleanup();
   }
 }
 
