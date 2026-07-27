@@ -44,6 +44,7 @@ import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
+import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
@@ -116,9 +117,10 @@ export const PlanDetailRoute = (
   );
   const status = isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
 
-  const completedTaskCount = tasks.filter(
-    (task) => task.status === 'COMPLETED',
-  ).length;
+  // Resolved = COMPLETED or SKIPPED (skipped tasks are effectively done / won't
+  // be worked on, e.g. promoted into their own plan), so both count toward the
+  // Tasks-tab progress numerator.
+  const resolvedTaskCount = getResolvedTaskCount(tasks);
 
   // Whether the page-level toolbar's Run/Queue is blocked. Reuses the config
   // editor's validation (workflow options + workspace path) and folds in the
@@ -270,7 +272,7 @@ export const PlanDetailRoute = (
               value="tasks"
             >
               <LayoutListIcon />
-              Tasks ({completedTaskCount}/{tasks.length})
+              Tasks ({resolvedTaskCount}/{tasks.length})
             </TabsTrigger>
             <TabsTrigger
               className="flex-0 cursor-pointer"
