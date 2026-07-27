@@ -149,6 +149,37 @@ describe('claudeConversationBackend', () => {
     }
   });
 
+  it('passes the run mcpEnv (OT MCP token + API URLs) through to the child on top of the allowlist', async () => {
+    process.env[CLAUDE_BIN_ENV] = writeFakeBin(
+      'claude-mcpenv.js',
+      `const token = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN || 'none';
+      const url = process.env.API_URL || 'none';
+      process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: token + '|' + url }) + '\\n');`,
+    );
+
+    const chunks = await collect({
+      cwd: dir,
+      mcpEnv: {
+        API_URL: 'http://localhost:6021',
+        API_URL_INTERNAL: 'http://localhost:6021',
+        OPENTHROTTLE_MCP_AUTH_TOKEN: 'ot_sa_test',
+      },
+      mcpServers: {
+        'openthrottle-mcp': {
+          args: ['./scripts/run-openthrottle-mcp.sh'],
+          command: 'bash',
+        },
+      },
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    expect(chunks.at(-1)?.metadata?.result).toBe(
+      'ot_sa_test|http://localhost:6021',
+    );
+  });
+
   it('kills a hung process on the idle timeout and yields an idle-timeout error', async () => {
     process.env[CLAUDE_BIN_ENV] = hangBin();
     process.env[AGENT_IDLE_TIMEOUT_MS_ENV] = '200';
