@@ -222,26 +222,37 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   }
 
   /**
-   * @description Reconcile a 'first'/'last' injected task: it must sit below the
-   * MIN (first) or above the MAX (last) sort_order of every OTHER task. If it
-   * already does, no write. Otherwise move it just past that edge on a
-   * {@link TASK_SORT_ORDER_GAP} stride. One recompute retry on a collision.
+   * @description Reconcile a 'first'/'last' injected task. When it is the only
+   * same-placement injected task on the plan it must simply sit below the MIN
+   * (first) or above the MAX (last) sort_order of every other task; if it
+   * already does, no write. When it shares its placement with other injected
+   * tasks (e.g. two 'last' rules), the whole sibling group is placed at
+   * deterministic, tiebreak-ordered slots so repeated passes never leapfrog —
+   * see {@link reconcileEdgeGroup}.
    */
   private async reconcileEdgePlacement(
     planId: string,
     task: Task,
     placement: 'first' | 'last',
   ): Promise<void> {
+    const siblings = await this.loadEdgePlacementSiblings(planId, placement);
+    if (siblings.length > 1) {
+      await this.reconcileEdgeGroup(planId, placement, siblings);
+      return;
+    }
+
     const repository = this.tasksService.getRepository();
-    const attempt = async (currentSortOrder: number): Promise<boolean> => {
-      const aggregate = placement === 'first' ? 'MIN' : 'MAX';
-      const extent = await this.planSortOrderExtent(planId, aggregate, task.id);
-      if (extent == null) return false; // only task in the plan — nothing to be after/before.
+    const aggregate = placement === 'first' ? 'MIN' : 'MAX';
+    const attempt = async (currentSortOrder: number): Promise<void> => {
+      const extent = await this.planSortOrderExtent(planId, aggregate, [
+        task.id,
+      ]);
+      if (extent == null) return; // only task in the plan — nothing to be after/before.
       const inPosition =
         placement === 'first'
           ? currentSortOrder < extent
           : currentSortOrder > extent;
-      if (inPosition) return false;
+      if (inPosition) return;
       const target =
         placement === 'first'
           ? extent - TASK_SORT_ORDER_GAP
@@ -251,7 +262,6 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         `Reconciled injected task ${task.id} to sort_order ${target} (placement '${placement}', plan ${planId})`,
         InjectTaskExecutor.name,
       );
-      return true;
     };
 
     try {
@@ -264,6 +274,130 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       });
       await attempt(fresh?.sortOrder ?? task.sortOrder);
     }
+  }
+
+  /**
+   * @description Deterministically place a group of same-placement injected
+   * tasks (given in tiebreak order) so repeated passes converge to the same
+   * order with no thrash. Each sibling gets a fixed slot beyond the MIN/MAX of
+   * all non-sibling tasks: 'last' → base + rank·GAP (ascending), 'first' → base
+   * − (n−rank)·GAP. Targets depend only on non-sibling tasks and each sibling's
+   * stable tiebreak rank, never on a sibling's current position, so they can't
+   * leapfrog. No-ops when every sibling is already at its slot. Movers are
+   * parked into a disjoint negative band then set to their targets in one
+   * transaction, so no intermediate UNIQUE(plan_id, sort_order) collision.
+   */
+  private async reconcileEdgeGroup(
+    planId: string,
+    placement: 'first' | 'last',
+    siblings: readonly { sortOrder: number; taskId: string }[],
+  ): Promise<void> {
+    const aggregate = placement === 'first' ? 'MIN' : 'MAX';
+    const extent = await this.planSortOrderExtent(
+      planId,
+      aggregate,
+      siblings.map((sibling) => sibling.taskId),
+    );
+    const base = extent ?? 0;
+    const count = siblings.length;
+    const planned = siblings.map((sibling, rank) => ({
+      current: sibling.sortOrder,
+      target:
+        placement === 'last'
+          ? base + (rank + 1) * TASK_SORT_ORDER_GAP
+          : base - (count - rank) * TASK_SORT_ORDER_GAP,
+      taskId: sibling.taskId,
+    }));
+
+    const movers = planned.filter((entry) => entry.current !== entry.target);
+    if (movers.length === 0) return;
+
+    // Park movers into a disjoint negative band first so setting final targets
+    // can never collide with a sibling still holding a target slot.
+    const parkBase = -1_000_000_000;
+    await this.tasksService
+      .getRepository()
+      .manager.transaction(async (manager) => {
+        await movers.reduce<Promise<void>>(
+          (chain, mover, index) =>
+            chain.then(async () => {
+              await manager.update(
+                Task,
+                { id: mover.taskId },
+                { sortOrder: parkBase - index },
+              );
+            }),
+          Promise.resolve(),
+        );
+        await movers.reduce<Promise<void>>(
+          (chain, mover) =>
+            chain.then(async () => {
+              await manager.update(
+                Task,
+                { id: mover.taskId },
+                { sortOrder: mover.target },
+              );
+            }),
+          Promise.resolve(),
+        );
+      });
+
+    this.logger.debug(
+      `Reconciled ${movers.length} '${placement}' injected task(s) on plan ${planId} to deterministic slots`,
+      InjectTaskExecutor.name,
+    );
+  }
+
+  /**
+   * @description The plan's injected tasks that share `placement`, in a stable
+   * deterministic tiebreak order (rule created_at, then application created_at,
+   * then rule id). Only 'applied' inject-task rows with a live, non-terminal
+   * task participate. Placement is read from the rule's action_payload; an
+   * absent value defaults to 'first' (matching the payload schema default).
+   */
+  private async loadEdgePlacementSiblings(
+    planId: string,
+    placement: 'first' | 'last',
+  ): Promise<{ sortOrder: number; taskId: string }[]> {
+    const query = this.ruleApplicationsService
+      .getRepository()
+      .createQueryBuilder('application')
+      .innerJoin('application.rule', 'rule')
+      .innerJoin('application.task', 'task')
+      .select('task.id', 'taskId')
+      .addSelect('task.sortOrder', 'sortOrder')
+      .where('application.planId = :planId', { planId })
+      .andWhere('application.state = :applied', {
+        applied: RULE_APPLICATION_STATES.APPLIED,
+      })
+      .andWhere('rule.actionType = :actionType', {
+        actionType: TAG_ACTION_TYPES.INJECT_TASK,
+      })
+      .andWhere('task.status NOT IN (:...terminal)', {
+        terminal: TERMINAL_TASK_STATUSES,
+      })
+      .orderBy('rule.createdAt', 'ASC')
+      .addOrderBy('application.createdAt', 'ASC')
+      .addOrderBy('rule.id', 'ASC');
+
+    if (placement === 'first') {
+      query.andWhere(
+        "(rule.action_payload->>'placement' = 'first' OR rule.action_payload->>'placement' IS NULL)",
+      );
+    } else {
+      query.andWhere("rule.action_payload->>'placement' = :placement", {
+        placement,
+      });
+    }
+
+    const rows = await query.getRawMany<{
+      sortOrder: number | string;
+      taskId: string;
+    }>();
+    return rows.map((row) => ({
+      sortOrder: Number(row.sortOrder),
+      taskId: row.taskId,
+    }));
   }
 
   /**
@@ -423,22 +557,23 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
 
   /**
    * @description MIN/MAX(sort_order) across a plan's tasks, optionally excluding
-   * one task (the injected task itself, when reconciling its own placement).
+   * some tasks (the injected task itself when reconciling its own placement, or
+   * the whole same-placement sibling group when ordering them deterministically).
    * Returns null when the (filtered) set is empty. Shared by first-inject
    * placement and reconcile so the edge math lives in one place.
    */
   private async planSortOrderExtent(
     planId: string,
     aggregate: 'MAX' | 'MIN',
-    excludeTaskId?: string,
+    excludeTaskIds: readonly string[] = [],
   ): Promise<number | null> {
     const query = this.tasksService
       .getRepository()
       .createQueryBuilder('task')
       .select(`${aggregate}(task.sortOrder)`, 'value')
       .where('task.planId = :planId', { planId });
-    if (excludeTaskId != null) {
-      query.andWhere('task.id != :excludeTaskId', { excludeTaskId });
+    if (excludeTaskIds.length > 0) {
+      query.andWhere('task.id NOT IN (:...excludeTaskIds)', { excludeTaskIds });
     }
     const result = await query.getRawOne<{ value: string | null }>();
     return result?.value != null && result.value !== ''

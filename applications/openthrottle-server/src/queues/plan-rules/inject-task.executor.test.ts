@@ -70,6 +70,8 @@ describe('InjectTaskExecutor', () => {
   let taskFindOne: ReturnType<typeof vi.fn>;
   let taskUpdate: ReturnType<typeof vi.fn>;
   let configGet: ReturnType<typeof vi.fn>;
+  let siblingGetRawMany: ReturnType<typeof vi.fn>;
+  let managerUpdate: ReturnType<typeof vi.fn>;
   let allocateSortOrderBesideAnchor: Mock<
     TasksService['allocateSortOrderBesideAnchor']
   >;
@@ -99,6 +101,12 @@ describe('InjectTaskExecutor', () => {
     taskDelete = vi.fn();
     taskFindOne = vi.fn().mockResolvedValue(null);
     taskUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+    // Transaction manager used by the multi-sibling group reconcile path.
+    managerUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+    const managerTransaction = vi.fn(
+      async (run: (manager: unknown) => Promise<void>) =>
+        run(asMock({ update: managerUpdate })),
+    );
     allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
     const tasksService = createMock<TasksService>({
       allocateSortOrderBesideAnchor,
@@ -108,6 +116,7 @@ describe('InjectTaskExecutor', () => {
           createQueryBuilder: vi.fn(() => queryBuilder),
           delete: taskDelete,
           findOne: taskFindOne,
+          manager: { transaction: managerTransaction },
           save: taskSave,
           update: taskUpdate,
         }),
@@ -124,7 +133,37 @@ describe('InjectTaskExecutor', () => {
         isSkillUnavailableForPlan,
       });
 
+    // Same-placement sibling lookup; defaults to a single sibling (the task
+    // under reconcile) so the common single-injected path is exercised.
+    siblingGetRawMany = vi
+      .fn()
+      .mockResolvedValue([{ sortOrder: 1000, taskId }]);
+    const siblingQueryBuilder = {
+      addOrderBy: vi.fn(),
+      addSelect: vi.fn(),
+      andWhere: vi.fn(),
+      getRawMany: siblingGetRawMany,
+      innerJoin: vi.fn(),
+      orderBy: vi.fn(),
+      select: vi.fn(),
+      where: vi.fn(),
+    };
+    for (const key of [
+      'addOrderBy',
+      'addSelect',
+      'andWhere',
+      'innerJoin',
+      'orderBy',
+      'select',
+      'where',
+    ] as const) {
+      siblingQueryBuilder[key].mockReturnValue(siblingQueryBuilder);
+    }
+
     ruleApplicationsService = createMock<RuleApplicationsService>({
+      getRepository: vi.fn(() =>
+        asMock({ createQueryBuilder: vi.fn(() => siblingQueryBuilder) }),
+      ),
       record: vi.fn((input) =>
         Promise.resolve(
           asMock<RuleApplication>({
@@ -522,6 +561,63 @@ describe('InjectTaskExecutor', () => {
       );
 
       expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it("orders two 'last' siblings deterministically at base+GAP, base+2·GAP", async () => {
+      const siblingA = '00000000-0000-4000-8000-0000000000aa';
+      const siblingB = '00000000-0000-4000-8000-0000000000bb';
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      // Two 'last' siblings in tiebreak order, both currently below the target band.
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 1000, taskId: siblingA },
+        { sortOrder: 2000, taskId: siblingB },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX excluding siblings
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      // Deterministic slots: rank 0 → 6000, rank 1 → 7000, set inside the tx.
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingA },
+        { sortOrder: 6000 },
+      );
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingB },
+        { sortOrder: 7000 },
+      );
+    });
+
+    it('does not re-write two siblings already at their deterministic slots (no thrash)', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 6000,
+          status: 'PENDING',
+        }),
+      );
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 6000, taskId: '00000000-0000-4000-8000-0000000000aa' },
+        { sortOrder: 7000, taskId: '00000000-0000-4000-8000-0000000000bb' },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(managerUpdate).not.toHaveBeenCalled();
     });
   });
 });
