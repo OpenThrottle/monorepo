@@ -35,6 +35,12 @@
       "path": "../../packages/react-router-auth"
     },
     {
+      "path": "../../packages/react-router-chat"
+    },
+    {
+      "path": "../../packages/react-router-chat-state"
+    },
+    {
       "path": "../../packages/react-router-graphql"
     },
     {
