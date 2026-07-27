@@ -85,10 +85,6 @@ query getWorkspaceSettings {
     name
     path
   }
-  projects {
-    id
-    name
-  }
   workspaceRepositories {
     ...WorkspaceRepositoryFields
   }
@@ -164,14 +160,6 @@ mutation refreshCheckout($input: RefreshCheckoutInput!) {
 mutation updateWorkspaceProfile($input: UpdateWorkspaceProfileInput!) {
   updateWorkspaceProfile(input: $input) {
     ...UserWorkspaceProfileFields
-  }
-}
-
-mutation setWorkspaceLocalRepositoryProject(
-  $input: SetWorkspaceLocalRepositoryProjectInput!
-) {
-  setWorkspaceLocalRepositoryProject(input: $input) {
-    ...WorkspaceLocalRepositoryFields
   }
 }
 

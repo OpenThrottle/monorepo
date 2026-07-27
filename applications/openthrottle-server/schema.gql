@@ -2853,6 +2853,11 @@ type Query {
   workspaceRepositories: [RepositoryObject!]!
 
   """
+  A single repository the authenticated user has a checkout of, with those checkouts and inspection snapshots; null when the user owns no checkout of it.
+  """
+  workspaceRepository(id: ID!): RepositoryObject
+
+  """
   Workspace settings for the authenticated user (profile and local repositories).
   """
   workspaceSettings: WorkspaceSettingsObject!
@@ -3689,6 +3694,11 @@ type Mutation {
   Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved).
   """
   refreshCheckout(input: RefreshCheckoutInput!): RefreshCheckoutPayloadObject!
+
+  """
+  Edit an owned repository's name, default branch, and/or project link. Requires the authenticated user to own a checkout of the repository.
+  """
+  updateRepository(input: UpdateRepositoryInput!): RepositoryObject!
 
   """
   Update contact fields and/or enabled editors on the authenticated user's workspace profile.
@@ -4698,6 +4708,25 @@ input CloneRepositoryInput {
 """Re-run inspection on an owned checkout."""
 input RefreshCheckoutInput {
   id: ID!
+}
+
+"""
+Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged.
+"""
+input UpdateRepositoryInput {
+  """New default branch; omit to leave unchanged."""
+  defaultBranch: String
+
+  """Repository id."""
+  id: ID!
+
+  """New display name; omit to leave unchanged."""
+  name: String
+
+  """
+  OpenThrottle project to link, or null to clear; omit to leave unchanged.
+  """
+  projectId: ID
 }
 
 input UpdateWorkspaceProfileInput {

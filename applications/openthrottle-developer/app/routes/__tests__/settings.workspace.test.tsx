@@ -28,7 +28,6 @@ const mockLoaderPayload = {
       path: '/Users/dev/openthrottle',
     },
   ],
-  projects: [{ id: 'proj-1', name: 'openthrottle-developer' }],
   workspaceRepositories: [
     {
       checkouts: [],
@@ -53,7 +52,7 @@ describe('routes/settings.workspace.tsx', () => {
   });
 
   describe('loader', () => {
-    test('returns profile, repositories, and projects from workspaceSettings query', async () => {
+    test('returns profile and repositories from workspaceSettings query', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
 
       const request = new Request('http://localhost/settings/workspace');
@@ -70,7 +69,6 @@ describe('routes/settings.workspace.tsx', () => {
       expect(result.profile).toEqual(mockProfile);
       expect(result.discoveredFolders).toHaveLength(1);
       expect(result.repositories).toHaveLength(1);
-      expect(result.projects).toEqual(mockLoaderPayload.projects);
     });
   });
 

@@ -7,6 +7,7 @@
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
+  ID,
   Mutation,
   Parent,
   Query,
@@ -23,6 +24,7 @@ import {
   AddWorkspaceFolderInput,
   CloneRepositoryInput,
   RefreshCheckoutInput,
+  UpdateRepositoryInput,
 } from './workspace-folders.input';
 import {
   AddWorkspaceFolderPayloadObject,
@@ -80,6 +82,18 @@ export class WorkspaceFoldersResolver {
     return this.workspaceFoldersService.workspaceRepositories(userId);
   }
 
+  @Query(() => RepositoryObject, {
+    description: `A single repository the authenticated user has a checkout of, with those checkouts and inspection snapshots; null when the user owns no checkout of it.`,
+    nullable: true,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async workspaceRepository(
+    @CurrentUser('sub') userId: string,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<RepositoryObject | null> {
+    return this.workspaceFoldersService.workspaceRepository(userId, id);
+  }
+
   @Mutation(() => AddWorkspaceFolderPayloadObject, {
     description: `Register a server-host folder: validates and inspects the path, reconciles identity via the OT manifest or normalized git remote, creates or relinks the checkout, and returns the enriched graph.`,
   })
@@ -114,5 +128,17 @@ export class WorkspaceFoldersResolver {
     input: RefreshCheckoutInput,
   ): Promise<RefreshCheckoutPayloadObject> {
     return this.workspaceFoldersService.refreshCheckout(userId, input.id);
+  }
+
+  @Mutation(() => RepositoryObject, {
+    description: `Edit an owned repository's name, default branch, and/or project link. Requires the authenticated user to own a checkout of the repository.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async updateRepository(
+    @CurrentUser('sub') userId: string,
+    @Args('input', { type: () => UpdateRepositoryInput })
+    input: UpdateRepositoryInput,
+  ): Promise<RepositoryObject> {
+    return this.workspaceFoldersService.updateRepository(userId, input);
   }
 }

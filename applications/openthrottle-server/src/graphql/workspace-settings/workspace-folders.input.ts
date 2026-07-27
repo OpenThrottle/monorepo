@@ -43,3 +43,31 @@ export class RefreshCheckoutInput {
   @Field(() => ID)
   id!: string;
 }
+
+@InputType({
+  description: `Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged.`,
+})
+export class UpdateRepositoryInput {
+  @Field(() => String, {
+    description: `New default branch; omit to leave unchanged.`,
+    nullable: true,
+  })
+  defaultBranch?: string | null;
+
+  @Field(() => ID, {
+    description: `Repository id.`,
+  })
+  id!: string;
+
+  @Field(() => String, {
+    description: `New display name; omit to leave unchanged.`,
+    nullable: true,
+  })
+  name?: string | null;
+
+  @Field(() => ID, {
+    description: `OpenThrottle project to link, or null to clear; omit to leave unchanged.`,
+    nullable: true,
+  })
+  projectId?: string | null;
+}

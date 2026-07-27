@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Form, useNavigation } from 'react-router';
+import { Form, Link, useNavigation } from 'react-router';
 import {
   Badge,
   Button,
@@ -12,8 +12,6 @@ import {
 import { FolderGit2Icon, RefreshCwIcon } from 'lucide-react';
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import { WorkspaceRepositoriesProjectSelect } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
-import type { ProjectOption } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
 
 export interface CheckoutDrift {
   branchMoved: boolean;
@@ -23,7 +21,6 @@ export interface CheckoutDrift {
 
 export interface WorkspaceRepositoryCardProps {
   driftByCheckoutId?: Record<string, CheckoutDrift>;
-  projects: ProjectOption[];
   repository: WorkspaceRepositoryFieldsFragment;
 }
 
@@ -40,14 +37,14 @@ const driftLabels = (drift: CheckoutDrift): string[] => {
 export const WorkspaceRepositoryCard = (
   props: WorkspaceRepositoryCardProps,
 ): React.ReactElement => {
-  const { driftByCheckoutId, projects, repository } = props;
+  const { driftByCheckoutId, repository } = props;
 
   // Hooks
   const navigation = useNavigation();
 
   // Setup
   const checkouts = repository.checkouts ?? [];
-  const relinkCheckoutId = checkouts[0]?.id ?? null;
+  const detailPath = `/settings/workspace/repositories/${repository.id}`;
   const refreshingCheckoutId =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'refreshCheckout'
@@ -64,34 +61,24 @@ export const WorkspaceRepositoryCard = (
 
   return (
     <Card data-testid="WorkspaceRepositoryCard">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <FolderGit2Icon aria-hidden={true} className="size-4" />
-          {repository.name}
-        </CardTitle>
-        <CardDescription className="font-mono text-xs">
-          {repository.normalizedRemoteUrl ?? 'Local only (no remote detected)'}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FolderGit2Icon aria-hidden={true} className="size-4" />
+            <Link className="hover:underline" to={detailPath}>
+              {repository.name}
+            </Link>
+          </CardTitle>
+          <CardDescription className="font-mono text-xs">
+            {repository.normalizedRemoteUrl ??
+              'Local only (no remote detected)'}
+          </CardDescription>
+        </div>
+        <Button asChild={true} size="sm" variant="outline">
+          <Link to={detailPath}>{WORKSPACE_FOLDERS_COPY.detailsButton}</Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {relinkCheckoutId ? (
-          <Form className="flex items-end gap-2" method="post">
-            <input name="intent" type="hidden" value="setRepoProject" />
-            <input name="id" type="hidden" value={relinkCheckoutId} />
-            <div className="flex-1 space-y-1">
-              <p className="text-muted-foreground text-xs">Linked project</p>
-              <WorkspaceRepositoriesProjectSelect
-                currentProjectId={repository.projectId ?? null}
-                name="projectId"
-                projects={projects}
-              />
-            </div>
-            <Button size="sm" type="submit" variant="outline">
-              Save link
-            </Button>
-          </Form>
-        ) : null}
-
         <ul className="space-y-3">
           {checkouts.map((checkout) => {
             const drift = driftByCheckoutId?.[checkout.id];

@@ -15,7 +15,6 @@ import {
   DeleteWorkspaceLocalRepositoryDocument,
   GetWorkspaceSettingsDocument,
   RefreshCheckoutDocument,
-  SetWorkspaceLocalRepositoryProjectDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
 import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
@@ -26,7 +25,6 @@ import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-
 import {
   optionalTrimmedString,
   parseEnabledEditorsFromFormData,
-  parseProjectIdFromFormData,
 } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.workspace';
 
@@ -46,7 +44,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     discoveredFolders: data.discoveredFolders,
     profile: data.workspaceSettings.profile,
-    projects: data.projects,
     repositories: data.workspaceRepositories,
   };
 };
@@ -63,7 +60,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { discoveredFolders, profile, projects, repositories } = loaderData;
+  const { discoveredFolders, profile, repositories } = loaderData;
   const actionError =
     actionData && 'error' in actionData ? actionData.error : null;
   const actionMessage =
@@ -92,7 +89,6 @@ export default function Component(
           actionError={actionError}
           addedFolder={addedFolder}
           discoveredFolders={discoveredFolders}
-          projects={projects}
           refreshed={refreshed}
           repositories={repositories}
         />
@@ -218,29 +214,6 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to refresh checkout.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'setRepoProject') {
-    const id = formData.get('id');
-    if (typeof id !== 'string' || !id.trim()) {
-      return { error: 'Missing checkout id.' };
-    }
-    const projectId = parseProjectIdFromFormData(formData.get('projectId'));
-
-    try {
-      await executeGraphqlWithAuth(
-        args.request,
-        SetWorkspaceLocalRepositoryProjectDocument,
-        { input: { id: id.trim(), projectId } },
-      );
-      return { ok: true };
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to update the project link.';
       return { error: message };
     }
   }
