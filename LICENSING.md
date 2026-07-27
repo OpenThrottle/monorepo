@@ -32,6 +32,14 @@ future enterprise modules (see [Open core](#open-core-why)).
    with a header noting it is **not** Apache-licensed, and (b) set its
    `package.json` `license` accordingly. None exist yet.
 
+> **Note on per-file headers.** OpenThrottle does **not** stamp a
+> `SPDX-License-Identifier` header into every source file. A file's license is
+> determined by its project's `LICENSE.md` and `package.json` `license` field
+> (Apache-2.0 for the core today). This keeps the license authoritative in one
+> place per project without a repo-wide header on thousands of files. A future
+> commercial package would likewise be identified by its own `LICENSE.md` +
+> `package.json`, not a per-file EULA header.
+
 ## What is Apache-2.0 (core)
 
 Everything first-party in the repository:
