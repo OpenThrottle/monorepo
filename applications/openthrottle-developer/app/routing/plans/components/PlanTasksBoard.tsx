@@ -53,13 +53,22 @@ export const PlanTasksBoard = (
 
   const tasksRef = React.useRef(regularTasks);
   tasksRef.current = regularTasks;
+  const wasBusyRef = React.useRef(false);
 
   React.useEffect(() => {
     setDisplayTasks(regularTasks);
   }, [regularTasks]);
 
   React.useEffect(() => {
-    if (fetcher.state !== 'idle' || fetcher.data == null) return;
+    // Only react to a genuine busy -> idle transition. Without this edge guard
+    // the effect re-runs on unrelated re-renders (e.g. a new `revalidator`
+    // identity) while `fetcher.data` still holds the last result, re-firing the
+    // toast and re-triggering revalidation off a stale, non-transition edge.
+    const busy = fetcher.state !== 'idle';
+    const justCompleted = wasBusyRef.current && !busy;
+    wasBusyRef.current = busy;
+
+    if (!justCompleted || fetcher.data == null) return;
     if ('updateTaskError' in fetcher.data && fetcher.data.updateTaskError) {
       setDisplayTasks(tasksRef.current);
       setAnnouncement(
