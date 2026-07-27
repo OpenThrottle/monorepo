@@ -188,6 +188,7 @@ export function useHeaderChatController(args: {
     reasoning,
     selectedCheckoutId: repositoryId,
     serviceTier,
+    sessionUsage: turn.sessionUsage,
   };
 
   return {

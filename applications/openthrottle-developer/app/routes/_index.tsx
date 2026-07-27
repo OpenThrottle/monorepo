@@ -303,6 +303,7 @@ export default function Component(
           onStop={turn.onStop}
           onSubmit={onSubmit}
           readOnly={voice.isDraftFrozen}
+          sessionUsage={turn.sessionUsage}
           textAreaRef={composerTextAreaRef}
           toolbar={toolbar}
         />
