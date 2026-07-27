@@ -70,6 +70,12 @@ export interface StartConversationStreamRun {
   readonly conversationId: string;
   /** Resolved working directory for a CLI backend. */
   readonly cwd: string | null;
+  /** Extra env a CLI child passes through (OT MCP token + API URLs); null when no MCP is configured. */
+  readonly mcpEnv: Readonly<Record<string, string>> | null;
+  /** Managed MCP servers (canonical `.mcp.json` schema) for a CLI backend; null when none apply. */
+  readonly mcpServers: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  > | null;
   /** Full prompt context (prior history + the new user message), oldest first. */
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
   /** Model id to complete with (openai), or optional model override (cli). */
@@ -184,6 +190,8 @@ export class ConversationStreamService {
     const backendRun: ConversationBackendRun = {
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
+      mcpEnv: run.mcpEnv ?? undefined,
+      mcpServers: run.mcpServers ?? undefined,
       messages: run.messages,
       model: run.model,
       resumeSession: run.resumeSession,
