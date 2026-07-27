@@ -13,9 +13,11 @@ import {
   CHAT_TOOLBAR_STATE_VERSION,
   DEFAULT_CHAT_TOOLBAR_STATE,
   type ChatToolbarState,
-} from '~/routing/home/data/atom.chat-toolbar';
-import type { RepositoryOption } from '~/routing/home/data/models.server';
-import { reconcileChatToolbarState } from '../chat-toolbar-reconcile';
+} from '../atom.chat-toolbar';
+import {
+  reconcileChatToolbarState,
+  type ReconcileRepositoryOption,
+} from '../chat-toolbar-reconcile';
 
 const cliModel: ChatModelOption = {
   description: 'Agent CLI',
@@ -31,8 +33,8 @@ const openaiModel: ChatModelOption = {
   label: 'llama3',
 };
 
-const repoA: RepositoryOption = { displayName: 'Repo A', id: 'repo-a' };
-const repoB: RepositoryOption = { displayName: 'Repo B', id: 'repo-b' };
+const repoA: ReconcileRepositoryOption = { id: 'repo-a' };
+const repoB: ReconcileRepositoryOption = { id: 'repo-b' };
 const personaA: ChatPersonaOption = { id: 'persona-a', label: 'Persona A' };
 const personaB: ChatPersonaOption = { id: 'persona-b', label: 'Persona B' };
 

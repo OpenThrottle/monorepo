@@ -10,6 +10,13 @@ import {
   type ChatReasoningLevel,
   type ChatServiceTier,
 } from '@openthrottle/react-router-chat';
+import {
+  buildModelGroups,
+  capabilitiesForChatOption,
+  chatToolbarStateAtom,
+  decodeChatOption,
+  reconcileChatToolbarState,
+} from '@openthrottle/react-router-chat-state';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { useAtom } from 'jotai';
 import {
@@ -23,7 +30,6 @@ import {
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { chatToolbarStateAtom } from '~/routing/home/data/atom.chat-toolbar';
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
@@ -37,12 +43,6 @@ import {
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
-import { capabilitiesForChatOption } from '~/routing/home/utils/chat-capabilities';
-import {
-  buildModelGroups,
-  decodeChatOption,
-} from '~/routing/home/utils/chat-model-option';
-import { reconcileChatToolbarState } from '~/routing/home/utils/chat-toolbar-reconcile';
 import type { Route } from '@/app/routes/+types/_index';
 
 /**

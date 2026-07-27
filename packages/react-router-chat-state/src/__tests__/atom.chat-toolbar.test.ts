@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 import {
   ChatComposerMode,
   ChatPermissionMode,
@@ -13,10 +14,12 @@ import {
 } from '../atom.chat-toolbar';
 
 describe('chat toolbar constants', () => {
-  test('CHAT_TOOLBAR_STORAGE_KEY is stable for localStorage', () => {
-    expect(CHAT_TOOLBAR_STORAGE_KEY).toBe(
-      'openthrottle-developer:chat:toolbar',
-    );
+  test('CHAT_TOOLBAR_STORAGE_KEY derives the app-namespaced key at runtime', () => {
+    // Namespaced by APP_NAME (window.env / process.env) so the single shared
+    // atom module keys per consuming app; the exact value depends on the runtime
+    // env, so assert the derivation rather than a hardcoded app name.
+    expect(CHAT_TOOLBAR_STORAGE_KEY).toBe(`${APP_NAME}:chat:toolbar`);
+    expect(CHAT_TOOLBAR_STORAGE_KEY).toMatch(/:chat:toolbar$/);
   });
 
   test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, everything else unset', () => {
