@@ -37,6 +37,18 @@ describe('toast empty-message guard', () => {
     expect(toast('')).toBeUndefined();
   });
 
+  it('suppresses nullish and non-ReactNode messages', () => {
+    // The nullish/undefined vector that a plain string guard cannot see.
+    expect(toast.error(undefined)).toBeUndefined();
+    expect(toast.success(null)).toBeUndefined();
+    expect(toast.info(undefined)).toBeUndefined();
+    // A boolean renders nothing in React, so it must be suppressed too.
+    expect(toast.warning(false)).toBeUndefined();
+    // Base callable is guarded for nullish too.
+    expect(toast(undefined)).toBeUndefined();
+    expect(toast(null)).toBeUndefined();
+  });
+
   it('forwards non-empty string messages', () => {
     expect(toast.success('Saved.')).not.toBeUndefined();
     expect(toast.error('Boom.')).not.toBeUndefined();
@@ -45,6 +57,7 @@ describe('toast empty-message guard', () => {
 
   it('passes ReactNode messages through untouched', () => {
     expect(toast.success(<span>Rich content</span>)).not.toBeUndefined();
+    expect(toast.info(<>Fragment content</>)).not.toBeUndefined();
   });
 
   it('preserves the non-message methods', () => {

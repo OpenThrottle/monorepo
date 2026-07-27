@@ -16,11 +16,11 @@ import {
 type ToasterTheme = NonNullable<ToasterProps['theme']>;
 
 /**
- * Toast entry points whose first argument is a display message. An empty or
- * whitespace-only string message must never surface a toast — Sonner would
- * otherwise render an empty, bodyless toast (the bug this guards against). The
- * non-message methods (`promise`/`custom`/`dismiss`/`getToasts`/…) are left
- * untouched, as are ReactNode messages.
+ * Toast entry points whose first argument is a display message. A message that
+ * would render empty must never surface a toast — Sonner would otherwise show
+ * an empty, bodyless toast (the bug this guards against). The non-message
+ * methods (`promise`/`custom`/`dismiss`/`getToasts`/…) are left untouched;
+ * genuine ReactNode messages still pass.
  */
 const MESSAGE_METHODS = new Set([
   'error',
@@ -31,10 +31,23 @@ const MESSAGE_METHODS = new Set([
   'warning',
 ]);
 
-/** A string message renders only when it has non-whitespace content. */
+/**
+ * A message renders only when it carries visible content: a non-whitespace
+ * string, a numeric value React will print, or a React element. Everything
+ * else — `null`/`undefined`, booleans, plain objects, functions, symbols — is
+ * suppressed, so a nullish or non-ReactNode first arg can never surface a
+ * bodyless toast (nor crash React on render). An allowlist (rather than a broad
+ * `typeof !== 'string'` check) keeps real rich content untouched.
+ */
 const hasRenderableMessage = (args: readonly unknown[]): boolean => {
   const [message] = args;
-  return typeof message !== 'string' || message.trim().length > 0;
+  if (typeof message === 'string') {
+    return message.trim().length > 0;
+  }
+  if (typeof message === 'number' || typeof message === 'bigint') {
+    return true;
+  }
+  return React.isValidElement(message);
 };
 
 /**
