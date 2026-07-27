@@ -11,6 +11,7 @@ import { isInteractiveArgPresent } from '../../utils/nx-cli';
 import { generatorReactRouterApplication } from './generator.application';
 import { generatorReactRouterComponent } from './generator.component';
 import { generatorReactRouterForm } from './generator.form';
+import { generatorReactRouterHook } from './generator.hook';
 import { generatorReactRouterModal } from './generator.modal';
 import { generatorReactRouterRoute } from './generator.route';
 import { generatorReactRouterTable } from './generator.table';
@@ -25,6 +26,7 @@ export interface ReactRouterGeneratorSchema {
     | 'application'
     | 'component'
     | 'form'
+    | 'hook'
     | 'modal'
     | 'route'
     | 'table';
@@ -55,10 +57,15 @@ export async function reactRouterGenerator(
             'application',
             'component',
             'form',
+            'hook',
             'modal',
             'route',
             'table',
           ],
+        },
+        hookFolders: {
+          description: `Hook destination area folders under applications/<app>/app (requires --application). Values are area paths (e.g. global, routing/<area>); hooks land in <folder>/hooks/.`,
+          source: { requires: ['application'], type: 'filesystem' },
         },
         modalFolders: {
           description: `Modal destination folders under applications/<app>/app (requires --application).`,
@@ -82,7 +89,15 @@ export async function reactRouterGenerator(
           type: 'string',
         },
         subGenerator: {
-          enum: ['application', 'component', 'form', 'modal', 'route', 'table'],
+          enum: [
+            'application',
+            'component',
+            'form',
+            'hook',
+            'modal',
+            'route',
+            'table',
+          ],
           required: true,
           type: 'string',
         },
@@ -99,6 +114,7 @@ export async function reactRouterGenerator(
         'application',
         'component',
         'form',
+        'hook',
         'modal',
         'route',
         'table',
@@ -116,6 +132,7 @@ export async function reactRouterGenerator(
       listKey === 'serviceFolders' ||
       listKey === 'componentFolders' ||
       listKey === 'formFolders' ||
+      listKey === 'hookFolders' ||
       listKey === 'tableFolders' ||
       listKey === 'modalFolders'
     ) {
@@ -146,6 +163,17 @@ export async function reactRouterGenerator(
         return;
       }
 
+      if (listKey === 'hookFolders') {
+        writeJsonToStdout(
+          [
+            'global',
+            ...routing.map((name) => `routing/${name}`),
+            ...services.map((name) => `services/${name}`),
+          ].sort(),
+        );
+        return;
+      }
+
       if (listKey === 'modalFolders') {
         writeJsonToStdout([...global, ...routingComponentFolders].sort());
         return;
@@ -172,6 +200,7 @@ export async function reactRouterGenerator(
         'serviceFolders',
         'componentFolders',
         'formFolders',
+        'hookFolders',
         'tableFolders',
         'modalFolders',
       ],
@@ -187,6 +216,7 @@ export async function reactRouterGenerator(
               'application',
               'component',
               'form',
+              'hook',
               'modal',
               'route',
               'table',
@@ -205,12 +235,13 @@ export async function reactRouterGenerator(
     throwGeneratorError({
       code: 'missing_option',
       field: 'subGenerator',
-      hint: 'Re-run with --withPrompts or pass --subGenerator=application|component|form|modal|route|table.',
+      hint: 'Re-run with --withPrompts or pass --subGenerator=application|component|form|hook|modal|route|table.',
       message: 'Missing required option: "subGenerator".',
       validValues: [
         'application',
         'component',
         'form',
+        'hook',
         'modal',
         'route',
         'table',
@@ -237,6 +268,15 @@ export async function reactRouterGenerator(
 
     case 'form':
       await generatorReactRouterForm(tree, {
+        application: schema.application,
+        folder: schema.folder,
+        interactive,
+        name: schema.name,
+      });
+      break;
+
+    case 'hook':
+      await generatorReactRouterHook(tree, {
         application: schema.application,
         folder: schema.folder,
         interactive,

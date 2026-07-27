@@ -83,6 +83,14 @@
     {
       "properties": {
         "subGenerator": {
+          "const": "hook"
+        }
+      },
+      "required": ["subGenerator", "application", "folder", "name"]
+    },
+    {
+      "properties": {
+        "subGenerator": {
           "const": "modal"
         }
       },
