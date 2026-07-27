@@ -57,7 +57,6 @@ describe('WorkspaceRepositoryCard Component', () => {
 
   beforeEach(() => {
     props = {
-      projects: [{ id: 'project-1', name: 'monorepo' }],
       repository: {
         checkouts: [checkout],
         createdAt: '2026-07-24T00:00:00.000Z',
@@ -89,6 +88,17 @@ describe('WorkspaceRepositoryCard Component', () => {
     expect(
       component.getByRole('button', { name: /Refresh/ }),
     ).toBeInTheDocument();
+  });
+
+  test('links to the detail route and no longer renders the inline project form', () => {
+    setup();
+
+    expect(component.getByRole('link', { name: /Details/ })).toHaveAttribute(
+      'href',
+      '/settings/workspace/repositories/repo-1',
+    );
+    expect(component.queryByText('Save link')).not.toBeInTheDocument();
+    expect(component.queryByText('Linked project')).not.toBeInTheDocument();
   });
 
   test('surfaces drift warnings after a refresh', () => {

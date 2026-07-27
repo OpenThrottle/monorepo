@@ -7102,7 +7102,6 @@ export type GetWorkspaceSettingsQuery = {
     name: string;
     path: string;
   }>;
-  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
   workspaceRepositories: Array<{
     __typename?: 'RepositoryObject';
     createdAt: any;
@@ -7565,27 +7564,6 @@ export type UpdateWorkspaceProfileMutation = {
     enabledEditors: Array<WorkspaceEditorId>;
     updatedAt: any;
     userId: string;
-  };
-};
-
-export type SetWorkspaceLocalRepositoryProjectMutationVariables = Exact<{
-  input: SetWorkspaceLocalRepositoryProjectInput;
-}>;
-
-export type SetWorkspaceLocalRepositoryProjectMutation = {
-  __typename?: 'Mutation';
-  setWorkspaceLocalRepositoryProject: {
-    __typename?: 'WorkspaceLocalRepositoryObject';
-    createdAt: any;
-    displayName: string;
-    filesystemPath: string;
-    gitDefaultBranch?: string | null;
-    gitRemoteUrl?: string | null;
-    id: string;
-    projectId?: string | null;
-    updatedAt: any;
-    userId: string;
-    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
   };
 };
 
@@ -17434,17 +17412,6 @@ export const GetWorkspaceSettingsDocument = {
           },
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'projects' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             name: { kind: 'Name', value: 'workspaceRepositories' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -18673,102 +18640,6 @@ export const UpdateWorkspaceProfileDocument = {
 } as unknown as DocumentNode<
   UpdateWorkspaceProfileMutation,
   UpdateWorkspaceProfileMutationVariables
->;
-export const SetWorkspaceLocalRepositoryProjectDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: {
-                kind: 'Name',
-                value: 'SetWorkspaceLocalRepositoryProjectInput',
-              },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: {
-                    kind: 'Name',
-                    value: 'WorkspaceLocalRepositoryFields',
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'project' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SetWorkspaceLocalRepositoryProjectMutation,
-  SetWorkspaceLocalRepositoryProjectMutationVariables
 >;
 export const DeleteWorkspaceLocalRepositoryDocument = {
   kind: 'Document',

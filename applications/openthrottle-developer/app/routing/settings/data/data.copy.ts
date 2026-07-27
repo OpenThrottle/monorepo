@@ -22,6 +22,7 @@ export const WORKSPACE_FOLDERS_COPY = {
   cloneRepoNameLabel: 'Folder name (optional)',
   cloneRepoTitle: 'Clone a repository',
   cloneRepoUrlLabel: 'Git URL',
+  detailsButton: 'Details',
   discoveredEmpty:
     'No git repositories found under the configured workspace roots. Set OPENTHROTTLE_WORKSPACE_ROOTS on the server to enable discovery, or enter a path manually below.',
   driftBranchMoved: 'Branch changed since last scan',
