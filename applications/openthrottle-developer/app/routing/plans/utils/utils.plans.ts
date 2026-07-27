@@ -1,5 +1,27 @@
 import { BadgeProps } from '@openthrottle/react-router-shadcn';
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanStatusKey } from '~/routing/plans/types';
+
+/**
+ * Terminal task statuses that count as "resolved" for the plan-detail Tasks
+ * progress count: COMPLETED (done) and SKIPPED (won't be worked on — e.g.
+ * promoted into its own plan). Everything else is still open work.
+ */
+const RESOLVED_TASK_STATUSES: ReadonlySet<string> = new Set([
+  'COMPLETED',
+  'SKIPPED',
+]);
+
+/**
+ * Count of a plan's tasks that are resolved — COMPLETED or SKIPPED — for the
+ * `Tasks (resolved/total)` progress label. SKIPPED tasks are effectively done
+ * or won't be worked on, so they count toward progress the same as COMPLETED.
+ */
+export const getResolvedTaskCount = (
+  tasks: readonly PlanTaskRowFragment[],
+): number => {
+  return tasks.filter((task) => RESOLVED_TASK_STATUSES.has(task.status)).length;
+};
 
 /**
  * Canonical "a run is active" check: true while the plan is QUEUED or
