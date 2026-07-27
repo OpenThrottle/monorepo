@@ -99,11 +99,13 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   actionsTooltip: `Task actions`,
   editTaskLabel: `Edit Task`,
   markCompleteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
+  markCompleteTerminalTooltip: `The plan is in a terminal state — create a new plan to change tasks.`,
   promoteConfirmLabel: `Promote`,
   promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it SKIPPED and tags it "promoted"). This cannot be undone from here.`,
   promoteDialogTitle: `Promote task to a plan?`,
   promoteLabel: `Promote to Plan`,
   promoteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
+  promoteTerminalTooltip: `The plan is in a terminal state — create a new plan to change tasks.`,
   promoteTooltip: `Create a first-class plan from this task and close the task out.`,
   promotedDisabledTooltip: `This task has already been promoted to a plan.`,
 } as const;
