@@ -619,6 +619,143 @@ describe('InjectTaskExecutor', () => {
 
       expect(managerUpdate).not.toHaveBeenCalled();
     });
+
+    it('retries the reposition once when a concurrent write took the slot (human reorder race)', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+      // First update loses the UNIQUE(plan_id, sort_order) race; retry succeeds.
+      taskUpdate
+        .mockRejectedValueOnce(sortOrderViolation())
+        .mockResolvedValueOnce({ affected: 1 });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledTimes(2);
+      expect(taskUpdate).toHaveBeenLastCalledWith(
+        { id: taskId },
+        { sortOrder: 6000 },
+      );
+    });
+
+    it("orders two 'first' siblings deterministically below the min (base − n·GAP)", async () => {
+      const siblingA = '00000000-0000-4000-8000-0000000000aa';
+      const siblingB = '00000000-0000-4000-8000-0000000000bb';
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 9000,
+          status: 'PENDING',
+        }),
+      );
+      siblingGetRawMany.mockResolvedValue([
+        { sortOrder: 9000, taskId: siblingA },
+        { sortOrder: 9500, taskId: siblingB },
+      ]);
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MIN excluding siblings
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
+      );
+
+      // rank 0 → 5000 − 2·1000 = 3000, rank 1 → 5000 − 1·1000 = 4000.
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingA },
+        { sortOrder: 3000 },
+      );
+      expect(managerUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: siblingB },
+        { sortOrder: 4000 },
+      );
+    });
+
+    it("re-allocates an out-of-position 'after' task beside its anchor", async () => {
+      taskFindOne
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 500,
+            status: 'PENDING',
+          }),
+        ) // the injected task under reconcile
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: '00000000-0000-4000-8000-0000000000cc',
+            planId,
+            sortOrder: 1000,
+          }),
+        ); // the resolved anchor
+      aggregateGetRawOne.mockResolvedValue({ value: null }); // no task between anchor and self
+
+      await executor.reconcile({
+        action: buildAction({
+          anchor: { taskId: '00000000-0000-4000-8000-0000000000cc' },
+          placement: 'after',
+          skillSlug: 'grilling',
+        }),
+        application: asMock<RuleApplication>({ state: 'applied', taskId }),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      });
+
+      expect(allocateSortOrderBesideAnchor).toHaveBeenCalledWith(
+        planId,
+        '00000000-0000-4000-8000-0000000000cc',
+        'after',
+      );
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 1500 },
+      );
+    });
+
+    it("leaves an already-adjacent 'after' task in place", async () => {
+      taskFindOne
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 2000,
+            status: 'PENDING',
+          }),
+        )
+        .mockResolvedValueOnce(
+          asMock<Task>({
+            id: '00000000-0000-4000-8000-0000000000cc',
+            planId,
+            sortOrder: 1000,
+          }),
+        );
+      aggregateGetRawOne.mockResolvedValue({ value: null }); // no other task after the anchor
+
+      await executor.reconcile({
+        action: buildAction({
+          anchor: { taskId: '00000000-0000-4000-8000-0000000000cc' },
+          placement: 'after',
+          skillSlug: 'grilling',
+        }),
+        application: asMock<RuleApplication>({ state: 'applied', taskId }),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      });
+
+      expect(allocateSortOrderBesideAnchor).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
   });
 
   describe('reinject', () => {
