@@ -6,6 +6,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { ConfigService } from '@nestjs/config';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Plan,
@@ -67,6 +68,8 @@ describe('InjectTaskExecutor', () => {
   let taskCreate: ReturnType<typeof vi.fn>;
   let taskDelete: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
+  let taskUpdate: ReturnType<typeof vi.fn>;
+  let configGet: ReturnType<typeof vi.fn>;
   let allocateSortOrderBesideAnchor: Mock<
     TasksService['allocateSortOrderBesideAnchor']
   >;
@@ -95,6 +98,7 @@ describe('InjectTaskExecutor', () => {
     );
     taskDelete = vi.fn();
     taskFindOne = vi.fn().mockResolvedValue(null);
+    taskUpdate = vi.fn().mockResolvedValue({ affected: 1 });
     allocateSortOrderBesideAnchor = vi.fn().mockResolvedValue(1500);
     const tasksService = createMock<TasksService>({
       allocateSortOrderBesideAnchor,
@@ -105,9 +109,14 @@ describe('InjectTaskExecutor', () => {
           delete: taskDelete,
           findOne: taskFindOne,
           save: taskSave,
+          update: taskUpdate,
         }),
       ),
     });
+
+    // Kill switch defaults to enabled (flag unset).
+    configGet = vi.fn().mockReturnValue(undefined);
+    const configService = asMock<ConfigService>({ get: configGet });
 
     isSkillUnavailableForPlan = vi.fn().mockResolvedValue(false);
     const planContextAvailabilityService =
@@ -129,6 +138,7 @@ describe('InjectTaskExecutor', () => {
     });
 
     executor = new InjectTaskExecutor(
+      configService,
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
       planContextAvailabilityService,
@@ -397,5 +407,121 @@ describe('InjectTaskExecutor', () => {
     });
 
     expect(taskDelete).toHaveBeenCalledWith({ id: taskId });
+  });
+
+  describe('reconcile', () => {
+    const buildReconcile = (
+      payload: Record<string, unknown>,
+      application: Partial<RuleApplication> = { taskId },
+    ) => ({
+      action: buildAction(payload),
+      application: asMock<RuleApplication>({
+        state: 'applied',
+        ...application,
+      }),
+      ownerUserId,
+      plan: buildPlan(),
+      rule: buildRule(),
+    });
+
+    it("moves a 'last' task below a newer max back above it", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' }); // MAX of other tasks
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 6000 },
+      );
+    });
+
+    it("does not write when a 'last' task is already above the max (converged → no further churn)", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 6000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '5000' });
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it("moves a 'first' task above a newer min back below it", async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 3000,
+          status: 'PENDING',
+        }),
+      );
+      aggregateGetRawOne.mockResolvedValue({ value: '2000' }); // MIN of other tasks
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'first', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).toHaveBeenCalledWith(
+        { id: taskId },
+        { sortOrder: 1000 },
+      );
+    });
+
+    it('is a no-op when the kill switch is disabled', async () => {
+      configGet.mockReturnValue('false');
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskFindOne).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when the injected task was deleted (task_id NULL)', async () => {
+      await executor.reconcile(
+        buildReconcile(
+          { placement: 'last', skillSlug: 'grilling' },
+          { taskId: null },
+        ),
+      );
+
+      expect(taskFindOne).not.toHaveBeenCalled();
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op for a task in a terminal status', async () => {
+      taskFindOne.mockResolvedValue(
+        asMock<Task>({
+          id: taskId,
+          planId,
+          sortOrder: 1000,
+          status: 'COMPLETED',
+        }),
+      );
+
+      await executor.reconcile(
+        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+      );
+
+      expect(taskUpdate).not.toHaveBeenCalled();
+    });
   });
 });

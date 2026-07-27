@@ -36,6 +36,7 @@
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type Plan,
@@ -59,6 +60,7 @@ import {
   type ActionExecutorContext,
   type ActionReconcileContext,
 } from './action-executor';
+import { isReconcilePlacementEnabled } from './reconcile-placement-policy';
 
 /**
  * @description Task statuses reconcile never repositions: a completed/skipped/
@@ -99,6 +101,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
   readonly actionType = TAG_ACTION_TYPES.INJECT_TASK;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly executorRegistry: ActionExecutorRegistry,
     private readonly logger: LoggerService,
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
@@ -196,6 +199,10 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
    * Collision-safe: a UNIQUE(plan_id, sort_order) race recomputes once.
    */
   async reconcile(context: ActionReconcileContext): Promise<void> {
+    // Kill switch: leave injected tasks at their first-apply position when the
+    // continuous reposition is disabled in prod.
+    if (!isReconcilePlacementEnabled(this.configService)) return;
+
     const { action, application, plan } = context;
     const taskId = application.taskId;
     if (taskId == null) return;
