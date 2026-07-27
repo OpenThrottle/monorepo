@@ -1,17 +1,9 @@
 /**
- * @description Live conversation stream for the home chat. Mirrors
- * usePlanOutputStream's loader-seed + subscription-delta pattern: history comes
- * from the loader (seedMessages), token deltas arrive via the
- * conversationStreamChunkAdded subscription and accumulate into an assistant
- * message keyed by messageId, dedup'd by chunk sortOrder. SSR-safe: with no
- * browser ws client the hook returns just the seed. When the loader later
- * revalidates and the persisted assistant row (same id) appears in seedMessages,
- * the seed version wins (dedup by id).
- *
- * The pure accumulation (reduceStreamChunk / toThreadMessages / StreamState)
- * lives in `@openthrottle/react-router-chat` so it can be shared; this hook is
- * the thin, app-specific shell that wires the app's graphql-ws client + the
- * generated subscription document to that reducer.
+ * @description Live conversation stream for the admin header chat — the thin,
+ * app-specific shell that wires admin's graphql-ws client + the generated
+ * ConversationStreamChunkAdded subscription to the SHARED pure reducer in
+ * `@openthrottle/react-router-chat`. Mirrors the developer app's hook. SSR-safe:
+ * with no browser ws client it returns just the seed.
  */
 import * as React from 'react';
 import type { ChatMessage } from '@openthrottle/react-router-chat';
@@ -32,7 +24,6 @@ export interface UseConversationStreamArgs {
 }
 
 export interface UseConversationStreamResult {
-  /** messageIds whose stream has reached its terminal `done` chunk. */
   readonly completedIds: ReadonlySet<string>;
   readonly isStreaming: boolean;
   readonly messages: ChatMessage[];

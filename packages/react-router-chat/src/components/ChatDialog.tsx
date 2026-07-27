@@ -18,7 +18,9 @@ import {
 import clsx from 'clsx';
 import { BotIcon, MessageSquarePlus } from 'lucide-react';
 import { useChatOptional } from '../context/chat-context';
+import type { ChatComposerControls } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
+import { ChatComposerToolbar } from './ChatComposerToolbar';
 import { ChatThread } from './ChatThread';
 import type { ChatMessage } from '../types';
 
@@ -26,6 +28,13 @@ type ChatDialogVariant = 'dialog' | 'sheet';
 
 export interface ChatDialogProps {
   readonly className?: string;
+  /**
+   * Optional agentic-composer surface (seven-control toolbar + streaming). When
+   * present — here or via {@link ChatProvider} — the dialog renders the toolbar
+   * and streaming send/stop; when absent it stays the bare legacy shell. A prop
+   * here overrides the provider's value.
+   */
+  readonly composer?: ChatComposerControls;
   readonly composerDisabled?: boolean;
   readonly defaultOpen?: boolean;
   /** When omitted, values come from {@link ChatProvider}. */
@@ -46,6 +55,7 @@ export interface ChatDialogProps {
 export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   const {
     className,
+    composer: composerProp,
     composerDisabled: composerDisabledProp,
     defaultOpen,
     messages: messagesProp,
@@ -69,6 +79,10 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   const composerDisabled =
     composerDisabledProp ?? chatContext?.composerDisabled ?? false;
   const onStartNewChat = chatContext?.onStartNewChat;
+  // Optional agentic surface: a prop overrides the provider. When present the
+  // dialog renders the toolbar + streaming; when undefined it stays the bare
+  // legacy shell (the dormant agentsRunChatTurn path).
+  const composer = composerProp ?? chatContext?.composer;
 
   if (!messages || !onSendMessage) {
     throw new Error(
@@ -88,7 +102,14 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <ChatComposer
         className="border-t-0"
         disabled={composerDisabled}
+        isStreaming={composer?.isStreaming}
+        onStop={composer?.onStop}
         onSubmit={onSendMessage}
+        toolbar={
+          composer !== undefined ? (
+            <ChatComposerToolbar {...composer} />
+          ) : undefined
+        }
       />
     </div>
   );

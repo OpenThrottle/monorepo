@@ -2,12 +2,12 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ChatComposerMode } from '@openthrottle/react-router-chat';
-import { createStore, getDefaultStore, Provider } from 'jotai';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '~/routing/home/data/atom.chat-toolbar';
+} from '@openthrottle/react-router-chat-state';
+import { createStore, getDefaultStore, Provider } from 'jotai';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import Index from '../_index';

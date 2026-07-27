@@ -2,21 +2,31 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import type { ChatToolbarState } from '~/routing/home/data/atom.chat-toolbar';
-import type { RepositoryOption } from '~/routing/home/data/models.server';
-import { capabilitiesForChatOption } from '~/routing/home/utils/chat-capabilities';
-import { decodeChatOption } from '~/routing/home/utils/chat-model-option';
+import type { ChatToolbarState } from './atom.chat-toolbar';
+import { capabilitiesForChatOption } from './chat-capabilities';
+import { decodeChatOption } from './chat-model-option';
+
+/**
+ * Minimal repository shape the reconciler matches persisted selections against —
+ * only the `id` is needed. Any richer app-side repository option (e.g.
+ * `{ id, displayName }`) is structurally assignable.
+ * @public
+ */
+export interface ReconcileRepositoryOption {
+  readonly id: string;
+}
 
 /**
  * Current loader-derived option lists the persisted selections are validated
  * against. `personas` is the list the toolbar actually renders (registry
  * personas, or the mock fallback), so a reconciled `personaId` always maps to a
  * visible option.
+ * @public
  */
 export interface ReconcileChatToolbarOptions {
   readonly models: readonly ChatModelOption[];
   readonly personas: readonly ChatPersonaOption[];
-  readonly repositories: readonly RepositoryOption[];
+  readonly repositories: readonly ReconcileRepositoryOption[];
 }
 
 /**
@@ -39,6 +49,7 @@ export interface ReconcileChatToolbarOptions {
  * - `repositoryId` is also cleared when the effective backend does not run in a
  *   repository (`requiresRepository === false`), since the checkout control is
  *   hidden for those backends.
+ * @public
  */
 export function reconcileChatToolbarState(
   persisted: ChatToolbarState,

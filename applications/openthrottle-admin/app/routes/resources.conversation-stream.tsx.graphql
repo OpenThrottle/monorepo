@@ -1,0 +1,26 @@
+mutation StartConversationStream($input: StartConversationStreamInput!) {
+  startConversationStream(input: $input) {
+    assistantMessageId
+    conversationId
+    errorMessage
+    userMessageId
+  }
+}
+
+mutation CancelConversationStream($conversationId: ID!) {
+  cancelConversationStream(conversationId: $conversationId)
+}
+
+subscription ConversationStreamChunkAdded($conversationId: ID!) {
+  conversationStreamChunkAdded(conversationId: $conversationId) {
+    conversationId
+    delta
+    done
+    error
+    id
+    kind
+    messageId
+    metadataJson
+    sortOrder
+  }
+}

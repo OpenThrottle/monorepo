@@ -12,19 +12,25 @@ import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
  * Schema version stamped into the persisted blob. Bump this whenever
  * {@link ChatToolbarState} changes shape so {@link normalizeChatToolbarState}
  * can migrate old blobs forward instead of wiping the user's saved toolbar.
+ * @public
  */
 export const CHAT_TOOLBAR_STATE_VERSION = 1 as const;
 
-/** localStorage key for the persisted Chat Toolbar selections. */
+/**
+ * localStorage key for the persisted Chat Toolbar selections. Derived from
+ * `APP_NAME` at RUNTIME (via window.env / process.env), so the single shared
+ * atom module namespaces per consuming app (developer vs admin) automatically.
+ * @public
+ */
 export const CHAT_TOOLBAR_STORAGE_KEY = `${APP_NAME}:chat:toolbar`;
 
 /**
- * The persisted Chat Toolbar selections for the developer-app home route.
- * Deliberately global (single object, implicit-default Jotai store) — per the
- * plan's V1 decision — mirroring the {@link configAtom} appearance precedent.
- * The id fields are `undefined` when unset so the route seeds them from loader
+ * The persisted Chat Toolbar selections. Deliberately global (single object,
+ * implicit-default Jotai store), mirroring the appearance-config precedent. The
+ * id fields are `undefined` when unset so the consumer seeds them from loader
  * data; the enum fields are `undefined` when the user has made no explicit pick.
  * Keys are alphabetized; `version` stamps the schema for forward migration.
+ * @public
  */
 export interface ChatToolbarState {
   readonly mode: ChatComposerMode;
@@ -38,10 +44,11 @@ export interface ChatToolbarState {
 }
 
 /**
- * Default = Plan mode, everything else unset. The route fills the absent id
+ * Default = Plan mode, everything else unset. The consumer fills the absent id
  * fields from loader data (`models[0]`, `repositories[0]`, `personas[0]`) at
  * render time; reasoning/serviceTier/permissionMode stay unset until the user
  * chooses (and until the selected backend's capabilities allow them).
+ * @public
  */
 export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   mode: ChatComposerMode.plan,
@@ -118,6 +125,7 @@ function coerceChatToolbarStateV1(
  * input — degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than throwing.
  * The `switch` is the seam where a future v1→v2 reshape slots in as its own
  * case (rewriting `record` before the shared coercion).
+ * @public
  */
 export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
   if (!isRecord(raw)) {
@@ -140,8 +148,8 @@ export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
 /**
  * SSR-guarded JSON storage that normalizes on read. On the server (no `window`)
  * it is a no-op store, so the atom hydrates to the default and the browser
- * re-reads localStorage on mount. No cross-tab `subscribe` — matches the
- * {@link configAtom} precedent (live cross-tab toolbar sync is deferred).
+ * re-reads localStorage on mount. No cross-tab `subscribe` — live cross-tab
+ * toolbar sync is deferred.
  */
 const createChatToolbarStorage = (): SyncStorage<ChatToolbarState> => {
   const jsonStorage = createJSONStorage<ChatToolbarState>(() => {
@@ -169,6 +177,7 @@ const createChatToolbarStorage = (): SyncStorage<ChatToolbarState> => {
  * Global, localStorage-backed atom holding the persisted Chat Toolbar
  * selections. `getOnInit` hydrates synchronously from storage so the toolbar
  * renders the saved values on first paint (client-side).
+ * @public
  */
 export const chatToolbarStateAtom = atomWithStorage(
   CHAT_TOOLBAR_STORAGE_KEY,
