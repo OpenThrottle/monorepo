@@ -20,6 +20,7 @@ import {
   type ChatCompletionMessage,
   type ConversationBackend,
   type ConversationBackendRun,
+  type ConversationPermissionMode,
   claudeConversationBackend,
   cursorAgentConversationBackend,
   openAiConversationBackend,
@@ -80,6 +81,11 @@ export interface StartConversationStreamRun {
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
   /** Model id to complete with (openai), or optional model override (cli). */
   readonly model: string;
+  /**
+   * Permission posture selected in the composer toolbar; forwarded to CLI
+   * backends, which resolve it to concrete permission flags. Null when unset.
+   */
+  readonly permissionMode: ConversationPermissionMode | null;
   /** Provider/backend label persisted on the conversation, or null. */
   readonly provider: string | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
@@ -197,6 +203,7 @@ export class ConversationStreamService {
       mcpServers: run.mcpServers ?? undefined,
       messages: run.messages,
       model: run.model,
+      permissionMode: run.permissionMode ?? undefined,
       resumeSession: run.resumeSession,
       sessionId: run.sessionId ?? undefined,
       signal: controller.signal,

@@ -45,6 +45,7 @@ const baseRun: StartConversationStreamRun = {
   mcpServers: null,
   messages: [{ content: 'hi', role: 'user' }],
   model: 'llama3',
+  permissionMode: null,
   provider: 'ollama',
   resumeSession: false,
   sessionId: null,

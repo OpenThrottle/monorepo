@@ -13,6 +13,55 @@
 import type { ChatCompletionMessage } from '../chat-completions/index.ts';
 
 /**
+ * Permission postures a CLI backend can run under, mirroring the developer-app
+ * composer's `ChatPermissionMode` (`@openthrottle/react-router-chat`). Carried
+ * as the raw UI enum end-to-end and resolved to concrete CLI flags inside each
+ * backend's argv/config builder (never in the resolver/service, which stay
+ * transport-only). `supervised` asks before commands/edits; `autoAcceptEdits`
+ * auto-approves edits only; `fullAccess` runs everything without prompts. In a
+ * headless `--print` spawn there is no approval UI, so every mode still carries
+ * a scoped allowlist for the injected managed MCP servers — see each argv
+ * builder for the exact mapping.
+ *
+ * @public
+ */
+export const CONVERSATION_PERMISSION_MODES = {
+  autoAcceptEdits: 'autoAcceptEdits',
+  fullAccess: 'fullAccess',
+  supervised: 'supervised',
+} as const;
+
+/**
+ * One of the {@link CONVERSATION_PERMISSION_MODES} values.
+ *
+ * @public
+ */
+export type ConversationPermissionMode =
+  (typeof CONVERSATION_PERMISSION_MODES)[keyof typeof CONVERSATION_PERMISSION_MODES];
+
+/**
+ * Narrow an untrusted transport string (GraphQL input) to a
+ * {@link ConversationPermissionMode}, or `undefined` when it is absent or not a
+ * recognized mode. Keeps the resolver transport-only: it forwards the raw input
+ * through this one guard rather than mapping to CLI flags itself.
+ *
+ * @public
+ */
+export function toConversationPermissionMode(
+  value: string | null | undefined,
+): ConversationPermissionMode | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  for (const mode of Object.values(CONVERSATION_PERMISSION_MODES)) {
+    if (mode === value) {
+      return mode;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Event kinds a backend can emit. `text` is plain assistant output; the rest
  * describe richer agentic events (reasoning, tool use, token accounting, the
  * backend's session handle). Values are snake_case to match the wire payload.
@@ -92,6 +141,13 @@ export interface ConversationBackendRun {
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
   /** Model id to complete with. */
   readonly model: string;
+  /**
+   * Permission posture selected in the composer toolbar. CLI backends resolve
+   * it to concrete permission flags in their argv/config builder; when absent
+   * they apply a safe default that unblocks only the injected managed MCP
+   * servers. Ignored by the openai backend.
+   */
+  readonly permissionMode?: ConversationPermissionMode;
   /**
    * When true, resume the given `sessionId` rather than create it. Only CLI
    * backends whose "create" and "resume" invocations differ read this: claude

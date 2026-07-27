@@ -34,8 +34,10 @@ import {
 import {
   AGENT_CLI_ALLOWLIST,
   type ChatCompletionMessage,
+  type ConversationPermissionMode,
   createCursorAgentSession,
   toContainerPath,
+  toConversationPermissionMode,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
@@ -134,6 +136,8 @@ interface ResolvedBackendRun {
     Record<string, Readonly<Record<string, unknown>>>
   > | null;
   readonly model: string;
+  /** Composer permission posture forwarded to CLI backends; null when unset. */
+  readonly permissionMode: ConversationPermissionMode | null;
   readonly provider: string | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
   readonly resumeSession: boolean;
@@ -221,28 +225,24 @@ export class ConversationStreamResolver {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
-    // T3 composer control selections (reasoning effort, service tier, permission
-    // mode) plus @-mentioned file paths are nullable + additive on the input.
-    // They are surfaced here but NOT yet honored: enforcing them is owned by the
-    // agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers).
-    // The @-mentioned paths already reach a CLI agent as inline `@path` tokens
-    // in `input.message`; the structured `fileMentions` list is for richer
-    // driver-side injection (e.g. file-content preloading) once dde67342 lands.
-    // TODO(dde67342): feed reasoning/serviceTier/permissionMode + fileMentions
-    // into the resolved driver run instead of only logging them.
+    // `permissionMode` IS now honored: it is threaded onto the resolved run and
+    // resolved to concrete CLI permission flags inside each backend's argv/config
+    // builder (see resolveBackendRun below). The remaining T3 composer controls
+    // (reasoning effort, service tier) and the structured `fileMentions` list are
+    // still nullable + additive and NOT yet honored — enforcing them stays with
+    // the broader plan cacb864e (owned by the agent driver registry, dde67342).
+    // The @-mentioned paths already reach a CLI agent as inline `@path` tokens in
+    // `input.message`; `fileMentions` is for richer driver-side injection later.
     const fileMentionCount = input.fileMentions?.length ?? 0;
     if (
-      input.permissionMode != null ||
       input.reasoning != null ||
       input.serviceTier != null ||
       fileMentionCount > 0
     ) {
       this.logger.debug(
-        `startConversationStream: control selections (not yet honored — see dde67342) reasoning=${
+        `startConversationStream: control selections (not yet honored — see cacb864e/dde67342) reasoning=${
           input.reasoning ?? '∅'
-        } serviceTier=${input.serviceTier ?? '∅'} permissionMode=${
-          input.permissionMode ?? '∅'
-        } fileMentions=${fileMentionCount}`,
+        } serviceTier=${input.serviceTier ?? '∅'} fileMentions=${fileMentionCount}`,
         ConversationStreamResolver.name,
       );
     }
@@ -295,6 +295,7 @@ export class ConversationStreamResolver {
       mcpServers: resolved.mcpServers,
       messages,
       model: resolved.model,
+      permissionMode: resolved.permissionMode,
       provider: resolved.provider,
       resumeSession: resolved.resumeSession,
       sessionId: resolved.sessionId,
@@ -346,6 +347,7 @@ export class ConversationStreamResolver {
         mcpEnv: null,
         mcpServers: null,
         model: input.modelId,
+        permissionMode: null,
         provider: endpoint.provider,
         resumeSession: false,
         sessionId: null,
@@ -429,6 +431,10 @@ export class ConversationStreamResolver {
       mcpEnv,
       mcpServers: hasMcp ? managedMcp : null,
       model: input.modelId ?? '',
+      // Narrow the untrusted UI string to a known mode here (transport guard);
+      // the CLI adapters map it to concrete permission flags.
+      permissionMode:
+        toConversationPermissionMode(input.permissionMode) ?? null,
       provider: backend,
       resumeSession: session.resumeSession,
       sessionId: session.sessionId,
