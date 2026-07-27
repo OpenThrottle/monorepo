@@ -1,11 +1,10 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ChatComposer,
   ChatComposerToolbar,
   ChatThread,
   parseFileMentions,
   type ChatComposerMode,
-  type ChatMessage,
   type ChatPermissionMode,
   type ChatReasoningLevel,
   type ChatServiceTier,
@@ -17,18 +16,12 @@ import {
   decodeChatOption,
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { useAtom } from 'jotai';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { useFetcher } from 'react-router';
-import {
-  CancelConversationStreamDocument,
-  StartConversationStreamDocument,
-} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
@@ -40,15 +33,10 @@ import {
   loadPersonas,
   loadRepositories,
 } from '~/routing/home/data/models.server';
-import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
+import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 import type { Route } from '@/app/routes/+types/_index';
-
-/**
- * Stable empty seed: history seeding is keyed off a conversation in the URL, which the home route has none of.
- */
-const EMPTY_SEED: readonly ChatMessage[] = [];
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -95,21 +83,17 @@ export default function Component(
       : CHAT_TOOLBAR_PERSONAS;
 
   // Hooks
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  // The assistant turn that has been started but not yet reached a terminal
-  // chunk. Keeps the composer in its streaming state and renders a running
-  // indicator on the placeholder while a slow backend (e.g. cursor-agent, which
-  // emits its whole turn in one end-of-turn burst) has produced nothing yet.
-  const [pendingAssistantId, setPendingAssistantId] = useState<string | null>(null); // prettier-ignore
+
+  // The streaming turn lifecycle (thread state, start/cancel to the
+  // conversation-stream resource action, live subscription, pending overlay)
+  // lives in a reusable hook shared with the global header chat.
+  const turn = useAgenticChatTurn();
 
   // Toolbar selections persist across reloads in a localStorage-backed atom.
   // Each per-field setter writes only its own key; absent id fields fall back to
   // the loader-derived seed for the effective value handed to the toolbar and to
-  // onSubmit, without overwriting an explicit persisted choice. Stale-value
-  // reconciliation against loader data + capabilities lands in a later task.
+  // onSubmit, without overwriting an explicit persisted choice.
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
 
   const setMode = (mode: ChatComposerMode): void =>
@@ -151,17 +135,9 @@ export default function Component(
   const repositoryId = effectiveToolbar.repositoryId;
   const serviceTier = effectiveToolbar.serviceTier;
 
-  const cancelFetcher = useFetcher();
   const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
-  const localIdRef = useRef(0);
-  const startFetcher = useFetcher<StartActionResult>();
 
   // Setup
-  const stream = useConversationStream({
-    conversationId,
-    seedMessages: EMPTY_SEED,
-  });
-
   // Backs the composer's @-mention file picker for the selected checkout;
   // undefined (trigger disabled) until a repository is chosen.
   const mentionProvider = useFileMentionProvider(repositoryId);
@@ -179,41 +155,7 @@ export default function Component(
     },
   });
 
-  // Streamed assistant turns overlay the ordered placeholders by message id,
-  // carrying both the flat body (fallback) and the structured `events`
-  // timeline (thinking / tool calls / output) so the thread renders the rich,
-  // collapsible turn rather than the flat text.
-  const streamedById = useMemo(
-    () => new Map(stream.messages.map((message) => [message.id, message])),
-    [stream.messages],
-  );
-
-  const threadMessages = useMemo(() => {
-    return messages.map((message) => {
-      const streamed = streamedById.get(message.id);
-      // Overlay streamed body/events when present. Keep `pending` while this is
-      // the in-flight assistant turn and nothing renderable has arrived yet —
-      // including when the reducer already has an empty streamed entry.
-      const base =
-        streamed === undefined
-          ? message
-          : streamed.events !== undefined
-            ? { ...message, body: streamed.body, events: streamed.events }
-            : { ...message, body: streamed.body };
-
-      const hasTimeline = base.events !== undefined && base.events.length > 0;
-      const stillEmpty = (base.body?.trim() ?? '') === '' && !hasTimeline;
-      const isPendingTurn = message.id === pendingAssistantId && stillEmpty;
-
-      return isPendingTurn ? { ...base, pending: true } : base;
-    });
-  }, [messages, pendingAssistantId, streamedById]);
-
-  const isStreaming =
-    startFetcher.state !== 'idle' ||
-    stream.isStreaming ||
-    pendingAssistantId !== null;
-  const isEmptyThread = threadMessages.length === 0;
+  const isEmptyThread = turn.messages.length === 0;
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
   const isCliBackend =
@@ -242,21 +184,11 @@ export default function Component(
     }
 
     if (decoded.backend !== 'openai' && !repositoryId) {
-      setError('Select a repository to run the agent in.');
+      turn.setError('Select a repository to run the agent in.');
       return;
     }
 
-    setError(null);
-    localIdRef.current += 1;
-
-    const userId = `local-user-${localIdRef.current}`;
-    const newMessage: ChatMessage = {
-      body: trimmed,
-      id: userId,
-      role: 'user',
-    };
-
-    setMessages((previous) => [...previous, newMessage]);
+    turn.setError(null);
 
     // @-mentioned files are parsed from the outgoing message and attached to the
     // payload. The @path tokens also remain inline in `message`, so a CLI agent
@@ -266,45 +198,24 @@ export default function Component(
       (mention) => mention.path,
     );
 
-    startFetcher.submit(
+    const fields: Record<string, string> =
       decoded.baseUrl != null
         ? {
             backend: 'openai',
             baseUrl: decoded.baseUrl,
-            conversationId: conversationId ?? '',
-            intent: 'start',
-            message: trimmed,
             modelId: decoded.model,
           }
         : {
             backend: decoded.backend,
-            conversationId: conversationId ?? '',
             fileMentions: JSON.stringify(fileMentions),
-            intent: 'start',
-            message: trimmed,
             permissionMode: permissionMode ?? '',
             personaId: personaId ?? '',
             reasoning: reasoning ?? '',
             repositoryId: repositoryId ?? '',
             serviceTier: serviceTier ?? '',
-          },
-      { method: 'post' },
-    );
-  };
+          };
 
-  const onStop = (): void => {
-    if (!conversationId) {
-      return;
-    }
-
-    // Leave the streaming state immediately; the terminal chunk may be missed
-    // if the cancel lands before the stream published anything.
-    setPendingAssistantId(null);
-
-    cancelFetcher.submit(
-      { conversationId, intent: 'cancel' },
-      { method: 'post' },
-    );
+    turn.submitTurn(trimmed, fields);
   };
 
   // Markup
@@ -344,40 +255,6 @@ export default function Component(
   );
 
   // Life Cycle
-  useEffect(() => {
-    const result = startFetcher.data;
-    if (!result) {
-      return;
-    }
-
-    if (result.errorMessage || !result.conversationId) {
-      setError(result.errorMessage ?? 'Failed to start the conversation.');
-      return;
-    }
-
-    setConversationId(result.conversationId);
-
-    if (result.assistantMessageId) {
-      const assistantId = result.assistantMessageId;
-      setPendingAssistantId(assistantId);
-      setMessages((previous) =>
-        previous.some((message) => message.id === assistantId)
-          ? previous
-          : [...previous, { body: '', id: assistantId, role: 'assistant' }],
-      );
-    }
-  }, [startFetcher.data]);
-
-  // Clear the pending flag once the started turn reaches its terminal `done`
-  // chunk (success or error), so the composer leaves its streaming state.
-  useEffect(() => {
-    if (
-      pendingAssistantId !== null &&
-      stream.completedIds.has(pendingAssistantId)
-    ) {
-      setPendingAssistantId(null);
-    }
-  }, [pendingAssistantId, stream.completedIds]);
 
   // 🔌 Short Circuit
 
@@ -399,9 +276,11 @@ export default function Component(
       )}
 
       <div className="mx-auto w-full max-w-3xl">
-        <ChatThread emptyStateLabel="" messages={threadMessages} />
-        {error ? (
-          <p className="text-destructive mb-2 text-center text-sm">{error}</p>
+        <ChatThread emptyStateLabel="" messages={turn.messages} />
+        {turn.error ? (
+          <p className="text-destructive mb-2 text-center text-sm">
+            {turn.error}
+          </p>
         ) : null}
         {voice.error ? (
           <p className="text-destructive mb-2 text-center text-sm">
@@ -418,10 +297,10 @@ export default function Component(
           className="border-t-0"
           disabled={!hasModels}
           draft={draft}
-          isStreaming={isStreaming}
+          isStreaming={turn.isStreaming}
           mentionProvider={mentionProvider}
           onDraftChange={setDraft}
-          onStop={onStop}
+          onStop={turn.onStop}
           onSubmit={onSubmit}
           readOnly={voice.isDraftFrozen}
           textAreaRef={composerTextAreaRef}
@@ -431,99 +310,5 @@ export default function Component(
     </GlobalScreen>
   );
 }
-
-interface StartActionResult {
-  readonly assistantMessageId: string | null;
-  readonly conversationId: string | null;
-  readonly errorMessage: string | null;
-  readonly userMessageId: string | null;
-}
-
-/**
- * Decode the JSON-encoded `fileMentions` form field (workspace-relative paths
- * parsed from the composer draft) into a string array, or null when absent or
- * malformed. Defensive: the value is our own JSON.stringify output, but a bad
- * value must never 500 the turn.
- */
-const parseFileMentionsField = (
-  value: FormDataEntryValue | null,
-): string[] | null => {
-  if (typeof value !== 'string' || value === '') {
-    return null;
-  }
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return null;
-    }
-    const paths = parsed.filter(
-      (entry): entry is string => typeof entry === 'string',
-    );
-    return paths.length > 0 ? paths : null;
-  } catch {
-    return null;
-  }
-};
-
-export const action = async (
-  args: Route.ActionArgs,
-): Promise<StartActionResult | { cancelled: boolean }> => {
-  const formData = await args.request.formData();
-  const intent = formData.get('intent');
-
-  if (intent === 'cancel') {
-    const conversationId = String(formData.get('conversationId') ?? '');
-    if (conversationId) {
-      await executeGraphqlWithAuth(
-        args.request,
-        CancelConversationStreamDocument,
-        { conversationId },
-      );
-    }
-
-    return { cancelled: true };
-  }
-
-  const conversationId = String(formData.get('conversationId') ?? '');
-  const input = {
-    backend: String(formData.get('backend') ?? '') || null,
-    baseUrl: String(formData.get('baseUrl') ?? '') || null,
-    conversationId: conversationId || null,
-    fileMentions: parseFileMentionsField(formData.get('fileMentions')),
-    message: String(formData.get('message') ?? ''),
-    modelId: String(formData.get('modelId') ?? '') || null,
-    permissionMode: String(formData.get('permissionMode') ?? '') || null,
-    personaId: String(formData.get('personaId') ?? '') || null,
-    reasoning: String(formData.get('reasoning') ?? '') || null,
-    repositoryId: String(formData.get('repositoryId') ?? '') || null,
-    serviceTier: String(formData.get('serviceTier') ?? '') || null,
-  };
-
-  try {
-    const data = await executeGraphqlWithAuth(
-      args.request,
-      StartConversationStreamDocument,
-      { input },
-    );
-
-    const result = data.startConversationStream;
-
-    return {
-      assistantMessageId: result.assistantMessageId ?? null,
-      conversationId: result.conversationId ?? null,
-      errorMessage: result.errorMessage ?? null,
-      userMessageId: result.userMessageId ?? null,
-    };
-  } catch (error) {
-    const isError = error instanceof Error;
-
-    return {
-      assistantMessageId: null,
-      conversationId: null,
-      errorMessage: isError ? error.message : 'Failed to start stream.',
-      userMessageId: null,
-    };
-  }
-};
 
 export const ErrorBoundary = GlobalErrorBoundary;

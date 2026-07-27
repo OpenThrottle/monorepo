@@ -1,4 +1,5 @@
 export * from './agents-chat-footer';
+export * from './conversation-stream';
 export * from './file-mentions';
 export * from './map-persisted-messages';
 export * from './components/ChatCheckoutSelector';
