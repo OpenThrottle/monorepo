@@ -19,6 +19,7 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ListOrderedIcon } from 'lucide-react';
 import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
+import { toErrorMessage } from '~/global/utils/utils.error-message';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -160,9 +161,7 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { retryJob: result.retryJob };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-
-      return { retryJobError: message };
+      return { retryJobError: toErrorMessage(error, 'Retry failed.') };
     }
   }
 
@@ -187,9 +186,9 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { cancelPlanRun: result.cancelPlanRun };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-
-      return { cancelPlanRunError: message };
+      return {
+        cancelPlanRunError: toErrorMessage(error, 'Failed to cancel plan run.'),
+      };
     }
   }
 

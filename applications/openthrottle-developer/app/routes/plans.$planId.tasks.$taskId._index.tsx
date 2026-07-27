@@ -25,6 +25,10 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { redirect } from 'react-router';
+import {
+  messageOrFallback,
+  toErrorMessage,
+} from '~/global/utils/utils.error-message';
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
@@ -166,13 +170,17 @@ export const action = async (args: Route.ActionArgs) => {
       const promote = result.promoteTaskToPlan;
       if (promote == null || !promote.success) {
         return {
-          promoteTaskError: promote?.error ?? 'Failed to promote task.',
+          promoteTaskError: messageOrFallback(
+            promote?.error,
+            'Failed to promote task.',
+          ),
         };
       }
       return { promoteTask: promote };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { promoteTaskError: message };
+      return {
+        promoteTaskError: toErrorMessage(error, 'Failed to promote task.'),
+      };
     }
   }
 
@@ -192,8 +200,12 @@ export const action = async (args: Route.ActionArgs) => {
       }
       return { setTaskStatus: result.updateTask };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { setTaskStatusError: message };
+      return {
+        setTaskStatusError: toErrorMessage(
+          error,
+          'Failed to update task status.',
+        ),
+      };
     }
   }
 
@@ -217,8 +229,9 @@ export const action = async (args: Route.ActionArgs) => {
       }
       return { taskTagUpdated: true };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { taskTagError: message };
+      return {
+        taskTagError: toErrorMessage(error, 'Failed to update task tag.'),
+      };
     }
   }
 
