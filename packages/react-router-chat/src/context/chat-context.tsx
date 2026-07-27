@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
-import type { ChatMessage } from '../types';
+import type { ChatMessage, ChatTokenUsage } from '../types';
 
 /**
  * The full agentic-composer surface a host app injects to upgrade
@@ -26,6 +26,12 @@ export interface ChatComposerControls extends Omit<
   readonly isStreaming?: boolean;
   /** Invoked when the composer's Stop button is pressed while {@link isStreaming}. */
   readonly onStop?: () => void;
+  /**
+   * Cumulative session token usage (summed across turns via `sumUsage`),
+   * rendered as the composer's running {@link ChatUsageCounter}. Presentational —
+   * the consumer owns the total. Omit to hide the counter.
+   */
+  readonly sessionUsage?: ChatTokenUsage;
 }
 
 export interface ChatContextValue {

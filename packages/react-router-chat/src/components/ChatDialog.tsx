@@ -105,6 +105,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
         isStreaming={composer?.isStreaming}
         onStop={composer?.onStop}
         onSubmit={onSendMessage}
+        sessionUsage={composer?.sessionUsage}
         toolbar={
           composer !== undefined ? (
             <ChatComposerToolbar {...composer} />

@@ -14,6 +14,7 @@ export * from './components/ChatThinkingBlock';
 export * from './components/ChatThread';
 export * from './components/ChatToolCall';
 export * from './components/ChatTurnTimeline';
+export * from './components/ChatUsageCounter';
 export * from './context';
 export * from './hooks';
 export * from './turn-events';
