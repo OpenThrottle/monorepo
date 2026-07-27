@@ -82,18 +82,29 @@ const toast: typeof sonnerToast = new Proxy(sonnerToast, {
 /**
  * Per-type toast surface colors, mirroring the shared Badge named-hue contract
  * (`border-{hue}-500/50 bg-{hue}-500/20`). Written as full literal class strings
- * so Tailwind's JIT can see and emit them — never build them dynamically. Only
- * the status types are colored; `loading` and `message`/`default` stay neutral
- * (they inherit the popover surface from `toasterStyle`) because they are
- * transient / non-status.
+ * so Tailwind's JIT can see and emit them — never build them dynamically. Sonner
+ * applies each key only to toasts of that `data-type`, so `loading` and
+ * `message`/`default` stay neutral (they keep the popover surface from
+ * `toasterStyle`) because they are transient / non-status.
+ *
+ * Why the trailing `!` (important): Sonner paints the surface with an
+ * *unlayered* rule — `[data-sonner-toast][data-styled='true'] { background:
+ * var(--normal-bg); border: 1px solid var(--normal-border) }`. Tailwind v4 emits
+ * every utility inside `@layer utilities`, and an unlayered declaration outranks
+ * ANY layered one regardless of selector specificity — so a plain (or even a
+ * more-specific, data-attribute-scoped) `bg-*` utility loses the cascade to
+ * Sonner's var-driven paint. Specificity cannot win across layers; the important
+ * flag can (an important declaration beats a normal unlayered one), so it is the
+ * necessary override here, not a gratuitous one. We only override the color;
+ * Sonner's `1px solid` border width/style still apply.
  */
 const typedToastClassNames: NonNullable<
   NonNullable<ToasterProps['toastOptions']>['classNames']
 > = {
-  error: 'border-red-500/50 bg-red-500/20',
-  info: 'border-sky-500/50 bg-sky-500/20',
-  success: 'border-green-500/50 bg-green-500/20',
-  warning: 'border-amber-500/50 bg-amber-500/20',
+  error: 'border-red-500/50! bg-red-500/20!',
+  info: 'border-sky-500/50! bg-sky-500/20!',
+  success: 'border-green-500/50! bg-green-500/20!',
+  warning: 'border-amber-500/50! bg-amber-500/20!',
 };
 
 const isToasterTheme = (value: string): value is ToasterTheme =>
