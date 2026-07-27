@@ -182,10 +182,14 @@ describe('PlansResolver', () => {
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
   const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
   const mockFindRecentByPlanId = vi.fn().mockResolvedValue([]);
+  const mockFindById = vi.fn().mockResolvedValue(null);
+  const mockRecordHeartbeatById = vi.fn().mockResolvedValue(1);
   const mockRegisterCliRun = vi.fn().mockResolvedValue({});
   const mockSettleCliRun = vi.fn().mockResolvedValue({});
   const mockPlanRunsService = createMock<PlanRunsService>({
+    findById: mockFindById,
     findRecentByPlanId: mockFindRecentByPlanId,
+    recordHeartbeatById: mockRecordHeartbeatById,
     recordQueuedRun: mockRecordQueuedRun,
     registerCliRun: mockRegisterCliRun,
     settleCliRun: mockSettleCliRun,
@@ -831,6 +835,65 @@ describe('PlansResolver', () => {
         }),
       ]);
     });
+
+    test('derives isStale: fresh IN_PROGRESS false, stale IN_PROGRESS true, terminal false', async () => {
+      const now = Date.now();
+      const baseRow = {
+        bullmqJobId: null,
+        executionBackend: 'claude',
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        updatedAt: new Date(now),
+      };
+      mockFindRecentByPlanId.mockResolvedValueOnce([
+        // fresh IN_PROGRESS: heartbeat just now -> not stale
+        {
+          ...baseRow,
+          createdAt: new Date(now - 5_000),
+          id: 'run-fresh',
+          lastHeartbeatAt: new Date(now - 5_000),
+          status: 'IN_PROGRESS',
+        },
+        // stale IN_PROGRESS: heartbeat well past the 120s cutoff -> stale
+        {
+          ...baseRow,
+          createdAt: new Date(now - 600_000),
+          id: 'run-stale',
+          lastHeartbeatAt: new Date(now - 600_000),
+          status: 'IN_PROGRESS',
+        },
+        // never heartbeated but old created_at -> stale (COALESCE fallback)
+        {
+          ...baseRow,
+          createdAt: new Date(now - 600_000),
+          id: 'run-nohb',
+          lastHeartbeatAt: null,
+          status: 'IN_PROGRESS',
+        },
+        // terminal row with an ancient heartbeat -> never stale (status conveys it)
+        {
+          ...baseRow,
+          createdAt: new Date(now - 600_000),
+          id: 'run-done',
+          lastHeartbeatAt: new Date(now - 600_000),
+          status: 'COMPLETED',
+        },
+      ]);
+
+      const result = await resolver.planRunsByPlanId({
+        limit: 10,
+        planId: mockPlan.id,
+      });
+
+      expect(result.map((r) => [r.id, r.isStale])).toEqual([
+        ['run-fresh', false],
+        ['run-stale', true],
+        ['run-nohb', true],
+        ['run-done', false],
+      ]);
+    });
   });
 
   describe('registerCliPlanRun', () => {
@@ -941,6 +1004,48 @@ describe('PlansResolver', () => {
       const result = await resolver.settleCliPlanRun({
         planRunId: 'missing',
         status: 'COMPLETED',
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('recordPlanRunHeartbeat', () => {
+    test('bumps the heartbeat by run id and maps the refreshed row', async () => {
+      mockRecordHeartbeatById.mockClear();
+      const now = Date.now();
+      mockFindById.mockResolvedValueOnce({
+        bullmqJobId: null,
+        createdAt: new Date(now - 5_000),
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        id: 'cli-run-1',
+        lastHeartbeatAt: new Date(now),
+        pid: 9999,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'IN_PROGRESS',
+        updatedAt: new Date(now),
+        workerId: 'cli-abc',
+      });
+
+      const result = await resolver.recordPlanRunHeartbeat({
+        planRunId: 'cli-run-1',
+      });
+
+      expect(mockRecordHeartbeatById).toHaveBeenCalledWith('cli-run-1');
+      expect(result).toEqual(
+        expect.objectContaining({ id: 'cli-run-1', isStale: false }),
+      );
+    });
+
+    test('returns null when the run row no longer exists', async () => {
+      mockFindById.mockResolvedValueOnce(null);
+
+      const result = await resolver.recordPlanRunHeartbeat({
+        planRunId: 'missing',
       });
 
       expect(result).toBeNull();

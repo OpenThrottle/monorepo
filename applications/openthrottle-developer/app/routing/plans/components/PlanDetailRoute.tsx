@@ -69,7 +69,11 @@ export const PlanDetailRoute = (
   props: PlanDetailRouteProps,
 ): React.ReactElement => {
   const { loaderData, params, plan } = props;
-  const { tagVocabulary, tasks } = loaderData;
+  const { planRunAuditRows, tagVocabulary, tasks } = loaderData;
+
+  // The newest run is first (planRunsByPlanId is newest-first); a stale newest run means the
+  // active run is dead, so the toolbar shows a 'Stale' badge instead of an unusable Kill.
+  const newestRunIsStale = planRunAuditRows[0]?.isStale ?? false;
 
   // Hooks
   const navigate = useNavigate();
@@ -218,6 +222,7 @@ export const PlanDetailRoute = (
           checkoutId={checkoutId}
           className="bg-card border-card-border rounded-lg border p-4"
           jobRunHooksJson={jobRunHooksJson}
+          newestRunIsStale={newestRunIsStale}
           onAddTag={(tag) =>
             tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
           }

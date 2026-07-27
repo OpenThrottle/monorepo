@@ -10,6 +10,7 @@
 import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   appendPlanOutputGraphql,
+  bumpCliPlanRunHeartbeatGraphql,
   ensureGraphqlIsReachable,
   ensureProjectForNxNameGraphql,
   getPlanByIdGraphql,
@@ -27,6 +28,7 @@ import {
 } from './openthrottle-ralph-graphql';
 import {
   appendPlanOutputPostgres,
+  bumpCliPlanRunHeartbeatPostgres,
   ensureOpenThrottleReachablePostgres,
   ensureProjectForNxNamePostgres,
   getPlanByIdPostgres,
@@ -352,3 +354,24 @@ export const settleCliPlanRun = async (
   isPostgresTransport(config)
     ? settleCliPlanRunPostgres(config, planRunId, status)
     : settleCliPlanRunGraphql(planRunId, status);
+
+/**
+ * @description How often the detached CLI loop bumps its plan_runs heartbeat. Mirrors the server's
+ * HEARTBEAT_INTERVAL_MS (@openthrottle/nestjs-repositories) — kept as a local constant so this CLI
+ * package does not depend on the server package. MUST stay well below the server's STALE_CUTOFF_MS
+ * (120s) so a healthy run is never falsely swept.
+ */
+export const HEARTBEAT_INTERVAL_MS = 15_000;
+
+/**
+ * @description Bumps the detached CLI run's liveness heartbeat on its plan_runs row (keyed on the run
+ * id). Called on a timer by the CLI loop; a hard crash (SIGKILL/power-loss) that stops the bumps
+ * leaves a stale heartbeat the server reader/sweeper treats as dead.
+ */
+export const bumpCliPlanRunHeartbeat = async (
+  config: WorkflowRalphConfig,
+  planRunId: string,
+): Promise<void> =>
+  isPostgresTransport(config)
+    ? bumpCliPlanRunHeartbeatPostgres(config, planRunId)
+    : bumpCliPlanRunHeartbeatGraphql(planRunId);

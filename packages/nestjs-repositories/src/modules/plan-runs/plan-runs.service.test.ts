@@ -16,6 +16,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     executionBackend: 'claude',
     hostname: null,
     id: 'run-1',
+    lastHeartbeatAt: null,
     pid: null,
     planId: 'plan-1',
     queueName: 'plans',
@@ -33,15 +34,27 @@ describe('PlanRunsService', () => {
   let service: PlanRunsService;
   let repo: {
     create: ReturnType<typeof vi.fn>;
+    createQueryBuilder: ReturnType<typeof vi.fn>;
     find: ReturnType<typeof vi.fn>;
     findOne: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  let qbGetMany: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
+    qbGetMany = vi.fn().mockResolvedValue([]);
+    // Chainable QueryBuilder stub: every builder method returns the same object
+    // so .where().andWhere().orderBy().take().getMany() resolves through.
+    const qb: Record<string, ReturnType<typeof vi.fn>> = {};
+    for (const method of ['where', 'andWhere', 'orderBy', 'take']) {
+      qb[method] = vi.fn(() => qb);
+    }
+    qb.getMany = qbGetMany;
+
     repo = {
       create: vi.fn((input: Partial<PlanRun>) => buildRun(input)),
+      createQueryBuilder: vi.fn(() => qb),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
       save: vi.fn((row: PlanRun) => Promise.resolve(row)),
@@ -171,7 +184,12 @@ describe('PlanRunsService', () => {
 
       expect(repo.update).toHaveBeenCalledWith(
         { bullmqJobId: 'job-1', queueName: 'plans' },
-        { hostname: 'host-a', pid: 4242, workerId: 'worker-x' },
+        expect.objectContaining({
+          hostname: 'host-a',
+          lastHeartbeatAt: expect.any(Date),
+          pid: 4242,
+          workerId: 'worker-x',
+        }),
       );
     });
 
@@ -238,6 +256,108 @@ describe('PlanRunsService', () => {
       repo.findOne.mockResolvedValueOnce(null);
 
       expect(await service.readCancelRequested('plan-1')).toBeNull();
+    });
+  });
+
+  describe('findById', () => {
+    it('returns the run for an id, or null when none matches', async () => {
+      repo.findOne.mockResolvedValueOnce(buildRun({ id: 'run-x' }));
+      expect((await service.findById('run-x'))?.id).toBe('run-x');
+
+      repo.findOne.mockResolvedValueOnce(null);
+      expect(await service.findById('missing')).toBeNull();
+    });
+  });
+
+  describe('heartbeat + staleness', () => {
+    it('registerCliRun stamps an initial heartbeat so a fresh run is immediately alive', async () => {
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 1,
+        planId: 'plan-1',
+        workerId: 'cli-abc',
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ lastHeartbeatAt: expect.any(Date) }),
+      );
+    });
+
+    it('recordHeartbeatById bumps last_heartbeat_at by run id and returns affected', async () => {
+      repo.update.mockResolvedValueOnce({ affected: 1 });
+
+      const affected = await service.recordHeartbeatById('run-cli');
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-cli' },
+        { lastHeartbeatAt: expect.any(Date) },
+      );
+      expect(affected).toBe(1);
+    });
+
+    it('recordHeartbeatById returns 0 for an unknown id', async () => {
+      repo.update.mockResolvedValueOnce({ affected: 0 });
+
+      expect(await service.recordHeartbeatById('missing')).toBe(0);
+    });
+
+    it('recordHeartbeatByJob bumps last_heartbeat_at by (queue, job)', async () => {
+      repo.update.mockResolvedValueOnce({ affected: 1 });
+
+      const affected = await service.recordHeartbeatByJob('plans', 'job-1');
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { bullmqJobId: 'job-1', queueName: 'plans' },
+        { lastHeartbeatAt: expect.any(Date) },
+      );
+      expect(affected).toBe(1);
+    });
+
+    it('findStaleInProgressRuns filters IN_PROGRESS + COALESCE(heartbeat, created) < cutoff, oldest first', async () => {
+      const stale = buildRun({ id: 'run-stale', status: 'IN_PROGRESS' });
+      qbGetMany.mockResolvedValueOnce([stale]);
+      const cutoff = new Date('2026-07-21T00:02:00Z');
+
+      const result = await service.findStaleInProgressRuns(cutoff, 200);
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.where).toHaveBeenCalledWith('run.status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'COALESCE(run.last_heartbeat_at, run.created_at) < :cutoff',
+        { cutoff },
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('run.created_at', 'ASC');
+      expect(qb.take).toHaveBeenCalledWith(200);
+      expect(result).toEqual([stale]);
+    });
+
+    it('settleStaleRun sets STALE + clears location, guarded on status IN_PROGRESS', async () => {
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ id: 'run-stale', status: 'STALE' }),
+      );
+
+      const result = await service.settleStaleRun('run-stale');
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-stale', status: 'IN_PROGRESS' },
+        { hostname: null, pid: null, status: 'STALE', workerId: null },
+      );
+      expect(result?.status).toBe('STALE');
+    });
+
+    it('settleStaleRun is a no-op returning the row when it already reached a terminal status', async () => {
+      // The status-guarded update matches 0 rows; the row is re-fetched as-is (e.g. COMPLETED).
+      repo.update.mockResolvedValueOnce({ affected: 0 });
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ id: 'run-done', status: 'COMPLETED' }),
+      );
+
+      const result = await service.settleStaleRun('run-done');
+
+      expect(result?.status).toBe('COMPLETED');
     });
   });
 });

@@ -21,6 +21,7 @@ import {
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
   ReadPlanRunCancelMarkerDocument,
+  RecordPlanRunHeartbeatDocument,
   RegisterCliPlanRunDocument,
   SettleCliPlanRunDocument,
   UpdatePlanDocument,
@@ -369,6 +370,22 @@ export async function settleCliPlanRunGraphql(
   unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(SettleCliPlanRunDocument, {
       input: { planRunId, status },
+    }),
+  );
+}
+
+/**
+ * @description Bumps the liveness heartbeat on a detached CLI run row via the
+ * recordPlanRunHeartbeat mutation, keyed on the run id. The CLI calls this on a ~15s timer so a hard
+ * crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper detects. Rides the existing
+ * bearer-token path used by every other CLI graphql op — no new credential.
+ */
+export async function bumpCliPlanRunHeartbeatGraphql(
+  planRunId: string,
+): Promise<void> {
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RecordPlanRunHeartbeatDocument, {
+      input: { planRunId },
     }),
   );
 }

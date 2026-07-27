@@ -7,6 +7,7 @@
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
 import {
+  bumpCliPlanRunHeartbeat,
   captureRunLocation,
   ensureDatabaseReachableOrExit,
   formatPlanAndTasksForPrompt,
@@ -14,6 +15,7 @@ import {
   getPlanById,
   getTaskById,
   getTasksByPlanId,
+  HEARTBEAT_INTERVAL_MS,
   RALPH_WORKFLOW_FATAL_PREFIX,
   readPlanRunCancelMarker,
   reconcilePlanCompletionIfAllTasksTerminal,
@@ -169,11 +171,19 @@ export const main = async (): Promise<void> => {
   let killRequested = false;
   let runSettled = false;
   let markerPollTimer: ReturnType<typeof setInterval> | undefined;
+  let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
 
   const stopMarkerPolling = (): void => {
     if (markerPollTimer) {
       clearInterval(markerPollTimer);
       markerPollTimer = undefined;
+    }
+  };
+
+  const stopHeartbeat = (): void => {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = undefined;
     }
   };
 
@@ -184,6 +194,7 @@ export const main = async (): Promise<void> => {
     }
     runSettled = true;
     stopMarkerPolling();
+    stopHeartbeat();
     try {
       await settleCliPlanRun(openthrottleConfig, planRunId, status);
     } catch (error) {
@@ -252,8 +263,27 @@ export const main = async (): Promise<void> => {
   if (isDetached && planRunId) {
     const myRunId = planRunId;
 
-    // Best-effort settle on graceful termination signals. SIGKILL / power-loss is a
-    // KNOWN LIMITATION (stale IN_PROGRESS row) covered by the heartbeat follow-up plan.
+    // Liveness heartbeat: bump last_heartbeat_at every ~15s on a dedicated wall-clock
+    // timer (independent of iteration progress). This is what covers the HARD-crash gap
+    // (SIGKILL / laptop sleep / power-loss) that the graceful signal handlers below cannot:
+    // when the process dies without settling, the heartbeat simply stops advancing and the
+    // server's passive reader (isStale) + staleness sweeper treat the stranded IN_PROGRESS
+    // row as dead. Best-effort — a failed bump warns and retries next tick, never aborts work.
+    // Initial liveness is already stamped by registerCliRun, so there is no false-stale gap.
+    heartbeatTimer = setInterval(() => {
+      void bumpCliPlanRunHeartbeat(openthrottleConfig, myRunId).catch(
+        (error: unknown) => {
+          const msg = error instanceof Error ? error.message : String(error);
+          console.warn(
+            `⚠️ Heartbeat bump failed for CLI run ${myRunId}: ${msg}`,
+          );
+        },
+      );
+    }, HEARTBEAT_INTERVAL_MS);
+    heartbeatTimer.unref?.();
+
+    // Best-effort settle on GRACEFUL termination signals (SIGINT/SIGTERM/beforeExit). A
+    // HARD crash that skips these handlers is covered by the heartbeat above.
     const settleOnSignal = (signalName: string, code: number): void => {
       console.warn(
         ` - 🛑 ${signalName} received; settling CLI run ${myRunId} (CANCELLED) best-effort.`,

@@ -76,6 +76,7 @@ import {
   QueueJobLogsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
+  RecordPlanRunHeartbeatInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
@@ -893,6 +894,14 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
     skipWorktreeSetup: z.boolean().nullish(),
     worktree: z.string().nullish(),
     worktreeBase: z.string().nullish(),
+  });
+}
+
+export function RecordPlanRunHeartbeatInputSchema(): z.ZodObject<
+  Properties<RecordPlanRunHeartbeatInput>
+> {
+  return z.object({
+    planRunId: z.string(),
   });
 }
 

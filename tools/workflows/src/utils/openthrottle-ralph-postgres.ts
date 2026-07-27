@@ -513,6 +513,28 @@ export async function settleCliPlanRunPostgres(
   }
 }
 
+/**
+ * @description Bumps the liveness heartbeat on a detached CLI run row (postgres-direct twin of
+ * {@link bumpCliPlanRunHeartbeatGraphql}), keyed on the run id. The CLI calls this on a ~15s timer so
+ * a hard crash leaves a stale heartbeat the reader/sweeper detects.
+ */
+export async function bumpCliPlanRunHeartbeatPostgres(
+  config: WorkflowRalphConfig,
+  planRunId: string,
+): Promise<void> {
+  const connectionString = requireConnectionString(config);
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  try {
+    await client.query(
+      `UPDATE plan_runs SET last_heartbeat_at = NOW() WHERE id = $1`,
+      [planRunId],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 export async function appendPlanOutputPostgres(
   config: WorkflowRalphConfig,
   planId: string,

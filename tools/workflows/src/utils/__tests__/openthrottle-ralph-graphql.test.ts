@@ -10,6 +10,7 @@ import {
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
   ReadPlanRunCancelMarkerDocument,
+  RecordPlanRunHeartbeatDocument,
   RegisterCliPlanRunDocument,
   SettleCliPlanRunDocument,
   WorkflowGraphqlError,
@@ -286,5 +287,26 @@ describe('openthrottle-ralph-graphql', () => {
     expect(vars).toEqual({
       input: { planRunId: 'cli-run-1', status: 'CANCELLED' },
     });
+  });
+
+  it('bumpCliPlanRunHeartbeatGraphql calls the heartbeat mutation with the run id', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({
+        recordPlanRunHeartbeat: {
+          id: 'cli-run-1',
+          lastHeartbeatAt: '2026-07-22T00:10:00.000Z',
+          status: 'IN_PROGRESS',
+        },
+      }),
+    );
+
+    const { bumpCliPlanRunHeartbeatGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await bumpCliPlanRunHeartbeatGraphql('cli-run-1');
+
+    const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(document).toBe(RecordPlanRunHeartbeatDocument);
+    expect(vars).toEqual({ input: { planRunId: 'cli-run-1' } });
   });
 });

@@ -65,6 +65,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
 import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module';
+import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep-queue.module';
 import { TaggingQueueModule } from './queues/tagging/tagging-queue.module';
 import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion-queue.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
@@ -226,6 +227,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       ? [
           PlanLifecycleHooksQueueModule,
           PlanRulesQueueModule,
+          PlanRunsStaleSweepQueueModule,
           PlansQueueModule,
           TaggingQueueModule,
           TaskPromotionQueueModule,

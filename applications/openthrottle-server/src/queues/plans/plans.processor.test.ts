@@ -12,6 +12,7 @@ import type {
   WallClockMetrics,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
+  HEARTBEAT_INTERVAL_MS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
@@ -127,6 +128,8 @@ const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
   reason: 'workflow_tasks_exhausted',
   status: 'finished',
 });
+
+const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -254,6 +257,7 @@ describe('PlansProcessor', () => {
           useValue: createMock<PlanRunsService>({
             clearRunLocation: vi.fn().mockResolvedValue(0),
             markRunStarted: vi.fn().mockResolvedValue(0),
+            recordHeartbeatByJob: mockRecordHeartbeatByJob,
           }),
         },
         {
@@ -436,6 +440,83 @@ describe('PlansProcessor', () => {
     );
     const content = mockCreate.mock.calls[0]?.[0]?.content;
     expect(content).toMatch(/RSS .+ MB, heap .+ MB, CPU user .+ ms/);
+  });
+
+  describe('liveness heartbeat', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('bumps the heartbeat on a wall-clock timer during the run and clears it on completion', async () => {
+      vi.useFakeTimers();
+      mockRecordHeartbeatByJob.mockClear();
+
+      // Hold the orchestrator open so the wall-clock heartbeat timer can fire mid-run.
+      let resolveOrchestrator!: (value: {
+        exitCode: number;
+        reason: string;
+        status: string;
+      }) => void;
+      mockRunPlanOrchestratorJob.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOrchestrator = resolve;
+        }),
+      );
+
+      const run = processor.process(mockJob);
+
+      // Advance past two heartbeat intervals while the run is in flight.
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 2 + 50);
+
+      expect(mockRecordHeartbeatByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
+      const bumpsWhileRunning = mockRecordHeartbeatByJob.mock.calls.length;
+      expect(bumpsWhileRunning).toBeGreaterThanOrEqual(2);
+
+      resolveOrchestrator({
+        exitCode: 0,
+        reason: 'workflow_tasks_exhausted',
+        status: 'finished',
+      });
+      await run;
+
+      // Timer cleared in finally: no further bumps after completion.
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 3);
+      expect(mockRecordHeartbeatByJob.mock.calls.length).toBe(
+        bumpsWhileRunning,
+      );
+    });
+
+    it('swallows a heartbeat bump failure without failing the job', async () => {
+      vi.useFakeTimers();
+      mockRecordHeartbeatByJob.mockClear();
+      mockRecordHeartbeatByJob.mockRejectedValue(new Error('db blip'));
+
+      let resolveOrchestrator!: (value: {
+        exitCode: number;
+        reason: string;
+        status: string;
+      }) => void;
+      mockRunPlanOrchestratorJob.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOrchestrator = resolve;
+        }),
+      );
+
+      const run = processor.process(mockJob);
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS + 50);
+      resolveOrchestrator({
+        exitCode: 0,
+        reason: 'workflow_tasks_exhausted',
+        status: 'finished',
+      });
+
+      // The rejected heartbeat is caught internally; the job resolves normally.
+      await expect(run).resolves.toBeDefined();
+      mockRecordHeartbeatByJob.mockResolvedValue(1);
+    });
   });
 
   describe('orchestrator path + cancel', () => {

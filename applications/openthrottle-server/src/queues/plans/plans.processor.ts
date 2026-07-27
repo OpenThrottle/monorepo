@@ -14,6 +14,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import {
+  HEARTBEAT_INTERVAL_MS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
@@ -432,6 +433,14 @@ export class PlansProcessor
     // durable, cross-process observability half). Cleared in finally alongside detach.
     await this.stampRunLocation(queueName, jobId);
 
+    // Liveness heartbeat: bump last_heartbeat_at on a wall-clock timer, independent of
+    // orchestrator iteration progress (a single iteration can exceed the staleness cutoff,
+    // so an iteration-boundary bump would false-trip it on a live run). If this worker
+    // crashes hard (SIGKILL/OOM/power-loss) without reaching the finally, the heartbeat
+    // stops advancing and the staleness sweeper settles the stranded row. markRunStarted
+    // (in stampRunLocation) already stamped the initial heartbeat, so the first tick can lag.
+    const heartbeatTimer = this.startRunHeartbeat(queueName, jobId);
+
     try {
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
@@ -529,6 +538,7 @@ export class PlansProcessor
 
       return result;
     } finally {
+      clearInterval(heartbeatTimer);
       await closeRunOutputForJob({
         jobId,
         logLabel: PlansProcessor.name,
@@ -544,6 +554,32 @@ export class PlansProcessor
         `workflow-ralph run ${jobId}`,
       );
     }
+  }
+
+  /**
+   * Starts a wall-clock heartbeat timer that bumps last_heartbeat_at on this job's
+   * plan_runs row every HEARTBEAT_INTERVAL_MS. Best-effort: a failed bump is logged and
+   * never thrown into the job. Returns the interval handle; the caller clears it in the
+   * job's finally. Wall-clock (not iteration-boundary) so a long single iteration cannot
+   * let a live run exceed the staleness cutoff and be falsely swept.
+   */
+  private startRunHeartbeat(
+    queueName: string,
+    bullmqJobId: string,
+  ): ReturnType<typeof setInterval> {
+    const timer = setInterval(() => {
+      void this.planRunsService
+        .recordHeartbeatByJob(queueName, bullmqJobId)
+        .catch((error: unknown) => {
+          this.logger.warn(
+            `Failed to bump plan_runs heartbeat: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+            PlansProcessor.name,
+          );
+        });
+    }, HEARTBEAT_INTERVAL_MS);
+    timer.unref?.();
+
+    return timer;
   }
 
   /**
