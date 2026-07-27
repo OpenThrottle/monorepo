@@ -1,6 +1,7 @@
 {
   "description": "Terraform IaC for GCP and Cloudflare—environment stacks (dev, staging, production) and reusable modules for OpenThrottle and related workloads.",
   "name": "infra",
+  "license": "Apache-2.0",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

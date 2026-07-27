@@ -8,6 +8,7 @@
     "ollama-proxy": "./dist/server.js"
   },
   "description": "Local OpenAI-compatible HTTP proxy for Cursor and other clients: rewrites chat model names and forwards requests to Ollama.",
+  "license": "Apache-2.0",
   "name": "@tools/ollama-proxy",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",

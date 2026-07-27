@@ -10,6 +10,7 @@
     "clsx": "catalog:"
   },
   "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
+  "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "name": "@openthrottle/react-router-chat",
