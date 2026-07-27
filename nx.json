@@ -377,8 +377,13 @@
     },
     "test": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}.",
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "codegen-graphql",
+        "codegen-react-router"
+      ],
+      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^production"],
       "options": {
