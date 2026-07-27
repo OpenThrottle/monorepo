@@ -22,6 +22,14 @@
  *    applied concurrently) deletes the just-injected task — the UNIQUE
  *    (rule_id, plan_id) fingerprint stays the single source of truth.
  *
+ * Injection is once (the apply-once ledger), but PLACEMENT is a continuously
+ * reconciled managed invariant: every later evaluation calls {@link
+ * InjectTaskExecutor.reconcile} for the already-'applied' row, which repositions
+ * the injected task back to its configured placement against the current task
+ * set (so a 'last' task stays last as tasks are added, overriding manual
+ * reorders). Reconcile no-ops when the task is already in position, deleted
+ * (task_id NULL), or terminal.
+ *
  * Actions are never undone: tag removal orphans the ledger row (worker-side),
  * and a human deleting the injected task SET NULLs task_id while the 'applied'
  * row keeps blocking re-injection.
@@ -49,7 +57,18 @@ import {
   ActionExecutorRegistry,
   type ActionExecutor,
   type ActionExecutorContext,
+  type ActionReconcileContext,
 } from './action-executor';
+
+/**
+ * @description Task statuses reconcile never repositions: a completed/skipped/
+ * canceled injected task is history and stays where it is.
+ */
+const TERMINAL_TASK_STATUSES: readonly string[] = [
+  'CANCELED',
+  'COMPLETED',
+  'SKIPPED',
+];
 
 const isSortOrderUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
@@ -165,6 +184,162 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     }
   }
 
+  /**
+   * @description Managed-invariant reconcile for an already-'applied' inject-task
+   * rule: repositions the injected task back to its configured placement against
+   * the CURRENT task set, every pass. This is what keeps a 'last' task last as
+   * later tasks are added (the frozen apply-once ledger otherwise never moves
+   * it). Authority is the managed invariant — a manual reorder is corrected on
+   * the next pass. No-ops when the task is already in position (so steady state
+   * writes nothing and there is no thrash), when the task was deleted
+   * (task_id NULL — T4 territory), or when it is in a terminal status.
+   * Collision-safe: a UNIQUE(plan_id, sort_order) race recomputes once.
+   */
+  async reconcile(context: ActionReconcileContext): Promise<void> {
+    const { action, application, plan } = context;
+    const taskId = application.taskId;
+    if (taskId == null) return;
+
+    const payload = injectTaskActionPayloadSchema.parse(action.actionPayload);
+    const task = await this.tasksService
+      .getRepository()
+      .findOne({ where: { id: taskId, planId: plan.id } });
+    if (task == null) return;
+    if (TERMINAL_TASK_STATUSES.includes(task.status)) return;
+
+    if (payload.placement === 'first' || payload.placement === 'last') {
+      await this.reconcileEdgePlacement(plan.id, task, payload.placement);
+      return;
+    }
+    await this.reconcileRelativePlacement(plan.id, task, payload);
+  }
+
+  /**
+   * @description Reconcile a 'first'/'last' injected task: it must sit below the
+   * MIN (first) or above the MAX (last) sort_order of every OTHER task. If it
+   * already does, no write. Otherwise move it just past that edge on a
+   * {@link TASK_SORT_ORDER_GAP} stride. One recompute retry on a collision.
+   */
+  private async reconcileEdgePlacement(
+    planId: string,
+    task: Task,
+    placement: 'first' | 'last',
+  ): Promise<void> {
+    const repository = this.tasksService.getRepository();
+    const attempt = async (currentSortOrder: number): Promise<boolean> => {
+      const aggregate = placement === 'first' ? 'MIN' : 'MAX';
+      const extent = await this.planSortOrderExtent(planId, aggregate, task.id);
+      if (extent == null) return false; // only task in the plan — nothing to be after/before.
+      const inPosition =
+        placement === 'first'
+          ? currentSortOrder < extent
+          : currentSortOrder > extent;
+      if (inPosition) return false;
+      const target =
+        placement === 'first'
+          ? extent - TASK_SORT_ORDER_GAP
+          : extent + TASK_SORT_ORDER_GAP;
+      await repository.update({ id: task.id }, { sortOrder: target });
+      this.logger.debug(
+        `Reconciled injected task ${task.id} to sort_order ${target} (placement '${placement}', plan ${planId})`,
+        InjectTaskExecutor.name,
+      );
+      return true;
+    };
+
+    try {
+      await attempt(task.sortOrder);
+    } catch (error) {
+      if (!isSortOrderUniqueViolation(error)) throw error;
+      const fresh = await repository.findOne({
+        select: { sortOrder: true },
+        where: { id: task.id },
+      });
+      await attempt(fresh?.sortOrder ?? task.sortOrder);
+    }
+  }
+
+  /**
+   * @description Reconcile a 'before'/'after' injected task: it must sit
+   * immediately beside its anchor with no other task between them. If already
+   * adjacent, no write. Otherwise re-allocate a slot beside the anchor via the
+   * canonical TasksService allocator (which rebalances only when the integer gap
+   * is exhausted) and move the task there. One recompute retry on a collision.
+   * A missing/unresolvable anchor leaves the task in place.
+   */
+  private async reconcileRelativePlacement(
+    planId: string,
+    task: Task,
+    payload: InjectTaskActionPayload,
+  ): Promise<void> {
+    if (payload.anchor == null) return;
+    const anchor = await this.resolveAnchorTask(planId, payload.anchor);
+    if (anchor == null || anchor.id === task.id) return;
+
+    const side = payload.placement === 'before' ? 'before' : 'after';
+    if (await this.isBesideAnchor(planId, task, anchor, side)) return;
+
+    const repository = this.tasksService.getRepository();
+    const move = async (): Promise<void> => {
+      const target = await this.tasksService.allocateSortOrderBesideAnchor(
+        planId,
+        anchor.id,
+        side,
+      );
+      await repository.update({ id: task.id }, { sortOrder: target });
+      this.logger.debug(
+        `Reconciled injected task ${task.id} beside anchor ${anchor.id} (placement '${side}', plan ${planId})`,
+        InjectTaskExecutor.name,
+      );
+    };
+
+    try {
+      await move();
+    } catch (error) {
+      if (!isSortOrderUniqueViolation(error)) throw error;
+      await move();
+    }
+  }
+
+  /**
+   * @description Whether the task already sits immediately beside the anchor on
+   * the given side, with no other task between them (self excluded).
+   */
+  private async isBesideAnchor(
+    planId: string,
+    task: Task,
+    anchor: Task,
+    side: 'after' | 'before',
+  ): Promise<boolean> {
+    const repository = this.tasksService.getRepository();
+    const neighbor = await repository
+      .createQueryBuilder('task')
+      .select(
+        side === 'after' ? 'MIN(task.sortOrder)' : 'MAX(task.sortOrder)',
+        'value',
+      )
+      .where('task.planId = :planId', { planId })
+      .andWhere('task.id != :taskId', { taskId: task.id })
+      .andWhere(
+        side === 'after'
+          ? 'task.sortOrder > :anchor'
+          : 'task.sortOrder < :anchor',
+        { anchor: anchor.sortOrder },
+      )
+      .getRawOne<{ value: string | null }>();
+    const neighborValue =
+      neighbor?.value != null && neighbor.value !== ''
+        ? Number(neighbor.value)
+        : null;
+
+    if (side === 'after') {
+      if (task.sortOrder <= anchor.sortOrder) return false;
+      return neighborValue == null || neighborValue > task.sortOrder;
+    }
+    if (task.sortOrder >= anchor.sortOrder) return false;
+    return neighborValue == null || neighborValue < task.sortOrder;
+  }
+
   private async insertInjectedTask(
     plan: Plan,
     action: MatchedTagAction,
@@ -230,23 +405,38 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     }
 
     const aggregate = placement === 'first' ? 'MIN' : 'MAX';
-    const result = await this.tasksService
-      .getRepository()
-      .createQueryBuilder('task')
-      .select(`${aggregate}(task.sortOrder)`, 'value')
-      .where('task.planId = :planId', { planId })
-      .getRawOne<{ value: string | null }>();
-
-    const value =
-      result?.value != null && result.value !== ''
-        ? Number(result.value)
-        : null;
+    const value = await this.planSortOrderExtent(planId, aggregate);
     if (value == null) {
       return TASK_SORT_ORDER_GAP;
     }
     return placement === 'first'
       ? value - TASK_SORT_ORDER_GAP
       : value + TASK_SORT_ORDER_GAP;
+  }
+
+  /**
+   * @description MIN/MAX(sort_order) across a plan's tasks, optionally excluding
+   * one task (the injected task itself, when reconciling its own placement).
+   * Returns null when the (filtered) set is empty. Shared by first-inject
+   * placement and reconcile so the edge math lives in one place.
+   */
+  private async planSortOrderExtent(
+    planId: string,
+    aggregate: 'MAX' | 'MIN',
+    excludeTaskId?: string,
+  ): Promise<number | null> {
+    const query = this.tasksService
+      .getRepository()
+      .createQueryBuilder('task')
+      .select(`${aggregate}(task.sortOrder)`, 'value')
+      .where('task.planId = :planId', { planId });
+    if (excludeTaskId != null) {
+      query.andWhere('task.id != :excludeTaskId', { excludeTaskId });
+    }
+    const result = await query.getRawOne<{ value: string | null }>();
+    return result?.value != null && result.value !== ''
+      ? Number(result.value)
+      : null;
   }
 
   /**

@@ -28,6 +28,8 @@ export interface PlanRulesEvaluateJobResult {
   readonly dispatched: number;
   readonly matched: number;
   readonly orphaned: number;
+  /** Already-'applied' matched rows whose executor reconcile pass ran. */
+  readonly reconciled: number;
   readonly skipped: string | null;
 }
 

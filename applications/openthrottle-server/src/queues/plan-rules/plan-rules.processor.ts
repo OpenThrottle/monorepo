@@ -2,10 +2,16 @@
  * @description BullMQ worker for plan-rules:evaluate. One job = one full
  * evaluation pass for a plan: load plan + effective tag set (slice-2 rollup),
  * load the plan owner's enabled rules, run the pure evaluator, dispatch
- * matched actions to the {@link ActionExecutorRegistry}, and flip un-matched
- * 'applied' ledger rows to 'orphaned'. The shared fingerprint check happens
- * here (a ledger row in ANY state for (rule, plan) means no dispatch), so
+ * matched actions to the {@link ActionExecutorRegistry}, reconcile the managed
+ * invariants of already-'applied' matched rows, and flip un-matched 'applied'
+ * ledger rows to 'orphaned'. The shared fingerprint check happens here (a
+ * ledger row in ANY state for (rule, plan) means no fresh dispatch), so
  * at-least-once redelivery is safe regardless of executor behavior.
+ *
+ * A matched rule with no ledger row is dispatched fresh (execute); a matched
+ * rule already 'applied' with a live task is handed to the executor's optional
+ * reconcile() so continuous invariants (e.g. inject-task placement) are
+ * re-established every pass rather than frozen at first apply.
  *
  * The plan owner is resolved from plan.author (GitHub username → users row);
  * a plan whose author has no user row has no rules and is skipped. The v1
@@ -19,6 +25,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import {
   PlansService,
+  RULE_APPLICATION_STATES,
   RuleApplicationsService,
   TagActionRulesService,
   TagsService,
@@ -82,6 +89,7 @@ export class PlanRulesProcessor
         dispatched: 0,
         matched: 0,
         orphaned: 0,
+        reconciled: 0,
         skipped: 'plan-missing',
       };
     }
@@ -96,6 +104,7 @@ export class PlanRulesProcessor
         dispatched: 0,
         matched: 0,
         orphaned: 0,
+        reconciled: 0,
         skipped: 'no-owner',
       };
     }
@@ -162,6 +171,48 @@ export class PlanRulesProcessor
     );
 
     const dispatched = dispatchable.length;
+
+    // Managed-invariant reconcile: for matched rules whose ledger row is already
+    // 'applied' with a live task, re-establish the action's invariant against the
+    // current plan state (inject-task repositions its task to its placement).
+    // Fresh rules (just dispatched above) have no applied row yet, so they are
+    // naturally excluded. Reconciles run sequentially so two placement writes in
+    // one pass never race each other on UNIQUE(plan_id, sort_order); per-plan
+    // pass serialization (dedup) guards against a sibling pass.
+    const reconcilable = matched.flatMap((action, index) => {
+      const application = fingerprints[index];
+      if (
+        application == null ||
+        application.state !== RULE_APPLICATION_STATES.APPLIED ||
+        application.taskId == null
+      ) {
+        return [];
+      }
+      const executor = this.executorRegistry.get(action.actionType);
+      const rule = rulesById.get(action.ruleId);
+      if (executor?.reconcile == null || rule == null) {
+        return [];
+      }
+      return [{ action, application, executor, rule }];
+    });
+
+    // Sequential (promise chain, not Promise.all) so two placement writes in the
+    // same pass never collide on UNIQUE(plan_id, sort_order); the set is tiny
+    // (one row per injected task on the plan).
+    await reconcilable.reduce<Promise<void>>(
+      (chain, { action, application, executor, rule }) =>
+        chain.then(() =>
+          executor.reconcile?.({
+            action,
+            application,
+            ownerUserId: owner.id,
+            plan,
+            rule,
+          }),
+        ),
+      Promise.resolve(),
+    );
+    const reconciled = reconcilable.length;
     const orphaned =
       await this.ruleApplicationsService.orphanUnmatchedApplications(
         planId,
@@ -179,6 +230,7 @@ export class PlanRulesProcessor
       dispatched,
       matched: matched.length,
       orphaned,
+      reconciled,
       skipped: null,
     };
   }

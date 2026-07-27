@@ -126,6 +126,7 @@ describe('PlanRulesProcessor.process', () => {
       dispatched: 1,
       matched: 1,
       orphaned: 0,
+      reconciled: 0,
       skipped: null,
     });
   });
@@ -141,6 +142,53 @@ describe('PlanRulesProcessor.process', () => {
     expect(executor.execute).not.toHaveBeenCalled();
     expect(result.dispatched).toBe(0);
     expect(result.matched).toBe(1);
+  });
+
+  it("reconciles an already-'applied' matched row instead of re-dispatching execute", async () => {
+    const reconcilingExecutor: ActionExecutor = {
+      actionType: 'inject-task',
+      execute: vi.fn(),
+      reconcile: vi.fn(),
+    };
+    registry.register(reconcilingExecutor);
+    const application = asMock<RuleApplication>({
+      state: 'applied',
+      taskId: '00000000-0000-4000-8000-00000000000a',
+    });
+    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+      application,
+    );
+
+    const result = await processor.process(buildJob());
+
+    expect(reconcilingExecutor.execute).not.toHaveBeenCalled();
+    expect(reconcilingExecutor.reconcile).toHaveBeenCalledTimes(1);
+    expect(reconcilingExecutor.reconcile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: expect.objectContaining({ ruleId: 'rule-1' }),
+        application,
+        ownerUserId: userId,
+      }),
+    );
+    expect(result.reconciled).toBe(1);
+    expect(result.dispatched).toBe(0);
+  });
+
+  it("does not reconcile an 'applied' row whose task was deleted (task_id NULL)", async () => {
+    const reconcilingExecutor: ActionExecutor = {
+      actionType: 'inject-task',
+      execute: vi.fn(),
+      reconcile: vi.fn(),
+    };
+    registry.register(reconcilingExecutor);
+    vi.mocked(ruleApplicationsService.findByRuleAndPlan).mockResolvedValue(
+      asMock<RuleApplication>({ state: 'applied', taskId: null }),
+    );
+
+    const result = await processor.process(buildJob());
+
+    expect(reconcilingExecutor.reconcile).not.toHaveBeenCalled();
+    expect(result.reconciled).toBe(0);
   });
 
   it('skips a matched action with no registered executor WITHOUT writing a ledger row', async () => {
