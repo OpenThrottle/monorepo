@@ -58,6 +58,7 @@
     "zod": "catalog:"
   },
   "description": "NestJS GraphQL API for OpenThrottle plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
+  "license": "Apache-2.0",
   "main": "./src/main.ts",
   "module": "./src/main.ts",
   "name": "openthrottle-server",

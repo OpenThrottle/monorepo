@@ -13,6 +13,7 @@
     "graphql-codegen-typescript-validation-schema": "catalog:"
   },
   "devDependencies": {},
+  "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {

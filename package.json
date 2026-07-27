@@ -353,6 +353,7 @@
     "vitest": "catalog:",
     "webpack-cli": "catalog:"
   },
+  "license": "Apache-2.0",
   "nx": {
     "projectType": "library",
     "sourceRoot": "./",
