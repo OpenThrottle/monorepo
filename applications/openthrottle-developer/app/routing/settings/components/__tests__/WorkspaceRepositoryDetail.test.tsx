@@ -54,7 +54,7 @@ describe('WorkspaceRepositoryDetail Component', () => {
     const Component = () => <WorkspaceRepositoryDetail {...props} />;
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
-      { element: <div>EDIT ROUTE</div>, path: '/edit' },
+      { path: '/edit' },
     ]);
     component = render(<RoutesStub />);
   };
