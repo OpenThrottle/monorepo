@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildClaudeArgv } from '../argv.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
+
+const MCP_SERVERS = {
+  'openthrottle-mcp': {
+    args: ['./scripts/run-openthrottle-mcp.sh'],
+    command: 'bash',
+  },
+} as const;
+
+/** The value after a flag, or undefined when the flag is absent. */
+const valueAfter = (
+  argv: readonly string[],
+  flag: string,
+): string | undefined =>
+  argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
 
 describe('buildClaudeArgv', () => {
   it('creates the session with --session-id on the first turn', () => {
@@ -109,5 +124,92 @@ describe('buildClaudeArgv', () => {
         sessionId: 'sid-1',
       }),
     ).not.toContain('--mcp-config');
+  });
+
+  describe('permission mode', () => {
+    it('default (no mode): scopes --allowedTools to the injected MCP servers, no --permission-mode', () => {
+      const argv = buildClaudeArgv({
+        mcpServers: MCP_SERVERS,
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(valueAfter(argv, '--allowedTools')).toBe(
+        'mcp__openthrottle-mcp__*',
+      );
+      expect(argv).not.toContain('--permission-mode');
+      // The grant must precede the `--` terminator + prompt.
+      expect(argv.indexOf('--allowedTools')).toBeLessThan(argv.indexOf('--'));
+      expect(argv.at(-1)).toBe('do it');
+    });
+
+    it('supervised: same scoped allowlist as the default, no --permission-mode', () => {
+      const argv = buildClaudeArgv({
+        mcpServers: MCP_SERVERS,
+        permissionMode: CONVERSATION_PERMISSION_MODES.supervised,
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(valueAfter(argv, '--allowedTools')).toBe(
+        'mcp__openthrottle-mcp__*',
+      );
+      expect(argv).not.toContain('--permission-mode');
+    });
+
+    it('autoAcceptEdits: emits --permission-mode acceptEdits AND the scoped allowlist', () => {
+      const argv = buildClaudeArgv({
+        mcpServers: MCP_SERVERS,
+        permissionMode: CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(valueAfter(argv, '--permission-mode')).toBe('acceptEdits');
+      expect(valueAfter(argv, '--allowedTools')).toBe(
+        'mcp__openthrottle-mcp__*',
+      );
+    });
+
+    it('fullAccess: emits --permission-mode bypassPermissions and NO allowlist', () => {
+      const argv = buildClaudeArgv({
+        mcpServers: MCP_SERVERS,
+        permissionMode: CONVERSATION_PERMISSION_MODES.fullAccess,
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(valueAfter(argv, '--permission-mode')).toBe('bypassPermissions');
+      expect(argv).not.toContain('--allowedTools');
+    });
+
+    it('joins the allowlist across multiple injected servers with commas', () => {
+      const argv = buildClaudeArgv({
+        mcpServers: { alpha: { command: 'a' }, beta: { command: 'b' } },
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(valueAfter(argv, '--allowedTools')).toBe(
+        'mcp__alpha__*,mcp__beta__*',
+      );
+    });
+
+    it('adds no permission flags when there are no MCP servers to allow', () => {
+      const argv = buildClaudeArgv({
+        permissionMode: CONVERSATION_PERMISSION_MODES.supervised,
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(argv).not.toContain('--allowedTools');
+      expect(argv).not.toContain('--permission-mode');
+    });
   });
 });
