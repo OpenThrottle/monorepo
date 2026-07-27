@@ -17,5 +17,6 @@ export * from './components/ChatTurnTimeline';
 export * from './context';
 export * from './hooks';
 export * from './turn-events';
+export * from './usage';
 export * from './utils/index';
 export * from './types';

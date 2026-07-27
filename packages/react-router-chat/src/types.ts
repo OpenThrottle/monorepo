@@ -71,6 +71,32 @@ export interface ChatTurnToolEvent {
   readonly status: ChatToolStatus;
 }
 
+/**
+ * Normalized, best-effort token accounting for a single turn (or a cumulative
+ * session total). Every field is optional: backends report wildly different
+ * subsets, and an absent field means "not reported by this backend" — never
+ * zero. Produced by {@link normalizeUsage} from a backend's raw metadata and
+ * accumulated by {@link sumUsage}.
+ *
+ * @public
+ */
+export interface ChatTokenUsage {
+  /** Tokens served from the prompt cache (claude `cache_read_input_tokens`, opencode `cache.read`). */
+  readonly cacheReadTokens?: number;
+  /** Tokens written to the prompt cache (claude `cache_creation_input_tokens`, opencode `cache.write`). */
+  readonly cacheWriteTokens?: number;
+  /** Reported dollar cost of the turn, when the backend prices it (claude `totalCostUsd`, opencode `cost`). */
+  readonly costUsd?: number;
+  /** Prompt/input tokens. */
+  readonly inputTokens?: number;
+  /** Model identifier the usage is attributed to, when the backend names it. */
+  readonly model?: string;
+  /** Completion/output tokens. */
+  readonly outputTokens?: number;
+  /** Total tokens: the backend's explicit total, else the sum of input + output when either is present. */
+  readonly totalTokens?: number;
+}
+
 /** Terminal token-accounting / result summary for the turn. @public */
 export interface ChatTurnUsageEvent {
   readonly error: string | null;
@@ -78,6 +104,12 @@ export interface ChatTurnUsageEvent {
   /** Final assistant result text reported by the backend, when present. */
   readonly result: string | null;
   readonly sortOrder: number;
+  /**
+   * Normalized, typed usage for this turn, when any counts were reported.
+   * Derived from {@link usageJson}/the raw metadata via {@link normalizeUsage};
+   * `undefined` when the backend reported nothing.
+   */
+  readonly usage?: ChatTokenUsage;
   /** Raw usage payload (token counts, etc.) as JSON, when present. */
   readonly usageJson: string | null;
 }
