@@ -13,7 +13,6 @@ import { WorkspaceAddFolderResult } from '~/routing/settings/components/Workspac
 import { WorkspaceCloneRepoDialog } from '~/routing/settings/components/WorkspaceCloneRepoDialog';
 import { WorkspaceRepositoryCard } from '~/routing/settings/components/WorkspaceRepositoryCard';
 import type { CheckoutDrift } from '~/routing/settings/components/WorkspaceRepositoryCard';
-import type { ProjectOption } from '~/routing/settings/components/WorkspaceRepositoriesProjectSelect';
 
 export interface SettingsWorkspaceRepositoriesSectionProps {
   actionError?: string | null;
@@ -23,7 +22,6 @@ export interface SettingsWorkspaceRepositoriesSectionProps {
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
-  projects: ProjectOption[];
   refreshed?: {
     checkoutId: string;
     drift: CheckoutDrift;
@@ -40,7 +38,6 @@ export const SettingsWorkspaceRepositoriesSection = (
     addedFolder,
     className,
     discoveredFolders,
-    projects,
     refreshed,
     repositories,
   } = props;
@@ -109,7 +106,6 @@ export const SettingsWorkspaceRepositoriesSection = (
               <li key={repository.id}>
                 <WorkspaceRepositoryCard
                   driftByCheckoutId={driftByCheckoutId}
-                  projects={projects}
                   repository={repository}
                 />
               </li>

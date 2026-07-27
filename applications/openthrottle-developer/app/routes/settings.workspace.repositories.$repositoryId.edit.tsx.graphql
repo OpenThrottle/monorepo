@@ -1,0 +1,15 @@
+query getWorkspaceRepositoryForEdit($repositoryId: ID!) {
+  projects {
+    id
+    name
+  }
+  workspaceRepository(id: $repositoryId) {
+    ...WorkspaceRepositoryFields
+  }
+}
+
+mutation updateRepository($input: UpdateRepositoryInput!) {
+  updateRepository(input: $input) {
+    ...WorkspaceRepositoryFields
+  }
+}

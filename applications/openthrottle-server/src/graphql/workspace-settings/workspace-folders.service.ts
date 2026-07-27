@@ -99,9 +99,19 @@ const toInspectionObject = (
   warnings: snapshot.warnings,
 });
 
-/** Last path segment of a normalized remote URL, for repository naming. */
-const repositoryNameFromRemote = (normalizedRemoteUrl: string): string | null =>
-  normalizedRemoteUrl.split('/').filter(Boolean).pop() ?? null;
+/**
+ * @description Owner/repo name from a normalized remote URL — the last two
+ * non-empty path segments joined by `/` (e.g. `github.com/acme/monorepo` →
+ * `acme/monorepo`), so repos that share a bare last segment stay
+ * distinguishable. Falls back to the single segment when only one exists.
+ */
+export const repositoryNameFromRemote = (
+  normalizedRemoteUrl: string,
+): string | null => {
+  const segments = normalizedRemoteUrl.split('/').filter(Boolean);
+  if (segments.length === 0) return null;
+  return segments.slice(-2).join('/');
+};
 
 /** Env var: absolute host-view directory OT clones managed checkouts into. */
 export const CHECKOUT_ROOT_ENV = 'OPENTHROTTLE_CHECKOUT_ROOT';
@@ -127,11 +137,17 @@ export const getCheckoutRoot = (
   return trimmed !== '' && isAbsolute(trimmed) ? trimmed : null;
 };
 
-/** Last path segment of a raw git URL, `.git` suffix stripped. */
-const repositoryNameFromGitUrl = (gitUrl: string): string | null => {
+/**
+ * @description Owner/repo name from a raw git URL (`.git` stripped) — the last
+ * two non-empty segments joined by `/`, matching repositoryNameFromRemote so
+ * the clone fallback name is org-disambiguated too. Single segment when only
+ * one exists.
+ */
+export const repositoryNameFromGitUrl = (gitUrl: string): string | null => {
   const withoutSuffix = gitUrl.trim().replace(/\.git\/?$/, '');
-  const segment = withoutSuffix.split(/[/:]/).filter(Boolean).pop();
-  return segment != null && segment !== '' ? segment : null;
+  const segments = withoutSuffix.split(/[/:]/).filter(Boolean);
+  if (segments.length === 0) return null;
+  return segments.slice(-2).join('/');
 };
 
 /** Restrict a derived folder name to a safe single path segment. */
@@ -624,6 +640,101 @@ export class WorkspaceFoldersService {
         checkouts: group.checkouts,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
+   * @description A single repository the user has a checkout of, with those
+   * checkouts and inspection snapshots. Returns null when the user owns no
+   * checkout of the repository (ownership gate for the detail route).
+   */
+  async workspaceRepository(
+    userId: string,
+    id: string,
+  ): Promise<RepositoryObject | null> {
+    const checkouts = await this.checkoutsService.findByRepositoryIdForUser(
+      id,
+      userId,
+    );
+    if (checkouts.length === 0) return null;
+
+    const repository =
+      checkouts[0].repository ?? (await this.repositoriesService.findById(id));
+    if (repository === null) return null;
+
+    return this.buildRepositoryObject(repository, checkouts);
+  }
+
+  /**
+   * @description Edits an owned repository's name, default branch, and/or
+   * project link. The user must own a checkout of the repository; omitted
+   * fields are left unchanged and a null projectId clears the link.
+   */
+  async updateRepository(
+    userId: string,
+    input: {
+      defaultBranch?: string | null;
+      id: string;
+      name?: string | null;
+      projectId?: string | null;
+    },
+  ): Promise<RepositoryObject> {
+    const owned = await this.checkoutsService.findByRepositoryIdForUser(
+      input.id,
+      userId,
+    );
+    if (owned.length === 0) {
+      throw new NotFoundException('Repository not found');
+    }
+
+    const data: {
+      defaultBranch?: string | null;
+      name?: string;
+      projectId?: string | null;
+    } = {};
+    if (input.defaultBranch !== undefined) {
+      data.defaultBranch =
+        input.defaultBranch === null || input.defaultBranch.trim() === ''
+          ? null
+          : input.defaultBranch.trim();
+    }
+    if (input.name != null) {
+      const trimmed = input.name.trim();
+      if (trimmed === '') {
+        throw new BadRequestException('Repository name cannot be empty');
+      }
+      data.name = trimmed;
+    }
+    if (input.projectId !== undefined) {
+      data.projectId = input.projectId;
+    }
+
+    const updated = await this.repositoriesService.update(input.id, data);
+    if (updated === null) {
+      throw new NotFoundException('Repository not found');
+    }
+
+    return this.buildRepositoryObject(updated, owned);
+  }
+
+  /**
+   * @description Assembles a RepositoryObject from a repository row and the
+   * user's checkouts of it, resolving each checkout's inspection snapshot.
+   */
+  private async buildRepositoryObject(
+    repository: Repository,
+    checkouts: readonly RepositoryCheckout[],
+  ): Promise<RepositoryObject> {
+    const checkoutObjects = await Promise.all(
+      checkouts.map(async (checkout) => {
+        const snapshot = await this.resolveInspection(checkout);
+        return this.toCheckoutObject(checkout, snapshot);
+      }),
+    );
+
+    return {
+      ...this.toRepositoryObject(repository),
+      checkouts: checkoutObjects,
+    };
   }
 
   /**

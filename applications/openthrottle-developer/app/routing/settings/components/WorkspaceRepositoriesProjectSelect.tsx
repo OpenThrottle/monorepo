@@ -1,7 +1,9 @@
 import * as React from 'react';
-import type { GetWorkspaceSettingsQuery } from '~/__generated__/graphql';
 
-export type ProjectOption = GetWorkspaceSettingsQuery['projects'][number];
+export interface ProjectOption {
+  id: string;
+  name: string;
+}
 
 const NONE_PROJECT_VALUE = '__none__';
 

@@ -112,6 +112,7 @@ import {
   UpdateNoteInput,
   UpdatePlanInput,
   UpdateProjectInput,
+  UpdateRepositoryInput,
   UpdateRoleInput,
   UpdateServiceAccountInput,
   UpdateTaskInput,
@@ -1257,6 +1258,17 @@ export function UpdateProjectInputSchema(): z.ZodObject<
     id: z.string(),
     name: z.string().nullish(),
     nxProjectName: z.string().nullish(),
+  });
+}
+
+export function UpdateRepositoryInputSchema(): z.ZodObject<
+  Properties<UpdateRepositoryInput>
+> {
+  return z.object({
+    defaultBranch: z.string().nullish(),
+    id: z.string(),
+    name: z.string().nullish(),
+    projectId: z.string().nullish(),
   });
 }
 
