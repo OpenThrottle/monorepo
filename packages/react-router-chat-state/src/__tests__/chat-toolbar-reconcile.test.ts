@@ -78,6 +78,95 @@ describe('reconcileChatToolbarState', () => {
     });
   });
 
+  describe('modelId re-resolution (v2)', () => {
+    const openai = (baseUrl: string, model: string): ChatModelOption => ({
+      description: 'ollama',
+      groupId: 'openai:ollama',
+      id: `${baseUrl}::${model}`,
+      label: model,
+    });
+    const claudeModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'claude',
+      label: 'Claude',
+    };
+
+    test('keeps the model when the endpoint moved to a new port (same host)', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://localhost:11434/v1::llama3' }),
+        {
+          models: [openai('http://localhost:11500/v1', 'llama3')],
+          personas: [],
+          repositories: [],
+        },
+      );
+      expect(result.modelId).toBe('http://localhost:11500/v1::llama3');
+    });
+
+    test('keeps a single same-name candidate on a different host', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://host-a:11434/v1::llama3' }),
+        {
+          models: [openai('http://host-b:11434/v1', 'llama3')],
+          personas: [],
+          repositories: [],
+        },
+      );
+      expect(result.modelId).toBe('http://host-b:11434/v1::llama3');
+    });
+
+    test('falls back to models[0] when multiple different-host endpoints share the name', () => {
+      const models = [
+        openai('http://host-b:11434/v1', 'llama3'),
+        openai('http://host-c:11434/v1', 'llama3'),
+      ];
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://host-a:11434/v1::llama3' }),
+        { models, personas: [], repositories: [] },
+      );
+      expect(result.modelId).toBe(models[0].id);
+    });
+
+    test('degrades a stale CLI model override to the bare backend option', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        {
+          models: [cliModel, claudeModel],
+          personas: [],
+          repositories: [repoA],
+        },
+      );
+      expect(result.modelId).toBe('cursor');
+    });
+
+    test('degrades a stale CLI override to another same-backend override when no bare option', () => {
+      const cursorGpt6: ChatModelOption = {
+        description: 'Agent CLI',
+        groupId: 'agent-clis',
+        id: 'cursor|gpt-6',
+        label: 'gpt-6',
+      };
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        {
+          models: [cursorGpt6, claudeModel],
+          personas: [],
+          repositories: [repoA],
+        },
+      );
+      expect(result.modelId).toBe('cursor|gpt-6');
+    });
+
+    test('falls back to models[0] when a stale CLI override has no same-backend option', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.modelId).toBe('claude');
+    });
+  });
+
   describe('personaId', () => {
     test('keeps a persisted persona that still exists', () => {
       const result = reconcileChatToolbarState(
