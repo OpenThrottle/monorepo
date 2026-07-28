@@ -148,6 +148,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.deleteTaskToolHandler,
     ),
     defineTool(
+      'discover_agent_clis',
+      Th.discoverAgentClisToolDescription,
+      Th.discoverAgentClisToolParameters,
+      Th.discoverAgentClisToolHandler,
+    ),
+    defineTool(
       'discover_local_models',
       Th.discoverLocalModelsToolDescription,
       Th.discoverLocalModelsToolParameters,
