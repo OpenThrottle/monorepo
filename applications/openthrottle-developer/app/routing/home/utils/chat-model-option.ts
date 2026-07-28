@@ -1,6 +1,7 @@
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   CLI_MODEL_GROUP_ID,
+  encodeCliOptionId,
   encodeModelOptionId,
   openaiGroupId,
 } from '@openthrottle/react-router-chat-state';
@@ -36,26 +37,38 @@ export function toChatModelOptions(
 }
 
 /**
- * Map discovered agent CLIs into composer toolbar options. The option id is the
- * bare backend discriminator (e.g. `cursor`) — no `::`, so it is distinguishable
- * from an openai endpoint::model id at submit time. All CLIs share one picker
- * group ({@link CLI_MODEL_GROUP_ID}).
+ * Map discovered agent CLIs into composer toolbar options. Only chat-capable
+ * drivers are offered (plan-run-only drivers like codex/grok are discoverable
+ * but have no streaming chat adapter). Each of a driver's models becomes its own
+ * option (id `backend|model`, e.g. `cursor|gpt-5.2`); a driver with no listable
+ * models falls back to a single bare-backend option at its default model. All
+ * share the one "Agent CLIs" picker group ({@link CLI_MODEL_GROUP_ID}), with the
+ * driver label as each row's sub-label to disambiguate same-named models.
  */
 export function toAgentChatOptions(
   discovery: DiscoverAgentClisQuery['discoverAgentClis'],
 ): ChatModelOption[] {
-  return discovery.agents.map((agent) => {
-    const hasVersion = agent.version !== null;
-    const description = !hasVersion
-      ? 'Agent CLI'
-      : `Agent CLI · ${agent.version}`;
+  return discovery.agents
+    .filter((agent) => agent.chatCapable)
+    .flatMap((agent) => {
+      if (agent.models.length === 0) {
+        return [
+          {
+            description: agent.label,
+            groupId: CLI_MODEL_GROUP_ID,
+            id: agent.backend,
+            label: agent.label,
+            subLabel: agent.label,
+          },
+        ];
+      }
 
-    return {
-      description,
-      groupId: CLI_MODEL_GROUP_ID,
-      id: agent.backend,
-      label: agent.label,
-      subLabel: description,
-    };
-  });
+      return agent.models.map((model) => ({
+        description: agent.label,
+        groupId: CLI_MODEL_GROUP_ID,
+        id: encodeCliOptionId(agent.backend, model),
+        label: model,
+        subLabel: agent.label,
+      }));
+    });
 }

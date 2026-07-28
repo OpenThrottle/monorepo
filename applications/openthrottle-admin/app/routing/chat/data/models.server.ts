@@ -4,6 +4,7 @@ import type {
 } from '@openthrottle/react-router-chat';
 import {
   CLI_MODEL_GROUP_ID,
+  encodeCliOptionId,
   encodeModelOptionId,
   openaiGroupId,
 } from '@openthrottle/react-router-chat-state';
@@ -49,20 +50,29 @@ function toChatModelOptions(
 function toAgentChatOptions(
   discovery: DiscoverAgentClisQuery['discoverAgentClis'],
 ): ChatModelOption[] {
-  return discovery.agents.map((agent) => {
-    const hasVersion = agent.version !== null;
-    const description = !hasVersion
-      ? 'Agent CLI'
-      : `Agent CLI · ${agent.version}`;
+  return discovery.agents
+    .filter((agent) => agent.chatCapable)
+    .flatMap((agent) => {
+      if (agent.models.length === 0) {
+        return [
+          {
+            description: agent.label,
+            groupId: CLI_MODEL_GROUP_ID,
+            id: agent.backend,
+            label: agent.label,
+            subLabel: agent.label,
+          },
+        ];
+      }
 
-    return {
-      description,
-      groupId: CLI_MODEL_GROUP_ID,
-      id: agent.backend,
-      label: agent.label,
-      subLabel: description,
-    };
-  });
+      return agent.models.map((model) => ({
+        description: agent.label,
+        groupId: CLI_MODEL_GROUP_ID,
+        id: encodeCliOptionId(agent.backend, model),
+        label: model,
+        subLabel: agent.label,
+      }));
+    });
 }
 
 export async function loadDiscoveredModels(

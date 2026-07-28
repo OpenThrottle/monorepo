@@ -4548,7 +4548,9 @@ export type DiscoverAgentClisQuery = {
     agents: Array<{
       __typename?: 'AgentCliOptionObject';
       backend: string;
+      chatCapable: boolean;
       label: string;
+      models: Array<string>;
       version?: string | null;
     }>;
   };
@@ -10045,7 +10047,15 @@ export const DiscoverAgentClisDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'backend' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'chatCapable' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'models' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'version' },

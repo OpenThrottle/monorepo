@@ -51,38 +51,84 @@ describe('toChatModelOptions', () => {
 });
 
 describe('toAgentChatOptions', () => {
-  it('groups every agent CLI under the shared CLI group', () => {
+  it('emits one option per model for chat-capable drivers, keyed backend|model', () => {
     const options = toAgentChatOptions({
       agents: [
-        { backend: 'cursor', label: 'Cursor', version: '1.2.3' },
-        { backend: 'claude', label: 'Claude Code', version: null },
-        { backend: 'opencode', label: 'OpenCode', version: '1.18.5' },
+        {
+          backend: 'cursor',
+          chatCapable: true,
+          label: 'cursor-agent',
+          models: ['auto', 'gpt-5.2'],
+          version: '1.2.3',
+        },
       ],
-      totalCount: 3,
+      totalCount: 1,
     });
 
     expect(options).toEqual([
       {
-        description: 'Agent CLI · 1.2.3',
+        description: 'cursor-agent',
         groupId: CLI_MODEL_GROUP_ID,
-        id: 'cursor',
-        label: 'Cursor',
-        subLabel: 'Agent CLI · 1.2.3',
+        id: 'cursor|auto',
+        label: 'auto',
+        subLabel: 'cursor-agent',
       },
       {
-        description: 'Agent CLI',
+        description: 'cursor-agent',
         groupId: CLI_MODEL_GROUP_ID,
-        id: 'claude',
-        label: 'Claude Code',
-        subLabel: 'Agent CLI',
-      },
-      {
-        description: 'Agent CLI · 1.18.5',
-        groupId: CLI_MODEL_GROUP_ID,
-        id: 'opencode',
-        label: 'OpenCode',
-        subLabel: 'Agent CLI · 1.18.5',
+        id: 'cursor|gpt-5.2',
+        label: 'gpt-5.2',
+        subLabel: 'cursor-agent',
       },
     ]);
+  });
+
+  it('falls back to a bare-backend option when a driver lists no models', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          backend: 'claude',
+          chatCapable: true,
+          label: 'claude-code',
+          models: [],
+          version: '2.1.220',
+        },
+      ],
+      totalCount: 1,
+    });
+
+    expect(options).toEqual([
+      {
+        description: 'claude-code',
+        groupId: CLI_MODEL_GROUP_ID,
+        id: 'claude',
+        label: 'claude-code',
+        subLabel: 'claude-code',
+      },
+    ]);
+  });
+
+  it('omits plan-run-only (non-chat-capable) drivers like codex/grok', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          backend: 'codex',
+          chatCapable: false,
+          label: 'codex',
+          models: [],
+          version: '0.145.0',
+        },
+        {
+          backend: 'grok',
+          chatCapable: false,
+          label: 'grok',
+          models: ['grok-4.5'],
+          version: '0.2.112',
+        },
+      ],
+      totalCount: 2,
+    });
+
+    expect(options).toEqual([]);
   });
 });
