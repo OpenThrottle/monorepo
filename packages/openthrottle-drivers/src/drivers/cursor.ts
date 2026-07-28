@@ -6,11 +6,12 @@
  */
 
 import { defineDriver } from '../registry/index.ts';
-import type { DriverCapabilities } from '../types/index.ts';
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
+  chatStreaming: true,
   permissionMode: false,
   skipWorktreeSetup: true,
   supportsModelFlag: true,
@@ -19,10 +20,27 @@ const capabilities: DriverCapabilities = {
 };
 
 /**
+ * `cursor-agent models` prints a `Available models` header, a blank line, then one `<id> - <Label>`
+ * row per model (verified against 2026.07.23). Capture the id token before ` - `; skip the header
+ * and blanks.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => /^(\S+) - /.exec(line.trim())?.[1])
+      .filter((id): id is string => id !== undefined),
+};
+
+/**
  * @description Cursor driver (`cursor`, label `cursor-agent`).
  * @public
  */
 export const cursorDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_CURSOR_AGENT_BIN',
+  binary: 'cursor-agent',
   buildShellCommand: (config) => {
     const modelFlag = config.model
       ? ` --model ${escapeShellArg(config.model)}`
@@ -34,6 +52,8 @@ export const cursorDriver = defineDriver({
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },
   capabilities,
+  discoverModels,
   id: 'cursor',
   label: 'cursor-agent',
+  versionArgs: ['--version'],
 });

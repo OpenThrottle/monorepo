@@ -225,8 +225,12 @@ export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
+  /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
+  chatCapable: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
+  /** Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). */
+  models: Array<Scalars['String']['output']>;
   /** Trimmed --version output, or null when unknown. */
   version?: Maybe<Scalars['String']['output']>;
 };
@@ -4544,7 +4548,9 @@ export type DiscoverAgentClisQuery = {
     agents: Array<{
       __typename?: 'AgentCliOptionObject';
       backend: string;
+      chatCapable: boolean;
       label: string;
+      models: Array<string>;
       version?: string | null;
     }>;
   };
@@ -10041,7 +10047,15 @@ export const DiscoverAgentClisDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'backend' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'chatCapable' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'models' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'version' },

@@ -13,6 +13,13 @@ import type {
  */
 
 const SEPARATOR = '::';
+/**
+ * Separator between a CLI backend and an optional model override in a composer
+ * option id (`cursor|gpt-5.2`). Distinct from {@link SEPARATOR} so a CLI option
+ * is never mistaken for a `baseUrl::model` openai id; agent-CLI model ids never
+ * contain it.
+ */
+const CLI_SEPARATOR = '|';
 
 /**
  * Group id (and picker rail heading) for all discovered agent CLI backends.
@@ -66,7 +73,17 @@ export function decodeModelOptionId(id: string): DecodedModelOption | null {
 }
 
 /**
- * A decoded composer option: the openai endpoint+model, or a bare CLI backend.
+ * Encode a CLI backend option id, optionally pinning a model override
+ * (`cursor` or `cursor|gpt-5.2`). A submit routes it as `backend` (+ `modelId`).
+ * @public
+ */
+export function encodeCliOptionId(backend: string, model?: string): string {
+  return model ? `${backend}${CLI_SEPARATOR}${model}` : backend;
+}
+
+/**
+ * A decoded composer option: an openai endpoint+model, or a CLI backend with an
+ * optional model override.
  * @public
  */
 export type DecodedChatOption =
@@ -78,19 +95,34 @@ export type DecodedChatOption =
   | {
       readonly backend: string;
       readonly baseUrl?: undefined;
-      readonly model?: undefined;
+      readonly model?: string;
     };
 
 /**
- * Decode a composer option id as a tagged union on the first segment: an
- * `baseUrl::model` id is the openai backend; a bare token (no `::`) is a CLI
- * backend discriminator (e.g. `cursor`). Returns null when malformed.
+ * Decode a composer option id as a tagged union: an `baseUrl::model` id is the
+ * openai backend; a `backend|model` id is a CLI backend with a model override; a
+ * bare token is a CLI backend at its default model. Returns null when malformed.
  * @public
  */
 export function decodeChatOption(id: string): DecodedChatOption | null {
   const index = id.indexOf(SEPARATOR);
   if (index === -1) {
-    return id === '' ? null : { backend: id };
+    if (id === '') {
+      return null;
+    }
+
+    const cliIndex = id.indexOf(CLI_SEPARATOR);
+    if (cliIndex === -1) {
+      return { backend: id };
+    }
+
+    const backend = id.slice(0, cliIndex);
+    const model = id.slice(cliIndex + CLI_SEPARATOR.length);
+    if (!backend || !model) {
+      return null;
+    }
+
+    return { backend, model };
   }
 
   const baseUrl = id.slice(0, index);

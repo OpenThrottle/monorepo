@@ -144,6 +144,7 @@ export function useHeaderChatController(args: {
         : {
             backend: decoded.backend,
             fileMentions: JSON.stringify(fileMentions),
+            modelId: decoded.model ?? '',
             permissionMode: permissionMode ?? '',
             personaId: personaId ?? '',
             reasoning: reasoning ?? '',

@@ -59,6 +59,13 @@ export interface DriverInvocationConfig {
  * @public
  */
 export interface DriverCapabilities {
+  /**
+   * Has a wired streaming chat backend (a `ConversationBackend` adapter), so it can be offered as a
+   * chat composer backend. `false` for plan-run-only drivers whose headless command works but that
+   * have no streaming adapter yet (codex, grok). The plan-run/driver path uses every driver
+   * regardless; only this gates the chat composer.
+   */
+  readonly chatStreaming: boolean;
   /** Emits a permission-mode flag (Claude: `--permission-mode acceptEdits`). */
   readonly permissionMode: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */
@@ -72,16 +79,40 @@ export interface DriverCapabilities {
 }
 
 /**
+ * @description How a driver's CLI enumerates the models it can run. `mode: 'command'` spawns the
+ * binary with `argv` and maps stdout to model ids via the pure `parse` function (tolerant — returns
+ * `[]` on unrecognized output); `mode: 'static'` carries a known list with no spawn. Kept dep-free
+ * so `openthrottle-drivers` stays a leaf package; the spawning side-effect lives in the discovery
+ * consumer (agentic-utils), which only calls `argv`/`parse`.
+ * @public
+ */
+export type DriverModelListing =
+  | {
+      readonly argv: readonly string[];
+      readonly mode: 'command';
+      readonly parse: (stdout: string) => readonly string[];
+    }
+  | { readonly mode: 'static'; readonly models: readonly string[] };
+
+/**
  * @description A single agent CLI, described once. Contributed via `defineDriver` and looked up
  * through the registry. `buildShellCommand` returns a `shell: true` command string and may throw
  * `UnsupportedDriverModeError` when the CLI has no viable headless mode.
  * @public
  */
 export interface AgentDriver {
+  /** Env var holding an absolute path override for {@link binary}, when set. */
+  readonly binEnv?: string;
+  /** Binary name resolved off PATH unless {@link binEnv} overrides it (e.g. `cursor-agent`). */
+  readonly binary: string;
   readonly buildShellCommand: (config: DriverInvocationConfig) => string;
   readonly capabilities: DriverCapabilities;
+  /** How discovery enumerates this CLI's models; omitted ⇒ availability-only (`models: []`). */
+  readonly discoverModels?: DriverModelListing;
   /** Stable driver id (also a `DriverId`). */
   readonly id: string;
   /** Human/iteration label, e.g. `claude-code`, `cursor-agent`. */
   readonly label: string;
+  /** Args probing presence + version; default `['--version']`. */
+  readonly versionArgs: readonly string[];
 }

@@ -9,11 +9,17 @@ import type { DecodedChatOption } from './chat-model-option';
 /**
  * @description Per-backend capability descriptors for the chat composer.
  *
- * These are hand-seeded for now. Once `@openthrottle/openthrottle-drivers`
- * (plan dde67342) lands, derive these from the driver registry (DRIVER_IDS +
- * per-driver capability flags) instead of the two constants below — see plan
- * cacb864e (honor chat controls end-to-end). Until then consumers hand-seed
- * from `loadAgentClis` / `loadDiscoveredModels`.
+ * WHICH backends and models the composer offers is registry-derived: agent-CLI
+ * discovery (`discoverAgentClis`) projects `@openthrottle/openthrottle-drivers`'
+ * `ALL_DRIVERS` and surfaces, per driver, its `chatCapable` flag and `models` —
+ * so only chat-capable drivers reach the picker and each carries its own model
+ * list (see the app-side `toAgentChatOptions` mapper). The drivers registry is a
+ * Node package (its engine imports `child_process`), so it is NOT imported into
+ * this browser bundle; the registry-derived facts arrive over discovery instead.
+ *
+ * The two descriptors below are the CONTROL SURFACE, which is an openai-vs-CLI
+ * distinction rather than a per-driver one: a local OpenAI endpoint is a plain
+ * completion, and every agent-CLI driver exposes the same T3 controls.
  */
 
 /**

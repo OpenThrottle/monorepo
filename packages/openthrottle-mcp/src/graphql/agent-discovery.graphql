@@ -1,0 +1,17 @@
+# MCP-only GraphQL document: agent-CLI discovery, which is outside Ralph's
+# plan/task I/O domain (mirrors model-discovery.graphql). Surfaces the agentic
+# CLIs detected on the server host with their versions and per-driver models.
+
+query discoverAgentClis {
+  discoverAgentClis {
+    agents {
+      backend
+      chatCapable
+      label
+      models
+      version
+    }
+    scannedAt
+    totalCount
+  }
+}
