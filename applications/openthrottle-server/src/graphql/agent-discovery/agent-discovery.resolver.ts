@@ -26,7 +26,9 @@ export class AgentDiscoveryResolver {
       .filter((agent) => agent.available)
       .map((agent) => ({
         backend: agent.backend,
+        chatCapable: agent.chatCapable,
         label: agent.label,
+        models: [...agent.models],
         version: agent.version,
       }));
 

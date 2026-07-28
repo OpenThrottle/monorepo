@@ -58,8 +58,20 @@ describe('AgentDiscoveryResolver', () => {
     expect(result.scannedAt).toBe('2026-06-19T00:00:00.000Z');
     expect(result.totalCount).toBe(2);
     expect(result.agents).toEqual([
-      { backend: 'cursor', label: 'Cursor Agent', version: '2026.06.15' },
-      { backend: 'opencode', label: 'OpenCode', version: '1.18.5' },
+      {
+        backend: 'cursor',
+        chatCapable: true,
+        label: 'Cursor Agent',
+        models: ['auto', 'gpt-5.2'],
+        version: '2026.06.15',
+      },
+      {
+        backend: 'opencode',
+        chatCapable: true,
+        label: 'OpenCode',
+        models: ['opencode/big-pickle'],
+        version: '1.18.5',
+      },
     ]);
   });
 

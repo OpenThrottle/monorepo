@@ -645,8 +645,18 @@ type AgentCliOptionObject {
   """
   backend: String!
 
+  """
+  True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok).
+  """
+  chatCapable: Boolean!
+
   """Human-readable label for the selector."""
   label: String!
+
+  """
+  Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed).
+  """
+  models: [String!]!
 
   """Trimmed --version output, or null when unknown."""
   version: String

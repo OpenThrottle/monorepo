@@ -225,8 +225,12 @@ export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
+  /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
+  chatCapable: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
+  /** Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). */
+  models: Array<Scalars['String']['output']>;
   /** Trimmed --version output, or null when unknown. */
   version?: Maybe<Scalars['String']['output']>;
 };
