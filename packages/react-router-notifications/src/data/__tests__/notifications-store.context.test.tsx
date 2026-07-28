@@ -254,3 +254,40 @@ describe('reducer add coalescing', () => {
     expect(next).toHaveLength(2);
   });
 });
+
+describe('reducer add renderability guard', () => {
+  const addAction = (message: string) => ({
+    event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
+    payload: {
+      message,
+      severity: 'info' as const,
+      timestamp: '2026-06-26T00:00:00.000Z',
+    },
+    type: 'add' as const,
+  });
+
+  test('drops an empty-string message (no phantom entry)', () => {
+    const next = reducer([], addAction(''));
+    expect(next).toHaveLength(0);
+  });
+
+  test('drops a whitespace-only message (no phantom entry)', () => {
+    expect(reducer([], addAction('   '))).toHaveLength(0);
+    expect(reducer([], addAction('\n\t'))).toHaveLength(0);
+  });
+
+  test('leaves existing entries untouched when a blank message is dropped', () => {
+    const withOne = reducer([], addAction('Real alert'));
+    expect(withOne).toHaveLength(1);
+
+    const afterBlank = reducer(withOne, addAction('  '));
+    expect(afterBlank).toHaveLength(1);
+    expect(afterBlank[0].id).toBe(withOne[0].id);
+  });
+
+  test('still adds a genuine message', () => {
+    const next = reducer([], addAction('Genuine alert'));
+    expect(next).toHaveLength(1);
+    expect(next[0].payload.message).toBe('Genuine alert');
+  });
+});

@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import { toast } from '@openthrottle/react-router-shadcn';
+import { isRenderableMessage, toast } from '@openthrottle/react-router-shadcn';
 import type {
   NotificationEventName,
   NotificationPayload,
@@ -109,6 +109,15 @@ export function reducer(
 ): NotificationInstance[] {
   switch (action.type) {
     case 'add': {
+      // Drop phantom content — a blank/whitespace/non-renderable message — before
+      // it can reach the list, unread badge, screen-reader announcer, or
+      // localStorage. This is the single chokepoint feeding all of those, and it
+      // uses the same predicate as the Sonner toast guard so both surfaces stay
+      // in lockstep. Return state unchanged (matching the no-op cases below).
+      if (!isRenderableMessage(action.payload.message)) {
+        return [...state];
+      }
+
       const now = Date.now();
 
       // Coalesce identical re-emits (same event + message + link) that arrive
