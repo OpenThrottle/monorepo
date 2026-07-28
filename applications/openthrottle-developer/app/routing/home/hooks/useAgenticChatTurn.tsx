@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import type { ChatMessage } from '@openthrottle/react-router-chat';
+import type {
+  ChatMessage,
+  ChatTokenUsage,
+} from '@openthrottle/react-router-chat';
+import { sumUsage } from '@openthrottle/react-router-chat';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
 import type { StartActionResult } from '~/routes/resources.conversation-stream';
 
@@ -21,6 +25,12 @@ export interface UseAgenticChatTurnResult {
   readonly messages: ChatMessage[];
   /** Cancel the in-flight turn. */
   readonly onStop: () => void;
+  /**
+   * Cumulative token usage across all assistant turns in this thread (best
+   * effort; empty when no backend reported counts). Feeds the composer's
+   * running {@link ChatUsageCounter}.
+   */
+  readonly sessionUsage: ChatTokenUsage;
   /** Surface a client-side validation error (e.g. "select a repository"). */
   readonly setError: (message: string | null) => void;
   /**
@@ -94,6 +104,23 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     startFetcher.state !== 'idle' ||
     stream.isStreaming ||
     pendingAssistantId !== null;
+
+  // Accumulate every turn's usage event into one running session total for the
+  // composer counter. Each assistant message carries at most one usage event
+  // (the reducer/persisted folder merge per-step counts), so summing across
+  // turns yields the conversation total; empty when nothing was reported.
+  const sessionUsage = React.useMemo<ChatTokenUsage>(() => {
+    let total: ChatTokenUsage = {};
+    for (const message of messagesView) {
+      for (const event of message.events ?? []) {
+        if (event.kind === 'usage' && event.usage !== undefined) {
+          total = sumUsage(total, event.usage);
+        }
+      }
+    }
+
+    return total;
+  }, [messagesView]);
 
   // Handlers
   const submitTurn = (
@@ -175,6 +202,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     isStreaming,
     messages: messagesView,
     onStop,
+    sessionUsage,
     setError,
     submitTurn,
   };

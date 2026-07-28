@@ -179,6 +179,9 @@ export class ConversationStreamService {
     let accumulated = '';
     let sortOrder = 0;
     let sessionPersisted = false;
+    // Error the backend reported on its terminal chunk (claude gates this on
+    // `is_error`); forwarded onto the published done chunk instead of dropped.
+    let terminalError: string | null = null;
 
     // Non-text events (thinking/tool/usage/session) collected for persistence
     // into the assistant message's tool_metadata on completion.
@@ -203,6 +206,37 @@ export class ConversationStreamService {
     try {
       for await (const chunk of backend.stream(backendRun)) {
         if (chunk.done) {
+          // A terminal chunk can still carry token accounting — claude and
+          // cursor-agent ride their usage on the `done:true` chunk (kind
+          // `usage`, metadata `{ usage, modelUsage, totalCostUsd, result }`).
+          // Re-emit it as a discrete usage chunk that is buffered, published,
+          // AND collected into `toolEvents` so both the live stream and the
+          // persisted turn keep the counts (previously this metadata was
+          // dropped when the loop broke). opencode reports usage mid-stream
+          // (done:false) so it already flows through below — unaffected.
+          if (chunk.metadata !== undefined) {
+            toolEvents.push({
+              delta: chunk.delta,
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+              metadata: chunk.metadata,
+            });
+
+            await this.publishChunk({
+              conversationId: run.conversationId,
+              delta: chunk.delta,
+              done: false,
+              error: null,
+              id: randomUUID(),
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+              messageId: run.assistantMessageId,
+              metadataJson: JSON.stringify(chunk.metadata),
+              sortOrder,
+            });
+
+            sortOrder += 1;
+          }
+
+          terminalError = chunk.error ?? null;
           break;
         }
 
@@ -252,7 +286,7 @@ export class ConversationStreamService {
         conversationId: run.conversationId,
         delta: '',
         done: true,
-        error: null,
+        error: terminalError,
         id: randomUUID(),
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,

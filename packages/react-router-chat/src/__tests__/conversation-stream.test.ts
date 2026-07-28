@@ -213,7 +213,7 @@ describe('reduceStreamChunk — structured events', () => {
     expect(eventsOf(state)).toHaveLength(1);
   });
 
-  it('records a terminal usage event with parsed result/usage', () => {
+  it('records a terminal usage event with parsed result + typed usage', () => {
     let state = INITIAL_STREAM_STATE;
     state = reduceStreamChunk(state, chunk({ delta: 'done', sortOrder: 0 }));
     state = reduceStreamChunk(
@@ -236,9 +236,108 @@ describe('reduceStreamChunk — structured events', () => {
         kind: 'usage',
         result: 'all set',
         sortOrder: 1,
+        usage: { totalTokens: 42 },
         usageJson: JSON.stringify({ totalTokens: 42 }),
       },
     ]);
+  });
+
+  it('folds a claude terminal usage chunk (server-forwarded) then the done chunk into ONE usage event', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'Hi', sortOrder: 0 }));
+    // Server forwards claude/cursor terminal usage as a discrete done:false chunk…
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage',
+        metadataJson: JSON.stringify({
+          result: 'Hi',
+          totalCostUsd: 0.04,
+          usage: { input_tokens: 1200, output_tokens: 340 },
+        }),
+        sortOrder: 1,
+      }),
+    );
+    // …followed by the terminal done chunk (now metadata-less).
+    state = reduceStreamChunk(state, chunk({ done: true, sortOrder: 2 }));
+
+    const usageEvents = eventsOf(state).filter((e) => e.kind === 'usage');
+    expect(usageEvents).toEqual([
+      {
+        error: null,
+        kind: 'usage',
+        result: 'Hi',
+        sortOrder: 2,
+        usage: {
+          costUsd: 0.04,
+          inputTokens: 1200,
+          outputTokens: 340,
+          totalTokens: 1540,
+        },
+        usageJson: JSON.stringify({ input_tokens: 1200, output_tokens: 340 }),
+      },
+    ]);
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+  });
+
+  it('accumulates opencode per-step mid-stream usage chunks into one event', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage',
+        metadataJson: JSON.stringify({
+          cost: 0,
+          tokens: { input: 100, output: 5 },
+        }),
+        sortOrder: 0,
+      }),
+    );
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage',
+        metadataJson: JSON.stringify({
+          cost: 0.01,
+          tokens: { input: 50, output: 8 },
+        }),
+        sortOrder: 1,
+      }),
+    );
+    state = reduceStreamChunk(state, chunk({ done: true, sortOrder: 2 }));
+
+    const usageEvents = eventsOf(state).filter((e) => e.kind === 'usage');
+    expect(usageEvents).toEqual([
+      {
+        error: null,
+        kind: 'usage',
+        result: null,
+        sortOrder: 2,
+        usage: {
+          costUsd: 0.01,
+          inputTokens: 150,
+          outputTokens: 13,
+          totalTokens: 163,
+        },
+        usageJson: null,
+      },
+    ]);
+  });
+
+  it('leaves usage absent when no counts were reported (graceful empty)', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'hi', sortOrder: 0 }));
+    state = reduceStreamChunk(state, chunk({ done: true, sortOrder: 1 }));
+
+    const [, usage] = eventsOf(state);
+    expect(usage).toEqual({
+      error: null,
+      kind: 'usage',
+      result: null,
+      sortOrder: 1,
+      usageJson: null,
+    });
+    expect('usage' in usage).toBe(false);
   });
 
   it('marks an outstanding tool failed when the turn errors', () => {

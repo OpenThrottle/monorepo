@@ -6,8 +6,9 @@ import {
   detectActiveMention,
   insertFileMention,
 } from '../file-mentions';
-import type { ChatMentionProvider } from '../types';
+import type { ChatMentionProvider, ChatTokenUsage } from '../types';
 import { ChatMentionPopover } from './ChatMentionPopover';
+import { ChatUsageCounter } from './ChatUsageCounter';
 
 /** Keys that move the caret without editing, so the mention state is re-detected. */
 const CARET_MOVEMENT_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'End', 'Home']);
@@ -47,6 +48,13 @@ export interface ChatComposerProps {
    * via {@link draft}.
    */
   readonly readOnly?: boolean;
+  /**
+   * Optional cumulative session usage rendered as a muted running token counter
+   * in the footer (live while {@link isStreaming}, a conversation total when
+   * idle). Presentational — the consumer owns the total (summed across turns).
+   * Omit, or pass an all-empty usage, to hide the counter.
+   */
+  readonly sessionUsage?: ChatTokenUsage;
   readonly stopLabel?: string;
   readonly submitLabel?: string;
   /** Ref to the underlying textarea (focus / cursor placement). */
@@ -72,6 +80,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     onSubmit,
     placeholder = 'Type a message…',
     readOnly = false,
+    sessionUsage,
     stopLabel = 'Stop',
     submitLabel = 'Send',
     textAreaRef,
@@ -339,22 +348,30 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         ) : null}
       </div>
       <div
-        className={clsx('flex', toolbar ? 'justify-between' : 'justify-end')}
+        className={clsx(
+          'flex items-center gap-3',
+          toolbar ? 'justify-between' : 'justify-end',
+        )}
       >
         {toolbar}
-        {isStreaming ? (
-          <Button onClick={onStop} size="sm" type="button">
-            {stopLabel}
-          </Button>
-        ) : (
-          <Button
-            disabled={disabled || draft.trim().length === 0}
-            size="sm"
-            type="submit"
-          >
-            {submitLabel}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {sessionUsage !== undefined ? (
+            <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
+          ) : null}
+          {isStreaming ? (
+            <Button onClick={onStop} size="sm" type="button">
+              {stopLabel}
+            </Button>
+          ) : (
+            <Button
+              disabled={disabled || draft.trim().length === 0}
+              size="sm"
+              type="submit"
+            >
+              {submitLabel}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );

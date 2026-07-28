@@ -9,7 +9,8 @@
  *   {@link foldPersistedTurnEvents}.
  */
 
-import type { ChatTurnEvent } from './types';
+import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
+import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -215,6 +216,55 @@ export const applyTurnToolResult = (
 };
 
 /**
+ * Fold a usage chunk (an opencode mid-stream `kind:'usage'` chunk, a claude/
+ * cursor terminal usage chunk the server now forwards, or a terminal `done`
+ * chunk that still carries usage metadata) into the turn's SINGLE usage event.
+ *
+ * There is never more than one usage event per turn: token counts accumulate
+ * across chunks (opencode reports usage per step, so its per-step counts sum to
+ * a turn total), a terminal `error` supersedes, and the event adopts the latest
+ * sortOrder so it renders at the end of the timeline. Typed `usage` is populated
+ * from the full metadata via {@link normalizeUsage}; the raw {@link
+ * ChatTurnUsageEvent.usageJson} is preserved for back-compat. When nothing was
+ * reported the `usage` field is left absent (renderers hide the row).
+ *
+ * @public
+ */
+export const applyTurnUsage = (
+  events: readonly ChatTurnEvent[],
+  metadataJson: string | null | undefined,
+  sortOrder: number,
+  terminal?: { readonly error?: string | null },
+): readonly ChatTurnEvent[] => {
+  const meta = parseChunkMetadata(metadataJson ?? null);
+  const incomingUsage = normalizeUsage(metadataJson ?? null);
+  const existing = events.find(
+    (event): event is ChatTurnUsageEvent => event.kind === 'usage',
+  );
+
+  const mergedUsage = sumUsage(existing?.usage ?? {}, incomingUsage);
+  const usageField = hasUsageCounts(mergedUsage) ? mergedUsage : undefined;
+
+  const merged: ChatTurnUsageEvent = {
+    error: terminal?.error ?? existing?.error ?? null,
+    kind: 'usage',
+    result: meta.usageResult ?? existing?.result ?? null,
+    sortOrder:
+      existing === undefined
+        ? sortOrder
+        : Math.max(existing.sortOrder, sortOrder),
+    ...(usageField !== undefined ? { usage: usageField } : {}),
+    usageJson: meta.usageJson ?? existing?.usageJson ?? null,
+  };
+
+  if (existing === undefined) {
+    return [...events, merged];
+  }
+
+  return events.map((event) => (event.kind === 'usage' ? merged : event));
+};
+
+/**
  * Mark any still-running tool events failed when the turn errors out.
  *
  * @public
@@ -256,11 +306,19 @@ export const foldPersistedTurnEvents = (
 
   let events: readonly ChatTurnEvent[] = [];
   let order = 0;
+  // Persisted usage events (written by the server since usage stopped being
+  // dropped) are collected here and folded AFTER the body so the usage summary
+  // renders at the end of the turn — matching live streaming, where the usage
+  // event adopts the terminal sortOrder.
+  const usageMetadataJsons: Array<string | null> = [];
 
   for (const raw of rawEvents) {
     if (isRecord(raw)) {
       const kind = asString(raw.kind);
       const delta = asString(raw.delta) ?? '';
+      const metadataJson = isRecord(raw.metadata)
+        ? JSON.stringify(raw.metadata)
+        : null;
       const meta = normalizeMetadata(
         isRecord(raw.metadata) ? raw.metadata : null,
       );
@@ -276,6 +334,8 @@ export const foldPersistedTurnEvents = (
           ...events,
           { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
         ];
+      } else if (kind === 'usage') {
+        usageMetadataJsons.push(metadataJson);
       }
     }
 
@@ -287,14 +347,26 @@ export const foldPersistedTurnEvents = (
     order += 1;
   }
 
-  return [
-    ...events,
-    {
-      error: null,
-      kind: 'usage',
-      result: null,
-      sortOrder: order,
-      usageJson: null,
-    },
-  ];
+  // Legacy turns (persisted before usage was retained) have no usage events —
+  // synthesize an empty terminal usage marker so the turn still reads complete
+  // (no running indicator), with no counts. Turns with persisted usage fold it
+  // (accumulating across opencode's per-step events) into a single event.
+  if (usageMetadataJsons.length === 0) {
+    return [
+      ...events,
+      {
+        error: null,
+        kind: 'usage',
+        result: null,
+        sortOrder: order,
+        usageJson: null,
+      },
+    ];
+  }
+
+  for (const metadataJson of usageMetadataJsons) {
+    events = applyTurnUsage(events, metadataJson, order);
+  }
+
+  return events;
 };
