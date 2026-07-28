@@ -31,8 +31,10 @@ vi.mock('child_process', async (importOriginal) => {
 });
 
 const testDriver: AgentDriver = defineDriver({
+  binary: 'echo-driver',
   buildShellCommand: (config) => `echo-driver -p "${config.prompt}"`,
   capabilities: {
+    chatStreaming: false,
     permissionMode: false,
     skipWorktreeSetup: false,
     supportsModelFlag: false,
@@ -41,6 +43,7 @@ const testDriver: AgentDriver = defineDriver({
   },
   id: 'echo',
   label: 'echo-driver',
+  versionArgs: ['--version'],
 });
 
 describe('runDriverSync', () => {

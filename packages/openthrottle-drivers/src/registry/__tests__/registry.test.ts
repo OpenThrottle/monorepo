@@ -12,8 +12,10 @@ import {
 
 const fakeDriver = (id: string): AgentDriver =>
   defineDriver({
+    binary: id,
     buildShellCommand: (config) => `${id} ${config.prompt}`,
     capabilities: {
+      chatStreaming: false,
       permissionMode: false,
       skipWorktreeSetup: false,
       supportsModelFlag: false,
@@ -22,6 +24,7 @@ const fakeDriver = (id: string): AgentDriver =>
     },
     id,
     label: id,
+    versionArgs: ['--version'],
   });
 
 describe('DRIVER_IDS / DEFAULT_DRIVER_ID', () => {
