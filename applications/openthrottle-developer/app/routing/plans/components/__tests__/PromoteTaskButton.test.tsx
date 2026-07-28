@@ -8,6 +8,7 @@ import { renderRouteHarness } from '~/testing/route-fixtures';
 const renderButton = (
   isPromoted: boolean,
   planIsRunning = false,
+  planIsTerminal = false,
 ): { submitted: (FormDataEntryValue | null)[] } => {
   const submitted: (FormDataEntryValue | null)[] = [];
 
@@ -17,6 +18,7 @@ const renderButton = (
         <PromoteTaskButton
           isPromoted={isPromoted}
           planIsRunning={planIsRunning}
+          planIsTerminal={planIsTerminal}
         />
       ),
       action: async ({ request }: { request: Request }) => {
@@ -70,6 +72,20 @@ describe('PromoteTaskButton', () => {
   test('renders a disabled control that cannot open the dialog while the plan run is active', async () => {
     const user = userEvent.setup();
     const { submitted } = renderButton(false, true);
+
+    const button = screen.getByRole('button', { name: /promote to plan/i });
+    expect(button).toBeDisabled();
+
+    await user.click(button);
+    expect(
+      screen.queryByText('Promote task to a plan?'),
+    ).not.toBeInTheDocument();
+    expect(submitted).toHaveLength(0);
+  });
+
+  test('renders a disabled control that cannot open the dialog while the plan is terminal', async () => {
+    const user = userEvent.setup();
+    const { submitted } = renderButton(false, false, true);
 
     const button = screen.getByRole('button', { name: /promote to plan/i });
     expect(button).toBeDisabled();

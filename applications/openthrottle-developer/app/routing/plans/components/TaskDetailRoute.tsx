@@ -36,7 +36,10 @@ import {
 } from '~/routing/plans/utils/parsers';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import { TaskTabOutput } from '~/routing/plans/components/TaskTabOutput';
-import { getPlanIsRunning } from '~/routing/plans/utils/utils.plans';
+import {
+  getPlanIsRunning,
+  getPlanIsTerminal,
+} from '~/routing/plans/utils/utils.plans';
 import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
@@ -64,6 +67,10 @@ export const TaskDetailRoute = (
   // Gate task mutations while the owning plan's run is active (QUEUED /
   // IN_PROGRESS) so Mark Complete / Promote can't fire under a live worker.
   const planIsRunning = getPlanIsRunning(plan?.status);
+  // Also gate them when the owning plan is terminal (COMPLETED / CANCELED /
+  // SKIPPED): there is no more work to do here, so close-out/promote a task by
+  // shipping a new plan instead.
+  const planIsTerminal = getPlanIsTerminal(plan?.status);
 
   // Task-scoped output: seed from the plan's chunks (loader) filtered by taskId,
   // then merge live deltas from the planOutputChunkAdded subscription.
@@ -109,6 +116,7 @@ export const TaskDetailRoute = (
         }
         planId={effectivePlanId}
         planIsRunning={planIsRunning}
+        planIsTerminal={planIsTerminal}
         tagVocabulary={tagVocabulary}
         tags={task.tags}
         tagsPending={tagFetcher.state !== 'idle'}

@@ -50,6 +50,15 @@ export interface PlanTaskToolbarProps {
    */
   planIsRunning: boolean;
   /**
+   * @description Whether the owning plan is in a terminal state (COMPLETED /
+   * CANCELED / SKIPPED). When true, Mark Complete and Promote to Plan are
+   * disabled with explanatory tooltips — there is no more work to do on a
+   * finished/abandoned plan, so close-out/promote by shipping a new plan
+   * instead. Edit Task stays enabled. Computed via `getPlanIsTerminal` from the
+   * plan status.
+   */
+  planIsTerminal: boolean;
+  /**
    * @description Available tag vocabulary for the add-tag dropdown.
    */
   tagVocabulary: PlanTagVocabularyOption[];
@@ -87,6 +96,7 @@ export const PlanTaskToolbar = (
     onRemoveTag,
     planId,
     planIsRunning,
+    planIsTerminal,
     taskId,
     taskStatus,
     tags,
@@ -158,6 +168,7 @@ export const PlanTaskToolbar = (
         <PromoteTaskButton
           isPromoted={isPromoted}
           planIsRunning={planIsRunning}
+          planIsTerminal={planIsTerminal}
         />
       }
       statusAction={
@@ -170,7 +181,8 @@ export const PlanTaskToolbar = (
                 disabled={
                   fetcherSetStatus.state !== 'idle' ||
                   isCompleted ||
-                  planIsRunning
+                  planIsRunning ||
+                  planIsTerminal
                 }
                 size="xs"
                 type="submit"
@@ -186,9 +198,11 @@ export const PlanTaskToolbar = (
           <TooltipContent side="top">
             {isCompleted
               ? 'Task is already completed'
-              : planIsRunning
-                ? PLAN_TASK_TOOLBAR_COPY.markCompleteRunningTooltip
-                : 'Mark this task as completed'}
+              : planIsTerminal
+                ? PLAN_TASK_TOOLBAR_COPY.markCompleteTerminalTooltip
+                : planIsRunning
+                  ? PLAN_TASK_TOOLBAR_COPY.markCompleteRunningTooltip
+                  : 'Mark this task as completed'}
           </TooltipContent>
         </Tooltip>
       }

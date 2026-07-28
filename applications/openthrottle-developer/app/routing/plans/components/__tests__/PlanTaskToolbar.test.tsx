@@ -31,6 +31,7 @@ describe('PlanTaskToolbar Component', () => {
       onRemoveTag,
       planId: 'plan-1',
       planIsRunning: false,
+      planIsTerminal: false,
       tagVocabulary: [
         { dimension: 'domain', tag: 'backend' },
         { dimension: 'domain', tag: 'frontend' },
@@ -124,5 +125,20 @@ describe('PlanTaskToolbar Component', () => {
     expect(
       idle.getByRole('button', { name: /promote to plan/i }),
     ).not.toBeDisabled();
+  });
+
+  test('disables Mark Complete and Promote while the plan is terminal, keeping Edit Task', () => {
+    const terminal = within(
+      renderToolbar({ ...props, planIsTerminal: true }).container,
+    );
+    expect(
+      terminal.getByRole('button', { name: /mark complete/i }),
+    ).toBeDisabled();
+    expect(
+      terminal.getByRole('button', { name: /promote to plan/i }),
+    ).toBeDisabled();
+    expect(
+      terminal.getByRole('button', { name: /^actions$/i }),
+    ).toBeInTheDocument();
   });
 });
