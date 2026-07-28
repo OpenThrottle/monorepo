@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { CLI_MODEL_GROUP_ID } from '@openthrottle/react-router-chat-state';
 import { toAgentChatOptions, toChatModelOptions } from '../chat-model-option';
 
 describe('toChatModelOptions', () => {
@@ -68,14 +67,14 @@ describe('toAgentChatOptions', () => {
     expect(options).toEqual([
       {
         description: 'cursor-agent',
-        groupId: CLI_MODEL_GROUP_ID,
+        groupId: 'cursor',
         id: 'cursor|auto',
         label: 'auto',
         subLabel: 'cursor-agent',
       },
       {
         description: 'cursor-agent',
-        groupId: CLI_MODEL_GROUP_ID,
+        groupId: 'cursor',
         id: 'cursor|gpt-5.2',
         label: 'gpt-5.2',
         subLabel: 'cursor-agent',
@@ -100,7 +99,7 @@ describe('toAgentChatOptions', () => {
     expect(options).toEqual([
       {
         description: 'claude-code',
-        groupId: CLI_MODEL_GROUP_ID,
+        groupId: 'claude',
         id: 'claude',
         label: 'claude-code',
         subLabel: 'claude-code',

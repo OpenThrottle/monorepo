@@ -1,6 +1,6 @@
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
-  CLI_MODEL_GROUP_ID,
+  cliGroupId,
   encodeCliOptionId,
   encodeModelOptionId,
   openaiGroupId,
@@ -41,9 +41,9 @@ export function toChatModelOptions(
  * drivers are offered (plan-run-only drivers like codex/grok are discoverable
  * but have no streaming chat adapter). Each of a driver's models becomes its own
  * option (id `backend|model`, e.g. `cursor|gpt-5.2`); a driver with no listable
- * models falls back to a single bare-backend option at its default model. All
- * share the one "Agent CLIs" picker group ({@link CLI_MODEL_GROUP_ID}), with the
- * driver label as each row's sub-label to disambiguate same-named models.
+ * models falls back to a single bare-backend option at its default model. Each
+ * driver gets its own picker rail group keyed on its backend ({@link cliGroupId}),
+ * with the driver label as each row's sub-label to disambiguate same-named models.
  */
 export function toAgentChatOptions(
   discovery: DiscoverAgentClisQuery['discoverAgentClis'],
@@ -55,7 +55,7 @@ export function toAgentChatOptions(
         return [
           {
             description: agent.label,
-            groupId: CLI_MODEL_GROUP_ID,
+            groupId: cliGroupId(agent.backend),
             id: agent.backend,
             label: agent.label,
             subLabel: agent.label,
@@ -65,7 +65,7 @@ export function toAgentChatOptions(
 
       return agent.models.map((model) => ({
         description: agent.label,
-        groupId: CLI_MODEL_GROUP_ID,
+        groupId: cliGroupId(agent.backend),
         id: encodeCliOptionId(agent.backend, model),
         label: model,
         subLabel: agent.label,

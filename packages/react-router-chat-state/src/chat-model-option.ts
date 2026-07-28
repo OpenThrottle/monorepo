@@ -2,6 +2,7 @@ import type {
   ChatModelGroup,
   ChatModelOption,
 } from '@openthrottle/react-router-chat';
+import { resolveProviderIcon } from './provider-icons';
 
 /**
  * @description Pure helpers for the chat composer's model dropdown. A toolbar
@@ -9,7 +10,8 @@ import type {
  * name so a submit can route the completion back to the exact endpoint+model the
  * user picked. baseUrl never contains the separator (`::`), so a first-occurrence
  * split is unambiguous. GraphQL-shaped mappers (discovery query → options) stay
- * in the consuming app; this module is dependency-free beyond the chat types.
+ * in the consuming app; this module depends only on the chat types and the
+ * presentational provider-glyph resolver.
  */
 
 const SEPARATOR = '::';
@@ -22,7 +24,11 @@ const SEPARATOR = '::';
 const CLI_SEPARATOR = '|';
 
 /**
- * Group id (and picker rail heading) for all discovered agent CLI backends.
+ * Legacy group id that collapsed every discovered agent CLI into one rail
+ * entry. Superseded by per-CLI groups keyed on the bare driver backend id (see
+ * {@link cliGroupId}); retained for back-compat.
+ *
+ * @deprecated Use {@link cliGroupId} so each CLI gets its own rail entry.
  * @public
  */
 export const CLI_MODEL_GROUP_ID = 'agent-clis';
@@ -37,6 +43,18 @@ const OPENAI_GROUP_PREFIX = 'openai:';
  */
 export function openaiGroupId(providerOrHost: string): string {
   return `${OPENAI_GROUP_PREFIX}${providerOrHost}`;
+}
+
+/**
+ * Group id for an agent CLI's rail entry: the bare driver backend id (`claude`,
+ * `codex`, `cursor`, `grok`, `opencode`). Each CLI is its own picker group so it
+ * gets a dedicated rail icon. Kept as a named helper (mirroring
+ * {@link openaiGroupId}) so the app-side discovery mapper, {@link buildModelGroups},
+ * and `resolveProviderIcon` all agree on the id scheme.
+ * @public
+ */
+export function cliGroupId(backend: string): string {
+  return backend;
 }
 
 /** @public */
@@ -139,9 +157,14 @@ export function decodeChatOption(id: string): DecodedChatOption | null {
 }
 
 /**
- * Derive the picker's provider/CLI groups from a flat option list, preserving
- * first-appearance order. Agent CLIs collapse into a single "Agent CLIs" group;
- * each local OpenAI provider/endpoint becomes its own group.
+ * Derive the picker's provider/CLI rail groups from a flat option list,
+ * preserving first-appearance order. Each distinct `groupId` becomes its own
+ * group (one per agent CLI, one per local OpenAI endpoint) and is given a
+ * brand glyph via `resolveProviderIcon`. A local OpenAI group's label is its
+ * provider/host (the id minus the `openai:` prefix); an agent-CLI group's label
+ * is the driver label carried on the option's `subLabel` (falling back to the
+ * bare group id). The legacy collapsed {@link CLI_MODEL_GROUP_ID} still resolves
+ * to a single "Agent CLIs" group for back-compat.
  * @public
  */
 export function buildModelGroups(
@@ -155,12 +178,19 @@ export function buildModelGroups(
       continue;
     }
 
-    const label =
-      groupId === CLI_MODEL_GROUP_ID
+    const label = groupId.startsWith(OPENAI_GROUP_PREFIX)
+      ? groupId.slice(OPENAI_GROUP_PREFIX.length)
+      : groupId === CLI_MODEL_GROUP_ID
         ? 'Agent CLIs'
-        : groupId.slice(OPENAI_GROUP_PREFIX.length);
+        : model.subLabel != null && model.subLabel !== ''
+          ? model.subLabel
+          : groupId;
 
-    groups.set(groupId, { id: groupId, label });
+    groups.set(groupId, {
+      icon: resolveProviderIcon(groupId),
+      id: groupId,
+      label,
+    });
   }
 
   return [...groups.values()];
