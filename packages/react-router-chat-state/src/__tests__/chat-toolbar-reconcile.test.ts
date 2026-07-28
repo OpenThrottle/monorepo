@@ -78,6 +78,95 @@ describe('reconcileChatToolbarState', () => {
     });
   });
 
+  describe('modelId re-resolution (v2)', () => {
+    const openai = (baseUrl: string, model: string): ChatModelOption => ({
+      description: 'ollama',
+      groupId: 'openai:ollama',
+      id: `${baseUrl}::${model}`,
+      label: model,
+    });
+    const claudeModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'claude',
+      label: 'Claude',
+    };
+
+    test('keeps the model when the endpoint moved to a new port (same host)', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://localhost:11434/v1::llama3' }),
+        {
+          models: [openai('http://localhost:11500/v1', 'llama3')],
+          personas: [],
+          repositories: [],
+        },
+      );
+      expect(result.modelId).toBe('http://localhost:11500/v1::llama3');
+    });
+
+    test('keeps a single same-name candidate on a different host', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://host-a:11434/v1::llama3' }),
+        {
+          models: [openai('http://host-b:11434/v1', 'llama3')],
+          personas: [],
+          repositories: [],
+        },
+      );
+      expect(result.modelId).toBe('http://host-b:11434/v1::llama3');
+    });
+
+    test('falls back to models[0] when multiple different-host endpoints share the name', () => {
+      const models = [
+        openai('http://host-b:11434/v1', 'llama3'),
+        openai('http://host-c:11434/v1', 'llama3'),
+      ];
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'http://host-a:11434/v1::llama3' }),
+        { models, personas: [], repositories: [] },
+      );
+      expect(result.modelId).toBe(models[0].id);
+    });
+
+    test('degrades a stale CLI model override to the bare backend option', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        {
+          models: [cliModel, claudeModel],
+          personas: [],
+          repositories: [repoA],
+        },
+      );
+      expect(result.modelId).toBe('cursor');
+    });
+
+    test('degrades a stale CLI override to another same-backend override when no bare option', () => {
+      const cursorGpt6: ChatModelOption = {
+        description: 'Agent CLI',
+        groupId: 'agent-clis',
+        id: 'cursor|gpt-6',
+        label: 'gpt-6',
+      };
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        {
+          models: [cursorGpt6, claudeModel],
+          personas: [],
+          repositories: [repoA],
+        },
+      );
+      expect(result.modelId).toBe('cursor|gpt-6');
+    });
+
+    test('falls back to models[0] when a stale CLI override has no same-backend option', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor|gpt-5.2' }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.modelId).toBe('claude');
+    });
+  });
+
   describe('personaId', () => {
     test('keeps a persisted persona that still exists', () => {
       const result = reconcileChatToolbarState(
@@ -171,6 +260,91 @@ describe('reconcileChatToolbarState', () => {
       );
       expect(result.modelId).toBe(openaiModel.id);
       expect(result.reasoning).toBeUndefined();
+    });
+  });
+
+  describe('perBackend override (v2)', () => {
+    const claudeModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'claude',
+      label: 'Claude',
+    };
+    const codexModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'codex',
+      label: 'Codex',
+    };
+
+    test('a per-backend override wins over the global fallback', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
+          reasoning: ChatReasoningLevel.low,
+        }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+    });
+
+    test('falls back to the global when the effective backend has no entry', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          perBackend: { codex: { reasoning: ChatReasoningLevel.high } },
+          reasoning: ChatReasoningLevel.low,
+        }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.reasoning).toBe(ChatReasoningLevel.low);
+    });
+
+    test('distinct per-CLI values coexist (claude=high vs codex=low)', () => {
+      const state = persisted({
+        modelId: 'claude',
+        perBackend: {
+          claude: { reasoning: ChatReasoningLevel.high },
+          codex: { reasoning: ChatReasoningLevel.low },
+        },
+      });
+      const models = [claudeModel, codexModel];
+
+      const asClaude = reconcileChatToolbarState(state, {
+        models,
+        personas: [],
+        repositories: [repoA],
+      });
+      const asCodex = reconcileChatToolbarState(
+        { ...state, modelId: 'codex' },
+        { models, personas: [], repositories: [repoA] },
+      );
+
+      expect(asClaude.reasoning).toBe(ChatReasoningLevel.high);
+      expect(asCodex.reasoning).toBe(ChatReasoningLevel.low);
+    });
+
+    test('gates a per-backend override the effective backend disallows', () => {
+      // The openai backend permits no reasoning levels; the override must still
+      // be capability-gated, not trusted verbatim.
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: openaiModel.id,
+          perBackend: { openai: { reasoning: ChatReasoningLevel.high } },
+        }),
+        { models: [openaiModel], personas: [], repositories: [] },
+      );
+      expect(result.reasoning).toBeUndefined();
+    });
+
+    test('passes perBackend through unchanged (derive-only)', () => {
+      const perBackend = { claude: { reasoning: ChatReasoningLevel.high } };
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'claude', perBackend }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.perBackend).toEqual(perBackend);
     });
   });
 

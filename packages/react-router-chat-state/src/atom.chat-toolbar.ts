@@ -14,7 +14,7 @@ import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
  * can migrate old blobs forward instead of wiping the user's saved toolbar.
  * @public
  */
-export const CHAT_TOOLBAR_STATE_VERSION = 1 as const;
+export const CHAT_TOOLBAR_STATE_VERSION = 2 as const;
 
 /**
  * localStorage key for the persisted Chat Toolbar selections. Derived from
@@ -25,16 +25,33 @@ export const CHAT_TOOLBAR_STATE_VERSION = 1 as const;
 export const CHAT_TOOLBAR_STORAGE_KEY = `${APP_NAME}:chat:toolbar`;
 
 /**
+ * Per-backend memory of the capability-gated toolbar controls. Keyed in
+ * {@link ChatToolbarState.perBackend} by `decodeChatOption(modelId).backend`
+ * (the CLI driver token, or `openai` for local endpoints), so each backend
+ * restores its own last-used picks. Every field is optional; an absent field
+ * falls back to the top-level global on that state (see the reconciler).
+ * @public
+ */
+export interface ChatToolbarBackendPrefs {
+  readonly permissionMode?: ChatPermissionMode;
+  readonly reasoning?: ChatReasoningLevel;
+  readonly serviceTier?: ChatServiceTier;
+}
+
+/**
  * The persisted Chat Toolbar selections. Deliberately global (single object,
  * implicit-default Jotai store), mirroring the appearance-config precedent. The
  * id fields are `undefined` when unset so the consumer seeds them from loader
  * data; the enum fields are `undefined` when the user has made no explicit pick.
- * Keys are alphabetized; `version` stamps the schema for forward migration.
+ * The top-level `permissionMode`/`reasoning`/`serviceTier` act as the GLOBAL
+ * fallback; `perBackend` (added in v2) holds per-backend OVERRIDES layered over
+ * them. Keys are alphabetized; `version` stamps the schema for forward migration.
  * @public
  */
 export interface ChatToolbarState {
   readonly mode: ChatComposerMode;
   readonly modelId: string | undefined;
+  readonly perBackend: Readonly<Record<string, ChatToolbarBackendPrefs>>;
   readonly permissionMode: ChatPermissionMode | undefined;
   readonly personaId: string | undefined;
   readonly reasoning: ChatReasoningLevel | undefined;
@@ -53,6 +70,7 @@ export interface ChatToolbarState {
 export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   mode: ChatComposerMode.plan,
   modelId: undefined,
+  perBackend: {},
   permissionMode: undefined,
   personaId: undefined,
   reasoning: undefined,
@@ -87,11 +105,58 @@ const isChatServiceTier = (value: unknown): value is ChatServiceTier =>
   isMemberOf(Object.values(ChatServiceTier), value);
 
 /**
- * Coerce a v1-shaped (or unversioned/legacy, which shares the v1 field set)
- * record into a valid {@link ChatToolbarState}: unknown enum values and
- * non-string ids drop back to their defaults rather than corrupting the blob.
+ * Coerce an unknown persisted `perBackend` map into a valid record: non-record
+ * entries and unknown enum values are dropped, and any entry left with no valid
+ * prefs is omitted entirely so the map never accumulates empty keys.
  */
-function coerceChatToolbarStateV1(
+function coercePerBackend(
+  value: unknown,
+): Record<string, ChatToolbarBackendPrefs> {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const result: Record<string, ChatToolbarBackendPrefs> = {};
+  for (const [backendKey, entry] of Object.entries(value)) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+
+    const prefs: {
+      permissionMode?: ChatPermissionMode;
+      reasoning?: ChatReasoningLevel;
+      serviceTier?: ChatServiceTier;
+    } = {};
+    if (isChatPermissionMode(entry.permissionMode)) {
+      prefs.permissionMode = entry.permissionMode;
+    }
+    if (isChatReasoningLevel(entry.reasoning)) {
+      prefs.reasoning = entry.reasoning;
+    }
+    if (isChatServiceTier(entry.serviceTier)) {
+      prefs.serviceTier = entry.serviceTier;
+    }
+
+    if (
+      prefs.permissionMode !== undefined ||
+      prefs.reasoning !== undefined ||
+      prefs.serviceTier !== undefined
+    ) {
+      result[backendKey] = prefs;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Coerce a persisted record into a valid {@link ChatToolbarState}: unknown enum
+ * values and non-string ids drop back to their defaults rather than corrupting
+ * the blob. v0/v1/v2 share a forward-compatible field set — `perBackend` is
+ * simply absent before v2, so it coerces to `{}` and the older blob migrates
+ * forward while preserving still-valid picks.
+ */
+function coerceChatToolbarState(
   record: Record<string, unknown>,
 ): ChatToolbarState {
   return {
@@ -99,6 +164,7 @@ function coerceChatToolbarStateV1(
       ? record.mode
       : DEFAULT_CHAT_TOOLBAR_STATE.mode,
     modelId: typeof record.modelId === 'string' ? record.modelId : undefined,
+    perBackend: coercePerBackend(record.perBackend),
     permissionMode: isChatPermissionMode(record.permissionMode)
       ? record.permissionMode
       : undefined,
@@ -120,11 +186,12 @@ function coerceChatToolbarStateV1(
  * @description Migration-aware coercion of unknown persisted JSON into a valid
  * {@link ChatToolbarState}. Reads `version`, dispatches to the matching
  * migration, then coerces each field. Unversioned/legacy blobs (`version`
- * absent → treated as v0) share the v1 field set today, so they migrate forward
- * while preserving still-valid picks. A newer/unknown version — or malformed
- * input — degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than throwing.
- * The `switch` is the seam where a future v1→v2 reshape slots in as its own
- * case (rewriting `record` before the shared coercion).
+ * absent → treated as v0) and v1 blobs share the v2 field set minus `perBackend`
+ * (added in v2), so they migrate forward — seeding `perBackend: {}` — while
+ * preserving still-valid picks. A newer/unknown version — or malformed input —
+ * degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than throwing. The
+ * `switch` is the seam where a future v2→v3 reshape slots in as its own case
+ * (rewriting `record` before the shared coercion).
  * @public
  */
 export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
@@ -136,8 +203,9 @@ export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
 
   switch (version) {
     case 0:
+    case 1:
     case CHAT_TOOLBAR_STATE_VERSION:
-      return coerceChatToolbarStateV1(raw);
+      return coerceChatToolbarState(raw);
     default:
       // Newer/unknown schema written by a build we can't understand: don't
       // guess — fall back to defaults.

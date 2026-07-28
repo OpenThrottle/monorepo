@@ -15,6 +15,9 @@ import {
   chatToolbarStateAtom,
   decodeChatOption,
   reconcileChatToolbarState,
+  useSessionPermissionDecay,
+  type ChatToolbarBackendPrefs,
+  type ChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import {
@@ -62,6 +65,8 @@ export function useHeaderChatController(args: {
   const optionsFetcher = useFetcher<ChatOptionsResponse>();
   const turn = useAgenticChatTurn();
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+  // Elevated permission modes decay to the safe default once per browser session.
+  useSessionPermissionDecay();
 
   // Setup
   const options = optionsFetcher.data ?? EMPTY_OPTIONS;
@@ -74,16 +79,10 @@ export function useHeaderChatController(args: {
     setToolbarState((previous) => ({ ...previous, mode }));
   const setModelId = (modelId: string): void =>
     setToolbarState((previous) => ({ ...previous, modelId }));
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
-    setToolbarState((previous) => ({ ...previous, permissionMode }));
   const setPersonaId = (personaId: string): void =>
     setToolbarState((previous) => ({ ...previous, personaId }));
-  const setReasoning = (reasoning: ChatReasoningLevel): void =>
-    setToolbarState((previous) => ({ ...previous, reasoning }));
   const setRepositoryId = (repositoryId: string): void =>
     setToolbarState((previous) => ({ ...previous, repositoryId }));
-  const setServiceTier = (serviceTier: ChatServiceTier): void =>
-    setToolbarState((previous) => ({ ...previous, serviceTier }));
 
   const effectiveToolbar = React.useMemo(
     () =>
@@ -105,6 +104,34 @@ export function useHeaderChatController(args: {
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decodedOption);
+
+  // Last-used-wins write path for the capability-gated controls: persist the new
+  // value both under the active backend's `perBackend` entry AND as the global
+  // fallback, so a never-touched backend inherits the most-recent choice.
+  const backendKey = decodedOption?.backend;
+  const writeBackendPref = (
+    previous: ChatToolbarState,
+    patch: ChatToolbarBackendPrefs,
+  ): ChatToolbarState =>
+    backendKey == null
+      ? { ...previous, ...patch }
+      : {
+          ...previous,
+          ...patch,
+          perBackend: {
+            ...previous.perBackend,
+            [backendKey]: { ...previous.perBackend[backendKey], ...patch },
+          },
+        };
+  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
+    setToolbarState((previous) =>
+      writeBackendPref(previous, { permissionMode }),
+    );
+  const setReasoning = (reasoning: ChatReasoningLevel): void =>
+    setToolbarState((previous) => writeBackendPref(previous, { reasoning }));
+  const setServiceTier = (serviceTier: ChatServiceTier): void =>
+    setToolbarState((previous) => writeBackendPref(previous, { serviceTier }));
+
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
     () =>
