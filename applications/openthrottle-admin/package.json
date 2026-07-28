@@ -9,8 +9,14 @@
   },
   "dependencies": {
     "@openthrottle/graphql-codegen": "workspace:^",
+    "@openthrottle/react-router-chat": "workspace:^",
+    "@openthrottle/react-router-chat-state": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",
-    "clsx": "catalog:"
+    "@openthrottle/react-router-graphql": "workspace:^",
+    "@openthrottle/react-router-ui-global": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
+    "clsx": "catalog:",
+    "jotai": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"

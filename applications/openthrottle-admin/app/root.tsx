@@ -46,6 +46,7 @@ import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { dataNavigation } from '~/global/data/data.navigation';
+import { useHeaderChatController } from '~/routing/chat/hooks/useHeaderChatController';
 
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -200,8 +201,13 @@ export default function App(): React.ReactElement {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
   const { pathname } = useLocation();
+  // Streaming chat surface for the global header ChatDialog. Runs unconditionally
+  // (hook rules); only injected into GlobalProviders when authenticated, else the
+  // header falls back to the legacy provider.
+  const headerChat = useHeaderChatController({ enabled: data?.user != null });
 
   // Setup
+  const headerChatSurface = data?.user != null ? headerChat : undefined;
   const isAuthRoute = pathname.startsWith('/auth');
   const isPromptsRoute = pathname.startsWith('/prompts/');
 
@@ -222,7 +228,7 @@ export default function App(): React.ReactElement {
 
   return (
     <>
-      <GlobalProviders>
+      <GlobalProviders chat={headerChatSurface}>
         <GlobalLayout
           data={dataNavigation}
           health={data?.serverHealth}

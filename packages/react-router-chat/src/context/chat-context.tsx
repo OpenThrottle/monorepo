@@ -1,7 +1,40 @@
 import * as React from 'react';
+import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
 import type { ChatMessage } from '../types';
 
+/**
+ * The full agentic-composer surface a host app injects to upgrade
+ * {@link ChatDialog} from a bare thread + composer to the seven-control
+ * {@link ChatComposerToolbar} + streaming send/stop. It is exactly
+ * {@link ChatComposerToolbarProps} (minus its layout `className`) plus the
+ * composer's streaming affordance — every field optional and presentational.
+ * When a host supplies this, {@link ChatDialog} renders the toolbar and threads
+ * the streaming state through the composer; when it does not, the dialog stays
+ * the bare legacy shell. The package hardcodes no option/capability data — the
+ * host owns all state (selections, discovery data, capabilities, mic, streaming).
+ *
+ * @public
+ */
+export interface ChatComposerControls extends Omit<
+  ChatComposerToolbarProps,
+  'className'
+> {
+  /**
+   * Mirrors the composer's `isStreaming`: when true the composer swaps Send for
+   * a Stop button wired to {@link onStop}.
+   */
+  readonly isStreaming?: boolean;
+  /** Invoked when the composer's Stop button is pressed while {@link isStreaming}. */
+  readonly onStop?: () => void;
+}
+
 export interface ChatContextValue {
+  /**
+   * Optional agentic-composer surface. When present, {@link ChatDialog} renders
+   * the {@link ChatComposerToolbar} + streaming send/stop; when absent it falls
+   * back to the bare thread + composer (the dormant legacy path).
+   */
+  readonly composer: ChatComposerControls | undefined;
   readonly composerDisabled: boolean;
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange: ((open: boolean) => void) | undefined;
@@ -14,6 +47,8 @@ export interface ChatContextValue {
 }
 
 export interface ChatProviderProps extends React.PropsWithChildren {
+  /** Optional agentic-composer surface; see {@link ChatComposerControls}. */
+  readonly composer?: ChatComposerControls;
   readonly composerDisabled?: boolean;
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange?: (open: boolean) => void;
@@ -30,6 +65,7 @@ const ChatContext = React.createContext<ChatContextValue | null>(null);
 export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
   const {
     children,
+    composer,
     composerDisabled = false,
     messages,
     onOpenChange,
@@ -40,6 +76,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
 
   const value = React.useMemo<ChatContextValue>(
     () => ({
+      composer,
       composerDisabled,
       messages,
       onOpenChange,
@@ -48,6 +85,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
       open,
     }),
     [
+      composer,
       composerDisabled,
       messages,
       onOpenChange,

@@ -1,11 +1,10 @@
-import type { ChatMessage } from '@openthrottle/react-router-chat';
 import { describe, expect, it } from 'vitest';
-
+import type { ChatMessage } from '../types';
 import {
   INITIAL_STREAM_STATE,
   reduceStreamChunk,
   toThreadMessages,
-} from '../useConversationStream';
+} from '../conversation-stream';
 
 const chunk = (overrides: {
   delta?: string;

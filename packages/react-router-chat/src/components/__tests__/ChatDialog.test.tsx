@@ -6,8 +6,10 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { ChatProvider } from '../../context/chat-context';
+import type { ChatComposerControls } from '../../context/chat-context';
 import { ChatDialog } from '../ChatDialog';
 import type { ChatDialogProps } from '../ChatDialog';
+import { ChatComposerMode } from '../../types';
 import type { ChatMessage } from '../../types';
 
 describe('ChatDialog Component', () => {
@@ -176,6 +178,86 @@ describe('ChatDialog Component', () => {
 
       expect(
         component!.queryByRole('button', { name: 'New chat' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a composer selection surface is provided', () => {
+    const buildComposer = (
+      overrides: Partial<ChatComposerControls> = {},
+    ): ChatComposerControls => ({
+      mode: ChatComposerMode.plan,
+      modelId: 'm1',
+      models: [{ id: 'm1', label: 'Model One' }],
+      ...overrides,
+    });
+
+    const mountWithComposer = (
+      composer: ChatComposerControls,
+    ): RenderResult => {
+      component?.unmount();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+      const Comp = () => (
+        <TooltipProvider>
+          <ChatDialog
+            composer={composer}
+            messages={messages}
+            onSendMessage={onSendMessage}
+            triggerLabel="Open assistant"
+          />
+        </TooltipProvider>
+      );
+      const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
+      component = render(<RoutesStub />);
+      return component;
+    };
+
+    test('should render the toolbar inside the open dialog', async () => {
+      const user = userEvent.setup();
+      mountWithComposer(buildComposer());
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      expect(component!.getByTestId('ChatComposerToolbar')).toBeInTheDocument();
+      expect(
+        component!.getByTestId('ChatComposerToolbar-model-select'),
+      ).toBeInTheDocument();
+    });
+
+    test('should invoke the injected setter when a control changes', async () => {
+      const user = userEvent.setup();
+      const onModeChange = vi.fn();
+      mountWithComposer(buildComposer({ onModeChange }));
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      await user.click(
+        component!.getByTestId('ChatComposerToolbar-mode-build'),
+      );
+      expect(onModeChange).toHaveBeenCalledWith('build');
+    });
+
+    test('should show the Stop control wired to onStop while streaming', async () => {
+      const user = userEvent.setup();
+      const onStop = vi.fn();
+      mountWithComposer(buildComposer({ isStreaming: true, onStop }));
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      await user.click(component!.getByRole('button', { name: 'Stop' }));
+      expect(onStop).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when no composer surface is provided', () => {
+    test('should render the bare composer without a toolbar', async () => {
+      const user = userEvent.setup();
+      mountDialog();
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      expect(
+        component!.queryByTestId('ChatComposerToolbar'),
       ).not.toBeInTheDocument();
     });
   });
