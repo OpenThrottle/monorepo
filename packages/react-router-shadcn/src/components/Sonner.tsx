@@ -12,6 +12,7 @@ import {
   toast as sonnerToast,
   type ToasterProps,
 } from 'sonner';
+import { isRenderableMessage } from '../utils/isRenderableMessage';
 
 type ToasterTheme = NonNullable<ToasterProps['theme']>;
 
@@ -32,23 +33,14 @@ const MESSAGE_METHODS = new Set([
 ]);
 
 /**
- * A message renders only when it carries visible content: a non-whitespace
- * string, a numeric value React will print, or a React element. Everything
- * else — `null`/`undefined`, booleans, plain objects, functions, symbols — is
- * suppressed, so a nullish or non-ReactNode first arg can never surface a
- * bodyless toast (nor crash React on render). An allowlist (rather than a broad
- * `typeof !== 'string'` check) keeps real rich content untouched.
+ * A toast surfaces only when its first argument carries visible content, so a
+ * nullish or non-ReactNode message can never surface a bodyless toast (nor crash
+ * React on render). Delegates to the shared {@link isRenderableMessage} predicate
+ * — the single source of truth also consumed by the in-app notifications store —
+ * so both surfaces stay in lockstep.
  */
-const hasRenderableMessage = (args: readonly unknown[]): boolean => {
-  const [message] = args;
-  if (typeof message === 'string') {
-    return message.trim().length > 0;
-  }
-  if (typeof message === 'number' || typeof message === 'bigint') {
-    return true;
-  }
-  return React.isValidElement(message);
-};
+const hasRenderableMessage = (args: readonly unknown[]): boolean =>
+  isRenderableMessage(args[0]);
 
 /**
  * @public

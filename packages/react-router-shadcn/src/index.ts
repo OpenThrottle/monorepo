@@ -62,3 +62,4 @@ export * from './themes/index';
 
 // Utilities
 export * from './utils/cn';
+export * from './utils/isRenderableMessage';
