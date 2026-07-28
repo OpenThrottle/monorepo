@@ -99,7 +99,14 @@ Certificate of Origin (`git commit -s`). See [CONTRIBUTING.md](./CONTRIBUTING.md
 
 Third-party and open-source dependencies are governed by their own license
 terms; nothing here supersedes them. The dependency tree is overwhelmingly
-MIT/Apache/BSD/ISC — all compatible with Apache-2.0.
+MIT/Apache/BSD/ISC — all compatible with Apache-2.0. A small number of
+dependencies carry non-permissive licenses that are documented, waived
+exceptions (e.g. Microsoft build-only tooling; a source-available decorative UI
+dependency) rather than part of the Apache-2.0 core.
+
+The full audit — including the resolution of every package `pnpm licenses list`
+reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
+[`docs/monorepo/dependency-license-audit.md`](./docs/monorepo/dependency-license-audit.md).
 
 ## Files
 
