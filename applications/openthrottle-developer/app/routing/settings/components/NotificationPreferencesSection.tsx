@@ -1,11 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import {
-  Label,
-  Separator,
-  Switch,
-  toast,
-} from '@openthrottle/react-router-shadcn';
+import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
 import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
 import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
@@ -31,15 +26,11 @@ export const NotificationPreferencesSection = (
   // Setup
 
   // Handlers
+  // Local-state only until a user-settings API + action handlers exist; toggling
+  // must not fire a toast (no real action is taken yet).
   const handleCheckedChange =
     (id: NotificationPreferenceId) => (checked: boolean) => {
       setToggles((prev) => ({ ...prev, [id]: checked }));
-
-      const value = toast.loading('Start a loader...');
-
-      setTimeout(() => {
-        toast.dismiss(value);
-      }, 1_500);
     };
 
   // Markup

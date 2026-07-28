@@ -11,15 +11,62 @@
  *   `aria-live` region should announce moves and errors.
  */
 import * as React from 'react';
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { RenderResult } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanTasksBoard } from '../PlanTasksBoard';
 import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
+// Spy on the toast boundary so we can assert the move-status effect fires
+// exactly once per real busy->idle transition (never on a stale re-render).
+const mockToast = vi.hoisted(() => ({
+  dismiss: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  loading: vi.fn(),
+  message: vi.fn(),
+  success: vi.fn(),
+  warning: vi.fn(),
+}));
+
+interface MockFetcher {
+  data: unknown;
+  state: 'idle' | 'loading' | 'submitting';
+  submit: ReturnType<typeof vi.fn>;
+}
+
+// A controllable `useFetcher` return value the tests mutate to drive the
+// submission through in-flight -> completed edges without a real drag-and-drop.
+const fetcherRef = vi.hoisted((): { current: MockFetcher } => ({
+  current: { data: undefined, state: 'idle', submit: vi.fn() },
+}));
+
+vi.mock('@openthrottle/react-router-shadcn', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-shadcn')>();
+  return { ...actual, toast: mockToast };
+});
+
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
+  return { ...actual, useFetcher: () => fetcherRef.current };
+});
+
+// Forces the board to re-render so a mutated `fetcherRef` is observed.
+let forceRerender: () => void = () => {};
+const BoardHarness = (): React.ReactElement => {
+  const [, setTick] = React.useState(0);
+  forceRerender = () => setTick((tick) => tick + 1);
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <PlanTasksBoard />
+    </DndProvider>
+  );
+};
 
 const mockTask = (
   overrides: Partial<PlanTaskRowFragment>,
@@ -182,5 +229,66 @@ describe('PlanTasksBoard Component', () => {
     expect(document.activeElement).toHaveAccessibleName(
       /open task: focusable title/i,
     );
+  });
+});
+
+describe('PlanTasksBoard move-status toast (busy-edge guard)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    fetcherRef.current = { data: undefined, state: 'idle', submit: vi.fn() };
+  });
+
+  const renderHarness = (): void => {
+    renderWithPlanDetailRouteData(<BoardHarness />, {
+      plan: { id: 'plan-1' },
+      planOutputChunks: [],
+      planRunAuditRows: [],
+      recentPlanRuns: [],
+      tasks: [mockTask({ id: 'a', status: 'PENDING' })],
+    });
+  };
+
+  test('fires the move-failed toast once on the busy->idle edge, never on a stale re-render', () => {
+    renderHarness();
+
+    // Submission goes in-flight: no toast yet.
+    act(() => {
+      fetcherRef.current = {
+        data: undefined,
+        state: 'submitting',
+        submit: vi.fn(),
+      };
+      forceRerender();
+    });
+    expect(mockToast.error).not.toHaveBeenCalled();
+
+    // Completes with an error -> the move-failed toast fires exactly once.
+    act(() => {
+      fetcherRef.current = {
+        data: { updateTaskError: 'Move failed' },
+        state: 'idle',
+        submit: vi.fn(),
+      };
+      forceRerender();
+    });
+    expect(mockToast.error).toHaveBeenCalledTimes(1);
+    expect(mockToast.error).toHaveBeenCalledWith(
+      'Failed to move task: Move failed',
+      {
+        id: 'update-task-status',
+      },
+    );
+
+    // A later unrelated re-render with the same completed data (new object ref,
+    // still idle, no busy->idle transition) must NOT re-fire the toast.
+    act(() => {
+      fetcherRef.current = {
+        data: { updateTaskError: 'Move failed' },
+        state: 'idle',
+        submit: vi.fn(),
+      };
+      forceRerender();
+    });
+    expect(mockToast.error).toHaveBeenCalledTimes(1);
   });
 });
