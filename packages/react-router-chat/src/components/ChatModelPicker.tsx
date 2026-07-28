@@ -3,7 +3,6 @@ import {
   Button,
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
@@ -11,6 +10,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Check, ChevronsUpDown, Star } from 'lucide-react';
 import clsx from 'clsx';
@@ -45,8 +47,12 @@ export interface ChatModelPickerProps {
   readonly selectedModelId?: string;
 }
 
+/** Id of the synthetic favorites group (the rail's first entry). */
+const FAVORITES_GROUP_ID = '__favorites__';
 /** Label for the synthetic favorites group. */
 const FAVORITES_GROUP_LABEL = 'Favorites';
+/** Id of the synthetic catch-all group for ungrouped models. */
+const OTHER_GROUP_ID = '__other__';
 /** Fallback group label for models whose `groupId` matches no supplied group. */
 const OTHER_GROUP_LABEL = 'Other';
 
@@ -58,12 +64,16 @@ interface ResolvedGroup {
 }
 
 /**
- * @description Controlled, presentational command-palette model/CLI picker.
- * Renders a searchable list grouped by provider/CLI (plus a synthetic
- * Favorites group), each row carrying an optional muted sub-label, a keyboard
- * shortcut hint, and an optional favorite toggle. Selection and favoriting are
- * driven entirely by props — the package hardcodes no models. Capability
- * gating (which rows are selectable) is expressed via {@link disabledModelIds}.
+ * @description Controlled, presentational command-palette model/CLI picker with
+ * a two-column layout: a thin, icon-only left rail lists a synthetic
+ * {@link FAVORITES_GROUP_LABEL} entry (when any model is favorited) followed by
+ * one entry per provider/CLI group, each an icon with a hover tooltip and an
+ * active state; the right panel is a searchable, scrolling list showing only the
+ * active group's models (label, optional muted sub-label, `⌘N` shortcut hint,
+ * optional favorite toggle, selected check). Search filters within the active
+ * group only. Selection, favoriting, and content are driven entirely by props —
+ * the package hardcodes no models. Capability gating (which rows are selectable)
+ * is expressed via {@link disabledModelIds}.
  *
  * @public
  */
@@ -86,6 +96,8 @@ export const ChatModelPicker = (
 
   // Hooks
   const [open, setOpen] = React.useState(false);
+  const [activeGroupId, setActiveGroupId] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState('');
 
   // Setup
   const disabledSet = React.useMemo(
@@ -104,7 +116,7 @@ export const ChatModelPicker = (
     const favorites = models.filter((model) => model.favorite === true);
     if (favorites.length > 0) {
       out.push({
-        id: '__favorites__',
+        id: FAVORITES_GROUP_ID,
         label: FAVORITES_GROUP_LABEL,
         models: favorites,
       });
@@ -128,7 +140,7 @@ export const ChatModelPicker = (
     );
     if (ungrouped.length > 0) {
       out.push({
-        id: '__other__',
+        id: OTHER_GROUP_ID,
         label: OTHER_GROUP_LABEL,
         models: ungrouped,
       });
@@ -137,10 +149,57 @@ export const ChatModelPicker = (
     return out;
   }, [groups, models]);
 
+  // The rail entry to open on. Prefer the selected model's group (its Favorites
+  // entry when it is favorited), else the first resolved group.
+  const defaultActiveGroupId = React.useMemo<string | null>(() => {
+    if (resolvedGroups.length === 0) {
+      return null;
+    }
+    if (selectedModel != null) {
+      if (
+        selectedModel.favorite === true &&
+        resolvedGroups.some((group) => group.id === FAVORITES_GROUP_ID)
+      ) {
+        return FAVORITES_GROUP_ID;
+      }
+      const owning = resolvedGroups.find(
+        (group) =>
+          group.id !== FAVORITES_GROUP_ID &&
+          group.models.some((model) => model.id === selectedModel.id),
+      );
+      if (owning != null) {
+        return owning.id;
+      }
+    }
+    return resolvedGroups[0].id;
+  }, [resolvedGroups, selectedModel]);
+
+  // The active group falls back to the default (and then the first group) so a
+  // stale `activeGroupId` — e.g. after `models` changes — never blanks the list.
+  const activeGroup =
+    resolvedGroups.find((group) => group.id === activeGroupId) ??
+    resolvedGroups.find((group) => group.id === defaultActiveGroupId) ??
+    resolvedGroups[0];
+
   const triggerLabel = selectedModel?.label ?? placeholder;
   const triggerSubLabel = selectedModel?.subLabel;
 
   // Handlers
+  const onOpenChange = (nextOpen: boolean): void => {
+    if (nextOpen) {
+      // Reopen onto the selected model's group with a cleared search.
+      setActiveGroupId(defaultActiveGroupId);
+      setSearch('');
+    }
+    setOpen(nextOpen);
+  };
+
+  const onSelectRail = (groupId: string): void => {
+    setActiveGroupId(groupId);
+    // Search filters within the active group only, so switching resets it.
+    setSearch('');
+  };
+
   const onSelectModel = (modelId: string): void => {
     if (disabledSet.has(modelId)) {
       return;
@@ -160,6 +219,56 @@ export const ChatModelPicker = (
   };
 
   // Markup
+  const renderRailIcon = (group: ResolvedGroup): React.ReactElement => {
+    if (group.id === FAVORITES_GROUP_ID) {
+      return <Star className="size-4" />;
+    }
+    if (group.icon != null) {
+      return (
+        <span className="flex size-4 items-center justify-center">
+          {group.icon}
+        </span>
+      );
+    }
+    // Letter-avatar fallback for a group that supplied no icon.
+    return (
+      <span
+        aria-hidden={true}
+        className="flex size-4 items-center justify-center text-xs font-medium"
+      >
+        {group.label.charAt(0).toUpperCase()}
+      </span>
+    );
+  };
+
+  const renderRailItem = (group: ResolvedGroup): React.ReactElement => {
+    const isActive = activeGroup?.id === group.id;
+    return (
+      <Tooltip delayDuration={300} key={group.id}>
+        <TooltipTrigger asChild={true}>
+          <Button
+            aria-label={group.label}
+            aria-pressed={isActive}
+            className={clsx(
+              'relative size-9 shrink-0',
+              isActive &&
+                'bg-accent text-accent-foreground before:bg-primary before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:content-[""]',
+            )}
+            data-active={isActive}
+            data-testid={`ChatModelPicker-rail-item-${group.id}`}
+            onClick={() => onSelectRail(group.id)}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            {renderRailIcon(group)}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">{group.label}</TooltipContent>
+      </Tooltip>
+    );
+  };
+
   const renderRow = (
     model: ChatModelOption,
     groupId: string,
@@ -232,7 +341,7 @@ export const ChatModelPicker = (
   // 🔌 Short Circuit
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
+    <Popover onOpenChange={onOpenChange} open={open}>
       <PopoverTrigger asChild={true}>
         <Button
           aria-expanded={open}
@@ -259,34 +368,29 @@ export const ChatModelPicker = (
       </PopoverTrigger>
       <PopoverContent
         align={align}
-        className="w-72 p-0"
+        className="flex w-96 p-0"
         data-testid="ChatModelPicker-content"
       >
-        <Command>
+        <div
+          className="bg-muted/40 flex max-h-80 flex-col gap-1 overflow-y-auto border-r p-1.5"
+          data-testid="ChatModelPicker-rail"
+        >
+          {resolvedGroups.map((group) => renderRailItem(group))}
+        </div>
+        <Command className="min-w-0 flex-1" shouldFilter={true}>
           <CommandInput
             data-testid="ChatModelPicker-search"
+            onValueChange={setSearch}
             placeholder={searchPlaceholder}
+            value={search}
           />
-          <CommandList>
+          <CommandList className="max-h-72">
             <CommandEmpty>{emptyLabel}</CommandEmpty>
-            {resolvedGroups.map((group) => (
-              <CommandGroup
-                data-testid={`ChatModelPicker-group-${group.id}`}
-                heading={
-                  group.icon != null ? (
-                    <span className="flex items-center gap-1.5">
-                      {group.icon}
-                      {group.label}
-                    </span>
-                  ) : (
-                    group.label
-                  )
-                }
-                key={group.id}
-              >
-                {group.models.map((model) => renderRow(model, group.id))}
-              </CommandGroup>
-            ))}
+            {activeGroup != null
+              ? activeGroup.models.map((model) =>
+                  renderRow(model, activeGroup.id),
+                )
+              : null}
           </CommandList>
         </Command>
       </PopoverContent>

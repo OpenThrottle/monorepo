@@ -3,7 +3,7 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import {
-  CLI_MODEL_GROUP_ID,
+  cliGroupId,
   encodeCliOptionId,
   encodeModelOptionId,
   openaiGroupId,
@@ -57,7 +57,7 @@ function toAgentChatOptions(
         return [
           {
             description: agent.label,
-            groupId: CLI_MODEL_GROUP_ID,
+            groupId: cliGroupId(agent.backend),
             id: agent.backend,
             label: agent.label,
             subLabel: agent.label,
@@ -67,7 +67,7 @@ function toAgentChatOptions(
 
       return agent.models.map((model) => ({
         description: agent.label,
-        groupId: CLI_MODEL_GROUP_ID,
+        groupId: cliGroupId(agent.backend),
         id: encodeCliOptionId(agent.backend, model),
         label: model,
         subLabel: agent.label,

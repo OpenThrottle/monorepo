@@ -49,7 +49,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
 
   const seededLoaderData: Route.ComponentProps['loaderData'] = {
     models: [
-      { description: 'Agent CLI', groupId: 'agent-clis', id: 'cursor', label: 'Cursor' }, // prettier-ignore
+      { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
     ],
     personas: [{ id: 'p1', label: 'Persona One' }],
     repositories: [{ displayName: 'Repo One', id: 'r1' }],
