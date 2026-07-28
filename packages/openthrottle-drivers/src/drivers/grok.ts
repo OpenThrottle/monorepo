@@ -9,11 +9,12 @@
  */
 
 import { defineDriver } from '../registry/index.ts';
-import type { DriverCapabilities } from '../types/index.ts';
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
+  chatStreaming: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsModelFlag: true,
@@ -22,10 +23,27 @@ const capabilities: DriverCapabilities = {
 };
 
 /**
+ * `grok models` prints an `Available models:` header then bulleted `  * <id> (default)` rows
+ * (verified against 0.2.112). Capture the id after the bullet, strip a trailing ` (default)`.
+ * Listing requires login, so this tolerantly yields `[]` when logged out.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => /^\s*\*\s+(\S+)/.exec(line)?.[1])
+      .filter((id): id is string => id !== undefined),
+};
+
+/**
  * @description Grok driver (`grok`, label `grok`). Model flag omitted when unset or `auto`.
  * @public
  */
 export const grokDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_GROK_BIN',
+  binary: 'grok',
   buildShellCommand: (config) => {
     const modelNorm = config.model?.trim() ?? '';
     const modelFlag =
@@ -39,6 +57,8 @@ export const grokDriver = defineDriver({
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },
   capabilities,
+  discoverModels,
   id: 'grok',
   label: 'grok',
+  versionArgs: ['--version'],
 });

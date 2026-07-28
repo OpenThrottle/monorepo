@@ -7,10 +7,11 @@
  */
 
 import { defineDriver } from '../registry/index.ts';
-import type { DriverCapabilities } from '../types/index.ts';
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsModelFlag: true,
@@ -19,11 +20,27 @@ const capabilities: DriverCapabilities = {
 };
 
 /**
+ * `opencode models` prints one `provider/model` id per line (verified against 1.18.5). Every
+ * non-empty trimmed line is a model id.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== ''),
+};
+
+/**
  * @description OpenCode driver (`opencode`, label `opencode`). `--auto` keeps the agentic loop
  * non-blocking; `--model` is omitted when unset or `auto` (OpenCode has no `auto` alias).
  * @public
  */
 export const opencodeDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_OPENCODE_BIN',
+  binary: 'opencode',
   buildShellCommand: (config) => {
     const modelNorm = config.model?.trim() ?? '';
     const modelFlag =
@@ -36,6 +53,8 @@ export const opencodeDriver = defineDriver({
     return `opencode run --auto "${safePrompt}"${modelFlag}`;
   },
   capabilities,
+  discoverModels,
   id: 'opencode',
   label: 'opencode',
+  versionArgs: ['--version'],
 });

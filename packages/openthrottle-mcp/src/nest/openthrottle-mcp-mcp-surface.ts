@@ -302,6 +302,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.discoverAgentClisToolDescription,
+    name: 'discover_agent_clis',
+    parameters: asMcpParameters(Th.discoverAgentClisToolParameters),
+  })
+  discoverAgentClis(
+    args: Parameters<typeof Th.discoverAgentClisToolHandler>[0],
+  ): ReturnType<typeof Th.discoverAgentClisToolHandler> {
+    return Th.discoverAgentClisToolHandler(args);
+  }
+
+  @Tool({
     description: Th.discoverLocalModelsToolDescription,
     name: 'discover_local_models',
     parameters: asMcpParameters(Th.discoverLocalModelsToolParameters),

@@ -12,6 +12,7 @@ import type { DriverCapabilities } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  chatStreaming: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsModelFlag: true,
@@ -21,10 +22,14 @@ const capabilities: DriverCapabilities = {
 
 /**
  * @description Codex driver (`codex`, label `codex`). Model flag is placed before the positional
- * prompt and omitted when unset or `auto`.
+ * prompt and omitted when unset or `auto`. Codex has no machine-listable models command (verified
+ * against codex-cli 0.145.0: no `codex models` subcommand; `-m` takes an arbitrary MODEL), so
+ * `discoverModels` is omitted and discovery reports availability-only (`models: []`).
  * @public
  */
 export const codexDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_CODEX_BIN',
+  binary: 'codex',
   buildShellCommand: (config) => {
     const modelNorm = config.model?.trim() ?? '';
     const modelFlag =
@@ -39,4 +44,5 @@ export const codexDriver = defineDriver({
   capabilities,
   id: 'codex',
   label: 'codex',
+  versionArgs: ['--version'],
 });

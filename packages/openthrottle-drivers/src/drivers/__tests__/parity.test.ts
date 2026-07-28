@@ -87,6 +87,7 @@ describe('claude driver parity', () => {
     expect(claudeDriver.id).toBe('claude');
     expect(claudeDriver.label).toBe('claude-code');
     expect(claudeDriver.capabilities).toEqual({
+      chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsModelFlag: true,
@@ -157,6 +158,7 @@ describe('cursor driver parity', () => {
     expect(cursorDriver.id).toBe('cursor');
     expect(cursorDriver.label).toBe('cursor-agent');
     expect(cursorDriver.capabilities).toEqual({
+      chatStreaming: true,
       permissionMode: false,
       skipWorktreeSetup: true,
       supportsModelFlag: true,

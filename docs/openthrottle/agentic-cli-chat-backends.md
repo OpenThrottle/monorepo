@@ -89,10 +89,16 @@ backend acquires its session id differently, persisted in
 Spawning a binary from an authenticated web request is the highest-risk surface.
 The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 
-- **Allowlist only.** The resolver accepts `openai` plus exactly the backends in
-  `AGENT_CLI_ALLOWLIST` (`cursor`, `claude`, `opencode`) and rejects anything
-  else; each adapter spawns only its own allowlisted binary. The same allowlist
-  gates what discovery even surfaces.
+- **Allowlist only.** `AGENT_CLI_ALLOWLIST` is **derived from the
+  `@openthrottle/openthrottle-drivers` registry** (`ALL_DRIVERS`), so it can't
+  drift from the driver set — discovery probes **every** driver (today `claude`,
+  `codex`, `cursor`, `grok`, `opencode`). The chat resolver, however, accepts
+  `openai` plus only the **chat-capable** drivers (those with a
+  `ConversationBackend` adapter — `capabilities.chatStreaming`: `cursor`,
+  `claude`, `opencode`) and rejects the plan-run-only drivers (`codex`, `grok`),
+  which are discoverable but have no streaming adapter yet. Each adapter spawns
+  only its own registry binary; the safety invariant (only registry binaries are
+  ever spawned) is now guaranteed by construction.
 - **No shell.** `child_process.spawn` with an **argument array** — the prompt is
   always one array element (after a `--` terminator). Shell metacharacters cannot
   escape (tested).
@@ -117,30 +123,40 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 | `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod) | unset          |
 | `OPENTHROTTLE_CURSOR_AGENT_BIN`           | Absolute path to `cursor-agent` (else PATH)                   | `cursor-agent` |
 | `OPENTHROTTLE_CLAUDE_BIN`                 | Absolute path to `claude` (else PATH)                         | `claude`       |
+| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH); discovery/plan-run only | `codex`        |
+| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH); discovery/plan-run only  | `grok`         |
 | `OPENTHROTTLE_OPENCODE_BIN`               | Absolute path to `opencode` (else PATH)                       | `opencode`     |
 | `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Kill after this much silence                                  | 120000         |
 | `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                  | 900000         |
 | `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                         | 5000           |
 | `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)      | 30000          |
 
-## Adding a new CLI to the allowlist
+## Adding a new CLI
 
-`cursor`, `claude`, and `opencode` are all wired today. Adding the next CLI is
-mechanical once it is vetted with the compatibility guide:
+Discovery is **registry-driven**: `AGENT_CLI_ALLOWLIST` projects `ALL_DRIVERS`
+from `@openthrottle/openthrottle-drivers`, so a driver becomes discoverable the
+moment it is registered — there is no separate discovery list to edit. `claude`,
+`cursor`, and `opencode` are wired as chat backends today; `codex` and `grok`
+are registered drivers that are discoverable (and usable for plan runs) but not
+yet chat-capable. To make a driver chat-capable:
 
 1. Run the [compatibility guide](./agentic-cli-backend-compatibility-guide.md)
    against the binary; commit a `<cli>-stream-json-schema.md`.
-2. Add an entry to `AGENT_CLI_ALLOWLIST` (`packages/openthrottle-agentic-utils/.../agent-discovery.ts`).
+2. Register the driver in `@openthrottle/openthrottle-drivers` (`binary`,
+   `binEnv`, `versionArgs`, a `discoverModels` descriptor, and set
+   `capabilities.chatStreaming: true`). Discovery picks it up automatically.
 3. Implement a `ConversationBackend` adapter (its own argv builder, NDJSON/SSE
    parser, event→`kind` mapping, session acquisition, system-prompt injection) —
    mirror `cursor-agent/` (flat top-level events), `claude/` (nested
    `stream_event` envelope + first-class system prompt), or `opencode/` (stateful
    per-part snapshot; terminal on process exit). The seam, chunk shape, timeouts,
    and teardown are shared; only parsing + invocation differ per CLI.
-4. Add the backend to `CLI_BACKENDS` in `ConversationStreamService` and (if it
-   acquires its session differently) a branch in the resolver's
-   `resolveCliSession`. The composer already handles any discovered backend
-   generically (no client change unless a new capability surface is needed).
+4. Wire the adapter into `ConversationStreamService` and (if it acquires its
+   session differently) a branch in the resolver's `resolveCliSession`. The
+   resolver's `CLI_BACKENDS` gate is derived from the `chatCapable` allowlist
+   entries, so setting `chatStreaming: true` in step 2 admits it automatically.
+   The composer already handles any chat-capable discovered backend generically
+   (no client change unless a new capability surface is needed).
 
 ## Test coverage
 
@@ -153,8 +169,9 @@ Unit + integration tests (no live CLI, no network) cover the path:
   fake binary; **start→stream→done**, the **stderr/non-zero-exit error** path,
   **idle-timeout kill**, **cancel kill**, and **env scrubbing** (a secret does
   not reach the child).
-- **Discovery**: available/missing/non-zero-exit probes for every allowlisted
-  backend (cursor, claude, opencode).
+- **Discovery**: available/missing/non-zero-exit probes for every registry
+  driver (claude, codex, cursor, grok, opencode), plus per-driver model-listing
+  parse + failure→`[]` paths and the `chatCapable` projection.
 - **Resolver**: backend routing, per-backend session acquisition (cursor mint,
   claude UUID create→resume, opencode mint-on-first-run + resume-from-metadata),
   cwd resolution, repository-not-found, and **unsupported-backend rejection**

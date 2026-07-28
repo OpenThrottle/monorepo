@@ -14,10 +14,20 @@ export class AgentCliOptionObject {
   })
   backend!: string;
 
+  @Field(() => Boolean, {
+    description: `True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok).`,
+  })
+  chatCapable!: boolean;
+
   @Field(() => String, {
     description: `Human-readable label for the selector.`,
   })
   label!: string;
+
+  @Field(() => [String], {
+    description: `Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed).`,
+  })
+  models!: string[];
 
   @Field(() => String, {
     description: `Trimmed --version output, or null when unknown.`,

@@ -72,6 +72,7 @@ describe('opencode driver', () => {
     expect(opencodeDriver.id).toBe('opencode');
     expect(opencodeDriver.label).toBe('opencode');
     expect(opencodeDriver.capabilities).toEqual({
+      chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsModelFlag: true,

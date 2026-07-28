@@ -11,6 +11,7 @@ import {
   buildModelGroups,
   decodeChatOption,
   decodeModelOptionId,
+  encodeCliOptionId,
   encodeModelOptionId,
 } from '../chat-model-option';
 
@@ -40,8 +41,23 @@ describe('decodeChatOption', () => {
     });
   });
 
-  it('decodes a bare CLI token as a CLI backend', () => {
+  it('decodes a bare CLI token as a CLI backend at its default model', () => {
     expect(decodeChatOption('cursor')).toEqual({ backend: 'cursor' });
+  });
+
+  it('decodes a CLI backend|model id as a backend with a model override', () => {
+    expect(decodeChatOption(encodeCliOptionId('cursor', 'gpt-5.2'))).toEqual({
+      backend: 'cursor',
+      model: 'gpt-5.2',
+    });
+    // A `provider/model` shaped CLI model round-trips (no `::`, contains `/`).
+    expect(
+      decodeChatOption(encodeCliOptionId('opencode', 'opencode/big-pickle')),
+    ).toEqual({ backend: 'opencode', model: 'opencode/big-pickle' });
+  });
+
+  it('encodes a bare backend when no model is given', () => {
+    expect(encodeCliOptionId('grok')).toBe('grok');
   });
 
   it('returns null for an empty id', () => {
@@ -97,5 +113,13 @@ describe('capabilitiesForChatOption', () => {
       expect(decoded).toEqual({ backend });
       expect(capabilitiesForChatOption(decoded).requiresRepository).toBe(true);
     }
+  });
+
+  it('keeps the full agent surface for a CLI backend with a model override', () => {
+    const caps = capabilitiesForChatOption(
+      decodeChatOption(encodeCliOptionId('cursor', 'gpt-5.2')),
+    );
+    expect(caps.requiresRepository).toBe(true);
+    expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
   });
 });
