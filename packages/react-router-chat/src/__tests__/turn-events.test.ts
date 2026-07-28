@@ -95,6 +95,91 @@ describe('foldPersistedTurnEvents', () => {
     });
   });
 
+  it('surfaces persisted usage (claude) as a single trailing usage event with typed counts', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: {
+            result: 'all set',
+            totalCostUsd: 0.04,
+            usage: { input_tokens: 1200, output_tokens: 340 },
+          },
+        },
+      ]),
+      'the answer',
+    );
+
+    const usageEvents = result.filter((e) => e.kind === 'usage');
+    expect(usageEvents).toEqual([
+      {
+        error: null,
+        kind: 'usage',
+        result: 'all set',
+        // rendered after the body text segment (sortOrder 1), not at its
+        // original persisted index (0).
+        sortOrder: 2,
+        usage: {
+          costUsd: 0.04,
+          inputTokens: 1200,
+          outputTokens: 340,
+          totalTokens: 1540,
+        },
+        usageJson: JSON.stringify({ input_tokens: 1200, output_tokens: 340 }),
+      },
+    ]);
+    // usage renders last, after the body text.
+    expect(result[result.length - 1]?.kind).toBe('usage');
+  });
+
+  it('accumulates multiple persisted opencode step-usage events into one', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: { cost: 0, tokens: { input: 100, output: 5 } },
+        },
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: { cost: 0.01, tokens: { input: 50, output: 8 } },
+        },
+      ]),
+      'done',
+    );
+
+    const usageEvents = result.filter((e) => e.kind === 'usage');
+    expect(usageEvents).toHaveLength(1);
+    expect(usageEvents[0]).toMatchObject({
+      kind: 'usage',
+      usage: {
+        costUsd: 0.01,
+        inputTokens: 150,
+        outputTokens: 13,
+        totalTokens: 163,
+      },
+    });
+  });
+
+  it('legacy turns without persisted usage still render with an empty usage marker (no counts)', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([{ delta: 'mull', kind: 'thinking', metadata: null }]),
+      'the answer',
+    );
+
+    const usage = result[result.length - 1];
+    expect(usage).toEqual({
+      error: null,
+      kind: 'usage',
+      result: null,
+      sortOrder: 2,
+      usageJson: null,
+    });
+    expect('usage' in usage).toBe(false);
+  });
+
   it('tolerates malformed toolMetadataJson', () => {
     expect(foldPersistedTurnEvents('not json', 'body')).toEqual([]);
   });

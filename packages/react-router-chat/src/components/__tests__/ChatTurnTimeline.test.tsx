@@ -84,18 +84,48 @@ describe('ChatTurnTimeline Component', () => {
       ).not.toBeInTheDocument();
     });
 
-    test('summarizes usage in a collapsed footer', () => {
+    test('summarizes usage as a compact badge with a breakdown aria-label', () => {
       const component = renderTimeline([
         {
           error: null,
           kind: 'usage',
           result: 'ok',
           sortOrder: 0,
-          usageJson: JSON.stringify({ totalTokens: 12 }),
+          usage: {
+            costUsd: 0.04,
+            inputTokens: 1200,
+            outputTokens: 340,
+            totalTokens: 1540,
+          },
+          usageJson: null,
         },
       ]);
 
-      expect(component.getByText('Usage')).toBeInTheDocument();
+      const badge = component.getByTestId('ChatTurnUsage');
+      expect(badge).toHaveTextContent('↑ 1.2k');
+      expect(badge).toHaveTextContent('↓ 340');
+      const ariaLabel = badge.getAttribute('aria-label') ?? '';
+      expect(ariaLabel).toContain('Input: 1.2k');
+      expect(ariaLabel).toContain('Cost: $0.04');
+    });
+
+    test('renders nothing for a usage event with no reported counts', () => {
+      const component = renderTimeline([
+        { kind: 'text', sortOrder: 0, text: 'done' },
+        {
+          error: null,
+          kind: 'usage',
+          result: null,
+          sortOrder: 1,
+          usageJson: null,
+        },
+      ]);
+
+      expect(component.queryByTestId('ChatTurnUsage')).not.toBeInTheDocument();
+      // the running indicator is still hidden — a usage event is present
+      expect(
+        component.queryByTestId('ChatTurnTimeline-running'),
+      ).not.toBeInTheDocument();
     });
 
     test('surfaces a terminal error as an alert instead of a usage summary', () => {

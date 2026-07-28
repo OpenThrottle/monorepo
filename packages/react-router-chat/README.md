@@ -259,12 +259,57 @@ start-conversation payload). Supporting types (`src/types.ts`, `@public`):
 > reuses the IDE ripgrep tier and resolves the repository path server-side — and
 > the parsed mentions are attached to the `startConversationStream` payload.
 
+## Token usage readout
+
+A best-effort, per-backend token/usage display: a compact per-turn breakdown and
+a live running counter in the composer footer. Token accounting is **not uniform
+across CLI backends**, so everything normalizes per-backend and **degrades
+gracefully** — it shows what a backend reported and renders nothing when a
+backend reports nothing. It never blocks streaming or throws on missing usage.
+
+| Export             | Description                                                                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ChatTokenUsage`   | Normalized, all-optional usage shape (`inputTokens`, `outputTokens`, `cacheRead/WriteTokens`, `totalTokens`, `costUsd`, `model`). An absent field means "not reported", never `0`. |
+| `normalizeUsage`   | Pure map of a backend's raw metadata (record or JSON string) → `ChatTokenUsage`; tolerates missing/partial/garbage input, returns `{}` rather than throwing                        |
+| `sumUsage`         | Accumulate two usages (token counts + cost add; latest non-empty `model` wins) — used for cumulative session totals                                                                |
+| `hasUsageCounts`   | True when a usage has at least one numeric count (renderers use it to decide whether to show anything)                                                                             |
+| `formatTokenCount` | Compact human count: `1234` → `1.2k`, `12000` → `12k`, `1_500_000` → `1.5M`                                                                                                        |
+| `formatUsageCost`  | Dollar cost for display (`$0.042` / `$1.20`), or `undefined` when absent                                                                                                           |
+| `ChatUsageCounter` | Presentational running counter (`N tokens · $cost`) for the composer footer; live pulse while streaming, settled total when idle                                                   |
+
+Per-turn usage renders as a compact `Badge` (`↑ 1.2k · ↓ 340`) with a hover
+`Tooltip` breakdown (input / output / cache / total / cost / model), mirrored
+into an `aria-label`. The composer's live counter is fed via
+`ChatComposer`'s `sessionUsage` prop (or `ChatComposerControls.sessionUsage`) —
+the **consumer owns** the cumulative total (sum turn usages with `sumUsage`);
+the package stays presentational.
+
+### Per-backend normalization
+
+| Backend      | Where usage rides              | Shape `normalizeUsage` reads                                                                                                 |
+| ------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| claude       | terminal (`done`) chunk        | `{ usage: { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens }, modelUsage, totalCostUsd }` |
+| cursor-agent | terminal (`done`) chunk        | `{ usage: { inputTokens, outputTokens, … } }`                                                                                |
+| opencode     | **mid-stream** (`step_finish`) | `{ tokens: { total, input, output, cache: { read, write } }, cost }` — per step, summed                                      |
+| openai/other | terminal, when present         | OpenAI-style `{ prompt_tokens, completion_tokens, total_tokens }`, or absent                                                 |
+
+> [!Note]
+> **Wire contract (for future backends & the server).** The reducer folds every
+> `kind:'usage'` chunk — mid-stream or terminal — into a single accumulating
+> usage event, so a backend may emit usage per step (opencode) or once at the end
+> (claude/cursor). The server (`openthrottle-server`
+> `conversation-stream.service.ts`) must **not drop** a terminal chunk's
+> `metadata`: it re-emits it as a discrete `kind:'usage'` chunk and persists it
+> into `tool_metadata` so reloaded turns keep their counts. A new backend just
+> needs to surface its counts in chunk `metadata` under any of the keys above.
+> Best-effort only: no client-side re-tokenization, no billing/quota enforcement.
+
 ## Dependencies
 
-| Package                             | Role                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------------------- |
-| `@openthrottle/react-router-shadcn` | Dialog/Sheet, `TextArea`, `Markdown` (preformatted text) for assistant bodies |
-| `@openthrottle/react-router-ui`     | Shared OpenThrottle UI patterns                                               |
+| Package                             | Role                                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `@openthrottle/react-router-shadcn` | Dialog/Sheet, `TextArea`, `Markdown` (preformatted text) for assistant bodies, `Badge`/`Tooltip` for the usage readout |
+| `@openthrottle/react-router-ui`     | Shared OpenThrottle UI patterns                                                                                        |
 
 ## Nx targets
 
