@@ -20,6 +20,14 @@ export const OPENCODE_DEFAULT_BIN = `opencode`;
  * Inputs for one streamed opencode turn.
  */
 export interface OpencodeArgvOptions {
+  /**
+   * When true, emit `--auto` (blanket auto-approve of all permissions not
+   * explicitly denied) — the opencode analog of claude's
+   * `--permission-mode bypassPermissions`, used only for the `fullAccess`
+   * posture. Scoped/default postures are expressed in the temp config's
+   * `permission` slice (see mcp-config.ts), not here.
+   */
+  readonly auto?: boolean;
   /** Workspace directory; passed as `--dir` (and used as the spawn cwd). */
   readonly cwd: string;
   /** Model as `provider/model`; omitted when undefined so opencode uses its default. */
@@ -43,7 +51,13 @@ export interface OpencodeArgvOptions {
  * `---` frontmatter, which yargs would otherwise treat as an option).
  */
 export function buildOpencodeArgv(options: OpencodeArgvOptions): string[] {
-  const argv = ['run', '--format', 'json', '--dir', options.cwd];
+  const argv = ['run'];
+
+  if (options.auto === true) {
+    argv.push('--auto');
+  }
+
+  argv.push('--format', 'json', '--dir', options.cwd);
 
   if (options.sessionId !== undefined && options.sessionId !== '') {
     argv.push('-s', options.sessionId);

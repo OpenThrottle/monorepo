@@ -123,6 +123,7 @@ async function* streamClaude(
     buildClaudeArgv({
       mcpServers: run.mcpServers,
       model: run.model,
+      permissionMode: run.permissionMode,
       prompt: latestUserMessage(run),
       resume: run.resumeSession === true,
       sessionId: run.sessionId,

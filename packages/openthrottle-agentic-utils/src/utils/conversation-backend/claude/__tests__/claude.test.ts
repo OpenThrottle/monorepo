@@ -7,7 +7,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CLAUDE_BIN_ENV } from '../argv.ts';
 import { claudeConversationBackend } from '../claude.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
-import type { ConversationStreamChunk } from '../../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  type ConversationStreamChunk,
+} from '../../types.ts';
 
 let dir: string;
 
@@ -41,6 +45,47 @@ const errorBin = (): string =>
     `process.stderr.write('Input must be provided\\n');
     process.exit(1);`,
   );
+
+// Simulates an MCP tool call whose outcome depends on the permission grant in
+// argv: with a grant (--allowedTools or bypassPermissions) it succeeds; without
+// one it returns the headless "user declined the approval" is_error result —
+// exactly the reported symptom. Lets a backend-level test prove the grant flips
+// the outcome without invoking a real CLI.
+const mcpToolBin = (): string =>
+  writeFakeBin(
+    'claude-mcp-tool.js',
+    `const argv = process.argv.slice(2).join(' ');
+    const granted = argv.includes('--allowedTools') || argv.includes('bypassPermissions');
+    const toolResult = granted
+      ? { type: 'tool_result', tool_use_id: 't1', is_error: false, content: 'plan created' }
+      : { type: 'tool_result', tool_use_id: 't1', is_error: true, content: 'user declined the approval' };
+    const lines = [
+      JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1' }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: [toolResult] } }),
+      JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: 'done' }),
+    ];
+    process.stdout.write(lines.join('\\n') + '\\n');`,
+  );
+
+/** The first tool_result block carried by the tool_result chunk, if any. */
+function firstToolResult(
+  chunks: readonly ConversationStreamChunk[],
+): Record<string, unknown> | undefined {
+  const chunk = chunks.find(
+    (candidate) =>
+      candidate.kind === CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+  );
+  const results = chunk?.metadata?.['toolResults'];
+  const block = Array.isArray(results) ? results[0] : undefined;
+  return typeof block === 'object' && block !== null ? block : undefined;
+}
+
+const MCP_SERVERS = {
+  'openthrottle-mcp': {
+    args: ['./scripts/run-openthrottle-mcp.sh'],
+    command: 'bash',
+  },
+};
 
 // Emits one event, then hangs (no result, no further output) until killed.
 const hangBin = (): string =>
@@ -196,6 +241,55 @@ describe('claudeConversationBackend', () => {
     } finally {
       delete process.env[AGENT_IDLE_TIMEOUT_MS_ENV];
     }
+  });
+
+  it('default posture: a managed MCP tool call is NOT auto-declined', async () => {
+    process.env[CLAUDE_BIN_ENV] = mcpToolBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      mcpServers: MCP_SERVERS,
+      messages: [{ content: 'create a plan', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    const block = firstToolResult(chunks);
+    expect(block).toBeDefined();
+    expect(block?.['is_error']).not.toBe(true);
+    expect(JSON.stringify(block)).not.toContain('declined');
+  });
+
+  it('fullAccess posture: a managed MCP tool call is NOT auto-declined', async () => {
+    process.env[CLAUDE_BIN_ENV] = mcpToolBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      mcpServers: MCP_SERVERS,
+      messages: [{ content: 'create a plan', role: 'user' }],
+      model: 'auto',
+      permissionMode: CONVERSATION_PERMISSION_MODES.fullAccess,
+      sessionId: 'sess-1',
+    });
+
+    const block = firstToolResult(chunks);
+    expect(block?.['is_error']).not.toBe(true);
+    expect(JSON.stringify(block)).not.toContain('declined');
+  });
+
+  it('control: with no permission grant the same tool call IS declined (reproduces the reported symptom)', async () => {
+    process.env[CLAUDE_BIN_ENV] = mcpToolBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'create a plan', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    const block = firstToolResult(chunks);
+    expect(block?.['is_error']).toBe(true);
+    expect(JSON.stringify(block)).toContain('declined');
   });
 
   it('tears down the child and yields a cancelled error when the signal aborts', async () => {

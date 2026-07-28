@@ -43,4 +43,27 @@ describe('buildOpencodeArgv', () => {
     expect(argv).not.toContain('-s');
     expect(argv).not.toContain('-m');
   });
+
+  describe('permission --auto', () => {
+    it('emits --auto right after run when auto is true (fullAccess)', () => {
+      const argv = buildOpencodeArgv({
+        auto: true,
+        cwd: '/repo',
+        prompt: 'hi',
+      });
+
+      expect(argv[0]).toBe('run');
+      expect(argv[1]).toBe('--auto');
+      expect(argv.at(-1)).toBe('hi');
+    });
+
+    it('omits --auto for the default/scoped postures', () => {
+      expect(
+        buildOpencodeArgv({ auto: false, cwd: '/repo', prompt: 'hi' }),
+      ).not.toContain('--auto');
+      expect(buildOpencodeArgv({ cwd: '/repo', prompt: 'hi' })).not.toContain(
+        '--auto',
+      );
+    });
+  });
 });
