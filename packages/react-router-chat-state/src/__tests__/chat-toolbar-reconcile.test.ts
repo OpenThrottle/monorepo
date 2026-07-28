@@ -174,6 +174,91 @@ describe('reconcileChatToolbarState', () => {
     });
   });
 
+  describe('perBackend override (v2)', () => {
+    const claudeModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'claude',
+      label: 'Claude',
+    };
+    const codexModel: ChatModelOption = {
+      description: 'Agent CLI',
+      groupId: 'agent-clis',
+      id: 'codex',
+      label: 'Codex',
+    };
+
+    test('a per-backend override wins over the global fallback', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
+          reasoning: ChatReasoningLevel.low,
+        }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+    });
+
+    test('falls back to the global when the effective backend has no entry', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          perBackend: { codex: { reasoning: ChatReasoningLevel.high } },
+          reasoning: ChatReasoningLevel.low,
+        }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.reasoning).toBe(ChatReasoningLevel.low);
+    });
+
+    test('distinct per-CLI values coexist (claude=high vs codex=low)', () => {
+      const state = persisted({
+        modelId: 'claude',
+        perBackend: {
+          claude: { reasoning: ChatReasoningLevel.high },
+          codex: { reasoning: ChatReasoningLevel.low },
+        },
+      });
+      const models = [claudeModel, codexModel];
+
+      const asClaude = reconcileChatToolbarState(state, {
+        models,
+        personas: [],
+        repositories: [repoA],
+      });
+      const asCodex = reconcileChatToolbarState(
+        { ...state, modelId: 'codex' },
+        { models, personas: [], repositories: [repoA] },
+      );
+
+      expect(asClaude.reasoning).toBe(ChatReasoningLevel.high);
+      expect(asCodex.reasoning).toBe(ChatReasoningLevel.low);
+    });
+
+    test('gates a per-backend override the effective backend disallows', () => {
+      // The openai backend permits no reasoning levels; the override must still
+      // be capability-gated, not trusted verbatim.
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: openaiModel.id,
+          perBackend: { openai: { reasoning: ChatReasoningLevel.high } },
+        }),
+        { models: [openaiModel], personas: [], repositories: [] },
+      );
+      expect(result.reasoning).toBeUndefined();
+    });
+
+    test('passes perBackend through unchanged (derive-only)', () => {
+      const perBackend = { claude: { reasoning: ChatReasoningLevel.high } };
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'claude', perBackend }),
+        { models: [claudeModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.perBackend).toEqual(perBackend);
+    });
+  });
+
   describe('purity', () => {
     test('preserves mode and version', () => {
       const result = reconcileChatToolbarState(

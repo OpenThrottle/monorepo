@@ -26,6 +26,7 @@ describe('chat toolbar constants', () => {
     expect(DEFAULT_CHAT_TOOLBAR_STATE).toEqual({
       mode: ChatComposerMode.plan,
       modelId: undefined,
+      perBackend: {},
       permissionMode: undefined,
       personaId: undefined,
       reasoning: undefined,
@@ -61,9 +62,34 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
-  describe('valid v1 blob', () => {
-    test('round-trips a fully-populated v1 blob', () => {
+  describe('valid v2 blob', () => {
+    test('round-trips a fully-populated v2 blob including perBackend', () => {
       const blob = {
+        mode: ChatComposerMode.build,
+        modelId: 'http://localhost:11434/v1::llama3',
+        perBackend: {
+          claude: { reasoning: ChatReasoningLevel.high },
+          codex: {
+            permissionMode: ChatPermissionMode.supervised,
+            reasoning: ChatReasoningLevel.low,
+            serviceTier: ChatServiceTier.standard,
+          },
+        },
+        permissionMode: ChatPermissionMode.fullAccess,
+        personaId: 'persona-42',
+        reasoning: ChatReasoningLevel.high,
+        repositoryId: 'repo-7',
+        serviceTier: ChatServiceTier.fast,
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      };
+
+      expect(normalizeChatToolbarState(blob)).toEqual(blob);
+    });
+  });
+
+  describe('v1 → v2 migration', () => {
+    test('migrates a fully-populated v1 blob forward, seeding perBackend and preserving globals', () => {
+      const v1Blob = {
         mode: ChatComposerMode.build,
         modelId: 'http://localhost:11434/v1::llama3',
         permissionMode: ChatPermissionMode.fullAccess,
@@ -74,12 +100,16 @@ describe('normalizeChatToolbarState', () => {
         version: 1,
       };
 
-      expect(normalizeChatToolbarState(blob)).toEqual(blob);
+      expect(normalizeChatToolbarState(v1Blob)).toEqual({
+        ...v1Blob,
+        perBackend: {},
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
     });
   });
 
   describe('legacy / unversioned migration', () => {
-    test('migrates an unversioned blob to v1, preserving still-valid fields', () => {
+    test('migrates an unversioned blob forward, preserving still-valid fields', () => {
       const legacy = {
         mode: ChatComposerMode.build,
         modelId: 'cursor',
@@ -93,11 +123,12 @@ describe('normalizeChatToolbarState', () => {
 
       expect(normalizeChatToolbarState(legacy)).toEqual({
         ...legacy,
+        perBackend: {},
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
     });
 
-    test('treats a version of 0 as legacy and coerces to v1', () => {
+    test('treats a version of 0 as legacy and coerces forward', () => {
       expect(
         normalizeChatToolbarState({ mode: ChatComposerMode.build, version: 0 }),
       ).toEqual({
@@ -113,7 +144,7 @@ describe('normalizeChatToolbarState', () => {
         normalizeChatToolbarState({
           mode: ChatComposerMode.build,
           modelId: 'cursor',
-          version: 2,
+          version: 3,
         }),
       ).toEqual(DEFAULT_CHAT_TOOLBAR_STATE);
     });
@@ -168,6 +199,60 @@ describe('normalizeChatToolbarState', () => {
         ...DEFAULT_CHAT_TOOLBAR_STATE,
         modelId: 'cursor',
       });
+    });
+  });
+
+  describe('perBackend coercion (v2)', () => {
+    test('keeps valid per-backend entries', () => {
+      const result = normalizeChatToolbarState({
+        perBackend: {
+          claude: { reasoning: ChatReasoningLevel.high },
+          openai: { serviceTier: ChatServiceTier.fast },
+        },
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
+
+      expect(result.perBackend).toEqual({
+        claude: { reasoning: ChatReasoningLevel.high },
+        openai: { serviceTier: ChatServiceTier.fast },
+      });
+    });
+
+    test('drops unknown enum values within a per-backend entry', () => {
+      const result = normalizeChatToolbarState({
+        perBackend: {
+          claude: {
+            permissionMode: 'godmode',
+            reasoning: ChatReasoningLevel.medium,
+          },
+        },
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
+
+      expect(result.perBackend).toEqual({
+        claude: { reasoning: ChatReasoningLevel.medium },
+      });
+    });
+
+    test('omits entries left with no valid prefs, and non-record entries', () => {
+      const result = normalizeChatToolbarState({
+        perBackend: {
+          bogus: 'not-an-object',
+          cursor: { reasoning: 'galaxy-brain' },
+        },
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
+
+      expect(result.perBackend).toEqual({});
+    });
+
+    test('coerces a non-record perBackend to an empty map', () => {
+      const result = normalizeChatToolbarState({
+        perBackend: 'nope',
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
+
+      expect(result.perBackend).toEqual({});
     });
   });
 });

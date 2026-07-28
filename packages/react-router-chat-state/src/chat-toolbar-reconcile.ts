@@ -43,9 +43,11 @@ export interface ReconcileChatToolbarOptions {
  *   falls back to the first model. No name/baseURL re-resolution (deferred to V2).
  * - `personaId` / `repositoryId`: kept when still present in the current lists,
  *   else the first available (or undefined when the list is empty).
- * - `reasoning` / `serviceTier` / `permissionMode`: re-gated against the
- *   effective backend's {@link capabilitiesForChatOption}; a value the backend
- *   no longer permits is cleared.
+ * - `reasoning` / `serviceTier` / `permissionMode`: resolved as the effective
+ *   backend's `perBackend` override (keyed by `decodeChatOption(modelId).backend`)
+ *   falling back to the top-level global, THEN re-gated against the effective
+ *   backend's {@link capabilitiesForChatOption}; a value the backend no longer
+ *   permits is cleared. `perBackend` itself passes through unchanged (derive-only).
  * - `repositoryId` is also cleared when the effective backend does not run in a
  *   repository (`requiresRepository === false`), since the checkout control is
  *   hidden for those backends.
@@ -69,9 +71,8 @@ export function reconcileChatToolbarState(
       ? persisted.personaId
       : personas[0]?.id;
 
-  const capabilities = capabilitiesForChatOption(
-    modelId != null ? decodeChatOption(modelId) : null,
-  );
+  const decoded = modelId != null ? decodeChatOption(modelId) : null;
+  const capabilities = capabilitiesForChatOption(decoded);
 
   const repositoryId = !capabilities.requiresRepository
     ? undefined
@@ -82,27 +83,38 @@ export function reconcileChatToolbarState(
       ? persisted.repositoryId
       : repositories[0]?.id;
 
+  // Per-backend override (keyed by the effective backend token) layered over the
+  // global fallback, then capability-gated against the effective backend.
+  const backendPrefs =
+    decoded != null ? persisted.perBackend[decoded.backend] : undefined;
+
+  const effectivePermissionMode =
+    backendPrefs?.permissionMode ?? persisted.permissionMode;
   const permissionMode =
-    persisted.permissionMode != null &&
-    capabilities.permissionModes.includes(persisted.permissionMode)
-      ? persisted.permissionMode
+    effectivePermissionMode != null &&
+    capabilities.permissionModes.includes(effectivePermissionMode)
+      ? effectivePermissionMode
       : undefined;
 
+  const effectiveReasoning = backendPrefs?.reasoning ?? persisted.reasoning;
   const reasoning =
-    persisted.reasoning != null &&
-    capabilities.reasoningLevels.includes(persisted.reasoning)
-      ? persisted.reasoning
+    effectiveReasoning != null &&
+    capabilities.reasoningLevels.includes(effectiveReasoning)
+      ? effectiveReasoning
       : undefined;
 
+  const effectiveServiceTier =
+    backendPrefs?.serviceTier ?? persisted.serviceTier;
   const serviceTier =
-    persisted.serviceTier != null &&
-    capabilities.serviceTiers.includes(persisted.serviceTier)
-      ? persisted.serviceTier
+    effectiveServiceTier != null &&
+    capabilities.serviceTiers.includes(effectiveServiceTier)
+      ? effectiveServiceTier
       : undefined;
 
   return {
     mode: persisted.mode,
     modelId,
+    perBackend: persisted.perBackend,
     permissionMode,
     personaId,
     reasoning,
