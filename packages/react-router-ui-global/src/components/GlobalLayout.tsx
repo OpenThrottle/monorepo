@@ -72,9 +72,9 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
           sectionDefaultExpanded={{
             Agents: true,
             Legal: authenticated ? false : true,
-            Settings: false,
+            Settings: true,
             User: false,
-            Workspace: true,
+            Workspace: false,
           }}
         />
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
