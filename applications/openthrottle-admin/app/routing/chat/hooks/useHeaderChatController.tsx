@@ -15,6 +15,7 @@ import {
   chatToolbarStateAtom,
   decodeChatOption,
   reconcileChatToolbarState,
+  useSessionPermissionDecay,
   type ChatToolbarBackendPrefs,
   type ChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
@@ -61,6 +62,8 @@ export function useHeaderChatController(args: {
   const optionsFetcher = useFetcher<ChatOptionsResponse>();
   const turn = useAgenticChatTurn();
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+  // Elevated permission modes decay to the safe default once per browser session.
+  useSessionPermissionDecay();
 
   // Setup
   const options = optionsFetcher.data ?? EMPTY_OPTIONS;
