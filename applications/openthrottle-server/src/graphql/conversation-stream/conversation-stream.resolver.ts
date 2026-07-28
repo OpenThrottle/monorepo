@@ -87,14 +87,18 @@ const resolveHumanUserId = (
 
 /**
  * Supported backends. `openai` is the HTTP path; every CLI backend comes from
- * the shared discovery allowlist (cursor, claude, opencode) — the resolver
- * accepts exactly what discovery can surface and rejects anything else.
+ * the shared discovery allowlist, restricted to the drivers with a wired
+ * streaming chat adapter (`chatCapable`: cursor, claude, opencode). Plan-run-only
+ * drivers (codex, grok) are discoverable but have no chat adapter, so the stream
+ * resolver rejects them rather than routing to a backend that doesn't exist.
  */
 const OPENAI_BACKEND = 'openai';
 const CURSOR_BACKEND = 'cursor';
 const CLAUDE_BACKEND = 'claude';
 const CLI_BACKENDS = new Set<string>(
-  AGENT_CLI_ALLOWLIST.map((descriptor) => descriptor.backend),
+  AGENT_CLI_ALLOWLIST.filter((descriptor) => descriptor.chatCapable).map(
+    (descriptor) => descriptor.backend,
+  ),
 );
 
 /** Conversation-metadata key holding a backend's persisted session id. */
