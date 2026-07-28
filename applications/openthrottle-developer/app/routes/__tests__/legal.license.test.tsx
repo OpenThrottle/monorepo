@@ -18,7 +18,7 @@ const matches: Route.ComponentProps['matches'] = [
 ];
 
 describe('routes/legal.license.tsx', () => {
-  test('should render license heading', () => {
+  test('should render the Apache-2.0 license heading and copy', () => {
     const view = render(
       <MemoryRouter>
         <License
@@ -33,8 +33,11 @@ describe('routes/legal.license.tsx', () => {
     expect(
       view.getByRole('heading', {
         level: 1,
-        name: 'End User License Agreement',
+        name: 'License',
       }),
     ).toBeInTheDocument();
+    expect(
+      view.getAllByText(/Apache License, Version 2\.0/).length,
+    ).toBeGreaterThan(0);
   });
 });

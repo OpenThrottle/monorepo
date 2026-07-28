@@ -21,6 +21,7 @@
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"
   },
+  "license": "Apache-2.0",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "./",

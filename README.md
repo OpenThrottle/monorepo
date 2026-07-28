@@ -104,3 +104,12 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 **4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷
+
+## 📄 License
+
+OpenThrottle is **open core**: the core is licensed under the **Apache License,
+Version 2.0** (see [`LICENSE`](./LICENSE)), with commercial/enterprise modules
+reserved under a separate EULA. All current first-party code is Apache-2.0.
+
+See [LICENSING.md](./LICENSING.md) for the open-core boundary — which
+directories are Apache-2.0 vs EULA, and how to tell.

@@ -24,6 +24,7 @@
       "types": "./dist/*.d.ts"
     }
   },
+  "license": "Apache-2.0",
   "main": "./src/index.ts",
   "name": "@openthrottle/openthrottle-plan-config",
   "module": "./src/index.ts",

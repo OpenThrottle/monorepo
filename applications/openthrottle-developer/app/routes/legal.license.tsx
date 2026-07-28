@@ -57,7 +57,7 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="End User License Agreement"
+          title="License"
         />
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
@@ -72,102 +72,74 @@ export default function Component(
             </Link>
           </p>
           <p>
-            IMPORTANT — READ CAREFULLY. This End User License Agreement
-            ("Agreement") is a legal agreement between you ("You") and Matthew
-            Scholta ("Licensor") for the OpenThrottle software, including its
-            source code, documentation, and associated assets (the "Software").
-            By accessing, downloading, installing, or using the Software, You
-            agree to be bound by this Agreement. If You do not agree, do not
-            access or use the Software.
+            OpenThrottle is{' '}
+            <strong className="text-foreground">open core</strong>. The
+            OpenThrottle core — its applications, packages, and tooling — is
+            licensed under the{' '}
+            <strong className="text-foreground">
+              Apache License, Version 2.0
+            </strong>
+            . Commercial and enterprise modules are reserved under a separate
+            End User License Agreement (EULA); none exist today, so all current
+            first-party code is Apache-2.0.
           </p>
 
-          <h2 className="text-foreground font-medium">License grant</h2>
+          <h2 className="text-foreground font-medium">
+            What the Apache-2.0 license grants
+          </h2>
           <p>
-            Subject to Your compliance with this Agreement, Licensor grants You
-            a limited, non-exclusive, non-transferable, non-sublicensable,
-            revocable license to view and study the Software's source code; to
-            download, install, and run the Software on systems You own or
-            control, solely for personal, non-commercial, and evaluation
-            purposes; and to modify the Software solely for those purposes. Any
-            use beyond this scope — including any production, commercial, or
-            revenue-generating use — requires a separate written agreement with
-            Licensor.
+            You may use, copy, modify, and distribute the core — including for
+            commercial and production purposes — free of charge, subject to the
+            terms of the Apache License, Version 2.0. The license includes an
+            express patent grant from contributors, and requires that copies
+            retain the license and applicable notices.
           </p>
 
-          <h2 className="text-foreground font-medium">Restrictions</h2>
+          <h2 className="text-foreground font-medium">Trademarks</h2>
           <p>
-            Except as expressly permitted above or by applicable law, You shall
-            not use the Software for any commercial purpose; copy, distribute,
-            publish, sell, rent, lease, lend, or otherwise transfer the Software
-            to any third party; sublicense the Software or offer it as a hosted
-            or managed service; remove or obscure proprietary notices; use the
-            Licensor's name or trademarks to endorse derived products without
-            permission; or represent the Software as Your own work.
+            The license does not grant permission to use the OpenThrottle name,
+            logo, or other marks, except as required to describe the origin of
+            the software (Apache-2.0 §6). You are free to fork the code; the
+            brand remains reserved.
           </p>
 
-          <h2 className="text-foreground font-medium">Ownership</h2>
+          <h2 className="text-foreground font-medium">Contributions</h2>
           <p>
-            The Software is licensed, not sold. Licensor retains all right,
-            title, and interest in and to the Software, including all
-            intellectual property rights. No rights are granted other than those
-            expressly set forth in this Agreement.
+            Contributions are welcome and, while the project is early-stage,
+            scoped to smaller targeted fixes; discuss anything larger in an
+            issue first. Contributors sign off under the Developer Certificate
+            of Origin (a "Signed-off-by" line, added with git commit -s), and
+            contributed core code is redistributed under Apache-2.0.
           </p>
 
           <h2 className="text-foreground font-medium">
             Third-party components
           </h2>
           <p>
-            The Software incorporates or depends upon third-party and
+            OpenThrottle incorporates or depends upon third-party and
             open-source components governed by their own license terms. Nothing
-            in this Agreement limits Your rights under, or grants rights that
-            supersede, the license terms of any such component.
-          </p>
-
-          <h2 className="text-foreground font-medium">Contributions</h2>
-          <p>
-            If You submit code, documentation, or other materials to the
-            Software's repository, You grant Licensor a perpetual, worldwide,
-            irrevocable, royalty-free license to use, reproduce, modify,
-            distribute, and relicense those contributions as part of the
-            Software.
+            here limits Your rights under, or grants rights that supersede, the
+            license terms of any such component.
           </p>
 
           <h2 className="text-foreground font-medium">
-            Disclaimer of warranty
+            Disclaimer of warranty and liability
           </h2>
           <p>
-            THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT
-            WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-            TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-            PURPOSE, TITLE, AND NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT
-            THE SOFTWARE WILL BE ERROR-FREE OR THAT ITS OPERATION WILL BE
-            UNINTERRUPTED.
-          </p>
-
-          <h2 className="text-foreground font-medium">
-            Limitation of liability
-          </h2>
-          <p>
-            TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL
-            LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY —
-            WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE — ARISING FROM,
-            OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-            DEALINGS IN THE SOFTWARE, INCLUDING ANY DIRECT, INDIRECT,
-            INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES.
-          </p>
-
-          <h2 className="text-foreground font-medium">Governing law</h2>
-          <p>
-            This Agreement is governed by and construed in accordance with the
-            laws of the State of California, USA, without regard to its conflict
-            of law provisions. Any dispute arising under this Agreement is
-            subject to the exclusive jurisdiction of the state and federal
-            courts located in California.
+            Unless required by applicable law or agreed to in writing, the
+            software is provided on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+            CONDITIONS OF ANY KIND, either express or implied, including any
+            warranties of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS
+            FOR A PARTICULAR PURPOSE. In no event shall any contributor be
+            liable for any damages arising out of the use or inability to use
+            the software. See the Apache License, Version 2.0 for the governing
+            terms.
           </p>
 
           <p>
-            For commercial licensing or questions regarding this Agreement,
-            contact Licensor at{' '}
+            The full license text lives in the LICENSE file at the repository
+            root, and the open-core boundary is described in LICENSING.md. For
+            commercial licensing or questions, contact{' '}
             <Link
               className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"
