@@ -22,6 +22,8 @@ import {
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationPermissionMode,
+  type ConversationReasoningEffort,
+  type ConversationServiceTier,
   openAiConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
@@ -68,6 +70,8 @@ export interface StartConversationStreamRun {
   readonly conversationId: string;
   /** Resolved working directory for a CLI backend. */
   readonly cwd: string | null;
+  /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
+  readonly fileMentions: readonly string[];
   /** Extra env a CLI child passes through (OT MCP token + API URLs); null when no MCP is configured. */
   readonly mcpEnv: Readonly<Record<string, string>> | null;
   /** Managed MCP servers (canonical `.mcp.json` schema) for a CLI backend; null when none apply. */
@@ -85,8 +89,12 @@ export interface StartConversationStreamRun {
   readonly permissionMode: ConversationPermissionMode | null;
   /** Provider/backend label persisted on the conversation, or null. */
   readonly provider: string | null;
+  /** Reasoning effort forwarded to backends that expose one; null when unset. */
+  readonly reasoning: ConversationReasoningEffort | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
   readonly resumeSession: boolean;
+  /** Service tier forwarded to tier-aware backends (cursor); null when unset. */
+  readonly serviceTier: ConversationServiceTier | null;
   /** CLI session handle to resume (e.g. cursor chat id), or null when the CLI mints it (opencode first turn). */
   readonly sessionId: string | null;
   /** System prompt (persona) injected by CLI backends. */
@@ -196,12 +204,15 @@ export class ConversationStreamService {
     const backendRun: ConversationBackendRun = {
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
+      fileMentions: run.fileMentions.length > 0 ? run.fileMentions : undefined,
       mcpEnv: run.mcpEnv ?? undefined,
       mcpServers: run.mcpServers ?? undefined,
       messages: run.messages,
       model: run.model,
       permissionMode: run.permissionMode ?? undefined,
+      reasoning: run.reasoning ?? undefined,
       resumeSession: run.resumeSession,
+      serviceTier: run.serviceTier ?? undefined,
       sessionId: run.sessionId ?? undefined,
       signal: controller.signal,
       systemPrompt: run.systemPrompt ?? undefined,

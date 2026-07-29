@@ -3536,21 +3536,21 @@ export type StartConversationStreamInput = {
   baseUrl?: InputMaybe<Scalars['String']['input']>;
   /** Existing conversation to continue; omit to start a new conversation. */
   conversationId?: InputMaybe<Scalars['ID']['input']>;
-  /** Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens, so a CLI agent already receives them; structured injection (e.g. file-content preloading) is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT applied yet. */
+  /** Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens; the server additionally injects them as structured turn context ("Referenced files") so the agent treats them as first-class references. */
   fileMentions?: InputMaybe<Array<Scalars['String']['input']>>;
   /** User message text for this turn. */
   message: Scalars['String']['input'];
   /** Model id to complete with. Required for the openai backend; optional model override for CLI backends. */
   modelId?: InputMaybe<Scalars['String']['input']>;
-  /** Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive; enforcement is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT honored yet. */
+  /** Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it). */
   permissionMode?: InputMaybe<Scalars['String']['input']>;
   /** Persona to steer the turn; CLI backends inject it as a system prompt. */
   personaId?: InputMaybe<Scalars['ID']['input']>;
-  /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive; whether a backend honors it is owned by openthrottle-drivers (dde67342) and is NOT applied yet. */
+  /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set. */
   reasoning?: InputMaybe<Scalars['String']['input']>;
   /** Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path). */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
-  /** Service tier for the turn: "standard" or "fast". Nullable + additive; honored by openthrottle-drivers (dde67342) once it lands, NOT applied yet. */
+  /** Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it. */
   serviceTier?: InputMaybe<Scalars['String']['input']>;
 };
 
