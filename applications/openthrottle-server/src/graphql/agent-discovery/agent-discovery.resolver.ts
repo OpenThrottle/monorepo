@@ -29,6 +29,7 @@ export class AgentDiscoveryResolver {
         chatCapable: agent.chatCapable,
         label: agent.label,
         models: [...agent.models],
+        supportsCustomBaseUrl: agent.supportsCustomBaseUrl,
         version: agent.version,
       }));
 

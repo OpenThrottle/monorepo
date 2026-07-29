@@ -83,6 +83,20 @@ describe('claude driver parity', () => {
     ).toBe(`${CLAUDE_BASE} --model sonnet -w wt`);
   });
 
+  it('ignores a local endpoint (supportsCustomBaseUrl is false)', () => {
+    expect(
+      claudeDriver.buildShellCommand(
+        config({
+          endpoint: {
+            baseUrl: 'http://localhost:11434/v1',
+            configFilePath: '/tmp/oc/config.json',
+            provider: 'ollama',
+          },
+        }),
+      ),
+    ).toBe(CLAUDE_BASE);
+  });
+
   it('advertises claude capabilities and label', () => {
     expect(claudeDriver.id).toBe('claude');
     expect(claudeDriver.label).toBe('claude-code');
@@ -90,6 +104,7 @@ describe('claude driver parity', () => {
       chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
+      supportsCustomBaseUrl: false,
       supportsModelFlag: true,
       worktree: true,
       worktreeBase: false,
@@ -154,6 +169,19 @@ describe('cursor driver parity', () => {
     ).toBe(`${CURSOR_BASE} -w`);
   });
 
+  it('ignores a local endpoint (supportsCustomBaseUrl is false)', () => {
+    expect(
+      cursorDriver.buildShellCommand(
+        config({
+          endpoint: {
+            baseUrl: 'http://localhost:11434/v1',
+            provider: 'lmstudio',
+          },
+        }),
+      ),
+    ).toBe(CURSOR_BASE);
+  });
+
   it('advertises cursor capabilities and label', () => {
     expect(cursorDriver.id).toBe('cursor');
     expect(cursorDriver.label).toBe('cursor-agent');
@@ -161,6 +189,7 @@ describe('cursor driver parity', () => {
       chatStreaming: true,
       permissionMode: false,
       skipWorktreeSetup: true,
+      supportsCustomBaseUrl: false,
       supportsModelFlag: true,
       worktree: true,
       worktreeBase: true,

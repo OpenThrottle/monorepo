@@ -29,6 +29,11 @@ export class AgentCliOptionObject {
   })
   models!: string[];
 
+  @Field(() => Boolean, {
+    description: `True when this driver can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint); gates driver×endpoint targeting in the composer. False for claude/cursor (own cloud wire protocol).`,
+  })
+  supportsCustomBaseUrl!: boolean;
+
   @Field(() => String, {
     description: `Trimmed --version output, or null when unknown.`,
     nullable: true,

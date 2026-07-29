@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { toAgentChatOptions, toChatModelOptions } from '../chat-model-option';
+import {
+  toAgentChatOptions,
+  toChatModelOptions,
+  toDriverEndpointChatOptions,
+} from '../chat-model-option';
 
 describe('toChatModelOptions', () => {
   it('flattens endpoints × models with provider fallback to host', () => {
@@ -58,6 +62,7 @@ describe('toAgentChatOptions', () => {
           chatCapable: true,
           label: 'cursor-agent',
           models: ['auto', 'gpt-5.2'],
+          supportsCustomBaseUrl: false,
           version: '1.2.3',
         },
       ],
@@ -90,6 +95,7 @@ describe('toAgentChatOptions', () => {
           chatCapable: true,
           label: 'claude-code',
           models: [],
+          supportsCustomBaseUrl: false,
           version: '2.1.220',
         },
       ],
@@ -115,6 +121,7 @@ describe('toAgentChatOptions', () => {
           chatCapable: false,
           label: 'future-plan-run-driver',
           models: [],
+          supportsCustomBaseUrl: false,
           version: '1.0.0',
         },
         {
@@ -122,11 +129,114 @@ describe('toAgentChatOptions', () => {
           chatCapable: false,
           label: 'another-plan-run-driver',
           models: ['some-model'],
+          supportsCustomBaseUrl: false,
           version: '2.0.0',
         },
       ],
       totalCount: 2,
     });
+
+    expect(options).toEqual([]);
+  });
+});
+
+describe('toDriverEndpointChatOptions', () => {
+  const agents = {
+    agents: [
+      {
+        backend: 'opencode',
+        chatCapable: true,
+        label: 'opencode',
+        models: ['opencode/big-pickle'],
+        supportsCustomBaseUrl: true,
+        version: '1.18.5',
+      },
+      {
+        backend: 'claude',
+        chatCapable: true,
+        label: 'claude-code',
+        models: [],
+        supportsCustomBaseUrl: false,
+        version: '2.1.220',
+      },
+    ],
+    totalCount: 2,
+  };
+
+  it('joins base-URL-capable drivers with discovered endpoints × models', () => {
+    const options = toDriverEndpointChatOptions(agents, {
+      endpoints: [
+        {
+          baseUrl: 'http://localhost:11434/v1',
+          host: 'localhost',
+          models: ['llama3', 'qwen'],
+          provider: 'ollama',
+        },
+      ],
+      totalCount: 1,
+    });
+
+    expect(options).toEqual([
+      {
+        description: 'opencode · ollama (local)',
+        groupId: 'opencode',
+        id: 'opencode|http://localhost:11434/v1::llama3',
+        label: 'llama3',
+        subLabel: 'opencode',
+      },
+      {
+        description: 'opencode · ollama (local)',
+        groupId: 'opencode',
+        id: 'opencode|http://localhost:11434/v1::qwen',
+        label: 'qwen',
+        subLabel: 'opencode',
+      },
+    ]);
+  });
+
+  it('flags a host.docker.internal endpoint as possibly unreachable', () => {
+    const [option] = toDriverEndpointChatOptions(agents, {
+      endpoints: [
+        {
+          baseUrl: 'http://host.docker.internal:11434/v1',
+          host: 'host.docker.internal',
+          models: ['llama3'],
+          provider: 'ollama',
+        },
+      ],
+      totalCount: 1,
+    });
+
+    expect(option?.description).toContain('may be unreachable outside Docker');
+  });
+
+  it('omits non-base-URL-capable drivers (claude/cursor) from the join', () => {
+    const options = toDriverEndpointChatOptions(
+      {
+        agents: [
+          {
+            backend: 'claude',
+            chatCapable: true,
+            label: 'claude-code',
+            models: [],
+            supportsCustomBaseUrl: false,
+            version: '2.1.220',
+          },
+        ],
+        totalCount: 1,
+      },
+      {
+        endpoints: [
+          {
+            baseUrl: 'http://localhost:11434/v1',
+            host: 'localhost',
+            models: ['llama3'],
+            provider: 'ollama',
+          },
+        ],
+        totalCount: 1,
+      },
+    );
 
     expect(options).toEqual([]);
   });

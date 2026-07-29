@@ -12,6 +12,7 @@ import {
   cliGroupId,
   decodeChatOption,
   decodeModelOptionId,
+  encodeCliEndpointOptionId,
   encodeCliOptionId,
   encodeModelOptionId,
 } from '../chat-model-option';
@@ -59,6 +60,33 @@ describe('decodeChatOption', () => {
 
   it('encodes a bare backend when no model is given', () => {
     expect(encodeCliOptionId('grok')).toBe('grok');
+  });
+
+  it('decodes a driver × local-endpoint id (backend|baseUrl::model)', () => {
+    const id = encodeCliEndpointOptionId(
+      'opencode',
+      'http://localhost:11434/v1',
+      'llama3',
+    );
+    expect(id).toBe('opencode|http://localhost:11434/v1::llama3');
+    expect(decodeChatOption(id)).toEqual({
+      backend: 'opencode',
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'llama3',
+    });
+  });
+
+  it('keeps an openai baseUrl::model id (no `|`) routed to the openai backend', () => {
+    expect(decodeChatOption('http://localhost:11434/v1::llama3')).toEqual({
+      backend: 'openai',
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'llama3',
+    });
+  });
+
+  it('returns null for a malformed driver×endpoint id', () => {
+    expect(decodeChatOption('opencode|http://x/v1::')).toBeNull();
+    expect(decodeChatOption('opencode|')).toBeNull();
   });
 
   it('returns null for an empty id', () => {
@@ -187,5 +215,20 @@ describe('capabilitiesForChatOption', () => {
     );
     expect(caps.requiresRepository).toBe(true);
     expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
+  });
+
+  it('keeps the full agent surface for a driver × local-endpoint option', () => {
+    const caps = capabilitiesForChatOption(
+      decodeChatOption(
+        encodeCliEndpointOptionId(
+          'opencode',
+          'http://localhost:11434/v1',
+          'llama3',
+        ),
+      ),
+    );
+    // A driver targeting a local endpoint is still a repo-scoped CLI agent.
+    expect(caps.requiresRepository).toBe(true);
+    expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
   });
 });

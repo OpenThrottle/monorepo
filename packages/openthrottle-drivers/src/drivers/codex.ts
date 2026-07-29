@@ -15,6 +15,7 @@ const capabilities: DriverCapabilities = {
   chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
+  supportsCustomBaseUrl: true,
   supportsModelFlag: true,
   worktree: false,
   worktreeBase: false,
@@ -25,6 +26,12 @@ const capabilities: DriverCapabilities = {
  * prompt and omitted when unset or `auto`. Codex has no machine-listable models command (verified
  * against codex-cli 0.145.0: no `codex models` subcommand; `-m` takes an arbitrary MODEL), so
  * `discoverModels` is omitted and discovery reports availability-only (`models: []`).
+ *
+ * A local endpoint is targeted through Codex's built-in OSS provider (`--oss`), redirected at the
+ * discovered `baseUrl` via a `-c model_providers.oss.base_url` override — this is preferred over a
+ * hand-rolled custom provider because Codex owns the OSS wire adapter (0.145.0 is deprecating the
+ * raw `wire_api = "chat"` that local servers speak). `--local-provider` selects the wire adapter; an
+ * unfingerprinted endpoint (`provider === null`) defaults to `ollama`, the common case.
  * @public
  */
 export const codexDriver = defineDriver({
@@ -37,9 +44,21 @@ export const codexDriver = defineDriver({
         ? ` --model ${escapeShellArg(modelNorm)}`
         : '';
 
+    let endpointFlags = '';
+    if (config.endpoint) {
+      const localProvider = config.endpoint.provider ?? 'ollama';
+      // JSON.stringify yields a valid double-quoted TOML string literal for the -c value.
+      const baseUrlOverride = `model_providers.oss.base_url=${JSON.stringify(
+        config.endpoint.baseUrl,
+      )}`;
+      endpointFlags = ` --oss --local-provider ${localProvider} -c ${escapeShellArg(
+        baseUrlOverride,
+      )}`;
+    }
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `codex exec --sandbox workspace-write${modelFlag} "${safePrompt}"`;
+    return `codex exec --sandbox workspace-write${endpointFlags}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

@@ -103,6 +103,20 @@ async function* streamGrok(
     throw new Error('The grok backend requires a cwd.');
   }
 
+  // A discovered local endpoint (run.baseUrl) is targeted by pointing grok's
+  // model endpoint at it via GROK_MODELS_BASE_URL; XAI_API_KEY is a placeholder
+  // (local servers ignore it — we never forward the host's real xAI key). Merged
+  // on top of the run's mcpEnv into the scrubbed child env; `--model` (run.model)
+  // selects the discovered id.
+  const endpointEnv =
+    run.baseUrl !== undefined && run.baseUrl !== ''
+      ? { GROK_MODELS_BASE_URL: run.baseUrl, XAI_API_KEY: 'local' }
+      : undefined;
+  const extraEnv =
+    run.mcpEnv !== undefined || endpointEnv !== undefined
+      ? { ...(run.mcpEnv ?? {}), ...(endpointEnv ?? {}) }
+      : undefined;
+
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. stdin is
   // ignored: the run is fully driven by argv (the prompt is `--single=…`).
@@ -120,7 +134,7 @@ async function* streamGrok(
     }),
     {
       cwd: run.cwd,
-      env: buildScrubbedEnv(process.env, run.mcpEnv),
+      env: buildScrubbedEnv(process.env, extraEnv),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );

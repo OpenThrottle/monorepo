@@ -32,6 +32,7 @@ import {
 import { withFileMentions } from '../file-mentions.ts';
 import { createOpencodeEventMapper } from './events.ts';
 import {
+  LOCAL_ENDPOINT_PROVIDER_ID,
   type OpencodeMcpConfigFile,
   writeOpencodeMcpConfig,
 } from './mcp-config.ts';
@@ -118,9 +119,17 @@ async function* streamOpencode(
   // write (no servers AND no permission slice), so `supervised`/default with no
   // managed servers adds no config. `fullAccess` is carried by `--auto` below,
   // not the config. Merge the config path with the run's mcpEnv into the child env.
+  // A discovered local endpoint (run.baseUrl) is targeted by defining a custom
+  // `@ai-sdk/openai-compatible` provider in the same temp config, keyed
+  // `LOCAL_ENDPOINT_PROVIDER_ID`; the model is then `local/<modelId>`.
+  const endpoint =
+    run.baseUrl !== undefined && run.baseUrl !== '' && run.model !== ''
+      ? { baseUrl: run.baseUrl, model: run.model }
+      : undefined;
   const mcpConfigFile: OpencodeMcpConfigFile | null = writeOpencodeMcpConfig(
     run.mcpServers ?? {},
     run.permissionMode,
+    endpoint,
   );
   const childEnv =
     run.mcpEnv !== undefined || mcpConfigFile !== null
@@ -131,6 +140,10 @@ async function* streamOpencode(
             : {}),
         }
       : undefined;
+  const model =
+    endpoint !== undefined
+      ? `${LOCAL_ENDPOINT_PROVIDER_ID}/${run.model}`
+      : run.model;
 
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. sessionId
@@ -140,7 +153,7 @@ async function* streamOpencode(
     buildOpencodeArgv({
       auto: run.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess,
       cwd: run.cwd,
-      model: run.model,
+      model,
       prompt: withFileMentions(composePrompt(run), run.fileMentions),
       reasoning: run.reasoning,
       sessionId: run.sessionId,

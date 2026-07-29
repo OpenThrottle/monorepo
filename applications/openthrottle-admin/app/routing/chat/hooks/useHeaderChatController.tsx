@@ -163,7 +163,7 @@ export function useHeaderChatController(args: {
         ? {
             backend: 'openai',
             baseUrl: decoded.baseUrl,
-            modelId: decoded.model,
+            modelId: decoded.model ?? '',
           }
         : {
             backend: decoded.backend,

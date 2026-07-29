@@ -56,6 +56,38 @@ describe('translateManagedMcpToOpencode', () => {
   });
 });
 
+describe('translateManagedMcpToOpencode — local endpoint provider', () => {
+  it('emits an openai-compatible provider keyed "local" registering the model', () => {
+    const config = translateManagedMcpToOpencode({}, undefined, {
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'llama3',
+    });
+
+    expect(config.provider).toEqual({
+      local: {
+        models: { llama3: {} },
+        name: 'Local endpoint (OpenThrottle)',
+        npm: '@ai-sdk/openai-compatible',
+        options: { apiKey: 'local', baseURL: 'http://localhost:11434/v1' },
+      },
+    });
+  });
+
+  it('uses a supplied apiKey when present', () => {
+    const config = translateManagedMcpToOpencode({}, undefined, {
+      apiKey: 'sk-x',
+      baseUrl: 'http://h:1/v1',
+      model: 'm',
+    });
+
+    expect(config.provider?.['local'].options.apiKey).toBe('sk-x');
+  });
+
+  it('omits the provider key when no endpoint is targeted', () => {
+    expect(translateManagedMcpToOpencode(MANAGED).provider).toBeUndefined();
+  });
+});
+
 describe('writeOpencodeMcpConfig', () => {
   it('writes a temp config outside any checkout and cleanup removes it', () => {
     const file = writeOpencodeMcpConfig(MANAGED);
@@ -80,6 +112,24 @@ describe('writeOpencodeMcpConfig', () => {
   it('returns null when there is nothing to inject', () => {
     expect(writeOpencodeMcpConfig({})).toBeNull();
     expect(writeOpencodeMcpConfig({ broken: { args: ['x'] } })).toBeNull();
+  });
+
+  it('writes a config carrying only the local-endpoint provider (no MCP/permission)', () => {
+    const file = writeOpencodeMcpConfig({}, undefined, {
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'llama3',
+    });
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.mcp).toBeUndefined();
+    expect(written.provider.local.options.baseURL).toBe(
+      'http://localhost:11434/v1',
+    );
+    file.cleanup();
   });
 });
 

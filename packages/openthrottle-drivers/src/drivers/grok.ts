@@ -10,13 +10,18 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatShellEnvPrefix,
+} from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
+  supportsCustomBaseUrl: true,
   supportsModelFlag: true,
   worktree: true,
   worktreeBase: false,
@@ -38,7 +43,12 @@ const discoverModels: DriverModelListing = {
 };
 
 /**
- * @description Grok driver (`grok`, label `grok`). Model flag omitted when unset or `auto`.
+ * @description Grok driver (`grok`, label `grok`). Model flag omitted when unset or `auto`. When a
+ * local endpoint is supplied, grok is redirected at it via the `GROK_MODELS_BASE_URL` +
+ * `XAI_API_KEY` env pair (see the Custom Models docs) — the model list is fetched from
+ * `{baseUrl}/models` and `--model` selects the discovered id. `XAI_API_KEY` defaults to a
+ * placeholder since local servers ignore it. The env prefix is baked into the command string
+ * because the engine spawns without an `env` override.
  * @public
  */
 export const grokDriver = defineDriver({
@@ -51,8 +61,15 @@ export const grokDriver = defineDriver({
         ? ` --model ${escapeShellArg(modelNorm)}`
         : '';
 
+    const endpointPrefix = config.endpoint
+      ? formatShellEnvPrefix({
+          GROK_MODELS_BASE_URL: config.endpoint.baseUrl,
+          XAI_API_KEY: config.endpoint.apiKey?.trim() || 'local',
+        })
+      : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
-    const base = `grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}`;
+    const base = `${endpointPrefix}grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}`;
 
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },

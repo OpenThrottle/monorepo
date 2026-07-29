@@ -8,12 +8,17 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatShellEnvPrefix,
+} from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
+  supportsCustomBaseUrl: true,
   supportsModelFlag: true,
   worktree: false,
   worktreeBase: false,
@@ -35,7 +40,12 @@ const discoverModels: DriverModelListing = {
 
 /**
  * @description OpenCode driver (`opencode`, label `opencode`). `--auto` keeps the agentic loop
- * non-blocking; `--model` is omitted when unset or `auto` (OpenCode has no `auto` alias).
+ * non-blocking; `--model` is omitted when unset or `auto` (OpenCode has no `auto` alias). A local
+ * endpoint is targeted by defining a custom `@ai-sdk/openai-compatible` provider in a config file
+ * (materialized by the consumer) and pointing `OPENCODE_CONFIG` at it; `config.model` then carries
+ * the `provider/model` id for that provider. The builder stays pure — it only references the
+ * caller-supplied `endpoint.configFilePath`; the env prefix is baked in because the engine spawns
+ * without an `env` override.
  * @public
  */
 export const opencodeDriver = defineDriver({
@@ -48,9 +58,14 @@ export const opencodeDriver = defineDriver({
         ? ` --model ${escapeShellArg(modelNorm)}`
         : '';
 
+    const configPath = config.endpoint?.configFilePath?.trim();
+    const endpointPrefix = configPath
+      ? formatShellEnvPrefix({ OPENCODE_CONFIG: configPath })
+      : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `opencode run --auto "${safePrompt}"${modelFlag}`;
+    return `${endpointPrefix}opencode run --auto "${safePrompt}"${modelFlag}`;
   },
   capabilities,
   discoverModels,
