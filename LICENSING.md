@@ -111,6 +111,10 @@ reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
 ## Files
 
 - [`LICENSE`](./LICENSE) — Apache-2.0, the canonical license for the open core.
+- [`NOTICE`](./NOTICE) — Apache-2.0 §4(d) attribution notice (project name +
+  copyright holder). Attribution only — it carries no additional license terms.
+  Third-party attributions are folded in only if/when a published package bundles
+  attribution-required dependencies (tracked in the license-automation plan).
 - [`LICENSE-EULA.md`](./LICENSE-EULA.md) — retained EULA, the template for future
   commercial/enterprise packages.
 - Per-project `LICENSE.md` — the license that applies to that project.
