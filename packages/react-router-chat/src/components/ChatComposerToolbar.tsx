@@ -10,8 +10,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  ToggleGroup,
-  ToggleGroupItem,
+  // ToggleGroup,
+  // ToggleGroupItem,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -117,7 +117,7 @@ export const ChatComposerToolbar = (
     contextSources,
     disabledModelIds,
     micState = ChatComposerMicState.idle,
-    mode,
+    // mode,
     modelGroups,
     modelId,
     models,
@@ -163,7 +163,7 @@ export const ChatComposerToolbar = (
         : 'Start voice input';
 
   // Handlers
-  const onModeValueChange = (value: string): void => {
+  const _onModeValueChange = (value: string): void => {
     if (value === ChatComposerMode.build || value === ChatComposerMode.plan) {
       onModeChange?.(value);
     }
@@ -227,43 +227,44 @@ export const ChatComposerToolbar = (
     </Select>
   ) : null;
 
-  const modeControl =
-    mode != null ? (
-      <ToggleGroup
-        aria-label="Mode"
-        data-testid="ChatComposerToolbar-mode-toggle"
-        onValueChange={onModeValueChange}
-        size="sm"
-        type="single"
-        value={mode}
-        variant="outline"
-      >
-        <Tooltip delayDuration={500}>
-          <TooltipTrigger asChild={true}>
-            <ToggleGroupItem
-              data-testid="ChatComposerToolbar-mode-plan"
-              value={ChatComposerMode.plan}
-            >
-              Plan
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            Plan — describe intent to get a decomposed plan
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip delayDuration={500}>
-          <TooltipTrigger asChild={true}>
-            <ToggleGroupItem
-              data-testid="ChatComposerToolbar-mode-build"
-              value={ChatComposerMode.build}
-            >
-              Build
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent side="top">Build — agentic execution</TooltipContent>
-        </Tooltip>
-      </ToggleGroup>
-    ) : null;
+  const modeControl = null;
+  // const modeControl =
+  //   mode != null ? (
+  //     <ToggleGroup
+  //       aria-label="Mode"
+  //       data-testid="ChatComposerToolbar-mode-toggle"
+  //       onValueChange={onModeValueChange}
+  //       size="sm"
+  //       type="single"
+  //       value={mode}
+  //       variant="outline"
+  //     >
+  //       <Tooltip delayDuration={500}>
+  //         <TooltipTrigger asChild={true}>
+  //           <ToggleGroupItem
+  //             data-testid="ChatComposerToolbar-mode-plan"
+  //             value={ChatComposerMode.plan}
+  //           >
+  //             Plan
+  //           </ToggleGroupItem>
+  //         </TooltipTrigger>
+  //         <TooltipContent side="top">
+  //           Plan — describe intent to get a decomposed plan
+  //         </TooltipContent>
+  //       </Tooltip>
+  //       <Tooltip delayDuration={500}>
+  //         <TooltipTrigger asChild={true}>
+  //           <ToggleGroupItem
+  //             data-testid="ChatComposerToolbar-mode-build"
+  //             value={ChatComposerMode.build}
+  //           >
+  //             Build
+  //           </ToggleGroupItem>
+  //         </TooltipTrigger>
+  //         <TooltipContent side="top">Build — agentic execution</TooltipContent>
+  //       </Tooltip>
+  //     </ToggleGroup>
+  //   ) : null;
 
   const reasoningTierControl =
     showReasoningTier && capabilities != null ? (

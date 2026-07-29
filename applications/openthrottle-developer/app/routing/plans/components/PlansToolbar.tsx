@@ -174,11 +174,13 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
             options={STATUS_OPTIONS}
             value={statuses}
           />
-          <AssigneeMultiSelect
-            onChange={handleAssigneeChange}
-            options={assigneeOptions}
-            value={assignees}
-          />
+          <div>
+            <AssigneeMultiSelect
+              onChange={handleAssigneeChange}
+              options={assigneeOptions}
+              value={assignees}
+            />
+          </div>
           <SortDropdown
             onChange={handleSortChange}
             sortBy={sortBy}
