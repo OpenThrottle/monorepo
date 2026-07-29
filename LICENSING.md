@@ -62,9 +62,9 @@ edition.
 **None today.** When commercial features are built (for example SSO/SAML, audit
 logging, advanced RBAC, or multi-tenant admin), they will live in their **own
 dedicated packages** under the EULA (`LICENSE-EULA.md`). Keeping the boundary at
-the package level is deliberate: it keeps the open core cleanly Apache-2.0 and
-means a lightweight **DCO** sign-off on contributions is sufficient (no CLA),
-because contributed core code is never pulled into a proprietary edition.
+the package level is deliberate: it keeps the open core cleanly Apache-2.0.
+Inbound contributions are governed by a **Contributor License Agreement (CLA)**
+— see [Contributions](#contributions) below.
 
 ## Open core — why <a id="open-core-why"></a>
 
@@ -79,7 +79,8 @@ code is freely forkable:
 - **Patent grant** — contributors and users get an explicit patent license,
   protecting the project from patent ambushes.
 - **Trademark clause (§6)** — anyone may fork the _code_, but not the
-  **name or marks**. When the code is free, the brand is the moat.
+  **name or marks**. When the code is free, the brand is the moat. See
+  [TRADEMARK.md](./TRADEMARK.md) for the trademark policy.
 
 Revenue comes from a canonical hosted/SaaS version, proprietary enterprise
 modules (the EULA packages above), support/SLAs, and the brand — not from
@@ -92,8 +93,9 @@ Apache-2.0. Future versions remain under the copyright holder's control.
 
 Contributions are welcome but, while the project is early-stage, scoped to
 smaller targeted fixes (bugs, docs, small well-scoped improvements); discuss
-anything larger in an issue first. Contributors sign off with the Developer
-Certificate of Origin (`git commit -s`). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+anything larger in an issue first. Inbound contributions are governed by a
+**Contributor License Agreement** (individual + corporate) — **draft pending
+legal review**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Third-party dependencies
 
@@ -111,6 +113,12 @@ reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
 ## Files
 
 - [`LICENSE`](./LICENSE) — Apache-2.0, the canonical license for the open core.
+- [`NOTICE`](./NOTICE) — Apache-2.0 §4(d) attribution notice (project name +
+  copyright holder). Attribution only — it carries no additional license terms.
+  Third-party attributions are folded in only if/when a published package bundles
+  attribution-required dependencies (tracked in the license-automation plan).
 - [`LICENSE-EULA.md`](./LICENSE-EULA.md) — retained EULA, the template for future
   commercial/enterprise packages.
+- [`TRADEMARK.md`](./TRADEMARK.md) — trademark policy for the OpenThrottle name
+  and logo (Apache-2.0 §6): what you may and may not do with the marks.
 - Per-project `LICENSE.md` — the license that applies to that project.
