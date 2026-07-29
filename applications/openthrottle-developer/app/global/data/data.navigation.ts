@@ -21,7 +21,6 @@ import {
   LogInIcon,
   MessageCircleCode,
   MonitorCogIcon,
-  NotebookTabsIcon,
   NotebookTextIcon,
   Search,
   StickyNoteIcon,
@@ -30,6 +29,27 @@ import {
   UserCircleIcon,
   WandSparklesIcon,
 } from 'lucide-react';
+
+const linksLegal = [
+  {
+    children: 'License',
+    disabled: false, // 🔴 🟠 🟡 🟢
+    icon: BookOpenIcon,
+    to: '/legal/license',
+  },
+  {
+    children: 'Privacy policy',
+    disabled: false, // 🔴 🟠 🟡 🟢
+    icon: BookOpenIcon,
+    to: '/legal/privacy-policy',
+  },
+  {
+    children: 'Terms of use',
+    disabled: false, // 🔴 🟠 🟡 🟢
+    icon: BookOpenIcon,
+    to: '/legal/terms-of-use',
+  },
+];
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
 export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
@@ -43,42 +63,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/',
       },
       {
-        beta: true,
-        children: 'Personas',
-        disabled: false, // 🔴
-        icon: BrainCircuitIcon,
-        to: '/personas',
-      },
-      {
-        beta: true,
-        children: 'Prompts',
-        disabled: false, // 🔴
-        icon: BrainIcon,
-        to: '/prompts',
-      },
-      {
-        beta: false,
-        children: 'Skills',
-        disabled: false, // 🔴
-        icon: BrainCircuitIcon,
-        to: '/skills',
-      },
-      {
-        beta: false,
-        children: 'Rules',
-        disabled: false, // 🔴
-        icon: WandSparklesIcon,
-        to: '/rules',
-      },
-      {
-        children: 'Usage',
-        disabled: false, // 🔴 🟠
-        icon: ChartAreaIcon,
-        to: '/usage',
-      },
-    ],
-    Workspace: [
-      {
         children: 'Dashboard',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: GaugeIcon,
@@ -87,9 +71,16 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         beta: true,
         children: 'IDE',
-        disabled: false, // 🔴
+        disabled: true, // 🔴
         icon: CodeIcon,
         to: '/ide',
+      },
+      {
+        beta: true,
+        children: 'Personas',
+        disabled: true, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/personas',
       },
       {
         children: 'Plans',
@@ -106,10 +97,10 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       },
       {
         beta: true,
-        children: 'Pull Requests',
-        disabled: false, // 🔴 🟠
-        icon: GitPullRequest,
-        to: '/pull-requests',
+        children: 'Prompts',
+        disabled: true, // 🔴
+        icon: BrainIcon,
+        to: '/prompts',
       },
       {
         children: 'Queues',
@@ -118,21 +109,42 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/queues',
       },
       {
+        beta: false,
+        children: 'Rules',
+        disabled: false, // 🔴
+        icon: WandSparklesIcon,
+        to: '/rules',
+      },
+      {
+        beta: false,
+        children: 'Skills',
+        disabled: false, // 🔴
+        icon: BrainCircuitIcon,
+        to: '/skills',
+      },
+      {
+        beta: true,
+        children: 'Pull Requests',
+        disabled: true, // 🔴 🟠
+        icon: GitPullRequest,
+        to: '/pull-requests',
+      },
+      {
         beta: true,
         children: 'Schedule',
-        disabled: false, // 🔴
+        disabled: true, // 🔴
         icon: CalendarDaysIcon,
         to: '/schedule',
       },
       {
         beta: true,
         children: 'Search',
-        disabled: false, // 🔴
+        disabled: true, // 🔴
         icon: Search,
         to: '/search',
       },
     ],
-    Organization: [
+    Settings: [
       {
         children: 'Application',
         disabled: false, // 🔴 🟠 🟡 🟢
@@ -150,18 +162,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: BugIcon,
         to: '/settings/debug',
-      },
-      {
-        children: 'Documentation',
-        disabled: false, // 🔴 🟠
-        icon: BookOpenIcon,
-        to: '/docs',
-      },
-      {
-        children: 'FAQ',
-        disabled: false, // 🔴 🟠
-        icon: CircleHelpIcon,
-        to: '/faq',
       },
       {
         children: 'Keys',
@@ -192,38 +192,39 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         beta: true,
         children: 'Notifications',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: true, // 🔴 🟠 🟡 🟢
         icon: BellIcon,
         to: '/notifications',
       },
       {
         beta: true,
         children: 'Profile',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: true, // 🔴 🟠 🟡 🟢
         icon: UserCircleIcon,
         to: '/profile',
       },
-    ],
-    Legal: [
       {
-        children: 'License',
-        disabled: false, // 🔴 🟠 🟡 🟢
-        icon: BookOpenIcon,
-        to: '/legal/license',
-      },
-      {
-        children: 'Privacy policy',
-        disabled: false, // 🔴 🟠 🟡 🟢
-        icon: BookOpenIcon,
-        to: '/legal/privacy-policy',
-      },
-      {
-        children: 'Terms of use',
-        disabled: false, // 🔴 🟠 🟡 🟢
-        icon: BookOpenIcon,
-        to: '/legal/terms-of-use',
+        children: 'Usage',
+        disabled: false, // 🔴 🟠
+        icon: ChartAreaIcon,
+        to: '/usage',
       },
     ],
+    Workspace: [
+      {
+        children: 'Documentation',
+        disabled: false, // 🔴 🟠
+        icon: BookOpenIcon,
+        to: '/docs',
+      },
+      {
+        children: 'FAQ',
+        disabled: false, // 🔴 🟠
+        icon: CircleHelpIcon,
+        to: '/faq',
+      },
+    ],
+    Legal: linksLegal,
   };
 
 export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
@@ -240,23 +241,7 @@ export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/auth',
     },
   ],
-  Legal: [
-    {
-      children: 'License',
-      icon: NotebookTabsIcon,
-      to: '/legal/license',
-    },
-    {
-      children: 'Privacy policy',
-      icon: NotebookTabsIcon,
-      to: '/legal/privacy-policy',
-    },
-    {
-      children: 'Terms of use',
-      icon: NotebookTabsIcon,
-      to: '/legal/terms-of-use',
-    },
-  ],
+  Legal: linksLegal,
 };
 
 /* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */

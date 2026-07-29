@@ -225,31 +225,20 @@ describe('ChatComposerToolbar Component', () => {
   });
 
   describe('mode toggle', () => {
-    test('renders Plan and Build when a mode is supplied', () => {
+    // The Plan/Build mode toggle is intentionally not surfaced in the composer.
+    // Supplying `mode` must not render any mode control.
+    test('does not render a mode toggle even when a mode is supplied', () => {
       const component = renderToolbar({ mode: ChatComposerMode.plan });
 
       expect(
-        component.getByTestId('ChatComposerToolbar-mode-toggle'),
-      ).toBeInTheDocument();
+        component.queryByTestId('ChatComposerToolbar-mode-toggle'),
+      ).not.toBeInTheDocument();
       expect(
-        component.getByTestId('ChatComposerToolbar-mode-plan'),
-      ).toHaveTextContent('Plan');
+        component.queryByTestId('ChatComposerToolbar-mode-plan'),
+      ).not.toBeInTheDocument();
       expect(
-        component.getByTestId('ChatComposerToolbar-mode-build'),
-      ).toHaveTextContent('Build');
-    });
-
-    test('calls onModeChange when the other mode is pressed', async () => {
-      const onModeChange = vi.fn();
-      const component = renderToolbar({
-        mode: ChatComposerMode.plan,
-        onModeChange,
-      });
-
-      const user = userEvent.setup();
-      await user.click(component.getByTestId('ChatComposerToolbar-mode-build'));
-
-      expect(onModeChange).toHaveBeenCalledWith(ChatComposerMode.build);
+        component.queryByTestId('ChatComposerToolbar-mode-build'),
+      ).not.toBeInTheDocument();
     });
   });
 

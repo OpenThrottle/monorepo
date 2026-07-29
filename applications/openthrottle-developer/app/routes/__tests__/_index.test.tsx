@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import userEvent from '@testing-library/user-event';
 import { ChatComposerMode } from '@openthrottle/react-router-chat';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
@@ -65,58 +64,12 @@ describe('routes/_index.tsx toolbar persistence', () => {
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
   });
 
-  test('mode toggle reflects the persisted atom state', () => {
-    store.set(chatToolbarStateAtom, {
-      ...DEFAULT_CHAT_TOOLBAR_STATE,
-      mode: ChatComposerMode.build,
-    });
-
-    const component = renderRoutesStub(
-      <Index
-        actionData={undefined}
-        loaderData={seededLoaderData}
-        matches={matches}
-        params={{}}
-      />,
-    );
-
-    // The toggle items are radios; the tooltip trigger clobbers `data-state`,
-    // so the pressed state is read from `aria-checked`.
-    expect(
-      component.getByTestId('ChatComposerToolbar-mode-build'),
-    ).toHaveAttribute('aria-checked', 'true');
-    expect(
-      component.getByTestId('ChatComposerToolbar-mode-plan'),
-    ).toHaveAttribute('aria-checked', 'false');
-  });
-
-  test('changing the mode control persists only that field to the atom', async () => {
-    // Default is Plan; toggling to Build must write through the per-field setter.
-    const user = userEvent.setup();
-    const component = renderRoutesStub(
-      <Index
-        actionData={undefined}
-        loaderData={seededLoaderData}
-        matches={matches}
-        params={{}}
-      />,
-    );
-
-    expect(store.get(chatToolbarStateAtom).mode).toBe(ChatComposerMode.plan);
-
-    await user.click(component.getByTestId('ChatComposerToolbar-mode-build'));
-
-    // Only `mode` changed; every other persisted field kept its default.
-    expect(store.get(chatToolbarStateAtom)).toEqual({
-      ...DEFAULT_CHAT_TOOLBAR_STATE,
-      mode: ChatComposerMode.build,
-    });
-  });
-
   // A page reload = a fresh JS context whose atom re-reads localStorage via
   // `getOnInit`. A fresh jotai store (mounted over the route via a Provider)
-  // reproduces that hydration path faithfully, so these stand in for the live
-  // reload proof (the home route is auth-gated; see the task summary).
+  // reproduces that hydration path faithfully, so this stands in for the live
+  // reload proof (the home route is auth-gated; see the task summary). The mode
+  // toggle is no longer surfaced in the composer, so hydration is asserted on
+  // the persisted atom directly rather than a rendered control.
   test('rehydrates the toolbar from localStorage on a fresh store (reload)', () => {
     localStorage.setItem(
       CHAT_TOOLBAR_STORAGE_KEY,
@@ -124,7 +77,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
     );
     const freshStore = createStore();
 
-    const component = renderRoutesStub(
+    renderRoutesStub(
       <Provider store={freshStore}>
         <Index
           actionData={undefined}
@@ -135,9 +88,9 @@ describe('routes/_index.tsx toolbar persistence', () => {
       </Provider>,
     );
 
-    expect(
-      component.getByTestId('ChatComposerToolbar-mode-build'),
-    ).toHaveAttribute('aria-checked', 'true');
+    expect(freshStore.get(chatToolbarStateAtom).mode).toBe(
+      ChatComposerMode.build,
+    );
   });
 
   test('falls back cleanly when persisted state references removed options', () => {

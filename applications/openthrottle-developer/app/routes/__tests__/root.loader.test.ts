@@ -23,9 +23,11 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
 // (diagnostics) and getPublicEnv() for the client-serialized `env`. Neither the
 // node nor jsdom test env populates those keys, so stub both accessors with a
 // deterministic env. The public stub omits server-only keys (API_URL_INTERNAL)
-// to mirror what actually ships to window.env. All other exports
-// (FEATURE_BETA_PREVIEW, APP_URL, etc.) stay real — FEATURE_BETA_PREVIEW defaults
-// to true here, which is the running app's behavior under test.
+// to mirror what actually ships to window.env. FEATURE_BETA_PREVIEW is forced
+// on so the beta-preview redirect path is exercised deterministically — the
+// real export resolves from process.env at module load, so a local `.env`
+// setting FEATURE_BETA_PREVIEW=false would otherwise silently disable the
+// redirect and fail these tests. Everything else stays real.
 const PUBLIC_ENV = {
   API_URL_EXTERNAL: 'http://localhost:6021',
   APP_ENV: 'test',
@@ -48,6 +50,7 @@ vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
     await importOriginal<typeof import('@openthrottle/react-router-utils')>();
   return {
     ...actual,
+    FEATURE_BETA_PREVIEW: true,
     getEnvironment: () => ({
       ...PUBLIC_ENV,
       API_URL_INTERNAL: 'http://localhost:6021',

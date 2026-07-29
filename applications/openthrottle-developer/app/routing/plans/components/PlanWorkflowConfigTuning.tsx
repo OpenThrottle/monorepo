@@ -65,7 +65,11 @@ export const PlanWorkflowConfigTuning = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-run-layer3-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-run-layer3-legend"
+      legend={heading}
+    >
       <p className="text-muted-foreground text-xs">
         Control the run by adjusting the flags below, run a specific model,
         limit the iteration count, etc..

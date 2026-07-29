@@ -226,15 +226,24 @@ describe('ChatDialog Component', () => {
 
     test('should invoke the injected setter when a control changes', async () => {
       const user = userEvent.setup();
-      const onModeChange = vi.fn();
-      mountWithComposer(buildComposer({ onModeChange }));
+      const onModelChange = vi.fn();
+      mountWithComposer(
+        buildComposer({
+          models: [
+            { id: 'm1', label: 'Model One' },
+            { id: 'm2', label: 'Model Two' },
+          ],
+          onModelChange,
+        }),
+      );
       await user.click(
         component!.getByRole('button', { name: 'Open assistant' }),
       );
       await user.click(
-        component!.getByTestId('ChatComposerToolbar-mode-build'),
+        component!.getByTestId('ChatComposerToolbar-model-select'),
       );
-      expect(onModeChange).toHaveBeenCalledWith('build');
+      await user.click(component!.getByRole('option', { name: 'Model Two' }));
+      expect(onModelChange).toHaveBeenCalledWith('m2');
     });
 
     test('should show the Stop control wired to onStop while streaming', async () => {

@@ -128,7 +128,17 @@ export default function Component(
   return (
     <GlobalScreen>
       <div className="flex items-center justify-between">
-        <GlobalHeading icon={WandSparklesIcon} title={RULES_COPY.pageTitle} />
+        <div>
+          <GlobalHeading
+            className="mb-4"
+            icon={WandSparklesIcon}
+            title={RULES_COPY.pageTitle}
+          />
+          <p className="text-muted-foreground mb-6 text-sm">
+            Rules are used to define the actions that will be taken when a job
+            is triggered.
+          </p>
+        </div>
         <Button asChild={true} size="xs">
           <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>
         </Button>

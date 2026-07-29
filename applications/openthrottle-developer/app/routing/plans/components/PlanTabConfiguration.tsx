@@ -191,7 +191,7 @@ export const PlanTabConfiguration = (
         />
 
         <PlanWorkflowConfigExecution
-          heading="05. Life Cycle"
+          heading="05. Agent"
           input={input}
           setInput={setInput}
         />
