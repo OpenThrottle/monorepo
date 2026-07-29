@@ -7,6 +7,7 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
   buildWorkflowRalphOptionArgs,
@@ -72,15 +73,6 @@ export const PlanTabDetails = (
   return (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
-        <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
-          <PlanLifecycleHooksSection
-            afterHooks={plan.afterHooks}
-            beforeHooks={plan.beforeHooks}
-            heading={PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
-            planId={plan.id}
-          />
-        </div>
-
         <div
           className={clsx('bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
@@ -125,15 +117,27 @@ export const PlanTabDetails = (
           )}
         </div>
 
-        <PlanWorkflowRunTransparency
-          canonicalWorkflowCommand={canonicalWorkflowCommand}
-          planId={plan.id}
-          planRunAuditRows={planRunAuditRows}
-          recentPlanRuns={recentPlanRuns}
-          workflowInput={workflowInput}
-          workflowTimeout={workflowTimeout}
-          workingDirectory={workingDirectory ?? ''}
-        />
+        {!FEATURE_CHARLIE_PREVIEW ? (
+          <>
+            <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
+              <PlanLifecycleHooksSection
+                afterHooks={plan.afterHooks}
+                beforeHooks={plan.beforeHooks}
+                heading={PLAN_LIFECYCLE_HOOKS_COPY.planSectionTitle}
+                planId={plan.id}
+              />
+            </div>
+            <PlanWorkflowRunTransparency
+              canonicalWorkflowCommand={canonicalWorkflowCommand}
+              planId={plan.id}
+              planRunAuditRows={planRunAuditRows}
+              recentPlanRuns={recentPlanRuns}
+              workflowInput={workflowInput}
+              workflowTimeout={workflowTimeout}
+              workingDirectory={workingDirectory ?? ''}
+            />
+          </>
+        ) : null}
       </div>
     </TabsContent>
   );

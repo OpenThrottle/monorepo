@@ -80,8 +80,6 @@ import {
   dataNavigationGuest,
   dataNavigationV2,
 } from '~/global/data/data.navigation';
-import type { Route } from '@/app/+types/root';
-import stylesheet from '~/styles.css?url';
 import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
@@ -103,6 +101,8 @@ import {
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import stylesheet from '~/styles.css?url';
+import type { Route } from '@/app/+types/root';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
@@ -179,24 +179,26 @@ export const loader = async (args: Route.LoaderArgs) => {
    */
   /** In development, always poll server health so API misconfiguration surfaces even when auth is off. */
   const healthProbe = async (): Promise<RootLoaderFailure | null> => {
-    if (!FEATURE_BETA_PREVIEW) {
-      return null;
-    }
     const t0 = Date.now();
     try {
       const response = await executeGraphqlWithAuth(
         request,
         GetRootHealthDocument,
       );
+
       diagnostics.healthLatencyMs = Date.now() - t0;
       serverHealth = response?.serverHealth;
+
       return null;
     } catch (error) {
       diagnostics.healthLatencyMs = Date.now() - t0;
+
       console.error('root loader: GetRootHealth failed', error);
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
+
       const healthMessage = rootLoaderErrorMessage(error);
       const healthHttpStatus = httpStatusFromRootLoaderError(error);
+
       return {
         kind: classifyRootLoaderError(error),
         message: healthMessage,
@@ -210,23 +212,30 @@ export const loader = async (args: Route.LoaderArgs) => {
     if (isTokenNull) {
       return null;
     }
+
     const t0 = Date.now();
     try {
       const queryMyUser = await executeGraphqlWithAuth(
         request,
         GetMyUserDocument,
       );
+
       diagnostics.userLatencyMs = Date.now() - t0;
+
       user = queryMyUser.me ?? null;
       userLoadOk = true;
+
       return null;
     } catch (error) {
       diagnostics.userLatencyMs = Date.now() - t0;
       console.error('root loader: GetMyUser failed', error);
+
       user = null;
       userLoadOk = false;
+
       const userMessage = rootLoaderErrorMessage(error);
       const userHttpStatus = httpStatusFromRootLoaderError(error);
+
       return {
         kind: classifyRootLoaderError(error),
         message: userMessage,
@@ -426,6 +435,7 @@ export default function App(): React.ReactElement {
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
+
   // Streaming chat surface for the global header ChatDialog. Runs unconditionally
   // (hook rules); only injected into GlobalProviders when authenticated, else the
   // header falls back to the legacy provider.

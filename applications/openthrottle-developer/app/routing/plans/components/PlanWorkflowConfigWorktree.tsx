@@ -64,7 +64,11 @@ export const PlanWorkflowConfigWorktree = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-run-worktree-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-run-worktree-legend"
+      legend={heading}
+    >
       <p className="text-muted-foreground text-xs">
         Forwards <code className="text-xs">--worktree</code> to cursor-agent and
         claude per iteration. Physical BullMQ git worktrees (

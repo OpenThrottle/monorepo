@@ -146,7 +146,11 @@ export const PlanWorkflowConfigWorkspaceSelector = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-run-workspace-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-run-workspace-legend"
+      legend={heading}
+    >
       <p className="text-muted-foreground text-xs">
         Choose a registered repository or checkout to run in — OpenThrottle
         resolves it to a filesystem path on enqueue. Pick a specific{' '}

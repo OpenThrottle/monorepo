@@ -191,6 +191,7 @@ export const ChatModelPicker = (
       setActiveGroupId(defaultActiveGroupId);
       setSearch('');
     }
+
     setOpen(nextOpen);
   };
 
@@ -204,6 +205,7 @@ export const ChatModelPicker = (
     if (disabledSet.has(modelId)) {
       return;
     }
+
     onModelChange(modelId);
     setOpen(false);
   };
@@ -215,6 +217,7 @@ export const ChatModelPicker = (
     // Keep the row's onSelect from firing when the star is clicked.
     event.preventDefault();
     event.stopPropagation();
+
     onToggleFavorite?.(modelId);
   };
 
@@ -223,6 +226,7 @@ export const ChatModelPicker = (
     if (group.id === FAVORITES_GROUP_ID) {
       return <Star className="size-4" />;
     }
+
     if (group.icon != null) {
       return (
         <span className="flex size-4 items-center justify-center">
@@ -230,6 +234,7 @@ export const ChatModelPicker = (
         </span>
       );
     }
+
     // Letter-avatar fallback for a group that supplied no icon.
     return (
       <span
@@ -241,10 +246,14 @@ export const ChatModelPicker = (
     );
   };
 
-  const renderRailItem = (group: ResolvedGroup): React.ReactElement => {
+  const renderRailItem = (
+    group: ResolvedGroup,
+    index: number,
+  ): React.ReactElement => {
     const isActive = activeGroup?.id === group.id;
+
     return (
-      <Tooltip delayDuration={300} key={group.id}>
+      <Tooltip defaultOpen={false} key={`${group.id}-${index}`}>
         <TooltipTrigger asChild={true}>
           <Button
             aria-label={group.label}
@@ -279,7 +288,7 @@ export const ChatModelPicker = (
     return (
       <CommandItem
         aria-disabled={isDisabled}
-        className="gap-2"
+        className="flex justify-between !gap-4 md:!gap-8"
         data-testid={`ChatModelPicker-option-${groupId}-${model.id}`}
         disabled={isDisabled}
         // Namespaced with the group id so the same model surfaced under both
@@ -289,20 +298,21 @@ export const ChatModelPicker = (
         onSelect={() => onSelectModel(model.id)}
         value={`${model.label} ${model.subLabel ?? ''} ${model.id}`}
       >
-        <Check
-          className={clsx(
-            'size-4 shrink-0',
-            isSelected ? 'opacity-100' : 'opacity-0',
-          )}
-        />
-        <span className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col">
           <span className="truncate">{model.label}</span>
           {model.subLabel != null && model.subLabel !== '' ? (
             <span className="text-muted-foreground truncate text-xs">
               {model.subLabel}
             </span>
           ) : null}
-        </span>
+        </div>
+        <Check
+          className={clsx(
+            'size-4 shrink-0',
+            isSelected ? 'opacity-100' : 'opacity-0',
+          )}
+        />
+
         {onToggleFavorite != null ? (
           <button
             aria-label={
@@ -375,10 +385,11 @@ export const ChatModelPicker = (
           className="bg-muted/40 flex max-h-80 flex-col gap-1 overflow-y-auto border-r p-1.5"
           data-testid="ChatModelPicker-rail"
         >
-          {resolvedGroups.map((group) => renderRailItem(group))}
+          {resolvedGroups.map(renderRailItem)}
         </div>
         <Command className="min-w-0 flex-1" shouldFilter={true}>
           <CommandInput
+            className="mb-3 px-2 py-0.5 text-sm placeholder:text-sm"
             data-testid="ChatModelPicker-search"
             onValueChange={setSearch}
             placeholder={searchPlaceholder}

@@ -68,7 +68,11 @@ export const PlanWorkflowConfigPrompt = (
   // 🔌 Short Circuit
 
   return (
-    <OpenThrottleFieldset id="workflow-run-layer1-legend" legend={heading}>
+    <OpenThrottleFieldset
+      className="border-0"
+      id="workflow-run-layer1-legend"
+      legend={heading}
+    >
       <fieldset
         aria-labelledby="workflow-run-layer1-legend"
         className={clsx('space-y-4', className)}
