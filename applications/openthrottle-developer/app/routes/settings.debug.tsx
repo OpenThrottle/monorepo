@@ -9,6 +9,7 @@ import { GetRootHealthDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugPanel';
+import { SettingsDocsExperimental } from '~/routing/settings/components/SettingsDocsExperimental';
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
 import type { Route } from '@/app/routes/+types/settings.debug';
 
@@ -88,6 +89,7 @@ export default function Component(
         envSnapshot={loaderData.envSnapshot}
         graphQL={loaderData.graphQL}
       />
+      <SettingsDocsExperimental className="mt-6" />
     </GlobalScreen>
   );
 }

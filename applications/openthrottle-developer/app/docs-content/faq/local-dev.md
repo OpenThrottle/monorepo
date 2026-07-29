@@ -1,6 +1,6 @@
 ---
-group: General
-order: 2
+group: 01. Local Development
+order: 1
 title: How do I run the app locally?
 ---
 
