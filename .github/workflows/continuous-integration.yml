@@ -171,6 +171,14 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Full-tree (not affected): license risk lives in the whole installed graph,
+      # so this always scans every dependency — cheapest safety for the case that
+      # matters most (a dependency bump / lockfile change pulling in copyleft).
+      # Fails the PR on any disallowed or undetected license; waivers live in
+      # license-policy.json (see CONTRIBUTING.md § Dependency licenses).
+      - name: '⚖️ Dependency-license compliance gate'
+        run: pnpm exec nx run monorepo:check-licenses
+
       - name: '🎨 Prettier format-check'
         run: pnpm exec nx run monorepo:format-check --verbose
 
