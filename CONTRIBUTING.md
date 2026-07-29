@@ -1,444 +1,99 @@
-# Contributing to the Monorepo
+# Contributing to OpenThrottle
 
-Thank you for your interest in contributing! This document provides guidelines and best practices for contributing to this monorepo.
+Thanks for your interest in contributing! This guide walks the contributor
+journey end to end. For how the monorepo is organized and the deeper build/test
+mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo/).
 
-For information about monorepo structure, organization, and project setup, see [MONOREPO.md](./MONOREPO.md).
+## Ways to contribute
 
-## Project Tags
+- **Issues** — report bugs or request features. Search first, then include clear
+  reproduction steps.
+- **Pull requests** — while the project is early-stage, contributions are scoped
+  to smaller, targeted changes (bug fixes, docs, well-scoped improvements).
+  Discuss anything larger in an issue before you build it.
+- **Questions** — open an issue for clarification.
 
-All NX projects in this monorepo must have appropriate tags. Tags enable project filtering, consistent organization, release management, and proper tooling workflows.
+## Getting set up
 
-### Tag Types
-
-Projects in this monorepo use four primary tag types:
-
-1. **`name:`** - Identifies the project name
-2. **`type:`** - Categorizes the project type (`application`, `package`, or `tool`)
-3. **`production:`** - Indicates production readiness
-4. **`technology:`** - Identifies the technology stack
-
-### Tag Format
-
-Tags follow the pattern `<type>:<value>`:
-
-```json
-{
-  "nx": {
-    "tags": [
-      "name:@openthrottle/xxxxxx",
-      "type:application",
-      "production:true",
-      "technology:react",
-      "technology:react-router"
-    ]
-  }
-}
-```
-
-### Tag Usage in Workflows
-
-Tags are used throughout the monorepo for:
-
-- **Release Management**: The `nx.json` release configuration uses `tag:type:application` and `tag:type:package` to determine which projects to release
-- **Project Filtering**: Filter projects by technology, type, or production status
-- **Task Execution**: Run tasks on specific project subsets using tag filters
-- **Organization**: Group and discover related projects
-
-### Required Tags
-
-Every project must have:
-
-- **`name:`** tag - The project identifier (matches package name or directory name)
-- **`type:`** tag - One of `type:application`, `type:package`, or `type:tool`
-- **`production:`** tag - Either `production:true` or `production:false`
-- **At least one `technology:`** tag - See [Technology Tags](#technology-tags) section below
-
-### Tag Examples
-
-**React Router Application:**
-
-```json
-{
-  "nx": {
-    "tags": [
-      "name:openthrottle-yyy",
-      "type:application",
-      "production:true",
-      "technology:react",
-      "technology:react-router"
-    ]
-  }
-}
-```
-
-**NestJS API Application:**
-
-```json
-{
-  "nx": {
-    "tags": [
-      "name:openthrottle-api",
-      "type:application",
-      "production:true",
-      "technology:nestjs"
-    ]
-  }
-}
-```
-
-### Tag Combinations
-
-Projects can have multiple tags of the same type when appropriate:
-
-- **Multiple technology tags**: Projects using multiple technologies should have all relevant `technology:` tags
-- **Single type tag**: Projects should have exactly one `type:` tag
-- **Single production tag**: Projects should have exactly one `production:` tag
-- **Single name tag**: Projects should have exactly one `name:` tag
-
-## Technology Tags
-
-All NX projects in this monorepo must have appropriate technology tags. Technology tags enable project filtering, consistent organization, and proper tooling workflows.
-
-### Quick Reference
-
-- **Reference Document**: See [docs/monorepo/NX/tags.md](docs/monorepo/NX/tags.md) for complete tag definitions
-- **Validation**: Run `pnpm nx:validate-tags` to check all projects
-- **Format**: Tags follow the pattern `technology:<value>`
-
-### Tagging Rules
-
-1. **Always tag by primary technology**: Use the most specific tag that applies
-2. **Use multiple tags when appropriate**: If a project uses multiple technologies, tag it with all relevant tags
-3. **Don't duplicate**: Don't use `technology:typescript` if the project already has a framework tag (React, NestJS, etc.)
-4. **Be consistent**: Use the exact tag values listed in the reference document
-5. **Tag all projects**: Every project should have at least one technology tag
-
-### Examples
-
-**React Router Application:**
-
-```json
-{
-  "nx": {
-    "tags": ["technology:react", "technology:react-router", "type:application"]
-  }
-}
-```
-
-**TypeScript-only Package:**
-
-```json
-{
-  "nx": {
-    "tags": ["technology:typescript", "type:package"]
-  }
-}
-```
-
-**Isomorphic Node library (client + server):**
-
-```json
-{
-  "nx": {
-    "tags": ["technology:nodejs", "type:package"]
-  }
-}
-```
-
-Use `technology:nodejs` only for shared libraries consumed on both server and client (for example `@openthrottle/nodejs-graphql`) or the workspace root. Node-only TypeScript packages use `technology:typescript` — never both on one project. See [docs/monorepo/NX/tags.md](docs/monorepo/NX/tags.md).
-
-**NestJS API:**
-
-```json
-{
-  "nx": {
-    "tags": ["technology:nestjs", "type:application"]
-  }
-}
-```
-
-### Validation
-
-Before committing changes, ensure your project tags are valid:
-
-```bash
-pnpm nx:validate-tags
-```
-
-This script will:
-
-- Identify projects missing technology tags
-- Validate tag values against the reference document
-- Report any inconsistencies
-
-### Adding Tags to New Projects
-
-When creating a new project:
-
-1. Determine the primary technology stack
-2. Consult the [technology tags reference](docs/monorepo/NX/tags.md)
-3. Add appropriate `technology:*` tags to the project's `package.json` or `project.json`
-4. Run `pnpm nx:validate-tags` to verify
-
-### Updating Tags
-
-If you need to update technology tags for an existing project:
-
-1. Update the tags in the project's configuration file
-2. Run `pnpm nx:validate-tags` to verify
-3. Ensure the tags accurately reflect the project's technology stack
-
-## Agent assets (skills & rules)
-
-**Skills** are managed by the **`skill-sync`** skill; **rules / personas / prompts** use `.agents/` as their source of truth. See [`skills/skill-sync/SKILL.md`](skills/skill-sync/SKILL.md) (mechanism) and [docs/Skills.md](docs/Skills.md) (adoption policy + installed set).
-
-| Asset              | Author here (SSOT)                                                                      | Generated (never hand-edit)                          |
-| ------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| OT-owned skills    | [`skills/<slug>/SKILL.md`](skills/)                                                     | `.agents/skills/<slug>` (symlink), `.claude/skills/` |
-| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json`) | `.claude/skills/` fan-out                            |
-| Rules              | [`.agents/rules/**/*.mdc`](.agents/rules/)                                              | `.cursor/rules/`                                     |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                 | Ralph `--prompt-file`                                |
-
-**Workflow:**
-
-1. Author an OT-owned skill under `skills/<slug>/` (add its `skill-tag-overlays.json` entry), or install an external one via `npx skills add … --agent universal`. Edit rules under `.agents/rules/` only. **Never** hand-edit `.agents/skills/` or `.claude/skills/` — they're generated.
-2. Run `bash skills/skill-sync/scripts/sync.sh` to (re)generate the layout, then `pnpm nx run monorepo:check-agent-assets-ssot` before pushing (also: `pnpm run check:local:agent-assets`).
-3. Open a git PR — **do not** edit agent assets in the `custom_prompts` DB; disk is write authority.
-
-**Editor-native (not generated):** `.cursor/hooks.json`, local `.cursor/mcp.json` (copy from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) for the full tree.
-
-**Windows clones:** Enable symlink support — `git config core.symlinks true` — or clone inside WSL. Without symlinks, generated trees may appear as plain files and CI will fail.
-
-**To customize an external skill:** don't edit the vendored copy (it stays 1:1 with upstream and re-sync would overwrite it) — author a companion skill or rule in `skills/` / `.agents/rules/` that references it (exemplar: `.agents/rules/coding/frontend-design-openthrottle.mdc`). See [docs/Skills.md](docs/Skills.md).
-
-## General Guidelines
-
-### GitHub Packages auth (one-time local setup)
-
-The workspace pulls `@openthrottle/*` packages from GitHub Packages, which needs an auth token. As of **pnpm 11**, the token can **not** live in the committed `.npmrc` — pnpm refuses to expand `${ENV}` in a committed project file (it could leak a secret to an attacker-controlled registry). The committed `.npmrc` keeps only the registry mapping; set the credential once in your trusted user-level config (token needs the `packages:read` scope):
-
-```bash
-pnpm config set "//npm.pkg.github.com/:_authToken" "$GITHUB_TOKEN"
-```
-
-CI ([`.github/actions/node-setup`](.github/actions/node-setup/action.yml)) and the Docker build stages ([`Dockerfile.NestJS`](Dockerfile.NestJS), [`Dockerfile.ReactRouter`](Dockerfile.ReactRouter)) do the equivalent from their `GITHUB_TOKEN` secret/arg before `pnpm install`.
-
-- **Code style and preferences:** Follow the coding conventions defined in [`.agents/rules/`](.agents/rules/). See [.agents/rules/README.md](.agents/rules/README.md) for the full style guide: `coding/` holds TypeScript/JS and structure rules; `commands/` holds rules for OpenThrottle (OT), GitHub, and agents. Cursor loads the same bodies via `.cursor/rules/` symlinks — edit `.agents/rules/` only.
-- Use conventional commits for commit messages
-- Ensure all tests pass before submitting changes
-- Update documentation when adding new features
-- See [MONOREPO.md](./MONOREPO.md) for project structure and organization guidelines
-
-### Formatting (Prettier)
-
-Prettier configuration lives in **one place**: `prettierConfig` from [`@tools/dotfiles`](tools/dotfiles/README.md). The repo's single root `.prettierrc.mjs` re-exports it, and Prettier resolves that root config from every directory — **do not add per-app `.prettierrc.mjs` files**. The shared config wires `prettier-plugin-tailwindcss` and pins YAML to **single quotes**; the root `.editorconfig` matches with `quote_type = single` so editors and Prettier never fight over YAML quotes.
-
-Format the whole repo with **`pnpm format`** and check it with **`pnpm format:check`** (these wrap `pnpm nx run monorepo:format-write` / `monorepo:format-check`). `format:check` also runs as part of `pnpm run check:local`.
-
-### Knip and public exports
-
-When you add or keep an export that is part of a **package public API** (see `package.json` → `exports`) or a documented cross-workspace helper, tag it with JSDoc **`@public`** so Knip does not report or auto-remove it. Component prop types (`*Props`, `*Options`) do not need this tag; intentional `export` on those types is expected. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md) for the full report-vs-fix workflow. Run **`pnpm nx run monorepo:knip`** for reports only—do not run **`knip --fix-type exports`** on application UI. **`knip --fix-type dependencies`** is optional and only after reviewing the `package.json` diff.
-
-## Nx targets: projects without `build`
-
-As of the current workspace graph, **16 of 59** Nx projects do **not** expose a `build` target. That is intentional—not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which now covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
-
-### Why React Router workspace libraries skip `build`
-
-Most no-build packages are **`technology:react-router`** workspace libraries under `packages/react-router-*` (plus two React-related codegen/MCP helpers). They follow a **source-first** pattern:
-
-- `package.json` **`main`**, **`module`**, and **`types`** point at **`./src/index.ts`** (TypeScript source, not a precompiled `dist/`).
-- React Router applications (Vite) **transpile workspace dependencies** when you run `dev` or `build` on the app.
-- Their `nx.targets` use **`__build`** and **`__build-package`** placeholders so the `@nx/js/typescript` plugin does **not** infer a library `build` target. Packages that _do_ ship compiled output use the real **`build-package`** target instead (see `nx.json` `targetDefaults`).
-
-Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
-
-### All projects without `build` (17)
-
-| Nx project                                     | Role                                                                                                                              |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `@openthrottle/react-router-auth`              | Shared React Router auth UI and hooks                                                                                             |
-| `@openthrottle/react-router-chat`              | Shared chat UI                                                                                                                    |
-| `@openthrottle/react-router-docs`              | Docs/FAQ rendering layer over a per-app Markdown content folder                                                                   |
-| `@openthrottle/react-router-editor`            | Monaco-based editor                                                                                                               |
-| `@openthrottle/react-router-graphql`           | GraphQL client helpers for React Router apps                                                                                      |
-| `@openthrottle/react-router-notifications`     | Notifications UI                                                                                                                  |
-| `@openthrottle/react-router-profiling`         | Profiling utilities                                                                                                               |
-| `@openthrottle/react-router-shadcn`            | shadcn-based primitives for OpenThrottle apps                                                                                     |
-| `@openthrottle/react-router-testing`           | Shared Vitest setup: jsdom polyfills + `window.env` fixture                                                                       |
-| `@openthrottle/react-router-ui`                | Shared UI components                                                                                                              |
-| `@openthrottle/react-router-ui-global`         | Global UI shell pieces                                                                                                            |
-| `@openthrottle/react-router-utils`             | Config, env, logging, metadata utilities                                                                                          |
-| `@openthrottle/openthrottle-developer-codegen` | GraphQL/codegen outputs for `openthrottle-developer`                                                                              |
-| `@openthrottle/graphql-codegen`                | Shared GraphQL codegen utilities                                                                                                  |
-| `@openthrottle/openthrottle-skills`            | Skills package (TypeScript source)                                                                                                |
-| `@openthrottle/openthrottle-vscode`            | Editor-agnostic logic lib for the VS Code/Cursor extension (the deployable extension itself is the `vscode-openthrottle` project) |
-| `infra`                                        | Terraform (`type:infrastructure`); no application bundle                                                                          |
-
-The **13** projects tagged `technology:react-router` in this list are the shared UI/library layer for OpenThrottle React Router apps.
-
-### What to run when you change these projects
-
-1. **Package-level checks** (always applicable):
+1. **Bootstrap the workspace** (Node ≥ 22, pnpm only — `preinstall` blocks
+   npm/yarn):
 
    ```bash
-   pnpm nx run <project>:lint
-   pnpm nx run <project>:typecheck   # covers source AND test files
-   # When the project defines test:
-   pnpm nx run <project>:test
+   ./scripts/setup.sh
    ```
 
-2. **Integration check** — run **`build`** or **`dev`** on a **consumer** React Router application (for example `openthrottle-developer`, `openthrottle-admin`) so Vite compiles your library changes end-to-end.
-
-3. **Affected workflows** — `pnpm nx affected --target=build` will **not** schedule these 16 projects. Use **`lint`** and **`typecheck`** on affected projects instead (as in [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)).
-
-### Auditing the graph locally
-
-```bash
-# Projects that expose build (43 today; count may change as projects are added)
-pnpm nx show projects --with-target=build
-
-# Compare to full project list
-pnpm nx show projects
-```
-
-## Full builds under `--parallel` (reliability)
-
-Most projects compile through TypeScript **project references** (`composite: true`). Under a cold, high-parallelism full build — e.g. `nx run-many --target=build,typecheck --all --parallel=4 --skip-nx-cache` — multiple `tsc --build` processes can each independently (re)build the **same shared dependency**, because `tsc --build` resolves and rebuilds references on its own, outside Nx's task scheduling. Two processes writing the same `dist/*.d.ts` at once surface as flaky, non-deterministic failures even though every project passes in isolation:
-
-- `TS6305` — `Output file '…/dist/src/index.d.ts' has not been built from source file …`
-- `TS2307` / `TS7016` — a dependency's declarations are momentarily missing (or `.js` exists without `.d.ts`) while another process rewrites them.
-
-Two hardening changes reduce this (see `nx.json` `targetDefaults` and the app `vite.config.ts` files):
-
-- **Ordered declaration writes.** `typecheck` depends on `^build`, its own `build`, and `^typecheck`; `build` depends on `^typecheck`. For any project its own build precedes its own typecheck, and a dependent waits for each dependency's build **and** typecheck — so within Nx's scheduling no `dist` is read while another task writes it. This eliminated the `TS6305`/`TS2307` signatures across repeated cold `--parallel=4` runs.
-- **No fixed-port build server.** `vite-bundle-analyzer` is gated behind `ANALYZE=true` (and uses `analyzerPort: 'auto'`), so app builds no longer start a server on the fixed port `8888` and collide under `--parallel` (`EADDRINUSE`).
-
-These remove the named signatures, but `tsc --build`'s autonomous reference rebuilds can still occasionally collide at high parallelism. **For a trustworthy cold full build, lower the parallelism:**
-
-```bash
-# Reliable full-build lane (validated repeatably green across cold runs)
-pnpm run build:all
-# equivalent to:
-pnpm nx run-many --target=build,typecheck --all --parallel=2
-```
-
-`--parallel=2` was repeatably green across cold, cache-purged runs; `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
-
-## Nx target descriptions
-
-Every Nx target we declare carries a `description` so `nx show project <p>` and Nx Console explain what each target does. A regression guard enforces this:
-
-```bash
-pnpm run check:target-descriptions   # also runs as part of pnpm run check:local
-# report (no failures): pnpm exec tsx ./scripts/audit-target-descriptions.ts
-```
-
-When you add a target, give it a description in one of two places:
-
-- **A whole family of targets** (e.g. `lint`, `test`, `build`) — set the `description` once on the matching `nx.json` `targetDefaults` entry (by target name, or by executor key like `@nx/js:tsc`). It cascades into every project's resolved target of that name/executor.
-- **A single project-specific target** (e.g. `docker-build`) — set `description` on the target in that project's `package.json` under `nx.targets`.
-
-Style: imperative, one sentence, what it does plus any key flag/gotcha (mirror `openthrottle-server`'s `docker-build` / `dev-debug`). The guard skips plugin-**inferred** targets (not editable here — they carry the plugin's own description) and intentionally-**disabled** marker targets (`__`-prefixed, `__DISABLED__`, padded underscores).
-
-## GraphQL schema and codegen
-
-The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`applications/openthrottle-server/schema.gql`** (via the shared `defineCodegen` helper in `@openthrottle/graphql-codegen`). CI fails when generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.
-
-### When you change the server schema
-
-1. **Regenerate the schema** — Start the server so NestJS writes `applications/openthrottle-server/schema.gql` (for example `pnpm nx run openthrottle-server:dev`, wait for bootstrap, then stop). The `dev`/`start` targets run with `cwd` at the project root, so `autoSchemaFile: 'schema.gql'` resolves to this app copy — the single committed schema file.
-2. **Regenerate consumer outputs** — Run GraphQL and React Router codegen for affected projects:
+2. **Authenticate to GitHub Packages (one-time).** The workspace pulls
+   `@openthrottle/*` packages from GitHub Packages. As of pnpm 11 the token can
+   **not** live in the committed `.npmrc`; set it once in your user-level config
+   with a token that has the `packages:read` scope:
 
    ```bash
-   pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel
+   pnpm config set "//npm.pkg.github.com/:_authToken" "$GITHUB_TOKEN"
    ```
 
-   To refresh all production-tagged consumers in one pass:
+   CI and the Docker build stages do the equivalent from their `GITHUB_TOKEN`.
+
+## The change loop
+
+1. **Branch** off `main` — never commit to `main` directly.
+2. **Make your change.** New projects, components, routes, and services come from
+   the generators, not hand-scaffolding — see
+   [Creating new projects](./MONOREPO.md#creating-new-projects). Follow the code
+   style in [`.agents/rules/`](./.agents/rules/README.md).
+3. **Validate locally — the golden path.** Run the same gates CI runs:
 
    ```bash
-   pnpm run build:graphql
+   pnpm run check:local
    ```
 
-3. **Commit schema and generated files** — Include `applications/openthrottle-server/schema.gql` and any updated `__generated__` trees under apps or packages you touched.
+   Green locally ≈ green on the PR. It covers formatting, lint, typecheck, tests,
+   GraphQL codegen drift, and Knip. Fix what it reports rather than memorizing
+   each rule — the validators and every Nx target's `description`
+   (`nx show project <p>`) are the source of truth. See
+   [docs/monorepo/CI-quality-gates.md](./docs/monorepo/CI-quality-gates.md).
 
-**Schema compatibility:** Do not remove or change types on existing GraphQL fields without a migration plan. Mark unused fields **`@deprecated(reason: "...")`** instead. See [personal-general.mdc](.cursor/rules/personal-general.mdc) (API applications) and `applications/openthrottle-server/docs/SCHEMA_AUDIT.md`.
+4. **Commit** using [Conventional Commits](https://www.conventionalcommits.org/)
+   (enforced by commitlint + Husky). Don't bypass the hooks (`--no-verify`).
+5. **Open a PR** with the
+   [pull request template](./.github/pull_request_template.md): a
+   conventional-commit title, and testing steps phrased as things to do.
 
-### Projects with committed GraphQL codegen
+## Contributor License Agreement (CLA)
 
-These targets read the committed `applications/openthrottle-server/schema.gql` via each project’s `codegen.ts`:
+> ⚠️ **DRAFT — pending legal review.** The CLA terms and process below are not
+> final until an attorney has reviewed them, and are not yet the operative
+> agreement. Status is tracked in OpenThrottle.
 
-| Area                    | Nx project(s)                                                                | Generated output (typical)                           |
-| ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Developer UI            | `openthrottle-developer`, `@openthrottle/openthrottle-developer-codegen`     | `app/__generated__/` or package `src/__generated__/` |
-| Other React Router apps | `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`           | `app/__generated__/`                                 |
-| MCP / Ralph / workflows | `@openthrottle/openthrottle-mcp`, `@openthrottle/openthrottle-agentic-ralph` | `src/__generated__/`                                 |
-| Editor extension        | `@openthrottle/vscode-openthrottle`                                          | extension `src/__generated__/`                       |
+Inbound contributions are governed by a **Contributor License Agreement**:
 
-**CI drift guards for committed package output:** `@openthrottle/openthrottle-mcp` and `@openthrottle/openthrottle-agentic-ralph` must keep `src/__generated__/` in sync with the schema (regenerate with `pnpm nx run <project>:codegen-graphql` and commit, or CI’s `verify-graphql-codegen` fails).
+- **Individuals** sign the Individual CLA (ICLA): you grant the project a
+  copyright and patent license to your contribution while retaining ownership of
+  your work.
+- **Contributing on behalf of an employer** additionally requires a Corporate
+  CLA (CCLA) signed by an authorized representative.
 
-Per-project watch mode during development: `pnpm nx run <project>:codegen-graphql-watch` (and `codegen-react-router-watch` for React Router apps).
+Signing is a one-time step per contributor (and per company). Until the CLA
+automation is approved and wired up, a maintainer will coordinate signing on
+your first PR.
 
-### Verify locally (mirror CI)
+## Code of Conduct & Security
 
-From the repo root after `pnpm install`:
+- **Code of Conduct** — participation is governed by our
+  [Code of Conduct](./CODE_OF_CONDUCT.md).
+- **Security** — do **not** open public issues for vulnerabilities; follow
+  [SECURITY.md](./SECURITY.md) for private disclosure.
 
-```bash
-# Package-specific generated GraphQL clients
-pnpm nx run-many --target=verify-graphql-codegen \
-  --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
+## Going deeper
 
-# Affected codegen + ensure working tree is clean
-pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel
-git diff --exit-code
-```
-
-`pnpm run check:local:verify` runs the schema-sync and package verify targets; `pnpm run check:local:codegen` runs affected codegen. Full contributor parity with CI gates: `pnpm run check:local` (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)).
-
-### Further reading
-
-- [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md) — P0/P1 gate commands and owners
-- [applications/openthrottle-server/README.md](applications/openthrottle-server/README.md) — running the API
-- [.agents/skills/openthrottle-stack/SKILL.md](.agents/skills/openthrottle-stack/SKILL.md) — server GraphQL conventions
-
-## Testing: `typecheck` versus `test`
-
-Nx exposes two different targets for test-related work. They are **not** interchangeable.
-
-| Target          | What it does                                                                                                                                            | Executes test bodies?                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **`typecheck`** | `tsc` over **source and test files** — a `tsc --build … --emitDeclarationOnly` pass plus `tsc --noEmit -p tsconfig.test.json` when a test config exists | **No** — only type-checks `*.ts`/`*.tsx` (including `*.test.ts`, `*.spec.ts`) |
-| **`test`**      | Vitest via `@nx/vitest:test` and each project’s `vitest.config.ts`                                                                                      | **Yes** — runs `describe` / `it` / `expect` and reports pass or fail          |
-
-**`typecheck` does not run Vitest and does not execute test bodies.** A green `typecheck` result only means source and test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution. (`typecheck` is a single target — it replaced the former `typecheck` + `typecheck-tests` split; the test-file coverage that used to live in `typecheck-tests` is now folded into `typecheck`.)
-
-CI runs both at different priorities: P0 affected **`lint`** and **`typecheck`** on every PR; P2 runs **`test`** for **all affected projects** (no per-project exclude — see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck` and affected `test` (via `check:local:affected-test`, `nx affected --target=test --parallel --nxBail`) as separate steps, mirroring the same affected test set CI runs.
-
-### Shared React Router test setup
-
-React Router apps share a single Vitest setup via **`@openthrottle/react-router-testing`** instead of hand-rolling jsdom polyfills and the `window.env` fixture in each `tests/setup.ts`. Keep `vitest.config.ts` `setupFiles` at `['./tests/setup.ts']` and reduce that file to one line plus the app's `APP_NAME`:
-
-```ts
-// tests/setup.ts
-import { setupReactRouterTest } from '@openthrottle/react-router-testing';
-
-setupReactRouterTest({ env: { APP_NAME: 'openthrottle-developer' } });
-```
-
-`setupReactRouterTest` registers the jest-dom matchers, bakes in `afterEach(cleanup)`, installs the jsdom polyfills (matchMedia, ResizeObserver, scrollIntoView, pointer capture), and populates `window.env`. Do **not** re-add those shared blocks to an app's setup file. Only genuinely app-specific shims belong there (e.g. openthrottle-developer's WebGL / GradientMesh stubs). See the package README for the granular escape hatches.
-
-## Additional Resources
-
-- **[MONOREPO.md](./MONOREPO.md)**: Comprehensive monorepo structure, organization, and contribution guidelines
-- **[Technology Tags Reference](docs/monorepo/NX/tags.md)**: Complete technology tag definitions
-- **[NX Documentation](https://nx.dev/)**: Official NX documentation
-- **[NX Tags Documentation](https://nx.dev/concepts/more-concepts/tags)**: NX tags and filtering
-
-## Questions?
-
-If you have questions about tags, project structure, or other contribution guidelines, please:
-
-- Check the [MONOREPO.md](./MONOREPO.md) for structure and organization questions
-- Review the [technology tags reference](docs/monorepo/NX/tags.md) for technology tag questions
-- Review existing projects for examples
-- Open an issue for clarification
+- [MONOREPO.md](./MONOREPO.md) — architecture, applications vs packages,
+  generators, dependency management, full-workspace builds, and the no-build
+  (source-first) projects.
+- [docs/monorepo/NX/tags.md](./docs/monorepo/NX/tags.md) — the required project
+  tags (`name` / `type` / `production` / `technology`); validate with
+  `pnpm nx:validate-tags`.
+- [docs/monorepo/CI-quality-gates.md](./docs/monorepo/CI-quality-gates.md) — the
+  CI gates, `typecheck` vs `test`, and the local commands that mirror CI.
+- [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
+  `@public` export convention.
+- [docs/Skills.md](./docs/Skills.md) — agent skills and rules (`.agents/` is the
+  source of truth; run `skill-sync`, never hand-edit generated trees).

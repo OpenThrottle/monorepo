@@ -465,13 +465,33 @@ Build a single project with `pnpm nx run <project>:build`. To build everything a
 pnpm run build:all   # nx run-many --target=build,typecheck --all --parallel=2
 ```
 
-A cold, high-parallelism full build (`--parallel=4 --skip-nx-cache`) is **not** reliably green: TypeScript project-reference (`tsc --build`) processes can concurrently rebuild shared dependencies and race on `dist/*.d.ts`, producing intermittent `TS6305`/`TS2307`/`TS7016` failures even though each project passes in isolation. `--parallel=2` is the validated trustworthy setting. See [CONTRIBUTING.md → Full builds under `--parallel`](./CONTRIBUTING.md#full-builds-under---parallel-reliability) for the root cause, the `nx.json`/analyzer hardening, and the Nx Cloud flaky-task-retry option.
+### Full builds under `--parallel` (reliability)
+
+Most projects compile through TypeScript **project references** (`composite: true`). Under a cold, high-parallelism full build — e.g. `nx run-many --target=build,typecheck --all --parallel=4 --skip-nx-cache` — multiple `tsc --build` processes can each independently (re)build the **same shared dependency**, because `tsc --build` resolves and rebuilds references on its own, outside Nx's task scheduling. Two processes writing the same `dist/*.d.ts` at once surface as flaky, non-deterministic failures even though every project passes in isolation:
+
+- `TS6305` — `Output file '…/dist/src/index.d.ts' has not been built from source file …`
+- `TS2307` / `TS7016` — a dependency's declarations are momentarily missing (or `.js` exists without `.d.ts`) while another process rewrites them.
+
+Two hardening changes reduce this (see `nx.json` `targetDefaults` and the app `vite.config.ts` files):
+
+- **Ordered declaration writes.** `typecheck` depends on `^build`, its own `build`, and `^typecheck`; `build` depends on `^typecheck`. For any project its own build precedes its own typecheck, and a dependent waits for each dependency's build **and** typecheck — so within Nx's scheduling no `dist` is read while another task writes it. This eliminated the `TS6305`/`TS2307` signatures across repeated cold `--parallel=4` runs.
+- **No fixed-port build server.** `vite-bundle-analyzer` is gated behind `ANALYZE=true` (and uses `analyzerPort: 'auto'`), so app builds no longer start a server on the fixed port `8888` and collide under `--parallel` (`EADDRINUSE`).
+
+These remove the named signatures, but `tsc --build`'s autonomous reference rebuilds can still occasionally collide at high parallelism. **For a trustworthy cold full build, lower the parallelism** to `--parallel=2` (as `pnpm run build:all` does); `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
+
+### Projects without a `build` target
+
+As of the current workspace graph, **16 of 59** Nx projects do **not** expose a `build` target. That is intentional — not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
+
+Most no-build packages are **`technology:react-router`** workspace libraries under `packages/react-router-*` (plus a couple of React-related codegen/MCP helpers). They follow a **source-first** pattern: `package.json` `main`/`module`/`types` point at `./src/index.ts` (not a precompiled `dist/`), and React Router apps (Vite) transpile these workspace dependencies when you run `dev` or `build` on the app. Their `nx.targets` use `__build`/`__build-package` placeholders so the `@nx/js/typescript` plugin does not infer a library `build` target. Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
+
+When you change one of these projects, run its `lint`/`typecheck`/`test`, then run `build` or `dev` on a consumer app (e.g. `openthrottle-developer`) as the integration check — `pnpm nx affected --target=build` will not schedule the no-build projects. Audit the set locally with `pnpm nx show projects --with-target=build` versus `pnpm nx show projects`.
 
 ## Additional Resources
 
 ### Documentation
 
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)**: Project tags (name, type, production, technology), tag usage, and contribution guidelines
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)**: How to contribute — setup, the local change loop (`pnpm run check:local`), commit/PR conventions, and the CLA
 - **[docs/monorepo/NX/tags.md](./docs/monorepo/NX/tags.md)**: Complete technology tag reference
 - **[docs/monorepo/nx-graph.md](./docs/monorepo/nx-graph.md)**: NX graph and dependency visualization (ground truth: `nx graph`, `nx show projects`)
 - **[README.md](./README.md)**: General monorepo overview and setup
