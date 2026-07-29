@@ -23,6 +23,7 @@ const EXPECTED_ENV_KEYS = {
   APP_URL_WEBSITE: true,
   APP_VERSION: true,
   FEATURE_BETA_PREVIEW: true,
+  FEATURE_CHARLIE_PREVIEW: true,
   NODE_ENV: true,
   ROLLBAR_TOKEN: true,
 } satisfies Record<keyof Required<OpenThrottleEnv>, true>;
