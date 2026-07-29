@@ -92,6 +92,10 @@ function build(): {
   });
   const streamService = createMock<ConversationStreamService>({
     cancel: vi.fn().mockReturnValue(true),
+    // Default: no ephemeral (Private-mode) stream is registered. Persisted
+    // conversations authorize via the DB ownership check; the Private-mode
+    // authorization test overrides this to true.
+    isEphemeralOwner: vi.fn().mockReturnValue(false),
     start: vi.fn(),
     subscribe: vi.fn().mockReturnValue({ next: vi.fn() }),
   });
@@ -233,6 +237,67 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
     expect(streamService.start).toHaveBeenCalledWith(
       expect.objectContaining({ reasoning: null, serviceTier: null }),
+    );
+  });
+
+  it('Private mode (persist=false): no row, no user-message write, streams a synthetic id', async () => {
+    const { conversations, resolver, streamService } = build();
+
+    const result = await resolver.startConversationStream(human, {
+      baseUrl: 'http://localhost:11434/v1',
+      conversationId: null,
+      message: 'do not save me',
+      modelId: 'llama3',
+      persist: false,
+    });
+
+    expect(result.errorMessage).toBeNull();
+    // A synthetic id is minted — never the created-row id (nothing is created).
+    expect(result.conversationId).toEqual(expect.any(String));
+    expect(result.conversationId).not.toBe('conv-1');
+    expect(result.userMessageId).toBeNull();
+    expect(conversations.createConversation).not.toHaveBeenCalled();
+    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(conversations.listMessagesForConversation).not.toHaveBeenCalled();
+    // The current message is the entire (single-turn) prompt context.
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: result.conversationId,
+        messages: [{ content: 'do not save me', role: 'user' }],
+        persist: false,
+      }),
+    );
+  });
+
+  it('Private mode with a CLI backend runs a fresh session with no metadata reads/writes', async () => {
+    const { conversations, repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'ephemeral agent turn',
+      modelId: null,
+      persist: false,
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    // No conversation row exists in Private mode, so metadata is neither read nor written.
+    expect(conversations.getConversationForUser).not.toHaveBeenCalled();
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'claude',
+        persist: false,
+        resumeSession: false,
+        sessionId: expect.any(String),
+      }),
     );
   });
 
@@ -623,5 +688,25 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
       resolver.conversationStreamChunkAdded('conv-1', { userId: 'user-1' }),
     ).rejects.toThrow('not found');
     expect(streamService.subscribe).not.toHaveBeenCalled();
+  });
+
+  it('authorizes a Private-mode subscription via the ephemeral-owner registry when no row exists', async () => {
+    const { conversations, resolver, streamService } = build();
+    // Private-mode ids have no row, so the DB ownership check throws...
+    vi.mocked(conversations.getConversationForUser).mockRejectedValueOnce(
+      new Error('Agent conversation not found'),
+    );
+    // ...but the stream service confirms this user owns the ephemeral stream.
+    vi.mocked(streamService.isEphemeralOwner).mockReturnValue(true);
+
+    await resolver.conversationStreamChunkAdded('ephemeral-1', {
+      userId: 'user-1',
+    });
+
+    expect(streamService.isEphemeralOwner).toHaveBeenCalledWith(
+      'user-1',
+      'ephemeral-1',
+    );
+    expect(streamService.subscribe).toHaveBeenCalledWith('ephemeral-1');
   });
 });

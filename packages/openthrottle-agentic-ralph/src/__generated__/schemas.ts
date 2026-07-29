@@ -37,6 +37,7 @@ import {
   CreateUserInput,
   CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
+  DeleteAgentConversationInput,
   DeletePlanInput,
   DeletePlanOutputInput,
   DeleteProjectInput,
@@ -534,6 +535,14 @@ export function CreateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
     gitDefaultBranch: z.string().nullish(),
     gitRemoteUrl: z.string().nullish(),
     projectId: z.string().nullish(),
+  });
+}
+
+export function DeleteAgentConversationInputSchema(): z.ZodObject<
+  Properties<DeleteAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string(),
   });
 }
 
@@ -1137,6 +1146,7 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
     message: z.string(),
     modelId: z.string().nullish(),
     permissionMode: z.string().nullish(),
+    persist: z.boolean().nullish(),
     personaId: z.string().nullish(),
     reasoning: z.string().nullish(),
     repositoryId: z.string().nullish(),

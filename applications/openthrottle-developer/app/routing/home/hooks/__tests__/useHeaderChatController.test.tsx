@@ -61,6 +61,15 @@ describe('useHeaderChatController (header chat surface)', () => {
         path: '/resources/chat-options',
       },
       {
+        // The switcher's mount-time list fetch resolves empty here.
+        action: () => ({
+          conversations: [],
+          errorMessage: null,
+          totalCount: 0,
+        }),
+        path: '/resources/agent-conversations',
+      },
+      {
         action: async ({ request }) => {
           const formData = await request.formData();
           actionSpy(Object.fromEntries(formData.entries()));

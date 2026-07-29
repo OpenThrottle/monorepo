@@ -216,11 +216,25 @@ export class ConversationStreamResolver {
       );
     }
 
-    // Ownership gate: throws when the conversation is not owned by the caller.
-    await this.conversations.getConversationForUser(
-      context.userId,
-      conversationId,
-    );
+    // Ownership gate. A persisted conversation is verified against the DB. A
+    // Private-mode (persist=false) stream has NO row, so that check throws; fall
+    // back to the stream service's ephemeral-owner registry, which records the
+    // synthetic id ↔ owning user for the life of the stream. The synthetic id is
+    // an unguessable UUID handed only to its owner by the start mutation, so this
+    // stays strictly user-scoped. Any other failure (a real id the caller does
+    // not own) still rejects.
+    try {
+      await this.conversations.getConversationForUser(
+        context.userId,
+        conversationId,
+      );
+    } catch (error: unknown) {
+      if (
+        !this.streamService.isEphemeralOwner(context.userId, conversationId)
+      ) {
+        throw error;
+      }
+    }
 
     // Replays any buffered chunks of the current turn before live deltas, so a
     // subscriber attaching after the stream started (the home route only knows
@@ -259,11 +273,22 @@ export class ConversationStreamResolver {
     // injected as genuine turn context (beyond the inline `@path` tokens already
     // in `input.message`). A backend that cannot route a given control ignores
     // it, and the capability descriptors advertise only what each backend honors.
-    const conversationId = await this.resolveConversationId(
-      userId,
-      input.conversationId ?? null,
-      message,
-    );
+
+    // Private mode (persist=false): stream ephemerally against a synthetic
+    // conversation id — no conversation row is created, no messages are written.
+    // The synthetic id still drives the `conversation:<id>:stream` topic + cancel,
+    // and the stream service registers it in an owner map so the subscription's
+    // ownership gate can authorize it without a DB row. Omitting `persist`
+    // preserves today's persisted behavior exactly.
+    const persist = input.persist ?? true;
+
+    const conversationId = persist
+      ? await this.resolveConversationId(
+          userId,
+          input.conversationId ?? null,
+          message,
+        )
+      : randomUUID();
 
     if (conversationId == null) {
       return failed('Conversation not found.');
@@ -274,26 +299,37 @@ export class ConversationStreamResolver {
       userId,
       conversationId,
       input,
+      persist,
     );
 
     if (typeof resolved === 'string') {
       return failed(resolved);
     }
 
-    const [userMessage] = await this.conversations.appendMessages(
-      userId,
-      conversationId,
-      [{ content: message, role: AGENT_CONVERSATION_MESSAGE_ROLES.user }],
-    );
+    // Persist the user message + rebuild history from storage only when
+    // persisting. In Private mode there is no row: the turn runs with just this
+    // message as context (single-turn), and no user message id is returned.
+    let userMessageId: string | null = null;
+    let messages: ChatCompletionMessage[];
+    if (persist) {
+      const [userMessage] = await this.conversations.appendMessages(
+        userId,
+        conversationId,
+        [{ content: message, role: AGENT_CONVERSATION_MESSAGE_ROLES.user }],
+      );
+      userMessageId = userMessage?.id ?? null;
 
-    const history = await this.conversations.listMessagesForConversation(
-      userId,
-      conversationId,
-    );
+      const history = await this.conversations.listMessagesForConversation(
+        userId,
+        conversationId,
+      );
 
-    const messages = history
-      .filter((row) => PROMPT_ROLES.has(row.role))
-      .map(toChatMessage);
+      messages = history
+        .filter((row) => PROMPT_ROLES.has(row.role))
+        .map(toChatMessage);
+    } else {
+      messages = [{ content: message, role: 'user' }];
+    }
 
     const assistantMessageId = randomUUID();
 
@@ -309,6 +345,7 @@ export class ConversationStreamResolver {
       messages,
       model: resolved.model,
       permissionMode: resolved.permissionMode,
+      persist,
       provider: resolved.provider,
       reasoning: resolved.reasoning,
       resumeSession: resolved.resumeSession,
@@ -323,7 +360,7 @@ export class ConversationStreamResolver {
     result.assistantMessageId = assistantMessageId;
     result.conversationId = conversationId;
     result.errorMessage = null;
-    result.userMessageId = userMessage?.id ?? null;
+    result.userMessageId = userMessageId;
 
     return result;
   }
@@ -338,6 +375,7 @@ export class ConversationStreamResolver {
     userId: string,
     conversationId: string,
     input: StartConversationStreamInput,
+    persist: boolean,
   ): Promise<ResolvedBackendRun | string> {
     // Narrow the untrusted UI strings to their transport unions here (transport
     // guard); the backend adapters map them to concrete flags/params. Same
@@ -445,6 +483,7 @@ export class ConversationStreamResolver {
       conversationId,
       cwd,
       input.repositoryId ?? null,
+      persist,
     );
 
     if (typeof session === 'string') {
@@ -519,19 +558,25 @@ export class ConversationStreamResolver {
     conversationId: string,
     cwd: string,
     repositoryId: string | null,
+    persist: boolean,
   ): Promise<{ resumeSession: boolean; sessionId: string | null } | string> {
-    const conversation = await this.conversations.getConversationForUser(
-      userId,
-      conversationId,
-    );
+    // Private mode (persist=false) has no conversation row: there is no metadata
+    // to read a prior session from, and nothing to persist a new one to. Every
+    // backend therefore runs a fresh, non-resumed ephemeral session per turn.
+    if (persist) {
+      const conversation = await this.conversations.getConversationForUser(
+        userId,
+        conversationId,
+      );
 
-    const persisted = conversation.metadata?.[sessionMetadataKey(backend)];
-    const existingSessionId =
-      typeof persisted === 'string' && persisted !== '' ? persisted : null;
+      const persisted = conversation.metadata?.[sessionMetadataKey(backend)];
+      const existingSessionId =
+        typeof persisted === 'string' && persisted !== '' ? persisted : null;
 
-    if (existingSessionId != null) {
-      // Every backend resumes an already-known session id.
-      return { resumeSession: true, sessionId: existingSessionId };
+      if (existingSessionId != null) {
+        // Every backend resumes an already-known session id.
+        return { resumeSession: true, sessionId: existingSessionId };
+      }
     }
 
     if (backend === CURSOR_BACKEND) {
@@ -547,30 +592,36 @@ export class ConversationStreamResolver {
         return `Failed to start a cursor-agent session: ${message}`;
       }
 
-      await this.conversations.updateMetadata(conversationId, {
-        [repositoryMetadataKey(backend)]: repositoryId,
-        [sessionMetadataKey(backend)]: sessionId,
-      });
+      if (persist) {
+        await this.conversations.updateMetadata(conversationId, {
+          [repositoryMetadataKey(backend)]: repositoryId,
+          [sessionMetadataKey(backend)]: sessionId,
+        });
+      }
 
       return { resumeSession: true, sessionId };
     }
 
     if (backend === CLAUDE_BACKEND) {
-      // claude sets the id itself on turn one; we mint + persist the UUID.
+      // claude sets the id itself on turn one; we mint (+ persist when saving) the UUID.
       const sessionId = randomUUID();
-      await this.conversations.updateMetadata(conversationId, {
-        [repositoryMetadataKey(backend)]: repositoryId,
-        [sessionMetadataKey(backend)]: sessionId,
-      });
+      if (persist) {
+        await this.conversations.updateMetadata(conversationId, {
+          [repositoryMetadataKey(backend)]: repositoryId,
+          [sessionMetadataKey(backend)]: sessionId,
+        });
+      }
 
       return { resumeSession: false, sessionId };
     }
 
-    // opencode: no pre-mint. Run without a session id; the service persists the
-    // id opencode surfaces in the stream so later turns can resume it.
-    await this.conversations.updateMetadata(conversationId, {
-      [repositoryMetadataKey(backend)]: repositoryId,
-    });
+    // opencode: no pre-mint. Run without a session id; when persisting, the
+    // service records the id opencode surfaces so later turns can resume it.
+    if (persist) {
+      await this.conversations.updateMetadata(conversationId, {
+        [repositoryMetadataKey(backend)]: repositoryId,
+      });
+    }
 
     return { resumeSession: false, sessionId: null };
   }

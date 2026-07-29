@@ -14,7 +14,7 @@ import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
  * can migrate old blobs forward instead of wiping the user's saved toolbar.
  * @public
  */
-export const CHAT_TOOLBAR_STATE_VERSION = 2 as const;
+export const CHAT_TOOLBAR_STATE_VERSION = 3 as const;
 
 /**
  * localStorage key for the persisted Chat Toolbar selections. Derived from
@@ -53,6 +53,12 @@ export interface ChatToolbarState {
   readonly modelId: string | undefined;
   readonly perBackend: Readonly<Record<string, ChatToolbarBackendPrefs>>;
   readonly permissionMode: ChatPermissionMode | undefined;
+  /**
+   * When true (default) turns are persisted to a conversation; false is Private
+   * mode (ephemeral — no conversation row, no message writes). Added in v3;
+   * always available regardless of backend, so it is never capability-gated.
+   */
+  readonly persist: boolean;
   readonly personaId: string | undefined;
   readonly reasoning: ChatReasoningLevel | undefined;
   readonly repositoryId: string | undefined;
@@ -72,6 +78,7 @@ export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   modelId: undefined,
   perBackend: {},
   permissionMode: undefined,
+  persist: true,
   personaId: undefined,
   reasoning: undefined,
   repositoryId: undefined,
@@ -168,6 +175,9 @@ function coerceChatToolbarState(
     permissionMode: isChatPermissionMode(record.permissionMode)
       ? record.permissionMode
       : undefined,
+    // Absent before v3 → default true, so older blobs migrate forward as
+    // persist-on (the default). Only an explicit `false` opts into Private mode.
+    persist: typeof record.persist === 'boolean' ? record.persist : true,
     personaId:
       typeof record.personaId === 'string' ? record.personaId : undefined,
     reasoning: isChatReasoningLevel(record.reasoning)
@@ -186,12 +196,13 @@ function coerceChatToolbarState(
  * @description Migration-aware coercion of unknown persisted JSON into a valid
  * {@link ChatToolbarState}. Reads `version`, dispatches to the matching
  * migration, then coerces each field. Unversioned/legacy blobs (`version`
- * absent → treated as v0) and v1 blobs share the v2 field set minus `perBackend`
- * (added in v2), so they migrate forward — seeding `perBackend: {}` — while
- * preserving still-valid picks. A newer/unknown version — or malformed input —
- * degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than throwing. The
- * `switch` is the seam where a future v2→v3 reshape slots in as its own case
- * (rewriting `record` before the shared coercion).
+ * absent → treated as v0), v1 blobs (before `perBackend`), and v2 blobs (before
+ * `persist`) all share a forward-compatible field set, so they migrate forward —
+ * seeding `perBackend: {}` and `persist: true` — while preserving still-valid
+ * picks (see {@link coerceChatToolbarState}). A newer/unknown version — or
+ * malformed input — degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than
+ * throwing. The `switch` is the seam where a future reshape slots in as its own
+ * case (rewriting `record` before the shared coercion).
  * @public
  */
 export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
@@ -204,6 +215,7 @@ export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
   switch (version) {
     case 0:
     case 1:
+    case 2:
     case CHAT_TOOLBAR_STATE_VERSION:
       return coerceChatToolbarState(raw);
     default:

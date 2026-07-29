@@ -23,6 +23,51 @@ query getMe {
   }
 }
 
+query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
+  getAgentConversationMessages(input: $input) {
+    messages {
+      content
+      createdAt
+      id
+      role
+      routingConfidence
+      routingReason
+      toolMetadataJson
+    }
+    totalCount
+  }
+}
+
+query listAgentConversations($input: ListAgentConversationsInput) {
+  listAgentConversations(input: $input) {
+    conversations {
+      id
+      status
+      title
+      updatedAt
+    }
+    totalCount
+  }
+}
+
+mutation deleteAgentConversation($input: DeleteAgentConversationInput!) {
+  deleteAgentConversation(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
+mutation updateAgentConversationTitle($input: UpdateAgentConversationTitleInput!) {
+  updateAgentConversationTitle(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
 mutation login($input: LoginInput!) {
   login(input: $input) {
     accessToken

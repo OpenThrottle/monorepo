@@ -164,6 +164,35 @@ export interface LoadAgentConversationMessagesResult {
   readonly messages: readonly ChatMessage[];
 }
 
+/**
+ * One conversation row for the conversations sidebar/switcher list. Data-only,
+ * shared by the loader/action intents that fetch it and the presentational
+ * {@link ChatConversationSidebar} that renders it.
+ */
+export interface AgentConversationListItem {
+  readonly id: string;
+  readonly status: string;
+  readonly title: string | null;
+  readonly updatedAt: string;
+}
+
+/** JSON shape returned by a root `list-agent-conversations` action. */
+export interface ListAgentConversationsResult {
+  readonly conversations: readonly AgentConversationListItem[];
+  readonly errorMessage: string | null;
+  readonly totalCount: number;
+}
+
+/**
+ * JSON shape returned by the root `rename-agent-conversation` and
+ * `delete-agent-conversation` actions. `conversation` is the updated row on
+ * success (null on failure); `errorMessage` is set only on failure.
+ */
+export interface MutateAgentConversationResult {
+  readonly conversation: AgentConversationListItem | null;
+  readonly errorMessage: string | null;
+}
+
 /** JSON shape returned by a root `send-agent-message` action (mirrors `agentsRunChatTurn`). */
 export interface ChatTurnResult {
   readonly assistantText: string | null;

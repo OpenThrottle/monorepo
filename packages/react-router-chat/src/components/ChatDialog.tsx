@@ -6,6 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -16,11 +19,13 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import { BotIcon, MessageSquarePlus } from 'lucide-react';
+import { BotIcon, MessageSquarePlus, MessagesSquare } from 'lucide-react';
 import { useChatOptional } from '../context/chat-context';
 import type { ChatComposerControls } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
+import { ChatConversationSidebar } from './ChatConversationSidebar';
+import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatThread } from './ChatThread';
 import type { ChatMessage } from '../types';
 
@@ -36,6 +41,12 @@ export interface ChatDialogProps {
    */
   readonly composer?: ChatComposerControls;
   readonly composerDisabled?: boolean;
+  /**
+   * Optional conversations switcher. When present — here or via
+   * {@link ChatProvider} — the header renders a "Conversations" popover backed
+   * by {@link ChatConversationSidebar}. A prop here overrides the provider.
+   */
+  readonly conversationSidebar?: ChatConversationSidebarProps;
   readonly defaultOpen?: boolean;
   /** When omitted, values come from {@link ChatProvider}. */
   readonly messages?: readonly ChatMessage[];
@@ -57,6 +68,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     className,
     composer: composerProp,
     composerDisabled: composerDisabledProp,
+    conversationSidebar: conversationSidebarProp,
     defaultOpen,
     messages: messagesProp,
     onOpenChange: onOpenChangeProp,
@@ -83,6 +95,8 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   // dialog renders the toolbar + streaming; when undefined it stays the bare
   // legacy shell (the dormant agentsRunChatTurn path).
   const composer = composerProp ?? chatContext?.composer;
+  const conversationSidebar =
+    conversationSidebarProp ?? chatContext?.conversationSidebar;
 
   if (!messages || !onSendMessage) {
     throw new Error(
@@ -114,6 +128,35 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       />
     </div>
   );
+
+  const conversationSwitcherControl =
+    conversationSidebar != null ? (
+      <Popover>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild={true}>
+            <PopoverTrigger asChild={true}>
+              <Button
+                aria-label="Conversations"
+                className="shrink-0"
+                data-testid="ChatDialog-conversations-trigger"
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
+                <MessagesSquare aria-hidden={true} className="size-4" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Conversations</TooltipContent>
+        </Tooltip>
+        <PopoverContent
+          align="end"
+          className="h-[60vh] w-80 overflow-hidden p-0"
+        >
+          <ChatConversationSidebar {...conversationSidebar} />
+        </PopoverContent>
+      </Popover>
+    ) : null;
 
   const newChatControl =
     onStartNewChat != null ? (
@@ -164,6 +207,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
           <SheetHeader>
             <SheetTitle className="flex w-full items-center gap-2">
               {headerTitle}
+              {conversationSwitcherControl}
               {newChatControl}
             </SheetTitle>
           </SheetHeader>
@@ -186,6 +230,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
         <DialogHeader>
           <DialogTitle className="flex w-full items-center gap-2">
             {headerTitle}
+            {conversationSwitcherControl}
             {newChatControl}
           </DialogTitle>
         </DialogHeader>

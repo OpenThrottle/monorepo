@@ -10,6 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   // ToggleGroup,
   // ToggleGroupItem,
   Tooltip,
@@ -73,6 +74,11 @@ export interface ChatComposerToolbarProps {
   readonly onModeChange?: (mode: ChatComposerMode) => void;
   readonly onModelChange?: (modelId: string) => void;
   readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
+  /**
+   * Toggle turn persistence. Supplying this renders the persist switch (always,
+   * never capability-gated); omit to hide it. Pair with {@link persist}.
+   */
+  readonly onPersistChange?: (persist: boolean) => void;
   readonly onPersonaChange?: (personaId: string) => void;
   readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
   readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
@@ -80,6 +86,12 @@ export interface ChatComposerToolbarProps {
   readonly onToggleFavorite?: (modelId: string) => void;
   /** Selected permission mode; pair with {@link capabilities}. */
   readonly permissionMode?: ChatPermissionMode;
+  /**
+   * Whether turns are persisted (default true when the switch is shown). false
+   * is Private mode — an ephemeral turn with a "not saved" affordance. Pair with
+   * {@link onPersistChange}.
+   */
+  readonly persist?: boolean;
   /** Selected persona id; pair with {@link personas}. */
   readonly personaId?: string;
   /** Selectable personas; omit to hide the persona control. */
@@ -127,11 +139,13 @@ export const ChatComposerToolbar = (
     onModeChange,
     onModelChange,
     onPermissionModeChange,
+    onPersistChange,
     onPersonaChange,
     onReasoningChange,
     onServiceTierChange,
     onToggleFavorite,
     permissionMode,
+    persist = true,
     personaId,
     personas,
     reasoning,
@@ -152,6 +166,7 @@ export const ChatComposerToolbar = (
   const showCheckout =
     capabilities?.requiresRepository === true && checkouts != null;
   const showMic = onMicToggle != null;
+  const showPersist = onPersistChange != null;
   const isMicFinalizing = micState === ChatComposerMicState.finalizing;
   const isMicRecording = micState === ChatComposerMicState.recording;
   const micLabel = isMicRecording
@@ -376,6 +391,38 @@ export const ChatComposerToolbar = (
     </Tooltip>
   );
 
+  const persistControl = !showPersist ? null : (
+    <Tooltip delayDuration={500}>
+      <TooltipTrigger asChild={true}>
+        <label
+          className="flex cursor-pointer items-center gap-1.5"
+          data-testid="ChatComposerToolbar-persist"
+        >
+          <Switch
+            aria-label="Save conversation"
+            checked={persist}
+            data-testid="ChatComposerToolbar-persist-switch"
+            onCheckedChange={onPersistChange}
+            size="sm"
+          />
+          <span
+            className={clsx(
+              'text-xs',
+              persist ? 'text-muted-foreground' : 'text-destructive',
+            )}
+          >
+            {persist ? 'Saved' : 'Private'}
+          </span>
+        </label>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        {persist
+          ? 'Saving — this conversation is stored in your history'
+          : 'Private — this conversation is not saved'}
+      </TooltipContent>
+    </Tooltip>
+  );
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -393,6 +440,7 @@ export const ChatComposerToolbar = (
       {modeControl}
       {attachControl}
       {micControl}
+      {persistControl}
     </div>
   );
 };

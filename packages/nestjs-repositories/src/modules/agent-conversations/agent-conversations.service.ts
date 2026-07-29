@@ -302,6 +302,25 @@ export class AgentConversationsService {
   }
 
   /**
+   * @description Soft-deletes an owned conversation (status='deleted'). The row
+   * and its messages are retained and excluded from the default list; reversible
+   * (a later purge job may hard-delete). Distinct from archive.
+   */
+  async softDeleteConversation(
+    userId: string,
+    conversationId: string,
+  ): Promise<AgentConversation> {
+    const conversation = await this.getConversationForUser(
+      userId,
+      conversationId,
+    );
+
+    conversation.status = AGENT_CONVERSATION_STATUSES.deleted;
+
+    return this.conversationRepository.save(conversation);
+  }
+
+  /**
    * @description Returns a conversation when owned by the user; otherwise throws 404.
    */
   async getConversationForUser(

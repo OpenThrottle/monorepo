@@ -5,6 +5,7 @@ export * from './map-persisted-messages';
 export * from './components/ChatCheckoutSelector';
 export * from './components/ChatComposer';
 export * from './components/ChatComposerToolbar';
+export * from './components/ChatConversationSidebar';
 export * from './components/ChatModelPicker';
 export * from './components/ChatPermissionModeControl';
 export * from './components/ChatReasoningTierControl';

@@ -335,4 +335,46 @@ describe('ChatComposerToolbar Component', () => {
       expect(mic).toHaveAttribute('aria-label', 'Voice input unavailable');
     });
   });
+
+  describe('persist toggle', () => {
+    test('is hidden when no onPersistChange callback is supplied', () => {
+      const component = renderToolbar({});
+
+      expect(
+        component.queryByTestId('ChatComposerToolbar-persist'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('renders the Saved affordance when persisting and toggles off on click', async () => {
+      const onPersistChange = vi.fn();
+      const component = renderToolbar({ onPersistChange, persist: true });
+
+      expect(
+        component.getByTestId('ChatComposerToolbar-persist'),
+      ).toHaveTextContent('Saved');
+
+      const user = userEvent.setup();
+      await user.click(
+        component.getByTestId('ChatComposerToolbar-persist-switch'),
+      );
+
+      expect(onPersistChange).toHaveBeenCalledWith(false);
+    });
+
+    test('renders the Private affordance and toggles back on when off', async () => {
+      const onPersistChange = vi.fn();
+      const component = renderToolbar({ onPersistChange, persist: false });
+
+      expect(
+        component.getByTestId('ChatComposerToolbar-persist'),
+      ).toHaveTextContent('Private');
+
+      const user = userEvent.setup();
+      await user.click(
+        component.getByTestId('ChatComposerToolbar-persist-switch'),
+      );
+
+      expect(onPersistChange).toHaveBeenCalledWith(true);
+    });
+  });
 });

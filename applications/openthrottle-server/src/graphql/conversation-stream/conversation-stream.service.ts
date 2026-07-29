@@ -87,6 +87,13 @@ export interface StartConversationStreamRun {
    * backends, which resolve it to concrete permission flags. Null when unset.
    */
   readonly permissionMode: ConversationPermissionMode | null;
+  /**
+   * When false (Private mode) the turn streams ephemerally: nothing is written
+   * to the DB — no assistant message, no model snapshot, no CLI-minted session
+   * id. The replay buffer + pubsub still run against the (synthetic) id. True
+   * for every persisted turn.
+   */
+  readonly persist: boolean;
   /** Provider/backend label persisted on the conversation, or null. */
   readonly provider: string | null;
   /** Reasoning effort forwarded to backends that expose one; null when unset. */
@@ -116,6 +123,13 @@ export class ConversationStreamService {
     ConversationStreamChunkPayload[]
   >();
   private readonly evictionTimers = new Map<string, NodeJS.Timeout>();
+
+  // Owner registry for Private-mode (persist=false) streams. A Private turn has
+  // no conversation row, so the subscription's DB ownership check cannot
+  // authorize it; this map (synthetic conversationId → owning userId) lets the
+  // resolver authorize the owner instead. Registered synchronously in `start()`
+  // before the start mutation returns, and evicted alongside the replay buffer.
+  private readonly ephemeralOwners = new Map<string, string>();
 
   constructor(
     private readonly conversations: AgentConversationsService,
@@ -173,7 +187,22 @@ export class ConversationStreamService {
    * Kick off a streaming completion. Fire-and-forget; errors are logged, never thrown.
    */
   start(run: StartConversationStreamRun): void {
+    // Register the ephemeral owner BEFORE the async stream begins so the
+    // subscription (which the client only opens after the start mutation
+    // returns) can always authorize the owner — no race with `runStream`.
+    if (!run.persist) {
+      this.ephemeralOwners.set(run.conversationId, run.userId);
+    }
     void this.runStream(run);
+  }
+
+  /**
+   * True when a Private-mode stream for `conversationId` is owned by `userId`.
+   * The subscription resolver calls this to authorize an ephemeral stream that
+   * has no DB row to ownership-check against.
+   */
+  isEphemeralOwner(userId: string, conversationId: string): boolean {
+    return this.ephemeralOwners.get(conversationId) === userId;
   }
 
   /**
@@ -344,6 +373,12 @@ export class ConversationStreamService {
     run: StartConversationStreamRun,
     metadata: Readonly<Record<string, unknown>> | undefined,
   ): Promise<void> {
+    // Private mode keeps no conversation row, so there is nowhere to persist a
+    // CLI-minted session id (and the next Private turn mints its own anyway).
+    if (!run.persist) {
+      return;
+    }
+
     const minted = metadata?.['sessionId'];
     if (
       typeof minted !== 'string' ||
@@ -370,6 +405,13 @@ export class ConversationStreamService {
     content: string,
     toolEvents: ReadonlyArray<Record<string, unknown>>,
   ): Promise<void> {
+    // Private mode (persist=false) never writes the assistant message or the
+    // model snapshot — the turn is ephemeral. The stream still emitted every
+    // chunk to the live subscriber above; only the DB write is skipped.
+    if (!run.persist) {
+      return;
+    }
+
     try {
       const isEmpty = toolEvents.length === 0;
       const toolMetadata = !isEmpty ? { events: [...toolEvents] } : null;
@@ -449,6 +491,8 @@ export class ConversationStreamService {
     const timer = setTimeout(() => {
       this.buffers.delete(conversationId);
       this.evictionTimers.delete(conversationId);
+      // A Private-mode owner entry lives exactly as long as its replay buffer.
+      this.ephemeralOwners.delete(conversationId);
     }, BUFFER_GRACE_MS);
     timer.unref();
 

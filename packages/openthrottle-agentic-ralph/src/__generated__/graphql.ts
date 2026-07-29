@@ -751,6 +751,10 @@ export type DebugNotification = NotificationEvent & {
   timestamp: Scalars['String']['output'];
 };
 
+export type DeleteAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
+};
+
 export type DeletePlanInput = {
   /** Plan id to delete */
   id: Scalars['ID']['input'];
@@ -1363,6 +1367,8 @@ export type Mutation = {
    * @deprecated Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).
    */
   createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
+  /** Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible). */
+  deleteAgentConversation: AgentConversationObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
   /** Delete a note by ID */
@@ -1651,6 +1657,10 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateWorkspaceLocalRepositoryArgs = {
   input: CreateWorkspaceLocalRepositoryInput;
+};
+
+export type MutationDeleteAgentConversationArgs = {
+  input: DeleteAgentConversationInput;
 };
 
 export type MutationDeleteCustomPromptArgs = {
@@ -3546,6 +3556,8 @@ export type StartConversationStreamInput = {
   modelId?: InputMaybe<Scalars['String']['input']>;
   /** Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it). */
   permissionMode?: InputMaybe<Scalars['String']['input']>;
+  /** Whether to persist this turn. True (default, or omitted) saves the conversation + messages as today. False runs a "Private mode" turn: the stream is ephemeral — no conversation row is created and no messages are written. A Private turn carries no server-side history (single-turn context) and CLI backends run a fresh, non-resumed session. */
+  persist?: InputMaybe<Scalars['Boolean']['input']>;
   /** Persona to steer the turn; CLI backends inject it as a system prompt. */
   personaId?: InputMaybe<Scalars['ID']['input']>;
   /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set. */

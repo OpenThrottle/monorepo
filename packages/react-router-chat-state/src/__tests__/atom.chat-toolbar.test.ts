@@ -22,12 +22,13 @@ describe('chat toolbar constants', () => {
     expect(CHAT_TOOLBAR_STORAGE_KEY).toMatch(/:chat:toolbar$/);
   });
 
-  test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, everything else unset', () => {
+  test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, persist on, everything else unset', () => {
     expect(DEFAULT_CHAT_TOOLBAR_STATE).toEqual({
       mode: ChatComposerMode.plan,
       modelId: undefined,
       perBackend: {},
       permissionMode: undefined,
+      persist: true,
       personaId: undefined,
       reasoning: undefined,
       repositoryId: undefined,
@@ -62,8 +63,8 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
-  describe('valid v2 blob', () => {
-    test('round-trips a fully-populated v2 blob including perBackend', () => {
+  describe('valid current-version (v3) blob', () => {
+    test('round-trips a fully-populated blob including perBackend and an explicit persist=false', () => {
       const blob = {
         mode: ChatComposerMode.build,
         modelId: 'http://localhost:11434/v1::llama3',
@@ -76,6 +77,7 @@ describe('normalizeChatToolbarState', () => {
           },
         },
         permissionMode: ChatPermissionMode.fullAccess,
+        persist: false,
         personaId: 'persona-42',
         reasoning: ChatReasoningLevel.high,
         repositoryId: 'repo-7',
@@ -87,8 +89,36 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
-  describe('v1 → v2 migration', () => {
-    test('migrates a fully-populated v1 blob forward, seeding perBackend and preserving globals', () => {
+  describe('v2 → v3 migration (persist)', () => {
+    test('seeds persist=true on a v2 blob that predates the field', () => {
+      const v2Blob = {
+        mode: ChatComposerMode.build,
+        modelId: 'cursor',
+        perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
+        permissionMode: ChatPermissionMode.supervised,
+        personaId: 'persona-42',
+        reasoning: ChatReasoningLevel.high,
+        repositoryId: 'repo-7',
+        serviceTier: ChatServiceTier.fast,
+        version: 2,
+      };
+
+      expect(normalizeChatToolbarState(v2Blob)).toEqual({
+        ...v2Blob,
+        persist: true,
+        version: CHAT_TOOLBAR_STATE_VERSION,
+      });
+    });
+
+    test('coerces a non-boolean persist to the default (true)', () => {
+      expect(
+        normalizeChatToolbarState({ persist: 'nope', version: 2 }).persist,
+      ).toBe(true);
+    });
+  });
+
+  describe('v1 → v3 migration', () => {
+    test('migrates a fully-populated v1 blob forward, seeding perBackend + persist and preserving globals', () => {
       const v1Blob = {
         mode: ChatComposerMode.build,
         modelId: 'http://localhost:11434/v1::llama3',
@@ -103,6 +133,7 @@ describe('normalizeChatToolbarState', () => {
       expect(normalizeChatToolbarState(v1Blob)).toEqual({
         ...v1Blob,
         perBackend: {},
+        persist: true,
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
     });
@@ -124,6 +155,7 @@ describe('normalizeChatToolbarState', () => {
       expect(normalizeChatToolbarState(legacy)).toEqual({
         ...legacy,
         perBackend: {},
+        persist: true,
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
     });
@@ -144,7 +176,7 @@ describe('normalizeChatToolbarState', () => {
         normalizeChatToolbarState({
           mode: ChatComposerMode.build,
           modelId: 'cursor',
-          version: 3,
+          version: 4,
         }),
       ).toEqual(DEFAULT_CHAT_TOOLBAR_STATE);
     });

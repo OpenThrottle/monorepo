@@ -56,11 +56,41 @@ Permissions: `settings:read` for queries, `settings:write` for mutations.
 
 ### Mutations
 
-| Mutation                       | Notes                                                                    |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| `createAgentConversation`      | Optional explicit create; title may instead be set on first persist turn |
-| `archiveAgentConversation`     | Sets `status=archived`; no hard delete in v1                             |
-| `updateAgentConversationTitle` | Updates `title` on an owned conversation                                 |
+| Mutation                       | Notes                                                                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createAgentConversation`      | Optional explicit create; title may instead be set on first persist turn                                                                                                                    |
+| `archiveAgentConversation`     | Sets `status=archived` (a user-visible "put away" state)                                                                                                                                    |
+| `deleteAgentConversation`      | Soft-delete: sets `status=deleted`; row + messages retained, hidden from the default list (reversible; a later purge job may hard-delete). Distinct from archive. Added by plan `16c97e11`. |
+| `updateAgentConversationTitle` | Updates `title` on an owned conversation (also backs inline rename)                                                                                                                         |
+
+### Lifecycle (`status`)
+
+`active` (default) → `archived` (put away, still user-visible) or `deleted`
+(soft-delete, hidden from the default list, reversible). Migration
+`081_add_deleted_status_to_agent_conversations.sql` widened the
+`agent_conversations_status_check` CHECK to `('active','archived','deleted')`.
+`listConversationsForUser` filters to a single status (default `active`), so
+both archived and deleted are excluded from the default list.
+
+## `startConversationStream` — `persist` flag (Private mode)
+
+The streaming turn surface (`conversation-stream/`, used by the agentic chat in
+both apps) also takes a `persist` flag (nullable; default `true`):
+
+| `persist`        | Behavior                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| omitted / `true` | Persisted turn as before: resolve-or-create the conversation row, write user + assistant messages. |
+| `false`          | **Private mode** — ephemeral: NO conversation row is created and NO messages are written.          |
+
+In Private mode the resolver mints a synthetic `randomUUID()` conversation id
+(never persisted), skips the user-message append + history load (single-turn
+context), and CLI backends run a fresh, non-resumed session (no metadata
+read/write). The synthetic id still drives the `conversation:<id>:stream` topic
+
+- `cancelConversationStream`; the stream service registers it in an in-memory
+  `ephemeralOwners` map so the `conversationStreamChunkAdded` subscription can
+  authorize the owner without a DB row (the synthetic id is an unguessable UUID
+  handed only to its owner). Added by plan `16c97e11`.
 
 ## Frontend v1 (openthrottle-developer)
 
@@ -68,7 +98,25 @@ When the user is authenticated, the developer app passes `persist: true` on ever
 
 - **One thread per `sessionStorage` key** (`openthrottle.chat.conversationId` by default).
 - Server-returned `conversationId` replaces any client-minted id after the first persisted turn.
-- **New chat** control deferred to follow-up plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1` (task `3ff35e87`).
+
+### Conversations sidebar + persist toggle (plan `16c97e11`)
+
+Both openthrottle-developer and openthrottle-admin surface the persistence
+backbone in the UI, on both surfaces (the home-route chat and the global header
+`ChatDialog`):
+
+- **Persist toggle** — a `Switch` in `ChatComposerToolbar` (Saved / Private);
+  OFF sends `persist=false` for a Private-mode turn. Stored in the
+  `chatToolbarStateAtom` (`react-router-chat-state`), namespaced per app via its
+  `${APP_NAME}:chat:toolbar` storage key so developer vs admin never bleed.
+- **Conversations switcher** — `ChatConversationSidebar` (`react-router-chat`):
+  paginated list, restore-on-click, inline rename (`updateAgentConversationTitle`),
+  soft-delete (`deleteAgentConversation`), and New chat. Mounted as a left rail on
+  the developer home route and inside a header-`ChatDialog` popover on both apps.
+- Data ops post to a route-independent `/resources/agent-conversations` action
+  (list / load-messages / rename / delete), reachable from every chat surface.
+- The shared `useAgenticChatTurn` gained `restore({conversationId})` (hydrates a
+  thread) + `reset()` (New chat).
 
 ## MCP read tools (deferred)
 

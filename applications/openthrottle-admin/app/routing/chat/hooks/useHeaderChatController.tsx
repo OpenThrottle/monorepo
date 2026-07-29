@@ -4,6 +4,7 @@ import {
   parseFileMentions,
   type ChatComposerControls,
   type ChatComposerMode,
+  type ChatConversationSidebarProps,
   type ChatMessage,
   type ChatPermissionMode,
   type ChatReasoningLevel,
@@ -25,6 +26,7 @@ import {
   CHAT_TOOLBAR_PERSONAS,
 } from '~/routing/chat/data/chat-toolbar';
 import { useAgenticChatTurn } from '~/routing/chat/hooks/useAgenticChatTurn';
+import { useConversationList } from '~/routing/chat/hooks/useConversationList';
 import type { ChatOptionsResponse } from '~/routes/resources.chat-options';
 
 const CHAT_OPTIONS_ROUTE = '/resources/chat-options';
@@ -39,8 +41,12 @@ const EMPTY_OPTIONS: ChatOptionsResponse = {
 export interface HeaderChatSurface {
   readonly composer: ChatComposerControls;
   readonly composerDisabled: boolean;
+  /** Conversations switcher for the header ChatDialog (list/restore/rename/delete/new). */
+  readonly conversationSidebar: ChatConversationSidebarProps;
   readonly messages: ChatMessage[];
   readonly onSendMessage: (message: string) => void;
+  /** New chat: reset the header thread to a fresh conversation. */
+  readonly onStartNewChat: () => void;
 }
 
 /**
@@ -61,7 +67,10 @@ export function useHeaderChatController(args: {
   // Hooks
   const optionsFetcher = useFetcher<ChatOptionsResponse>();
   const turn = useAgenticChatTurn();
+  const conversationList = useConversationList();
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+  // Dedupes the "new conversation created" refresh to one per conversation id.
+  const refreshedForIdRef = React.useRef<string | null>(null);
   // Elevated permission modes decay to the safe default once per browser session.
   useSessionPermissionDecay();
 
@@ -76,6 +85,8 @@ export function useHeaderChatController(args: {
     setToolbarState((previous) => ({ ...previous, mode }));
   const setModelId = (modelId: string): void =>
     setToolbarState((previous) => ({ ...previous, modelId }));
+  const setPersist = (persist: boolean): void =>
+    setToolbarState((previous) => ({ ...previous, persist }));
   const setPersonaId = (personaId: string): void =>
     setToolbarState((previous) => ({ ...previous, personaId }));
   const setRepositoryId = (repositoryId: string): void =>
@@ -94,6 +105,7 @@ export function useHeaderChatController(args: {
   const mode = effectiveToolbar.mode;
   const modelId = effectiveToolbar.modelId;
   const permissionMode = effectiveToolbar.permissionMode;
+  const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
   const repositoryId = effectiveToolbar.repositoryId;
@@ -164,12 +176,14 @@ export function useHeaderChatController(args: {
             backend: 'openai',
             baseUrl: decoded.baseUrl,
             modelId: decoded.model ?? '',
+            persist: String(persist),
           }
         : {
             backend: decoded.backend,
             fileMentions: JSON.stringify(fileMentions),
             modelId: decoded.model ?? '',
             permissionMode: permissionMode ?? '',
+            persist: String(persist),
             personaId: personaId ?? '',
             reasoning: reasoning ?? '',
             repositoryId: repositoryId ?? '',
@@ -177,6 +191,23 @@ export function useHeaderChatController(args: {
           };
 
     turn.submitTurn(trimmed, fields);
+  };
+
+  const onStartNewChat = (): void => {
+    turn.reset();
+  };
+
+  const conversationSidebar: ChatConversationSidebarProps = {
+    activeConversationId: turn.conversationId,
+    conversations: conversationList.conversations,
+    isLoading: conversationList.isLoading,
+    isLoadingMore: conversationList.isLoadingMore,
+    onDelete: conversationList.remove,
+    onLoadMore: conversationList.loadMore,
+    onNewChat: onStartNewChat,
+    onRename: conversationList.rename,
+    onSelect: (id: string): void => turn.restore({ conversationId: id }),
+    totalCount: conversationList.totalCount,
   };
 
   // Life Cycle
@@ -188,6 +219,23 @@ export function useHeaderChatController(args: {
       optionsFetcher.load(CHAT_OPTIONS_ROUTE);
     }
   }, [enabled, optionsFetcher]);
+
+  // Refresh the switcher list once when a turn creates a NEW persisted
+  // conversation (skipped in Private mode + on restore; ref-deduped).
+  React.useEffect(() => {
+    const id = turn.conversationId;
+    if (id == null || id === refreshedForIdRef.current) {
+      return;
+    }
+
+    const alreadyListed = conversationList.conversations.some(
+      (conversation) => conversation.id === id,
+    );
+    if (persist && !alreadyListed) {
+      refreshedForIdRef.current = id;
+      conversationList.refresh();
+    }
+  }, [turn.conversationId, persist]);
 
   // 🔌 Short Circuit
   const composer: ChatComposerControls = {
@@ -203,11 +251,13 @@ export function useHeaderChatController(args: {
     onModeChange: setMode,
     onModelChange: setModelId,
     onPermissionModeChange: setPermissionMode,
+    onPersistChange: setPersist,
     onPersonaChange: setPersonaId,
     onReasoningChange: setReasoning,
     onServiceTierChange: setServiceTier,
     onStop: turn.onStop,
     permissionMode,
+    persist,
     personaId,
     personas,
     reasoning,
@@ -218,7 +268,9 @@ export function useHeaderChatController(args: {
   return {
     composer,
     composerDisabled: models.length === 0,
+    conversationSidebar,
     messages: turn.messages,
     onSendMessage,
+    onStartNewChat,
   };
 }
