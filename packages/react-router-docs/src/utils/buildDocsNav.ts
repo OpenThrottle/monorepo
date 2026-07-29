@@ -42,3 +42,44 @@ export const buildDocsNav = (
     .map(([label, items]): DocsNavGroup => ({ items, label }))
     .sort((a, b) => a.label.localeCompare(b.label));
 };
+
+/** Prev/next neighbors of a page within the flat nav sequence. @public */
+export interface DocPager {
+  readonly next: DocsNavItem | null;
+  readonly prev: DocsNavItem | null;
+}
+
+/**
+ * Flatten grouped nav into a single ordered sequence — the reading order used
+ * for prev/next paging. Preserves group order (alphabetical by label) and each
+ * group's internal order (from {@link buildDocsNav}).
+ *
+ * @public
+ */
+export const flattenDocsNav = (
+  groups: readonly DocsNavGroup[],
+): readonly DocsNavItem[] => groups.flatMap((group) => group.items);
+
+/**
+ * Resolve the previous/next pages for `currentPath` within an ordered
+ * sequence (see {@link flattenDocsNav}). Returns `null` at each boundary (no
+ * prev on the first page, no next on the last) and `null`/`null` when the path
+ * is not in the sequence.
+ *
+ * @public
+ */
+export const getDocPager = (
+  sequence: readonly DocsNavItem[],
+  currentPath: string,
+): DocPager => {
+  const index = sequence.findIndex((item) => item.path === currentPath);
+
+  if (index === -1) {
+    return { next: null, prev: null };
+  }
+
+  return {
+    next: index < sequence.length - 1 ? sequence[index + 1] : null,
+    prev: index > 0 ? sequence[index - 1] : null,
+  };
+};

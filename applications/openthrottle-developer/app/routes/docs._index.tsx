@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { DocPageView } from '@openthrottle/react-router-docs';
+import {
+  DocPageView,
+  buildDocsNav,
+  flattenDocsNav,
+} from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   GlobalErrorBoundary,
@@ -10,6 +14,8 @@ import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs._index';
 
 const indexEntry = docsManifest.find((entry) => entry.path === '/docs');
+
+const docsSequence = flattenDocsNav(buildDocsNav(docsManifest, 'docs'));
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -55,7 +61,15 @@ export default function Component(
     );
   }
 
-  return <DocPageView entry={indexEntry} toc={flags.toc} />;
+  return (
+    <DocPageView
+      codeCopy={flags.codeCopy}
+      entry={indexEntry}
+      prevNext={flags.prevNext}
+      sequence={docsSequence}
+      toc={flags.toc}
+    />
+  );
 }
 
 export const ErrorBoundary = GlobalErrorBoundary;

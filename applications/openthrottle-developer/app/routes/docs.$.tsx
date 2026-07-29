@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { DocPageView } from '@openthrottle/react-router-docs';
+import {
+  DocPageView,
+  buildDocsNav,
+  flattenDocsNav,
+} from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   GlobalErrorBoundary,
@@ -14,6 +18,8 @@ const docsBySlug = new Map(
     .filter((entry) => entry.section === 'docs')
     .map((entry) => [entry.path, entry]),
 );
+
+const docsSequence = flattenDocsNav(buildDocsNav(docsManifest, 'docs'));
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -67,7 +73,15 @@ export default function Component(
     return <p className="text-muted-foreground text-sm">Page not found.</p>;
   }
 
-  return <DocPageView entry={entry} toc={flags.toc} />;
+  return (
+    <DocPageView
+      codeCopy={flags.codeCopy}
+      entry={entry}
+      prevNext={flags.prevNext}
+      sequence={docsSequence}
+      toc={flags.toc}
+    />
+  );
 }
 
 export const ErrorBoundary = GlobalErrorBoundary;
