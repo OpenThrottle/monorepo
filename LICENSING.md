@@ -115,7 +115,7 @@ declares the allowed licenses and waivers, and a CI gate
 (`pnpm validate:licenses`) fails any PR that introduces a disallowed or undetected
 license. Dependency attributions are aggregated into
 [`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) (regenerated with
-`pnpm notice:generate`). See CONTRIBUTING.md § Dependency licenses for the policy
+`pnpm generate:notices`). See CONTRIBUTING.md § Dependency licenses for the policy
 and the waiver process.
 
 ## Files
@@ -125,7 +125,7 @@ and the waiver process.
   copyright holder) plus a pointer to the third-party attribution manifest and
   any notice-required dependencies.
 - [`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) — generated dependency
-  attribution manifest (`pnpm notice:generate`); embeds the full license text of
+  attribution manifest (`pnpm generate:notices`); embeds the full license text of
   notice-required dependencies.
 - [`license-policy.json`](./license-policy.json) — the allowlist/waiver policy
   the CI license gate (`pnpm validate:licenses`) enforces.

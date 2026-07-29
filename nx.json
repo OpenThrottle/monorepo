@@ -297,7 +297,7 @@
     },
     "generate-third-party-notices": {
       "cache": false,
-      "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm notice:check`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph.",
+      "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/generate-third-party-notices.ts",

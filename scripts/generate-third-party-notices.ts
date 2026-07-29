@@ -126,7 +126,7 @@ export const renderThirdPartyNotices = (
   lines.push('# Third-party licenses');
   lines.push('');
   lines.push(
-    '<!-- GENERATED FILE — do not edit by hand. Regenerate with `pnpm notice:generate`',
+    '<!-- GENERATED FILE — do not edit by hand. Regenerate with `pnpm generate:notices`',
   );
   lines.push(
     '     (scripts/generate-third-party-notices.ts). CI fails if this file is stale. -->',
@@ -273,7 +273,7 @@ async function main(): Promise<void> {
     const existing = await readFile(outputPath, 'utf8').catch(() => '');
     if (existing !== rendered) {
       console.error(
-        `❌ ${OUTPUT_FILENAME} is out of date. Run \`pnpm notice:generate\` and commit the result.`,
+        `❌ ${OUTPUT_FILENAME} is out of date. Run \`pnpm generate:notices\` and commit the result.`,
       );
       process.exit(1);
     }

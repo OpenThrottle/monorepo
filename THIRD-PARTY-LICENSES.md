@@ -1,6 +1,6 @@
 # Third-party licenses
 
-<!-- GENERATED FILE — do not edit by hand. Regenerate with `pnpm notice:generate`
+<!-- GENERATED FILE — do not edit by hand. Regenerate with `pnpm generate:notices`
      (scripts/generate-third-party-notices.ts). CI fails if this file is stale. -->
 
 OpenThrottle is distributed under the Apache License 2.0. This file aggregates the

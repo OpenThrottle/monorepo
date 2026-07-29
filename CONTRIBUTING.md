@@ -107,8 +107,8 @@ Apache-2.0 §4 manifest, pointed to by [`NOTICE`](./NOTICE)) is generated and
 drift-checked in CI. If a dependency change moves it, regenerate and commit:
 
 ```bash
-pnpm notice:generate           # writes THIRD-PARTY-LICENSES.md
-pnpm notice:check              # what CI runs; fails if the committed file is stale
+pnpm generate:notices   # writes THIRD-PARTY-LICENSES.md
+pnpm validate:notices   # what CI runs; fails if the committed file is stale
 ```
 
 Every `notice: true` waiver has its full license text embedded at the end of the

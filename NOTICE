@@ -11,7 +11,7 @@ Third-party software
 This product bundles third-party software subject to separate license terms.
 A complete, auto-generated attribution manifest for every dependency in the
 installed graph — with each package's version, license, and attribution — is
-maintained in THIRD-PARTY-LICENSES.md (regenerate with `pnpm notice:generate`).
+maintained in THIRD-PARTY-LICENSES.md (regenerate with `pnpm generate:notices`).
 
 The following bundled dependencies carry a specific notice obligation and are
 reproduced in full at the end of THIRD-PARTY-LICENSES.md:

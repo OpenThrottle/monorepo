@@ -182,7 +182,7 @@ jobs:
       # Keep THIRD-PARTY-LICENSES.md (Apache-2.0 §4 attribution manifest) fresh:
       # regenerate from the installed graph and fail if the committed copy drifted.
       - name: '📜 THIRD-PARTY-LICENSES freshness guard'
-        run: pnpm exec tsx ./scripts/generate-third-party-notices.ts --check
+        run: pnpm run validate:notices
 
       - name: '🎨 Prettier format-check'
         run: pnpm exec nx run monorepo:format-check --verbose
