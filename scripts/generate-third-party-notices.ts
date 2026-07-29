@@ -9,7 +9,7 @@ import {
   type PnpmLicensesOutput,
   readInstalledLicenses,
   resolveEffectiveLicense,
-} from './check-license-compliance.ts';
+} from './validate-license-compliance.ts';
 
 /**
  * @description Generates `THIRD-PARTY-LICENSES.md` — the aggregated dependency-attribution

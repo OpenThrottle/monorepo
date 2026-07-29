@@ -372,13 +372,13 @@
         "executor": "nx:noop"
       },
       "check-agent-assets-ssot": {},
-      "check-licenses": {},
       "check-migration-table-comments": {},
       "format-check": {},
       "format-write": {},
       "generate-third-party-notices": {},
       "ingest-agent-assets": {},
       "validate-agent-assets-frontmatter": {},
+      "validate-licenses": {},
       "knip": {},
       "lint": {
         "executor": "nx:noop"
@@ -412,9 +412,9 @@
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
     "caddy": "caddy run --config tools/caddy/Caddyfile",
     "check:catalog": "tsx ./scripts/check-catalog-coverage.ts",
-    "check:licenses": "tsx ./scripts/check-license-compliance.ts",
     "check:target-descriptions": "tsx ./scripts/audit-target-descriptions.ts --check",
-    "check:local": "pnpm run check:catalog && pnpm run check:target-descriptions && pnpm run check:licenses && pnpm run notice:check && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:agent-assets && pnpm run check:local:migration-comments && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:verify && pnpm run check:local:codegen",
+    "validate:licenses": "tsx ./scripts/validate-license-compliance.ts",
+    "check:local": "pnpm run check:catalog && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run notice:check && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:agent-assets && pnpm run check:local:migration-comments && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:verify && pnpm run check:local:codegen",
     "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",

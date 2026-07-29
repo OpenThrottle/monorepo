@@ -268,12 +268,12 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "check-licenses": {
+    "validate-licenses": {
       "cache": false,
-      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/check-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
+      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx ./scripts/check-license-compliance.ts",
+        "command": "tsx ./scripts/validate-license-compliance.ts",
         "cwd": "{workspaceRoot}"
       }
     },

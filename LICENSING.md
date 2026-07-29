@@ -112,7 +112,7 @@ reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
 
 This is enforced automatically: [`license-policy.json`](./license-policy.json)
 declares the allowed licenses and waivers, and a CI gate
-(`pnpm check:licenses`) fails any PR that introduces a disallowed or undetected
+(`pnpm validate:licenses`) fails any PR that introduces a disallowed or undetected
 license. Dependency attributions are aggregated into
 [`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) (regenerated with
 `pnpm notice:generate`). See CONTRIBUTING.md § Dependency licenses for the policy
@@ -128,7 +128,7 @@ and the waiver process.
   attribution manifest (`pnpm notice:generate`); embeds the full license text of
   notice-required dependencies.
 - [`license-policy.json`](./license-policy.json) — the allowlist/waiver policy
-  the CI license gate (`pnpm check:licenses`) enforces.
+  the CI license gate (`pnpm validate:licenses`) enforces.
 - [`LICENSE-EULA.md`](./LICENSE-EULA.md) — retained EULA, the template for future
   commercial/enterprise packages.
 - [`TRADEMARK.md`](./TRADEMARK.md) — trademark policy for the OpenThrottle name

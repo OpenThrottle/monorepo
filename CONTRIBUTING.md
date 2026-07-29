@@ -78,13 +78,13 @@ documented waiver. The policy has four sections:
   absent or non-SPDX (verified from the bundled license text).
 - `exceptions` — package-scoped waivers, `{ package, license, reason, scope, notice? }`.
 
-**The gate.** `scripts/check-license-compliance.ts` applies the policy to
+**The gate.** `scripts/validate-license-compliance.ts` applies the policy to
 `pnpm licenses list --json` and exits non-zero on any disallowed or undetected
 license. It runs in CI (the _Dependency-license compliance gate_ step, full-tree
 on every ready PR) and locally:
 
 ```bash
-pnpm check:licenses            # or: pnpm nx run monorepo:check-licenses
+pnpm validate:licenses            # or: pnpm nx run monorepo:validate-licenses
 ```
 
 **When the gate fails,** the report names each offending package and the fix.

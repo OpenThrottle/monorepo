@@ -1,5 +1,5 @@
 {
-  "description": "OpenThrottle dependency-license policy. Allowlist-based: a package passes only if every license in its SPDX expression is in `allow`, OR the package is covered by an `exceptions` waiver. Anything else — copyleft (AGPL/GPL/LGPL/SSPL/BUSL), 'Commercial'/proprietary, or an undetected 'Unknown' — fails the CI gate. Consumed by scripts/check-license-compliance.ts. Seeded from docs/monorepo/dependency-license-audit.md (plan 956e3522). See CONTRIBUTING.md § Dependency licenses for the waiver process. Keep arrays sorted.",
+  "description": "OpenThrottle dependency-license policy. Allowlist-based: a package passes only if every license in its SPDX expression is in `allow`, OR the package is covered by an `exceptions` waiver. Anything else — copyleft (AGPL/GPL/LGPL/SSPL/BUSL), 'Commercial'/proprietary, or an undetected 'Unknown' — fails the CI gate. Consumed by scripts/validate-license-compliance.ts. Seeded from docs/monorepo/dependency-license-audit.md (plan 956e3522). See CONTRIBUTING.md § Dependency licenses for the waiver process. Keep arrays sorted.",
   "allow": [
     "0BSD",
     "Apache-2.0",

@@ -8,7 +8,7 @@ import {
   type PnpmLicensesOutput,
   resolveEffectiveLicense,
   tokenizeSpdx,
-} from './check-license-compliance.ts';
+} from './validate-license-compliance.ts';
 
 const ALLOW = new Set([
   '0BSD',

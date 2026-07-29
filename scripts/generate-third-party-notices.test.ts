@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   LicensePolicy,
   PnpmLicensesOutput,
-} from './check-license-compliance.ts';
+} from './validate-license-compliance.ts';
 import {
   type Attribution,
   collectAttributions,

@@ -177,7 +177,7 @@ jobs:
       # Fails the PR on any disallowed or undetected license; waivers live in
       # license-policy.json (see CONTRIBUTING.md § Dependency licenses).
       - name: '⚖️ Dependency-license compliance gate'
-        run: pnpm exec nx run monorepo:check-licenses
+        run: pnpm exec nx run monorepo:validate-licenses
 
       # Keep THIRD-PARTY-LICENSES.md (Apache-2.0 §4 attribution manifest) fresh:
       # regenerate from the installed graph and fail if the committed copy drifted.
