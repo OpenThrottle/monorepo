@@ -16,14 +16,27 @@ const { claudeStreamMock, openAiStreamMock, opencodeStreamMock } = vi.hoisted(
   }),
 );
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import('@openthrottle/openthrottle-agentic-utils')
-  >()),
-  claudeConversationBackend: { stream: claudeStreamMock },
-  openAiConversationBackend: { stream: openAiStreamMock },
-  opencodeConversationBackend: { stream: opencodeStreamMock },
-}));
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/openthrottle-agentic-utils')
+    >();
+  return {
+    ...actual,
+    // The service routes via the CONVERSATION_CLI_BACKENDS registry, so the
+    // mocked streams must be swapped INTO the registry (not just the individual
+    // exports) for routing to reach them. cursor/codex/grok stay real (unused
+    // here); openai is the default path (openAiConversationBackend, below).
+    CONVERSATION_CLI_BACKENDS: {
+      ...actual.CONVERSATION_CLI_BACKENDS,
+      claude: { stream: claudeStreamMock },
+      opencode: { stream: opencodeStreamMock },
+    },
+    claudeConversationBackend: { stream: claudeStreamMock },
+    openAiConversationBackend: { stream: openAiStreamMock },
+    opencodeConversationBackend: { stream: opencodeStreamMock },
+  };
+});
 
 /** Build a fake backend stream yielding the given text deltas + a terminal done. */
 async function* fakeStream(

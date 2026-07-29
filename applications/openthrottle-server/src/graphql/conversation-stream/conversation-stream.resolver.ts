@@ -88,9 +88,11 @@ const resolveHumanUserId = (
 /**
  * Supported backends. `openai` is the HTTP path; every CLI backend comes from
  * the shared discovery allowlist, restricted to the drivers with a wired
- * streaming chat adapter (`chatCapable`: cursor, claude, opencode). Plan-run-only
- * drivers (codex, grok) are discoverable but have no chat adapter, so the stream
- * resolver rejects them rather than routing to a backend that doesn't exist.
+ * streaming chat adapter (`chatCapable` — claude, cursor, opencode, codex, grok).
+ * Any remaining plan-run-only driver is discoverable but has no chat adapter, so
+ * the stream resolver rejects it rather than routing to a backend that doesn't
+ * exist. The allowlist derives from `chatStreaming`, which the drift guard keeps
+ * in lockstep with the `CONVERSATION_CLI_BACKENDS` routing registry.
  */
 const OPENAI_BACKEND = 'openai';
 const CURSOR_BACKEND = 'cursor';

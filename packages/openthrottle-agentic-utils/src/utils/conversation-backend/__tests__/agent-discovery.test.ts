@@ -69,13 +69,13 @@ describe('AGENT_CLI_ALLOWLIST', () => {
     ]);
   });
 
-  it('marks chat-capable drivers vs plan-run-only drivers', () => {
+  it('marks claude/cursor/opencode/codex/grok chat-capable (all have streaming adapters)', () => {
     const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
     expect(byId.get('claude')?.chatCapable).toBe(true);
     expect(byId.get('cursor')?.chatCapable).toBe(true);
     expect(byId.get('opencode')?.chatCapable).toBe(true);
-    expect(byId.get('codex')?.chatCapable).toBe(false);
-    expect(byId.get('grok')?.chatCapable).toBe(false);
+    expect(byId.get('codex')?.chatCapable).toBe(true);
+    expect(byId.get('grok')?.chatCapable).toBe(true);
   });
 });
 
@@ -145,7 +145,7 @@ describe('discoverAgentClis', () => {
       result.agents.find((agent) => agent.backend === 'codex'),
     ).toMatchObject({
       available: true,
-      chatCapable: false,
+      chatCapable: true,
       models: [],
       version: 'codex-cli 0.145.0',
     });

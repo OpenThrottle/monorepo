@@ -16,6 +16,29 @@ discovery.
 - `src/types/` — public type shapes (e.g. `model-discovery.ts`).
 - `src/index.ts` — barrel; every public symbol re-exports from here.
 
+## Conversation backends (streaming chat)
+
+`src/utils/conversation-backend/` is the uniform streaming seam behind the chat
+composer: a backend maps its source's native output onto `ConversationStreamChunk`
+(`text` | `thinking` | `tool_call` | `tool_result` | `usage` | `session`).
+
+- **Backends:** `openai` (HTTP endpoint) + CLI adapters **claude, cursor, opencode,
+  codex, grok** (one directory each: `argv.ts` / `events.ts` / `<cli>.ts` / `index.ts`
+  - `__tests__`). Each CLI's native event schema is documented in
+    `docs/openthrottle/<cli>-stream-json-schema.md`.
+- **Single routing registry:** `registry.ts` exports `CONVERSATION_CLI_BACKENDS`
+  (driver id → `ConversationBackend`). The server derives its `CLI_BACKENDS` map
+  directly from it — the ONE place a CLI backend is wired.
+- **Add a streaming backend (recipe):** (1) the driver is already in
+  `@openthrottle/openthrottle-drivers` (discovery derives from `ALL_DRIVERS`);
+  (2) add `conversation-backend/<id>/` mirroring an existing adapter (spawn
+  hardening: allowlisted binary via bin-env, scrubbed env, arg-array/no-shell,
+  SIGTERM→SIGKILL teardown, idle+wall timeouts); (3) add one entry to
+  `CONVERSATION_CLI_BACKENDS`; (4) flip that driver's `capabilities.chatStreaming:
+true`. A guard test (`__tests__/registry.test.ts`) enforces (3) ⟺ (4); discovery,
+  the composer, the resolver's accepted-backend allowlist, and server routing all
+  light up from there.
+
 ## Invariants & gotchas
 
 - No Nx `build` target (`__build`/`__build-package` placeholders — see [../AGENTS.md](../AGENTS.md)),
