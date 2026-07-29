@@ -7,58 +7,159 @@ import type { ChatBackendCapabilities } from '@openthrottle/react-router-chat';
 import type { DecodedChatOption } from './chat-model-option';
 
 /**
- * @description Per-backend capability descriptors for the chat composer.
+ * @description Per-backend capability descriptors for the chat composer — the
+ * CONTROL SURFACE the toolbar gates on.
  *
- * WHICH backends and models the composer offers is registry-derived: agent-CLI
+ * WHICH backends/models the composer offers is registry-derived: agent-CLI
  * discovery (`discoverAgentClis`) projects `@openthrottle/openthrottle-drivers`'
- * `ALL_DRIVERS` and surfaces, per driver, its `chatCapable` flag and `models` —
- * so only chat-capable drivers reach the picker and each carries its own model
- * list (see the app-side `toAgentChatOptions` mapper). The drivers registry is a
- * Node package (its engine imports `child_process`), so it is NOT imported into
- * this browser bundle; the registry-derived facts arrive over discovery instead.
+ * `ALL_DRIVERS` and surfaces, per driver, its `chatCapable` flag and `models`.
+ * The drivers registry is a Node package (its engine imports `child_process`),
+ * so it is NOT imported into this browser bundle; the registry-derived facts
+ * arrive over discovery instead.
  *
- * The two descriptors below are the CONTROL SURFACE, which is an openai-vs-CLI
- * distinction rather than a per-driver one: a local OpenAI endpoint is a plain
- * completion, and every agent-CLI driver exposes the same T3 controls.
+ * These descriptors are hand-authored HERE (browser-safe) but are the ADVERTISED
+ * half of an "advertised == honored" contract with the server-side argv/request
+ * builders in `@openthrottle/openthrottle-agentic-utils`. A drift-guard test
+ * (node-side, where it may import the builders) asserts that every level/mode a
+ * backend advertises below maps to a concrete flag the matching adapter emits,
+ * and that no backend advertises a control its adapter drops — so the two halves
+ * cannot silently diverge.
  */
 
 /**
- * Local OpenAI-compatible endpoints: a plain completion. The model is chosen
- * from the picker; no reasoning/tier/permission controls and no repository.
+ * Local OpenAI-compatible endpoints: a plain completion against a discovered
+ * LOCAL endpoint. No repository, no permission surface, and no service tier
+ * (a cloud-only concept). Reasoning IS forwarded best-effort as the OpenAI
+ * `reasoning_effort` request param (honored by reasoning-capable local models),
+ * so the reasoning control is offered.
  * @public
  */
 export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   permissionModes: [],
-  reasoningLevels: [],
+  reasoningLevels: [
+    ChatReasoningLevel.low,
+    ChatReasoningLevel.medium,
+    ChatReasoningLevel.high,
+  ],
   requiresRepository: false,
   serviceTiers: [],
   supportsModelFlag: true,
 };
 
+/** All three composer permission postures, in UI order. */
+const ALL_PERMISSION_MODES: readonly ChatPermissionMode[] = [
+  ChatPermissionMode.supervised,
+  ChatPermissionMode.autoAcceptEdits,
+  ChatPermissionMode.fullAccess,
+];
+
 /**
- * Agent CLI backends (cursor, claude, codex, …): run in a repository checkout
- * and expose the full T3 control surface.
+ * Fallback for a chat-capable CLI backend that discovery surfaces but that has
+ * no explicit entry below (e.g. a newly-added driver). Conservative: the common
+ * CLI surface — all permission postures, the low/medium/high reasoning triple
+ * every agent CLI honors, no service tier. The drift guard flags a known
+ * backend that lacks an explicit descriptor, so this only ever covers genuinely
+ * new drivers until they are characterized.
  * @public
  */
-export const CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
-  permissionModes: [
-    ChatPermissionMode.supervised,
-    ChatPermissionMode.autoAcceptEdits,
-    ChatPermissionMode.fullAccess,
-  ],
+export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
+  permissionModes: ALL_PERMISSION_MODES,
   reasoningLevels: [
     ChatReasoningLevel.low,
     ChatReasoningLevel.medium,
     ChatReasoningLevel.high,
   ],
   requiresRepository: true,
-  serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  serviceTiers: [],
   supportsModelFlag: true,
 };
 
 /**
+ * Per-CLI-backend capabilities, keyed by the driver id (`decoded.backend`).
+ * Each mirrors exactly what the backend's argv/request builder honors:
+ * - reasoning: every backend maps it, but to different vocabularies — claude
+ *   reaches `xhigh`/`max`; opencode reaches `max`; codex/grok/cursor top out at
+ *   `high` (their CLIs' ceiling). Only the DISTINCT honored levels are listed.
+ * - serviceTier: only cursor routes by tier (model-string `[fast=…]`); the rest
+ *   have no tier flag.
+ * - permissionMode: claude/codex/grok/opencode map all three to distinct flags;
+ *   cursor has only two distinct headless postures (trust-only vs `--force`), so
+ *   it advertises just those.
+ * @public
+ */
+export const CHAT_BACKEND_CAPABILITIES: Readonly<
+  Record<string, ChatBackendCapabilities>
+> = {
+  claude: {
+    permissionModes: ALL_PERMISSION_MODES,
+    reasoningLevels: [
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+      ChatReasoningLevel.extraHigh,
+      ChatReasoningLevel.max,
+    ],
+    requiresRepository: true,
+    serviceTiers: [],
+    supportsModelFlag: true,
+  },
+  codex: {
+    permissionModes: ALL_PERMISSION_MODES,
+    reasoningLevels: [
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+    ],
+    requiresRepository: true,
+    serviceTiers: [],
+    supportsModelFlag: true,
+  },
+  cursor: {
+    // Headless cursor has two distinct postures: trust-only (safe) and `--force`
+    // (run everything). autoAcceptEdits has no distinct edits-only flag, so it is
+    // not advertised.
+    permissionModes: [
+      ChatPermissionMode.supervised,
+      ChatPermissionMode.fullAccess,
+    ],
+    reasoningLevels: [
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+    ],
+    requiresRepository: true,
+    serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+    supportsModelFlag: true,
+  },
+  grok: {
+    permissionModes: ALL_PERMISSION_MODES,
+    reasoningLevels: [
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+    ],
+    requiresRepository: true,
+    serviceTiers: [],
+    supportsModelFlag: true,
+  },
+  opencode: {
+    permissionModes: ALL_PERMISSION_MODES,
+    reasoningLevels: [
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+      ChatReasoningLevel.max,
+    ],
+    requiresRepository: true,
+    serviceTiers: [],
+    supportsModelFlag: true,
+  },
+};
+
+/**
  * Capabilities for the currently-selected composer option. OpenAI endpoints get
- * the minimal descriptor; every CLI backend gets the agent descriptor.
+ * the completion descriptor; a CLI backend gets its per-driver descriptor (or
+ * the conservative default for an as-yet-uncharacterized driver).
  * @public
  */
 export function capabilitiesForChatOption(
@@ -68,5 +169,8 @@ export function capabilitiesForChatOption(
     return OPENAI_BACKEND_CAPABILITIES;
   }
 
-  return CLI_BACKEND_CAPABILITIES;
+  return (
+    CHAT_BACKEND_CAPABILITIES[decoded.backend] ??
+    DEFAULT_CLI_BACKEND_CAPABILITIES
+  );
 }

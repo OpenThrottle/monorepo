@@ -126,24 +126,51 @@ describe('buildModelGroups', () => {
 });
 
 describe('capabilitiesForChatOption', () => {
-  it('gives OpenAI endpoints the minimal descriptor (no repo, no controls)', () => {
+  it('gives OpenAI endpoints a completion descriptor: reasoning best-effort, no repo/tier/permission', () => {
     const caps = capabilitiesForChatOption(
       decodeChatOption('http://localhost:11434/v1::llama3'),
     );
 
     expect(caps.requiresRepository).toBe(false);
-    expect(caps.reasoningLevels).toEqual([]);
+    // reasoning_effort is forwarded best-effort to local reasoning models.
+    expect(caps.reasoningLevels).toEqual([
+      ChatReasoningLevel.low,
+      ChatReasoningLevel.medium,
+      ChatReasoningLevel.high,
+    ]);
     expect(caps.permissionModes).toEqual([]);
     expect(caps.serviceTiers).toEqual([]);
   });
 
-  it('gives CLI backends the full agent control surface', () => {
+  it('gives cursor the tier-aware agent surface (the only backend that routes by tier)', () => {
     const caps = capabilitiesForChatOption(decodeChatOption('cursor'));
 
     expect(caps.requiresRepository).toBe(true);
     expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
     expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
     expect(caps.serviceTiers).toContain(ChatServiceTier.fast);
+  });
+
+  it('gives non-cursor CLI backends NO service tier (cloud-only concept they cannot route)', () => {
+    for (const backend of ['claude', 'codex', 'grok', 'opencode']) {
+      const caps = capabilitiesForChatOption(decodeChatOption(backend));
+      expect(caps.serviceTiers).toEqual([]);
+      expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
+      expect(caps.requiresRepository).toBe(true);
+    }
+  });
+
+  it('lets claude reach xhigh/max and opencode reach max reasoning; codex/grok cap at high', () => {
+    const claude = capabilitiesForChatOption(decodeChatOption('claude'));
+    expect(claude.reasoningLevels).toContain(ChatReasoningLevel.extraHigh);
+    expect(claude.reasoningLevels).toContain(ChatReasoningLevel.max);
+
+    const opencode = capabilitiesForChatOption(decodeChatOption('opencode'));
+    expect(opencode.reasoningLevels).toContain(ChatReasoningLevel.max);
+
+    const codex = capabilitiesForChatOption(decodeChatOption('codex'));
+    expect(codex.reasoningLevels).not.toContain(ChatReasoningLevel.extraHigh);
+    expect(codex.reasoningLevels).not.toContain(ChatReasoningLevel.max);
   });
 
   it('treats every discovered CLI backend (claude, opencode) as a repo-scoped agent', () => {

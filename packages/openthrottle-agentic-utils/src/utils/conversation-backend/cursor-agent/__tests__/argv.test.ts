@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildCursorAgentArgv } from '../argv.ts';
 import {
+  CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
   CONVERSATION_SERVICE_TIERS,
 } from '../../types.ts';
@@ -67,6 +68,36 @@ describe('buildCursorAgentArgv', () => {
     });
     expect(argv.at(-2)).toBe('--');
     expect(argv.at(-1)).toBe('---\nname: product\n---\n\nBe concise.');
+  });
+
+  describe('permission mode → --force', () => {
+    it('fullAccess adds --force on top of the always-on --trust', () => {
+      const argv = buildCursorAgentArgv({
+        cwd: '/repo',
+        permissionMode: CONVERSATION_PERMISSION_MODES.fullAccess,
+        prompt: 'p',
+        sessionId: 'c',
+      });
+      expect(argv).toContain('--trust');
+      expect(argv).toContain('--force');
+    });
+
+    it('supervised/autoAcceptEdits/no-mode stay trust-only (no --force)', () => {
+      for (const permissionMode of [
+        CONVERSATION_PERMISSION_MODES.supervised,
+        CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
+        undefined,
+      ]) {
+        const argv = buildCursorAgentArgv({
+          cwd: '/repo',
+          permissionMode,
+          prompt: 'p',
+          sessionId: 'c',
+        });
+        expect(argv).toContain('--trust');
+        expect(argv).not.toContain('--force');
+      }
+    });
   });
 
   describe('reasoning + service tier → model-string bracket', () => {

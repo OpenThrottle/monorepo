@@ -192,6 +192,7 @@ async function* streamCursorAgent(
     buildCursorAgentArgv({
       cwd: run.cwd,
       model: run.model,
+      permissionMode: run.permissionMode,
       prompt: withFileMentions(composePrompt(run), run.fileMentions),
       reasoning: run.reasoning,
       serviceTier: run.serviceTier,

@@ -6,8 +6,10 @@
  */
 
 import {
+  CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
   CONVERSATION_SERVICE_TIERS,
+  type ConversationPermissionMode,
   type ConversationReasoningEffort,
   type ConversationServiceTier,
 } from '../types.ts';
@@ -30,6 +32,15 @@ export interface CursorAgentArgvOptions {
   readonly cwd: string;
   /** Model id; omitted when undefined so cursor-agent uses its default. */
   readonly model?: string;
+  /**
+   * Composer permission posture. cursor-agent always runs `--trust` (the
+   * workspace is a registered, ownership-checked checkout); on top of that,
+   * `fullAccess` adds `--force` (run every tool call unless explicitly denied).
+   * `supervised`/`autoAcceptEdits`/no-mode keep the safe trust-only posture —
+   * headless cursor has no distinct edits-only auto-run flag, so those collapse
+   * to the safe posture (the composer advertises only the two distinct modes).
+   */
+  readonly permissionMode?: ConversationPermissionMode;
   /** The fully-composed prompt (persona prefix already applied by the caller). */
   readonly prompt: string;
   /**
@@ -117,6 +128,13 @@ export function buildCursorAgentArgv(
     '--resume',
     options.sessionId,
   ];
+
+  // fullAccess adds `--force` (run every tool call unless denied) on top of the
+  // always-on `--trust`; every other posture stays trust-only (the safe
+  // default). Placed before the `--` terminator + prompt.
+  if (options.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
+    argv.push('--force');
+  }
 
   if (options.model !== undefined && options.model !== '') {
     argv.push(
