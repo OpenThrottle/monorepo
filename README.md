@@ -113,3 +113,7 @@ reserved under a separate EULA. All current first-party code is Apache-2.0.
 
 See [LICENSING.md](./LICENSING.md) for the open-core boundary — which
 directories are Apache-2.0 vs EULA, and how to tell.
+
+The code is open source, but the **OpenThrottle name and logo are trademarks** —
+Apache-2.0 §6 grants no trademark rights. See [TRADEMARK.md](./TRADEMARK.md) for
+what you may and may not do with the marks.

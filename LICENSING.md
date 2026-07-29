@@ -79,7 +79,8 @@ code is freely forkable:
 - **Patent grant** — contributors and users get an explicit patent license,
   protecting the project from patent ambushes.
 - **Trademark clause (§6)** — anyone may fork the _code_, but not the
-  **name or marks**. When the code is free, the brand is the moat.
+  **name or marks**. When the code is free, the brand is the moat. See
+  [TRADEMARK.md](./TRADEMARK.md) for the trademark policy.
 
 Revenue comes from a canonical hosted/SaaS version, proprietary enterprise
 modules (the EULA packages above), support/SLAs, and the brand — not from
@@ -118,4 +119,6 @@ reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
   attribution-required dependencies (tracked in the license-automation plan).
 - [`LICENSE-EULA.md`](./LICENSE-EULA.md) — retained EULA, the template for future
   commercial/enterprise packages.
+- [`TRADEMARK.md`](./TRADEMARK.md) — trademark policy for the OpenThrottle name
+  and logo (Apache-2.0 §6): what you may and may not do with the marks.
 - Per-project `LICENSE.md` — the license that applies to that project.
