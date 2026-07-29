@@ -14,7 +14,7 @@ import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
-  chatStreaming: false,
+  chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsModelFlag: true,

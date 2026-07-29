@@ -16,15 +16,13 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import {
+  CONVERSATION_CLI_BACKENDS,
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ChatCompletionMessage,
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationPermissionMode,
-  claudeConversationBackend,
-  cursorAgentConversationBackend,
   openAiConversationBackend,
-  opencodeConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
@@ -33,14 +31,13 @@ import {
 } from './conversation-stream.types';
 
 /**
- * CLI backends (spawned agent adapters) keyed by discriminator; openai is the
+ * CLI backends (spawned agent adapters) keyed by the driver-id discriminator,
+ * derived from the single `CONVERSATION_CLI_BACKENDS` registry so a new driver's
+ * backend is wired in one place (agentic-utils) with no edit here. openai is the
  * default HTTP path when a backend is not in this map.
  */
-const CLI_BACKENDS: Record<string, ConversationBackend> = {
-  claude: claudeConversationBackend,
-  cursor: cursorAgentConversationBackend,
-  opencode: opencodeConversationBackend,
-};
+const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
+  CONVERSATION_CLI_BACKENDS;
 
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;

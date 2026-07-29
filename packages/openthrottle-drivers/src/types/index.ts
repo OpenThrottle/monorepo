@@ -62,8 +62,10 @@ export interface DriverCapabilities {
   /**
    * Has a wired streaming chat backend (a `ConversationBackend` adapter), so it can be offered as a
    * chat composer backend. `false` for plan-run-only drivers whose headless command works but that
-   * have no streaming adapter yet (codex, grok). The plan-run/driver path uses every driver
-   * regardless; only this gates the chat composer.
+   * have no streaming adapter yet. The plan-run/driver path uses every driver regardless; only this
+   * gates the chat composer. Must stay in lockstep with the adapter registry
+   * (`CONVERSATION_CLI_BACKENDS` in `@openthrottle/openthrottle-agentic-utils`) — a guard test
+   * asserts the two agree.
    */
   readonly chatStreaming: boolean;
   /** Emits a permission-mode flag (Claude: `--permission-mode acceptEdits`). */

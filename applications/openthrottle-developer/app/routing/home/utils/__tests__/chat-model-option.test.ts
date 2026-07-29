@@ -107,22 +107,22 @@ describe('toAgentChatOptions', () => {
     ]);
   });
 
-  it('omits plan-run-only (non-chat-capable) drivers like codex/grok', () => {
+  it('omits plan-run-only (non-chat-capable) drivers', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'codex',
+          backend: 'future-plan-run-driver',
           chatCapable: false,
-          label: 'codex',
+          label: 'future-plan-run-driver',
           models: [],
-          version: '0.145.0',
+          version: '1.0.0',
         },
         {
-          backend: 'grok',
+          backend: 'another-plan-run-driver',
           chatCapable: false,
-          label: 'grok',
-          models: ['grok-4.5'],
-          version: '0.2.112',
+          label: 'another-plan-run-driver',
+          models: ['some-model'],
+          version: '2.0.0',
         },
       ],
       totalCount: 2,
