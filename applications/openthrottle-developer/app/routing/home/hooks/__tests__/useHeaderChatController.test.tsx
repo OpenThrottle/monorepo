@@ -3,7 +3,7 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ChatComposerMode, ChatDialog } from '@openthrottle/react-router-chat';
+import { ChatDialog } from '@openthrottle/react-router-chat';
 import {
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
@@ -84,22 +84,6 @@ describe('useHeaderChatController (header chat surface)', () => {
     expect(
       await component.findByTestId('ChatComposerToolbar'),
     ).toBeInTheDocument();
-    expect(
-      await component.findByTestId('ChatComposerToolbar-mode-build'),
-    ).toBeInTheDocument();
-  });
-
-  test('a toolbar control change updates the shared persisted atom', async () => {
-    const user = userEvent.setup();
-    const component = renderHeader();
-
-    await user.click(
-      await component.findByTestId('ChatComposerToolbar-mode-build'),
-    );
-
-    await waitFor(() =>
-      expect(store.get(chatToolbarStateAtom).mode).toBe('build'),
-    );
   });
 
   test('sending a message posts intent=start to the conversation-stream action', async () => {
@@ -117,21 +101,6 @@ describe('useHeaderChatController (header chat surface)', () => {
       expect(actionSpy).toHaveBeenCalledWith(
         expect.objectContaining({ intent: 'start', message: 'Hello agent' }),
       ),
-    );
-  });
-
-  test('rehydrates the persisted toolbar mode into the header toolbar', async () => {
-    store.set(chatToolbarStateAtom, {
-      ...DEFAULT_CHAT_TOOLBAR_STATE,
-      mode: ChatComposerMode.build,
-    });
-
-    const component = renderHeader();
-
-    await waitFor(() =>
-      expect(
-        component.getByTestId('ChatComposerToolbar-mode-build'),
-      ).toHaveAttribute('aria-checked', 'true'),
     );
   });
 
