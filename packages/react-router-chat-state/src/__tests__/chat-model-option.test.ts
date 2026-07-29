@@ -6,9 +6,11 @@ import {
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import { capabilitiesForChatOption } from '../chat-capabilities';
+import * as React from 'react';
 import {
   CLI_MODEL_GROUP_ID,
   buildModelGroups,
+  cliGroupId,
   decodeChatOption,
   decodeModelOptionId,
   encodeCliOptionId,
@@ -66,19 +68,56 @@ describe('decodeChatOption', () => {
 });
 
 describe('buildModelGroups', () => {
-  it('collapses CLIs into one group and one group per OpenAI provider', () => {
+  it('gives each agent CLI its own group and one group per OpenAI provider', () => {
     const groups = buildModelGroups([
       { groupId: 'openai:ollama', id: 'a', label: 'llama3' },
       { groupId: 'openai:ollama', id: 'b', label: 'qwen' },
-      { groupId: CLI_MODEL_GROUP_ID, id: 'cursor', label: 'Cursor' },
+      {
+        groupId: cliGroupId('cursor'),
+        id: 'cursor|auto',
+        label: 'auto',
+        subLabel: 'cursor-agent',
+      },
+      {
+        groupId: cliGroupId('claude'),
+        id: 'claude',
+        label: 'claude-code',
+        subLabel: 'claude-code',
+      },
       { groupId: 'openai:localhost', id: 'c', label: 'mlx' },
     ]);
 
-    expect(groups).toEqual([
+    // Labels + ids, in first-appearance order. OpenAI groups take the host/
+    // provider; each CLI group takes the driver label from its option subLabel.
+    expect(groups.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: 'openai:ollama', label: 'ollama' },
-      { id: CLI_MODEL_GROUP_ID, label: 'Agent CLIs' },
+      { id: 'cursor', label: 'cursor-agent' },
+      { id: 'claude', label: 'claude-code' },
       { id: 'openai:localhost', label: 'localhost' },
     ]);
+    // Every group carries a resolved provider glyph.
+    for (const group of groups) {
+      expect(React.isValidElement(group.icon)).toBe(true);
+    }
+  });
+
+  it('falls back to the bare group id when a CLI option has no sub-label', () => {
+    const [group] = buildModelGroups([
+      { groupId: cliGroupId('mystery'), id: 'mystery', label: 'Mystery' },
+    ]);
+
+    expect(group).toMatchObject({ id: 'mystery', label: 'mystery' });
+  });
+
+  it('still resolves the legacy collapsed group id to one "Agent CLIs" group', () => {
+    const [group] = buildModelGroups([
+      { groupId: CLI_MODEL_GROUP_ID, id: 'cursor', label: 'Cursor' },
+    ]);
+
+    expect(group).toMatchObject({
+      id: CLI_MODEL_GROUP_ID,
+      label: 'Agent CLIs',
+    });
   });
 
   it('ignores options without a group id', () => {

@@ -42,7 +42,7 @@ describe('routes/resources.chat-options loader', () => {
       },
     ]);
     mockAgentClis.mockResolvedValue([
-      { description: 'Agent CLI', groupId: 'agent-clis', id: 'cursor', label: 'Cursor' }, // prettier-ignore
+      { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
     ]);
     mockRepositories.mockResolvedValue([{ displayName: 'Repo', id: 'r1' }]);
     mockPersonas.mockResolvedValue([{ id: 'p1', label: 'Persona One' }]);
@@ -57,7 +57,7 @@ describe('routes/resources.chat-options loader', () => {
           id: 'ep::m',
           label: 'm',
         },
-        { description: 'Agent CLI', groupId: 'agent-clis', id: 'cursor', label: 'Cursor' }, // prettier-ignore
+        { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
       ],
       personas: [{ id: 'p1', label: 'Persona One' }],
       repositories: [{ displayName: 'Repo', id: 'r1' }],

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { ChatModelPicker } from '../ChatModelPicker';
 import type { ChatModelPickerProps } from '../ChatModelPicker';
@@ -27,13 +28,15 @@ const renderPicker = (
   overrides: Partial<ChatModelPickerProps> = {},
 ): RenderResult =>
   render(
-    <ChatModelPicker
-      groups={GROUPS}
-      models={MODELS}
-      onModelChange={vi.fn()}
-      selectedModelId="claude::opus"
-      {...overrides}
-    />,
+    <TooltipProvider>
+      <ChatModelPicker
+        groups={GROUPS}
+        models={MODELS}
+        onModelChange={vi.fn()}
+        selectedModelId="claude::opus"
+        {...overrides}
+      />
+    </TooltipProvider>,
   );
 
 const openPicker = async (
@@ -41,6 +44,16 @@ const openPicker = async (
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> => {
   await user.click(component.getByTestId('ChatModelPicker-trigger'));
+};
+
+const selectRail = async (
+  component: RenderResult,
+  user: ReturnType<typeof userEvent.setup>,
+  groupId: string,
+): Promise<void> => {
+  await user.click(
+    component.getByTestId(`ChatModelPicker-rail-item-${groupId}`),
+  );
 };
 
 describe('ChatModelPicker Component', () => {
@@ -52,19 +65,43 @@ describe('ChatModelPicker Component', () => {
     );
   });
 
-  test('renders a Favorites group plus a group per provider when opened', async () => {
+  test('renders a Favorites rail entry plus one per provider when opened', async () => {
     const user = userEvent.setup();
     const component = renderPicker();
     await openPicker(component, user);
 
+    expect(component.getByTestId('ChatModelPicker-rail')).toBeInTheDocument();
     expect(
-      component.getByTestId('ChatModelPicker-group-__favorites__'),
+      component.getByTestId('ChatModelPicker-rail-item-__favorites__'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('ChatModelPicker-group-claude'),
+      component.getByTestId('ChatModelPicker-rail-item-claude'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('ChatModelPicker-group-codex'),
+      component.getByTestId('ChatModelPicker-rail-item-codex'),
+    ).toBeInTheDocument();
+  });
+
+  test('opens onto the selected model group and switches the list on rail click', async () => {
+    const user = userEvent.setup();
+    const component = renderPicker();
+    await openPicker(component, user);
+
+    // Opus is favorited, so the picker opens on the Favorites rail entry: its
+    // row is visible while the codex model is not yet rendered.
+    expect(
+      component.getByTestId(
+        'ChatModelPicker-option-__favorites__-claude::opus',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatModelPicker-option-codex-codex::gpt5'),
+    ).not.toBeInTheDocument();
+
+    await selectRail(component, user, 'codex');
+
+    expect(
+      component.getByTestId('ChatModelPicker-option-codex-codex::gpt5'),
     ).toBeInTheDocument();
   });
 
@@ -73,6 +110,7 @@ describe('ChatModelPicker Component', () => {
     const user = userEvent.setup();
     const component = renderPicker({ onModelChange });
     await openPicker(component, user);
+    await selectRail(component, user, 'codex');
 
     await user.click(
       component.getByTestId('ChatModelPicker-option-codex-codex::gpt5'),
@@ -81,19 +119,40 @@ describe('ChatModelPicker Component', () => {
     expect(onModelChange).toHaveBeenCalledWith('codex::gpt5');
   });
 
-  test('filters rows by the search input', async () => {
+  test('search filters within the active provider only', async () => {
     const user = userEvent.setup();
     const component = renderPicker();
     await openPicker(component, user);
+    await selectRail(component, user, 'claude');
 
-    await user.type(component.getByTestId('ChatModelPicker-search'), 'gpt');
+    await user.type(component.getByTestId('ChatModelPicker-search'), 'sonnet');
 
+    // Matches the active (claude) group...
+    expect(
+      component.getByTestId('ChatModelPicker-option-claude-claude::sonnet'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatModelPicker-option-claude-claude::opus'),
+    ).not.toBeInTheDocument();
+    // ...and never leaks a matching row from another provider group.
+    expect(
+      component.queryByTestId('ChatModelPicker-option-codex-codex::gpt5'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('resets the search when switching rails', async () => {
+    const user = userEvent.setup();
+    const component = renderPicker();
+    await openPicker(component, user);
+    await selectRail(component, user, 'claude');
+
+    await user.type(component.getByTestId('ChatModelPicker-search'), 'sonnet');
+    await selectRail(component, user, 'codex');
+
+    expect(component.getByTestId('ChatModelPicker-search')).toHaveValue('');
     expect(
       component.getByTestId('ChatModelPicker-option-codex-codex::gpt5'),
     ).toBeInTheDocument();
-    expect(
-      component.queryByTestId('ChatModelPicker-option-claude-claude::sonnet'),
-    ).not.toBeInTheDocument();
   });
 
   test('toggles favorite without selecting the row', async () => {
@@ -102,6 +161,7 @@ describe('ChatModelPicker Component', () => {
     const user = userEvent.setup();
     const component = renderPicker({ onModelChange, onToggleFavorite });
     await openPicker(component, user);
+    await selectRail(component, user, 'codex');
 
     await user.click(
       component.getByTestId('ChatModelPicker-favorite-codex-codex::gpt5'),
@@ -119,6 +179,7 @@ describe('ChatModelPicker Component', () => {
       onModelChange,
     });
     await openPicker(component, user);
+    await selectRail(component, user, 'codex');
 
     await user.click(
       component.getByTestId('ChatModelPicker-option-codex-codex::gpt5'),
@@ -140,11 +201,11 @@ describe('ChatModelPicker Component', () => {
     });
     await openPicker(component, user);
 
+    // The Favorites rail entry is active by default (opus is the selection and
+    // is favorited), so every model is selectable straight from it.
     expect(
-      component.getByTestId('ChatModelPicker-group-__favorites__'),
+      component.getByTestId('ChatModelPicker-rail-item-__favorites__'),
     ).toBeInTheDocument();
-    // The favorited model still appears under its provider group too, so it is
-    // selectable from either — pick it from the Favorites group.
     await user.click(
       component.getByTestId('ChatModelPicker-option-__favorites__-codex::gpt5'),
     );
@@ -171,6 +232,7 @@ describe('ChatModelPicker Component', () => {
     const user = userEvent.setup();
     const component = renderPicker({ onModelChange });
     await openPicker(component, user);
+    await selectRail(component, user, 'claude');
 
     const search = component.getByTestId('ChatModelPicker-search');
     await user.type(search, 'sonnet');
