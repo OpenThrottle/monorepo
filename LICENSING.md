@@ -62,9 +62,9 @@ edition.
 **None today.** When commercial features are built (for example SSO/SAML, audit
 logging, advanced RBAC, or multi-tenant admin), they will live in their **own
 dedicated packages** under the EULA (`LICENSE-EULA.md`). Keeping the boundary at
-the package level is deliberate: it keeps the open core cleanly Apache-2.0 and
-means a lightweight **DCO** sign-off on contributions is sufficient (no CLA),
-because contributed core code is never pulled into a proprietary edition.
+the package level is deliberate: it keeps the open core cleanly Apache-2.0.
+Inbound contributions are governed by a **Contributor License Agreement (CLA)**
+— see [Contributions](#contributions) below.
 
 ## Open core — why <a id="open-core-why"></a>
 
@@ -92,8 +92,9 @@ Apache-2.0. Future versions remain under the copyright holder's control.
 
 Contributions are welcome but, while the project is early-stage, scoped to
 smaller targeted fixes (bugs, docs, small well-scoped improvements); discuss
-anything larger in an issue first. Contributors sign off with the Developer
-Certificate of Origin (`git commit -s`). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+anything larger in an issue first. Inbound contributions are governed by a
+**Contributor License Agreement** (individual + corporate) — **draft pending
+legal review**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Third-party dependencies
 
