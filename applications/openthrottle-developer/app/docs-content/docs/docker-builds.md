@@ -1,7 +1,7 @@
 ---
-description: Docker Compose
-group: 01. Development
-order: 3
+description: Image build strategy and registry for the OpenThrottle apps.
+group: 02. Development
+order: 2
 title: Docker Builds
 ---
 

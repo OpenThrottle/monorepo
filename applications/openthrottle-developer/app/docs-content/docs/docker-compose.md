@@ -1,7 +1,7 @@
 ---
-description: Docker Compose
-group: 01. Development
-order: 2
+description: Run the OpenThrottle apps and dependencies with Docker Compose.
+group: 02. Development
+order: 1
 title: 'Docker Compose'
 ---
 
