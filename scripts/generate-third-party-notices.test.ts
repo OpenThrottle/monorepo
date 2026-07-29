@@ -8,7 +8,6 @@ import {
   type Attribution,
   collectAttributions,
   compareCodeUnits,
-  hasPlatformConstraints,
   isFirstParty,
   normalizeAuthor,
   renderThirdPartyNotices,
@@ -47,24 +46,6 @@ describe('compareCodeUnits', () => {
       'axe',
       'axios',
     ]);
-  });
-});
-
-describe('hasPlatformConstraints', () => {
-  it('is true when the manifest declares os or cpu', () => {
-    expect(hasPlatformConstraints({ cpu: ['arm64'], os: ['darwin'] })).toBe(
-      true,
-    );
-    expect(hasPlatformConstraints({ os: ['linux'] })).toBe(true);
-    expect(hasPlatformConstraints({ cpu: ['x64'] })).toBe(true);
-  });
-
-  it('is false for cross-platform packages and non-objects', () => {
-    expect(hasPlatformConstraints({ name: 'react', version: '19' })).toBe(
-      false,
-    );
-    expect(hasPlatformConstraints(null)).toBe(false);
-    expect(hasPlatformConstraints('nope')).toBe(false);
   });
 });
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateCompliance,
   formatReport,
+  hasPlatformConstraints,
   isExpressionAllowed,
   type LicensePolicy,
   type PnpmLicensesOutput,
@@ -145,6 +146,24 @@ describe('resolveEffectiveLicense', () => {
   });
 });
 
+describe('hasPlatformConstraints', () => {
+  it('is true when the manifest declares os or cpu', () => {
+    expect(hasPlatformConstraints({ cpu: ['arm64'], os: ['darwin'] })).toBe(
+      true,
+    );
+    expect(hasPlatformConstraints({ os: ['linux'] })).toBe(true);
+    expect(hasPlatformConstraints({ cpu: ['x64'] })).toBe(true);
+  });
+
+  it('is false for cross-platform packages and non-objects', () => {
+    expect(hasPlatformConstraints({ name: 'react', version: '19' })).toBe(
+      false,
+    );
+    expect(hasPlatformConstraints(null)).toBe(false);
+    expect(hasPlatformConstraints('nope')).toBe(false);
+  });
+});
+
 describe('evaluateCompliance', () => {
   it('passes a clean graph with no violations', () => {
     const output: PnpmLicensesOutput = {
@@ -153,6 +172,26 @@ describe('evaluateCompliance', () => {
     };
     const result = evaluateCompliance(output, policy);
     expect(result.violations).toEqual([]);
+  });
+
+  it('skips platform-specific packages in the exclusion set', () => {
+    const output: PnpmLicensesOutput = {
+      Commercial: [
+        {
+          license: 'Commercial',
+          name: '@nx/key-linux-x64-gnu',
+          versions: ['5'],
+        },
+      ],
+    };
+    // Not waived and not on the allowlist, but excluded → neither violation nor waiver.
+    const result = evaluateCompliance(
+      output,
+      policy,
+      new Set(['@nx/key-linux-x64-gnu']),
+    );
+    expect(result.violations).toEqual([]);
+    expect(result.waived).toEqual([]);
   });
 
   it('flags a disallowed copyleft license', () => {

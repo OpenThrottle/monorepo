@@ -176,6 +176,7 @@ export const resolveEffectiveLicense = (
 export const evaluateCompliance = (
   output: PnpmLicensesOutput,
   policy: LicensePolicy,
+  excludedPackages: ReadonlySet<string> = new Set(),
 ): ComplianceResult => {
   const allow = new Set(policy.allow);
   const exceptionsByPackage = new Map(
@@ -188,6 +189,13 @@ export const evaluateCompliance = (
 
   for (const packages of Object.values(output)) {
     for (const pkg of packages) {
+      // Platform-specific native binaries (os/cpu-constrained) install differently per
+      // host OS; skip them so the gate is OS-independent. Their cross-platform parent
+      // package is still checked, and they inherit its license.
+      if (excludedPackages.has(pkg.name)) {
+        continue;
+      }
+
       const exception = exceptionsByPackage.get(pkg.name);
       if (exception !== undefined) {
         matchedPackages.add(pkg.name);
@@ -296,6 +304,87 @@ export const readInstalledLicenses = (cwd: string): PnpmLicensesOutput => {
   return parsed;
 };
 
+/**
+ * @description True when a package declares `os`/`cpu` constraints — i.e. it is a
+ * platform-specific optional dependency (a prebuilt native binary such as
+ * `@rollup/rollup-darwin-arm64`, or `fsevents`). pnpm only installs the variants matching
+ * the current machine, so the set differs between a macOS dev box and the Linux CI runner.
+ * Both the license gate and the NOTICE manifest exclude them for OS-independence; their
+ * license matches the cross-platform parent package that stays checked. Exported for reuse.
+ */
+export const hasPlatformConstraints = (manifest: unknown): boolean =>
+  typeof manifest === 'object' &&
+  manifest !== null &&
+  ('os' in manifest || 'cpu' in manifest);
+
+/**
+ * @description Map over items with a fixed-size worker pool so reading thousands of
+ * package.json files never exhausts the file-descriptor limit. Results preserve input order.
+ */
+const mapWithConcurrency = async <T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> => {
+  const results: R[] = [];
+  let cursor = 0;
+  const worker = async (): Promise<void> => {
+    const current = cursor;
+    cursor += 1;
+    if (current >= items.length) {
+      return;
+    }
+    results[current] = await fn(items[current]);
+    return worker();
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
+  );
+  return results;
+};
+
+/**
+ * @description Names of installed packages that declare `os`/`cpu` constraints, read from
+ * each package's own package.json (the licenses payload does not carry os/cpu). Both the
+ * gate and the NOTICE generator exclude these so their output is OS-independent.
+ */
+export const collectPlatformSpecificPackages = async (
+  output: PnpmLicensesOutput,
+): Promise<Set<string>> => {
+  const entries: Array<{ directory: string; name: string }> = [];
+  for (const packages of Object.values(output)) {
+    for (const pkg of packages) {
+      const directory = pkg.paths?.[0];
+      if (directory !== undefined) {
+        entries.push({ directory, name: pkg.name });
+      }
+    }
+  }
+
+  const platformFlags = await mapWithConcurrency(
+    entries,
+    100,
+    async ({ directory }) => {
+      try {
+        const manifest: unknown = JSON.parse(
+          await readFile(join(directory, 'package.json'), 'utf8'),
+        );
+        return hasPlatformConstraints(manifest);
+      } catch {
+        return false;
+      }
+    },
+  );
+
+  const names = new Set<string>();
+  entries.forEach((entry, index) => {
+    if (platformFlags[index]) {
+      names.add(entry.name);
+    }
+  });
+  return names;
+};
+
 const parseArg = (flag: string): string | undefined => {
   const index = process.argv.indexOf(flag);
   return index >= 0 ? process.argv[index + 1] : undefined;
@@ -311,7 +400,8 @@ async function main(): Promise<void> {
     ? JSON.parse(await readFile(fixturePath, 'utf8'))
     : readInstalledLicenses(cwd);
 
-  const result = evaluateCompliance(output, policy);
+  const excludedPackages = await collectPlatformSpecificPackages(output);
+  const result = evaluateCompliance(output, policy, excludedPackages);
   const report = formatReport(result);
 
   if (result.violations.length > 0) {

@@ -56,19 +56,7 @@
     {
       "package": "@nx/key",
       "license": "Commercial",
-      "reason": "Nx Powerpack license-activation helper, transitive via @nx/gcs-cache. Build-time only, never shipped. See plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2.",
-      "scope": "build-tooling"
-    },
-    {
-      "package": "@nx/key-darwin-arm64",
-      "license": "Commercial",
-      "reason": "Native binary for @nx/key. Build-time only, never shipped. See plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2.",
-      "scope": "build-tooling"
-    },
-    {
-      "package": "@nx/key-linux-x64-gnu",
-      "license": "Commercial",
-      "reason": "Native binary for @nx/key. Build-time only, never shipped. See plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2.",
+      "reason": "Nx Powerpack license-activation helper, transitive via @nx/gcs-cache. Build-time only, never shipped. See plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2. Its per-arch native binaries (@nx/key-<os>-<arch>) need no separate waiver: they declare os/cpu and are excluded from the gate as platform-specific.",
       "scope": "build-tooling"
     },
     {
@@ -88,19 +76,7 @@
     {
       "package": "@vscode/vsce-sign",
       "license": "LicenseRef-Microsoft-vsce-sign",
-      "reason": "Microsoft proprietary EULA; build/publish tooling via @vscode/vsce (VS Code extension packaging), not shipped in any product bundle. Its native postinstall build is disabled in pnpm-workspace.yaml.",
-      "scope": "build-tooling"
-    },
-    {
-      "package": "@vscode/vsce-sign-linux-x64",
-      "license": "LicenseRef-Microsoft-vsce-sign",
-      "reason": "Microsoft proprietary EULA; native binary for @vscode/vsce-sign build/publish tooling, not shipped in any product bundle.",
-      "scope": "build-tooling"
-    },
-    {
-      "package": "@vscode/vsce-sign-darwin-arm64",
-      "license": "LicenseRef-Microsoft-vsce-sign",
-      "reason": "Microsoft proprietary EULA; native binary for @vscode/vsce-sign build/publish tooling, not shipped in any product bundle.",
+      "reason": "Microsoft proprietary EULA; build/publish tooling via @vscode/vsce (VS Code extension packaging), not shipped in any product bundle. Its native postinstall build is disabled in pnpm-workspace.yaml. Its per-arch native binaries (@vscode/vsce-sign-<os>-<arch>) need no separate waiver: they declare os/cpu and are excluded from the gate as platform-specific.",
       "scope": "build-tooling"
     }
   ]

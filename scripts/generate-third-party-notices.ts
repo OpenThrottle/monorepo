@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  collectPlatformSpecificPackages,
   type LicensePolicy,
   type PnpmLicensesOutput,
   readInstalledLicenses,
@@ -56,19 +57,6 @@ export const isFirstParty = (name: string): boolean =>
  */
 export const compareCodeUnits = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
-
-/**
- * @description True when a package declares `os`/`cpu` constraints — i.e. it is a
- * platform-specific optional dependency (a prebuilt native binary such as
- * `@rollup/rollup-darwin-arm64`, or `fsevents`). pnpm only installs the variants matching
- * the current machine, so these differ between a macOS dev box and the Linux CI runner.
- * They are excluded from the manifest to keep it OS-independent; their license matches the
- * cross-platform parent toolchain that remains listed. Exported for unit testing.
- */
-export const hasPlatformConstraints = (manifest: unknown): boolean =>
-  typeof manifest === 'object' &&
-  manifest !== null &&
-  ('os' in manifest || 'cpu' in manifest);
 
 /**
  * @description Normalize a package `author` (pnpm emits a string, but package.json may carry
@@ -284,75 +272,6 @@ export const collectEmbeddedNotices = async (
       };
     }),
   );
-};
-
-/**
- * @description Map over items with a fixed-size worker pool so reading thousands of
- * package.json files never exhausts the file-descriptor limit. Results preserve input order.
- */
-const mapWithConcurrency = async <T, R>(
-  items: readonly T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> => {
-  const results: R[] = [];
-  let cursor = 0;
-  const worker = async (): Promise<void> => {
-    const current = cursor;
-    cursor += 1;
-    if (current >= items.length) {
-      return;
-    }
-    results[current] = await fn(items[current]);
-    return worker();
-  };
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
-  );
-  return results;
-};
-
-/**
- * @description Names of packages that declare `os`/`cpu` constraints — platform-specific
- * prebuilt binaries whose installed set varies by host OS. Read from each package's own
- * package.json (the licenses payload does not carry os/cpu), excluded to keep the manifest
- * OS-independent. Exported for unit testing.
- */
-export const collectPlatformSpecificPackages = async (
-  output: PnpmLicensesOutput,
-): Promise<Set<string>> => {
-  const entries: Array<{ directory: string; name: string }> = [];
-  for (const packages of Object.values(output)) {
-    for (const pkg of packages) {
-      const directory = pkg.paths?.[0];
-      if (directory !== undefined) {
-        entries.push({ directory, name: pkg.name });
-      }
-    }
-  }
-
-  const platformFlags = await mapWithConcurrency(
-    entries,
-    100,
-    async ({ directory }) => {
-      try {
-        const manifest: unknown = JSON.parse(
-          await readFile(join(directory, 'package.json'), 'utf8'),
-        );
-        return hasPlatformConstraints(manifest);
-      } catch {
-        return false;
-      }
-    },
-  );
-
-  const names = new Set<string>();
-  entries.forEach((entry, index) => {
-    if (platformFlags[index]) {
-      names.add(entry.name);
-    }
-  });
-  return names;
 };
 
 const OUTPUT_FILENAME = 'THIRD-PARTY-LICENSES.md';
