@@ -231,6 +231,8 @@ export type AgentCliOptionObject = {
   label: Scalars['String']['output'];
   /** Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). */
   models: Array<Scalars['String']['output']>;
+  /** True when this driver can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint); gates driver×endpoint targeting in the composer. False for claude/cursor (own cloud wire protocol). */
+  supportsCustomBaseUrl: Scalars['Boolean']['output'];
   /** Trimmed --version output, or null when unknown. */
   version?: Maybe<Scalars['String']['output']>;
 };

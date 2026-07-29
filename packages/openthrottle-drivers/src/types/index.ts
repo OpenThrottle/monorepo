@@ -30,6 +30,30 @@ export interface DriverWorktreeOptions {
 }
 
 /**
+ * @description Points a driver at a discovered local OpenAI-compatible model-server endpoint (from
+ * `discoverLocalModels`) instead of the driver's own cloud provider. Only drivers whose
+ * {@link DriverCapabilities} advertise `supportsCustomBaseUrl` act on this; the rest ignore it.
+ * The mechanism differs per driver (env prefix, CLI flag, or config file — see each driver module),
+ * but the discovered `baseUrl`/`provider` are the shared inputs. `configFilePath` is materialized by
+ * the (impure) consumer for drivers that require a provider-config file (opencode); the leaf-package
+ * command builders stay pure and only reference the path.
+ * @public
+ */
+export interface DriverEndpointConfig {
+  /**
+   * API key sent to the endpoint. Most local servers ignore it, but CLIs/SDKs often require *some*
+   * value; drivers default to a placeholder when omitted.
+   */
+  readonly apiKey?: string;
+  /** OpenAI-compatible `/v1` base URL, e.g. `http://localhost:11434/v1`. Passed verbatim. */
+  readonly baseUrl: string;
+  /** Path to a caller-materialized provider-config file (opencode-only); ignored by other drivers. */
+  readonly configFilePath?: string;
+  /** Discovery provider fingerprint, or `null` when the server could not be fingerprinted. */
+  readonly provider?: 'lmstudio' | 'ollama' | null;
+}
+
+/**
  * @description Per-invocation inputs shared by every driver. Modeled on the legacy
  * `RunIterationConfig` but with no Ralph-specific coupling.
  * @public
@@ -37,6 +61,11 @@ export interface DriverWorktreeOptions {
 export interface DriverInvocationConfig {
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
+  /**
+   * Optional local model-server endpoint to target; honored only by drivers advertising
+   * `supportsCustomBaseUrl` (see {@link DriverEndpointConfig}). Others ignore it.
+   */
+  readonly endpoint?: DriverEndpointConfig;
   /** Iteration number (used only for log attribution). */
   readonly iteration: number;
   /** Model preset; drivers that advertise `supportsModelFlag` emit `--model` (Claude omits `auto`). */
@@ -72,6 +101,12 @@ export interface DriverCapabilities {
   readonly permissionMode: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */
   readonly skipWorktreeSetup: boolean;
+  /**
+   * Can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint) via
+   * {@link DriverInvocationConfig.endpoint}. `false` for drivers that only speak their own cloud
+   * provider's wire protocol (Claude → Anthropic Messages API; Cursor → its proprietary backend).
+   */
+  readonly supportsCustomBaseUrl: boolean;
   /** Emits a `--model` flag. */
   readonly supportsModelFlag: boolean;
   /** Emits a `-w` / `--worktree` flag. */

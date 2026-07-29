@@ -5,6 +5,7 @@ query DiscoverAgentClis {
       chatCapable
       label
       models
+      supportsCustomBaseUrl
       version
     }
     totalCount

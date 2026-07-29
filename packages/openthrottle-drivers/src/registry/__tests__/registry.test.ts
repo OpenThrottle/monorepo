@@ -18,6 +18,7 @@ const fakeDriver = (id: string): AgentDriver =>
       chatStreaming: false,
       permissionMode: false,
       skipWorktreeSetup: false,
+      supportsCustomBaseUrl: false,
       supportsModelFlag: false,
       worktree: false,
       worktreeBase: false,

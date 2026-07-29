@@ -12,6 +12,7 @@ import {
 import {
   toAgentChatOptions,
   toChatModelOptions,
+  toDriverEndpointChatOptions,
 } from '~/routing/home/utils/chat-model-option';
 
 /**
@@ -58,6 +59,31 @@ export async function loadAgentClis(
     );
 
     return toAgentChatOptions(data.discoverAgentClis);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @description Server-only loader helper: join discovered agent CLIs with
+ * discovered local endpoints into "driver × local endpoint/model" composer
+ * options (only base-URL-capable drivers). Fetches both discovery queries
+ * (server-side cached, 60s TTL); empty on failure so the composer still renders
+ * the un-joined driver + endpoint groups.
+ */
+export async function loadDriverEndpointModels(
+  request: Request,
+): Promise<ChatModelOption[]> {
+  try {
+    const [agents, localModels] = await Promise.all([
+      executeGraphqlWithAuth(request, DiscoverAgentClisDocument),
+      executeGraphqlWithAuth(request, DiscoverLocalModelsDocument),
+    ]);
+
+    return toDriverEndpointChatOptions(
+      agents.discoverAgentClis,
+      localModels.discoverLocalModels,
+    );
   } catch {
     return [];
   }

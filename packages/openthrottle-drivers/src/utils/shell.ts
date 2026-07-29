@@ -44,3 +44,22 @@ export function escapeShellArg(value: string): string {
     .replace(/\$/g, '\\$')
     .replace(/"/g, '\\"')}"`;
 }
+
+/**
+ * @description Builds a leading `KEY=value ` env-assignment prefix for a `shell: true` command
+ * string (values escaped via {@link escapeShellArg}). Keys are emitted in alphabetical order and
+ * empty-string values are dropped. Returns `''` when nothing survives, so callers can prepend it
+ * unconditionally. Used by drivers that inject a custom endpoint through the environment (the
+ * engine spawns without an `env` override, so env must live in the command string).
+ * @public
+ */
+export function formatShellEnvPrefix(
+  env: Readonly<Record<string, string>>,
+): string {
+  const parts = Object.keys(env)
+    .sort()
+    .filter((key) => env[key] !== '')
+    .map((key) => `${key}=${escapeShellArg(env[key])}`);
+
+  return parts.length > 0 ? `${parts.join(' ')} ` : '';
+}

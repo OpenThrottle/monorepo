@@ -404,6 +404,81 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     );
   });
 
+  it('routes a base-URL-capable CLI backend against a discovered local endpoint', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'opencode',
+      baseUrl: 'http://localhost:11434/v1',
+      conversationId: null,
+      message: 'do the thing',
+      modelId: 'llama3',
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'opencode',
+        baseUrl: 'http://localhost:11434/v1',
+        cwd: '/repo/checkout',
+        model: 'llama3',
+      }),
+    );
+  });
+
+  it('rejects a non-base-URL-capable CLI backend (claude) targeting a local endpoint', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: 'http://localhost:11434/v1',
+      conversationId: null,
+      message: 'do the thing',
+      modelId: 'llama3',
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toContain(
+      'cannot target a custom local endpoint',
+    );
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('rejects a CLI + baseUrl not present in discovery (SSRF guard)', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'opencode',
+      baseUrl: 'http://evil.example.com/v1',
+      conversationId: null,
+      message: 'do the thing',
+      modelId: 'llama3',
+      personaId: null,
+      repositoryId: 'repo-1',
+    });
+
+    expect(result.errorMessage).toContain('Unknown model or endpoint');
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
   it('resumes an existing CLI session from conversation metadata without re-minting', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(

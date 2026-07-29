@@ -67,6 +67,30 @@ describe('buildCodexArgv', () => {
     expect(argv.at(-1)).toBe('--not-a-flag');
   });
 
+  describe('local endpoint (baseUrl)', () => {
+    it('adds --oss + --local-provider ollama + a quoted base_url override', () => {
+      const argv = buildCodexArgv({
+        baseUrl: 'http://localhost:11434/v1',
+        model: 'llama3',
+        prompt: 'p',
+        resume: false,
+      });
+
+      expect(argv).toContain('--oss');
+      expect(valueAfter(argv, '--local-provider')).toBe('ollama');
+      expect(valueAfter(argv, '-c')).toBe(
+        'model_providers.oss.base_url="http://localhost:11434/v1"',
+      );
+      expect(valueAfter(argv, '--model')).toBe('llama3');
+    });
+
+    it('omits the endpoint flags when no baseUrl is set', () => {
+      const argv = buildCodexArgv({ prompt: 'p', resume: false });
+      expect(argv).not.toContain('--oss');
+      expect(argv).not.toContain('-c');
+    });
+  });
+
   describe('permission mode → sandbox policy', () => {
     it('fullAccess → --dangerously-bypass-approvals-and-sandbox (no --sandbox)', () => {
       const argv = buildCodexArgv({

@@ -77,6 +77,15 @@ describe('AGENT_CLI_ALLOWLIST', () => {
     expect(byId.get('codex')?.chatCapable).toBe(true);
     expect(byId.get('grok')?.chatCapable).toBe(true);
   });
+
+  it('projects supportsCustomBaseUrl from the driver capability (opencode/codex/grok yes; claude/cursor no)', () => {
+    const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
+    expect(byId.get('opencode')?.supportsCustomBaseUrl).toBe(true);
+    expect(byId.get('codex')?.supportsCustomBaseUrl).toBe(true);
+    expect(byId.get('grok')?.supportsCustomBaseUrl).toBe(true);
+    expect(byId.get('claude')?.supportsCustomBaseUrl).toBe(false);
+    expect(byId.get('cursor')?.supportsCustomBaseUrl).toBe(false);
+  });
 });
 
 describe('discoverAgentClis', () => {

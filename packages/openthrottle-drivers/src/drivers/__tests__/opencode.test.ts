@@ -68,6 +68,30 @@ describe('opencode driver', () => {
     ).toBe('opencode run --auto "do the thing"');
   });
 
+  it('prepends OPENCODE_CONFIG when a local-endpoint config file is supplied', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({
+          endpoint: {
+            baseUrl: 'http://localhost:11434/v1',
+            configFilePath: '/tmp/oc/config.json',
+          },
+          model: 'local/llama3',
+        }),
+      ),
+    ).toBe(
+      'OPENCODE_CONFIG=/tmp/oc/config.json opencode run --auto "do the thing" --model local/llama3',
+    );
+  });
+
+  it('ignores an endpoint with no config file path (nothing to point at)', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({ endpoint: { baseUrl: 'http://localhost:11434/v1' } }),
+      ),
+    ).toBe('opencode run --auto "do the thing"');
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(opencodeDriver.id).toBe('opencode');
     expect(opencodeDriver.label).toBe('opencode');
@@ -75,6 +99,7 @@ describe('opencode driver', () => {
       chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
+      supportsCustomBaseUrl: true,
       supportsModelFlag: true,
       worktree: false,
       worktreeBase: false,

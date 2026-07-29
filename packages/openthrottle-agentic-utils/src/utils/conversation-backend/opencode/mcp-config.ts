@@ -36,11 +36,63 @@ interface OpencodeMcpServer {
 /** opencode permission action for a tool/category (`ask` is opencode's default). */
 type OpencodePermissionAction = 'allow' | 'ask' | 'deny';
 
-/** opencode config file shape (only the `mcp` + `permission` slices we manage). */
+/**
+ * Provider id opencode uses for a discovered local endpoint. The model string a
+ * caller passes to `-m` is `<LOCAL_ENDPOINT_PROVIDER_ID>/<modelId>`.
+ */
+export const LOCAL_ENDPOINT_PROVIDER_ID = 'local';
+
+/**
+ * A discovered local OpenAI-compatible endpoint to target. `apiKey` is a
+ * placeholder for keyless local servers (the openai-compatible SDK still wants a
+ * value). `model` is registered under the custom provider so `-m local/<model>`
+ * resolves.
+ */
+export interface OpencodeEndpointConfig {
+  readonly apiKey?: string;
+  readonly baseUrl: string;
+  readonly model: string;
+}
+
+/** opencode custom-provider slice (a single `@ai-sdk/openai-compatible` provider). */
+interface OpencodeProvider {
+  readonly models: Readonly<Record<string, Record<string, never>>>;
+  readonly name: string;
+  readonly npm: '@ai-sdk/openai-compatible';
+  readonly options: { readonly apiKey: string; readonly baseURL: string };
+}
+
+/** opencode config file shape (only the `mcp` + `permission` + `provider` slices we manage). */
 interface OpencodeConfig {
   readonly $schema: string;
   readonly mcp?: Readonly<Record<string, OpencodeMcpServer>>;
   readonly permission?: Readonly<Record<string, OpencodePermissionAction>>;
+  readonly provider?: Readonly<Record<string, OpencodeProvider>>;
+}
+
+/**
+ * Build the custom-provider slice that points opencode at a discovered local
+ * endpoint. Undefined when no endpoint is targeted. The provider is keyed by
+ * {@link LOCAL_ENDPOINT_PROVIDER_ID} and registers the one discovered model so
+ * `-m local/<model>` resolves.
+ */
+function buildOpencodeProvider(
+  endpoint: OpencodeEndpointConfig | undefined,
+): Record<string, OpencodeProvider> | undefined {
+  if (endpoint === undefined) {
+    return undefined;
+  }
+  return {
+    [LOCAL_ENDPOINT_PROVIDER_ID]: {
+      models: { [endpoint.model]: {} },
+      name: 'Local endpoint (OpenThrottle)',
+      npm: '@ai-sdk/openai-compatible',
+      options: {
+        apiKey: endpoint.apiKey?.trim() || 'local',
+        baseURL: endpoint.baseUrl,
+      },
+    },
+  };
 }
 
 /** A written temp config and the cleanup that removes it. */
@@ -107,6 +159,7 @@ function buildOpencodePermission(
 export function translateManagedMcpToOpencode(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
   permissionMode?: ConversationPermissionMode,
+  endpoint?: OpencodeEndpointConfig,
 ): OpencodeConfig {
   const mcp: Record<string, OpencodeMcpServer> = {};
   for (const [name, definition] of Object.entries(managed)) {
@@ -125,11 +178,13 @@ export function translateManagedMcpToOpencode(
   }
 
   const permission = buildOpencodePermission(Object.keys(mcp), permissionMode);
+  const provider = buildOpencodeProvider(endpoint);
 
   return {
     $schema: 'https://opencode.ai/config.json',
     ...(Object.keys(mcp).length > 0 ? { mcp } : {}),
     ...(permission !== undefined ? { permission } : {}),
+    ...(provider !== undefined ? { provider } : {}),
   };
 }
 
@@ -142,11 +197,17 @@ export function translateManagedMcpToOpencode(
 export function writeOpencodeMcpConfig(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
   permissionMode?: ConversationPermissionMode,
+  endpoint?: OpencodeEndpointConfig,
 ): OpencodeMcpConfigFile | null {
-  const config = translateManagedMcpToOpencode(managed, permissionMode);
+  const config = translateManagedMcpToOpencode(
+    managed,
+    permissionMode,
+    endpoint,
+  );
   const hasMcp = config.mcp !== undefined && Object.keys(config.mcp).length > 0;
   const hasPermission = config.permission !== undefined;
-  if (!hasMcp && !hasPermission) {
+  const hasProvider = config.provider !== undefined;
+  if (!hasMcp && !hasPermission && !hasProvider) {
     return null;
   }
 

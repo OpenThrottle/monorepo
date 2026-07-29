@@ -41,6 +41,34 @@ OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes
   it at runtime, so relative imports use `.ts` extensions. Tag public API `@public`.
 
+## Local-endpoint targeting (`DriverInvocationConfig.endpoint`)
+
+A driver can be pointed at a discovered local OpenAI-compatible model server
+(Ollama/LM Studio/vLLM, from `discoverLocalModels`) instead of its own cloud
+provider. Set `endpoint: { baseUrl, provider?, apiKey?, configFilePath? }` and
+read `capabilities.supportsCustomBaseUrl` to feature-detect.
+
+- **opencode / codex / grok** advertise `supportsCustomBaseUrl: true`; **claude /
+  cursor** advertise `false` and ignore `endpoint` (their wire protocols aren't
+  OpenAI-compatible — Anthropic Messages API / Cursor's proprietary backend).
+- Injection stays in the **pure** `buildShellCommand` (env prefix via
+  `formatShellEnvPrefix`, or CLI flags): grok → `GROK_MODELS_BASE_URL` +
+  placeholder `XAI_API_KEY`; codex → `--oss --local-provider <provider|ollama> -c
+model_providers.oss.base_url="<baseUrl>"`; opencode → `OPENCODE_CONFIG=<path>`
+  (the config **file is materialized by the consumer** and passed as
+  `endpoint.configFilePath` — the leaf builder never writes files).
+- `model` carries the discovered model id (opencode expects `provider/model`).
+- The streaming chat path has a parallel implementation in
+  `@openthrottle/openthrottle-agentic-utils` conversation-backend adapters (honoring
+  `ConversationBackendRun.baseUrl`); the developer composer joins driver × endpoint
+  and the conversation-stream resolver SSRF-validates `baseUrl` against discovery.
+
+**Verified E2E (2026-07-29):** `GROK_MODELS_BASE_URL=http://localhost:11434/v1
+XAI_API_KEY=local grok -p "…" --model qwen3.5:latest` streamed a completion from a
+local Ollama model. Docker caveat: a discovered `host.docker.internal` baseUrl may
+be unreachable from a driver process outside that Docker network — pass it verbatim
+and prefer the localhost vantage.
+
 ## Pointers
 
 - [README.md](./README.md) — API list, capability matrix, "adding a new agent CLI".

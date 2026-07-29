@@ -14,6 +14,7 @@ const capabilities: DriverCapabilities = {
   chatStreaming: true,
   permissionMode: false,
   skipWorktreeSetup: true,
+  supportsCustomBaseUrl: false,
   supportsModelFlag: true,
   worktree: true,
   worktreeBase: true,
