@@ -191,6 +191,7 @@ export const ChatModelPicker = (
       setActiveGroupId(defaultActiveGroupId);
       setSearch('');
     }
+
     setOpen(nextOpen);
   };
 
@@ -204,6 +205,7 @@ export const ChatModelPicker = (
     if (disabledSet.has(modelId)) {
       return;
     }
+
     onModelChange(modelId);
     setOpen(false);
   };
@@ -215,6 +217,7 @@ export const ChatModelPicker = (
     // Keep the row's onSelect from firing when the star is clicked.
     event.preventDefault();
     event.stopPropagation();
+
     onToggleFavorite?.(modelId);
   };
 
@@ -223,6 +226,7 @@ export const ChatModelPicker = (
     if (group.id === FAVORITES_GROUP_ID) {
       return <Star className="size-4" />;
     }
+
     if (group.icon != null) {
       return (
         <span className="flex size-4 items-center justify-center">
@@ -230,6 +234,7 @@ export const ChatModelPicker = (
         </span>
       );
     }
+
     // Letter-avatar fallback for a group that supplied no icon.
     return (
       <span
@@ -243,8 +248,14 @@ export const ChatModelPicker = (
 
   const renderRailItem = (group: ResolvedGroup): React.ReactElement => {
     const isActive = activeGroup?.id === group.id;
+
     return (
-      <Tooltip delayDuration={300} key={group.id}>
+      <Tooltip
+        // defaultOpen={false}
+        // delayDuration={300}
+        key={group.id}
+        open={false}
+      >
         <TooltipTrigger asChild={true}>
           <Button
             aria-label={group.label}
@@ -379,6 +390,7 @@ export const ChatModelPicker = (
         </div>
         <Command className="min-w-0 flex-1" shouldFilter={true}>
           <CommandInput
+            className="mb-3 px-2 py-0.5 text-sm placeholder:text-sm"
             data-testid="ChatModelPicker-search"
             onValueChange={setSearch}
             placeholder={searchPlaceholder}
