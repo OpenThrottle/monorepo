@@ -9,13 +9,17 @@ satisfying Apache-2.0 §4 attribution obligations. Each dependency also ships it
 complete license text inside its package under `node_modules`. Licenses that carry a
 specific notice obligation are reproduced in full at the end of this file.
 
-**2819** third-party packages.
+Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
+`@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
+the host OS, and each shares the license of the cross-platform toolchain already listed.
+
+**2797** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2338 |
+| MIT | 2321 |
 | Apache-2.0 | 163 |
 | ISC | 95 |
 | MIT-0 | 65 |
@@ -25,10 +29,9 @@ specific notice obligation are reproduced in full at the end of this file.
 | Unlicense | 9 |
 | Artistic-2.0 | 5 |
 | CC0-1.0 | 4 |
-| Commercial | 3 |
-| MPL-2.0 | 3 |
-| LicenseRef-Microsoft-vsce-sign | 2 |
+| Commercial | 2 |
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
+| MPL-2.0 | 2 |
 | (AFL-2.1 OR BSD-3-Clause) | 1 |
 | (Apache-2.0 AND BSD-3-Clause) | 1 |
 | (Apache-2.0 AND MIT) | 1 |
@@ -42,13 +45,12 @@ specific notice obligation are reproduced in full at the end of this file.
 | (MPL-2.0 OR Apache-2.0) | 1 |
 | (WTFPL OR MIT) | 1 |
 | 0BSD | 1 |
-| Apache-2.0 AND MIT | 1 |
 | BSD | 1 |
 | CC-BY-3.0 | 1 |
 | CC-BY-4.0 | 1 |
+| LicenseRef-Microsoft-vsce-sign | 1 |
 | MIT AND ISC | 1 |
 | MIT AND MPL-2.0 | 1 |
-| MIT OR Apache-2.0 | 1 |
 | Python-2.0 | 1 |
 | WTFPL | 1 |
 
@@ -222,7 +224,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@babel/traverse` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-traverse) |
 | `@babel/types` | 7.29.7 | MIT | [The Babel Team](https://babel.dev/docs/en/next/babel-types) |
 | `@bcoe/v8-coverage` | 0.2.3, 1.0.2 | MIT | [Charles Samborski](https://github.com/bcoe/v8-coverage#readme) |
-| `@biomejs/cli-darwin-arm64` | 2.4.14 | MIT OR Apache-2.0 | [source](https://biomejs.dev) |
 | `@bkrem/react-transition-group` | 1.3.5 | BSD-3-Clause | [source](https://github.com/bkrem/react-transition-group#readme) |
 | `@borewit/text-codec` | 0.2.2 | MIT | [Borewit](https://github.com/Borewit/text-codec#readme) |
 | `@bramus/specificity` | 2.4.2 | MIT | [Bramus Van Damme](https://github.com/bramus/specificity#readme) |
@@ -333,7 +334,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@envelop/core` | 5.5.1 | MIT | [Dotan Simha](https://github.com/graphql-hive/envelop#readme) |
 | `@envelop/instrumentation` | 1.0.0 | MIT | [Valentin Cocaud](https://github.com/n1ru4l/envelop#readme) |
 | `@envelop/types` | 5.2.1 | MIT | [Dotan Simha](https://github.com/n1ru4l/envelop#readme) |
-| `@esbuild/darwin-arm64` | 0.25.12, 0.27.7 | MIT | [source](https://github.com/evanw/esbuild#readme) |
 | `@eslint-community/eslint-utils` | 4.9.1 | MIT | [Toru Nagashima](https://github.com/eslint-community/eslint-utils#readme) |
 | `@eslint-community/regexpp` | 4.12.2 | MIT | [Toru Nagashima](https://github.com/eslint-community/regexpp#readme) |
 | `@eslint/config-array` | 0.21.2 | Apache-2.0 | [Nicholas C. Zakas](https://github.com/eslint/rewrite/tree/main/packages/config-array#readme) |
@@ -557,12 +557,9 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@module-federation/webpack-bundler-runtime` | 0.21.6, 2.4.0 | MIT | [zhanghang](https://github.com/module-federation/core#readme) |
 | `@monaco-editor/loader` | 1.7.0 | MIT | [Suren Atoyan](https://github.com/suren-atoyan/monaco-loader.git) |
 | `@monaco-editor/react` | 4.7.0 | MIT | [Suren Atoyan](https://github.com/suren-atoyan/monaco-react#readme) |
-| `@msgpackr-extract/msgpackr-extract-darwin-arm64` | 3.0.3 | MIT | [Kris Zyp](https://github.com/kriszyp/msgpackr-extract#readme) |
 | `@mswjs/interceptors` | 0.41.8 | MIT | [Artem Zakharchenko](https://github.com/mswjs/interceptors#readme) |
 | `@napi-rs/canvas` | 0.1.80 | MIT | [source](https://github.com/Brooooooklyn/canvas#readme) |
-| `@napi-rs/canvas-darwin-arm64` | 0.1.80 | MIT | [source](https://github.com/Brooooooklyn/canvas#readme) |
 | `@napi-rs/nice` | 1.1.1 | MIT | [source](https://github.com/Brooooooklyn/nice#readme) |
-| `@napi-rs/nice-darwin-arm64` | 1.1.1 | MIT | [source](https://github.com/Brooooooklyn/nice#readme) |
 | `@napi-rs/wasm-runtime` | 0.2.12, 0.2.4 | MIT | [LongYinan](https://github.com/napi-rs/napi-rs#readme) |
 | `@nestjs/apollo` | 13.4.0 | MIT | [Kamil Mysliwiec](https://github.com/nestjs/graphql#readme) |
 | `@nestjs/bull-shared` | 11.0.4 | MIT | [Kamil Mysliwiec](https://github.com/nestjs/bull) |
@@ -599,9 +596,7 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@nx/jest` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
 | `@nx/js` | 22.7.4 | MIT | [source](https://nx.dev) |
 | `@nx/key` | 5.0.4 | Commercial | [source](https://nx.dev/powerpack) |
-| `@nx/key-darwin-arm64` | 5.0.4 | Commercial |  |
 | `@nx/module-federation` | 22.7.4 | MIT | [Colum Ferry](https://nx.dev) |
-| `@nx/nx-darwin-arm64` | 22.7.4 | MIT | [source](https://github.com/nrwl/nx#readme) |
 | `@nx/plugin` | 22.7.4 | MIT | [Nrwl](https://nx.dev) |
 | `@nx/react` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
 | `@nx/rollup` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
@@ -647,15 +642,11 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@opentelemetry/sdk-trace-base` | 1.30.1, 2.7.1 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base) |
 | `@opentelemetry/semantic-conventions` | 1.28.0, 1.40.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions) |
 | `@opentelemetry/sql-common` | 0.40.1 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/sql-common#readme) |
-| `@oxc-parser/binding-darwin-arm64` | 0.138.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `@oxc-project/types` | 0.128.0, 0.138.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
-| `@oxc-resolver/binding-darwin-arm64` | 11.24.2 | MIT | [source](https://oxc.rs) |
-| `@oxlint/binding-darwin-arm64` | 1.66.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
 | `@package-json/types` | 0.0.12 | MIT | [藍+85CD](https://github.com/importantimport/package-json) |
 | `@paper-design/shaders` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@paper-design/shaders-react` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@parcel/watcher` | 2.5.6 | MIT | [source](https://github.com/parcel-bundler/watcher#readme) |
-| `@parcel/watcher-darwin-arm64` | 2.5.6 | MIT | [source](https://github.com/parcel-bundler/watcher#readme) |
 | `@paulirish/trace_engine` | 0.0.64 | BSD-3-Clause |  |
 | `@peculiar/asn1-cms` | 2.7.0 | MIT | [PeculiarVentures, LLC](https://github.com/PeculiarVentures/asn1-schema/tree/master/packages/cms#readme) |
 | `@peculiar/asn1-csr` | 2.7.0 | MIT | [PeculiarVentures, LLC](https://github.com/PeculiarVentures/asn1-schema/tree/master/packages/csr#readme) |
@@ -787,7 +778,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@remix-run/server-runtime` | 2.17.4 | MIT | [source](https://github.com/remix-run/remix#readme) |
 | `@repeaterjs/repeater` | 3.0.6 | MIT | [source](https://github.com/repeaterjs/repeater#readme) |
 | `@rollbar/react` | 1.0.0 | MIT | [jeff.hoffer@rollbar.com](https://github.com/rollbar/rollbar-react#readme) |
-| `@rolldown/binding-darwin-arm64` | 1.0.0-rc.18 | MIT | [source](https://rolldown.rs/) |
 | `@rolldown/pluginutils` | 1.0.0-rc.18, 1.0.0-rc.7 | MIT | [source](https://rolldown.rs/) |
 | `@rollup/plugin-babel` | 6.1.0 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/babel#readme) |
 | `@rollup/plugin-commonjs` | 13.0.2, 25.0.8 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/commonjs/#readme) |
@@ -797,12 +787,10 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@rollup/plugin-replace` | 2.4.2 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/replace#readme) |
 | `@rollup/plugin-typescript` | 12.3.0 | MIT | [Oskar Segersvärd](https://github.com/rollup/plugins/tree/master/packages/typescript/#readme) |
 | `@rollup/pluginutils` | 3.1.0, 4.2.1, 5.3.0 | MIT | [Rich Harris](https://github.com/rollup/plugins/tree/master/packages/pluginutils#readme) |
-| `@rollup/rollup-darwin-arm64` | 4.60.3 | MIT | [Lukas Taegert-Atkinson](https://rollupjs.org/) |
 | `@rrweb/record` | 2.0.0-alpha.20 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/record#readme) |
 | `@rrweb/types` | 2.0.0-alpha.20 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/types#readme) |
 | `@rrweb/utils` | 2.0.0-alpha.20 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/@rrweb/utils#readme) |
 | `@rspack/binding` | 1.6.8 | MIT | [source](https://rspack.rs) |
-| `@rspack/binding-darwin-arm64` | 1.6.8 | MIT | [source](https://rspack.rs) |
 | `@rspack/core` | 1.6.8 | MIT | [source](https://rspack.rs) |
 | `@rspack/lite-tapable` | 1.1.0 | MIT | [source](https://github.com/rspack-contrib/rspack-lite-tapable#readme) |
 | `@rtsao/scc` | 1.1.0 | MIT | [source](https://github.com/rtsao/scc#readme) |
@@ -877,14 +865,12 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@swc-node/sourcemap-support` | 0.6.1 | MIT | [LongYinan](https://github.com/swc-project/swc-node) |
 | `@swc/cli` | 0.7.10 | MIT | [강동윤](https://github.com/swc-project/pkgs) |
 | `@swc/core` | 1.15.33 | Apache-2.0 | [강동윤](https://swc.rs) |
-| `@swc/core-darwin-arm64` | 1.15.33 | Apache-2.0 AND MIT | [강동윤](https://swc.rs) |
 | `@swc/counter` | 0.1.3 | Apache-2.0 | [강동윤](https://swc.rs) |
 | `@swc/helpers` | 0.5.21 | Apache-2.0 | [강동윤](https://swc.rs) |
 | `@swc/types` | 0.1.26 | Apache-2.0 | [강동윤](https://swc.rs) |
 | `@szmarczak/http-timer` | 5.0.1 | MIT | [Szymon Marczak](https://github.com/szmarczak/http-timer#readme) |
 | `@tailwindcss/node` | 4.2.4 | MIT | [source](https://tailwindcss.com) |
 | `@tailwindcss/oxide` | 4.2.4 | MIT | [source](https://github.com/tailwindlabs/tailwindcss#readme) |
-| `@tailwindcss/oxide-darwin-arm64` | 4.2.4 | MIT | [source](https://github.com/tailwindlabs/tailwindcss#readme) |
 | `@tailwindcss/postcss` | 4.2.4 | MIT | [source](https://tailwindcss.com) |
 | `@tailwindcss/vite` | 4.2.4 | MIT | [source](https://tailwindcss.com) |
 | `@tanstack/devtools` | 0.10.14 | MIT | [Tanner Linsley](https://tanstack.com/devtools) |
@@ -1046,7 +1032,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@typescript/vfs` | 1.6.4 | MIT | [TypeScript team](https://github.com/microsoft/TypeScript-Website) |
 | `@typespec/ts-http-runtime` | 0.3.5 | MIT | [Microsoft Corporation](https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/core/ts-http-runtime/) |
 | `@ungap/structured-clone` | 1.3.1 | ISC | [Andrea Giammarchi](https://github.com/ungap/structured-clone#readme) |
-| `@unrs/resolver-binding-darwin-arm64` | 1.11.1 | MIT | [JounQin](https://github.com/unrs/unrs-resolver#readme) |
 | `@vercel/analytics` | 2.0.1 | MIT | [source](https://github.com/vercel/analytics#readme) |
 | `@vercel/react-router` | 1.3.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vercel/static-config` | 3.3.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
@@ -1064,10 +1049,8 @@ specific notice obligation are reproduced in full at the end of this file.
 | `@volar/source-map` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@volar/typescript` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@vscode/ripgrep` | 1.18.0 | MIT | [Rob Lourens](https://github.com/microsoft/vscode-ripgrep#readme) |
-| `@vscode/ripgrep-darwin-arm64` | 1.18.0 | MIT | [source](https://github.com/microsoft/vscode-ripgrep#readme) |
 | `@vscode/vsce` | 3.9.1 | MIT | [Microsoft Corporation](https://code.visualstudio.com) |
 | `@vscode/vsce-sign` | 2.0.9 | LicenseRef-Microsoft-vsce-sign | [Microsoft](https://github.com/Microsoft/node-vsce-sign) |
-| `@vscode/vsce-sign-darwin-arm64` | 2.0.6 | LicenseRef-Microsoft-vsce-sign | [Microsoft](https://github.com/Microsoft/node-vscode-sign) |
 | `@vue/compiler-core` | 3.5.34 | MIT | [Evan You](https://github.com/vuejs/core/tree/main/packages/compiler-core#readme) |
 | `@vue/compiler-dom` | 3.5.34 | MIT | [Evan You](https://github.com/vuejs/core/tree/main/packages/compiler-dom#readme) |
 | `@vue/compiler-vue2` | 2.7.16 | MIT | [Evan You](https://github.com/vuejs/vue/tree/dev/packages/vue-template-compiler#readme) |
@@ -1627,7 +1610,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `fs-extra` | 10.1.0, 11.3.5 | MIT | [JP Richardson](https://github.com/jprichardson/node-fs-extra) |
 | `fs-monkey` | 1.1.0 | Unlicense | [source](https://github.com/streamich/fs-monkey#readme) |
 | `fs.realpath` | 1.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/fs.realpath#readme) |
-| `fsevents` | 2.3.2, 2.3.3 | MIT | [source](https://github.com/fsevents/fsevents) |
 | `function-bind` | 1.1.2 | MIT | [Raynos](https://github.com/Raynos/function-bind) |
 | `function.prototype.name` | 1.1.8 | MIT | [Jordan Harband](https://github.com/es-shims/Function.prototype.name#readme) |
 | `functions-have-names` | 1.2.3 | MIT | [Jordan Harband](https://github.com/inspect-js/functions-have-names#readme) |
@@ -1919,7 +1901,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `lighthouse-logger` | 2.0.2 | Apache-2.0 | [source](https://github.com/GoogleChrome/lighthouse#readme) |
 | `lighthouse-stack-packs` | 1.12.3 | Apache-2.0 | [The Chromium Authors](https://github.com/GoogleChrome/lighthouse-stack-packs#readme) |
 | `lightningcss` | 1.32.0 | MPL-2.0 | [source](https://github.com/parcel-bundler/lightningcss#readme) |
-| `lightningcss-darwin-arm64` | 1.32.0 | MPL-2.0 | [source](https://github.com/parcel-bundler/lightningcss#readme) |
 | `lilconfig` | 3.1.3 | MIT | [antonk52](https://github.com/antonk52/lilconfig#readme) |
 | `lines-and-columns` | 1.2.4, 2.0.3 | MIT | [Brian Donovan](https://github.com/eventualbuddha/lines-and-columns#readme) |
 | `linkify-it` | 5.0.0 | MIT | [source](https://github.com/markdown-it/linkify-it#readme) |
@@ -2468,7 +2449,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `sanitize-html` | 2.17.3 | MIT | [Apostrophe Technologies, Inc.](https://github.com/apostrophecms/apostrophe/tree/main/packages/sanitize-html#readme) |
 | `sass` | 1.99.0 | MIT | [Natalie Weizenbaum](https://github.com/sass/dart-sass) |
 | `sass-embedded` | 1.99.0 | MIT | [Google Inc.](https://github.com/sass/embedded-host-node#readme) |
-| `sass-embedded-darwin-arm64` | 1.99.0 | MIT | [Google Inc.](https://github.com/sass/embedded-host-node#readme) |
 | `sass-loader` | 16.0.7 | MIT | [J. Tangelder](https://github.com/webpack/sass-loader) |
 | `sax` | 1.6.0 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/sax-js#readme) |
 | `saxes` | 6.0.0 | ISC | [Louis-Dominique Dubeau](https://github.com/lddubeau/saxes#readme) |
@@ -2571,7 +2551,6 @@ specific notice obligation are reproduced in full at the end of this file.
 | `streamsearch` | 1.1.0 | MIT | [Brian White](https://github.com/mscdex/streamsearch#readme) |
 | `streamx` | 2.25.0 | MIT | [Mathias Buus](https://github.com/mafintosh/streamx) |
 | `strict-event-emitter` | 0.5.1 | MIT | [Artem Zakharchenko](https://github.com/open-draft/strict-event-emitter#readme) |
-| `string_decoder` | 1.1.1, 1.3.0 | MIT | [source](https://github.com/nodejs/string_decoder) |
 | `string-argv` | 0.3.2 | MIT | [Anthony McCormick](https://github.com/mccormicka/string-argv) |
 | `string-env-interpolation` | 1.0.1 | MIT | [Kamil Kisiela](https://github.com/kamilkisiela/string-env-interpolation#readme) |
 | `string-hash` | 1.1.3 | CC0-1.0 | [The Dark Sky Company](https://github.com/darkskyapp/string-hash#readme) |
@@ -2582,6 +2561,7 @@ specific notice obligation are reproduced in full at the end of this file.
 | `string.prototype.trim` | 1.2.10 | MIT | [Jordan Harband](https://github.com/es-shims/String.prototype.trim#readme) |
 | `string.prototype.trimend` | 1.0.9 | MIT | [Jordan Harband](https://github.com/es-shims/String.prototype.trimEnd#readme) |
 | `string.prototype.trimstart` | 1.0.8 | MIT | [Jordan Harband](https://github.com/es-shims/String.prototype.trimStart#readme) |
+| `string_decoder` | 1.1.1, 1.3.0 | MIT | [source](https://github.com/nodejs/string_decoder) |
 | `stringify-entities` | 4.0.4 | MIT | [Titus Wormer](https://github.com/wooorm/stringify-entities#readme) |
 | `stringify-object` | 5.0.0 | BSD-2-Clause | [Sindre Sorhus](https://github.com/yeoman/stringify-object#readme) |
 | `strip-ansi` | 6.0.1, 7.2.0 | MIT | [Sindre Sorhus](https://github.com/chalk/strip-ansi#readme) |

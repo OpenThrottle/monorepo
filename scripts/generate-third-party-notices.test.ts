@@ -7,6 +7,8 @@ import type {
 import {
   type Attribution,
   collectAttributions,
+  compareCodeUnits,
+  hasPlatformConstraints,
   isFirstParty,
   normalizeAuthor,
   renderThirdPartyNotices,
@@ -31,6 +33,41 @@ describe('isFirstParty', () => {
   });
 });
 
+describe('compareCodeUnits', () => {
+  it('orders by UTF-16 code unit, independent of locale', () => {
+    expect(compareCodeUnits('a', 'b')).toBe(-1);
+    expect(compareCodeUnits('b', 'a')).toBe(1);
+    expect(compareCodeUnits('a', 'a')).toBe(0);
+    // Deterministic total order used for the drift-stable manifest.
+    const input = ['@zod/core', 'Zone', 'axios', '@axe/core', 'axe'];
+    expect([...input].sort(compareCodeUnits)).toEqual([
+      '@axe/core',
+      '@zod/core',
+      'Zone',
+      'axe',
+      'axios',
+    ]);
+  });
+});
+
+describe('hasPlatformConstraints', () => {
+  it('is true when the manifest declares os or cpu', () => {
+    expect(hasPlatformConstraints({ cpu: ['arm64'], os: ['darwin'] })).toBe(
+      true,
+    );
+    expect(hasPlatformConstraints({ os: ['linux'] })).toBe(true);
+    expect(hasPlatformConstraints({ cpu: ['x64'] })).toBe(true);
+  });
+
+  it('is false for cross-platform packages and non-objects', () => {
+    expect(hasPlatformConstraints({ name: 'react', version: '19' })).toBe(
+      false,
+    );
+    expect(hasPlatformConstraints(null)).toBe(false);
+    expect(hasPlatformConstraints('nope')).toBe(false);
+  });
+});
+
 describe('collectAttributions', () => {
   it('excludes first-party packages and sorts by name', () => {
     const output: PnpmLicensesOutput = {
@@ -46,6 +83,26 @@ describe('collectAttributions', () => {
     };
     const rows = collectAttributions(output, policy);
     expect(rows.map((row) => row.name)).toEqual(['axios', 'react']);
+  });
+
+  it('excludes platform-specific packages passed in the exclusion set', () => {
+    const output: PnpmLicensesOutput = {
+      MIT: [
+        { license: 'MIT', name: 'rollup', versions: ['4'] },
+        {
+          license: 'MIT',
+          name: '@rollup/rollup-darwin-arm64',
+          versions: ['4'],
+        },
+        { license: 'MIT', name: 'fsevents', versions: ['2'] },
+      ],
+    };
+    const rows = collectAttributions(
+      output,
+      policy,
+      new Set(['@rollup/rollup-darwin-arm64', 'fsevents']),
+    );
+    expect(rows.map((row) => row.name)).toEqual(['rollup']);
   });
 
   it('applies resolvedUnknowns to the reported license', () => {

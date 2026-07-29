@@ -49,6 +49,28 @@ export const isFirstParty = (name: string): boolean =>
   FIRST_PARTY_SCOPES.some((scope) => name.startsWith(scope));
 
 /**
+ * @description Deterministic, locale-independent string order (UTF-16 code units). Used for
+ * every sort in the manifest so the output is byte-identical across operating systems and
+ * Node ICU builds — `String#localeCompare` is not (it varies by platform/locale), which
+ * would break the CI drift guard.
+ */
+export const compareCodeUnits = (a: string, b: string): number =>
+  a < b ? -1 : a > b ? 1 : 0;
+
+/**
+ * @description True when a package declares `os`/`cpu` constraints — i.e. it is a
+ * platform-specific optional dependency (a prebuilt native binary such as
+ * `@rollup/rollup-darwin-arm64`, or `fsevents`). pnpm only installs the variants matching
+ * the current machine, so these differ between a macOS dev box and the Linux CI runner.
+ * They are excluded from the manifest to keep it OS-independent; their license matches the
+ * cross-platform parent toolchain that remains listed. Exported for unit testing.
+ */
+export const hasPlatformConstraints = (manifest: unknown): boolean =>
+  typeof manifest === 'object' &&
+  manifest !== null &&
+  ('os' in manifest || 'cpu' in manifest);
+
+/**
  * @description Normalize a package `author` (pnpm emits a string, but package.json may carry
  * an object) to a plain display name, or undefined. Exported for unit testing.
  */
@@ -71,6 +93,7 @@ export const normalizeAuthor = (author: unknown): string | undefined => {
 export const collectAttributions = (
   output: PnpmLicensesOutput,
   policy: LicensePolicy,
+  excludedPackages: ReadonlySet<string> = new Set(),
 ): Attribution[] => {
   const exceptionLicenses = new Map(
     policy.exceptions.map((exception) => [
@@ -81,7 +104,7 @@ export const collectAttributions = (
   const rows: Attribution[] = [];
   for (const packages of Object.values(output)) {
     for (const pkg of packages) {
-      if (isFirstParty(pkg.name)) {
+      if (isFirstParty(pkg.name) || excludedPackages.has(pkg.name)) {
         continue;
       }
       // A waiver's declared license is the accurate attribution (e.g. the PolyForm /
@@ -95,14 +118,14 @@ export const collectAttributions = (
         homepage: pkg.homepage,
         license,
         name: pkg.name,
-        versions: [...(pkg.versions ?? [])].sort(),
+        versions: [...(pkg.versions ?? [])].sort(compareCodeUnits),
       });
     }
   }
   return rows.sort(
     (a, b) =>
-      a.name.localeCompare(b.name) ||
-      a.versions.join(',').localeCompare(b.versions.join(',')),
+      compareCodeUnits(a.name, b.name) ||
+      compareCodeUnits(a.versions.join(','), b.versions.join(',')),
   );
 };
 
@@ -119,7 +142,7 @@ export const renderThirdPartyNotices = (
     counts.set(row.license, (counts.get(row.license) ?? 0) + 1);
   }
   const summary = [...counts.entries()].sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    (a, b) => b[1] - a[1] || compareCodeUnits(a[0], b[0]),
   );
 
   const lines: string[] = [];
@@ -146,6 +169,16 @@ export const renderThirdPartyNotices = (
   );
   lines.push(
     'specific notice obligation are reproduced in full at the end of this file.',
+  );
+  lines.push('');
+  lines.push(
+    'Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.',
+  );
+  lines.push(
+    '`@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on',
+  );
+  lines.push(
+    'the host OS, and each shares the license of the cross-platform toolchain already listed.',
   );
   lines.push('');
   lines.push(`**${rows.length}** third-party packages.`);
@@ -236,7 +269,7 @@ export const collectEmbeddedNotices = async (
 ): Promise<EmbeddedNotice[]> => {
   const noticeExceptions = policy.exceptions
     .filter((exception) => exception.notice)
-    .sort((a, b) => a.package.localeCompare(b.package));
+    .sort((a, b) => compareCodeUnits(a.package, b.package));
 
   return Promise.all(
     noticeExceptions.map(async (exception) => {
@@ -253,6 +286,75 @@ export const collectEmbeddedNotices = async (
   );
 };
 
+/**
+ * @description Map over items with a fixed-size worker pool so reading thousands of
+ * package.json files never exhausts the file-descriptor limit. Results preserve input order.
+ */
+const mapWithConcurrency = async <T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> => {
+  const results: R[] = [];
+  let cursor = 0;
+  const worker = async (): Promise<void> => {
+    const current = cursor;
+    cursor += 1;
+    if (current >= items.length) {
+      return;
+    }
+    results[current] = await fn(items[current]);
+    return worker();
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
+  );
+  return results;
+};
+
+/**
+ * @description Names of packages that declare `os`/`cpu` constraints — platform-specific
+ * prebuilt binaries whose installed set varies by host OS. Read from each package's own
+ * package.json (the licenses payload does not carry os/cpu), excluded to keep the manifest
+ * OS-independent. Exported for unit testing.
+ */
+export const collectPlatformSpecificPackages = async (
+  output: PnpmLicensesOutput,
+): Promise<Set<string>> => {
+  const entries: Array<{ directory: string; name: string }> = [];
+  for (const packages of Object.values(output)) {
+    for (const pkg of packages) {
+      const directory = pkg.paths?.[0];
+      if (directory !== undefined) {
+        entries.push({ directory, name: pkg.name });
+      }
+    }
+  }
+
+  const platformFlags = await mapWithConcurrency(
+    entries,
+    100,
+    async ({ directory }) => {
+      try {
+        const manifest: unknown = JSON.parse(
+          await readFile(join(directory, 'package.json'), 'utf8'),
+        );
+        return hasPlatformConstraints(manifest);
+      } catch {
+        return false;
+      }
+    },
+  );
+
+  const names = new Set<string>();
+  entries.forEach((entry, index) => {
+    if (platformFlags[index]) {
+      names.add(entry.name);
+    }
+  });
+  return names;
+};
+
 const OUTPUT_FILENAME = 'THIRD-PARTY-LICENSES.md';
 
 async function main(): Promise<void> {
@@ -263,7 +365,8 @@ async function main(): Promise<void> {
   );
 
   const output = readInstalledLicenses(cwd);
-  const rows = collectAttributions(output, policy);
+  const excludedPackages = await collectPlatformSpecificPackages(output);
+  const rows = collectAttributions(output, policy, excludedPackages);
   const embedded = await collectEmbeddedNotices(output, policy);
   const rendered = renderThirdPartyNotices(rows, embedded);
 
