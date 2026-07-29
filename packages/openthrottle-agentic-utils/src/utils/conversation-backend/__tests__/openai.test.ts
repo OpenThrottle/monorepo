@@ -64,6 +64,54 @@ describe('openAiConversationBackend', () => {
     });
   });
 
+  it('maps the composer reasoning level to the OpenAI reasoning_effort triple (ceiling = high)', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'gpt-oss',
+      reasoning: 'ultra',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock).toHaveBeenCalledWith(
+      expect.objectContaining({ reasoningEffort: 'high' }),
+    );
+  });
+
+  it('omits reasoningEffort when no reasoning level is selected', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock.mock.calls[0]?.[0].reasoningEffort).toBe(
+      undefined,
+    );
+  });
+
+  it('injects @-mentioned paths as a leading system message (openai has no file tools)', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      fileMentions: ['src/app.ts'],
+      messages: [{ content: 'check it', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    const forwarded = streamChatCompletionMock.mock.calls[0]?.[0].messages;
+    expect(forwarded[0].role).toBe('system');
+    expect(forwarded[0].content).toContain('- src/app.ts');
+    expect(forwarded[1]).toEqual({ content: 'check it', role: 'user' });
+  });
+
   it('throws when baseUrl is missing rather than calling the SDK', async () => {
     await expect(async () => {
       for await (const _chunk of openAiConversationBackend.stream({

@@ -9,7 +9,9 @@
 
 import {
   CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
   type ConversationPermissionMode,
+  type ConversationReasoningEffort,
 } from '../types.ts';
 
 /**
@@ -41,12 +43,41 @@ export interface GrokArgvOptions {
   readonly permissionMode?: ConversationPermissionMode;
   /** The latest user message (persona goes to `--system-prompt-override`). */
   readonly prompt: string;
+  /**
+   * Composer reasoning effort, mapped to grok's `--reasoning-effort`
+   * (`low`/`medium`/`high`): `extraHigh`/`max`/`ultra` clamp to `high`.
+   * Omitted ⇒ no flag (grok's default). See {@link buildGrokArgv}.
+   */
+  readonly reasoning?: ConversationReasoningEffort;
   /** When true, resume `sessionId` via `-r`; otherwise start a fresh session. */
   readonly resume: boolean;
   /** grok session id to resume; required only when `resume` is true. */
   readonly sessionId?: string;
   /** Persona system prompt → first-class `--system-prompt-override`. */
   readonly systemPrompt?: string;
+}
+
+/**
+ * Map the composer reasoning level onto grok's `--reasoning-effort` value
+ * (`low`/`medium`/`high`), or `undefined` to omit the flag. grok exposes the
+ * low/medium/high triple, so `extraHigh`/`max`/`ultra` clamp to `high`.
+ */
+function reasoningEffort(
+  reasoning: ConversationReasoningEffort | undefined,
+): string | undefined {
+  switch (reasoning) {
+    case CONVERSATION_REASONING_EFFORTS.low:
+      return 'low';
+    case CONVERSATION_REASONING_EFFORTS.medium:
+      return 'medium';
+    case CONVERSATION_REASONING_EFFORTS.high:
+    case CONVERSATION_REASONING_EFFORTS.extraHigh:
+    case CONVERSATION_REASONING_EFFORTS.max:
+    case CONVERSATION_REASONING_EFFORTS.ultra:
+      return 'high';
+    default:
+      return undefined;
+  }
 }
 
 /** Map a composer permission posture onto a grok `--permission-mode` value, or undefined to omit. */
@@ -102,6 +133,11 @@ export function buildGrokArgv(options: GrokArgvOptions): string[] {
   const permission = permissionModeFlag(options.permissionMode);
   if (permission !== undefined) {
     argv.push('--permission-mode', permission);
+  }
+
+  const effort = reasoningEffort(options.reasoning);
+  if (effort !== undefined) {
+    argv.push('--reasoning-effort', effort);
   }
 
   return argv;

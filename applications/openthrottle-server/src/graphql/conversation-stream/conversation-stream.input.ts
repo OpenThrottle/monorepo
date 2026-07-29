@@ -30,7 +30,7 @@ export class StartConversationStreamInput {
   conversationId?: string | null;
 
   @Field(() => [String], {
-    description: `Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens, so a CLI agent already receives them; structured injection (e.g. file-content preloading) is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT applied yet.`,
+    description: `Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens; the server additionally injects them as structured turn context ("Referenced files") so the agent treats them as first-class references.`,
     nullable: true,
   })
   fileMentions?: string[] | null;
@@ -53,13 +53,13 @@ export class StartConversationStreamInput {
   personaId?: string | null;
 
   @Field(() => String, {
-    description: `Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive; enforcement is owned by the agent driver registry (plan dde67342, @openthrottle/openthrottle-drivers) and is NOT honored yet.`,
+    description: `Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it).`,
     nullable: true,
   })
   permissionMode?: string | null;
 
   @Field(() => String, {
-    description: `Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive; whether a backend honors it is owned by openthrottle-drivers (dde67342) and is NOT applied yet.`,
+    description: `Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set.`,
     nullable: true,
   })
   reasoning?: string | null;
@@ -71,7 +71,7 @@ export class StartConversationStreamInput {
   repositoryId?: string | null;
 
   @Field(() => String, {
-    description: `Service tier for the turn: "standard" or "fast". Nullable + additive; honored by openthrottle-drivers (dde67342) once it lands, NOT applied yet.`,
+    description: `Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it.`,
     nullable: true,
   })
   serviceTier?: string | null;

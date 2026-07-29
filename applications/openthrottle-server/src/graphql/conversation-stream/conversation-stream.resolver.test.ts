@@ -148,7 +148,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     );
   });
 
-  it('accepts additive @-mention fileMentions and still starts the stream', async () => {
+  it('threads @-mention fileMentions onto the run for structured context injection', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
       createMock<WorkspaceLocalRepository>({
@@ -168,11 +168,71 @@ describe('ConversationStreamResolver.startConversationStream', () => {
       repositoryId: 'repo-1',
     });
 
-    // fileMentions is additive + not yet honored (dde67342): it must not change
-    // the run, but the turn must still succeed.
+    // fileMentions is now honored: it is threaded onto the run so the adapter
+    // can inject the paths as genuine turn context.
     expect(result.errorMessage).toBeNull();
     expect(streamService.start).toHaveBeenCalledWith(
-      expect.objectContaining({ backend: 'cursor', cwd: '/repo/checkout' }),
+      expect.objectContaining({
+        backend: 'cursor',
+        cwd: '/repo/checkout',
+        fileMentions: ['src/app.ts', 'lib/util.ts'],
+      }),
+    );
+  });
+
+  it('narrows reasoning + service tier onto the run for a CLI backend', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+
+    await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      permissionMode: 'fullAccess',
+      reasoning: 'high',
+      repositoryId: 'repo-1',
+      serviceTier: 'fast',
+    });
+
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: 'cursor',
+        permissionMode: 'fullAccess',
+        reasoning: 'high',
+        serviceTier: 'fast',
+      }),
+    );
+  });
+
+  it('drops an unrecognized reasoning/tier string (transport guard) to null', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/checkout',
+      }),
+    );
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+
+    await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      reasoning: 'bogus',
+      repositoryId: 'repo-1',
+      serviceTier: 'nonsense',
+    });
+
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({ reasoning: null, serviceTier: null }),
     );
   });
 
