@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   ChatPermissionMode,
   ChatReasoningLevel,
-  ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import { capabilitiesForChatOption } from '../chat-capabilities';
 import * as React from 'react';
@@ -142,20 +141,21 @@ describe('capabilitiesForChatOption', () => {
     expect(caps.serviceTiers).toEqual([]);
   });
 
-  it('gives cursor the tier-aware agent surface (the only backend that routes by tier)', () => {
+  it('gives cursor a permission surface but NO separate reasoning/tier controls (baked into the model id)', () => {
     const caps = capabilitiesForChatOption(decodeChatOption('cursor'));
 
     expect(caps.requiresRepository).toBe(true);
-    expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
     expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
-    expect(caps.serviceTiers).toContain(ChatServiceTier.fast);
+    // cursor's reasoning + tier live in the model id (e.g. `...-high-fast`), so
+    // they are not offered as separate composer controls.
+    expect(caps.reasoningLevels).toEqual([]);
+    expect(caps.serviceTiers).toEqual([]);
   });
 
-  it('gives non-cursor CLI backends NO service tier (cloud-only concept they cannot route)', () => {
-    for (const backend of ['claude', 'codex', 'grok', 'opencode']) {
+  it('advertises NO service tier for any backend (no backend routes tier as a separate control)', () => {
+    for (const backend of ['claude', 'codex', 'cursor', 'grok', 'opencode']) {
       const caps = capabilitiesForChatOption(decodeChatOption(backend));
       expect(caps.serviceTiers).toEqual([]);
-      expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
       expect(caps.requiresRepository).toBe(true);
     }
   });
@@ -181,9 +181,9 @@ describe('capabilitiesForChatOption', () => {
     }
   });
 
-  it('keeps the full agent surface for a CLI backend with a model override', () => {
+  it('keeps the backend descriptor for a CLI backend with a model override', () => {
     const caps = capabilitiesForChatOption(
-      decodeChatOption(encodeCliOptionId('cursor', 'gpt-5.2')),
+      decodeChatOption(encodeCliOptionId('claude', 'opus')),
     );
     expect(caps.requiresRepository).toBe(true);
     expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);

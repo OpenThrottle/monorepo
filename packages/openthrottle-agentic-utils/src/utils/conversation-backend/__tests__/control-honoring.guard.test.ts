@@ -18,7 +18,6 @@ import { buildOpencodeArgv } from '../opencode/argv.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
-  CONVERSATION_SERVICE_TIERS,
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
 } from '../types.ts';
@@ -44,18 +43,6 @@ const reasoningFlagPresent: Record<
   codex: (reasoning) => {
     const argv = buildCodexArgv({ prompt: 'p', reasoning, resume: false });
     return argv.some((a) => a.startsWith('model_reasoning_effort='));
-  },
-  cursor: (reasoning) => {
-    // Reasoning rides on the model-string bracket, so a model is required.
-    const argv = buildCursorAgentArgv({
-      cwd: '/w',
-      model: 'm',
-      prompt: 'p',
-      reasoning,
-      sessionId: 's',
-    });
-    const model = argv[argv.indexOf('--model') + 1] ?? '';
-    return model.includes('effort=');
   },
   grok: (reasoning) => {
     const argv = buildGrokArgv({
@@ -148,24 +135,18 @@ describe('control-honoring drift guard', () => {
     });
   });
 
-  describe('service tier: cursor (the only tier-aware backend) routes both tiers', () => {
-    it('fast and standard produce distinct model brackets', () => {
-      const model = (
-        tier: (typeof CONVERSATION_SERVICE_TIERS)[keyof typeof CONVERSATION_SERVICE_TIERS],
-      ): string => {
-        const argv = buildCursorAgentArgv({
-          cwd: '/w',
-          model: 'm',
-          prompt: 'p',
-          serviceTier: tier,
-          sessionId: 's',
-        });
-        return argv[argv.indexOf('--model') + 1] ?? '';
-      };
-      expect(model(CONVERSATION_SERVICE_TIERS.fast)).toContain('fast=true');
-      expect(model(CONVERSATION_SERVICE_TIERS.standard)).toContain(
-        'fast=false',
-      );
+  describe('service tier: no backend honors it as a separate control', () => {
+    it('cursor encodes reasoning/tier in the model id and never suffixes it', () => {
+      // Regression: `auto[fast=false]` was rejected by cursor. The model id must
+      // be passed through verbatim, never bracket-suffixed.
+      const argv = buildCursorAgentArgv({
+        cwd: '/w',
+        model: 'auto',
+        prompt: 'p',
+        sessionId: 's',
+      });
+      expect(argv[argv.indexOf('--model') + 1]).toBe('auto');
+      expect(argv.every((part) => !part.includes('['))).toBe(true);
     });
   });
 });

@@ -1,7 +1,6 @@
 import {
   ChatPermissionMode,
   ChatReasoningLevel,
-  ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import type { ChatBackendCapabilities } from '@openthrottle/react-router-chat';
 import type { DecodedChatOption } from './chat-model-option';
@@ -115,20 +114,21 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   cursor: {
-    // Headless cursor has two distinct postures: trust-only (safe) and `--force`
-    // (run everything). autoAcceptEdits has no distinct edits-only flag, so it is
-    // not advertised.
+    // Headless cursor has two distinct permission postures: trust-only (safe)
+    // and `--force` (run everything). autoAcceptEdits has no distinct edits-only
+    // flag, so it is not advertised.
     permissionModes: [
       ChatPermissionMode.supervised,
       ChatPermissionMode.fullAccess,
     ],
-    reasoningLevels: [
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
-    ],
+    // Reasoning + service tier are NOT separate controls for cursor — they are
+    // baked into the model id (`cursor-agent models` lists concrete ids like
+    // `claude-opus-4-8-high-fast`; the bracket form is rejected at run time). So
+    // the model picker is the reasoning/tier selector, and neither control is
+    // advertised here.
+    reasoningLevels: [],
     requiresRepository: true,
-    serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+    serviceTiers: [],
     supportsModelFlag: true,
   },
   grok: {
