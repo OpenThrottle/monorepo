@@ -385,7 +385,7 @@ export const ChatModelPicker = (
           className="bg-muted/40 flex max-h-80 flex-col gap-1 overflow-y-auto border-r p-1.5"
           data-testid="ChatModelPicker-rail"
         >
-          {resolvedGroups.map((group) => renderRailItem(group))}
+          {resolvedGroups.map(renderRailItem)}
         </div>
         <Command className="min-w-0 flex-1" shouldFilter={true}>
           <CommandInput

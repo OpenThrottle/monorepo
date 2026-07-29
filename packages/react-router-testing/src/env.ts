@@ -41,6 +41,7 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   // drifting from the type and surfacing as a `getEnvironment()` throw in
   // consumers. The runtime length assertion in env.test.ts backstops the count.
   FEATURE_BETA_PREVIEW: 'false',
+  FEATURE_CHARLIE_PREVIEW: 'false',
   NODE_ENV: 'test',
   ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',
 };
