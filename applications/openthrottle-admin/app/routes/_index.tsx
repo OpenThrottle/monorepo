@@ -1,4 +1,5 @@
 import * as React from 'react';
+import clsx from 'clsx';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
@@ -6,6 +7,8 @@ import {
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+  GradientMesh,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
@@ -47,12 +50,33 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center p-4 md:p-8 lg:p-12">
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-8">
+    <GlobalScreen
+      className="relative isolate flex w-full flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
+      // onClick={onIncrementCount}
+    >
+      <GradientMesh
+        className={clsx('opacity-0 transition-opacity duration-1000', {
+          'opacity-100': true,
+        })}
+        colors={['#13171B', '#0F1216', '#343739', '#0F1216', '#13171B']}
+        distortion={0.9}
+        // grainMixer={grainMixer}
+        // grainOverlay={grainOverlay}
+        speed={0.8}
+        swirl={1.6}
+      />
+      <div
+        className={clsx(
+          'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',
+          // { 'opacity-0': isExiting },
+        )}
+      >
         <OpenThrottleLogo className="mx-auto text-2xl" name={SITE_SUBDOMAIN} />
-        <OpenThrottleAuthForm action="/" />
+        <div className="shimmer-border w-full max-w-md">
+          <OpenThrottleAuthForm action="/" />
+        </div>
       </div>
-    </div>
+    </GlobalScreen>
   );
 }
 

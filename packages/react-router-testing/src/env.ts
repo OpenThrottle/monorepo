@@ -4,9 +4,11 @@ import type {
 } from '@openthrottle/react-router-utils';
 
 declare global {
-  // Mirrors each app's app/types/global.d.ts so installTestEnv can assign
-  // window.env without a cast. Declaration-merges with the apps' own (identical)
-  // augmentation when this package is consumed.
+  /**
+   * Mirrors each app's app/types/global.d.ts so installTestEnv can assign
+   * window.env without a cast. Declaration-merges with the apps' own (identical)
+   * augmentation when this package is consumed.
+   */
   interface Window {
     env: OpenThrottleClientEnv;
   }
@@ -35,13 +37,17 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   APP_URL_SERVER: 'http://localhost:6026',
   APP_URL_WEBSITE: 'http://localhost:6027',
   APP_VERSION: '1.0.0',
-  // Optional in OpenThrottleEnv, but pinned here via Required<> so the fixture
-  // is exhaustive: adding a key to the type — required or optional — now breaks
-  // this object literal at compile time (missing key), instead of silently
-  // drifting from the type and surfacing as a `getEnvironment()` throw in
-  // consumers. The runtime length assertion in env.test.ts backstops the count.
+
+  /**
+   * Optional in OpenThrottleEnv, but pinned here via Required<> so the fixture
+   * is exhaustive: adding a key to the type — required or optional — now breaks
+   * this object literal at compile time (missing key), instead of silently
+   * drifting from the type and surfacing as a `getEnvironment()` throw in
+   * consumers. The runtime length assertion in env.test.ts backstops the count.
+   */
   FEATURE_BETA_PREVIEW: 'false',
   FEATURE_CHARLIE_PREVIEW: 'false',
+
   NODE_ENV: 'test',
   ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',
 };
@@ -74,9 +80,9 @@ export const installTestEnv = (
   overrides: Partial<OpenThrottleEnv> = {},
 ): void => {
   if (typeof window === 'undefined') {
-    console.warn(
-      "installTestEnv() called outside a jsdom environment — window is undefined, so window.env was not set. Set Vitest test.environment='jsdom' for this suite.",
-    );
+    const message = `installTestEnv() called outside a jsdom environment — window is undefined, so window.env was not set. Set Vitest test.environment='jsdom' for this suite.`;
+    console.warn(message);
+
     return;
   }
 
