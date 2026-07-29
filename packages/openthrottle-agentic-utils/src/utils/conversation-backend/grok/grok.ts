@@ -27,6 +27,7 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { GROK_BIN_ENV, GROK_DEFAULT_BIN, buildGrokArgv } from './argv.ts';
+import { withFileMentions } from '../file-mentions.ts';
 import { mapGrokEvent } from './events.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -111,7 +112,7 @@ async function* streamGrok(
       cwd: run.cwd,
       model: run.model,
       permissionMode: run.permissionMode,
-      prompt: latestUserMessage(run),
+      prompt: withFileMentions(latestUserMessage(run), run.fileMentions),
       reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,

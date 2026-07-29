@@ -95,6 +95,23 @@ describe('openAiConversationBackend', () => {
     );
   });
 
+  it('injects @-mentioned paths as a leading system message (openai has no file tools)', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      fileMentions: ['src/app.ts'],
+      messages: [{ content: 'check it', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    const forwarded = streamChatCompletionMock.mock.calls[0]?.[0].messages;
+    expect(forwarded[0].role).toBe('system');
+    expect(forwarded[0].content).toContain('- src/app.ts');
+    expect(forwarded[1]).toEqual({ content: 'check it', role: 'user' });
+  });
+
   it('throws when baseUrl is missing rather than calling the SDK', async () => {
     await expect(async () => {
       for await (const _chunk of openAiConversationBackend.stream({

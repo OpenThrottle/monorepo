@@ -23,6 +23,7 @@ import {
   CURSOR_AGENT_DEFAULT_BIN,
   buildCursorAgentArgv,
 } from './argv.ts';
+import { withFileMentions } from '../file-mentions.ts';
 import { mapCursorEvent } from './events.ts';
 import { NdjsonBuffer } from './ndjson.ts';
 import {
@@ -191,7 +192,7 @@ async function* streamCursorAgent(
     buildCursorAgentArgv({
       cwd: run.cwd,
       model: run.model,
-      prompt: composePrompt(run),
+      prompt: withFileMentions(composePrompt(run), run.fileMentions),
       reasoning: run.reasoning,
       serviceTier: run.serviceTier,
       sessionId: run.sessionId,

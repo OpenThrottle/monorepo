@@ -7,6 +7,7 @@
  */
 
 import { streamChatCompletion } from '../chat-completions/index.ts';
+import { withFileMentionsMessage } from './file-mentions.ts';
 import {
   CONVERSATION_REASONING_EFFORTS,
   CONVERSATION_STREAM_CHUNK_KINDS,
@@ -50,7 +51,9 @@ async function* streamOpenAi(
 
   for await (const chunk of streamChatCompletion({
     baseUrl: run.baseUrl,
-    messages: run.messages,
+    // openai has no file tools, so the @-mentioned paths ride as a leading
+    // system message rather than a tool-actionable reference list.
+    messages: withFileMentionsMessage(run.messages, run.fileMentions),
     model: run.model,
     reasoningEffort: reasoningEffort(run.reasoning),
     signal: run.signal,

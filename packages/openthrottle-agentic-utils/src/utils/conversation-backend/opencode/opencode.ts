@@ -29,6 +29,7 @@ import {
   OPENCODE_DEFAULT_BIN,
   buildOpencodeArgv,
 } from './argv.ts';
+import { withFileMentions } from '../file-mentions.ts';
 import { createOpencodeEventMapper } from './events.ts';
 import {
   type OpencodeMcpConfigFile,
@@ -140,7 +141,7 @@ async function* streamOpencode(
       auto: run.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess,
       cwd: run.cwd,
       model: run.model,
-      prompt: composePrompt(run),
+      prompt: withFileMentions(composePrompt(run), run.fileMentions),
       reasoning: run.reasoning,
       sessionId: run.sessionId,
     }),
