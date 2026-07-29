@@ -26,14 +26,20 @@ describe('driver discovery metadata', () => {
     }
   });
 
-  it('marks chat-capable drivers (claude/cursor/opencode) and plan-run-only drivers (codex/grok)', () => {
+  it('marks claude/cursor/opencode/codex/grok chat-capable (all have streaming adapters)', () => {
     const chatCapable = ALL_DRIVERS.filter(
       (driver) => driver.capabilities.chatStreaming,
     ).map((driver) => driver.id);
-    expect(chatCapable.sort()).toEqual(['claude', 'cursor', 'opencode']);
+    expect(chatCapable.sort()).toEqual([
+      'claude',
+      'codex',
+      'cursor',
+      'grok',
+      'opencode',
+    ]);
 
-    expect(codexDriver.capabilities.chatStreaming).toBe(false);
-    expect(grokDriver.capabilities.chatStreaming).toBe(false);
+    expect(codexDriver.capabilities.chatStreaming).toBe(true);
+    expect(grokDriver.capabilities.chatStreaming).toBe(true);
   });
 
   it('claude uses a static alias list (no machine-listable models command)', () => {

@@ -12,7 +12,7 @@ import type { DriverCapabilities } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
-  chatStreaming: false,
+  chatStreaming: true,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsModelFlag: true,

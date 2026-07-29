@@ -57,7 +57,7 @@ describe('codex driver', () => {
     expect(codexDriver.id).toBe('codex');
     expect(codexDriver.label).toBe('codex');
     expect(codexDriver.capabilities).toEqual({
-      chatStreaming: false,
+      chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsModelFlag: true,
@@ -119,7 +119,7 @@ describe('grok driver', () => {
     expect(grokDriver.id).toBe('grok');
     expect(grokDriver.label).toBe('grok');
     expect(grokDriver.capabilities).toEqual({
-      chatStreaming: false,
+      chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsModelFlag: true,

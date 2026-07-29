@@ -9,4 +9,5 @@ export * from './cursor-agent/index.ts';
 export * from './grok/index.ts';
 export * from './openai.ts';
 export * from './opencode/index.ts';
+export * from './registry.ts';
 export * from './types.ts';
