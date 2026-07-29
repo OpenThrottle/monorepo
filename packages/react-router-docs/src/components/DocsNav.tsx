@@ -1,6 +1,7 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { NavLink } from 'react-router';
+import { formatGroupLabel } from '../utils/buildDocsNav';
 import type { DocsNavGroup } from '../utils/buildDocsNav';
 
 export interface DocsNavProps {
@@ -39,7 +40,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
       {groups.map((group) => (
         <div key={group.label}>
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-            {group.label}
+            {formatGroupLabel(group.label)}
           </p>
 
           <ul className="mt-4 flex flex-col gap-0.5">

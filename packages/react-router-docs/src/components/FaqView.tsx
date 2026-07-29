@@ -7,6 +7,8 @@ import {
   AccordionTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { formatGroupLabel } from '../utils/buildDocsNav';
+import { slugify } from '../utils/slugify';
 import type { DocEntry } from '../utils/buildDocsManifest';
 
 export interface FaqViewProps {
@@ -63,8 +65,12 @@ export const FaqView = (props: FaqViewProps): React.ReactElement => {
       data-testid="FaqView"
     >
       {groups.map((group) => (
-        <section key={group.label}>
-          <h2 className="mb-2 text-lg">{group.label}</h2>
+        <section
+          className="scroll-mt-24"
+          id={slugify(group.label)}
+          key={group.label}
+        >
+          <h2 className="mb-2 text-lg">{formatGroupLabel(group.label)}</h2>
           <Accordion collapsible={true} type="single">
             {group.entries.map((entry) => (
               <AccordionItem

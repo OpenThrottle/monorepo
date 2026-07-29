@@ -67,4 +67,28 @@ describe('routes/faq._index.tsx', () => {
       view.queryByRole('button', { name: 'Search FAQ…' }),
     ).not.toBeInTheDocument();
   });
+
+  test('never renders placeholder Lorem ipsum copy', () => {
+    const view = renderFaq();
+
+    expect(view.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
+  });
+
+  test('renders the category hero when the landing flag is on (default)', () => {
+    const view = renderFaq();
+
+    expect(view.getByTestId('FaqHero')).toBeInTheDocument();
+  });
+
+  test('falls back to a plain intro (no hero) when the landing flag is off', () => {
+    window.localStorage.setItem(
+      buildPersistentSettingKey('docs.featureFlags'),
+      JSON.stringify({ ...DOCS_FEATURE_FLAG_DEFAULTS, landing: false }),
+    );
+
+    const view = renderFaq();
+
+    expect(view.queryByTestId('FaqHero')).not.toBeInTheDocument();
+    expect(view.getByText(/Answers to common questions/i)).toBeInTheDocument();
+  });
 });

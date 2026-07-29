@@ -1,6 +1,17 @@
 import type { DocEntry, DocsSection } from './buildDocsManifest';
 
 /**
+ * Strip a numeric ordering prefix (`"00. "`, `"01. "`, …) from a group label
+ * for display. Groups use these prefixes so the package's alphabetical group
+ * ordering yields a deliberate sidebar order; they are an ordering device, not
+ * part of the human-facing label.
+ *
+ * @public
+ */
+export const formatGroupLabel = (label: string): string =>
+  label.replace(/^\d+\.\s*/u, '');
+
+/**
  * A single navigable link within a nav group. @public
  */
 export interface DocsNavItem {
