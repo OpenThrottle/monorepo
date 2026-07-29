@@ -192,6 +192,8 @@ async function* streamCursorAgent(
       cwd: run.cwd,
       model: run.model,
       prompt: composePrompt(run),
+      reasoning: run.reasoning,
+      serviceTier: run.serviceTier,
       sessionId: run.sessionId,
     }),
     {

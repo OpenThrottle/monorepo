@@ -7,12 +7,39 @@
  */
 
 import { streamChatCompletion } from '../chat-completions/index.ts';
-import { CONVERSATION_STREAM_CHUNK_KINDS } from './types.ts';
+import {
+  CONVERSATION_REASONING_EFFORTS,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  type ConversationReasoningEffort,
+} from './types.ts';
 import type {
   ConversationBackend,
   ConversationBackendRun,
   ConversationStreamChunk,
 } from './types.ts';
+
+/**
+ * Map the composer reasoning level onto the OpenAI `reasoning_effort` triple
+ * (`low`/`medium`/`high`), or `undefined` to omit it. OpenAI caps effort at
+ * `high`, so `extraHigh`/`max`/`ultra` clamp to `high`.
+ */
+function reasoningEffort(
+  reasoning: ConversationReasoningEffort | undefined,
+): 'high' | 'low' | 'medium' | undefined {
+  switch (reasoning) {
+    case CONVERSATION_REASONING_EFFORTS.low:
+      return 'low';
+    case CONVERSATION_REASONING_EFFORTS.medium:
+      return 'medium';
+    case CONVERSATION_REASONING_EFFORTS.high:
+    case CONVERSATION_REASONING_EFFORTS.extraHigh:
+    case CONVERSATION_REASONING_EFFORTS.max:
+    case CONVERSATION_REASONING_EFFORTS.ultra:
+      return 'high';
+    default:
+      return undefined;
+  }
+}
 
 async function* streamOpenAi(
   run: ConversationBackendRun,
@@ -25,6 +52,7 @@ async function* streamOpenAi(
     baseUrl: run.baseUrl,
     messages: run.messages,
     model: run.model,
+    reasoningEffort: reasoningEffort(run.reasoning),
     signal: run.signal,
   })) {
     yield {

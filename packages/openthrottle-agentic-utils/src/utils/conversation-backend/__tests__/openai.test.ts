@@ -64,6 +64,37 @@ describe('openAiConversationBackend', () => {
     });
   });
 
+  it('maps the composer reasoning level to the OpenAI reasoning_effort triple (ceiling = high)', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'gpt-oss',
+      reasoning: 'ultra',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock).toHaveBeenCalledWith(
+      expect.objectContaining({ reasoningEffort: 'high' }),
+    );
+  });
+
+  it('omits reasoningEffort when no reasoning level is selected', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:1234/v1',
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock.mock.calls[0]?.[0].reasoningEffort).toBe(
+      undefined,
+    );
+  });
+
   it('throws when baseUrl is missing rather than calling the SDK', async () => {
     await expect(async () => {
       for await (const _chunk of openAiConversationBackend.stream({

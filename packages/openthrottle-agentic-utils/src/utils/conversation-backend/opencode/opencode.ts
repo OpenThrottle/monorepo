@@ -141,6 +141,7 @@ async function* streamOpencode(
       cwd: run.cwd,
       model: run.model,
       prompt: composePrompt(run),
+      reasoning: run.reasoning,
       sessionId: run.sessionId,
     }),
     {

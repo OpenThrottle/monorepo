@@ -112,6 +112,7 @@ async function* streamGrok(
       model: run.model,
       permissionMode: run.permissionMode,
       prompt: latestUserMessage(run),
+      reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,
       systemPrompt: run.systemPrompt,

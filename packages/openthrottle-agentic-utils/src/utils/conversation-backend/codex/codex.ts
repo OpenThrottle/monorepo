@@ -125,6 +125,7 @@ async function* streamCodex(
       model: run.model,
       permissionMode: run.permissionMode,
       prompt: composePrompt(run),
+      reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,
     }),
