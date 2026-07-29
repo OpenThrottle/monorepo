@@ -6,6 +6,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
 } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs._index';
 
 const indexEntry = docsManifest.find((entry) => entry.path === '/docs');
@@ -35,6 +36,7 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
+  const [flags] = useDocsFeatureFlags();
 
   // Setup
 
@@ -53,7 +55,7 @@ export default function Component(
     );
   }
 
-  return <DocPageView entry={indexEntry} />;
+  return <DocPageView entry={indexEntry} toc={flags.toc} />;
 }
 
 export const ErrorBoundary = GlobalErrorBoundary;

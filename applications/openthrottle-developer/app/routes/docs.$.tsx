@@ -6,6 +6,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
 } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs.$';
 
 const docsBySlug = new Map(
@@ -50,6 +51,7 @@ export default function Component(
   const { params } = props;
 
   // Hooks
+  const [flags] = useDocsFeatureFlags();
 
   // Setup
   const entry = docsBySlug.get(`/docs/${params['*']}`);
@@ -65,7 +67,7 @@ export default function Component(
     return <p className="text-muted-foreground text-sm">Page not found.</p>;
   }
 
-  return <DocPageView entry={entry} />;
+  return <DocPageView entry={entry} toc={flags.toc} />;
 }
 
 export const ErrorBoundary = GlobalErrorBoundary;
