@@ -117,7 +117,7 @@ export const PlanTabDetails = (
           )}
         </div>
 
-        {!FEATURE_CHARLIE_PREVIEW ? (
+        {FEATURE_CHARLIE_PREVIEW ? (
           <>
             <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
               <PlanLifecycleHooksSection

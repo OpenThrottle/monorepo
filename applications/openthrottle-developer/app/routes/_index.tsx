@@ -17,6 +17,7 @@ import {
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
+import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -278,16 +279,7 @@ export default function Component(
 
       <div className="mx-auto w-full max-w-3xl">
         <ChatThread emptyStateLabel="" messages={turn.messages} />
-        {turn.error ? (
-          <p className="text-destructive mb-2 text-center text-sm">
-            {turn.error}
-          </p>
-        ) : null}
-        {voice.error ? (
-          <p className="text-destructive mb-2 text-center text-sm">
-            {voice.error}
-          </p>
-        ) : null}
+        <InlineErrors errors={[turn.error, voice.error]} />
         {!hasModels ? (
           <p className="text-muted-foreground mb-2 text-center text-sm">
             No local models discovered. Start a local OpenAI-compatible server

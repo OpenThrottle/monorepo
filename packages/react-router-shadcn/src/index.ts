@@ -21,6 +21,7 @@ export * from './components/Drawer';
 export * from './components/DropdownMenu';
 export * from './components/Empty';
 export * from './components/HoverCard';
+export * from './components/InlineErrors';
 export * from './components/Input';
 export * from './components/InputGroup';
 export * from './components/InputGroupAddon';
