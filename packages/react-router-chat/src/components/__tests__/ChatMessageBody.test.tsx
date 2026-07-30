@@ -22,9 +22,12 @@ describe('ChatMessageBody Component', () => {
   });
 
   describe('when role is user', () => {
-    test('should render plain text', () => {
+    test('should render plain text, not Markdown', () => {
       expect(component.getByText('Hello')).toBeInTheDocument();
-      expect(component.queryByRole('code')).not.toBeInTheDocument();
+      // User bodies bypass the Markdown renderer entirely.
+      expect(
+        component.queryByTestId('MarkdownRenderer'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -34,9 +37,14 @@ describe('ChatMessageBody Component', () => {
       component = renderBody(props);
     });
 
-    test('should render via Markdown', () => {
-      expect(component.getByText('**bold**')).toBeInTheDocument();
-      expect(component.getByRole('code')).toBeInTheDocument();
+    test('should parse the body as Markdown', () => {
+      // The renderer parses Markdown, so `**bold**` becomes a <strong> — not
+      // the literal asterisks the old escaped renderer produced.
+      const strong = component.container.querySelector('strong');
+      expect(strong).toBeInTheDocument();
+      expect(strong).toHaveTextContent('bold');
+      expect(component.queryByText('**bold**')).not.toBeInTheDocument();
+      expect(component.getByTestId('MarkdownRenderer')).toBeInTheDocument();
     });
   });
 
@@ -46,9 +54,9 @@ describe('ChatMessageBody Component', () => {
       component = renderBody(props);
     });
 
-    test('should render via Markdown', () => {
+    test('should render the body through Markdown', () => {
       expect(component.getByText('Notice')).toBeInTheDocument();
-      expect(component.getByRole('code')).toBeInTheDocument();
+      expect(component.getByTestId('MarkdownRenderer')).toBeInTheDocument();
     });
   });
 
@@ -65,29 +73,25 @@ describe('ChatMessageBody Component', () => {
   });
 
   // XSS / HTML-injection regression. Assistant/system bodies are untrusted
-  // (server LLM output + persisted history). The body MUST be rendered as
-  // literal text, never injected as live DOM. This guards the current escaped
-  // renderer and will fail loudly if a future real Markdown renderer enables
-  // raw HTML without sanitization.
+  // (server LLM output + persisted history). The Markdown renderer parses
+  // CommonMark (`format: 'md'`) with no `rehype-raw`, so embedded raw HTML is
+  // dropped rather than injected as live DOM. These tests fail loudly if a
+  // future swap re-enables raw HTML without sanitization.
   describe('when an untrusted body contains HTML injection payloads', () => {
     const SCRIPT_PAYLOAD = '<script>window.__xss = true;</script>';
     const IMG_PAYLOAD = '<img src=x onerror="window.__xss = true">';
 
     for (const role of ['assistant', 'system'] as const) {
       describe(`role ${role}`, () => {
-        test('should render a <script> payload as literal text, not a live element', () => {
+        test('should not inject a live <script> element', () => {
           component = renderBody({ body: SCRIPT_PAYLOAD, role });
-
-          expect(component.getByText(SCRIPT_PAYLOAD)).toBeInTheDocument();
           expect(
             component.container.querySelector('script'),
           ).not.toBeInTheDocument();
         });
 
-        test('should render an <img onerror> payload as literal text, not a live element', () => {
+        test('should not inject a live <img onerror> element', () => {
           component = renderBody({ body: IMG_PAYLOAD, role });
-
-          expect(component.getByText(IMG_PAYLOAD)).toBeInTheDocument();
           expect(
             component.container.querySelector('img'),
           ).not.toBeInTheDocument();

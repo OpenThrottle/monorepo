@@ -8,10 +8,10 @@ import { useConversationStream } from '~/routing/chat/hooks/useConversationStrea
 import type { StartActionResult } from '~/routes/resources.conversation-stream';
 
 /** Route-independent action the admin header chat posts to. */
-export const CONVERSATION_STREAM_ACTION = '/resources/conversation-stream';
+export const CONVERSATION_STREAM_ACTION = `/resources/conversation-stream`;
 
 /** Route-independent action for persisted-conversation data ops (restore, list, …). */
-export const AGENT_CONVERSATIONS_ACTION = '/resources/agent-conversations';
+export const AGENT_CONVERSATIONS_ACTION = `/resources/agent-conversations`;
 
 /**
  * Stable empty seed: the header surface has no conversation id in the URL to
@@ -133,6 +133,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     setError(null);
     setPendingAssistantId(null);
     setConversationId(params.conversationId);
+
     restoreFetcher.submit(
       { conversationId: params.conversationId, intent: 'load-messages' },
       { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },

@@ -2,9 +2,9 @@ import { describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 
-// The URL/dedup/absolute-canonical behavior now lives in (and is tested with)
+// The URL/dedup/absolute-canonical behavior lives in (and is tested with)
 // buildSitemapResponse in @openthrottle/react-router-utils. Here we verify the
-// route's own responsibility: assembling static + non-draft manifest paths and
+// route's own responsibility: assembling the live static page paths and
 // delegating to the shared helper.
 const buildSitemapResponse = vi.fn(
   (_paths: readonly string[]) =>
@@ -14,14 +14,6 @@ const buildSitemapResponse = vi.fn(
 );
 
 vi.mock('@openthrottle/react-router-utils', () => ({ buildSitemapResponse }));
-
-vi.mock('~/routing/docs/data/docsManifest', () => ({
-  docsManifest: [
-    { draft: false, path: '/docs/getting-started' },
-    { draft: false, path: '/faq' },
-    { draft: true, path: '/docs/secret-draft' },
-  ],
-}));
 
 const { loader } = await import('../sitemap[.]xml');
 
@@ -34,7 +26,7 @@ const loaderArgs: Route.LoaderArgs = {
 };
 
 describe('routes/sitemap[.]xml.tsx', () => {
-  test('delegates static + non-draft manifest paths to the shared helper', () => {
+  test('delegates the live static page paths to the shared helper', () => {
     const response = loader(loaderArgs);
 
     expect(response.headers.get('Content-Type')).toBe('application/xml');
@@ -42,16 +34,12 @@ describe('routes/sitemap[.]xml.tsx', () => {
 
     const paths = buildSitemapResponse.mock.calls[0]?.[0];
 
-    // Static page routes.
+    // The site currently exposes only the index route.
     expect(paths).toContain('/');
-    expect(paths).toContain('/docs');
-    expect(paths).toContain('/demos/layout');
 
-    // Manifest-driven, non-draft entries.
-    expect(paths).toContain('/docs/getting-started');
-    expect(paths).toContain('/faq');
-
-    // Drafts are excluded by the route before delegating.
-    expect(paths).not.toContain('/docs/secret-draft');
+    // Routes removed during the pre-launch trim must not linger in the sitemap.
+    expect(paths).not.toContain('/docs');
+    expect(paths).not.toContain('/demos/layout');
+    expect(paths).not.toContain('/faq');
   });
 });

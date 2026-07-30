@@ -1,1 +1,0 @@
-export const DEFAULT_DEMOS = 'DEFAULT_DEMOS';
