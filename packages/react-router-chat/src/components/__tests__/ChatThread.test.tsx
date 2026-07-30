@@ -65,7 +65,11 @@ describe('ChatThread Component', () => {
         { body: '# Title', id: 'a1', role: 'assistant' },
       ];
       component = renderThread({ messages: markdownMessages });
-      expect(component.getByText('# Title')).toBeInTheDocument();
+      // The renderer parses Markdown, so `# Title` becomes a heading element
+      // with the text `Title` — not the literal `# Title` string.
+      const heading = component.getByRole('heading', { name: 'Title' });
+      expect(heading).toBeInTheDocument();
+      expect(component.queryByText('# Title')).not.toBeInTheDocument();
     });
   });
 
