@@ -32,7 +32,13 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/_index',
-    loaderData: { models: [], personas: [], repositories: [] },
+    loaderData: {
+      composerData: Promise.resolve({
+        models: [],
+        personas: [],
+        repositories: [],
+      }),
+    },
     params: {},
     pathname: '/',
   },
@@ -43,7 +49,13 @@ describe('routes/_index.tsx', () => {
     const view = renderHome(
       <Index
         actionData={undefined}
-        loaderData={{ models: [], personas: [], repositories: [] }}
+        loaderData={{
+          composerData: Promise.resolve({
+            models: [],
+            personas: [],
+            repositories: [],
+          }),
+        }}
         matches={matches}
         params={{}}
       />,
@@ -62,11 +74,13 @@ describe('routes/_index.tsx toolbar persistence', () => {
   const store = getDefaultStore();
 
   const seededLoaderData: Route.ComponentProps['loaderData'] = {
-    models: [
-      { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
-    ],
-    personas: [{ id: 'p1', label: 'Persona One' }],
-    repositories: [{ displayName: 'Repo One', id: 'r1' }],
+    composerData: Promise.resolve({
+      models: [
+        { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
+      ],
+      personas: [{ id: 'p1', label: 'Persona One' }],
+      repositories: [{ displayName: 'Repo One', id: 'r1' }],
+    }),
   };
 
   beforeEach(() => {
