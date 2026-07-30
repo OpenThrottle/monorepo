@@ -32,15 +32,23 @@ export default (config: ConfigEnv) => {
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description vmForks runs each test file in a fresh V8 VM context inside a
-       * reused worker process. Globals are isolated per file (so no cross-file state
-       * leakage — unlike `isolate: false`), but the worker and module transform cache
-       * are reused, which eliminates the dominant per-file module re-import cost.
-       * Measured on this suite: ~730s -> ~172s user CPU, ~120s -> ~30s wall, no new
-       * failures. (Plain `forks`/`threads` re-import the full module graph per file;
-       * `isolate: false` is faster still but leaks global state non-deterministically.)
+       * @description Pool differs by environment on purpose.
+       *
+       * Locally we use `vmForks`: each file runs in a fresh V8 VM context inside a
+       * reused worker, so globals are isolated per file (no cross-file leakage,
+       * unlike `isolate: false`) while the worker and module transform cache are
+       * reused — eliminating the dominant per-file re-import cost. Measured on this
+       * suite: ~730s -> ~172s user CPU, ~120s -> ~30s wall.
+       *
+       * In CI we use the stable default `forks` pool. On the Linux CI runners a
+       * `vmForks` worker dies mid-suite (surfacing as a stuck `(0 test)` file and a
+       * truncated, summary-less run) in a way that does not reproduce on the dev
+       * machines — a known class of VM-context instability. `forks` has no VM
+       * context to crash; the full suite is clean under it. The per-file re-import
+       * cost is an acceptable trade for a reliable pipeline. (The plan-detail WS
+       * realm crash that first exposed this is fixed independently in tests/setup.)
        */
-      pool: 'vmForks',
+      pool: process.env.CI ? 'forks' : 'vmForks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
     },
