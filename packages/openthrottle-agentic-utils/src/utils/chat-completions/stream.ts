@@ -38,6 +38,13 @@ export interface StreamChatCompletionOptions {
   readonly messages: ReadonlyArray<ChatCompletionMessage>;
   /** Model id to complete with, as advertised by the endpoint. */
   readonly model: string;
+  /**
+   * Reasoning-effort hint for reasoning-capable models, sent as the OpenAI
+   * `reasoning_effort` request param. Best-effort: only forwarded when set, so
+   * endpoints/models that do not support it are unaffected. The caller maps the
+   * composer level onto this `low`/`medium`/`high` triple.
+   */
+  readonly reasoningEffort?: 'high' | 'low' | 'medium';
   /** Optional abort signal; forwarded to the SDK to cancel the in-flight stream. */
   readonly signal?: AbortSignal;
 }
@@ -86,6 +93,11 @@ export async function* streamChatCompletion(
     {
       messages: options.messages.map(toMessageParam),
       model: options.model,
+      // Only include when set so endpoints that reject unknown params (many
+      // local, non-reasoning models) are untouched.
+      ...(options.reasoningEffort !== undefined
+        ? { reasoning_effort: options.reasoningEffort }
+        : {}),
       stream: true,
     },
     { signal: options.signal },

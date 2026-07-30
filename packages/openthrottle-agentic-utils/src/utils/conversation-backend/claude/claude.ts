@@ -23,6 +23,7 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN, buildClaudeArgv } from './argv.ts';
+import { withFileMentions } from '../file-mentions.ts';
 import { mapClaudeEvent } from './events.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -124,7 +125,8 @@ async function* streamClaude(
       mcpServers: run.mcpServers,
       model: run.model,
       permissionMode: run.permissionMode,
-      prompt: latestUserMessage(run),
+      prompt: withFileMentions(latestUserMessage(run), run.fileMentions),
+      reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,
       systemPrompt: run.systemPrompt,

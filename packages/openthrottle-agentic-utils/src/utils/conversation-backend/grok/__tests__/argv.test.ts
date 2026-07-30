@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildGrokArgv } from '../argv.ts';
-import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
+} from '../../types.ts';
 
 /** The value after a flag, or undefined when the flag is absent. */
 const valueAfter = (
@@ -112,6 +115,38 @@ describe('buildGrokArgv', () => {
       expect(
         buildGrokArgv({ cwd: '/w', prompt: 'p', resume: false }),
       ).not.toContain('--permission-mode');
+    });
+  });
+
+  describe('reasoning effort → --reasoning-effort', () => {
+    const effortFor = (
+      reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
+    ): string | undefined =>
+      valueAfter(
+        buildGrokArgv({ cwd: '/w', prompt: 'p', reasoning, resume: false }),
+        '--reasoning-effort',
+      );
+
+    it('maps low/medium straight through', () => {
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.low)).toBe('low');
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.medium)).toBe('medium');
+    });
+
+    it('clamps high/extraHigh/max/ultra to high', () => {
+      for (const level of [
+        CONVERSATION_REASONING_EFFORTS.high,
+        CONVERSATION_REASONING_EFFORTS.extraHigh,
+        CONVERSATION_REASONING_EFFORTS.max,
+        CONVERSATION_REASONING_EFFORTS.ultra,
+      ]) {
+        expect(effortFor(level)).toBe('high');
+      }
+    });
+
+    it('omits --reasoning-effort when no level is given', () => {
+      expect(
+        buildGrokArgv({ cwd: '/w', prompt: 'p', resume: false }),
+      ).not.toContain('--reasoning-effort');
     });
   });
 });

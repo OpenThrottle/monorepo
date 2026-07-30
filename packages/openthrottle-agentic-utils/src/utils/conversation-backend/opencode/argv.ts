@@ -6,6 +6,11 @@
  * docs/openthrottle/opencode-stream-json-schema.md §1.
  */
 
+import {
+  CONVERSATION_REASONING_EFFORTS,
+  type ConversationReasoningEffort,
+} from '../types.ts';
+
 /**
  * Env var holding an absolute path to the opencode binary; overrides PATH lookup.
  */
@@ -38,10 +43,43 @@ export interface OpencodeArgvOptions {
    */
   readonly prompt: string;
   /**
+   * Composer reasoning effort, mapped to opencode's `--variant` (provider-
+   * specific model variant / reasoning effort). Uses the token set opencode
+   * documents (`minimal`/`high`/`max`) plus the OpenAI-style middle levels:
+   * `low`→`low`, `medium`→`medium`, `high`/`extraHigh`→`high`,
+   * `max`/`ultra`→`max`. Omitted ⇒ no flag (the model's default variant).
+   */
+  readonly reasoning?: ConversationReasoningEffort;
+  /**
    * Session id to resume (`-s`); omitted on the first turn so opencode mints a
    * new session (its id is surfaced in the stream, not supplied by us).
    */
   readonly sessionId?: string;
+}
+
+/**
+ * Map the composer reasoning level onto an opencode `--variant` token, or
+ * `undefined` to omit the flag. Uses opencode's documented `minimal`/`high`/
+ * `max` plus OpenAI-style middles: `low`→`low`, `medium`→`medium`,
+ * `high`/`extraHigh`→`high`, `max`/`ultra`→`max`.
+ */
+function variant(
+  reasoning: ConversationReasoningEffort | undefined,
+): string | undefined {
+  switch (reasoning) {
+    case CONVERSATION_REASONING_EFFORTS.low:
+      return 'low';
+    case CONVERSATION_REASONING_EFFORTS.medium:
+      return 'medium';
+    case CONVERSATION_REASONING_EFFORTS.high:
+    case CONVERSATION_REASONING_EFFORTS.extraHigh:
+      return 'high';
+    case CONVERSATION_REASONING_EFFORTS.max:
+    case CONVERSATION_REASONING_EFFORTS.ultra:
+      return 'max';
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -65,6 +103,11 @@ export function buildOpencodeArgv(options: OpencodeArgvOptions): string[] {
 
   if (options.model !== undefined && options.model !== '') {
     argv.push('-m', options.model);
+  }
+
+  const modelVariant = variant(options.reasoning);
+  if (modelVariant !== undefined) {
+    argv.push('--variant', modelVariant);
   }
 
   argv.push('--', options.prompt);

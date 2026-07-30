@@ -26,6 +26,16 @@ const cliModel: ChatModelOption = {
   label: 'Cursor',
 };
 
+// A CLI backend that advertises reasoning (claude), used where the test needs a
+// backend with a reasoning surface — cursor bakes reasoning into the model id
+// and so exposes no separate reasoning/tier controls.
+const claudeCliModel: ChatModelOption = {
+  description: 'Agent CLI',
+  groupId: 'agent-clis',
+  id: 'claude',
+  label: 'Claude',
+};
+
 const openaiModel: ChatModelOption = {
   description: 'ollama',
   groupId: 'openai:ollama',
@@ -212,31 +222,48 @@ describe('reconcileChatToolbarState', () => {
   });
 
   describe('capability re-gating', () => {
-    test('keeps reasoning/serviceTier/permissionMode valid for the CLI backend', () => {
+    test('keeps a supported reasoning + permission mode for a CLI backend, clears tier (no backend routes it)', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          permissionMode: ChatPermissionMode.supervised,
+          reasoning: ChatReasoningLevel.high,
+          serviceTier: ChatServiceTier.fast,
+        }),
+        { models: [claudeCliModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.permissionMode).toBe(ChatPermissionMode.supervised);
+      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+      // No backend advertises a service-tier control, so it is always cleared.
+      expect(result.serviceTier).toBeUndefined();
+    });
+
+    test('clears a reasoning level the CLI backend does not permit', () => {
+      // claude tops out at `max`; `ultra` is not advertised, so it is cleared.
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'claude', reasoning: ChatReasoningLevel.ultra }),
+        { models: [claudeCliModel], personas: [], repositories: [repoA] },
+      );
+      expect(result.reasoning).toBeUndefined();
+    });
+
+    test('clears reasoning + tier for cursor (both are encoded in the model id, not controls)', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: 'cursor',
-          permissionMode: ChatPermissionMode.supervised,
+          permissionMode: ChatPermissionMode.fullAccess,
           reasoning: ChatReasoningLevel.high,
           serviceTier: ChatServiceTier.fast,
         }),
         { models: [cliModel], personas: [], repositories: [repoA] },
       );
-      expect(result.permissionMode).toBe(ChatPermissionMode.supervised);
-      expect(result.reasoning).toBe(ChatReasoningLevel.high);
-      expect(result.serviceTier).toBe(ChatServiceTier.fast);
-    });
-
-    test('clears a reasoning level the CLI backend does not permit', () => {
-      // `ultra` is a valid enum value but not in CLI_BACKEND_CAPABILITIES.
-      const result = reconcileChatToolbarState(
-        persisted({ modelId: 'cursor', reasoning: ChatReasoningLevel.ultra }),
-        { models: [cliModel], personas: [], repositories: [repoA] },
-      );
+      // cursor still has a permission surface, but no reasoning/tier controls.
+      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
       expect(result.reasoning).toBeUndefined();
+      expect(result.serviceTier).toBeUndefined();
     });
 
-    test('clears CLI-valid controls when the effective backend is openai', () => {
+    test('clears permission + tier for openai but keeps a supported reasoning level', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: openaiModel.id,
@@ -246,20 +273,22 @@ describe('reconcileChatToolbarState', () => {
         }),
         { models: [openaiModel], personas: [], repositories: [] },
       );
+      // openai has no permission surface and no tier, but forwards reasoning
+      // best-effort — so high is retained while the other two are cleared.
       expect(result.permissionMode).toBeUndefined();
-      expect(result.reasoning).toBeUndefined();
+      expect(result.reasoning).toBe(ChatReasoningLevel.high);
       expect(result.serviceTier).toBeUndefined();
     });
 
     test('re-gates when a removed CLI model falls back to an openai model', () => {
-      // Persisted CLI selection with CLI-valid reasoning, but the CLI model is
-      // gone so it falls back to the openai model, which permits no reasoning.
+      // Persisted CLI selection with a reasoning level openai also permits; the
+      // CLI model is gone so it falls back to openai, which keeps the level.
       const result = reconcileChatToolbarState(
         persisted({ modelId: 'cursor', reasoning: ChatReasoningLevel.medium }),
         { models: [openaiModel], personas: [], repositories: [] },
       );
       expect(result.modelId).toBe(openaiModel.id);
-      expect(result.reasoning).toBeUndefined();
+      expect(result.reasoning).toBe(ChatReasoningLevel.medium);
     });
   });
 
@@ -326,12 +355,12 @@ describe('reconcileChatToolbarState', () => {
     });
 
     test('gates a per-backend override the effective backend disallows', () => {
-      // The openai backend permits no reasoning levels; the override must still
-      // be capability-gated, not trusted verbatim.
+      // openai forwards low/medium/high best-effort but not `ultra`; the override
+      // must still be capability-gated, not trusted verbatim.
       const result = reconcileChatToolbarState(
         persisted({
           modelId: openaiModel.id,
-          perBackend: { openai: { reasoning: ChatReasoningLevel.high } },
+          perBackend: { openai: { reasoning: ChatReasoningLevel.ultra } },
         }),
         { models: [openaiModel], personas: [], repositories: [] },
       );

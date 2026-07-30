@@ -8,7 +8,9 @@
 
 import {
   CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
   type ConversationPermissionMode,
+  type ConversationReasoningEffort,
 } from '../types.ts';
 
 /**
@@ -48,6 +50,13 @@ export interface ClaudeArgvOptions {
   /** The latest user message (persona goes to `--append-system-prompt`, not here). */
   readonly prompt: string;
   /**
+   * Composer reasoning effort. Mapped to claude's `--effort` vocabulary
+   * (`low`/`medium`/`high`/`xhigh`/`max`): `extraHigh` → `xhigh`, `ultra` →
+   * `max`. Omitted ⇒ no `--effort` flag (claude's own default). See
+   * {@link buildClaudeArgv}.
+   */
+  readonly reasoning?: ConversationReasoningEffort;
+  /**
    * When true, resume `sessionId` (`--resume`); otherwise create it up front
    * (`--session-id`). claude, unlike cursor, sets the id itself on turn one.
    */
@@ -56,6 +65,31 @@ export interface ClaudeArgvOptions {
   readonly sessionId: string;
   /** Persona system prompt → first-class `--append-system-prompt` (no prefix hack). */
   readonly systemPrompt?: string;
+}
+
+/**
+ * Map the composer reasoning level onto claude's `--effort` vocabulary
+ * (`low`/`medium`/`high`/`xhigh`/`max`), or `undefined` to omit the flag.
+ * `extraHigh` → `xhigh`; both `max` and `ultra` → `max` (claude's ceiling).
+ */
+function effortFlag(
+  reasoning: ConversationReasoningEffort | undefined,
+): string | undefined {
+  switch (reasoning) {
+    case CONVERSATION_REASONING_EFFORTS.low:
+      return 'low';
+    case CONVERSATION_REASONING_EFFORTS.medium:
+      return 'medium';
+    case CONVERSATION_REASONING_EFFORTS.high:
+      return 'high';
+    case CONVERSATION_REASONING_EFFORTS.extraHigh:
+      return 'xhigh';
+    case CONVERSATION_REASONING_EFFORTS.max:
+    case CONVERSATION_REASONING_EFFORTS.ultra:
+      return 'max';
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -83,6 +117,11 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
   const systemPrompt = options.systemPrompt?.trim();
   if (systemPrompt !== undefined && systemPrompt !== '') {
     argv.push('--append-system-prompt', systemPrompt);
+  }
+
+  const effort = effortFlag(options.reasoning);
+  if (effort !== undefined) {
+    argv.push('--effort', effort);
   }
 
   // Inject managed MCP servers inline (JSON string, not a file — no checkout

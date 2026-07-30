@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildCodexArgv } from '../argv.ts';
-import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
+} from '../../types.ts';
 
 /** The value after a flag, or undefined when the flag is absent. */
 const valueAfter = (
@@ -91,6 +94,42 @@ describe('buildCodexArgv', () => {
         resume: false,
       });
       expect(valueAfter(argv, '--sandbox')).toBe('read-only');
+    });
+  });
+
+  describe('reasoning effort → -c model_reasoning_effort', () => {
+    const effortFor = (
+      reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
+    ): string | undefined =>
+      valueAfter(
+        buildCodexArgv({ prompt: 'p', reasoning, resume: false }),
+        '-c',
+      );
+
+    it('maps low/medium straight through', () => {
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.low)).toBe(
+        'model_reasoning_effort=low',
+      );
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.medium)).toBe(
+        'model_reasoning_effort=medium',
+      );
+    });
+
+    it('caps high/extraHigh/max/ultra at high (OpenAI ceiling)', () => {
+      for (const level of [
+        CONVERSATION_REASONING_EFFORTS.high,
+        CONVERSATION_REASONING_EFFORTS.extraHigh,
+        CONVERSATION_REASONING_EFFORTS.max,
+        CONVERSATION_REASONING_EFFORTS.ultra,
+      ]) {
+        expect(effortFor(level)).toBe('model_reasoning_effort=high');
+      }
+    });
+
+    it('omits the override when no reasoning level is given, prompt stays last', () => {
+      const argv = buildCodexArgv({ prompt: 'p', resume: false });
+      expect(argv).not.toContain('-c');
+      expect(argv.at(-1)).toBe('p');
     });
   });
 });

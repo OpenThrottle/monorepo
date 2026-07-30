@@ -62,6 +62,98 @@ export function toConversationPermissionMode(
 }
 
 /**
+ * Reasoning-effort levels the composer can request, mirroring the developer-app
+ * composer's `ChatReasoningLevel` (`@openthrottle/react-router-chat`). Carried as
+ * the raw UI enum end-to-end and mapped to each backend's real vocabulary inside
+ * its argv/request builder (claude `--effort`, grok `--reasoning-effort`, codex
+ * `-c model_reasoning_effort=`, opencode `--variant`, cursor model-string
+ * `[effort=…]`, openai `reasoning_effort`). Not every backend accepts every
+ * level, so each builder clamps to its own accepted set.
+ *
+ * @public
+ */
+export const CONVERSATION_REASONING_EFFORTS = {
+  extraHigh: 'extraHigh',
+  high: 'high',
+  low: 'low',
+  max: 'max',
+  medium: 'medium',
+  ultra: 'ultra',
+} as const;
+
+/**
+ * One of the {@link CONVERSATION_REASONING_EFFORTS} values.
+ *
+ * @public
+ */
+export type ConversationReasoningEffort =
+  (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS];
+
+/**
+ * Narrow an untrusted transport string (GraphQL input) to a
+ * {@link ConversationReasoningEffort}, or `undefined` when it is absent or not a
+ * recognized level. Keeps the resolver transport-only, exactly like
+ * {@link toConversationPermissionMode}.
+ *
+ * @public
+ */
+export function toConversationReasoningEffort(
+  value: string | null | undefined,
+): ConversationReasoningEffort | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  for (const effort of Object.values(CONVERSATION_REASONING_EFFORTS)) {
+    if (effort === value) {
+      return effort;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Service tiers the composer can request, mirroring the developer-app composer's
+ * `ChatServiceTier`. `standard` = default queue; `fast` = priority/low-latency.
+ * Only backends that can actually route by tier honor it (cursor-agent, via the
+ * model-string `[fast=…]` suffix); the rest ignore it.
+ *
+ * @public
+ */
+export const CONVERSATION_SERVICE_TIERS = {
+  fast: 'fast',
+  standard: 'standard',
+} as const;
+
+/**
+ * One of the {@link CONVERSATION_SERVICE_TIERS} values.
+ *
+ * @public
+ */
+export type ConversationServiceTier =
+  (typeof CONVERSATION_SERVICE_TIERS)[keyof typeof CONVERSATION_SERVICE_TIERS];
+
+/**
+ * Narrow an untrusted transport string (GraphQL input) to a
+ * {@link ConversationServiceTier}, or `undefined` when it is absent or not a
+ * recognized tier. Keeps the resolver transport-only.
+ *
+ * @public
+ */
+export function toConversationServiceTier(
+  value: string | null | undefined,
+): ConversationServiceTier | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  for (const tier of Object.values(CONVERSATION_SERVICE_TIERS)) {
+    if (tier === value) {
+      return tier;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Event kinds a backend can emit. `text` is plain assistant output; the rest
  * describe richer agentic events (reasoning, tool use, token accounting, the
  * backend's session handle). Values are snake_case to match the wire payload.
@@ -120,6 +212,14 @@ export interface ConversationBackendRun {
   /** Working directory the CLI runs in; required by CLI backends. */
   readonly cwd?: string;
   /**
+   * Workspace-relative POSIX paths the user @-mentioned in the composer. The
+   * paths already travel inline as `@path` tokens inside the latest message;
+   * this structured list lets a backend inject them as genuine turn context
+   * (e.g. a "Referenced files" preamble) beyond the inline tokens. Empty/absent
+   * ⇒ no injection. Honored by every backend that composes a prompt.
+   */
+  readonly fileMentions?: readonly string[];
+  /**
    * Extra environment variables a CLI backend must pass through to the spawned
    * child (and, transitively, to its MCP servers) — the OT MCP auth token + API
    * URLs, plus any adapter-specific keys (e.g. opencode's config path). Scoped:
@@ -149,6 +249,15 @@ export interface ConversationBackendRun {
    */
   readonly permissionMode?: ConversationPermissionMode;
   /**
+   * Reasoning-effort level selected in the composer toolbar. Backends that
+   * expose a reasoning knob map it to their own vocabulary in the argv/request
+   * builder (claude `--effort`, grok `--reasoning-effort`, codex
+   * `-c model_reasoning_effort=`, opencode `--variant`, cursor `[effort=…]`,
+   * openai `reasoning_effort`); each clamps to its accepted set. Absent ⇒ the
+   * backend's own default.
+   */
+  readonly reasoning?: ConversationReasoningEffort;
+  /**
    * When true, resume the given `sessionId` rather than create it. Only CLI
    * backends whose "create" and "resume" invocations differ read this: claude
    * uses `--session-id` (create) vs `--resume` (continue). Cursor (which always
@@ -156,6 +265,12 @@ export interface ConversationBackendRun {
    * `sessionId` is absent) ignore it. Defaults to false (create/first turn).
    */
   readonly resumeSession?: boolean;
+  /**
+   * Service tier selected in the composer toolbar. Only backends that can route
+   * by tier honor it (cursor-agent, via the model-string `[fast=…]` suffix); the
+   * rest ignore it. Absent ⇒ the backend's own default.
+   */
+  readonly serviceTier?: ConversationServiceTier;
   /**
    * CLI backend session handle to resume (e.g. a cursor-agent chat id). CLI
    * backends own multi-turn context themselves, so they read only the latest

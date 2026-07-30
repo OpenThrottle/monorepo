@@ -35,9 +35,13 @@ import {
   AGENT_CLI_ALLOWLIST,
   type ChatCompletionMessage,
   type ConversationPermissionMode,
+  type ConversationReasoningEffort,
+  type ConversationServiceTier,
   createCursorAgentSession,
   toContainerPath,
   toConversationPermissionMode,
+  toConversationReasoningEffort,
+  toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
@@ -135,6 +139,8 @@ const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
 interface ResolvedBackendRun {
   readonly baseUrl: string | null;
   readonly cwd: string | null;
+  /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
+  readonly fileMentions: readonly string[];
   /** Extra env the CLI child must pass through (OT MCP token + API URLs); null when no MCP is configured. */
   readonly mcpEnv: Readonly<Record<string, string>> | null;
   /** Managed MCP servers (canonical `.mcp.json` schema); null when none apply to this checkout. */
@@ -145,8 +151,12 @@ interface ResolvedBackendRun {
   /** Composer permission posture forwarded to CLI backends; null when unset. */
   readonly permissionMode: ConversationPermissionMode | null;
   readonly provider: string | null;
+  /** Reasoning effort forwarded to backends that expose one; null when unset. */
+  readonly reasoning: ConversationReasoningEffort | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
   readonly resumeSession: boolean;
+  /** Service tier forwarded to tier-aware backends (cursor); null when unset. */
+  readonly serviceTier: ConversationServiceTier | null;
   readonly sessionId: string | null;
   readonly systemPrompt: string | null;
 }
@@ -231,28 +241,13 @@ export class ConversationStreamResolver {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
-    // `permissionMode` IS now honored: it is threaded onto the resolved run and
-    // resolved to concrete CLI permission flags inside each backend's argv/config
-    // builder (see resolveBackendRun below). The remaining T3 composer controls
-    // (reasoning effort, service tier) and the structured `fileMentions` list are
-    // still nullable + additive and NOT yet honored — enforcing them stays with
-    // the broader plan cacb864e (owned by the agent driver registry, dde67342).
-    // The @-mentioned paths already reach a CLI agent as inline `@path` tokens in
-    // `input.message`; `fileMentions` is for richer driver-side injection later.
-    const fileMentionCount = input.fileMentions?.length ?? 0;
-    if (
-      input.reasoning != null ||
-      input.serviceTier != null ||
-      fileMentionCount > 0
-    ) {
-      this.logger.debug(
-        `startConversationStream: control selections (not yet honored — see cacb864e/dde67342) reasoning=${
-          input.reasoning ?? '∅'
-        } serviceTier=${input.serviceTier ?? '∅'} fileMentions=${fileMentionCount}`,
-        ConversationStreamResolver.name,
-      );
-    }
-
+    // All four composer controls are now honored end-to-end: `permissionMode`,
+    // `reasoning`, and `serviceTier` are narrowed to their transport unions in
+    // `resolveBackendRun` and mapped to concrete per-backend flags/params inside
+    // each backend's argv/request builder; the structured `fileMentions` list is
+    // injected as genuine turn context (beyond the inline `@path` tokens already
+    // in `input.message`). A backend that cannot route a given control ignores
+    // it, and the capability descriptors advertise only what each backend honors.
     const conversationId = await this.resolveConversationId(
       userId,
       input.conversationId ?? null,
@@ -297,13 +292,16 @@ export class ConversationStreamResolver {
       baseUrl: resolved.baseUrl,
       conversationId,
       cwd: resolved.cwd,
+      fileMentions: resolved.fileMentions,
       mcpEnv: resolved.mcpEnv,
       mcpServers: resolved.mcpServers,
       messages,
       model: resolved.model,
       permissionMode: resolved.permissionMode,
       provider: resolved.provider,
+      reasoning: resolved.reasoning,
       resumeSession: resolved.resumeSession,
+      serviceTier: resolved.serviceTier,
       sessionId: resolved.sessionId,
       systemPrompt: resolved.systemPrompt,
       userId,
@@ -330,6 +328,14 @@ export class ConversationStreamResolver {
     conversationId: string,
     input: StartConversationStreamInput,
   ): Promise<ResolvedBackendRun | string> {
+    // Narrow the untrusted UI strings to their transport unions here (transport
+    // guard); the backend adapters map them to concrete flags/params. Same
+    // pattern as `permissionMode`. `fileMentions` is a structured path list —
+    // trusted only as strings, resolved to real context inside the adapters.
+    const reasoning = toConversationReasoningEffort(input.reasoning) ?? null;
+    const serviceTier = toConversationServiceTier(input.serviceTier) ?? null;
+    const fileMentions = input.fileMentions ?? [];
+
     if (backend === OPENAI_BACKEND) {
       if (!input.baseUrl || !input.modelId) {
         return 'baseUrl and modelId are required for the openai backend.';
@@ -350,12 +356,19 @@ export class ConversationStreamResolver {
       return {
         baseUrl: endpoint.baseUrl,
         cwd: null,
+        // openai has no filesystem, but it still benefits from the referenced
+        // paths as prompt context.
+        fileMentions,
         mcpEnv: null,
         mcpServers: null,
         model: input.modelId,
         permissionMode: null,
         provider: endpoint.provider,
+        // Local endpoints honor reasoning best-effort; tier is a cloud-only
+        // concept, so it is never routed here.
+        reasoning,
         resumeSession: false,
+        serviceTier: null,
         sessionId: null,
         systemPrompt: null,
       };
@@ -434,6 +447,7 @@ export class ConversationStreamResolver {
     return {
       baseUrl: null,
       cwd,
+      fileMentions,
       mcpEnv,
       mcpServers: hasMcp ? managedMcp : null,
       model: input.modelId ?? '',
@@ -442,7 +456,9 @@ export class ConversationStreamResolver {
       permissionMode:
         toConversationPermissionMode(input.permissionMode) ?? null,
       provider: backend,
+      reasoning,
       resumeSession: session.resumeSession,
+      serviceTier,
       sessionId: session.sessionId,
       systemPrompt,
     };

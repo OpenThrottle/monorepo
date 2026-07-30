@@ -26,6 +26,7 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { CODEX_BIN_ENV, CODEX_DEFAULT_BIN, buildCodexArgv } from './argv.ts';
+import { withFileMentions } from '../file-mentions.ts';
 import { mapCodexEvent } from './events.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -124,7 +125,8 @@ async function* streamCodex(
     buildCodexArgv({
       model: run.model,
       permissionMode: run.permissionMode,
-      prompt: composePrompt(run),
+      prompt: withFileMentions(composePrompt(run), run.fileMentions),
+      reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,
     }),

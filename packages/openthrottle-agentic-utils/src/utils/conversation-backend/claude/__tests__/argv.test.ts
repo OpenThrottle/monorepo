@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildClaudeArgv } from '../argv.ts';
-import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
+} from '../../types.ts';
 
 const MCP_SERVERS = {
   'openthrottle-mcp': {
@@ -210,6 +213,44 @@ describe('buildClaudeArgv', () => {
 
       expect(argv).not.toContain('--allowedTools');
       expect(argv).not.toContain('--permission-mode');
+    });
+  });
+
+  describe('reasoning effort', () => {
+    const effortFor = (
+      reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
+    ): string | undefined =>
+      valueAfter(
+        buildClaudeArgv({
+          prompt: 'do it',
+          reasoning,
+          resume: false,
+          sessionId: 'sid-1',
+        }),
+        '--effort',
+      );
+
+    it('maps low/medium/high straight through to --effort', () => {
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.low)).toBe('low');
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.medium)).toBe('medium');
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.high)).toBe('high');
+    });
+
+    it('maps extraHigh → xhigh and (max, ultra) → max (claude vocab)', () => {
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.extraHigh)).toBe('xhigh');
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.max)).toBe('max');
+      expect(effortFor(CONVERSATION_REASONING_EFFORTS.ultra)).toBe('max');
+    });
+
+    it('omits --effort when no reasoning level is given, prompt stays last', () => {
+      const argv = buildClaudeArgv({
+        prompt: 'do it',
+        resume: false,
+        sessionId: 'sid-1',
+      });
+
+      expect(argv).not.toContain('--effort');
+      expect(argv.at(-1)).toBe('do it');
     });
   });
 });
