@@ -1,5 +1,4 @@
 import { buildSitemapResponse } from '@openthrottle/react-router-utils';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 
 /**
@@ -16,9 +15,10 @@ const STATIC_PATHS: readonly string[] = ['/', '/docs', '/demos/layout', '/faq'];
  * docs/FAQ entry from `docsManifest`.
  */
 export const loader = (_args: Route.LoaderArgs): Response => {
-  const docPaths = docsManifest
-    .filter((entry) => !entry.draft)
-    .map((entry) => entry.path);
+  const docPaths: string[] = [];
+  // const docPaths = docsManifest
+  //   .filter((entry) => !entry.draft)
+  //   .map((entry) => entry.path);
 
   return buildSitemapResponse([...STATIC_PATHS, ...docPaths]);
 };
