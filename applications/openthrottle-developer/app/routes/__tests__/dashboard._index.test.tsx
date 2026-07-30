@@ -26,7 +26,7 @@ const mockGithubStats = {
   prTimeInStateSummary: [{ avgDaysInState: 2.5, count: 4, state: 'open' }],
 };
 
-const mockLoaderData = {
+const mockDashboardQuery = {
   activityByDate: {
     commits: [],
     hasNext: false,
@@ -35,14 +35,13 @@ const mockLoaderData = {
     totalCount: 0,
   },
   dailyStatsRange: { items: [] },
-  githubStats: mockGithubStats,
   queues: [],
 };
 
-const mockDashboardQuery = {
-  activityByDate: mockLoaderData.activityByDate,
-  dailyStatsRange: mockLoaderData.dailyStatsRange,
-  queues: mockLoaderData.queues,
+// Deferred loader shape: `core` (dashboard query) + `githubStats`, each a promise.
+const mockLoaderData = {
+  core: Promise.resolve(mockDashboardQuery),
+  githubStats: Promise.resolve(mockGithubStats),
 };
 
 const matches: Route.ComponentProps['matches'] = [
@@ -80,7 +79,11 @@ describe('routes/dashboard._index.tsx', () => {
 
       const result = await loader(args);
 
-      expect(result.githubStats).toEqual(mockGithubStats);
+      // Both queries fire concurrently (no serial await gate): by the time the
+      // loader returns, both executeGraphqlWithAuth calls have been invoked.
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      // githubStats is now a deferred promise — await it to assert its value.
+      expect(await result.githubStats).toEqual(mockGithubStats);
       expect(mockExecute).toHaveBeenNthCalledWith(
         2,
         request,
@@ -116,7 +119,7 @@ describe('routes/dashboard._index.tsx', () => {
     });
   });
 
-  test('should render dashboard content grid with chart cards', () => {
+  test('renders the intro banner + grid scaffold synchronously', () => {
     const Component = () => (
       <Index
         actionData={undefined}
@@ -128,23 +131,18 @@ describe('routes/dashboard._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
-    const grid = component.getByTestId('dashboard-content-grid');
-    expect(grid).toBeInTheDocument();
+    // The shell (intro + grid scaffold + static toolbar) is not deferred, so it
+    // is present on the first synchronous render before any promise resolves.
+    expect(component.getByTestId('dashboard-content-grid')).toBeInTheDocument();
     expect(
-      grid.querySelector('[data-testid="DashboardDailyStatsCard"]'),
-    ).toBeInTheDocument();
-    // expect(
-    //   grid.querySelector('[data-testid="DashboardQueueStats"]'),
-    // ).toBeInTheDocument();
-    expect(
-      grid.querySelector('[data-testid="DashboardPrTimeInStateCard"]'),
+      component.getByRole('heading', { level: 3, name: 'PR Time in State' }),
     ).toBeInTheDocument();
     expect(
-      grid.querySelector('[data-testid="DashboardOpenPrsByAuthorCard"]'),
+      component.getByRole('heading', { level: 3, name: 'PRs by author' }),
     ).toBeInTheDocument();
   });
 
-  test('should render PRs by author section with full githubStats from loader', () => {
+  test('streams the deferred chart + PR cards into the grid', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
@@ -157,30 +155,34 @@ describe('routes/dashboard._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
+    // Deferred cards resolve behind Suspense/Await — query async.
     expect(
-      component.getByRole('heading', { level: 3, name: 'PRs by author' }),
+      await component.findByTestId('DashboardDailyStatsCard'),
     ).toBeInTheDocument();
-
-    const card = component.getByTestId('DashboardOpenPrsByAuthorCard');
+    expect(
+      await component.findByTestId('DashboardPrTimeInStateCard'),
+    ).toBeInTheDocument();
+    const card = await component.findByTestId('DashboardOpenPrsByAuthorCard');
     expect(card).toBeInTheDocument();
+
     const chartRoot = card.querySelector('.recharts-responsive-container');
     expect(chartRoot).toBeInTheDocument();
     expect(chartRoot).toHaveStyle({ '--color-closed': 'var(--chart-2)' });
     expect(chartRoot).toHaveStyle({ '--color-open': 'var(--chart-1)' });
   });
 
-  test('should render PRs by author empty state when both series are empty', () => {
+  test('renders PRs by author empty state when both series are empty', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
         actionData={undefined}
         loaderData={{
           ...mockLoaderData,
-          githubStats: {
+          githubStats: Promise.resolve({
             ...mockGithubStats,
             closedPrCountByAuthor: [],
             openPrCountByAuthor: [],
-          },
+          }),
         }}
         matches={matches}
         params={{}}
@@ -189,7 +191,7 @@ describe('routes/dashboard._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
-    expect(component.getByText(/No PRs by author/)).toBeInTheDocument();
+    expect(await component.findByText(/No PRs by author/)).toBeInTheDocument();
     expect(
       component
         .getByTestId('DashboardOpenPrsByAuthorCard')
@@ -197,7 +199,7 @@ describe('routes/dashboard._index.tsx', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('should render recent activity outside the content grid', () => {
+  test('streams recent activity outside the content grid', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => (
       <Index
@@ -211,7 +213,37 @@ describe('routes/dashboard._index.tsx', () => {
     const component = render(<RoutesStub />);
 
     expect(
-      component.getByTestId('DashboardRecentActivity'),
+      await component.findByTestId('DashboardRecentActivity'),
+    ).toBeInTheDocument();
+  });
+
+  test('degrades the PR cards inline when githubStats rejects', async () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={{
+          ...mockLoaderData,
+          githubStats: Promise.reject(new Error('github boom')),
+        }}
+        matches={matches}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+
+    // Both PR-card boundaries render their inline errorElement (degraded), and
+    // the route does NOT throw to the ErrorBoundary — the core chart still
+    // streams in. One error per PR card boundary.
+    const errors = await component.findAllByText(/Couldn’t load PR stats\./);
+    expect(errors).toHaveLength(2);
+    expect(
+      component.queryByTestId('DashboardOpenPrsByAuthorCard'),
+    ).not.toBeInTheDocument();
+    // Core-backed activity chart is unaffected by the GitHub failure.
+    expect(
+      await component.findByTestId('DashboardDailyStatsCard'),
     ).toBeInTheDocument();
   });
 });
