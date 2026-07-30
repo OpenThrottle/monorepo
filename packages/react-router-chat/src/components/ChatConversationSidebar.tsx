@@ -206,7 +206,7 @@ export const ChatConversationSidebar = (
       <div
         className={clsx(
           // 'group/row flex items-center gap-1 rounded-md ',
-          'group/row hover:bg-accent/50 flex max-w-full px-2 py-0.5',
+          'group/row hover:bg-accent/50 flex max-w-full px-2 py-2',
           isActive && 'bg-accent',
         )}
         key={conversation.id}
@@ -214,13 +214,13 @@ export const ChatConversationSidebar = (
         <div className="flex-1">
           <button
             aria-current={isActive ? 'true' : undefined}
-            className="flex flex-col items-start"
+            className="flex cursor-pointer flex-col text-left"
             // className="hover:bg-accent/50 flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-1 text-left"
             data-testid={`ChatConversationSidebar-select-${conversation.id}`}
             onClick={() => onSelect(conversation.id)}
             type="button"
           >
-            <div className="text-sm">{label}</div>
+            <div className="line-clamp-1 text-sm">{label}</div>
             <div className="text-xs">
               {formatRelativeChatTimestamp(conversation.updatedAt)}
             </div>
@@ -286,7 +286,7 @@ export const ChatConversationSidebar = (
         ) : isEmpty ? (
           empty
         ) : (
-          <div className="flex flex-col gap-0.5 pb-1">{rows}</div>
+          <div className="flex flex-col gap-px pb-1">{rows}</div>
         )}
         {loadMore}
       </ScrollArea>

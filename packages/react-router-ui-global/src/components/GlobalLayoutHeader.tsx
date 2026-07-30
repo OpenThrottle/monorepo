@@ -158,7 +158,7 @@ export const GlobalLayoutHeader = (
       </div>
 
       <ChatDialog
-        title="OpenThrottle Assistant"
+        title="Clutch Assistant"
         triggerLabel="Chat"
         // variant="sheet"
         // variant="dialog"

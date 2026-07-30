@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, useFetcher, useNavigate } from 'react-router';
+import { Await, Link, useFetcher, useNavigate } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -13,10 +13,12 @@ import {
   GetDashboardQueryVariables,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
+import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
+import { DashboardPrCardsSkeleton } from '~/routing/dashboard/components/DashboardPrCardsSkeleton';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
 // import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
@@ -33,7 +35,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (args: Route.LoaderArgs) => {
+export const loader = (args: Route.LoaderArgs) => {
   const end = new Date();
   const endIso = end.toISOString();
 
@@ -48,20 +50,28 @@ export const loader = async (args: Route.LoaderArgs) => {
     start: startIso,
   };
 
-  const result = await executeGraphqlWithAuth(
+  // Fire both queries concurrently (no serial waitfall) and return two
+  // independent naked promises so the "This Week's Activity" chart streams as
+  // soon as the dashboard query lands, without waiting on the slower GitHub API
+  // round-trip. RR8 Single Fetch serializes/streams the promise fields. The
+  // dashboard call is invoked first (call #1), githubStats second (call #2).
+  const core = executeGraphqlWithAuth(
     args.request,
     GetDashboardDocument,
     variables,
-  );
+  ).then((result) => ({
+    activityByDate: result.activityByDate,
+    dailyStatsRange: result.dailyStatsRange,
+    queues: result.queues,
+  }));
 
-  const { activityByDate, dailyStatsRange, queues } = result;
-  const githubStats = await executeGraphqlWithAuth(
+  const githubStats = executeGraphqlWithAuth(
     args.request,
     GetDashboardGithubStatsDocument,
     { owner, repo },
   );
 
-  return { activityByDate, dailyStatsRange, githubStats, queues };
+  return { core, githubStats };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -76,12 +86,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const {
-    activityByDate,
-    dailyStatsRange,
-    githubStats,
-    queues: _queues,
-  } = loaderData;
+  const { core, githubStats } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -138,27 +143,80 @@ export default function Component(
               </Link>
             </Button>
           </div>
-          <DashboardDailyStatsCard
-            dailyStats={dailyStatsRange.items}
-            onSelectDate={handleSelectDate}
-          />
+          {/* Deferred (core): streams as soon as the dashboard query lands. */}
+          <React.Suspense fallback={<DashboardActivityChartSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load this week&rsquo;s activity.
+                </p>
+              }
+              resolve={core}
+            >
+              {(data) => (
+                <DashboardDailyStatsCard
+                  dailyStats={data.dailyStatsRange.items}
+                  onSelectDate={handleSelectDate}
+                />
+              )}
+            </Await>
+          </React.Suspense>
         </div>
 
         <DashboardToolbar className="col-span-2" />
 
         <div>
           <h3 className="mb-4">PR Time in State</h3>
-          <DashboardPrTimeInStateCard
-            prTimeInStateSummary={githubStats.prTimeInStateSummary}
-          />
+          {/* Deferred (githubStats): its own boundary so the GitHub round-trip
+              never blocks the activity chart. errorElement degrades the card. */}
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load PR stats.
+                </p>
+              }
+              resolve={githubStats}
+            >
+              {(stats) => (
+                <DashboardPrTimeInStateCard
+                  prTimeInStateSummary={stats.prTimeInStateSummary}
+                />
+              )}
+            </Await>
+          </React.Suspense>
         </div>
 
         <div>
           <h3 className="mb-4">PRs by author</h3>
-          <DashboardOpenPrsByAuthorCard githubStats={githubStats} />
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load PR stats.
+                </p>
+              }
+              resolve={githubStats}
+            >
+              {(stats) => <DashboardOpenPrsByAuthorCard githubStats={stats} />}
+            </Await>
+          </React.Suspense>
         </div>
 
-        <DashboardRecentActivity className="col-span-2" data={activityByDate} />
+        <div className="col-span-2">
+          <React.Suspense fallback={<DashboardActivityChartSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load recent activity.
+                </p>
+              }
+              resolve={core}
+            >
+              {(data) => <DashboardRecentActivity data={data.activityByDate} />}
+            </Await>
+          </React.Suspense>
+        </div>
 
         {/* <div>
           <h3 className="text-lg mb-4">Development</h3>
@@ -192,7 +250,15 @@ export default function Component(
         </div> */}
       </div>
 
-      <DashboardDailyStatsModal dailyStats={dailyStatsRange.items} />
+      {/* Portal-rendered (Dialog): invisible until ?modal=daily-stats, so a
+          null fallback is fine and it simply waits on the core promise. */}
+      <React.Suspense fallback={null}>
+        <Await errorElement={null} resolve={core}>
+          {(data) => (
+            <DashboardDailyStatsModal dailyStats={data.dailyStatsRange.items} />
+          )}
+        </Await>
+      </React.Suspense>
     </GlobalScreen>
   );
 }
