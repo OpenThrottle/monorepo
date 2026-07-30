@@ -1,5 +1,5 @@
 ---
-group: General
+group: 00. General
 order: 1
 title: What is OpenThrottle?
 ---

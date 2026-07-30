@@ -1,5 +1,5 @@
 ---
-group: Plans
+group: 02. Plans & Tasks
 order: 1
 title: Where are plans and tasks stored?
 ---

@@ -1,11 +1,16 @@
 import * as React from 'react';
-import { DocPageView } from '@openthrottle/react-router-docs';
+import {
+  DocPageView,
+  buildDocsNav,
+  flattenDocsNav,
+} from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
 } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs.$';
 
 const docsBySlug = new Map(
@@ -13,6 +18,8 @@ const docsBySlug = new Map(
     .filter((entry) => entry.section === 'docs')
     .map((entry) => [entry.path, entry]),
 );
+
+const docsSequence = flattenDocsNav(buildDocsNav(docsManifest, 'docs'));
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -50,6 +57,7 @@ export default function Component(
   const { params } = props;
 
   // Hooks
+  const [flags] = useDocsFeatureFlags();
 
   // Setup
   const entry = docsBySlug.get(`/docs/${params['*']}`);
@@ -65,7 +73,15 @@ export default function Component(
     return <p className="text-muted-foreground text-sm">Page not found.</p>;
   }
 
-  return <DocPageView entry={entry} />;
+  return (
+    <DocPageView
+      codeCopy={flags.codeCopy}
+      entry={entry}
+      prevNext={flags.prevNext}
+      sequence={docsSequence}
+      toc={flags.toc}
+    />
+  );
 }
 
 export const ErrorBoundary = GlobalErrorBoundary;
