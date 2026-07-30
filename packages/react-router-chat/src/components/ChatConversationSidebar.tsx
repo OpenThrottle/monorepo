@@ -26,6 +26,12 @@ export interface ChatConversationSidebarProps {
   readonly className?: string;
   /** The conversations to list (already paginated by the consumer). */
   readonly conversations: readonly AgentConversationListItem[];
+  /**
+   * Suppress the built-in header row (title + New chat). Set when a wrapper —
+   * e.g. {@link ChatConversationSheet} — supplies its own header/title so the
+   * two don't duplicate.
+   */
+  readonly hideHeader?: boolean;
   /** True while the first page loads — renders skeleton rows instead of the list. */
   readonly isLoading?: boolean;
   /** True while a load-more request is in flight — disables the button. */
@@ -65,6 +71,7 @@ export const ChatConversationSidebar = (
     activeConversationId,
     className,
     conversations,
+    hideHeader = false,
     isLoading = false,
     isLoadingMore = false,
     onDelete,
@@ -198,45 +205,51 @@ export const ChatConversationSidebar = (
     return (
       <div
         className={clsx(
-          'group/row flex items-center gap-1 rounded-md px-2 py-0.5',
+          // 'group/row flex items-center gap-1 rounded-md ',
+          'group/row hover:bg-accent/50 flex max-w-full px-2 py-0.5',
           isActive && 'bg-accent',
         )}
         key={conversation.id}
       >
-        <button
-          aria-current={isActive ? 'true' : undefined}
-          className="hover:bg-accent/50 flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-1 text-left"
-          data-testid={`ChatConversationSidebar-select-${conversation.id}`}
-          onClick={() => onSelect(conversation.id)}
-          type="button"
-        >
-          <span className="w-full truncate text-sm">{label}</span>
-          <span className="text-muted-foreground text-xs">
-            {formatRelativeChatTimestamp(conversation.updatedAt)}
-          </span>
-        </button>
-        <Button
-          aria-label={`Rename ${label}`}
-          className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
-          data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
-          onClick={() => startRename(conversation)}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-        <Button
-          aria-label={`Delete ${label}`}
-          className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
-          data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
-          onClick={() => setPendingDeleteId(conversation.id)}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        <div className="flex-1">
+          <button
+            aria-current={isActive ? 'true' : undefined}
+            className="flex flex-col items-start"
+            // className="hover:bg-accent/50 flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-1 text-left"
+            data-testid={`ChatConversationSidebar-select-${conversation.id}`}
+            onClick={() => onSelect(conversation.id)}
+            type="button"
+          >
+            <div className="text-sm">{label}</div>
+            <div className="text-xs">
+              {formatRelativeChatTimestamp(conversation.updatedAt)}
+            </div>
+          </button>
+        </div>
+        <div>
+          <Button
+            aria-label={`Rename ${label}`}
+            // className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+            data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
+            onClick={() => startRename(conversation)}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+          <Button
+            aria-label={`Delete ${label}`}
+            // className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+            data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
+            onClick={() => setPendingDeleteId(conversation.id)}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
       </div>
     );
   });
@@ -266,7 +279,7 @@ export const ChatConversationSidebar = (
       className={clsx('flex h-full min-h-0 flex-col', className)}
       data-testid="ChatConversationSidebar"
     >
-      {header}
+      {hideHeader ? null : header}
       <ScrollArea className="min-h-0 flex-1">
         {isLoading ? (
           skeletons

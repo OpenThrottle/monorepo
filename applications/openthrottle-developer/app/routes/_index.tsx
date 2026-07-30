@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChatComposer,
   ChatComposerToolbar,
-  ChatConversationSidebar,
+  ChatConversationSheet,
   ChatThread,
   parseFileMentions,
   type ChatComposerMode,
@@ -311,12 +311,12 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen beta={true} className="flex flex-1 flex-row">
-      <aside
-        className="hidden w-72 shrink-0 border-r md:flex md:flex-col"
-        data-testid="home-conversation-sidebar"
+    <GlobalScreen beta={true} className="flex flex-1 flex-col">
+      <div
+        className="flex items-center gap-2 px-4 pt-4 md:px-8 md:pt-6 lg:px-12"
+        data-testid="home-conversation-toolbar"
       >
-        <ChatConversationSidebar
+        <ChatConversationSheet
           activeConversationId={turn.conversationId}
           conversations={conversationList.conversations}
           isLoading={conversationList.isLoading}
@@ -326,11 +326,12 @@ export default function Component(
           onNewChat={onNewChat}
           onRename={conversationList.rename}
           onSelect={onSelectConversation}
+          side="left"
           totalCount={conversationList.totalCount}
         />
-      </aside>
+      </div>
 
-      <div className="flex flex-1 flex-col justify-end p-4 md:p-8 lg:p-12">
+      <div className="flex flex-1 flex-col justify-end p-4 pt-2 md:p-8 md:pt-4 lg:p-12 lg:pt-4">
         {isEmptyThread && (
           <div className="flex flex-1 flex-col items-center justify-center">
             <h1 className="text-center text-2xl">

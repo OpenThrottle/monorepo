@@ -6,9 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -19,12 +16,12 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import { BotIcon, MessageSquarePlus, MessagesSquare } from 'lucide-react';
+import { BotIcon, MessageSquarePlus } from 'lucide-react';
 import { useChatOptional } from '../context/chat-context';
 import type { ChatComposerControls } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
-import { ChatConversationSidebar } from './ChatConversationSidebar';
+import { ChatConversationSheet } from './ChatConversationSheet';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatThread } from './ChatThread';
 import type { ChatMessage } from '../types';
@@ -131,31 +128,11 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
 
   const conversationSwitcherControl =
     conversationSidebar != null ? (
-      <Popover>
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild={true}>
-            <PopoverTrigger asChild={true}>
-              <Button
-                aria-label="Conversations"
-                className="shrink-0"
-                data-testid="ChatDialog-conversations-trigger"
-                size="icon"
-                type="button"
-                variant="ghost"
-              >
-                <MessagesSquare aria-hidden={true} className="size-4" />
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent>Conversations</TooltipContent>
-        </Tooltip>
-        <PopoverContent
-          align="end"
-          className="h-[60vh] w-80 overflow-hidden p-0"
-        >
-          <ChatConversationSidebar {...conversationSidebar} />
-        </PopoverContent>
-      </Popover>
+      <ChatConversationSheet
+        {...conversationSidebar}
+        side="right"
+        triggerTestId="ChatDialog-conversations-trigger"
+      />
     ) : null;
 
   const newChatControl =

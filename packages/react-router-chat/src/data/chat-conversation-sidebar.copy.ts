@@ -14,6 +14,8 @@ export const CHAT_CONVERSATION_SIDEBAR_COPY = {
   loadMore: 'Load more',
   newChat: 'New chat',
   renamePlaceholder: 'Conversation title',
+  switcherDescription:
+    'Browse, restore, rename, or delete your saved conversations.',
   title: 'Conversations',
   untitled: 'Untitled conversation',
 } as const;

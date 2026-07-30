@@ -292,7 +292,7 @@ describe('ChatDialog Component', () => {
       ).not.toBeInTheDocument();
     });
 
-    test('opens a popover listing conversations and selects one', async () => {
+    test('opens a sheet listing conversations and selects one', async () => {
       const user = userEvent.setup();
       const onSelect = vi.fn();
       renderWithSidebar({
