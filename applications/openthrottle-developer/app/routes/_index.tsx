@@ -311,7 +311,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen beta={true} className="flex flex-1 flex-col">
+    <GlobalScreen className="flex flex-1 flex-col">
       <div
         className="flex items-center gap-2 px-4 pt-4 md:px-8 md:pt-6 lg:px-12"
         data-testid="home-conversation-toolbar"
@@ -338,8 +338,8 @@ export default function Component(
               What would you like to build today?
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              OpenThrottle is a platform for building applications based on best
-              practices for Agentic development.
+              OpenThrottle is a platform for building software, fast, and
+              secure.
             </p>
           </div>
         )}
