@@ -110,13 +110,25 @@ The full audit — including the resolution of every package `pnpm licenses list
 reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
 [`docs/monorepo/dependency-license-audit.md`](./docs/monorepo/dependency-license-audit.md).
 
+This is enforced automatically: [`license-policy.json`](./license-policy.json)
+declares the allowed licenses and waivers, and a CI gate
+(`pnpm validate:licenses`) fails any PR that introduces a disallowed or undetected
+license. Dependency attributions are aggregated into
+[`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) (regenerated with
+`pnpm generate:notices`). See CONTRIBUTING.md § Dependency licenses for the policy
+and the waiver process.
+
 ## Files
 
 - [`LICENSE`](./LICENSE) — Apache-2.0, the canonical license for the open core.
 - [`NOTICE`](./NOTICE) — Apache-2.0 §4(d) attribution notice (project name +
-  copyright holder). Attribution only — it carries no additional license terms.
-  Third-party attributions are folded in only if/when a published package bundles
-  attribution-required dependencies (tracked in the license-automation plan).
+  copyright holder) plus a pointer to the third-party attribution manifest and
+  any notice-required dependencies.
+- [`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) — generated dependency
+  attribution manifest (`pnpm generate:notices`); embeds the full license text of
+  notice-required dependencies.
+- [`license-policy.json`](./license-policy.json) — the allowlist/waiver policy
+  the CI license gate (`pnpm validate:licenses`) enforces.
 - [`LICENSE-EULA.md`](./LICENSE-EULA.md) — retained EULA, the template for future
   commercial/enterprise packages.
 - [`TRADEMARK.md`](./TRADEMARK.md) — trademark policy for the OpenThrottle name

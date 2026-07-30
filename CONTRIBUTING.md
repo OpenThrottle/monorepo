@@ -58,6 +58,64 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    [pull request template](./.github/pull_request_template.md): a
    conventional-commit title, and testing steps phrased as things to do.
 
+## Dependency licenses
+
+Dependency licenses are gated in CI so an incompatible license (copyleft such as
+AGPL/GPL/LGPL/SSPL, "Commercial"/proprietary, or an undetected one) cannot slip in
+with a dependency bump — the way the dead `ua-parser-js` AGPL dependency once did.
+
+**Policy** lives in [`license-policy.json`](./license-policy.json). It is
+**allowlist-based / default-deny**: a package passes only if _every_ license in
+its SPDX expression is on the `allow` list, or the package is covered by a
+documented waiver. The policy has four sections:
+
+- `allow` — SPDX ids permitted outright (MIT, Apache-2.0, BSD-2/3-Clause, ISC,
+  0BSD, Unlicense, BlueOak, MPL-2.0 used unmodified, etc.).
+- `deny` — copyleft/proprietary ids listed only so the report can explain _why_
+  something failed; the default-deny already blocks anything not in `allow`.
+- `resolvedUnknowns` — `package → verified SPDX id` overrides for packages that
+  `pnpm licenses list` reports as `Unknown` because their `license` field is
+  absent or non-SPDX (verified from the bundled license text).
+- `exceptions` — package-scoped waivers, `{ package, license, reason, scope, notice? }`.
+
+**The gate.** `scripts/validate-license-compliance.ts` applies the policy to
+`pnpm licenses list --json` and exits non-zero on any disallowed or undetected
+license. It runs in CI (the _Dependency-license compliance gate_ step, full-tree
+on every ready PR) and locally:
+
+```bash
+pnpm validate:licenses            # or: pnpm nx run monorepo:validate-licenses
+```
+
+**When the gate fails,** the report names each offending package and the fix.
+Pick the right one:
+
+1. **The license is permissive but not yet listed** → add its SPDX id to `allow`
+   (keep the array sorted).
+2. **pnpm reports it as `Unknown`** → open the package's bundled `LICENSE`,
+   confirm the real license, and add `"<package>": "<SPDX>"` to `resolvedUnknowns`
+   (or `allow` the SPDX if it is new).
+3. **The license is non-permissive but acceptable for a documented reason**
+   (build-only tooling, a scoped source-available dependency, an elected dual
+   license) → add an `exceptions` entry with a clear `reason` and `scope`
+   (`build-tooling` or `runtime`). Set `notice: true` if the license requires its
+   text be reproduced downstream. **Waivers are an owner/maintainer decision** —
+   flag it in the PR; don't self-approve a copyleft runtime dependency.
+
+**Attribution.** [`THIRD-PARTY-LICENSES.md`](./THIRD-PARTY-LICENSES.md) (the
+Apache-2.0 §4 manifest, pointed to by [`NOTICE`](./NOTICE)) is generated and
+drift-checked in CI. If a dependency change moves it, regenerate and commit:
+
+```bash
+pnpm generate:notices   # writes THIRD-PARTY-LICENSES.md
+pnpm validate:notices   # what CI runs; fails if the committed file is stale
+```
+
+Every `notice: true` waiver has its full license text embedded at the end of the
+manifest. Background and the per-package waiver rationale live in
+[`docs/monorepo/dependency-license-audit.md`](./docs/monorepo/dependency-license-audit.md)
+and [`LICENSING.md`](./LICENSING.md).
+
 ## Contributor License Agreement (CLA)
 
 > ⚠️ **DRAFT — pending legal review.** The CLA terms and process below are not

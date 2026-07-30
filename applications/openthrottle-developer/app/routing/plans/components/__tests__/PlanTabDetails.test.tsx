@@ -48,7 +48,7 @@ describe('PlanTabDetails Component', () => {
       setFullscreen,
     };
 
-    const { findAllByText, getByTestId } = renderWithPlanDetailRouteData(
+    const { findAllByText } = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <Tabs value="overview">
           <PlanTabDetails {...props} />
@@ -63,7 +63,9 @@ describe('PlanTabDetails Component', () => {
       },
     );
 
-    expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
+    // Disabled w/ default feature flag
+    // expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
+
     // MarkdownRenderer compiles the description asynchronously, so await it.
     expect(
       (await findAllByText('Plan description')).length,
