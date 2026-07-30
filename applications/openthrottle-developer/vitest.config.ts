@@ -32,25 +32,27 @@ export default (config: ConfigEnv) => {
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description Pool differs by environment on purpose.
-       *
-       * Locally we use `vmForks`: each file runs in a fresh V8 VM context inside a
-       * reused worker, so globals are isolated per file (no cross-file leakage,
-       * unlike `isolate: false`) while the worker and module transform cache are
-       * reused — eliminating the dominant per-file re-import cost. Measured on this
-       * suite: ~730s -> ~172s user CPU, ~120s -> ~30s wall.
-       *
-       * In CI we use the stable default `forks` pool. On the Linux CI runners a
-       * `vmForks` worker dies mid-suite (surfacing as a stuck `(0 test)` file and a
-       * truncated, summary-less run) in a way that does not reproduce on the dev
-       * machines — a known class of VM-context instability. `forks` has no VM
-       * context to crash; the full suite is clean under it. The per-file re-import
-       * cost is an acceptable trade for a reliable pipeline. (The plan-detail WS
-       * realm crash that first exposed this is fixed independently in tests/setup.)
+       * @description vmForks runs each test file in a fresh V8 VM context inside a
+       * reused worker process. Globals are isolated per file (so no cross-file state
+       * leakage — unlike `isolate: false`), but the worker and module transform cache
+       * are reused, which eliminates the dominant per-file module re-import cost.
+       * Measured on this suite: ~730s -> ~172s user CPU, ~120s -> ~30s wall, no new
+       * failures. (Plain `forks`/`threads` re-import the full module graph per file;
+       * `isolate: false` is faster still but leaks global state non-deterministically.)
        */
-      pool: process.env.CI ? 'forks' : 'vmForks',
+      pool: 'vmForks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
+      /**
+       * @description A reused `vmForks` worker accumulates heap across the many
+       * files it runs; Vitest's default recycle threshold is derived from *host*
+       * RAM, which a CI container over-reports, so the worker is OOM-killed by the
+       * cgroup before it ever recycles (the run dies mid-suite with no summary).
+       * Pin an explicit limit so each worker recycles well under the container
+       * ceiling. Local runs (more RAM) never hit it. (This is the memory half of the
+       * CI fix; the plan-detail WebSocket realm crash is handled in tests/setup.)
+       */
+      vmMemoryLimit: '512MB',
     },
   });
 
