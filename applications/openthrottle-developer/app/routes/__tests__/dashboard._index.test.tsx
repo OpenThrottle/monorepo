@@ -26,7 +26,7 @@ const mockGithubStats = {
   prTimeInStateSummary: [{ avgDaysInState: 2.5, count: 4, state: 'open' }],
 };
 
-const mockLoaderData = {
+const mockDashboardQuery = {
   activityByDate: {
     commits: [],
     hasNext: false,
@@ -35,14 +35,13 @@ const mockLoaderData = {
     totalCount: 0,
   },
   dailyStatsRange: { items: [] },
-  githubStats: mockGithubStats,
   queues: [],
 };
 
-const mockDashboardQuery = {
-  activityByDate: mockLoaderData.activityByDate,
-  dailyStatsRange: mockLoaderData.dailyStatsRange,
-  queues: mockLoaderData.queues,
+// Deferred loader shape: `core` (dashboard query) + `githubStats`, each a promise.
+const mockLoaderData = {
+  core: Promise.resolve(mockDashboardQuery),
+  githubStats: Promise.resolve(mockGithubStats),
 };
 
 const matches: Route.ComponentProps['matches'] = [
@@ -176,11 +175,11 @@ describe('routes/dashboard._index.tsx', () => {
         actionData={undefined}
         loaderData={{
           ...mockLoaderData,
-          githubStats: {
+          githubStats: Promise.resolve({
             ...mockGithubStats,
             closedPrCountByAuthor: [],
             openPrCountByAuthor: [],
-          },
+          }),
         }}
         matches={matches}
         params={{}}
