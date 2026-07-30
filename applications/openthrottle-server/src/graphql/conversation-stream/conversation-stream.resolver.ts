@@ -107,6 +107,17 @@ const CLI_BACKENDS = new Set<string>(
   ),
 );
 
+/**
+ * CLI backends that can be pointed at a discovered local OpenAI-compatible
+ * endpoint (`supportsCustomBaseUrl` — opencode, codex, grok). Only these accept a
+ * `baseUrl` on a CLI request; the rest (claude, cursor) reject it.
+ */
+const BASE_URL_CAPABLE_BACKENDS = new Set<string>(
+  AGENT_CLI_ALLOWLIST.filter(
+    (descriptor) => descriptor.supportsCustomBaseUrl,
+  ).map((descriptor) => descriptor.backend),
+);
+
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
 /** Conversation-metadata key holding a backend's persisted repository id. */
@@ -374,6 +385,30 @@ export class ConversationStreamResolver {
       };
     }
 
+    // Optional driver×endpoint targeting: a base-URL-capable CLI backend may run
+    // against a discovered local endpoint. Validated up front (before any session
+    // minting) with the same SSRF guard as the openai backend — baseUrl+model must
+    // come from discovery; rejected for non-capable backends (claude/cursor).
+    let cliBaseUrl: string | null = null;
+    if (input.baseUrl != null && input.baseUrl !== '') {
+      if (!BASE_URL_CAPABLE_BACKENDS.has(backend)) {
+        return `The ${backend} backend cannot target a custom local endpoint.`;
+      }
+      if (!input.modelId) {
+        return 'modelId is required when targeting a local endpoint.';
+      }
+      const discovery = await this.modelDiscovery.discover();
+      const endpoint = discovery.endpoints.find(
+        (candidate) =>
+          candidate.baseUrl === input.baseUrl &&
+          candidate.models.includes(input.modelId ?? ''),
+      );
+      if (!endpoint) {
+        return 'Unknown model or endpoint. Pick a model from the discovered list.';
+      }
+      cliBaseUrl = endpoint.baseUrl;
+    }
+
     // CLI backend (cursor | claude | opencode): resolve a scoped cwd from a
     // registered repository, or — only in development, behind an env flag — a
     // configured dev directory. Same gate for every CLI backend.
@@ -445,7 +480,7 @@ export class ConversationStreamResolver {
       : null;
 
     return {
-      baseUrl: null,
+      baseUrl: cliBaseUrl,
       cwd,
       fileMentions,
       mcpEnv,

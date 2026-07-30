@@ -37,6 +37,7 @@ const testDriver: AgentDriver = defineDriver({
     chatStreaming: false,
     permissionMode: false,
     skipWorktreeSetup: false,
+    supportsCustomBaseUrl: false,
     supportsModelFlag: false,
     worktree: false,
     worktreeBase: false,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   escapeForShellDoubleQuoted,
   escapeShellArg,
+  formatShellEnvPrefix,
   WORKTREE_FLAG_ONLY,
 } from '../shell.ts';
 
@@ -56,6 +57,33 @@ describe('escapeForShellDoubleQuoted', () => {
 
   it('escapes embedded double quotes', () => {
     expect(escapeForShellDoubleQuoted('say "hi"')).toBe('say \\"hi\\"');
+  });
+});
+
+describe('formatShellEnvPrefix', () => {
+  it('returns empty string for no entries', () => {
+    expect(formatShellEnvPrefix({})).toBe('');
+  });
+
+  it('emits KEY=value pairs in alphabetical key order with a trailing space', () => {
+    // Deliberately out-of-order input to prove the function reorders keys.
+    // eslint-disable-next-line sort-keys, sort-keys-fix/sort-keys-fix
+    expect(formatShellEnvPrefix({ ZED: 'z', ABE: 'a' })).toBe('ABE=a ZED=z ');
+  });
+
+  it('escapes unsafe values (e.g. a base URL with a colon)', () => {
+    expect(
+      formatShellEnvPrefix({ BASE_URL: 'http://localhost:11434/v1' }),
+    ).toBe('BASE_URL="http://localhost:11434/v1" ');
+  });
+
+  it('drops empty-string values so callers can prepend unconditionally', () => {
+    expect(formatShellEnvPrefix({ A: '', B: 'b' })).toBe('B=b ');
+    expect(formatShellEnvPrefix({ A: '' })).toBe('');
+  });
+
+  it('neutralizes injection attempts in values', () => {
+    expect(formatShellEnvPrefix({ K: '$(id)' })).toBe('K="\\$(id)" ');
   });
 });
 

@@ -161,15 +161,20 @@ export function useHeaderChatController(args: {
       (mention) => mention.path,
     );
 
+    // Three shapes: the plain openai HTTP backend (baseUrl + model, no repo); a
+    // CLI backend on its own cloud model; and a CLI backend pointed at a
+    // discovered local endpoint (a driver id + baseUrl) — the last carries both
+    // the endpoint fields AND the CLI/repo fields.
     const fields: Record<string, string> =
-      decoded.baseUrl != null
+      decoded.backend === 'openai'
         ? {
             backend: 'openai',
-            baseUrl: decoded.baseUrl,
-            modelId: decoded.model,
+            baseUrl: decoded.baseUrl ?? '',
+            modelId: decoded.model ?? '',
           }
         : {
             backend: decoded.backend,
+            ...(decoded.baseUrl != null ? { baseUrl: decoded.baseUrl } : {}),
             fileMentions: JSON.stringify(fileMentions),
             modelId: decoded.model ?? '',
             permissionMode: permissionMode ?? '',

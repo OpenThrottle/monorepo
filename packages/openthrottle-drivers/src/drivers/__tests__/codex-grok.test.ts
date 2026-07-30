@@ -53,6 +53,32 @@ describe('codex driver', () => {
     ).toBe('codex exec --sandbox workspace-write "fix it"');
   });
 
+  it('targets a fingerprinted local endpoint via --oss + base_url override', () => {
+    expect(
+      codexDriver.buildShellCommand(
+        config({
+          endpoint: {
+            baseUrl: 'http://localhost:11434/v1',
+            provider: 'ollama',
+          },
+          model: 'llama3',
+        }),
+      ),
+    ).toBe(
+      'codex exec --sandbox workspace-write --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://localhost:11434/v1\\"" --model llama3 "fix it"',
+    );
+  });
+
+  it('defaults an unfingerprinted endpoint provider to ollama', () => {
+    expect(
+      codexDriver.buildShellCommand(
+        config({ endpoint: { baseUrl: 'http://h:1/v1', provider: null } }),
+      ),
+    ).toBe(
+      'codex exec --sandbox workspace-write --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://h:1/v1\\"" "fix it"',
+    );
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(codexDriver.id).toBe('codex');
     expect(codexDriver.label).toBe('codex');
@@ -60,6 +86,7 @@ describe('codex driver', () => {
       chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
+      supportsCustomBaseUrl: true,
       supportsModelFlag: true,
       worktree: false,
       worktreeBase: false,
@@ -115,6 +142,32 @@ describe('grok driver', () => {
     ).toBe('grok -p "leak \\${HOME}" --permission-mode acceptEdits');
   });
 
+  it('redirects at a local endpoint via GROK_MODELS_BASE_URL + XAI_API_KEY env', () => {
+    expect(
+      grokDriver.buildShellCommand(
+        config({
+          endpoint: { baseUrl: 'http://localhost:11434/v1' },
+          model: 'llama3',
+        }),
+      ),
+    ).toBe(
+      'GROK_MODELS_BASE_URL="http://localhost:11434/v1" XAI_API_KEY=local grok -p "fix it" --permission-mode acceptEdits --model llama3',
+    );
+  });
+
+  it('honors a supplied apiKey and composes with a worktree', () => {
+    expect(
+      grokDriver.buildShellCommand(
+        config({
+          endpoint: { apiKey: 'sk-x', baseUrl: 'http://h:1/v1' },
+          worktree: { worktree: 'wt' },
+        }),
+      ),
+    ).toBe(
+      'GROK_MODELS_BASE_URL="http://h:1/v1" XAI_API_KEY=sk-x grok -p "fix it" --permission-mode acceptEdits -w wt',
+    );
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(grokDriver.id).toBe('grok');
     expect(grokDriver.label).toBe('grok');
@@ -122,6 +175,7 @@ describe('grok driver', () => {
       chatStreaming: true,
       permissionMode: true,
       skipWorktreeSetup: false,
+      supportsCustomBaseUrl: true,
       supportsModelFlag: true,
       worktree: true,
       worktreeBase: false,

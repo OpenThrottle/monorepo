@@ -27,6 +27,12 @@ export interface AgentCliDescriptor {
   readonly discoverModels?: DriverModelListing;
   /** Human-readable label for the selector. */
   readonly label: string;
+  /**
+   * True when the driver can be pointed at a custom OpenAI-compatible base URL (a discovered local
+   * endpoint). The composer offers driver×endpoint targeting only for these; false drivers
+   * (claude/cursor) speak their own cloud wire protocol.
+   */
+  readonly supportsCustomBaseUrl: boolean;
   /** Args probing presence + version (default `['--version']`). */
   readonly versionArgs: readonly string[];
 }
@@ -45,6 +51,8 @@ export interface AgentCliAvailability {
   readonly label: string;
   /** Models this CLI can run (empty when unavailable, undiscoverable, or on listing failure). */
   readonly models: readonly string[];
+  /** True when this driver can target a custom OpenAI-compatible base URL (a discovered endpoint). */
+  readonly supportsCustomBaseUrl: boolean;
   /** Trimmed version output when available, else null. */
   readonly version: string | null;
 }
@@ -89,6 +97,7 @@ export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] =
     chatCapable: driver.capabilities.chatStreaming,
     discoverModels: driver.discoverModels,
     label: driver.label,
+    supportsCustomBaseUrl: driver.capabilities.supportsCustomBaseUrl,
     versionArgs: driver.versionArgs,
   }));
 
@@ -173,7 +182,7 @@ function probe(
   modelListTimeoutMs: number,
 ): Promise<AgentCliAvailability> {
   return new Promise((resolve) => {
-    const { backend, chatCapable, label } = descriptor;
+    const { backend, chatCapable, label, supportsCustomBaseUrl } = descriptor;
 
     let stdout = '';
     const unavailable: AgentCliAvailability = {
@@ -182,6 +191,7 @@ function probe(
       chatCapable,
       label,
       models: [],
+      supportsCustomBaseUrl,
       version: null,
     };
 
@@ -226,6 +236,7 @@ function probe(
           chatCapable,
           label,
           models,
+          supportsCustomBaseUrl,
           version,
         });
       });

@@ -20,6 +20,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       chatCapable: true,
       label: 'Cursor Agent',
       models: ['auto', 'gpt-5.2'],
+      supportsCustomBaseUrl: false,
       version: '2026.06.15',
     },
     {
@@ -28,6 +29,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       chatCapable: true,
       label: 'Claude Code',
       models: [],
+      supportsCustomBaseUrl: false,
       version: null,
     },
     {
@@ -36,6 +38,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       chatCapable: true,
       label: 'OpenCode',
       models: ['opencode/big-pickle'],
+      supportsCustomBaseUrl: true,
       version: '1.18.5',
     },
   ],
@@ -63,6 +66,7 @@ describe('AgentDiscoveryResolver', () => {
         chatCapable: true,
         label: 'Cursor Agent',
         models: ['auto', 'gpt-5.2'],
+        supportsCustomBaseUrl: false,
         version: '2026.06.15',
       },
       {
@@ -70,6 +74,7 @@ describe('AgentDiscoveryResolver', () => {
         chatCapable: true,
         label: 'OpenCode',
         models: ['opencode/big-pickle'],
+        supportsCustomBaseUrl: true,
         version: '1.18.5',
       },
     ]);
@@ -84,6 +89,7 @@ describe('AgentDiscoveryResolver', () => {
           chatCapable: true,
           label: 'Cursor Agent',
           models: [],
+          supportsCustomBaseUrl: false,
           version: null,
         },
       ],

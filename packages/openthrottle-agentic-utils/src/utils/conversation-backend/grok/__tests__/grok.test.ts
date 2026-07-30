@@ -141,6 +141,27 @@ describe('grokConversationBackend', () => {
     }
   });
 
+  it('points grok at a local endpoint via GROK_MODELS_BASE_URL + a placeholder XAI_API_KEY', async () => {
+    process.env[GROK_BIN_ENV] = writeFakeBin(
+      'grok-endpoint.js',
+      `const base = process.env.GROK_MODELS_BASE_URL ?? 'unset';
+      const key = process.env.XAI_API_KEY ?? 'unset';
+      process.stdout.write(JSON.stringify({ type: 'text', data: base + '|' + key }) + '\\n');
+      process.stdout.write(JSON.stringify({ type: 'end', sessionId: 's', usage: {} }) + '\\n');`,
+    );
+
+    const chunks = await collect({
+      baseUrl: 'http://localhost:11434/v1',
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    });
+
+    expect(chunks.find((chunk) => chunk.kind === 'text')?.delta).toBe(
+      'http://localhost:11434/v1|local',
+    );
+  });
+
   it('kills a hung process on the idle timeout and yields an idle-timeout error', async () => {
     process.env[GROK_BIN_ENV] = hangBin();
     process.env[AGENT_IDLE_TIMEOUT_MS_ENV] = '200';

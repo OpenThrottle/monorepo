@@ -28,6 +28,13 @@ export const CODEX_DEFAULT_BIN = `codex`;
  * Inputs for one streamed codex turn.
  */
 export interface CodexArgvOptions {
+  /**
+   * Discovered local OpenAI-compatible endpoint to target. When set, codex runs
+   * through its built-in OSS provider (`--oss`) redirected at this base URL via a
+   * `-c model_providers.oss.base_url` override — preferred over a hand-rolled
+   * custom provider because codex owns the OSS wire adapter.
+   */
+  readonly baseUrl?: string;
   /** Model id; omitted when undefined/blank/`auto` so codex uses its default. */
   readonly model?: string;
   /**
@@ -114,6 +121,20 @@ export function buildCodexArgv(options: CodexArgvOptions): string[] {
   const effort = reasoningEffort(options.reasoning);
   if (effort !== undefined) {
     common.push('-c', `model_reasoning_effort=${effort}`);
+  }
+
+  const baseUrl = options.baseUrl?.trim();
+  if (baseUrl !== undefined && baseUrl !== '') {
+    // `--local-provider ollama` keeps the run deterministic in headless mode
+    // (codex would otherwise prompt/pick). The `-c` value is a TOML string
+    // literal (JSON.stringify quotes it); passed as one argv element (no shell).
+    common.push(
+      '--oss',
+      '--local-provider',
+      'ollama',
+      '-c',
+      `model_providers.oss.base_url=${JSON.stringify(baseUrl)}`,
+    );
   }
 
   const model = options.model?.trim();

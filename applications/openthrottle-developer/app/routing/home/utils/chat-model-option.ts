@@ -1,6 +1,7 @@
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   cliGroupId,
+  encodeCliEndpointOptionId,
   encodeCliOptionId,
   encodeModelOptionId,
   openaiGroupId,
@@ -9,6 +10,9 @@ import type {
   DiscoverAgentClisQuery,
   DiscoverLocalModelsQuery,
 } from '~/__generated__/graphql';
+
+/** Docker-only host: reachable from a containerized server, not always from the driver process. */
+const DOCKER_INTERNAL_HOST = 'host.docker.internal';
 
 /**
  * @description GraphQL discovery → composer toolbar options. The pure
@@ -71,4 +75,41 @@ export function toAgentChatOptions(
         subLabel: agent.label,
       }));
     });
+}
+
+/**
+ * Join discovered agent CLIs with discovered local endpoints into "driver ×
+ * local endpoint/model" composer options. Only base-URL-capable, chat-capable
+ * drivers are offered (claude/cursor can't consume a raw OpenAI-compatible
+ * endpoint); each option pairs such a driver with every discovered endpoint ×
+ * model. Grouped under the driver's own rail ({@link cliGroupId}); the endpoint's
+ * provider/host is surfaced in the description so the network vantage is visible
+ * (a `host.docker.internal` endpoint is flagged, since it may be unreachable from
+ * a driver process running outside that Docker network).
+ */
+export function toDriverEndpointChatOptions(
+  agents: DiscoverAgentClisQuery['discoverAgentClis'],
+  localModels: DiscoverLocalModelsQuery['discoverLocalModels'],
+): ChatModelOption[] {
+  const capableDrivers = agents.agents.filter(
+    (agent) => agent.chatCapable && agent.supportsCustomBaseUrl,
+  );
+
+  return capableDrivers.flatMap((agent) =>
+    localModels.endpoints.flatMap((endpoint) => {
+      const vantage = endpoint.provider ?? endpoint.host;
+      const description =
+        endpoint.host === DOCKER_INTERNAL_HOST
+          ? `${agent.label} · ${vantage} (may be unreachable outside Docker)`
+          : `${agent.label} · ${vantage} (local)`;
+
+      return endpoint.models.map((model) => ({
+        description,
+        groupId: cliGroupId(agent.backend),
+        id: encodeCliEndpointOptionId(agent.backend, endpoint.baseUrl, model),
+        label: model,
+        subLabel: agent.label,
+      }));
+    }),
+  );
 }

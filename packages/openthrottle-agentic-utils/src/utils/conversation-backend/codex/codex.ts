@@ -123,6 +123,7 @@ async function* streamCodex(
   const child = spawn(
     resolveCodexBin(),
     buildCodexArgv({
+      baseUrl: run.baseUrl,
       model: run.model,
       permissionMode: run.permissionMode,
       prompt: withFileMentions(composePrompt(run), run.fileMentions),

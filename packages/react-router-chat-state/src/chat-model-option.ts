@@ -100,47 +100,72 @@ export function encodeCliOptionId(backend: string, model?: string): string {
 }
 
 /**
- * A decoded composer option: an openai endpoint+model, or a CLI backend with an
- * optional model override.
+ * Encode a "driver × discovered local endpoint" option id: a CLI backend pinned
+ * to a discovered endpoint's `baseUrl` + model (`opencode|http://host:port/v1::llama3`).
+ * A submit routes it as `backend` + `baseUrl` + `modelId` — the CLI runs against
+ * the local endpoint. `baseUrl` never contains the CLI separator (`|`), and a
+ * model id never contains `::`, so the two-level split is unambiguous.
  * @public
  */
-export type DecodedChatOption =
-  | {
-      readonly backend: 'openai';
-      readonly baseUrl: string;
-      readonly model: string;
-    }
-  | {
-      readonly backend: string;
-      readonly baseUrl?: undefined;
-      readonly model?: string;
-    };
+export function encodeCliEndpointOptionId(
+  backend: string,
+  baseUrl: string,
+  model: string,
+): string {
+  return `${backend}${CLI_SEPARATOR}${baseUrl}${SEPARATOR}${model}`;
+}
 
 /**
- * Decode a composer option id as a tagged union: an `baseUrl::model` id is the
- * openai backend; a `backend|model` id is a CLI backend with a model override; a
- * bare token is a CLI backend at its default model. Returns null when malformed.
+ * A decoded composer option. `backend` is `openai` or a driver id. `baseUrl` is
+ * present when the option targets a discovered local endpoint — either the plain
+ * openai HTTP backend or a CLI driver pointed at that endpoint (distinguished by
+ * `backend`). `model` is the model id (absent only for a bare CLI backend at its
+ * default model).
+ * @public
+ */
+export interface DecodedChatOption {
+  readonly backend: string;
+  readonly baseUrl?: string;
+  readonly model?: string;
+}
+
+/**
+ * Decode a composer option id. A `backend|…` id is a CLI backend: the remainder
+ * is either `baseUrl::model` (driver × local endpoint) or a plain model override.
+ * A bare token is a CLI backend at its default model. Otherwise a `baseUrl::model`
+ * id is the plain openai HTTP backend. Returns null when malformed.
  * @public
  */
 export function decodeChatOption(id: string): DecodedChatOption | null {
+  if (id === '') {
+    return null;
+  }
+
+  const cliIndex = id.indexOf(CLI_SEPARATOR);
+  if (cliIndex !== -1) {
+    const backend = id.slice(0, cliIndex);
+    const rest = id.slice(cliIndex + CLI_SEPARATOR.length);
+    if (!backend || !rest) {
+      return null;
+    }
+
+    const sep = rest.indexOf(SEPARATOR);
+    if (sep === -1) {
+      return { backend, model: rest };
+    }
+
+    const baseUrl = rest.slice(0, sep);
+    const model = rest.slice(sep + SEPARATOR.length);
+    if (!baseUrl || !model) {
+      return null;
+    }
+
+    return { backend, baseUrl, model };
+  }
+
   const index = id.indexOf(SEPARATOR);
   if (index === -1) {
-    if (id === '') {
-      return null;
-    }
-
-    const cliIndex = id.indexOf(CLI_SEPARATOR);
-    if (cliIndex === -1) {
-      return { backend: id };
-    }
-
-    const backend = id.slice(0, cliIndex);
-    const model = id.slice(cliIndex + CLI_SEPARATOR.length);
-    if (!backend || !model) {
-      return null;
-    }
-
-    return { backend, model };
+    return { backend: id };
   }
 
   const baseUrl = id.slice(0, index);
