@@ -132,14 +132,20 @@ export function useHeaderChatController(args: {
             [backendKey]: { ...previous.perBackend[backendKey], ...patch },
           },
         };
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
+
+  const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
     setToolbarState((previous) =>
       writeBackendPref(previous, { permissionMode }),
     );
-  const setReasoning = (reasoning: ChatReasoningLevel): void =>
+  };
+
+  const setReasoning = (reasoning: ChatReasoningLevel): void => {
     setToolbarState((previous) => writeBackendPref(previous, { reasoning }));
-  const setServiceTier = (serviceTier: ChatServiceTier): void =>
+  };
+
+  const setServiceTier = (serviceTier: ChatServiceTier): void => {
     setToolbarState((previous) => writeBackendPref(previous, { serviceTier }));
+  };
 
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
@@ -231,6 +237,7 @@ export function useHeaderChatController(args: {
     const alreadyListed = conversationList.conversations.some(
       (conversation) => conversation.id === id,
     );
+
     if (persist && !alreadyListed) {
       refreshedForIdRef.current = id;
       conversationList.refresh();
@@ -238,6 +245,7 @@ export function useHeaderChatController(args: {
   }, [turn.conversationId, persist]);
 
   // 🔌 Short Circuit
+
   const composer: ChatComposerControls = {
     capabilities,
     checkouts,
