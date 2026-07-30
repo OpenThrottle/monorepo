@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChatComposer,
   ChatComposerToolbar,
+  ChatConversationSheet,
   ChatThread,
   parseFileMentions,
   type ChatComposerMode,
@@ -36,6 +37,7 @@ import {
   loadRepositories,
 } from '~/routing/home/data/models.server';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
+import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 import type { Route } from '@/app/routes/+types/_index';
@@ -94,6 +96,10 @@ export default function Component(
   // lives in a reusable hook shared with the global header chat.
   const turn = useAgenticChatTurn();
 
+  // Persisted-conversation list backing the sidebar (list + rename + delete +
+  // refresh); posts to the route-independent resource action.
+  const conversationList = useConversationList();
+
   // Toolbar selections persist across reloads in a localStorage-backed atom.
   // Each per-field setter writes only its own key; absent id fields fall back to
   // the loader-derived seed for the effective value handed to the toolbar and to
@@ -106,6 +112,8 @@ export default function Component(
     setToolbarState((previous) => ({ ...previous, modelId }));
   const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
     setToolbarState((previous) => ({ ...previous, permissionMode }));
+  const setPersist = (persist: boolean): void =>
+    setToolbarState((previous) => ({ ...previous, persist }));
   const setPersonaId = (personaId: string): void =>
     setToolbarState((previous) => ({ ...previous, personaId }));
   const setReasoning = (reasoning: ChatReasoningLevel): void =>
@@ -134,12 +142,15 @@ export default function Component(
   const mode = effectiveToolbar.mode;
   const modelId = effectiveToolbar.modelId;
   const permissionMode = effectiveToolbar.permissionMode;
+  const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
   const repositoryId = effectiveToolbar.repositoryId;
   const serviceTier = effectiveToolbar.serviceTier;
 
   const composerTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  // Dedupes the "new conversation created" refresh to one per conversation id.
+  const refreshedForIdRef = useRef<string | null>(null);
 
   // Setup
   // Backs the composer's @-mention file picker for the selected checkout;
@@ -212,6 +223,7 @@ export default function Component(
             backend: 'openai',
             baseUrl: decoded.baseUrl ?? '',
             modelId: decoded.model ?? '',
+            persist: String(persist),
           }
         : {
             backend: decoded.backend,
@@ -219,6 +231,7 @@ export default function Component(
             fileMentions: JSON.stringify(fileMentions),
             modelId: decoded.model ?? '',
             permissionMode: permissionMode ?? '',
+            persist: String(persist),
             personaId: personaId ?? '',
             reasoning: reasoning ?? '',
             repositoryId: repositoryId ?? '',
@@ -227,6 +240,33 @@ export default function Component(
 
     turn.submitTurn(trimmed, fields);
   };
+
+  const onNewChat = (): void => {
+    turn.reset();
+  };
+
+  const onSelectConversation = (conversationId: string): void => {
+    turn.restore({ conversationId });
+  };
+
+  // Life Cycle
+  // When a turn creates a NEW persisted conversation (an id not already in the
+  // list), refresh the sidebar so it shows up. Skipped in Private mode (no row)
+  // and on restore (the id is already listed); the ref dedupes to one refresh.
+  useEffect(() => {
+    const id = turn.conversationId;
+    if (id == null || id === refreshedForIdRef.current) {
+      return;
+    }
+
+    const alreadyListed = conversationList.conversations.some(
+      (conversation) => conversation.id === id,
+    );
+    if (persist && !alreadyListed) {
+      refreshedForIdRef.current = id;
+      conversationList.refresh();
+    }
+  }, [turn.conversationId, persist]);
 
   // Markup
   const toolbar = (
@@ -246,10 +286,12 @@ export default function Component(
         onModeChange={setMode}
         onModelChange={setModelId}
         onPermissionModeChange={setPermissionMode}
+        onPersistChange={setPersist}
         onPersonaChange={setPersonaId}
         onReasoningChange={setReasoning}
         onServiceTierChange={setServiceTier}
         permissionMode={permissionMode}
+        persist={persist}
         personaId={personaId}
         personas={personas}
         reasoning={reasoning}
@@ -269,45 +311,63 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen
-      beta={true}
-      className="flex flex-1 flex-col justify-end p-4 md:p-8 lg:p-12"
-    >
-      {isEmptyThread && (
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <h1 className="text-center text-2xl">
-            What would you like to build today?
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            OpenThrottle is a platform for building applications based on best
-            practices for Agentic development.
-          </p>
-        </div>
-      )}
-
-      <div className="mx-auto w-full max-w-3xl">
-        <ChatThread emptyStateLabel="" messages={turn.messages} />
-        <InlineErrors errors={[turn.error, voice.error]} />
-        {!hasModels ? (
-          <p className="text-muted-foreground mb-2 text-center text-sm">
-            No local models discovered. Start a local OpenAI-compatible server
-            (e.g. Ollama) and reload.
-          </p>
-        ) : null}
-        <ChatComposer
-          className="border-t-0"
-          disabled={!hasModels}
-          draft={draft}
-          isStreaming={turn.isStreaming}
-          mentionProvider={mentionProvider}
-          onDraftChange={setDraft}
-          onStop={turn.onStop}
-          onSubmit={onSubmit}
-          readOnly={voice.isDraftFrozen}
-          sessionUsage={turn.sessionUsage}
-          textAreaRef={composerTextAreaRef}
-          toolbar={toolbar}
+    <GlobalScreen beta={true} className="flex flex-1 flex-col">
+      <div
+        className="flex items-center gap-2 px-4 pt-4 md:px-8 md:pt-6 lg:px-12"
+        data-testid="home-conversation-toolbar"
+      >
+        <ChatConversationSheet
+          activeConversationId={turn.conversationId}
+          conversations={conversationList.conversations}
+          isLoading={conversationList.isLoading}
+          isLoadingMore={conversationList.isLoadingMore}
+          onDelete={conversationList.remove}
+          onLoadMore={conversationList.loadMore}
+          onNewChat={onNewChat}
+          onRename={conversationList.rename}
+          onSelect={onSelectConversation}
+          side="left"
+          totalCount={conversationList.totalCount}
         />
+      </div>
+
+      <div className="flex flex-1 flex-col justify-end p-4 pt-2 md:p-8 md:pt-4 lg:p-12 lg:pt-4">
+        {isEmptyThread && (
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <h1 className="text-center text-2xl">
+              What would you like to build today?
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm">
+              OpenThrottle is a platform for building applications based on best
+              practices for Agentic development.
+            </p>
+          </div>
+        )}
+
+        <div className="mx-auto w-full max-w-3xl">
+          <ChatThread emptyStateLabel="" messages={turn.messages} />
+          <InlineErrors errors={[turn.error, voice.error]} />
+          {!hasModels ? (
+            <p className="text-muted-foreground mb-2 text-center text-sm">
+              No local models discovered. Start a local OpenAI-compatible server
+              (e.g. Ollama) and reload.
+            </p>
+          ) : null}
+          <ChatComposer
+            className="border-t-0"
+            disabled={!hasModels}
+            draft={draft}
+            isStreaming={turn.isStreaming}
+            mentionProvider={mentionProvider}
+            onDraftChange={setDraft}
+            onStop={turn.onStop}
+            onSubmit={onSubmit}
+            readOnly={voice.isDraftFrozen}
+            sessionUsage={turn.sessionUsage}
+            textAreaRef={composerTextAreaRef}
+            toolbar={toolbar}
+          />
+        </div>
       </div>
     </GlobalScreen>
   );

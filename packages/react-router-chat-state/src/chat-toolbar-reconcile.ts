@@ -198,6 +198,9 @@ export function reconcileChatToolbarState(
     modelId,
     perBackend: persisted.perBackend,
     permissionMode,
+    // Persist is never capability-gated — every backend can run persisted or
+    // Private — so it passes through unchanged.
+    persist: persisted.persist,
     personaId,
     reasoning,
     repositoryId,

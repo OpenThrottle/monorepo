@@ -7,10 +7,25 @@ import {
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
 import { createStore, getDefaultStore, Provider } from 'jotai';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import type { RenderResult } from '@testing-library/react';
+import { renderRouteHarness } from '~/testing/route-fixtures';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import Index from '../_index';
 import type { Route } from '@/app/routes/+types/_index';
+
+/**
+ * Render the home route with a stub `/resources/agent-conversations` action so
+ * the sidebar's mount-time conversation list fetch resolves (empty) instead of
+ * 404-ing into the router error boundary.
+ */
+const renderHome = (element: React.ReactElement): RenderResult =>
+  renderRouteHarness([
+    { Component: (): React.ReactElement => element, path: '/' },
+    {
+      action: () => ({ conversations: [], errorMessage: null, totalCount: 0 }),
+      path: '/resources/agent-conversations',
+    },
+  ]);
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
@@ -25,7 +40,7 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/_index.tsx', () => {
   test('renders home build prompt heading', () => {
-    const view = renderRoutesStub(
+    const view = renderHome(
       <Index
         actionData={undefined}
         loaderData={{ models: [], personas: [], repositories: [] }}
@@ -77,7 +92,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
     );
     const freshStore = createStore();
 
-    renderRoutesStub(
+    renderHome(
       <Provider store={freshStore}>
         <Index
           actionData={undefined}
@@ -105,7 +120,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
     );
     const freshStore = createStore();
 
-    const component = renderRoutesStub(
+    const component = renderHome(
       <Provider store={freshStore}>
         <Index
           actionData={undefined}

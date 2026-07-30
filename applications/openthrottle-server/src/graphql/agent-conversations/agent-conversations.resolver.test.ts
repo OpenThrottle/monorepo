@@ -219,6 +219,40 @@ describe('AgentConversationsResolver', () => {
     });
   });
 
+  describe('deleteAgentConversation', () => {
+    test('soft-deletes an owned conversation via the service', async () => {
+      const deleted = {
+        ...mockConversation,
+        status: AGENT_CONVERSATION_STATUSES.deleted,
+      };
+
+      vi.mocked(
+        agentConversationsService.softDeleteConversation,
+      ).mockResolvedValue(deleted);
+
+      const result = await resolver.deleteAgentConversation(humanPrincipal, {
+        conversationId: mockConversation.id,
+      });
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.deleted);
+      expect(
+        agentConversationsService.softDeleteConversation,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id);
+    });
+
+    test('propagates when the conversation is not owned', async () => {
+      vi.mocked(
+        agentConversationsService.softDeleteConversation,
+      ).mockRejectedValue(new Error('Agent conversation not found'));
+
+      await expect(
+        resolver.deleteAgentConversation(humanPrincipal, {
+          conversationId: 'not-mine',
+        }),
+      ).rejects.toThrow('not found');
+    });
+  });
+
   describe('updateAgentConversationTitle', () => {
     test('delegates to service', async () => {
       const updated = { ...mockConversation, title: 'Renamed' };

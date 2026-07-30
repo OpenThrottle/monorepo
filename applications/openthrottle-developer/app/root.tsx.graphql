@@ -90,6 +90,36 @@ query getRootMetrics {
   }
 }
 
+query listAgentConversations($input: ListAgentConversationsInput) {
+  listAgentConversations(input: $input) {
+    conversations {
+      id
+      status
+      title
+      updatedAt
+    }
+    totalCount
+  }
+}
+
+mutation deleteAgentConversation($input: DeleteAgentConversationInput!) {
+  deleteAgentConversation(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
+mutation updateAgentConversationTitle($input: UpdateAgentConversationTitleInput!) {
+  updateAgentConversationTitle(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
 query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
   getAgentConversationMessages(input: $input) {
     messages {

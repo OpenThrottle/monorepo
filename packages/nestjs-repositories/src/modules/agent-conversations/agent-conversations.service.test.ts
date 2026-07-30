@@ -195,6 +195,32 @@ describe('AgentConversationsService', () => {
     });
   });
 
+  describe('softDeleteConversation', () => {
+    it('sets status to deleted for an owned conversation', async () => {
+      vi.mocked(mockConversationRepository.findOne).mockResolvedValue({
+        ...mockConversation,
+      });
+      vi.mocked(mockConversationRepository.save).mockImplementation(
+        async (entity) => entity,
+      );
+
+      const result = await service.softDeleteConversation(
+        userId,
+        conversationId,
+      );
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.deleted);
+    });
+
+    it('throws when the conversation is not owned', async () => {
+      vi.mocked(mockConversationRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.softDeleteConversation(userId, conversationId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
   describe('updateConversationTitle', () => {
     it('updates title for an owned conversation', async () => {
       vi.mocked(mockConversationRepository.findOne).mockResolvedValue({

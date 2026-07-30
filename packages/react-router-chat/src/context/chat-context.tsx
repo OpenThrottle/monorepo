@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
+import type { ChatConversationSidebarProps } from '../components/ChatConversationSidebar';
 import type { ChatMessage, ChatTokenUsage } from '../types';
 
 /**
@@ -42,6 +43,12 @@ export interface ChatContextValue {
    */
   readonly composer: ChatComposerControls | undefined;
   readonly composerDisabled: boolean;
+  /**
+   * Optional persisted-conversations switcher. When present, {@link ChatDialog}
+   * renders a "Conversations" popover backed by {@link ChatConversationSidebar}
+   * (list / restore / rename / soft-delete / new chat). Omit for the bare shell.
+   */
+  readonly conversationSidebar: ChatConversationSidebarProps | undefined;
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange: ((open: boolean) => void) | undefined;
   readonly onSendMessage: (message: string) => void;
@@ -56,6 +63,8 @@ export interface ChatProviderProps extends React.PropsWithChildren {
   /** Optional agentic-composer surface; see {@link ChatComposerControls}. */
   readonly composer?: ChatComposerControls;
   readonly composerDisabled?: boolean;
+  /** Optional conversations switcher; see {@link ChatContextValue.conversationSidebar}. */
+  readonly conversationSidebar?: ChatConversationSidebarProps;
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange?: (open: boolean) => void;
   readonly onSendMessage: (message: string) => void;
@@ -73,6 +82,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
     children,
     composer,
     composerDisabled = false,
+    conversationSidebar,
     messages,
     onOpenChange,
     onSendMessage,
@@ -84,6 +94,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
     () => ({
       composer,
       composerDisabled,
+      conversationSidebar,
       messages,
       onOpenChange,
       onSendMessage,
@@ -93,6 +104,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
     [
       composer,
       composerDisabled,
+      conversationSidebar,
       messages,
       onOpenChange,
       onSendMessage,

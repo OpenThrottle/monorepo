@@ -16,6 +16,7 @@ import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-
 import {
   ArchiveAgentConversationInput,
   CreateAgentConversationInput,
+  DeleteAgentConversationInput,
   GetAgentConversationMessagesInput,
   ListAgentConversationsInput,
   UpdateAgentConversationTitleInput,
@@ -181,6 +182,26 @@ export class AgentConversationsResolver {
 
     const conversation =
       await this.agentConversationsService.archiveConversation(
+        user.sub,
+        input.conversationId,
+      );
+
+    return toAgentConversationObject(conversation);
+  }
+
+  @Mutation(() => AgentConversationObject, {
+    description: `Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible).`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async deleteAgentConversation(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('input', { type: () => DeleteAgentConversationInput })
+    input: DeleteAgentConversationInput,
+  ): Promise<AgentConversationObject> {
+    const user = assertHumanAuthPrincipal(principal);
+
+    const conversation =
+      await this.agentConversationsService.softDeleteConversation(
         user.sub,
         input.conversationId,
       );

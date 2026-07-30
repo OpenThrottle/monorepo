@@ -68,6 +68,9 @@ export const action = async (
   }
 
   const conversationId = String(formData.get('conversationId') ?? '');
+  // Private mode is opt-in: the form only sends `persist=false` to run an
+  // ephemeral turn. Absent → null → the server default (persist=true).
+  const persist = formData.get('persist') === 'false' ? false : null;
   const input = {
     backend: String(formData.get('backend') ?? '') || null,
     baseUrl: String(formData.get('baseUrl') ?? '') || null,
@@ -76,6 +79,7 @@ export const action = async (
     message: String(formData.get('message') ?? ''),
     modelId: String(formData.get('modelId') ?? '') || null,
     permissionMode: String(formData.get('permissionMode') ?? '') || null,
+    persist,
     personaId: String(formData.get('personaId') ?? '') || null,
     reasoning: String(formData.get('reasoning') ?? '') || null,
     repositoryId: String(formData.get('repositoryId') ?? '') || null,

@@ -258,6 +258,72 @@ describe('ChatDialog Component', () => {
     });
   });
 
+  describe('conversations switcher', () => {
+    // The switcher trigger renders a Tooltip, so (like the New chat control)
+    // it must mount under a TooltipProvider — mirror real usage (GlobalProviders).
+    const renderWithSidebar = (
+      conversationSidebar?: ChatDialogProps['conversationSidebar'],
+    ): RenderResult => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+      const Comp = (): React.ReactElement => (
+        <TooltipProvider>
+          <ChatDialog
+            conversationSidebar={conversationSidebar}
+            messages={messages}
+            onSendMessage={onSendMessage}
+            triggerLabel="Open assistant"
+          />
+        </TooltipProvider>
+      );
+      const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
+      component = render(<RoutesStub />);
+      return component;
+    };
+
+    test('renders no switcher trigger without a conversationSidebar', async () => {
+      const user = userEvent.setup();
+      renderWithSidebar(undefined);
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      await component!.findByTestId('ChatDialog');
+      expect(
+        component!.queryByTestId('ChatDialog-conversations-trigger'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('opens a sheet listing conversations and selects one', async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      renderWithSidebar({
+        conversations: [
+          {
+            id: 'c1',
+            status: 'active',
+            title: 'Prior thread',
+            updatedAt: '2026-07-29T12:00:00.000Z',
+          },
+        ],
+        onDelete: vi.fn(),
+        onNewChat: vi.fn(),
+        onRename: vi.fn(),
+        onSelect,
+        totalCount: 1,
+      });
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      await user.click(
+        await component!.findByTestId('ChatDialog-conversations-trigger'),
+      );
+      await user.click(
+        await component!.findByTestId('ChatConversationSidebar-select-c1'),
+      );
+
+      expect(onSelect).toHaveBeenCalledWith('c1');
+    });
+  });
+
   describe('when no composer surface is provided', () => {
     test('should render the bare composer without a toolbar', async () => {
       const user = userEvent.setup();

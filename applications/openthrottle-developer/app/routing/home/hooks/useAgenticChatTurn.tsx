@@ -3,6 +3,7 @@ import { useFetcher } from 'react-router';
 import type {
   ChatMessage,
   ChatTokenUsage,
+  LoadAgentConversationMessagesResult,
 } from '@openthrottle/react-router-chat';
 import { sumUsage } from '@openthrottle/react-router-chat';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
@@ -10,6 +11,9 @@ import type { StartActionResult } from '~/routes/resources.conversation-stream';
 
 /** Route-independent action both the home route and the header chat post to. */
 export const CONVERSATION_STREAM_ACTION = '/resources/conversation-stream';
+
+/** Route-independent action for persisted-conversation data ops (restore, list, …). */
+export const AGENT_CONVERSATIONS_ACTION = '/resources/agent-conversations';
 
 /**
  * Stable empty seed: the home/header surfaces have no conversation id in the URL
@@ -25,6 +29,13 @@ export interface UseAgenticChatTurnResult {
   readonly messages: ChatMessage[];
   /** Cancel the in-flight turn. */
   readonly onStop: () => void;
+  /** Clear the thread for a fresh conversation (New chat). */
+  readonly reset: () => void;
+  /**
+   * Restore a persisted conversation: seed its id (re-keying the live stream)
+   * and hydrate its messages from the load-messages resource action.
+   */
+  readonly restore: (params: { conversationId: string }) => void;
   /**
    * Cumulative token usage across all assistant turns in this thread (best
    * effort; empty when no backend reported counts). Feeds the composer's
@@ -68,6 +79,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   const cancelFetcher = useFetcher();
   const localIdRef = React.useRef(0);
   const startFetcher = useFetcher<StartActionResult>();
+  const restoreFetcher = useFetcher<LoadAgentConversationMessagesResult>();
 
   // Setup
   const stream = useConversationStream({
@@ -160,6 +172,27 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     );
   };
 
+  // Restore a persisted conversation: seed the id synchronously (so the live
+  // subscription re-keys to that thread's topic) and fetch its messages; the
+  // effect below swaps them in when the load resolves.
+  const restore = (params: { conversationId: string }): void => {
+    setError(null);
+    setPendingAssistantId(null);
+    setConversationId(params.conversationId);
+    restoreFetcher.submit(
+      { conversationId: params.conversationId, intent: 'load-messages' },
+      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+    );
+  };
+
+  // New chat: drop the id + thread so the next turn starts a fresh conversation.
+  const reset = (): void => {
+    setError(null);
+    setPendingAssistantId(null);
+    setConversationId(null);
+    setMessages([]);
+  };
+
   // Life Cycle
   React.useEffect(() => {
     const result = startFetcher.data;
@@ -196,12 +229,31 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     }
   }, [pendingAssistantId, stream.completedIds]);
 
+  // Hydrate the thread from a restored conversation once its messages load. The
+  // load-messages helper already maps rows to ChatMessage[]; a load error
+  // surfaces without clobbering the (already re-keyed) id.
+  React.useEffect(() => {
+    const result = restoreFetcher.data;
+    if (!result) {
+      return;
+    }
+
+    if (result.errorMessage) {
+      setError(result.errorMessage);
+      return;
+    }
+
+    setMessages([...result.messages]);
+  }, [restoreFetcher.data]);
+
   return {
     conversationId,
     error,
     isStreaming,
     messages: messagesView,
     onStop,
+    reset,
+    restore,
     sessionUsage,
     setError,
     submitTurn,
