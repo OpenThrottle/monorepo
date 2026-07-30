@@ -2,15 +2,15 @@ import * as React from 'react';
 import type { CommanderGroup } from '@openthrottle/react-router-ui';
 import { useCallback } from 'react';
 import {
-  BotIcon,
-  CalendarDaysIcon,
   ChartLineIcon,
   FolderIcon,
   HomeIcon,
   MapIcon,
   NotebookIcon,
-  SettingsIcon,
-  SpeechIcon,
+  // BotIcon,
+  // CalendarDaysIcon,
+  // SettingsIcon,
+  // SpeechIcon,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -42,12 +42,12 @@ export function useCommanderOptions(): CommanderGroup[] {
     {
       heading: 'Navigation',
       items: [
-        {
-          icon: <CalendarDaysIcon className="h-3! w-3!" />,
-          id: 'nav-schedule',
-          label: 'Schedule',
-          onSelect: nav('/schedule'),
-        },
+        // {
+        //   icon: <CalendarDaysIcon className="h-3! w-3!" />,
+        //   id: 'nav-schedule',
+        //   label: 'Schedule',
+        //   onSelect: nav('/schedule'),
+        // },
         {
           icon: <HomeIcon className="h-3! w-3!" />,
           id: 'nav-dashboard',
@@ -68,12 +68,12 @@ export function useCommanderOptions(): CommanderGroup[] {
           label: 'Projects',
           onSelect: nav('/projects'),
         },
-        {
-          icon: <SpeechIcon className="h-3! w-3!" />,
-          id: 'nav-prompts',
-          label: 'Prompts',
-          onSelect: nav('/prompts'),
-        },
+        // {
+        //   icon: <SpeechIcon className="h-3! w-3!" />,
+        //   id: 'nav-prompts',
+        //   label: 'Prompts',
+        //   onSelect: nav('/prompts'),
+        // },
         {
           icon: <ChartLineIcon className="h-3! w-3!" />,
           id: 'nav-queues',
@@ -86,18 +86,18 @@ export function useCommanderOptions(): CommanderGroup[] {
           label: 'Notes',
           onSelect: nav('/notes'),
         },
-        {
-          icon: <BotIcon className="h-3! w-3!" />,
-          id: 'nav-generators',
-          label: 'Generators',
-          onSelect: nav('/generators'),
-        },
-        {
-          icon: <SettingsIcon className="h-3! w-3!" />,
-          id: 'nav-settings',
-          label: 'Settings',
-          onSelect: nav('/settings'),
-        },
+        // {
+        //   icon: <BotIcon className="h-3! w-3!" />,
+        //   id: 'nav-generators',
+        //   label: 'Generators',
+        //   onSelect: nav('/generators'),
+        // },
+        // {
+        //   icon: <SettingsIcon className="h-3! w-3!" />,
+        //   id: 'nav-settings',
+        //   label: 'Settings',
+        //   onSelect: nav('/settings'),
+        // },
       ],
     },
     // {
