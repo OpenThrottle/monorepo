@@ -60,6 +60,7 @@ const baseRun: StartConversationStreamRun = {
   messages: [{ content: 'hi', role: 'user' }],
   model: 'llama3',
   permissionMode: null,
+  persist: true,
   provider: 'ollama',
   reasoning: null,
   resumeSession: false,
@@ -389,6 +390,68 @@ describe('ConversationStreamService', () => {
     expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
       opencodeSessionId: 'ses_new',
     });
+  });
+
+  it('Private mode (persist=false) streams every chunk but writes nothing to the DB', async () => {
+    openAiStreamMock.mockReturnValue(fakeStream(['Hel', 'lo']));
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream({ ...baseRun, persist: false });
+
+    // The live stream is unaffected: every delta + the terminal chunk publish.
+    const published = publish.mock.calls.map(
+      ([, payload]) => payload.conversationStreamChunkAdded,
+    );
+    expect(published).toEqual([
+      expect.objectContaining({ delta: 'Hel', done: false, sortOrder: 0 }),
+      expect.objectContaining({ delta: 'lo', done: false, sortOrder: 1 }),
+      expect.objectContaining({ delta: '', done: true, sortOrder: 2 }),
+    ]);
+    // But nothing is persisted: no assistant message, no model snapshot.
+    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(conversations.updateModelSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('does not persist a CLI-minted session id in Private mode', async () => {
+    async function* opencodeStream(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: '',
+        done: false,
+        kind: 'session',
+        metadata: { sessionId: 'ses_new' },
+      };
+      yield { delta: 'hi', done: false, kind: 'text' };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    opencodeStreamMock.mockImplementation(opencodeStream);
+    const { conversations, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'opencode',
+      cwd: '/repo',
+      persist: false,
+      sessionId: null,
+    });
+
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
+  });
+
+  it('registers a Private-mode owner via start() (user-scoped), never for a persisted stream', () => {
+    openAiStreamMock.mockReturnValue(fakeStream(['x']));
+    const { service } = buildService();
+
+    service.start({ ...baseRun, persist: false });
+    expect(service.isEphemeralOwner('user-1', 'conv-1')).toBe(true);
+    expect(service.isEphemeralOwner('someone-else', 'conv-1')).toBe(false);
+
+    service.start({ ...baseRun, conversationId: 'conv-2', persist: true });
+    expect(service.isEphemeralOwner('user-1', 'conv-2')).toBe(false);
   });
 
   it('does not re-persist a session id the CLI merely echoes back', async () => {

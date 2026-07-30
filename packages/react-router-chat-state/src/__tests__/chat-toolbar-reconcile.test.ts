@@ -377,6 +377,24 @@ describe('reconcileChatToolbarState', () => {
     });
   });
 
+  describe('persist', () => {
+    test('passes persist through unchanged (never capability-gated)', () => {
+      const off = reconcileChatToolbarState(persisted({ persist: false }), {
+        models: [cliModel],
+        personas: [],
+        repositories: [repoA],
+      });
+      expect(off.persist).toBe(false);
+
+      const on = reconcileChatToolbarState(persisted({ persist: true }), {
+        models: [openaiModel],
+        personas: [],
+        repositories: [],
+      });
+      expect(on.persist).toBe(true);
+    });
+  });
+
   describe('purity', () => {
     test('preserves mode and version', () => {
       const result = reconcileChatToolbarState(

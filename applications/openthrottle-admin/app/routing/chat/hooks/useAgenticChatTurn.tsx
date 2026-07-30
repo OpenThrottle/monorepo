@@ -1,11 +1,17 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import type { ChatMessage } from '@openthrottle/react-router-chat';
+import type {
+  ChatMessage,
+  LoadAgentConversationMessagesResult,
+} from '@openthrottle/react-router-chat';
 import { useConversationStream } from '~/routing/chat/hooks/useConversationStream';
 import type { StartActionResult } from '~/routes/resources.conversation-stream';
 
 /** Route-independent action the admin header chat posts to. */
 export const CONVERSATION_STREAM_ACTION = '/resources/conversation-stream';
+
+/** Route-independent action for persisted-conversation data ops (restore, list, …). */
+export const AGENT_CONVERSATIONS_ACTION = '/resources/agent-conversations';
 
 /**
  * Stable empty seed: the header surface has no conversation id in the URL to
@@ -19,6 +25,10 @@ export interface UseAgenticChatTurnResult {
   readonly isStreaming: boolean;
   readonly messages: ChatMessage[];
   readonly onStop: () => void;
+  /** Clear the thread for a fresh conversation (New chat). */
+  readonly reset: () => void;
+  /** Restore a persisted conversation: seed its id + hydrate its messages. */
+  readonly restore: (params: { conversationId: string }) => void;
   readonly setError: (message: string | null) => void;
   readonly submitTurn: (
     message: string,
@@ -45,6 +55,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   const cancelFetcher = useFetcher();
   const localIdRef = React.useRef(0);
   const startFetcher = useFetcher<StartActionResult>();
+  const restoreFetcher = useFetcher<LoadAgentConversationMessagesResult>();
 
   // Setup
   const stream = useConversationStream({
@@ -116,6 +127,26 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     );
   };
 
+  // Restore a persisted conversation: seed the id (re-keying the live stream)
+  // and fetch its messages; the effect below swaps them in when they load.
+  const restore = (params: { conversationId: string }): void => {
+    setError(null);
+    setPendingAssistantId(null);
+    setConversationId(params.conversationId);
+    restoreFetcher.submit(
+      { conversationId: params.conversationId, intent: 'load-messages' },
+      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+    );
+  };
+
+  // New chat: drop the id + thread so the next turn starts a fresh conversation.
+  const reset = (): void => {
+    setError(null);
+    setPendingAssistantId(null);
+    setConversationId(null);
+    setMessages([]);
+  };
+
   // Life Cycle
   React.useEffect(() => {
     const result = startFetcher.data;
@@ -150,12 +181,29 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     }
   }, [pendingAssistantId, stream.completedIds]);
 
+  // Hydrate the thread from a restored conversation once its messages load.
+  React.useEffect(() => {
+    const result = restoreFetcher.data;
+    if (!result) {
+      return;
+    }
+
+    if (result.errorMessage) {
+      setError(result.errorMessage);
+      return;
+    }
+
+    setMessages([...result.messages]);
+  }, [restoreFetcher.data]);
+
   return {
     conversationId,
     error,
     isStreaming,
     messages: messagesView,
     onStop,
+    reset,
+    restore,
     setError,
     submitTurn,
   };

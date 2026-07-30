@@ -40,6 +40,12 @@ export class StartConversationStreamInput {
   })
   message!: string;
 
+  @Field(() => Boolean, {
+    description: `Whether to persist this turn. True (default, or omitted) saves the conversation + messages as today. False runs a "Private mode" turn: the stream is ephemeral — no conversation row is created and no messages are written. A Private turn carries no server-side history (single-turn context) and CLI backends run a fresh, non-resumed session.`,
+    nullable: true,
+  })
+  persist?: boolean | null;
+
   @Field(() => String, {
     description: `Model id to complete with. Required for the openai backend; optional model override for CLI backends.`,
     nullable: true,

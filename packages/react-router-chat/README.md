@@ -32,14 +32,15 @@ import '@openthrottle/react-router-chat/src/index.css';
 
 ## Public API
 
-| Export                                          | Description                                                                                     |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `ChatDialog`                                    | Modal chat (`dialog` or `sheet`); controlled open via `open` / `onOpenChange`, or `defaultOpen` |
-| `ChatThread`, `ChatComposer`, `ChatMessageBody` | Thread list, input, and role-aware body rendering                                               |
-| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage` / `onStartNewChat`       |
-| `useChatMessages`                               | Uncontrolled local message list (`sendUserMessage`, `appendMessage`, `setMessages`)             |
-| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (`startNewChat` when persisted)                |
-| `ChatMessage`, `ChatTurnResult`                 | Message model and JSON shape for server chat turns                                              |
+| Export                                          | Description                                                                                                                                                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ChatDialog`                                    | Modal chat (`dialog` or `sheet`); controlled open via `open` / `onOpenChange`, or `defaultOpen`. Renders a "Conversations" switcher popover when `conversationSidebar` is supplied                               |
+| `ChatThread`, `ChatComposer`, `ChatMessageBody` | Thread list, input, and role-aware body rendering                                                                                                                                                                |
+| `ChatConversationSidebar`                       | Fully-controlled conversations list: select/restore, inline rename, confirm-guarded soft-delete, New chat, Load more, loading + empty states. Used as the home-route rail and inside the header switcher popover |
+| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage` / `onStartNewChat` / `conversationSidebar`                                                                                                |
+| `useChatMessages`                               | Uncontrolled local message list (`sendUserMessage`, `appendMessage`, `setMessages`)                                                                                                                              |
+| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (`startNewChat` when persisted)                                                                                                                                 |
+| `ChatMessage`, `ChatTurnResult`                 | Message model and JSON shape for server chat turns                                                                                                                                                               |
 
 ### Controlled vs uncontrolled
 
@@ -142,6 +143,23 @@ Root action handlers:
 - `intent: load-agent-conversation-messages` — calls `getAgentConversationMessages` and maps rows via `mapPersistedAgentConversationMessages`.
 
 Server design (GraphQL CRUD, `persist` contract, pagination): [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md). Database schema: [databases/README.md](../../databases/README.md) § Agent conversations.
+
+### Persist toggle + conversations switcher (streaming chat)
+
+The agentic streaming chat (developer + admin, home route + header `ChatDialog`)
+adds two presentational pieces on top of the streaming turn:
+
+- **Persist toggle** — supply `persist` + `onPersistChange` to `ChatComposerToolbar`
+  (or via `ChatComposerControls`) to render a Saved / Private `Switch`. It is never
+  capability-gated. OFF is **Private mode**: the host sends `persist=false` and the
+  server streams ephemerally (no conversation row, no message writes). Hosts store
+  the value in `chatToolbarStateAtom` (`@openthrottle/react-router-chat-state`).
+- **`ChatConversationSidebar`** — a fully-controlled list (select→restore, inline
+  rename, confirm-guarded soft-delete, New chat, Load more). Mount it directly as a
+  home-route rail, or pass it as `conversationSidebar` to `ChatDialog` /
+  `ChatProvider` to render the header's "Conversations" popover. The package owns no
+  data — the host supplies rows + every handler (typically from a `useConversationList`
+  hook posting to a `/resources/agent-conversations` action).
 
 ## Composer controls & capability descriptors
 

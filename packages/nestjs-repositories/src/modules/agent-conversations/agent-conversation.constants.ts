@@ -13,6 +13,7 @@ export const AGENT_CONVERSATION_MESSAGES_MAX_LIMIT = 500;
 export const AGENT_CONVERSATION_STATUSES = {
   active: 'active',
   archived: 'archived',
+  deleted: 'deleted',
 } as const;
 
 export type AgentConversationStatus =

@@ -751,6 +751,10 @@ export type DebugNotification = NotificationEvent & {
   timestamp: Scalars['String']['output'];
 };
 
+export type DeleteAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
+};
+
 export type DeletePlanInput = {
   /** Plan id to delete */
   id: Scalars['ID']['input'];
@@ -1363,6 +1367,8 @@ export type Mutation = {
    * @deprecated Replaced by addWorkspaceFolder (repository/checkout model with auto-detected git metadata).
    */
   createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
+  /** Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible). */
+  deleteAgentConversation: AgentConversationObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
   /** Delete a note by ID */
@@ -1651,6 +1657,10 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateWorkspaceLocalRepositoryArgs = {
   input: CreateWorkspaceLocalRepositoryInput;
+};
+
+export type MutationDeleteAgentConversationArgs = {
+  input: DeleteAgentConversationInput;
 };
 
 export type MutationDeleteCustomPromptArgs = {
@@ -3546,6 +3556,8 @@ export type StartConversationStreamInput = {
   modelId?: InputMaybe<Scalars['String']['input']>;
   /** Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it). */
   permissionMode?: InputMaybe<Scalars['String']['input']>;
+  /** Whether to persist this turn. True (default, or omitted) saves the conversation + messages as today. False runs a "Private mode" turn: the stream is ephemeral — no conversation row is created and no messages are written. A Private turn carries no server-side history (single-turn context) and CLI backends run a fresh, non-resumed session. */
+  persist?: InputMaybe<Scalars['Boolean']['input']>;
   /** Persona to steer the turn; CLI backends inject it as a system prompt. */
   personaId?: InputMaybe<Scalars['ID']['input']>;
   /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set. */
@@ -4366,6 +4378,55 @@ export type GetRootMetricsQuery = {
     heapTotalMb: number;
     heapUsedMb: number;
     rssMb: number;
+  };
+};
+
+export type ListAgentConversationsQueryVariables = Exact<{
+  input?: InputMaybe<ListAgentConversationsInput>;
+}>;
+
+export type ListAgentConversationsQuery = {
+  __typename?: 'Query';
+  listAgentConversations: {
+    __typename?: 'ListAgentConversationsResultObject';
+    totalCount: number;
+    conversations: Array<{
+      __typename?: 'AgentConversationObject';
+      id: string;
+      status: string;
+      title?: string | null;
+      updatedAt: any;
+    }>;
+  };
+};
+
+export type DeleteAgentConversationMutationVariables = Exact<{
+  input: DeleteAgentConversationInput;
+}>;
+
+export type DeleteAgentConversationMutation = {
+  __typename?: 'Mutation';
+  deleteAgentConversation: {
+    __typename?: 'AgentConversationObject';
+    id: string;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type UpdateAgentConversationTitleMutationVariables = Exact<{
+  input: UpdateAgentConversationTitleInput;
+}>;
+
+export type UpdateAgentConversationTitleMutation = {
+  __typename?: 'Mutation';
+  updateAgentConversationTitle: {
+    __typename?: 'AgentConversationObject';
+    id: string;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
   };
 };
 
@@ -9537,6 +9598,193 @@ export const GetRootMetricsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetRootMetricsQuery, GetRootMetricsQueryVariables>;
+export const ListAgentConversationsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'listAgentConversations' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'ListAgentConversationsInput' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'listAgentConversations' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversations' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ListAgentConversationsQuery,
+  ListAgentConversationsQueryVariables
+>;
+export const DeleteAgentConversationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteAgentConversation' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DeleteAgentConversationInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteAgentConversation' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteAgentConversationMutation,
+  DeleteAgentConversationMutationVariables
+>;
+export const UpdateAgentConversationTitleDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateAgentConversationTitle' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'UpdateAgentConversationTitleInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateAgentConversationTitle' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateAgentConversationTitleMutation,
+  UpdateAgentConversationTitleMutationVariables
+>;
 export const GetAgentConversationMessagesDocument = {
   kind: 'Document',
   definitions: [
