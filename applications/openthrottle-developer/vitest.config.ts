@@ -43,15 +43,6 @@ export default (config: ConfigEnv) => {
       pool: 'vmForks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
-      /**
-       * @description `vmForks` grows heap across the many files a reused worker
-       * runs; Vitest's default recycle threshold is derived from *host* RAM, which
-       * a CI container over-reports, so the fork is OOM-killed by the cgroup before
-       * it ever recycles (the run dies mid-suite with no Vitest summary). Pin an
-       * explicit absolute limit so each fork recycles well under the container
-       * ceiling. Local runs (more RAM) never hit it; CI stops OOMing.
-       */
-      vmMemoryLimit: '512MB',
     },
   });
 
