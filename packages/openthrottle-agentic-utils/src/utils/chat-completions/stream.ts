@@ -10,6 +10,7 @@
  * leak across the package boundary.
  */
 import OpenAI from 'openai';
+import { resolveAgentTimeouts } from '../conversation-backend/cursor-agent/teardown.ts';
 
 /** A chat message role the local model understands. */
 export type ChatRole = 'assistant' | 'system' | 'user';
@@ -89,24 +90,71 @@ export async function* streamChatCompletion(
     apiKey: process.env.LLM_API_KEY ?? 'not-needed',
     baseURL: options.baseUrl,
   });
-  const stream = await client.chat.completions.create(
-    {
-      messages: options.messages.map(toMessageParam),
-      model: options.model,
-      // Only include when set so endpoints that reject unknown params (many
-      // local, non-reasoning models) are untouched.
-      ...(options.reasoningEffort !== undefined
-        ? { reasoning_effort: options.reasoningEffort }
-        : {}),
-      stream: true,
-    },
-    { signal: options.signal },
-  );
-  for await (const part of stream) {
-    const delta = part.choices[0]?.delta?.content ?? '';
-    if (delta.length > 0) {
-      yield { delta, done: false };
+
+  // Per-part idle timeout: unlike the CLI backends (whose subprocess wrapper
+  // self-terminates on idle), the SDK stream is otherwise unbounded — a silent
+  // endpoint mid-stream hangs the `for await` forever. Abort the SDK request
+  // when no part arrives within `idleMs`, composed with any caller signal so
+  // both the orchestrator abort and the idle abort tear the stream down. This
+  // is defense-in-depth beneath the runStream() backstop: it frees the HTTP
+  // socket promptly and surfaces a clear error close to the source.
+  const { idleMs } = resolveAgentTimeouts();
+  const idleController = new AbortController();
+  const signal =
+    options.signal !== undefined
+      ? AbortSignal.any([options.signal, idleController.signal])
+      : idleController.signal;
+
+  let idleTimer: NodeJS.Timeout | undefined;
+  let idleFired = false;
+  const armIdle = (): void => {
+    if (idleTimer !== undefined) {
+      clearTimeout(idleTimer);
+    }
+    idleTimer = setTimeout(() => {
+      idleFired = true;
+      idleController.abort();
+    }, idleMs);
+    idleTimer.unref();
+  };
+
+  try {
+    // Arm before `create()` so a stalled connect is bounded too, then reset on
+    // every delivered part.
+    armIdle();
+    const stream = await client.chat.completions.create(
+      {
+        messages: options.messages.map(toMessageParam),
+        model: options.model,
+        // Only include when set so endpoints that reject unknown params (many
+        // local, non-reasoning models) are untouched.
+        ...(options.reasoningEffort !== undefined
+          ? { reasoning_effort: options.reasoningEffort }
+          : {}),
+        stream: true,
+      },
+      { signal },
+    );
+    for await (const part of stream) {
+      armIdle();
+      const delta = part.choices[0]?.delta?.content ?? '';
+      if (delta.length > 0) {
+        yield { delta, done: false };
+      }
+    }
+    yield { delta: '', done: true };
+  } catch (error: unknown) {
+    // Distinguish our idle abort from a caller abort / genuine SDK error, so the
+    // upstream orchestrator publishes a clear timeout message.
+    if (idleFired && !(options.signal?.aborted ?? false)) {
+      throw new Error(
+        `The model endpoint stalled: no response for ${Math.round(idleMs / 1000)}s.`,
+      );
+    }
+    throw error;
+  } finally {
+    if (idleTimer !== undefined) {
+      clearTimeout(idleTimer);
     }
   }
-  yield { delta: '', done: true };
 }

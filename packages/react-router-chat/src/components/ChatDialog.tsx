@@ -102,7 +102,11 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
 
   const shellBody = (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <ChatThread messages={messages} />
+      <ChatThread
+        canRetry={composer?.canRetry}
+        messages={messages}
+        onRetry={composer?.onRetry}
+      />
       <ChatComposer
         className="border-t-0"
         disabled={composerDisabled}

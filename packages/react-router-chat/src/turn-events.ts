@@ -34,6 +34,22 @@ const safeParse = (
   }
 };
 
+/**
+ * True when a terminal (`done: true`) chunk's metadata carries the server's
+ * retryable timeout marker (`TerminalTimeoutMetadata { retryable: true }`) — the
+ * turn stalled and was safely interrupted, so the client may auto-retry rather
+ * than treat it as a fatal error. Any other terminal (success or fatal failure)
+ * returns false.
+ * @public
+ */
+export const isRetryableTerminalMetadata = (
+  metadataJson: string | null | undefined,
+): boolean => {
+  const parsed = safeParse(metadataJson);
+
+  return parsed !== null && parsed.retryable === true;
+};
+
 /** Best-effort tool name from a parsed `toolCall` payload; falls back to 'tool'. */
 const extractToolName = (toolCall: unknown): string => {
   if (!isRecord(toolCall)) {

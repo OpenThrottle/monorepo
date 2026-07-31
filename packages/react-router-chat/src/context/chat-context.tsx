@@ -21,10 +21,17 @@ export interface ChatComposerControls extends Omit<
   'className'
 > {
   /**
+   * When true, the last turn timed out and its single automatic retry is spent —
+   * {@link ChatDialog} renders a manual Retry affordance wired to {@link onRetry}.
+   */
+  readonly canRetry?: boolean;
+  /**
    * Mirrors the composer's `isStreaming`: when true the composer swaps Send for
    * a Stop button wired to {@link onStop}.
    */
   readonly isStreaming?: boolean;
+  /** Replay the last turn; surfaced by the Retry affordance when {@link canRetry}. */
+  readonly onRetry?: () => void;
   /** Invoked when the composer's Stop button is pressed while {@link isStreaming}. */
   readonly onStop?: () => void;
   /**

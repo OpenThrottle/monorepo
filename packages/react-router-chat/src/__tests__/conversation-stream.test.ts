@@ -103,6 +103,35 @@ describe('reduceStreamChunk', () => {
     expect(state.completedIds.has('assistant-1')).toBe(true);
   });
 
+  it('records a retryable timeout terminal in retryableIds', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(state, chunk({ delta: 'partial', sortOrder: 0 }));
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        done: true,
+        error: 'The response timed out after 150s with no activity.',
+        metadataJson: JSON.stringify({ retryable: true, timedOut: true }),
+        sortOrder: 1,
+      }),
+    );
+
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+    expect(state.retryableIds.has('assistant-1')).toBe(true);
+    expect(state.isStreaming).toBe(false);
+  });
+
+  it('does not mark a fatal (non-retryable) error terminal as retryable', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({ done: true, error: 'model_not_found', sortOrder: 0 }),
+    );
+
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+    expect(state.retryableIds.has('assistant-1')).toBe(false);
+  });
+
   it('appends an error note on a terminal error chunk', () => {
     let state = INITIAL_STREAM_STATE;
     state = reduceStreamChunk(state, chunk({ delta: 'partial', sortOrder: 0 }));

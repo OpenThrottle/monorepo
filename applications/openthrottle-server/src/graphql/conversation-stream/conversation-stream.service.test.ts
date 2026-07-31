@@ -101,6 +101,8 @@ function buildService(): {
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.useRealTimers();
+  delete process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS;
 });
 
 describe('ConversationStreamService', () => {
@@ -316,6 +318,77 @@ describe('ConversationStreamService', () => {
         },
       ],
     );
+  });
+
+  it('times out a stalled backend: retryable terminal chunk, partial persisted, controller cleared', async () => {
+    vi.useFakeTimers();
+    process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
+
+    // Yields one chunk, then hangs forever (a wedged backend).
+    async function* stalling(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+    }> {
+      yield { delta: 'partial', done: false, kind: 'text' };
+      await new Promise<never>(() => {});
+    }
+    openAiStreamMock.mockReturnValue(stalling());
+    const { conversations, publish, service } = buildService();
+
+    const done = service.runStream(baseRun);
+    await vi.advanceTimersByTimeAsync(5000);
+    await done;
+
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({
+      done: true,
+      metadataJson: JSON.stringify({ retryable: true, timedOut: true }),
+    });
+    expect(last.error).toContain('timed out');
+    // The partial text is persisted so the turn is not lost.
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        {
+          content: 'partial',
+          id: 'assistant-msg-1',
+          role: 'assistant',
+          toolMetadata: null,
+        },
+      ],
+    );
+    // The controller is cleared on completion (nothing left to cancel).
+    expect(service.cancel('conv-1')).toBe(false);
+  });
+
+  it('terminates a backend that ignores its abort signal (the race, not abort propagation)', async () => {
+    vi.useFakeTimers();
+    process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
+
+    let capturedSignal: AbortSignal | undefined;
+    // Captures the signal but NEVER observes it, then hangs — proving the
+    // orchestrator's idle race (not the backend reacting to abort) ends the turn.
+    async function* ignoresAbort(run: {
+      signal?: AbortSignal;
+    }): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      capturedSignal = run.signal;
+      yield { delta: 'x', done: false, kind: 'text' };
+      await new Promise<never>(() => {});
+    }
+    openAiStreamMock.mockImplementation(ignoresAbort);
+    const { publish, service } = buildService();
+
+    const done = service.runStream(baseRun);
+    await vi.advanceTimersByTimeAsync(5000);
+    // `done` resolving at all is the proof the loop terminated despite the
+    // backend ignoring its signal.
+    await done;
+
+    expect(capturedSignal?.aborted).toBe(true);
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({ done: true });
   });
 
   it('cancel aborts an in-flight stream', async () => {

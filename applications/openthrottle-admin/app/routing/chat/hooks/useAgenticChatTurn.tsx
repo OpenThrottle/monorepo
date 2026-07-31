@@ -19,11 +19,29 @@ export const AGENT_CONVERSATIONS_ACTION = `/resources/agent-conversations`;
  */
 const EMPTY_SEED: readonly ChatMessage[] = [];
 
+/** How many times one logical turn auto-retries before surfacing manual Retry. */
+const MAX_AUTO_RETRIES = 1;
+
+/**
+ * Client stall watchdog window (ms): if a turn is pending but no chunk has
+ * arrived for this long, assume the subscription died and recover. Set above the
+ * server idle backstop (150s default) so the server's retryable terminal chunk
+ * is preferred whenever it can still reach the client.
+ */
+const CLIENT_STALL_TIMEOUT_MS = 180_000;
+
 export interface UseAgenticChatTurnResult {
+  /**
+   * True when the last turn ended in a retryable timeout and the single
+   * automatic retry is already spent — the UI should offer a manual Retry.
+   */
+  readonly canRetry: boolean;
   readonly conversationId: string | null;
   readonly error: string | null;
   readonly isStreaming: boolean;
   readonly messages: ChatMessage[];
+  /** Manually replay the last turn after the auto-retry was exhausted. */
+  readonly onRetry: () => void;
   readonly onStop: () => void;
   /** Clear the thread for a fresh conversation (New chat). */
   readonly reset: () => void;
@@ -51,11 +69,25 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   const [error, setError] = React.useState<string | null>(null);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [pendingAssistantId, setPendingAssistantId] = React.useState<string | null>(null); // prettier-ignore
+  // Bridges the gap between a recovery firing and the replayed turn's new
+  // pending id arriving, so the composer never flickers out of streaming.
+  const [isRetrying, setIsRetrying] = React.useState(false);
+  // Set once the single auto-retry is spent on a timed-out turn → offer Retry.
+  const [canRetry, setCanRetry] = React.useState(false);
 
   const cancelFetcher = useFetcher();
   const localIdRef = React.useRef(0);
   const startFetcher = useFetcher<StartActionResult>();
   const restoreFetcher = useFetcher<LoadAgentConversationMessagesResult>();
+
+  // Last submitted turn, remembered so a stall/timeout can replay it verbatim
+  // without re-appending the user bubble (it is already in the thread).
+  const lastTurnRef = React.useRef<{
+    fields: Record<string, string>;
+    message: string;
+  } | null>(null);
+  // Auto-retries already spent on the current logical turn (loop guard).
+  const retryCountRef = React.useRef(0);
 
   // Setup
   const stream = useConversationStream({
@@ -89,13 +121,22 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   const isStreaming =
     startFetcher.state !== 'idle' ||
     stream.isStreaming ||
-    pendingAssistantId !== null;
+    pendingAssistantId !== null ||
+    isRetrying;
 
   // Handlers
   const submitTurn = (
     message: string,
     fields: Record<string, string>,
   ): void => {
+    // Remember the turn and reset the retry budget so a stall/timeout can replay
+    // it, and clear any prior manual-retry state.
+    lastTurnRef.current = { fields, message };
+    retryCountRef.current = 0;
+    setCanRetry(false);
+    setError(null);
+    setIsRetrying(false);
+
     localIdRef.current += 1;
     const userId = `local-user-${localIdRef.current}`;
     setMessages((previous) => [
@@ -114,7 +155,71 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     );
   };
 
+  /**
+   * Recover a stalled turn by replaying the last (message, fields). Auto-retries
+   * at most {@link MAX_AUTO_RETRIES} times per logical turn, then surfaces manual
+   * Retry. `cancelFirst` cancels a possibly-still-live server turn before
+   * resubmitting (client-side stall); a server-emitted retryable terminal has
+   * already ended the turn, so it resubmits directly. The user bubble is NOT
+   * re-appended — it is already in the thread; the server resolves session/resume
+   * from conversation metadata like any follow-up turn.
+   */
+  const recover = (options: { cancelFirst: boolean }): void => {
+    const lastTurn = lastTurnRef.current;
+    if (lastTurn === null) {
+      return;
+    }
+
+    if (retryCountRef.current >= MAX_AUTO_RETRIES) {
+      setPendingAssistantId(null);
+      setIsRetrying(false);
+      setCanRetry(true);
+      setError('The response timed out. Retry?');
+      return;
+    }
+
+    retryCountRef.current += 1;
+    setCanRetry(false);
+    setError(null);
+    setPendingAssistantId(null);
+    setIsRetrying(true);
+
+    if (options.cancelFirst && conversationId) {
+      cancelFetcher.submit(
+        { conversationId, intent: 'cancel' },
+        { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+      );
+    }
+
+    startFetcher.submit(
+      {
+        conversationId: conversationId ?? '',
+        intent: 'start',
+        message: lastTurn.message,
+        ...lastTurn.fields,
+      },
+      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+    );
+  };
+
+  // Effects call the latest `recover` through a ref so they need not list it as
+  // a dependency (it closes over changing state each render).
+  const recoverRef = React.useRef(recover);
+  recoverRef.current = recover;
+
+  // Manual Retry (Retry button): reset the auto-retry budget and replay once.
+  const onRetry = (): void => {
+    retryCountRef.current = 0;
+    setCanRetry(false);
+    recover({ cancelFirst: false });
+  };
+
   const onStop = (): void => {
+    // Stopping is deliberate — never auto-retry a user-cancelled turn.
+    retryCountRef.current = MAX_AUTO_RETRIES;
+    setCanRetry(false);
+    setIsRetrying(false);
+
     if (!conversationId) {
       return;
     }
@@ -130,6 +235,10 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   // Restore a persisted conversation: seed the id (re-keying the live stream)
   // and fetch its messages; the effect below swaps them in when they load.
   const restore = (params: { conversationId: string }): void => {
+    lastTurnRef.current = null;
+    retryCountRef.current = 0;
+    setCanRetry(false);
+    setIsRetrying(false);
     setError(null);
     setPendingAssistantId(null);
     setConversationId(params.conversationId);
@@ -142,6 +251,10 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
 
   // New chat: drop the id + thread so the next turn starts a fresh conversation.
   const reset = (): void => {
+    lastTurnRef.current = null;
+    retryCountRef.current = 0;
+    setCanRetry(false);
+    setIsRetrying(false);
     setError(null);
     setPendingAssistantId(null);
     setConversationId(null);
@@ -156,6 +269,8 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     }
 
     if (result.errorMessage || !result.conversationId) {
+      // A failed (re)start must never leave the composer wedged mid-retry.
+      setIsRetrying(false);
       setError(result.errorMessage ?? 'Failed to start the conversation.');
       return;
     }
@@ -163,6 +278,8 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     setConversationId(result.conversationId);
 
     if (result.assistantMessageId) {
+      // The replayed turn's stream has begun → leave the retry bridge state.
+      setIsRetrying(false);
       const assistantId = result.assistantMessageId;
       setPendingAssistantId(assistantId);
       setMessages((previous) =>
@@ -173,14 +290,47 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     }
   }, [startFetcher.data]);
 
+  // Recover on a retryable timeout terminal for the current pending turn: the
+  // server already ended it, so replay directly (no cancel). The loop guard in
+  // `recover` caps this at one automatic retry, then surfaces manual Retry.
   React.useEffect(() => {
     if (
       pendingAssistantId !== null &&
-      stream.completedIds.has(pendingAssistantId)
+      stream.retryableIds.has(pendingAssistantId)
+    ) {
+      recoverRef.current({ cancelFirst: false });
+    }
+  }, [pendingAssistantId, stream.retryableIds]);
+
+  // Clear the pending flag once the started turn reaches its terminal `done`
+  // chunk (success or fatal error). Retryable timeouts are handled above.
+  React.useEffect(() => {
+    if (
+      pendingAssistantId !== null &&
+      stream.completedIds.has(pendingAssistantId) &&
+      !stream.retryableIds.has(pendingAssistantId)
     ) {
       setPendingAssistantId(null);
     }
-  }, [pendingAssistantId, stream.completedIds]);
+  }, [pendingAssistantId, stream.completedIds, stream.retryableIds]);
+
+  // Stall watchdog: if a turn is pending but no chunk arrives for the stall
+  // window (a silently-dead subscription), cancel the possibly-live server turn
+  // and replay once. The timer resets on every chunk (lastActivityAt changes)
+  // and is cleared on unmount / pending clear / new conversation.
+  React.useEffect(() => {
+    if (pendingAssistantId === null) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      recoverRef.current({ cancelFirst: true });
+    }, CLIENT_STALL_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [pendingAssistantId, stream.lastActivityAt]);
 
   // Hydrate the thread from a restored conversation once its messages load.
   React.useEffect(() => {
@@ -198,10 +348,12 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   }, [restoreFetcher.data]);
 
   return {
+    canRetry,
     conversationId,
     error,
     isStreaming,
     messages: messagesView,
+    onRetry,
     onStop,
     reset,
     restore,
