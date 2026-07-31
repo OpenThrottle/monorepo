@@ -1,9 +1,9 @@
 import { Button, Input, Label, cn } from '@openthrottle/react-router-shadcn';
-import { type ReactElement, useId } from 'react';
+import * as React from 'react';
 
-import { NumberField } from './NumberField';
 import { type DisplayUnit, type FloorElement } from '../types';
 import { formatDimensions } from '../utils/units';
+import { NumberField } from './NumberField';
 
 /**
  * The editable fields surfaced by {@link PropertyPanel}.
@@ -43,14 +43,16 @@ export interface PropertyPanelProps {
  *
  * @public
  */
-export function PropertyPanel(props: PropertyPanelProps): ReactElement {
-  // Setup
+export const PropertyPanel = (
+  props: PropertyPanelProps,
+): React.ReactElement => {
   const { className, displayUnit, element, onChange, onDelete } = props;
 
   // Hooks
-  const fieldId = useId();
+  const fieldId = React.useId();
 
   // Setup
+  const kind = element?.type.replace(/-/g, ' ') ?? '';
 
   // Handlers
 
@@ -67,10 +69,6 @@ export function PropertyPanel(props: PropertyPanelProps): ReactElement {
     );
   }
 
-  // Setup
-  const isTable = 'seats' in element;
-  const kind = element.type.replace(/-/g, ' ');
-
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       <p className="text-sm font-medium capitalize">{kind}</p>
@@ -84,7 +82,7 @@ export function PropertyPanel(props: PropertyPanelProps): ReactElement {
         />
       </div>
 
-      {isTable ? (
+      {'seats' in element ? (
         <NumberField
           id={`${fieldId}-seats`}
           integer={true}
@@ -118,4 +116,4 @@ export function PropertyPanel(props: PropertyPanelProps): ReactElement {
       </Button>
     </div>
   );
-}
+};

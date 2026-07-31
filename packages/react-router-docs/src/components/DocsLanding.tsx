@@ -31,7 +31,18 @@ export interface DocsLandingProps {
 export const DocsLanding = (props: DocsLandingProps): React.ReactElement => {
   const { className, groups, intro = null } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={clsx('flex flex-col gap-8', className)}

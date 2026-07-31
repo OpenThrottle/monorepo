@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import { formatPlanTagProvenance } from '~/routing/plans/utils/plan-tag-chips';
 
 export interface PlanTagChipData {
   confidence?: number | null;
@@ -21,11 +22,6 @@ export interface PlanTagChipsProps {
   tags: PlanTagChipData[];
   vocabulary: PlanTagVocabularyOption[];
 }
-
-const formatProvenance = (tag: PlanTagChipData): string =>
-  tag.confidence != null
-    ? `${tag.source} · confidence ${tag.confidence}`
-    : tag.source;
 
 export const PlanTagChips = (props: PlanTagChipsProps): React.ReactElement => {
   const { onAddTag, onRemoveTag, pending = false, tags, vocabulary } = props;
@@ -79,7 +75,7 @@ export const PlanTagChips = (props: PlanTagChipsProps): React.ReactElement => {
               : 'gap-1'
           }
           key={tag.tag}
-          title={formatProvenance(tag)}
+          title={formatPlanTagProvenance(tag)}
         >
           <span>{tag.tag}</span>
           {tag.dimension === 'phase' ? (

@@ -20,10 +20,12 @@ export const PlanTabOutput = (
 ): React.ReactElement => {
   const { chunks, className: _className } = props;
 
-  // Hooks — rule applications + linked artifacts come from the route loader
+  // Hooks
+  // Rule applications + linked artifacts come from the route loader
   // (same source as the tab shell) rather than being prop-drilled through tabs.
   const { linkedArtifacts, ruleApplications } = usePlanDetailRouteData();
 
+  // Setup
   const markdown = React.useMemo(
     () =>
       chunks
@@ -42,8 +44,6 @@ export const PlanTabOutput = (
         .join('\n\n---\n\n'),
     [chunks],
   );
-
-  // Setup
 
   // Handlers
 

@@ -10,7 +10,7 @@ export interface BlockquoteProps extends React.HTMLAttributes<HTMLQuoteElement> 
  * @see https://ui.shadcn.com/docs/components/typography
  */
 export const Blockquote = React.forwardRef<HTMLQuoteElement, BlockquoteProps>(
-  (props, ref) => {
+  (props, ref): React.ReactElement => {
     const { className, ...rest } = props;
 
     // Hooks

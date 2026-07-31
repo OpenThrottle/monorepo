@@ -27,9 +27,9 @@ export interface NotificationsStoreProviderProps {
  *
  * @public
  */
-export function NotificationsStoreProvider(
+export const NotificationsStoreProvider = (
   props: NotificationsStoreProviderProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { children, persist = true, storageKey } = props;
   const resolvedStorageKey = storageKey ?? DEFAULT_NOTIFICATIONS_STORAGE_KEY;
 
@@ -136,4 +136,4 @@ export function NotificationsStoreProvider(
       {children}
     </NotificationsStoreContext.Provider>
   );
-}
+};

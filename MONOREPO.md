@@ -494,6 +494,7 @@ When you change one of these projects, run its `lint`/`typecheck`/`test`, then r
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)**: How to contribute — setup, the local change loop (`pnpm run check:local`), commit/PR conventions, and the CLA
 - **[docs/monorepo/NX/tags.md](./docs/monorepo/NX/tags.md)**: Complete technology tag reference
 - **[docs/monorepo/nx-graph.md](./docs/monorepo/nx-graph.md)**: NX graph and dependency visualization (ground truth: `nx graph`, `nx show projects`)
+- **[docs/monorepo/component-primitive-shape.md](./docs/monorepo/component-primitive-shape.md)**: The enforced shape every authored React component must follow (derived from the `@tools/generators` component template)
 - **[README.md](./README.md)**: General monorepo overview and setup
 
 ### NX Resources

@@ -2,10 +2,6 @@ import * as React from 'react';
 import { Dialog as SheetPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
-export interface SheetOverlayProps {
-  readonly className?: string;
-}
-
 export interface SheetOverlayProps extends React.ComponentPropsWithoutRef<
   typeof SheetPrimitive.Overlay
 > {}
@@ -13,7 +9,7 @@ export interface SheetOverlayProps extends React.ComponentPropsWithoutRef<
 export const SheetOverlay = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Overlay>,
   SheetOverlayProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

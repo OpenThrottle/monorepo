@@ -7,31 +7,36 @@ export interface MarkdownProps {
   contentEditable?: boolean;
 }
 
-export const Markdown = (props: MarkdownProps): React.ReactElement => {
-  const { className, content = {}, contentEditable = false } = props;
+export const Markdown = React.forwardRef<HTMLDivElement, MarkdownProps>(
+  (props, ref): React.ReactElement => {
+    const { className, content = {}, contentEditable = false } = props;
 
-  // Hooks
+    // Hooks
 
-  // Setup
-  const isString = typeof content === 'string';
-  const value = isString ? content : JSON.stringify(content, undefined, 2);
+    // Setup
+    const isString = typeof content === 'string';
+    const value = isString ? content : JSON.stringify(content, undefined, 2);
 
-  // Handlers
+    // Handlers
 
-  // Markup
+    // Markup
 
-  // Life Cycle
+    // Life Cycle
 
-  // 🔌 Short Circuits
+    // 🔌 Short Circuit
 
-  return (
-    <div
-      className={clsx('markdown max-w-full overflow-auto', className)}
-      contentEditable={contentEditable}
-    >
-      <pre>
-        <code>{value}</code>
-      </pre>
-    </div>
-  );
-};
+    return (
+      <div
+        className={clsx('markdown max-w-full overflow-auto', className)}
+        contentEditable={contentEditable}
+        ref={ref}
+      >
+        <pre>
+          <code>{value}</code>
+        </pre>
+      </div>
+    );
+  },
+);
+
+Markdown.displayName = 'Markdown';

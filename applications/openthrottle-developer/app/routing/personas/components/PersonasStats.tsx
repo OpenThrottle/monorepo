@@ -10,7 +10,19 @@ export const PersonasStats = (
   props: PersonasStatsProps,
 ): React.ReactElement => {
   const { entries = [] } = props;
+
+  // Hooks
+
+  // Setup
   const count = getRepoPersonasRegistryCount(entries);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

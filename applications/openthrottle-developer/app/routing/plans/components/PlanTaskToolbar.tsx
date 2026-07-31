@@ -11,9 +11,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { CheckCircle, ChevronDown, PencilIcon } from 'lucide-react';
-import { Link, useFetcher } from 'react-router';
-import { useActionToast } from '~/global/hooks/useActionToast';
-import { action } from '~/routes/plans.$planId.tasks.$taskId._index';
+import { Link } from 'react-router';
+import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
@@ -105,30 +104,15 @@ export const PlanTaskToolbar = (
   } = props;
 
   // Hooks
-  const fetcherSetStatus = useFetcher<typeof action>();
+  const { fetcherSetStatus, isCompleted } = usePlanTaskToolbar({ taskStatus });
 
   // Setup
-  const isCompleted = taskStatus === 'COMPLETED';
-  const setStatusData = fetcherSetStatus.data;
-  const setStatusError =
-    setStatusData != null &&
-    typeof setStatusData === 'object' &&
-    'setTaskStatusError' in setStatusData &&
-    typeof setStatusData.setTaskStatusError === 'string'
-      ? setStatusData.setTaskStatusError
-      : undefined;
 
   // Handlers
 
   // Markup
 
   // Life Cycle
-  useActionToast(fetcherSetStatus.data, {
-    active: fetcherSetStatus.state !== 'idle',
-    error: () => setStatusError,
-    id: 'set-task-status',
-    success: 'Task marked complete.',
-  });
 
   // 🔌 Short Circuit
 

@@ -14,7 +14,7 @@ export interface SheetContentProps
 export const SheetContent = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, children, side = 'right', ...rest } = props;
 
   // Hooks

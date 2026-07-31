@@ -8,8 +8,10 @@ import {
   type Attribution,
   collectAttributions,
   compareCodeUnits,
+  diffManifestLines,
   isFirstParty,
   normalizeAuthor,
+  packageNamesFromLines,
   renderThirdPartyNotices,
 } from './generate-third-party-notices.ts';
 
@@ -178,5 +180,38 @@ describe('renderThirdPartyNotices', () => {
       '### @paper-design/shaders — LicenseRef-PolyForm-Shield-1.0.0',
     );
     expect(doc).toContain('PolyForm Shield License 1.0.0');
+  });
+});
+
+describe('diffManifestLines', () => {
+  it('reports lines only on this host (added) and only in the committed file (removed)', () => {
+    const committed = 'a\nb\nc\n';
+    const freshlyGenerated = 'a\nb\nx\ny\n';
+
+    const { added, removed } = diffManifestLines(committed, freshlyGenerated);
+
+    expect(added).toEqual(['x', 'y']);
+    expect(removed).toEqual(['c']);
+  });
+
+  it('returns no drift for identical manifests', () => {
+    const same = 'a\nb\n';
+    expect(diffManifestLines(same, same)).toEqual({ added: [], removed: [] });
+  });
+});
+
+describe('packageNamesFromLines', () => {
+  it('extracts package names from package-table rows only', () => {
+    const lines = [
+      '| `@esbuild/linux-x64` | 0.21.5 | MIT |  |',
+      '| `fsevents` | 2.3.3 | MIT |  |',
+      '**42** third-party packages.',
+      '| License | Packages |',
+    ];
+
+    expect(packageNamesFromLines(lines)).toEqual([
+      '@esbuild/linux-x64',
+      'fsevents',
+    ]);
   });
 });

@@ -15,19 +15,37 @@ import {
 import { cn } from '../utils/cn';
 import { Button, buttonVariants } from './Button';
 
-function Calendar({
-  className,
-  classNames,
-  showOutsideDays = true,
-  captionLayout = 'label',
-  buttonVariant = 'ghost',
-  formatters,
-  components,
-  ...props
-}: React.ComponentProps<typeof DayPicker> & {
+// DayPicker (react-day-picker) is a plain function component with no ref
+// forwarding, so `Calendar` is not wrapped in `forwardRef` — there is no ref
+// to forward without changing behavior.
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>['variant'];
-}) {
+};
+
+export const Calendar = (props: CalendarProps): React.ReactElement => {
+  const {
+    buttonVariant = 'ghost',
+    captionLayout = 'label',
+    className,
+    classNames,
+    components,
+    formatters,
+    showOutsideDays = true,
+    ...rest
+  } = props;
+
+  // Hooks
+
+  // Setup
   const defaultClassNames = getDefaultClassNames();
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <DayPicker
@@ -174,23 +192,40 @@ function Calendar({
         ...formatters,
       }}
       showOutsideDays={showOutsideDays}
-      {...props}
+      {...rest}
     />
   );
-}
+};
 
-function CalendarDayButton({
-  className,
-  day,
-  modifiers,
-  ...props
-}: React.ComponentProps<typeof DayButton>) {
-  const defaultClassNames = getDefaultClassNames();
+// react-day-picker's `DayButton` custom-component contract is a plain
+// function with no ref parameter, so `CalendarDayButton` is not wrapped in
+// `forwardRef` — the internal `ref` below is local focus-management state,
+// not a ref forwarded from a caller.
+export interface CalendarDayButtonProps extends React.ComponentProps<
+  typeof DayButton
+> {}
 
+export const CalendarDayButton = (
+  props: CalendarDayButtonProps,
+): React.ReactElement => {
+  const { className, day, modifiers, ...rest } = props;
+
+  // Hooks
   const ref = React.useRef<HTMLButtonElement>(null);
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus();
   }, [modifiers.focused]);
+
+  // Setup
+  const defaultClassNames = getDefaultClassNames();
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Button
@@ -212,9 +247,7 @@ function CalendarDayButton({
       ref={ref}
       size="icon"
       variant="ghost"
-      {...props}
+      {...rest}
     />
   );
-}
-
-export { Calendar, CalendarDayButton };
+};

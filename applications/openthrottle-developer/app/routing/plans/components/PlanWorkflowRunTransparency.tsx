@@ -8,22 +8,17 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { Link } from 'react-router';
-import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphTuningDiffLabels,
-  formatWorkflowRalphExecutionBackendLabel,
-  planRunJobDetailPath,
   WORKFLOW_RALPH_CONFIG_PRECEDENCE,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
-
-type RecentRun =
-  PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
-
-type PlanRunAuditRow = PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
+import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import { PlanWorkflowRunTransparencyRecentRuns } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
+import type { RecentRun } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
 
 export interface PlanWorkflowRunTransparencyProps {
   canonicalWorkflowCommand: string;
@@ -34,14 +29,6 @@ export interface PlanWorkflowRunTransparencyProps {
   workflowTimeout: string;
   workingDirectory: string;
 }
-
-const formatFinishedOn = (finishedOn: number | null | undefined): string => {
-  if (finishedOn == null || Number.isNaN(finishedOn)) {
-    return '—';
-  }
-
-  return new Date(finishedOn).toISOString();
-};
 
 /**
  * @description Plan detail: canonical CLI copy, debug bundle (includes argv segments), diff vs
@@ -61,6 +48,8 @@ export const PlanWorkflowRunTransparency = (
   } = props;
 
   // Hooks
+
+  // Setup
   const debugBundleText = React.useMemo(
     () =>
       buildWorkflowRalphDebugBundleText({
@@ -75,8 +64,6 @@ export const PlanWorkflowRunTransparency = (
     () => buildWorkflowRalphTuningDiffLabels(workflowInput, workflowTimeout),
     [workflowInput, workflowTimeout],
   );
-
-  // Setup
 
   // Handlers
 
@@ -176,156 +163,15 @@ export const PlanWorkflowRunTransparency = (
             )}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="text-muted-foreground mt-8 w-full min-w-[28rem] border-collapse text-xs">
-              <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-                Queued run audit (persisted plan_runs rows). Snapshot diff
-                compares enqueue-time config to current Configuration tab
-                values.
-              </caption>
-              <thead>
-                <tr className="border-border border-b text-left">
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Job id
-                  </th>
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Queued (UTC)
-                  </th>
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Kind
-                  </th>
-                  <th className="text-foreground py-1.5 font-medium">
-                    vs current config
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {planRunAuditRows.length === 0 ? (
-                  <tr>
-                    <td className="py-2 text-[0.7rem]" colSpan={4}>
-                      No queued run audit rows yet. After you enqueue from the
-                      toolbar, each run records its resolved configuration here.
-                    </td>
-                  </tr>
-                ) : (
-                  planRunAuditRows.map((row) => {
-                    const diffLabels = buildPlanRunSnapshotDiffLabels(
-                      row.runConfigSnapshotJson,
-                      { workflowInput, workingDirectory },
-                    );
+          <PlanWorkflowRunTransparencyAuditTable
+            planRunAuditRows={planRunAuditRows}
+            workflowInput={workflowInput}
+            workingDirectory={workingDirectory}
+          />
 
-                    return (
-                      <tr
-                        className="border-border/60 border-b last:border-0"
-                        key={row.id}
-                      >
-                        <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                          {row.bullmqJobId == null ? (
-                            <span className="text-muted-foreground">
-                              CLI run
-                            </span>
-                          ) : (
-                            <Link
-                              className="text-primary underline-offset-2 hover:underline"
-                              to={planRunJobDetailPath(row.bullmqJobId)}
-                            >
-                              {row.bullmqJobId}
-                            </Link>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                          {new Date(row.createdAt).toISOString()}
-                        </td>
-                        <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                          {row.runKind}
-                        </td>
-                        <td className="py-1.5 align-top text-[0.65rem]">
-                          {row.runConfigSnapshotJson == null ? (
-                            '—'
-                          ) : diffLabels.length === 0 ? (
-                            'Matches current config'
-                          ) : (
-                            <ul className="list-inside list-disc">
-                              {diffLabels.map((line, index) => (
-                                <li key={`${row.id}-${index}`}>{line}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="text-muted-foreground mt-8 w-full min-w-[28rem] border-collapse text-xs">
-              <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-                Recent enqueue history (completed jobs for this plan). Each row
-                shows which runner executed that run (one backend per job).
-                After “Add to Queue” or “Run plan”, finished workers appear here
-                — open a job id for payload and state in the queue UI.
-              </caption>
-              <thead>
-                <tr className="border-border border-b text-left">
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Job id
-                  </th>
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Runner
-                  </th>
-                  <th className="text-foreground py-1.5 pr-2 font-medium">
-                    Finished (UTC)
-                  </th>
-                  <th className="text-foreground py-1.5 font-medium">
-                    RSS end (MB)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentPlanRuns.length === 0 ? (
-                  <tr>
-                    <td className="py-2 text-[0.7rem]" colSpan={4}>
-                      No completed runs recorded for this plan yet. After you
-                      enqueue from the toolbar, finished jobs appear here with a
-                      link to the job detail view.
-                    </td>
-                  </tr>
-                ) : (
-                  recentPlanRuns.map((row) => (
-                    <tr
-                      className="border-border/60 border-b last:border-0"
-                      key={row.jobId}
-                    >
-                      <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                        <Link
-                          className="text-primary underline-offset-2 hover:underline"
-                          to={planRunJobDetailPath(row.jobId)}
-                        >
-                          {row.jobId}
-                        </Link>
-                      </td>
-                      <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                        {formatWorkflowRalphExecutionBackendLabel(
-                          row.executionBackend,
-                        )}
-                      </td>
-                      <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                        {formatFinishedOn(row.finishedOn)}
-                      </td>
-                      <td className="py-1.5 align-top font-mono text-[0.65rem]">
-                        {row.taskRunMetrics?.atEnd.rssMb != null
-                          ? row.taskRunMetrics.atEnd.rssMb.toFixed(1)
-                          : '—'}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <PlanWorkflowRunTransparencyRecentRuns
+            recentPlanRuns={recentPlanRuns}
+          />
         </div>
       </CardContent>
     </Card>

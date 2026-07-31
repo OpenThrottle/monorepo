@@ -35,11 +35,21 @@ export const PlanWorkflowConfigHooks = (
     savePending = false,
   } = props;
 
+  // Hooks
+
+  // Setup
   const validation = validateJobRunHooksDraftRows(hooks);
 
+  // Handlers
   const handleAdd = (): void => {
     onChange([...hooks, createDefaultJobRunHookDraftRow()]);
   };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <>

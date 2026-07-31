@@ -36,6 +36,17 @@ export function sortElementsByLayer(
 }
 
 /**
+ * Human-readable description of an element for a11y labels/titles — the kind
+ * (the `type` with dashes as spaces) plus the label when present.
+ *
+ * @public
+ */
+export function describeFloorElement(element: FloorElement): string {
+  const kind = element.type.replace(/-/g, ' ');
+  return element.label ? `${kind}: ${element.label}` : kind;
+}
+
+/**
  * Build a new floor element of the given type, centered at `center`, using the
  * catalog defaults (real-world inches, seat counts) and the type's z-order
  * layer. The caller supplies a stable `id`. Returns a fully-formed, schema-valid

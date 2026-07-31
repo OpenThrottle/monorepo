@@ -9,7 +9,7 @@ export interface SheetTitleProps extends React.ComponentPropsWithoutRef<
 export const SheetTitle = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Title>,
   SheetTitleProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

@@ -147,7 +147,7 @@ jobs:
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm exec nx affected --target="${{ matrix.target }}" --parallel --output-style=stream ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
@@ -186,6 +186,9 @@ jobs:
 
       - name: '🎨 Prettier format-check'
         run: pnpm exec nx run monorepo:format-check --verbose
+
+      - name: '🧱 Component primitive-shape audit (R4/R5/R6/R7)'
+        run: pnpm run audit:component-shape:strict
 
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
       #   run: pnpm exec nx run monorepo:check-migration-table-comments

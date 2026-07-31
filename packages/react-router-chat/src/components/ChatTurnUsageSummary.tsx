@@ -6,78 +6,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { ChatTokenUsage } from '../types';
+import { buildBadgeLabel, buildRows } from '../utils/chat-turn-usage-summary';
+import { hasUsageCounts } from '../usage';
 import type { ChatTurnUsageEvent } from '../types';
-import { formatTokenCount, formatUsageCost, hasUsageCounts } from '../usage';
 
 export interface ChatTurnUsageSummaryProps {
   readonly event: ChatTurnUsageEvent;
 }
-
-/** One label/value pair in the tooltip breakdown. */
-interface UsageRow {
-  readonly label: string;
-  readonly value: string;
-}
-
-/** Build the ordered breakdown rows for whichever fields the backend reported. */
-const buildRows = (usage: ChatTokenUsage): readonly UsageRow[] => {
-  const rows: UsageRow[] = [];
-
-  if (usage.inputTokens !== undefined) {
-    rows.push({ label: 'Input', value: formatTokenCount(usage.inputTokens) });
-  }
-  if (usage.outputTokens !== undefined) {
-    rows.push({ label: 'Output', value: formatTokenCount(usage.outputTokens) });
-  }
-  if (usage.cacheReadTokens !== undefined) {
-    rows.push({
-      label: 'Cache read',
-      value: formatTokenCount(usage.cacheReadTokens),
-    });
-  }
-  if (usage.cacheWriteTokens !== undefined) {
-    rows.push({
-      label: 'Cache write',
-      value: formatTokenCount(usage.cacheWriteTokens),
-    });
-  }
-  if (usage.totalTokens !== undefined) {
-    rows.push({ label: 'Total', value: formatTokenCount(usage.totalTokens) });
-  }
-
-  const cost = formatUsageCost(usage.costUsd);
-  if (cost !== undefined) {
-    rows.push({ label: 'Cost', value: cost });
-  }
-  if (usage.model !== undefined) {
-    rows.push({ label: 'Model', value: usage.model });
-  }
-
-  return rows;
-};
-
-/** Compact badge label: `↑ 1.2k · ↓ 340`, falling back to total or cost alone. */
-const buildBadgeLabel = (usage: ChatTokenUsage): string => {
-  const parts: string[] = [];
-
-  if (usage.inputTokens !== undefined) {
-    parts.push(`↑ ${formatTokenCount(usage.inputTokens)}`);
-  }
-  if (usage.outputTokens !== undefined) {
-    parts.push(`↓ ${formatTokenCount(usage.outputTokens)}`);
-  }
-  if (parts.length === 0 && usage.totalTokens !== undefined) {
-    parts.push(`Σ ${formatTokenCount(usage.totalTokens)}`);
-  }
-
-  const cost = formatUsageCost(usage.costUsd);
-  if (parts.length === 0 && cost !== undefined) {
-    parts.push(cost);
-  }
-
-  return parts.join(' · ');
-};
 
 /**
  * Per-turn token/usage readout: a compact {@link Badge} (e.g. `↑ 1.2k · ↓ 340`)
@@ -92,10 +27,18 @@ export const ChatTurnUsageSummary = (
 ): React.ReactElement | null => {
   const { event } = props;
 
+  // Hooks
+
   // Setup
   const hasError = event.error !== null && event.error.trim() !== '';
   const usage = event.usage;
   const rows = usage !== undefined ? buildRows(usage) : [];
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // 🔌 Short Circuit
   if (hasError) {
@@ -116,7 +59,6 @@ export const ChatTurnUsageSummary = (
     .map((row) => `${row.label}: ${row.value}`)
     .join(', ')}`;
 
-  // Markup
   return (
     <TooltipProvider>
       <Tooltip delayDuration={300}>

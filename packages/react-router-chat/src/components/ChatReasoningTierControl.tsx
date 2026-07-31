@@ -10,6 +10,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Check, SlidersHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import {
+  DEFAULT_REASONING_LABELS,
+  DEFAULT_SERVICE_TIER_LABELS,
+} from '../data/chat-reasoning-tier-labels';
 import { ChatReasoningLevel, ChatServiceTier } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
@@ -28,22 +32,6 @@ export interface ChatReasoningTierControlProps {
   /** Override the default human labels for service tiers. */
   readonly serviceTierLabels?: Partial<Record<ChatServiceTier, string>>;
 }
-
-/** Canonical UI labels for reasoning levels (overridable via props). */
-const DEFAULT_REASONING_LABELS: Record<ChatReasoningLevel, string> = {
-  [ChatReasoningLevel.extraHigh]: 'Extra High',
-  [ChatReasoningLevel.high]: 'High',
-  [ChatReasoningLevel.low]: 'Low',
-  [ChatReasoningLevel.max]: 'Max',
-  [ChatReasoningLevel.medium]: 'Medium',
-  [ChatReasoningLevel.ultra]: 'Ultra',
-};
-
-/** Canonical UI labels for service tiers (overridable via props). */
-const DEFAULT_SERVICE_TIER_LABELS: Record<ChatServiceTier, string> = {
-  [ChatServiceTier.fast]: 'Fast',
-  [ChatServiceTier.standard]: 'Standard',
-};
 
 /**
  * @description Controlled, presentational reasoning + service-tier dropdown

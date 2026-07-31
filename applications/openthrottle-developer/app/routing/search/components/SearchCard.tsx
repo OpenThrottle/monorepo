@@ -2,6 +2,7 @@ import * as React from 'react';
 import { SearchDocumentationCard } from '~/routing/search/components/SearchDocumentationCard';
 import { SearchPlanCard } from '~/routing/search/components/SearchPlanCard';
 import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
+import { normalizeSource } from '~/routing/search/utils/search-card';
 import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
@@ -10,19 +11,6 @@ export interface SearchCardProps {
   defaultOpenWhy?: boolean;
   rankMeta?: SearchRankMeta;
   result: SearchChunk;
-}
-
-/** Source discriminator for delegating to the appropriate card component. */
-type SearchSource = 'plan' | 'task' | 'documentation';
-
-/**
- * @description Normalizes API source string to the three supported card types.
- */
-function normalizeSource(source: string): SearchSource {
-  if (source === 'task' || source === 'documentation') {
-    return source;
-  }
-  return 'plan';
 }
 
 /**

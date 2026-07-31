@@ -28,6 +28,30 @@ export const QUEUE_STATS_CHART_CONFIG: ChartConfig = {
   waiting: { color: 'var(--chart-1)', label: 'Waiting' },
 };
 
+/** A tooltip payload row: queue name plus every count series. */
+export type QueueStatsChartRow = Record<
+  (typeof QUEUE_STATS_CHART_SERIES)[number],
+  number
+> & {
+  name: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** Narrow an unknown Recharts tooltip payload to a complete chart row. */
+export const isQueueStatsChartRow = (
+  value: unknown,
+): value is QueueStatsChartRow => {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return (
+    typeof value.name === 'string' &&
+    QUEUE_STATS_CHART_SERIES.every((key) => typeof value[key] === 'number')
+  );
+};
+
 /**
  * @description Waiting + delayed jobs — same semantics as the queues table backlog column.
  */

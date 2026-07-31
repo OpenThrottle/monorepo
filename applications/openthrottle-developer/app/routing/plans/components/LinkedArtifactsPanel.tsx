@@ -1,5 +1,10 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/linked-artifacts-panel-verification-styles';
+import {
+  formatProducedAt,
+  toMillis,
+} from '~/routing/plans/utils/linked-artifacts-panel';
 
 export interface LinkedArtifactRow {
   externalKey: string;
@@ -16,27 +21,6 @@ export interface LinkedArtifactsPanelProps {
   artifacts: LinkedArtifactRow[];
 }
 
-/** Verification badge styling — verified reads calm, orphaned warns, unverified is muted (a pending claim). */
-const VERIFICATION_STYLES: Record<string, string> = {
-  orphaned: 'border-amber-500/60 bg-amber-500/10',
-  unverified: 'border-slate-500/60 bg-slate-500/10',
-  verified: 'border-emerald-500/60 bg-emerald-500/10',
-};
-
-/** Coerce the Date scalar (number epoch millis | string) to a Date; matches the TaskDetails pattern. */
-const toDate = (value: number | string): Date =>
-  typeof value === 'number' ? new Date(value) : new Date(String(value));
-
-const toMillis = (value: number | string): number => {
-  const time = toDate(value).getTime();
-  return Number.isNaN(time) ? 0 : time;
-};
-
-const formatProducedAt = (value: number | string): string => {
-  const date = toDate(value);
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
-};
-
 export const LinkedArtifactsPanel = (
   props: LinkedArtifactsPanelProps,
 ): React.ReactElement | null => {
@@ -44,7 +28,8 @@ export const LinkedArtifactsPanel = (
 
   // Hooks
 
-  // Setup — newest first (the query already orders by producedAt DESC; keep it stable here too).
+  // Setup
+  // Newest first (the query already orders by producedAt DESC; keep it stable here too).
   const ordered = [...artifacts].sort(
     (a, b) => toMillis(b.producedAt) - toMillis(a.producedAt),
   );
@@ -69,7 +54,9 @@ export const LinkedArtifactsPanel = (
             key={artifact.id}
           >
             <Badge
-              className={VERIFICATION_STYLES[artifact.verification] ?? ''}
+              className={
+                LINKED_ARTIFACT_VERIFICATION_STYLES[artifact.verification] ?? ''
+              }
               title={`Verification: ${artifact.verification}`}
             >
               {artifact.verification}

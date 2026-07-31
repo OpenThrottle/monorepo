@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
 
+export interface AgentSearchIntroductionProps {}
+
 /**
  * @description Heading + blurb for the agent-assets search route.
  */
-export const AgentSearchIntroduction = (): React.ReactElement => {
+export const AgentSearchIntroduction = (
+  _props: AgentSearchIntroductionProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

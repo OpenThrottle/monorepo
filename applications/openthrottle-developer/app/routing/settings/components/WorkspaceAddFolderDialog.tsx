@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { Form, useFetcher, useNavigation } from 'react-router';
+import { Form } from 'react-router';
 import {
-  Badge,
   Button,
   Dialog,
   DialogContent,
@@ -12,9 +11,11 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
-import { FolderGit2Icon, FolderIcon, FolderPlusIcon } from 'lucide-react';
+import { FolderIcon, FolderPlusIcon } from 'lucide-react';
 import type { DiscoveredFolderObject } from '~/__generated__/graphql';
+import { WorkspaceAddFolderCandidate } from '~/routing/settings/components/WorkspaceAddFolderCandidate';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { useWorkspaceAddFolderDialog } from '~/routing/settings/hooks/useWorkspaceAddFolderDialog';
 
 export interface WorkspaceAddFolderDialogProps {
   actionError?: string | null;
@@ -24,71 +25,30 @@ export interface WorkspaceAddFolderDialogProps {
   >[];
 }
 
-interface BrowseEntry {
-  name: string;
-  path: string;
-}
-
 export const WorkspaceAddFolderDialog = (
   props: WorkspaceAddFolderDialogProps,
 ): React.ReactElement => {
   const { actionError, discoveredFolders } = props;
 
   // Hooks
-  const [open, setOpen] = React.useState(false);
-  const [showManualPath, setShowManualPath] = React.useState(false);
-  const browseFetcher = useFetcher<{
-    browse?: { entries: BrowseEntry[]; path: string };
-  }>();
-  const navigation = useNavigation();
+  const {
+    browseEntries,
+    browseFetcher,
+    browsePath,
+    handleBrowse,
+    handleBrowseSubmit,
+    handleToggleManualPath,
+    isAdding,
+    open,
+    setOpen,
+    showManualPath,
+  } = useWorkspaceAddFolderDialog();
 
   // Setup
-  const isAdding =
-    navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'addFolder';
-  const browseEntries = browseFetcher.data?.browse?.entries ?? null;
-  const browsePath = browseFetcher.data?.browse?.path ?? null;
 
   // Handlers
-  const handleBrowse = (path: string): void => {
-    browseFetcher.submit(
-      { intent: 'browseDirectory', path },
-      { method: 'post' },
-    );
-  };
 
   // Markup
-  const renderCandidate = (
-    candidate: WorkspaceAddFolderDialogProps['discoveredFolders'][number],
-  ): React.ReactElement => (
-    <li
-      className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
-      key={candidate.path}
-    >
-      <div className="flex min-w-0 items-center gap-2">
-        <FolderGit2Icon aria-hidden={true} className="size-4 shrink-0" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{candidate.name}</p>
-          <p className="text-muted-foreground truncate font-mono text-xs">
-            {candidate.path}
-          </p>
-        </div>
-      </div>
-      {candidate.alreadyRegistered ? (
-        <Badge variant="secondary">
-          {WORKSPACE_FOLDERS_COPY.alreadyRegisteredBadge}
-        </Badge>
-      ) : (
-        <Form method="post">
-          <input name="intent" type="hidden" value="addFolder" />
-          <input name="path" type="hidden" value={candidate.path} />
-          <Button disabled={isAdding} size="sm" type="submit">
-            {isAdding ? 'Adding…' : 'Add'}
-          </Button>
-        </Form>
-      )}
-    </li>
-  );
 
   // Life Cycle
 
@@ -119,7 +79,13 @@ export const WorkspaceAddFolderDialog = (
           </p>
         ) : (
           <ul className="space-y-2">
-            {discoveredFolders.map(renderCandidate)}
+            {discoveredFolders.map((candidate) => (
+              <WorkspaceAddFolderCandidate
+                candidate={candidate}
+                isAdding={isAdding}
+                key={candidate.path}
+              />
+            ))}
           </ul>
         )}
 
@@ -171,13 +137,7 @@ export const WorkspaceAddFolderDialog = (
           <browseFetcher.Form
             className="flex items-end gap-2"
             method="post"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const value = new FormData(event.currentTarget).get('path');
-              if (typeof value === 'string' && value.trim() !== '') {
-                handleBrowse(value.trim());
-              }
-            }}
+            onSubmit={handleBrowseSubmit}
           >
             <div className="flex-1 space-y-1">
               <Label htmlFor="browse-directory-path">Browse from</Label>
@@ -197,7 +157,7 @@ export const WorkspaceAddFolderDialog = (
         <div className="space-y-2 border-t pt-4">
           <button
             className="text-muted-foreground text-sm hover:underline"
-            onClick={() => setShowManualPath((current) => !current)}
+            onClick={handleToggleManualPath}
             type="button"
           >
             {WORKSPACE_FOLDERS_COPY.advancedPathToggle}

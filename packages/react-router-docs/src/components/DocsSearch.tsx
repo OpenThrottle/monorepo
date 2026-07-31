@@ -14,6 +14,7 @@ import {
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
 import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
+import { docEntryKey } from '../utils/docEntryKey';
 import type { DocEntry } from '../utils/buildDocsManifest';
 
 export interface DocsSearchProps {
@@ -29,9 +30,6 @@ const SECTION_HEADINGS = {
   docs: 'Docs',
   faq: 'FAQ',
 } as const;
-
-const uniqueKey = (entry: DocEntry): string =>
-  `${entry.section}:${entry.slug.length > 0 ? entry.slug : 'index'}`;
 
 /**
  * Client-side command-palette search across the docs + FAQ manifest. Opens on
@@ -70,6 +68,37 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
     [navigate],
   );
 
+  // Markup
+  const renderGroup = (
+    section: keyof typeof SECTION_HEADINGS,
+    groupEntries: readonly DocEntry[],
+  ): React.ReactElement | null => {
+    if (groupEntries.length === 0) {
+      return null;
+    }
+
+    return (
+      <CommandGroup heading={SECTION_HEADINGS[section]}>
+        {groupEntries.map((entry) => (
+          <CommandItem
+            key={docEntryKey(entry)}
+            onSelect={() => handleSelect(entry)}
+            value={docEntryKey(entry)}
+          >
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate">{entry.title}</span>
+              {entry.description ? (
+                <span className="text-muted-foreground truncate text-xs">
+                  {entry.description}
+                </span>
+              ) : null}
+            </div>
+          </CommandItem>
+        ))}
+      </CommandGroup>
+    );
+  };
+
   // Life Cycle
   React.useEffect(() => {
     if (open) {
@@ -88,37 +117,6 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
-
-  // Markup
-  const renderGroup = (
-    section: keyof typeof SECTION_HEADINGS,
-    groupEntries: readonly DocEntry[],
-  ): React.ReactElement | null => {
-    if (groupEntries.length === 0) {
-      return null;
-    }
-
-    return (
-      <CommandGroup heading={SECTION_HEADINGS[section]}>
-        {groupEntries.map((entry) => (
-          <CommandItem
-            key={uniqueKey(entry)}
-            onSelect={() => handleSelect(entry)}
-            value={uniqueKey(entry)}
-          >
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate">{entry.title}</span>
-              {entry.description ? (
-                <span className="text-muted-foreground truncate text-xs">
-                  {entry.description}
-                </span>
-              ) : null}
-            </div>
-          </CommandItem>
-        ))}
-      </CommandGroup>
-    );
-  };
 
   // 🔌 Short Circuit
 

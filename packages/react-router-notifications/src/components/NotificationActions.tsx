@@ -9,7 +9,9 @@ export interface NotificationActionsProps {
   readonly setOpen: (open: boolean) => void;
 }
 
-/** @public */
+/**
+ * @public
+ */
 export const NotificationActions = (
   props: NotificationActionsProps,
 ): React.ReactElement => {

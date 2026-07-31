@@ -5,14 +5,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Check, ChevronDown, Loader2, Wrench, X } from 'lucide-react';
+import { ChevronDown, Wrench } from 'lucide-react';
 import { ToolPayload } from './ToolPayload';
+import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
 import { formatJsonPayload } from '../utils/index';
 import { ChatToolStatus } from '../types';
-import type {
-  ChatToolStatus as ChatToolStatusType,
-  ChatTurnToolEvent,
-} from '../types';
+import type { ChatTurnToolEvent } from '../types';
 
 export interface ChatToolCallProps {
   /** Whether the card starts expanded. Defaults to open when the call failed. */
@@ -20,34 +18,6 @@ export interface ChatToolCallProps {
   /** The correlated tool event from the turn's structured events. */
   readonly event: ChatTurnToolEvent;
 }
-
-interface StatusConfig {
-  readonly Icon: typeof Check;
-  readonly color: 'amber' | 'green' | 'red';
-  readonly label: string;
-  readonly spin: boolean;
-}
-
-const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
-  [ChatToolStatus.failed]: {
-    Icon: X,
-    color: 'red',
-    label: 'failed',
-    spin: false,
-  },
-  [ChatToolStatus.running]: {
-    Icon: Loader2,
-    color: 'amber',
-    label: 'running',
-    spin: true,
-  },
-  [ChatToolStatus.succeeded]: {
-    Icon: Check,
-    color: 'green',
-    label: 'succeeded',
-    spin: false,
-  },
-};
 
 /**
  * @description A correlated tool_call/tool_result rendered as a single

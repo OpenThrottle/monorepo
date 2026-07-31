@@ -4,7 +4,7 @@ import { OpenThrottleTabsWithUrlSync } from './OpenThrottleTabsWithUrlSync';
 import type { OpenThrottleTabsProps as OpenThrottleTabsPropsContract } from '../tabs/open-throttle-tabs.api';
 
 /** @see ../tabs/open-throttle-tabs.api.ts */
-export type OpenThrottleTabsProps = OpenThrottleTabsPropsContract;
+export interface OpenThrottleTabsProps extends OpenThrottleTabsPropsContract {}
 
 /**
  * @description Controlled Radix tabs with optional URL search-param sync (Approach A).
@@ -16,6 +16,17 @@ export const OpenThrottleTabs = React.forwardRef<
 >((props, ref): React.ReactElement => {
   const { className, urlSync, ...rest } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (urlSync) {
     return (
       <OpenThrottleTabsWithUrlSync

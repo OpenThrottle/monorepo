@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
 
+export interface AgentSearchEmptyProps {}
+
 /**
  * @description Empty-state shown when a query returns no agent-asset matches.
  */
-export const AgentSearchEmpty = (): React.ReactElement => {
+export const AgentSearchEmpty = (
+  _props: AgentSearchEmptyProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

@@ -1,21 +1,16 @@
 import { cn } from '@openthrottle/react-router-shadcn';
-import {
-  type PointerEvent as ReactPointerEvent,
-  type ReactElement,
-  type ReactNode,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import * as React from 'react';
+
+import { usePerElementPointerDown } from '../hooks/usePerElementPointerDown';
 import { usePointerDrag } from '../hooks/usePointerDrag';
 import { type UseViewportResult } from '../hooks/useViewport';
 import { type FloorLayout } from '../types';
+import { floorBounds, sortElementsByLayer } from '../utils/elements';
 import {
   type Point,
   clampPointToRect,
   snapPointToGrid,
 } from '../utils/geometry';
-import { floorBounds, sortElementsByLayer } from '../utils/elements';
 import { FloorElementView } from './FloorElementView';
 import { FloorGrid } from './FloorGrid';
 
@@ -26,13 +21,13 @@ import { FloorGrid } from './FloorGrid';
  */
 export interface FloorCanvasProps {
   /** Optional overlay drawn above elements (e.g. selection handles). */
-  readonly children?: ReactNode;
+  readonly children?: React.ReactNode;
   /** Class applied to the root `<svg>`. */
   readonly className?: string;
   /** The layout to render (floor size, grid, elements). */
   readonly layout: FloorLayout;
   /** Pointer-down on empty canvas (drives deselect). */
-  readonly onBackgroundPointerDown?: (event: ReactPointerEvent) => void;
+  readonly onBackgroundPointerDown?: (event: React.PointerEvent) => void;
   /** Live element move — fires every frame during a drag (no commit). */
   readonly onElementDrag?: (id: string, center: Point) => void;
   /** Committed element move — fires once on pointerup if the element moved. */
@@ -40,7 +35,7 @@ export interface FloorCanvasProps {
   /** Pointer-down on an element (drives selection); fires before move starts. */
   readonly onElementPointerDown?: (
     id: string,
-    event: ReactPointerEvent,
+    event: React.PointerEvent,
   ) => void;
   /** The currently selected element id, if any. */
   readonly selectedId?: string | null;
@@ -68,7 +63,7 @@ interface ActiveMove {
  *
  * @public
  */
-export function FloorCanvas(props: FloorCanvasProps): ReactElement {
+export const FloorCanvas = (props: FloorCanvasProps): React.ReactElement => {
   const {
     children,
     className,
@@ -83,16 +78,16 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
   } = props;
 
   // Hooks
-  const active = useRef<ActiveMove | null>(null);
+  const active = React.useRef<ActiveMove | null>(null);
 
   // Setup
-  const bounds = useMemo(() => floorBounds(layout), [layout]);
-  const ordered = useMemo(
+  const bounds = React.useMemo(() => floorBounds(layout), [layout]);
+  const ordered = React.useMemo(
     () => sortElementsByLayer(layout.elements),
     [layout.elements],
   );
 
-  const resolveCenter = useCallback(
+  const resolveCenter = React.useCallback(
     (rawWorld: Point, grabOffset: Point): Point => {
       const raw = {
         x: rawWorld.x + grabOffset.x,
@@ -129,8 +124,8 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
   });
 
   // Handlers
-  const handleElementPointerDown = useCallback(
-    (id: string, event: ReactPointerEvent): void => {
+  const handleElementPointerDown = React.useCallback(
+    (id: string, event: React.PointerEvent): void => {
       onElementPointerDown?.(id, event);
       const element = layout.elements.find((candidate) => candidate.id === id);
       if (!element) return;
@@ -152,32 +147,13 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
   );
 
   // Per-element pointer-down closures, cached by id so each `FloorElementView`
-  // receives a referentially stable `onPointerDown`. Without this, a fresh
-  // inline arrow per element per render would defeat `FloorElementView`'s
-  // `React.memo` and re-render every element on every live-drag frame. The
-  // cached closures read the latest handler through a ref, so they stay stable
-  // even though `handleElementPointerDown` changes identity every frame (the
-  // live `layout` is rebuilt during a drag).
-  const handlerRef = useRef(handleElementPointerDown);
-  handlerRef.current = handleElementPointerDown;
-  const pointerDownCache = useRef(
-    new Map<string, (event: ReactPointerEvent) => void>(),
-  );
-  const elementPointerDown = useCallback(
-    (id: string): ((event: ReactPointerEvent) => void) => {
-      const cache = pointerDownCache.current;
-      const existing = cache.get(id);
-      if (existing) return existing;
-      const handler = (event: ReactPointerEvent): void =>
-        handlerRef.current(id, event);
-      cache.set(id, handler);
-      return handler;
-    },
-    [],
-  );
+  // receives a referentially stable `onPointerDown` (see the hook's docs).
+  const { getPointerDown } = usePerElementPointerDown({
+    handler: handleElementPointerDown,
+  });
 
-  const handleBackgroundPointerDown = useCallback(
-    (event: ReactPointerEvent): void => {
+  const handleBackgroundPointerDown = React.useCallback(
+    (event: React.PointerEvent): void => {
       onBackgroundPointerDown?.(event);
       viewport.panHandlers.onPointerDown(event);
     },
@@ -210,10 +186,10 @@ export function FloorCanvas(props: FloorCanvasProps): ReactElement {
           element={element}
           isSelected={element.id === selectedId}
           key={element.id}
-          onPointerDown={elementPointerDown(element.id)}
+          onPointerDown={getPointerDown(element.id)}
         />
       ))}
       {children}
     </svg>
   );
-}
+};

@@ -1,12 +1,16 @@
+import * as React from 'react';
 import type { CalendarEventSlotProps } from '@openthrottle/react-router-scheduling';
-import type { ReactElement } from 'react';
+
+export interface ScheduleEventCardProps extends CalendarEventSlotProps {}
 
 /**
  * @description Custom time-grid event card for the scheduling-calendar demo,
  * passed as the package's `timeGridEvent` slot. Demonstrates that a slot
  * receives the event as a domain CalendarEvent (no Schedule-X / Temporal types).
  */
-export function ScheduleEventCard(props: CalendarEventSlotProps): ReactElement {
+export const ScheduleEventCard = (
+  props: ScheduleEventCardProps,
+): React.ReactElement => {
   const { calendarEvent } = props;
 
   // Hooks
@@ -36,4 +40,4 @@ export function ScheduleEventCard(props: CalendarEventSlotProps): ReactElement {
       </p>
     </div>
   );
-}
+};

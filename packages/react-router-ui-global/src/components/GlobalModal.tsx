@@ -10,11 +10,22 @@ export interface GlobalModalProps extends React.PropsWithChildren {
 export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
   const { children, param: paramProp = 'modal', value } = props;
 
+  // Hooks
   const { onOpenChange, open } = useUrlSyncedOverlay({
     // clearParamsOnClose: ['keep'],
     openValue: value,
     param: paramProp,
   });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>

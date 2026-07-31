@@ -10,11 +10,11 @@ import { useTheme } from 'next-themes';
 import {
   Toaster as Sonner,
   toast as sonnerToast,
-  type ToasterProps,
+  type ToasterProps as SonnerToasterProps,
 } from 'sonner';
 import { isRenderableMessage } from '../utils/isRenderableMessage';
 
-type ToasterTheme = NonNullable<ToasterProps['theme']>;
+type ToasterTheme = NonNullable<SonnerToasterProps['theme']>;
 
 /**
  * Toast entry points whose first argument is a display message. A message that
@@ -49,7 +49,7 @@ const hasRenderableMessage = (args: readonly unknown[]): boolean =>
  * callable and every method (including `promise`, `custom`, and `dismiss`)
  * without re-declaring the surface, and `new Proxy<T>` keeps the original type.
  */
-const toast: typeof sonnerToast = new Proxy(sonnerToast, {
+export const toast: typeof sonnerToast = new Proxy(sonnerToast, {
   apply(target, thisArg: unknown, args: unknown[]): unknown {
     return hasRenderableMessage(args)
       ? Reflect.apply(target, thisArg, args)
@@ -91,7 +91,7 @@ const toast: typeof sonnerToast = new Proxy(sonnerToast, {
  * Sonner's `1px solid` border width/style still apply.
  */
 const typedToastClassNames: NonNullable<
-  NonNullable<ToasterProps['toastOptions']>['classNames']
+  NonNullable<SonnerToasterProps['toastOptions']>['classNames']
 > = {
   error: 'border-red-500/50! bg-red-500/20!',
   info: 'border-sky-500/50! bg-sky-500/20!',
@@ -102,10 +102,19 @@ const typedToastClassNames: NonNullable<
 const isToasterTheme = (value: string): value is ToasterTheme =>
   value === 'dark' || value === 'light' || value === 'system';
 
-const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
+export interface ToasterProps extends SonnerToasterProps {}
+
+export const Toaster = React.forwardRef<
+  React.ComponentRef<typeof Sonner>,
+  ToasterProps
+>((props, ref): React.ReactElement => {
+  const { ...rest } = props;
+
+  // Hooks
   const { theme = 'system' } = useTheme();
 
-  const resolvedTheme: ToasterProps['theme'] = isToasterTheme(theme)
+  // Setup
+  const resolvedTheme: SonnerToasterProps['theme'] = isToasterTheme(theme)
     ? theme
     : 'system';
 
@@ -115,6 +124,14 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
     '--normal-border': 'var(--border)',
     '--normal-text': 'var(--popover-foreground)',
   };
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Sonner
@@ -131,12 +148,13 @@ const Toaster = ({ ...props }: ToasterProps): React.ReactElement => {
         success: <CircleCheckIcon className="size-4 text-green-500" />,
         warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
       }}
+      ref={ref}
       style={toasterStyle}
       theme={resolvedTheme}
       toastOptions={{ classNames: typedToastClassNames }}
-      {...props}
+      {...rest}
     />
   );
-};
+});
 
-export { Toaster, toast };
+Toaster.displayName = 'Toaster';

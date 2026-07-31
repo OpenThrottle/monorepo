@@ -372,6 +372,9 @@ catalogs:
     '@typescript-eslint/parser':
       specifier: ^8.60.1
       version: 8.60.1
+    '@typescript-eslint/rule-tester':
+      specifier: 8.60.1
+      version: 8.60.1
     '@typescript-eslint/utils':
       specifier: ^8.60.1
       version: 8.60.1
@@ -3461,6 +3464,9 @@ importers:
         specifier: 'catalog:'
         version: 8.60.1(@typescript-eslint/parser@8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3))(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/parser':
+        specifier: 'catalog:'
+        version: 8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/rule-tester':
         specifier: 'catalog:'
         version: 8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/utils':
@@ -9507,8 +9513,8 @@ packages:
   '@react-dnd/shallowequal@4.0.2':
     resolution: {integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==}
 
-  '@react-grab/cli@0.1.48':
-    resolution: {integrity: sha512-KXRZFN0b78BeVa4Tq1FC9kiXPpC5lS4pQp/mvQ1azy9dZUJ3zfc7Ei84+yvGh+WoYdceMCFxXfBp6qhU/G056g==}
+  '@react-grab/cli@0.1.50':
+    resolution: {integrity: sha512-Px/Hwhhyk2PubCA4ZaRFsfvwxhbxXsetJyvqC6aFFi8WhJhA+oVC33aTzuAeWmM3fhb4/8ce8YsHXI1d6ChcKg==}
     hasBin: true
 
   '@react-router/dev@8.0.1':
@@ -11229,6 +11235,13 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4 <6.1.0'
 
+  '@typescript-eslint/rule-tester@8.60.1':
+    resolution: {integrity: sha512-ly/WFKd5EwhTpuFbgQ81Z+67o4DRnlgKy+yHTuHWTy/u8yb0nEVPjDKqVUkJ1545vX2aAW1TELNSPPs+AOC+KA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+      typescript: '>=4.8.4 <6.1.0'
+
   '@typescript-eslint/scope-manager@5.62.0':
     resolution: {integrity: sha512-VXuvVvZeQCQb5Zgf4HAxc04q5j+WrNAtNh9OwCsCgpKqESMTu3tF/jhZ3xG6T4NZwWl65Bg8KuS2uEvhSfLl0w==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -11239,6 +11252,12 @@ packages:
 
   '@typescript-eslint/tsconfig-utils@8.60.1':
     resolution: {integrity: sha512-nh8w4qAteiKuZu3pSSzG/yGKpw0OlkrKnzFmbVRenKaD4qc+7i1GrmZaLVkr8rk4uipiPGMOW4YsM6WmKZ5CvA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/tsconfig-utils@8.65.0':
+    resolution: {integrity: sha512-j6GzGqCiRdA7Qhur2VVmKZAkBLfnHFQfx4TaJGL9RMveZqCo48jSHHO0DTgizEnGhtWnqmbtCUSrqSkdiY/0Hg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '>=4.8.4 <6.1.0'
@@ -11256,6 +11275,10 @@ packages:
 
   '@typescript-eslint/types@8.60.1':
     resolution: {integrity: sha512-4h0tY8ppCkdCzcrl2YM5M3my0xsE1Tf8om3owEu5oPWmXwkKRmk0j0LGDzYBGUcAlesEbxBhazqu/K4cu3Ug7w==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/types@8.65.0':
+    resolution: {integrity: sha512-JSSwWNy+H0E/01jJEM+hrX6N0OFDzFzeIhHFSAS01tlVaevpG8cFyYRPhS5yjGOvBUx3sqQHVMjCL1CAZZMxBg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/typescript-estree@5.62.0':
@@ -12352,6 +12375,11 @@ packages:
     peerDependencies:
       react: 19.2.4
 
+  bippy@0.6.1:
+    resolution: {integrity: sha512-ky4m94Y/KfsddjGkKTsV4uFjZqkJjpOjQ2t5gKPdX6XH1MNxMNX5FrVefsxV4lpjemEmEdwe0e0YbzAMNs3oUQ==}
+    peerDependencies:
+      react: 19.2.4
+
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
@@ -13445,8 +13473,8 @@ packages:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
 
-  deslop-js@0.9.0:
-    resolution: {integrity: sha512-A3FRlth+grf6x/v88BKBKx/0uQYcUJEgJOWu//v5Axwi09jT8dX0MzBf9g8rVvbJnn0tto92cmHy5XDylLNYag==}
+  deslop-js@0.9.1:
+    resolution: {integrity: sha512-eo3Tn37bqC1mMS3BwsdwRITYgQQQdT30g8SMY9C/zRbMu6ekNf9o7aGNUEkxWiKd1dTND58Sndi5fBlT9V6UvA==}
 
   destroy@1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
@@ -16994,8 +17022,8 @@ packages:
   oxc-resolver@11.24.2:
     resolution: {integrity: sha512-FY91FiDBj7ls5MsFS9jN3tjz2o0/zsdSsymlakySaBwVJZorHhkWyICLZMKxlu1R9vYo+sd3z1jwb4J8x7bNDw==}
 
-  oxlint-plugin-react-doctor@0.9.0:
-    resolution: {integrity: sha512-s1xAicFC3RzkD44SVlXlE5KdQ7ry/0l8KerYHYhZMq0DN6VsnqyHzmSsvG/B21DfXAuIC3wpji1BCe56OweSWg==}
+  oxlint-plugin-react-doctor@0.9.1:
+    resolution: {integrity: sha512-yCW8USbiuszbVsUMN4fL1iU7mRu3Ae3w96+k/xqCyWvW6bF6DzCMtLy5N/w6WLRX78iQsWxVqW/SEgzRBXLfsA==}
     engines: {node: ^20.19.0 || >=22.13.0}
 
   oxlint@1.74.0:
@@ -18259,8 +18287,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-doctor@0.9.0:
-    resolution: {integrity: sha512-9Vt6BLn5EofL7vTXXH5wpnhVnYdm3qsBG6OtdiosMtbWvyf8L5b97++4exTiv/Pk0pY2H8XIhDDwMfjFS1Imnw==}
+  react-doctor@0.9.1:
+    resolution: {integrity: sha512-pKCWENXuYZK7UNBHpNLbEBlpy+oVWwPnOxTD2B//gmrQLm+UvIknArzP3IOjNP5Nk1NKCR9uavypFA1QMbYFyg==}
     engines: {node: ^20.19.0 || >=22.13.0}
     hasBin: true
 
@@ -18272,8 +18300,8 @@ packages:
   react-fast-compare@2.0.4:
     resolution: {integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==}
 
-  react-grab@0.1.48:
-    resolution: {integrity: sha512-p3WnmK9LLvXE/c4ITPLlXcP1fkXo2VFEQqK94tIfcHIWKNdqdhYYFyNVioO50HR+uyHIwT63Z4txZDqJlVcD/Q==}
+  react-grab@0.1.50:
+    resolution: {integrity: sha512-zRkHKq/8a1msCpEOp8BDROeQZT50m0OH2XPrP6jk5op+JAHrlsm3pj7eAQMOsct87EZDeGNnu4r+sGsJJzyw1Q==}
     hasBin: true
     peerDependencies:
       react: 19.2.4
@@ -27905,7 +27933,7 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.48':
+  '@react-grab/cli@0.1.50':
     dependencies:
       agent-install: 0.0.6
       commander: 14.0.3
@@ -29686,9 +29714,23 @@ snapshots:
 
   '@typescript-eslint/project-service@8.60.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.60.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.60.1
+      '@typescript-eslint/tsconfig-utils': 8.65.0(typescript@6.0.3)
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/rule-tester@8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/parser': 8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/typescript-estree': 8.60.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
+      ajv: 6.15.0
+      eslint: 9.39.4(jiti@2.7.0)
+      json-stable-stringify-without-jsonify: 1.0.1
+      lodash.merge: 4.6.2
+      semver: 7.8.5
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
@@ -29707,6 +29749,10 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
+  '@typescript-eslint/tsconfig-utils@8.65.0(typescript@6.0.3)':
+    dependencies:
+      typescript: 6.0.3
+
   '@typescript-eslint/type-utils@8.60.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/types': 8.60.1
@@ -29722,6 +29768,8 @@ snapshots:
   '@typescript-eslint/types@5.62.0': {}
 
   '@typescript-eslint/types@8.60.1': {}
+
+  '@typescript-eslint/types@8.65.0': {}
 
   '@typescript-eslint/typescript-estree@5.62.0(typescript@6.0.3)':
     dependencies:
@@ -30958,6 +31006,10 @@ snapshots:
     dependencies:
       react: 19.2.4
 
+  bippy@0.6.1(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+
   bl@4.1.0:
     dependencies:
       buffer: 5.7.1
@@ -32112,7 +32164,7 @@ snapshots:
 
   dequal@2.0.3: {}
 
-  deslop-js@0.9.0:
+  deslop-js@0.9.1:
     dependencies:
       '@oxc-project/types': 0.141.0
       fast-glob: 3.3.3
@@ -36799,9 +36851,9 @@ snapshots:
       '@oxc-resolver/binding-win32-arm64-msvc': 11.24.2
       '@oxc-resolver/binding-win32-x64-msvc': 11.24.2
 
-  oxlint-plugin-react-doctor@0.9.0:
+  oxlint-plugin-react-doctor@0.9.1:
     dependencies:
-      '@typescript-eslint/types': 8.60.1
+      '@typescript-eslint/types': 8.65.0
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
       oxc-parser: 0.141.0
@@ -38201,14 +38253,14 @@ snapshots:
       '@types/node': 24.12.2
       '@types/react': 19.2.7
 
-  react-doctor@0.9.0(@types/react@19.2.7)(eslint@9.39.4(jiti@2.7.0)):
+  react-doctor@0.9.1(@types/react@19.2.7)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@sentry/node': 10.56.0
       agent-install: 0.0.5
       conf: 15.1.0
       confbox: 0.2.4
-      deslop-js: 0.9.0
+      deslop-js: 0.9.1
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.4(jiti@2.7.0))
       figures: 6.1.0
       ink: 7.1.1(@types/react@19.2.7)(react@19.2.4)
@@ -38216,7 +38268,7 @@ snapshots:
       jiti: 2.7.0
       magicast: 0.5.3
       oxlint: 1.74.0
-      oxlint-plugin-react-doctor: 0.9.0
+      oxlint-plugin-react-doctor: 0.9.1
       prompts: 2.4.2
       react: 19.2.4
       typescript: 5.9.3
@@ -38242,10 +38294,10 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.48(react@19.2.4):
+  react-grab@0.1.50(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.48
-      bippy: 0.5.43(react@19.2.4)
+      '@react-grab/cli': 0.1.50
+      bippy: 0.6.1(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
 
@@ -38408,9 +38460,9 @@ snapshots:
       preact: 10.29.1
       prompts: 2.4.2
       react: 19.2.4
-      react-doctor: 0.9.0(@types/react@19.2.7)(eslint@9.39.4(jiti@2.7.0))
+      react-doctor: 0.9.1(@types/react@19.2.7)(eslint@9.39.4(jiti@2.7.0))
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.48(react@19.2.4)
+      react-grab: 0.1.50(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 3.0.0

@@ -1,5 +1,12 @@
 import { CalendarView } from '../types';
-import type { SchedulePluginsConfig } from '../types';
+import type { CalendarEvent, SchedulePluginsConfig } from '../types';
+
+/**
+ * Stable empty default for an omitted `events` prop, so the array identity is
+ * the same across renders (the events-sync effect diffs by reference).
+ * @public
+ */
+export const CALENDAR_LAYOUT_DEFAULT_EVENTS: CalendarEvent[] = [];
 
 /**
  * Default enabled views: week and month (in toolbar order).

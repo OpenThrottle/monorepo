@@ -161,6 +161,7 @@ catalog:
   '@types/yargs': '^17.0.35'
   '@typescript-eslint/eslint-plugin': '^8.60.1'
   '@typescript-eslint/parser': '^8.60.1'
+  '@typescript-eslint/rule-tester': '8.60.1'
   '@typescript-eslint/utils': '^8.60.1'
   '@vercel/analytics': '^2.0.1'
   '@vercel/react-router': '^1.2.4'

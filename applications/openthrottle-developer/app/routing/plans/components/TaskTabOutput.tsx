@@ -25,6 +25,8 @@ export const TaskTabOutput = (
 ): React.ReactElement => {
   const { chunks, planId } = props;
 
+  // Hooks
+
   // Setup
   const markdown = React.useMemo(
     () =>

@@ -9,7 +9,7 @@ export interface AlertDialogTitleProps extends React.ComponentPropsWithoutRef<
 export const AlertDialogTitle = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Title>,
   AlertDialogTitleProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

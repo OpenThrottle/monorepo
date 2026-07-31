@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Calendar,
   CalendarView,
@@ -7,9 +8,7 @@ import {
 import { Button } from '@openthrottle/react-router-shadcn';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { ScheduleEventCard } from './ScheduleEventCard';
-import { useRef } from 'react';
 import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
-import type { ReactElement } from 'react';
 
 export interface ScheduleCalendarProps {
   readonly className?: string;
@@ -23,13 +22,13 @@ export interface ScheduleCalendarProps {
  * (click an empty slot to create), and `<Calendar>` — so it exercises recurrence,
  * slots, and interactions together.
  */
-export function ScheduleCalendar(
+export const ScheduleCalendar = (
   props: ScheduleCalendarProps,
-): ReactElement | null {
+): React.ReactElement | null => {
   const { className, events } = props;
 
   // Hooks
-  const createdCount = useRef(0);
+  const createdCount = React.useRef(0);
   const selection = useCalendarSelection();
   const schedule = useSchedule({
     callbacks: selection.callbacks,
@@ -106,4 +105,4 @@ export function ScheduleCalendar(
       </div>
     </div>
   );
-}
+};

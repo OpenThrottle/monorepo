@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
 import { Modal } from '@openthrottle/react-router-shadcn';
 
@@ -24,7 +25,7 @@ export const <%= name %> = (
 
   // Life Cycle
 
-  // 🔌 Short Circuits
+  // 🔌 Short Circuit
 
   return (
     <Modal

@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { LinkProps, UIMatch, useMatches } from 'react-router';
+import { hasBreadcrumbHandle } from '../utils/breadcrumb-handle';
 
 export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {
   breadcrumb?: (match: UIMatch<TLoaderData, THandle>) => React.ReactNode;
@@ -11,16 +12,6 @@ export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {
 export interface GlobalLayoutBreadcrumbsProps {
   className?: string;
 }
-
-type BreadcrumbMatch = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
-
-/**
- * Narrows a router match to one whose `handle` is a breadcrumb handle object.
- * Route handles are typed `unknown` by `useMatches`, so this guard replaces the
- * former blanket cast — only matches with an object handle flow downstream.
- */
-const hasBreadcrumbHandle = (match: UIMatch): match is BreadcrumbMatch =>
-  typeof match.handle === 'object' && match.handle !== null;
 
 export const GlobalLayoutBreadcrumbs = (
   props: GlobalLayoutBreadcrumbsProps,

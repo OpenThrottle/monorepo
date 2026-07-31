@@ -4,7 +4,7 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { X } from 'lucide-react';
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
-interface GlobalServerHealthBannerProps {
+export interface GlobalServerHealthBannerProps {
   readonly health?: ServerHealthObject;
   /** When true, hide this banner (e.g. root loader already shows a detailed API failure). */
   readonly suppress?: boolean;

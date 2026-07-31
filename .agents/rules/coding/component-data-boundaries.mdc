@@ -5,6 +5,8 @@ globs:
 name: coding-component-data-boundaries
 ---
 
+> These boundaries are part of the broader **component primitive shape** — the shape the `@tools/generators` component template emits: exported `Foo` + `FooProps`, an explicit `React.ReactElement` signature, the six ordered section markers (`// Hooks / // Setup / // Handlers / // Markup / // Life Cycle / // 🔌 Short Circuit`), file-scope helpers/data/config hoisted to sibling `utils/`/`data/`/`config/` (or a `use<Name>` hook), one component per file, and a 210-line cap. It is documented and **enforced** (ESLint rule `openthrottle/component-primitive-shape` + `pnpm run audit:component-shape`) — see [docs/monorepo/component-primitive-shape.md](../../../docs/monorepo/component-primitive-shape.md). Conform by default; the last-resort `/* component-shape: opt-out — <reason> */` pragma is for the genuinely-impossible case only. Scaffold new components with the generator so they start conformant.
+
 Component and data file boundaries:
 
 - A file in a `components/` folder exports **only** its component and the props generated with it (e.g. `Foo` + `FooProps`). Infrequently it may export one extra closely-related type/interface — but never constants, hardcoded data, lists, mock data, or copy.

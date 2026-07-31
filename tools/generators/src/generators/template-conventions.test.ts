@@ -113,3 +113,61 @@ describe('app test setup template', () => {
     expect(source).not.toContain('global.ResizeObserver');
   });
 });
+
+describe('source templates use the canonical primitive shape', () => {
+  // Every source template that carries the section-comment skeleton. The
+  // marker set is a single canonical string — the modal and form templates
+  // had drifted to a plural `Short Circuits`, which would fail the
+  // component-shape rule (docs/monorepo/component-primitive-shape.md, R3).
+  const markerTemplates = [
+    'react-router/files/component/__name__.tsx',
+    'react-router/files/form/components/__name__.tsx',
+    'react-router/files/hook/__name__.tsx',
+    'react-router/files/modal/__name__.tsx',
+    'react-router/files/route/__name__.tsx',
+    'react-router/files/table/__name__.tsx',
+    'react/files/component/__name__.tsx',
+    'react/files/hook/__name__.tsx',
+  ];
+
+  // Templates that carry an explicit React namespace import (the house style —
+  // modal and form relied on the @types/react UMD global instead).
+  const reactImportTemplates = [
+    'react-router/files/component/__name__.tsx',
+    'react-router/files/form/components/__name__.tsx',
+    'react-router/files/hook/__name__.tsx',
+    'react-router/files/modal/__name__.tsx',
+    'react-router/files/table/__name__.tsx',
+    'react/files/component/__name__.tsx',
+    'react/files/hook/__name__.tsx',
+  ];
+
+  // Hook templates must not leak `any` (repo no-`any` rule); the react hook
+  // template had `onCopy = (value: any)`.
+  const hookTemplates = [
+    'react-router/files/hook/__name__.tsx',
+    'react/files/hook/__name__.tsx',
+  ];
+
+  test.each(markerTemplates)(
+    'uses the singular `// 🔌 Short Circuit` marker: %s',
+    (relative) => {
+      const source = read(relative);
+
+      expect(source).toContain('// 🔌 Short Circuit');
+      // The plural form is the drift this guard prevents from recurring.
+      expect(source).not.toContain('Short Circuits');
+    },
+  );
+
+  test.each(reactImportTemplates)(
+    "imports React explicitly via `import * as React from 'react'`: %s",
+    (relative) => {
+      expect(read(relative)).toContain("import * as React from 'react';");
+    },
+  );
+
+  test.each(hookTemplates)('does not use `any`: %s', (relative) => {
+    expect(read(relative)).not.toMatch(/:\s*any\b/);
+  });
+});

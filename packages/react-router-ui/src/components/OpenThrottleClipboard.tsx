@@ -11,7 +11,9 @@ export interface OpenThrottleClipboardProps {
  * @description Renders a button that copies the Ralph workflow command
  * for this plan to the clipboard.
  */
-export function OpenThrottleClipboard(props: OpenThrottleClipboardProps) {
+export const OpenThrottleClipboard = (
+  props: OpenThrottleClipboardProps,
+): React.ReactElement => {
   const { className, label = 'Copy to clipboard', text } = props;
 
   // Hooks
@@ -88,4 +90,4 @@ export function OpenThrottleClipboard(props: OpenThrottleClipboardProps) {
       {copied ? 'Copied!' : label}
     </button>
   );
-}
+};

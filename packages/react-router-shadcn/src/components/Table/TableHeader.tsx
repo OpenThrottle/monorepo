@@ -8,6 +8,7 @@ export const TableHeader = React.forwardRef<
   TableHeaderProps
 >((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
+
   // Hooks
 
   // Setup

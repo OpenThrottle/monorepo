@@ -1,7 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { CopyIcon } from 'lucide-react';
-import { Form, useNavigation, useRevalidator } from 'react-router';
+import { Form } from 'react-router';
 import {
   Button,
   DatePicker,
@@ -12,15 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
   Label,
-  toast,
 } from '@openthrottle/react-router-shadcn';
+import { SettingsKeysFormSuccess } from '~/routing/settings/components/SettingsKeysFormSuccess';
+import { useSettingsKeysForm } from '~/routing/settings/hooks/useSettingsKeysForm';
 import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
-import { copyText } from '~/routing/settings/utils/settings.support';
 
 export interface SettingsKeysFormProps {
   actionData?: Extract<
@@ -48,75 +43,29 @@ export const SettingsKeysForm = (
   } = props;
 
   // Hooks
-  const navigation = useNavigation();
-  const refCredentialId = React.useRef<string | null>(null);
-  const revalidator = useRevalidator();
-  const [expiresAt, setExpiresAt] = React.useState<Date | undefined>(undefined);
-  const [dismissedCredentialId, setDismissedCredentialId] = React.useState<
-    string | null
-  >(null);
+  const {
+    canSubmit,
+    expiresAt,
+    handleCopyToken,
+    handleDone,
+    handleOpenChange,
+    isSubmitting,
+    setExpiresAt,
+    showSuccess,
+    successPayload,
+  } = useSettingsKeysForm({
+    actionData,
+    onCreateDialogOpenChange,
+    serviceAccountId,
+  });
 
   // Setup
-  const isSubmitting =
-    navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'createCredential';
-  const successPayload =
-    actionData?.token != null && actionData.credential != null
-      ? actionData
-      : null;
-  const showSuccess =
-    successPayload != null &&
-    successPayload.credential.id !== dismissedCredentialId;
-  const canSubmit = serviceAccountId != null && !isSubmitting;
 
   // Handlers
-  const handleOpenChange = (open: boolean): void => {
-    if (!open) {
-      if (successPayload != null) {
-        setDismissedCredentialId(successPayload.credential.id);
-      }
-
-      setExpiresAt(undefined);
-    }
-
-    onCreateDialogOpenChange?.(open);
-  };
-
-  const handleCopyToken = async (): Promise<void> => {
-    if (!successPayload?.token) {
-      return;
-    }
-
-    const copied = await copyText(successPayload.token);
-    if (copied) {
-      toast.success('Credential token copied to clipboard');
-    } else {
-      toast.error('Could not copy token to clipboard');
-    }
-  };
-
-  const handleDone = (): void => {
-    handleOpenChange(false);
-  };
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    const credentialId = successPayload?.credential.id;
-    if (credentialId == null) {
-      return;
-    }
-
-    if (refCredentialId.current === credentialId) {
-      return;
-    }
-
-    refCredentialId.current = credentialId;
-    revalidator.revalidate();
-  }, [successPayload?.credential.id, revalidator]);
-
-  console.log('dismissedCredentialId', dismissedCredentialId);
 
   // 🔌 Short Circuit
 
@@ -126,72 +75,12 @@ export const SettingsKeysForm = (
         className={clsx('sm:max-w-lg', className)}
         data-testid="SettingsKeysForm"
       >
-        {showSuccess ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Credential created</DialogTitle>
-              <DialogDescription>
-                Copy this bearer token now. It is shown once and cannot be
-                retrieved again from the portal.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-3">
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-50">
-                Store the token in{' '}
-                <code className="text-xs">OPENTHROTTLE_MCP_AUTH_TOKEN</code> or
-                your worker environment before closing this dialog.
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="settings-keys-created-token">Token</Label>
-                <InputGroup>
-                  <InputGroupInput
-                    aria-label="One-time credential token"
-                    className="font-mono text-xs"
-                    data-testid="SettingsKeysForm-token-input"
-                    id="settings-keys-created-token"
-                    readOnly={true}
-                    value={successPayload.token}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <InputGroupButton
-                      aria-label="Copy credential token"
-                      data-testid="SettingsKeysForm-copy-token"
-                      onClick={() => {
-                        void handleCopyToken();
-                      }}
-                      type="button"
-                      variant="outline"
-                    >
-                      <CopyIcon aria-hidden={true} className="size-4" />
-                      Copy
-                    </InputGroupButton>
-                  </InputGroupAddon>
-                </InputGroup>
-              </div>
-
-              {successPayload.credential.label?.trim() ? (
-                <p className="text-muted-foreground text-sm">
-                  <span className="text-foreground font-medium">Label:</span>{' '}
-                  {successPayload.credential.label}
-                </p>
-              ) : null}
-              <p className="text-muted-foreground font-mono text-xs">
-                Prefix: {successPayload.credential.prefix}
-              </p>
-            </div>
-
-            <DialogFooter>
-              <Button
-                data-testid="SettingsKeysForm-done-button"
-                onClick={handleDone}
-                type="button"
-              >
-                Done
-              </Button>
-            </DialogFooter>
-          </>
+        {showSuccess && successPayload != null ? (
+          <SettingsKeysFormSuccess
+            onCopyToken={handleCopyToken}
+            onDone={handleDone}
+            payload={successPayload}
+          />
         ) : (
           <>
             <DialogHeader>

@@ -18,8 +18,19 @@ export const PersonasTable = (
 ): React.ReactElement => {
   const { className, entries = [] } = props;
 
+  // Hooks
+
+  // Setup
   const data = React.useMemo(() => [...entries], [entries]);
+
+  // Handlers
   const getRowId = React.useCallback(getPersonasTableRowId, []);
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

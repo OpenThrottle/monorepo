@@ -32,6 +32,8 @@ export const IdeSearchResults = (
 ): React.ReactElement => {
   const { className, loading = false, onSelectMatch, result } = props;
 
+  // Hooks
+
   // Setup
   const hasQuery = result.query.trim() !== '';
   const hasMatches = result.matches.length > 0;
