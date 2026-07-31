@@ -62,12 +62,13 @@ export default function Component(
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It exists to showcase open source work and
-            experiments, not to run a commercial service. This policy describes,
-            in plain terms, what is and is not collected when you visit, and how
-            that information is used. The site is provided as is; this policy
-            may evolve as the project evolves.
+            OpenThrottle is an open-source product, built and stewarded by
+            Matthew Scholta, and this site is its Developer application.
+            Collecting as little as possible is a deliberate design choice:
+            there are no accounts and no cross-site tracking. This policy
+            describes, in plain terms, what is and is not collected when you
+            visit, and how that information is used. The site is provided as is,
+            and this policy may evolve as the product evolves.
           </p>
 
           <h2 className="text-foreground font-medium">Information collected</h2>
