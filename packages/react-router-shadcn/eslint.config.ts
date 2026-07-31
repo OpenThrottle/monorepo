@@ -39,4 +39,27 @@ export default [
       ],
     },
   },
+
+  /**
+   * PILOT allowlist (plan task 3): the first primitives brought fully to the
+   * Style-A variant. The primitive profile is `error` here so these files can't
+   * regress while the rest of the package is still report-only. The allowlist
+   * grows batch-by-batch through task 4, then the whole package flips to `error`
+   * in task 5 and this block is removed.
+   */
+  {
+    files: [
+      '**/components/Avatar.tsx',
+      '**/components/Badge.tsx',
+      '**/components/Blockquote.tsx',
+      '**/components/Skeleton.tsx',
+      '**/components/Spinner.tsx',
+    ],
+    rules: {
+      'openthrottle/component-primitive-shape': [
+        'error',
+        { profile: 'primitive' },
+      ],
+    },
+  },
 ];

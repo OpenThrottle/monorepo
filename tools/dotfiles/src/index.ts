@@ -285,4 +285,29 @@ export const eslintConfig = tslint.config([
       'openthrottle/component-primitive-shape': 'error',
     },
   },
+
+  /**
+   * The shadcn primitive variant — root-cwd coverage
+   * (docs/monorepo/component-shape-shadcn-variant.md). `nx lint` runs each
+   * project with cwd at the package, where a `packages/react-router-shadcn/**`
+   * glob can't match the package-relative paths, so the package's own
+   * eslint.config.ts owns that path. But lint-staged and any root-level eslint
+   * run from the repo root, where this glob DOES match — so mirror the package's
+   * carve-outs here: shadcn primitives are multi-export / forwardRef families,
+   * so `react/no-multi-comp` and the `max-lines` cap don't apply, and the base
+   * authored `component-primitive-shape` gives way to the report-only
+   * `primitive` profile.
+   */
+  {
+    files: ['**/packages/react-router-shadcn/**/*.tsx'],
+    ignores: ['**/*.test.tsx', '**/__tests__/**'],
+    rules: {
+      'max-lines': 'off',
+      'openthrottle/component-primitive-shape': [
+        'warn',
+        { profile: 'primitive' },
+      ],
+      'react/no-multi-comp': 'off',
+    },
+  },
 ]);
