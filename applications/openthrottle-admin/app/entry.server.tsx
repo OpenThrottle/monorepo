@@ -22,6 +22,18 @@ import {
 import { getCspOptions } from '~/global/config/csp';
 import { SITE_TITLE } from '~/global/config/settings';
 
+// 🧭 One-time boot banner (fires at server module load). openthrottle-admin is a
+// planned app (future corporate layer) — see the Project status table in the root README.
+logger.warn(
+  [
+    '',
+    '🧭  openthrottle-admin — PLANNED preview',
+    '    Builds and passes CI, but not feature-complete. Don’t depend on it yet.',
+    '    Status: https://github.com/OpenThrottle/monorepo#-project-status',
+    '',
+  ].join('\n'),
+);
+
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,

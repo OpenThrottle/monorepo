@@ -37,12 +37,12 @@ export interface UseConversationListResult {
 export function useConversationList(): UseConversationListResult {
   // Hooks
   const listFetcher = useFetcher<ListAgentConversationsResult>();
+  const loadedOnce = React.useRef(false);
   const mutateFetcher = useFetcher<MutateAgentConversationResult>();
+  const [totalCount, setTotalCount] = React.useState(0);
   const [conversations, setConversations] = React.useState<
     AgentConversationListItem[]
   >([]);
-  const [totalCount, setTotalCount] = React.useState(0);
-  const loadedOnce = React.useRef(false);
 
   // Setup
   const isFetching = listFetcher.state !== 'idle';
@@ -85,6 +85,7 @@ export function useConversationList(): UseConversationListResult {
       previous.filter((conversation) => conversation.id !== conversationId),
     );
     setTotalCount((previous) => Math.max(previous - 1, 0));
+
     mutateFetcher.submit(
       { conversationId, intent: 'delete' },
       { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
@@ -97,6 +98,7 @@ export function useConversationList(): UseConversationListResult {
     if (loadedOnce.current) {
       return;
     }
+
     loadedOnce.current = true;
     fetchPage(0);
   }, []);
@@ -118,6 +120,7 @@ export function useConversationList(): UseConversationListResult {
           seen.add(conversation.id);
         }
       }
+
       return merged;
     });
   }, [listFetcher.data]);

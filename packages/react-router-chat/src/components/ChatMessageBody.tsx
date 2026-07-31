@@ -1,8 +1,6 @@
 import * as React from 'react';
-import { Markdown } from '@openthrottle/react-router-shadcn';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import type { ChatMessageRole } from '../types';
-
-const EMPTY_BODY_LABEL = '(No content)';
 
 export interface ChatMessageBodyProps {
   readonly body: string;
@@ -37,9 +35,7 @@ export const ChatMessageBody = (
 
   // 🔌 Short Circuit
   if (!trimmed) {
-    return (
-      <p className="text-muted-foreground text-sm italic">{EMPTY_BODY_LABEL}</p>
-    );
+    return <p className="text-muted-foreground text-sm italic">(No content)</p>;
   }
 
   if (role === 'user') {
@@ -47,9 +43,9 @@ export const ChatMessageBody = (
   }
 
   return (
-    <Markdown
-      className="text-sm break-words [&_pre]:whitespace-pre-wrap"
-      content={body}
+    <MarkdownRenderer
+      className="bg-card rounded-lg p-4 text-sm break-words [&_pre]:whitespace-pre-wrap"
+      source={body}
     />
   );
 };

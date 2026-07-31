@@ -30,6 +30,22 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 └── tools                  # Nx plugins, templates, workflows (see tools/)
 ```
 
+## 🚦 Project status
+
+OpenThrottle is open core and built in the open. The table below sets expectations before you dive into any one app — everything here is Apache-2.0, but not everything is finished.
+
+| Application              | Status          | What it is                                                          |
+| ------------------------ | --------------- | ------------------------------------------------------------------- |
+| `openthrottle`           | ✅ Stable       | Quick-start / product landing (the `docker compose up` entrypoint). |
+| `openthrottle-server`    | ✅ Stable       | NestJS code-first GraphQL API — the backbone of the platform.       |
+| `openthrottle-developer` | ✅ Stable       | The flagship developer portal: plans, projects, notes, generators.  |
+| `openthrottle-website`   | ✅ Stable       | Marketing site.                                                     |
+| `openthrottle-admin`     | 🧭 Planned      | Corporate management layer. On the roadmap; not production-ready.   |
+| `openthrottle-email`     | 🚧 Experimental | A web mail client we're prototyping. Expect rough edges.            |
+
+> [!NOTE]
+> 🧭 **Planned** and 🚧 **Experimental** apps ship as previews so you can see where OpenThrottle is headed. They build and pass CI, but aren't feature-complete — don't depend on them yet.
+
 ## ⚙️ Installation
 
 > [!IMPORTANT]
