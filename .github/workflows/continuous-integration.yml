@@ -147,7 +147,7 @@ jobs:
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm exec nx affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target="${{ matrix.target }}" --parallel --output-style=stream ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
