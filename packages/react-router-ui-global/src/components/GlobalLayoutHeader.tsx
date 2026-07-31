@@ -15,6 +15,7 @@ import {
 import { Form, Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
+import { GlobalHelpTrigger } from './GlobalHelpTrigger';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { NotificationBell } from '@openthrottle/react-router-notifications';
@@ -178,6 +179,8 @@ export const GlobalLayoutHeader = (
           </Link>
         </>
       ) : null}
+
+      <GlobalHelpTrigger />
 
       <NotificationBell />
 

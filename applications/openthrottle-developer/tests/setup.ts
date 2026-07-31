@@ -69,3 +69,53 @@ if (typeof globalThis.visualViewport === 'undefined') {
     writable: true,
   });
 }
+
+// graphql-ws (the plan-detail output stream) opens a real WebSocket via the
+// global constructor the moment a component subscribes. window.env.API_URL_EXTERNAL
+// points at a dev port with nothing listening under test, so Node's undici
+// WebSocket later runs its connection callback and dispatches an `open`/`error`
+// Event across the vm-realm boundary — `TypeError: The "event" argument must be
+// an instance of Event` — an unhandled error that fails the run (and, under the
+// vmForks pool, crashes the worker outright so its in-flight file is reported as
+// a stuck `(0 test)`). Swap in an inert socket that never connects and never
+// dispatches. Suites that assert on stream behavior mock the graphql-ws client
+// (`~/services/graphql-ws-client`) directly, so they bypass this entirely.
+class InertWebSocket {
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSING = 2;
+  static readonly CLOSED = 3;
+  readonly CONNECTING = 0;
+  readonly OPEN = 1;
+  readonly CLOSING = 2;
+  readonly CLOSED = 3;
+  readonly url: string;
+  readonly protocol = '';
+  readonly extensions = '';
+  readonly bufferedAmount = 0;
+  binaryType = 'blob';
+  readyState = InertWebSocket.CONNECTING;
+  onopen: unknown = null;
+  onclose: unknown = null;
+  onerror: unknown = null;
+  onmessage: unknown = null;
+
+  constructor(url: string | URL) {
+    this.url = String(url);
+  }
+
+  addEventListener(): void {}
+  removeEventListener(): void {}
+  dispatchEvent(): boolean {
+    return false;
+  }
+  send(): void {}
+  close(): void {
+    this.readyState = InertWebSocket.CLOSED;
+  }
+}
+
+globalThis.WebSocket = asMock<typeof WebSocket>(InertWebSocket);
+if (typeof window !== 'undefined') {
+  window.WebSocket = asMock<typeof WebSocket>(InertWebSocket);
+}

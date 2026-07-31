@@ -3,6 +3,8 @@ export * from './components/GlobalErrorBoundary';
 export * from './components/GlobalFooter';
 export * from './components/GlobalHeader';
 export * from './components/GlobalHeading';
+export * from './components/GlobalHelpModal';
+export * from './components/GlobalHelpTrigger';
 export * from './components/GlobalLayout';
 export * from './components/GlobalLayoutBreadcrumbs';
 export * from './components/GlobalLayoutHeader';
