@@ -1,4 +1,8 @@
-import { ConfigEnv, defineConfig, loadEnv } from 'vite';
+import { ConfigEnv, loadEnv } from 'vite';
+// defineConfig from vitest/config (not vite) so the `test` block is typed with
+// the full Vitest schema (e.g. `maxWorkers`); vite's own defineConfig types a
+// narrower `test` shape that omits some Vitest-only keys.
+import { defineConfig } from 'vitest/config';
 
 /**
  * @description Nx may set NODE_ENV=production for the test task; that pulls in
@@ -32,15 +36,27 @@ export default (config: ConfigEnv) => {
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description vmForks runs each test file in a fresh V8 VM context inside a
-       * reused worker process. Globals are isolated per file (so no cross-file state
-       * leakage — unlike `isolate: false`), but the worker and module transform cache
-       * are reused, which eliminates the dominant per-file module re-import cost.
-       * Measured on this suite: ~730s -> ~172s user CPU, ~120s -> ~30s wall, no new
-       * failures. (Plain `forks`/`threads` re-import the full module graph per file;
-       * `isolate: false` is faster still but leaks global state non-deterministically.)
+       * @description `maxWorkers` caps the number of concurrent worker processes,
+       * bounding peak memory (peak ≈ maxWorkers × per-file working set) — the
+       * direct anti-OOM lever. In Vitest 4 the per-pool `poolOptions.forks.maxForks`
+       * knob was removed in favour of this top-level cap. Deliberately do NOT raise
+       * `--max-old-space-size` — that lets each fork grow before GC and fights the
+       * container memory limit.
        */
-      pool: 'vmForks',
+      maxWorkers: 4,
+      /**
+       * @description `forks` runs each test file in a fresh child process and
+       * reclaims its memory on teardown between files. We moved off `vmForks`
+       * because its reused worker accumulates V8 VM contexts across this large
+       * suite (354 files) and crashes the worker under CI memory pressure — the
+       * crash surfaces as in-flight files reporting `(0 test)` with no error
+       * stack and no Vitest summary (a flaky, non-deterministic CI failure with
+       * zero real assertion failures). `forks` is slower on wall-clock (it
+       * re-imports the module graph per file — the cost `vmForks` avoided) but is
+       * stable. Sharding the suite to claw back the wall-clock regression is
+       * tracked as a follow-up.
+       */
+      pool: 'forks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
     },
