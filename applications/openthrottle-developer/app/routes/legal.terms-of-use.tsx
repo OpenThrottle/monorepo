@@ -71,11 +71,14 @@ export default function Component(
 
           <h2 className="text-foreground font-medium">About this site</h2>
           <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It is provided free of charge, on an as-is
-            basis, primarily to showcase open source work and experiments. It is
-            not a commercial product, and there is no service-level agreement,
-            uptime guarantee, or commitment to maintain any particular feature.
+            OpenThrottle is an open-source product, built and stewarded by
+            Matthew Scholta, and this site is its Developer application. It is
+            offered free of charge, on an as-is basis. That as-is footing is a
+            deliberate stance for an actively developed, open-core product — not
+            a measure of how seriously it is built: there is no service-level
+            agreement, uptime guarantee, or commitment to maintain any
+            particular feature, and the software may change as the product
+            evolves.
           </p>
 
           <h2 className="text-foreground font-medium">Acceptable use</h2>
@@ -95,9 +98,12 @@ export default function Component(
             Intellectual property and source code
           </h2>
           <p>
-            The source code that powers this site is source-available and
-            licensed under a proprietary End User License Agreement (EULA). You
-            can read the full license at{' '}
+            The OpenThrottle core that powers this site — its applications,
+            packages, and tooling — is open source, licensed under the Apache
+            License, Version 2.0. OpenThrottle is open-core: commercial and
+            enterprise modules are reserved under a separate license, and none
+            exist today, so all current first-party code is Apache-2.0. You can
+            read the full terms at{' '}
             <Link
               className="hover:text-foreground underline underline-offset-4 transition-colors"
               to="/legal/license"
