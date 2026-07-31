@@ -370,7 +370,19 @@ const runShadcn = (): void => {
     for (const r of optOuts) console.log(`  ${r.file}`);
   }
 
-  // Report-only: never fails the build while the package is brought to spec.
+  // In --strict mode the structural VRs (VR1 props, VR2 displayName, VR5
+  // re-export block) gate the build; VR6 (over-cap) stays report-only, since a
+  // few compound families sit over 210 by design (max-lines is off for shadcn).
+  if (process.argv.includes('--strict')) {
+    const structural =
+      missingProps.length + missingDisplay.length + reExport.length;
+    if (structural > 0) {
+      console.log(
+        `\n${structural} structural VR1/VR2/VR5 violation(s) — failing (--strict).`,
+      );
+      process.exit(1);
+    }
+  }
 };
 
 const hasHoistViolation = (r: FileReport): boolean =>

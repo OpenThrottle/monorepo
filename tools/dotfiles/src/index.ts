@@ -295,8 +295,8 @@ export const eslintConfig = tslint.config([
    * run from the repo root, where this glob DOES match — so mirror the package's
    * carve-outs here: shadcn primitives are multi-export / forwardRef families,
    * so `react/no-multi-comp` and the `max-lines` cap don't apply, and the base
-   * authored `component-primitive-shape` gives way to the report-only
-   * `primitive` profile.
+   * authored `component-primitive-shape` gives way to the `primitive` profile
+   * (enforced at `error` now that the package is at spec — plan task 5).
    */
   {
     files: ['**/packages/react-router-shadcn/**/*.tsx'],
@@ -304,7 +304,7 @@ export const eslintConfig = tslint.config([
     rules: {
       'max-lines': 'off',
       'openthrottle/component-primitive-shape': [
-        'warn',
+        'error',
         { profile: 'primitive' },
       ],
       'react/no-multi-comp': 'off',

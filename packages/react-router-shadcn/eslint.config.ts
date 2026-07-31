@@ -20,10 +20,10 @@ export default [
    * (docs/monorepo/component-shape-shadcn-variant.md). These files are the
    * multi-export / forwardRef / cva primitive families the base authored shape
    * can't map, so the base `component-primitive-shape` (authored) rule + the
-   * `max-lines` cap are replaced here by the `primitive` profile. It runs at
-   * `warn` — report-only while the package is brought to spec (plan tasks 3–4);
-   * flipped to `error` in task 5. This override must live in the package config:
-   * nx lints with cwd at the package, where the base config's
+   * `max-lines` cap are replaced here by the `primitive` profile. Enforced at
+   * `error` now that the whole package is at spec (plan task 5) — regressions
+   * block the build. This override must live in the package config: nx lints
+   * with cwd at the package, where the base config's
    * `packages/react-router-shadcn/**` ignore can't match the package-relative
    * paths.
    */
@@ -36,31 +36,9 @@ export default [
       '**/*.test.tsx',
     ],
     rules: {
-      // VR6 (size cap) is report-only via the audit during rollout.
+      // VR6 (size cap) is report-only via the audit — a few compound families
+      // (e.g. Avatar) sit over 210 by design; the audit reports them.
       'max-lines': 'off',
-      'openthrottle/component-primitive-shape': [
-        'warn',
-        { profile: 'primitive' },
-      ],
-    },
-  },
-
-  /**
-   * PILOT allowlist (plan task 3): the first primitives brought fully to the
-   * Style-A variant. The primitive profile is `error` here so these files can't
-   * regress while the rest of the package is still report-only. The allowlist
-   * grows batch-by-batch through task 4, then the whole package flips to `error`
-   * in task 5 and this block is removed.
-   */
-  {
-    files: [
-      '**/components/Avatar.tsx',
-      '**/components/Badge.tsx',
-      '**/components/Blockquote.tsx',
-      '**/components/Skeleton.tsx',
-      '**/components/Spinner.tsx',
-    ],
-    rules: {
       'openthrottle/component-primitive-shape': [
         'error',
         { profile: 'primitive' },

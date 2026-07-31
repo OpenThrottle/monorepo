@@ -293,23 +293,59 @@ reason, expected near-zero use:
 /* component-shape: opt-out — <written reason> */
 ```
 
-## How this is enforced (forward reference)
+## How this is enforced
 
-The enforcers from OT `0f0528ff` are **extended with a "primitive" profile**
-(task 2 of this plan) rather than duplicated:
+Enforcement is **live and hard** — the `react-router-shadcn` package is fully at
+spec, so the primitive profile runs at `error` and regressions block the build.
+The enforcers from OT `0f0528ff` were **extended with a "primitive" profile**
+rather than duplicated:
 
-- **ESLint** `component-primitive-shape` gains a primitive profile scoped to
-  `packages/react-router-shadcn/**` that (a) allows multi-export families
-  (relaxes R5 → VR5), (b) requires `forwardRef` + `displayName` + exported
-  `*Props` per part (VR1/VR2), (c) still enforces R3 markers and R6/VR6 size.
-  Report-only (`warn`) first, then `error` after the pilot + bulldoze.
-- **Audit** `component-shape:check` gains the same profile: family-aware
-  one-per-file (VR5), the trailing-`export {}`-block ban, and `data-slot`
-  presence, plus the shared inventory.
+- **ESLint** `openthrottle/component-primitive-shape` runs the `primitive`
+  profile — allows multi-export families (relaxes R5 → VR5), requires
+  `forwardRef` + `displayName` + an exported `*Props` (interface, or `type` for
+  union-props primitives) per part (VR1/VR2), enforces R3 markers, and bans the
+  trailing `export {}` re-export block (VR5). It is set to `error` in **both**
+  `packages/react-router-shadcn/eslint.config.ts` (the `nx lint` / package-cwd
+  path) and the base `@tools/dotfiles` config scoped to
+  `**/packages/react-router-shadcn/**/*.tsx` (the lint-staged / root-cwd path) —
+  both are needed because ESLint resolves flat-config globs relative to the
+  config's base path, which differs between the two run contexts. `max-lines`
+  (VR6) is **off** for the package — a few compound families (e.g. `Avatar`) sit
+  over 210 by design; the audit reports them instead of failing.
+- **Audit** `pnpm run audit:component-shape:shadcn` scans the package for the
+  variant dimensions; `:shadcn:strict` gates on the structural VRs (VR1/VR2/VR5)
+  and runs in `check:local` / CI so drift blocks merges. VR6 (over-cap) stays
+  report-only there too.
 
-Both share the scope globs + opt-out pragma with the base enforcers, and a
-contract test pins the primitive profile against `Button.tsx` / `Badge.tsx` as
-the golden shape.
+Both share the scope globs + opt-out pragma with the base enforcers, and
+RuleTester + audit unit tests pin the primitive profile (forwardRef,
+multi-export, cva, and the `type`-alias VR1 case).
+
+## Ownership & authoring (adding or updating a shadcn component)
+
+These files are **owned** — we install and control them. To add or change one so
+it lands already-conformant:
+
+1. **Adding a new primitive.** Pull it from the shadcn registry into a scratch
+   location, then author it here in Style A: PascalCase filename (or an `index`
+   folder when the family is large — see [VR5](#vr5--one-primitive-family-per-file-or-folder)),
+   each exported part as a `forwardRef` primitive with its exported `*Props`, the
+   six markers, `displayName`, and no trailing `export {}` block. Add
+   `export * from './components/<Name>'` to `src/index.ts`. Run
+   `nx lint` + `nx typecheck` + `nx test` on the package — the rule will flag any
+   gap before commit.
+2. **Updating an existing primitive** (an upstream fix, a new variant): follow
+   the [Re-sync runbook](#re-sync-policy-capped-divergence). Keep the change
+   inside the allowed-divergence set; comment any intentional functional
+   divergence so a later re-sync won't silently revert it.
+3. **A part that genuinely can't conform** (a third-party primitive that doesn't
+   forward a ref, e.g. a `vaul`/react-day-picker root): keep it a plain Style-A
+   `export const` (still `*Props` + markers, no `forwardRef`/`displayName`), with
+   a one-line comment saying why — do **not** reach for the opt-out pragma for
+   this; the pragma is only for the genuinely-impossible file.
+
+Never hand-edit `dist/`, `__generated__/`, or a test file to satisfy the rule —
+those are out of scope. Prefer fixing the source shape over an opt-out.
 
 ## Related
 
