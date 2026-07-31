@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2809** third-party packages.
+**2810** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2333 |
+| MIT | 2334 |
 | Apache-2.0 | 163 |
 | ISC | 95 |
 | MIT-0 | 65 |
@@ -763,7 +763,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@react-dnd/asap` | 5.0.2 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/invariant` | 4.0.2 | MIT | [Andres Suarez](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/shallowequal` | 4.0.2 | MIT | [Alberto Leal](https://github.com/react-dnd/react-dnd#readme) |
-| `@react-grab/cli` | 0.1.48 | MIT | [source](https://github.com/aidenybai/react-grab#readme) |
+| `@react-grab/cli` | 0.1.50 | MIT | [source](https://github.com/aidenybai/react-grab#readme) |
 | `@react-router/dev` | 8.0.1 | MIT | [source](https://reactrouter.com) |
 | `@react-router/express` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
 | `@react-router/fs-routes` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
@@ -1022,10 +1022,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@typescript-eslint/experimental-utils` | 5.62.0 | MIT | [source](https://github.com/typescript-eslint/typescript-eslint#readme) |
 | `@typescript-eslint/parser` | 8.60.1 | MIT | [source](https://typescript-eslint.io/packages/parser) |
 | `@typescript-eslint/project-service` | 8.60.1 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/rule-tester` | 8.60.1 | MIT | [source](https://typescript-eslint.io/packages/rule-tester) |
 | `@typescript-eslint/scope-manager` | 5.62.0, 8.60.1 | MIT | [source](https://typescript-eslint.io/packages/scope-manager) |
-| `@typescript-eslint/tsconfig-utils` | 8.60.1 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/tsconfig-utils` | 8.60.1, 8.65.0 | MIT | [source](https://typescript-eslint.io) |
 | `@typescript-eslint/type-utils` | 8.60.1 | MIT | [source](https://typescript-eslint.io) |
-| `@typescript-eslint/types` | 5.62.0, 8.60.1 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/types` | 5.62.0, 8.60.1, 8.65.0 | MIT | [source](https://typescript-eslint.io) |
 | `@typescript-eslint/typescript-estree` | 5.62.0 | BSD-2-Clause | [source](https://github.com/typescript-eslint/typescript-eslint#readme) |
 | `@typescript-eslint/typescript-estree` | 8.60.1 | MIT | [source](https://typescript-eslint.io/packages/typescript-estree) |
 | `@typescript-eslint/utils` | 5.62.0, 8.60.1 | MIT | [source](https://typescript-eslint.io/packages/utils) |
@@ -1206,7 +1207,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `binary-extensions` | 2.3.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/binary-extensions#readme) |
 | `binary-search` | 1.3.6 | CC0-1.0 | [The Dark Sky Company, LLC](https://github.com/darkskyapp/binary-search#readme) |
 | `binaryextensions` | 6.11.0 | Artistic-2.0 | [Benjamin Lupton](https://github.com/bevry/binaryextensions) |
-| `bippy` | 0.5.43 | MIT | [Aiden Bai](https://bippy.dev) |
+| `bippy` | 0.5.43, 0.6.1 | MIT | [Aiden Bai](https://bippy.dev) |
 | `bl` | 4.1.0 | MIT | [source](https://github.com/rvagg/bl) |
 | `bmp-ts` | 1.0.9 | MIT | [Andrew lisowski](https://github.com/hipstersmoothie/bmp-ts#readme) |
 | `body-parser` | 1.20.5, 2.2.2 | MIT | [source](https://github.com/expressjs/body-parser#readme) |
@@ -1422,7 +1423,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 1.1.2, 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
-| `deslop-js` | 0.9.0 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `deslop-js` | 0.9.1 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
@@ -2145,7 +2146,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `oxc-parser` | 0.141.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
 | `oxlint` | 1.74.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
-| `oxlint-plugin-react-doctor` | 0.9.0 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `oxlint-plugin-react-doctor` | 0.9.1 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `p-cancelable` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
@@ -2350,10 +2351,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-diff-viewer-continued` | 3.4.0 | MIT | [source](https://github.com/aeolun/react-diff-viewer-continued#readme) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-doctor` | 0.9.0 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
+| `react-doctor` | 0.9.1 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
-| `react-grab` | 0.1.48 | MIT | [Aiden Bai](https://react-grab.com) |
+| `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
 | `react-hotkeys-hook` | 4.6.2, 5.3.2 | MIT | [Johannes Klauss](https://react-hotkeys-hook.vercel.app/) |
 | `react-i18next` | 17.0.7 | MIT | [Jan Mühlemann](https://github.com/i18next/react-i18next) |
 | `react-is` | 16.13.1, 17.0.2, 18.3.1, 19.2.6 | MIT | [source](https://react.dev/) |
