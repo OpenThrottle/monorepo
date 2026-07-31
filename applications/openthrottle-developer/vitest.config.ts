@@ -1,7 +1,4 @@
 import { ConfigEnv, loadEnv } from 'vite';
-// defineConfig from vitest/config (not vite) so the `test` block is typed with
-// the full Vitest schema (e.g. `maxWorkers`); vite's own defineConfig types a
-// narrower `test` shape that omits some Vitest-only keys.
 import { defineConfig } from 'vitest/config';
 
 /**
