@@ -261,7 +261,8 @@ matches `**/components/**` in `applications/*` and `packages/react-router-*`
 - `**/*.server.tsx` — server-only modules (no component shape).
 - `packages/react-router-shadcn/**` — **vendored** shadcn/ui primitives
   (cva/Radix, multi-export, `forwardRef`). "Vendored" = sourced from outside
-  rather than hand-authored. These are held to a **separate** variant standard
+  rather than hand-authored. These are held to a **separate** variant standard —
+  [component-shape-shadcn-variant.md](./component-shape-shadcn-variant.md),
   tracked in its own plan (`Bring react-router-shadcn into the component-shape
 standard`), _not_ this one.
 - Story / example / fixture files (`*.stories.tsx`, `*.example.tsx`).
