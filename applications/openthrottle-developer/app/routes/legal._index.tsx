@@ -58,12 +58,12 @@ export default function Component(
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It is provided free of charge, on an as-is
-            basis, primarily to showcase open source work and experiments. It is
-            not a commercial product or service, and there is no service-level
+            OpenThrottle is an open-source product, built and stewarded by
+            Matthew Scholta, and this site is its Developer application. It is
+            offered free of charge, on an as-is basis: there is no service-level
             agreement, uptime guarantee, or commitment to maintain any
-            particular feature.
+            particular feature. The documents below describe the terms of that
+            arrangement.
           </p>
           <ul className="list-inside list-disc space-y-1">
             <li>
