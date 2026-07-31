@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { ConfigEnv, defineConfig, loadEnv } from 'vite';
 
 /**
@@ -12,6 +13,26 @@ export default (config: ConfigEnv) => {
   const configuration = defineConfig({
     cacheDir: '../../node_modules/.vite/applications/openthrottle-developer',
     resolve: {
+      /**
+       * @description Resolve the isomorphic `@openthrottle/openthrottle-plan-config`
+       * from its TypeScript source rather than its built `dist`. The package is
+       * consumed via its `exports` map (dist), so tests otherwise depend on its
+       * `build` output being present — which made the suite fail in CI whenever the
+       * remote Nx cache restored an incomplete `dist` (typecheck resolved the
+       * `.d.ts` but Vite could not resolve the missing `index.js`: "Failed to
+       * resolve import @openthrottle/openthrottle-plan-config"). Pointing tests at
+       * source removes that build/cache dependency; the package is pure and
+       * jsdom-safe, so behavior is identical to the compiled output.
+       */
+      alias: [
+        {
+          find: /^@openthrottle\/openthrottle-plan-config$/,
+          replacement: resolve(
+            __dirname,
+            '../../packages/openthrottle-plan-config/src/index.ts',
+          ),
+        },
+      ],
       dedupe: ['react', 'react-dom', '@testing-library/react'],
       // Vite 8 resolves tsconfig.json `paths` aliases natively (discovers the
       // tsconfig at `root`), replacing the vite-tsconfig-paths plugin.
