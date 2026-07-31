@@ -59,7 +59,7 @@ export default function Component(
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
             OpenThrottle is an open-source product, built and stewarded by
-            Matthew Scholta, and this site is its Developer application. It is
+            Matthew Scholta, and you are using its Developer application. It is
             offered free of charge, on an as-is basis: there is no service-level
             agreement, uptime guarantee, or commitment to maintain any
             particular feature. The documents below describe the terms of that
