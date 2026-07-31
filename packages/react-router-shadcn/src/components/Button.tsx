@@ -51,7 +51,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ...rest
     } = props;
 
+    // Hooks
+
+    // Setup
     const Component = asChild ? SlotPrimitive.Slot : 'button';
+
+    // Handlers
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
 
     return (
       <Component

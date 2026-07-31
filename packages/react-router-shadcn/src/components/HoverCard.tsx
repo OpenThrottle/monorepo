@@ -2,13 +2,60 @@ import * as React from 'react';
 import { HoverCard as HoverCardPrimitive } from 'radix-ui';
 import { cn } from '../utils/cn';
 
+// HoverCardPrimitive.Root is a plain React.FC (no ref forwarding) — leaving
+// this as a direct alias rather than wrapping it in `forwardRef`, which would
+// change runtime behavior (React would warn on any `ref` passed through).
 export const HoverCard = HoverCardPrimitive.Root;
-export const HoverCardTrigger = HoverCardPrimitive.Trigger;
+
+export interface HoverCardTriggerProps extends React.ComponentPropsWithoutRef<
+  typeof HoverCardPrimitive.Trigger
+> {}
+
+export const HoverCardTrigger = React.forwardRef<
+  React.ComponentRef<typeof HoverCardPrimitive.Trigger>,
+  HoverCardTriggerProps
+>((props, ref): React.ReactElement => {
+  const { ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return <HoverCardPrimitive.Trigger ref={ref} {...rest} />;
+});
+
+HoverCardTrigger.displayName = HoverCardPrimitive.Trigger.displayName;
+
+export interface HoverCardContentProps extends React.ComponentPropsWithoutRef<
+  typeof HoverCardPrimitive.Content
+> {}
 
 export const HoverCardContent = React.forwardRef<
   React.ComponentRef<typeof HoverCardPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content>
->(({ align = 'center', className, sideOffset = 4, ...props }, ref) => {
+  HoverCardContentProps
+>((props, ref): React.ReactElement => {
+  const { align = 'center', className, sideOffset = 4, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <HoverCardPrimitive.Portal>
       <HoverCardPrimitive.Content
@@ -20,7 +67,7 @@ export const HoverCardContent = React.forwardRef<
         data-slot="hover-card-content"
         ref={ref}
         sideOffset={sideOffset}
-        {...props}
+        {...rest}
       />
     </HoverCardPrimitive.Portal>
   );
