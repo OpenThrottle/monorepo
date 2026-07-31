@@ -404,6 +404,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
     "audit:component-shape": "tsx ./scripts/audit-component-shape.ts",
+    "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:strict": "tsx ./scripts/audit-component-shape.ts --strict",
     "audit:templates-compliance": "tsx ./scripts/audit-templates-compliance.ts",
     "build": "pnpm run build:packages",

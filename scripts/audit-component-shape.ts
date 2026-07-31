@@ -20,6 +20,7 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
 
@@ -30,6 +31,12 @@ const IN_SCOPE_GLOBS = [
   'applications/*/app/**/components/**/*.tsx',
   'packages/*/src/**/components/**/*.tsx',
 ];
+
+// The shadcn primitive variant (docs/monorepo/component-shape-shadcn-variant.md)
+// lives in its own package and is excluded from the authored scan above.
+const SHADCN_GLOB = 'packages/react-router-shadcn/src/**/components/**/*.tsx';
+const SHADCN_EXCLUDE =
+  /(?:\/dist\/|\/__generated__\/|\/__tests__\/|\.test\.tsx$|\.stories\.tsx$|\.example\.tsx$)/;
 
 const EXCLUDE =
   /(?:\/dist\/|\/__generated__\/|\/__tests__\/|\.test\.tsx$|\.server\.tsx$|\.stories\.tsx$|\.example\.tsx$|packages\/react-router-shadcn\/)/;
@@ -72,9 +79,7 @@ const initFunction = (
   return undefined;
 };
 
-const isExported = (
-  node: ts.VariableStatement | ts.FunctionDeclaration,
-): boolean => {
+const isExported = (node: ts.Node): boolean => {
   const modifiers = ts.canHaveModifiers(node)
     ? ts.getModifiers(node)
     : undefined;
@@ -188,6 +193,180 @@ const analyze = (absPath: string): FileReport | null => {
   };
 };
 
+/** True when an initializer is a `forwardRef(...)` / `React.forwardRef(...)` call. */
+const isForwardRefInit = (init: ts.Expression | undefined): boolean => {
+  if (init === undefined || !ts.isCallExpression(init)) return false;
+  const callee = init.expression;
+  if (ts.isIdentifier(callee)) return callee.text === 'forwardRef';
+  if (ts.isPropertyAccessExpression(callee)) {
+    return callee.name.text === 'forwardRef';
+  }
+  return false;
+};
+
+/**
+ * Report for one shadcn primitive file (the variant profile). Pure and
+ * content-based so it is unit-testable without the filesystem. Mirrors the
+ * `component-primitive-shape` ESLint rule's `primitive` profile so the audit
+ * and the rule can't disagree.
+ */
+export interface PrimitiveReport {
+  readonly file: string;
+  readonly forwardRefParts: readonly string[];
+  readonly lineCount: number;
+  readonly missingDisplayName: readonly string[];
+  readonly missingProps: readonly string[];
+  readonly optOut: boolean;
+  readonly overCap: boolean;
+  readonly parts: readonly string[];
+  readonly reExportBlock: boolean;
+}
+
+/**
+ * Analyze one shadcn primitive source: its exported PascalCase parts, which are
+ * `forwardRef`, which lack a paired `<Part>Props` (VR1) or a `displayName`
+ * (VR2), and whether it uses the banned trailing `export { … }` block (VR5).
+ */
+export const analyzePrimitiveSource = (
+  content: string,
+  file = 'primitive.tsx',
+): PrimitiveReport => {
+  const optOut = OPT_OUT.test(content.split('\n')[0] ?? '');
+  const source = ts.createSourceFile(
+    file,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+
+  const parts: string[] = [];
+  const forwardRefParts: string[] = [];
+  const exportedInterfaces = new Set<string>();
+  const displayNames = new Set<string>();
+  let reExportBlock = false;
+
+  for (const statement of source.statements) {
+    // Exported interface names.
+    if (ts.isInterfaceDeclaration(statement) && isExported(statement)) {
+      exportedInterfaces.add(statement.name.text);
+      continue;
+    }
+    // `<Name>.displayName = …` assignments.
+    if (
+      ts.isExpressionStatement(statement) &&
+      ts.isBinaryExpression(statement.expression) &&
+      statement.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isPropertyAccessExpression(statement.expression.left) &&
+      statement.expression.left.name.text === 'displayName' &&
+      ts.isIdentifier(statement.expression.left.expression)
+    ) {
+      displayNames.add(statement.expression.left.expression.text);
+      continue;
+    }
+    // The banned trailing `export { … }` re-export block (no module specifier).
+    if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause) &&
+      statement.moduleSpecifier === undefined
+    ) {
+      reExportBlock = true;
+      continue;
+    }
+    // Exported PascalCase const parts.
+    if (!ts.isVariableStatement(statement) || !isExported(statement)) continue;
+    for (const decl of statement.declarationList.declarations) {
+      if (!ts.isIdentifier(decl.name)) continue;
+      const name = decl.name.text;
+      if (!isPascalCase(name) || initFunction(decl.initializer) === undefined) {
+        continue;
+      }
+      parts.push(name);
+      if (isForwardRefInit(decl.initializer)) forwardRefParts.push(name);
+    }
+  }
+
+  const lineCount = content.split('\n').length;
+  return {
+    file,
+    forwardRefParts,
+    lineCount,
+    missingDisplayName: optOut
+      ? []
+      : forwardRefParts.filter((p) => !displayNames.has(p)),
+    missingProps: optOut
+      ? []
+      : parts.filter((p) => !exportedInterfaces.has(`${p}Props`)),
+    optOut,
+    overCap: !optOut && lineCount > LINE_CAP,
+    parts,
+    reExportBlock: !optOut && reExportBlock,
+  };
+};
+
+const runShadcn = (): void => {
+  const files = globSync(SHADCN_GLOB, { absolute: true, cwd: ROOT })
+    .filter((file) => !SHADCN_EXCLUDE.test(file))
+    .sort();
+
+  const reports = files.map((abs) =>
+    analyzePrimitiveSource(
+      readFileSync(abs, 'utf-8'),
+      path.relative(ROOT, abs),
+    ),
+  );
+
+  const totalParts = reports.reduce((n, r) => n + r.parts.length, 0);
+  const totalForwardRef = reports.reduce(
+    (n, r) => n + r.forwardRefParts.length,
+    0,
+  );
+  const missingProps = reports.filter((r) => r.missingProps.length > 0);
+  const missingDisplay = reports.filter((r) => r.missingDisplayName.length > 0);
+  const reExport = reports.filter((r) => r.reExportBlock);
+  const overCap = reports.filter((r) => r.overCap);
+  const optOuts = reports.filter((r) => r.optOut);
+
+  console.log('shadcn primitive-variant audit (VR1/VR2/VR5/VR6) — report-only');
+  console.log(
+    `Scanned ${reports.length} files, ${totalParts} exported parts (${totalForwardRef} forwardRef).\n`,
+  );
+
+  console.log(
+    `VR1 — parts missing a <Part>Props: ${missingProps.length} file(s)`,
+  );
+  for (const r of missingProps) {
+    console.log(`  ${r.file}  (${r.missingProps.join(', ')})`);
+  }
+
+  console.log(
+    `\nVR2 — forwardRef parts missing displayName: ${missingDisplay.length} file(s)`,
+  );
+  for (const r of missingDisplay) {
+    console.log(`  ${r.file}  (${r.missingDisplayName.join(', ')})`);
+  }
+
+  console.log(
+    `\nVR5 — banned trailing \`export { … }\` block: ${reExport.length} file(s)`,
+  );
+  for (const r of reExport) console.log(`  ${r.file}`);
+
+  console.log(
+    `\nVR6 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`,
+  );
+  for (const r of overCap.sort((a, b) => b.lineCount - a.lineCount)) {
+    console.log(`  ${r.file}  (${r.lineCount})`);
+  }
+
+  if (optOuts.length > 0) {
+    console.log(`\nOpt-out files (excluded): ${optOuts.length}`);
+    for (const r of optOuts) console.log(`  ${r.file}`);
+  }
+
+  // Report-only: never fails the build while the package is brought to spec.
+};
+
 const hasHoistViolation = (r: FileReport): boolean =>
   !r.optOut && (r.helperDecls > 0 || r.dataDecls > 0);
 const hasMultiComponent = (r: FileReport): boolean =>
@@ -196,6 +375,12 @@ const isHookHeavy = (r: FileReport): boolean =>
   !r.optOut && (r.useStateCount >= 8 || r.statements >= 30);
 
 const run = (): void => {
+  // The shadcn primitive-variant profile is a separate, report-only scan.
+  if (process.argv.includes('--shadcn')) {
+    runShadcn();
+    return;
+  }
+
   const json = process.argv.includes('--json');
   const strict = process.argv.includes('--strict');
 
@@ -284,4 +469,6 @@ const run = (): void => {
   }
 };
 
-run();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  run();
+}
