@@ -411,6 +411,37 @@ Foo.displayName = 'Foo';
         filename: 'Card.tsx',
         options: [{ profile: 'primitive' }],
       },
+      // VR1 accepts an exported `type <Part>Props` for union-props primitives.
+      {
+        code: `import * as React from 'react';
+
+export type ToggleGroupProps = React.ComponentProps<'div'> & { size?: 'sm' };
+
+export const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
+  (props, ref): React.ReactElement => {
+    const { className, size, ...rest } = props;
+
+    // Hooks
+
+    // Setup
+
+    // Handlers
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
+
+    return <div className={className} data-size={size} ref={ref} {...rest} />;
+  },
+);
+
+ToggleGroup.displayName = 'ToggleGroup';
+`,
+        filename: 'ToggleGroup.tsx',
+        options: [{ profile: 'primitive' }],
+      },
       // Opt-out pragma still disables every check under the primitive profile.
       {
         code: `/* component-shape: opt-out — vendored, re-sync pending */

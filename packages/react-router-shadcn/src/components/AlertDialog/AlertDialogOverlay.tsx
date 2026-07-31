@@ -9,7 +9,7 @@ export interface AlertDialogOverlayProps extends React.ComponentPropsWithoutRef<
 export const AlertDialogOverlay = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Overlay>,
   AlertDialogOverlayProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

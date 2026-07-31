@@ -13,6 +13,18 @@ export const TabsTrigger = React.forwardRef<
 >((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <TabsPrimitive.Trigger
       className={cn(tabsTriggerVariants(), className)}

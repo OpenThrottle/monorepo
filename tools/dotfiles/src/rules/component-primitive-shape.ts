@@ -274,6 +274,24 @@ export const componentPrimitiveShape = createRule<
       return exportedInterfaces;
     };
 
+    // The primitive profile also accepts an exported `type <Part>Props` alias:
+    // radix primitives whose props are a union (single vs multiple) cannot be
+    // expressed as an `interface extends` (VR1).
+    const collectExportedPropsTypeNames = (
+      program: TSESTree.Program,
+    ): Set<string> => {
+      const names = collectExportedInterfaces(program);
+      for (const stmt of program.body) {
+        if (
+          stmt.type === 'ExportNamedDeclaration' &&
+          stmt.declaration?.type === 'TSTypeAliasDeclaration'
+        ) {
+          names.add(stmt.declaration.id.name);
+        }
+      }
+      return names;
+    };
+
     /** Names with a `<Name>.displayName = …` assignment at module scope. */
     const collectDisplayNames = (program: TSESTree.Program): Set<string> => {
       const names = new Set<string>();
@@ -330,10 +348,12 @@ export const componentPrimitiveShape = createRule<
             }
           }
 
+          const propsTypeNames = collectExportedPropsTypeNames(program);
           const displayNames = collectDisplayNames(program);
           for (const part of collectParts(program)) {
-            // VR1 — each part pairs with an exported `<Part>Props`.
-            if (!exportedInterfaces.has(`${part.name}Props`)) {
+            // VR1 — each part pairs with an exported `<Part>Props` (interface,
+            // or a `type` alias for union-props primitives).
+            if (!propsTypeNames.has(`${part.name}Props`)) {
               reportMissingProps(part.name, part.exportNode);
             }
             // VR2 — forwardRef parts must set `displayName`.

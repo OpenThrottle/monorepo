@@ -36,7 +36,7 @@ const IN_SCOPE_GLOBS = [
 // lives in its own package and is excluded from the authored scan above.
 const SHADCN_GLOB = 'packages/react-router-shadcn/src/**/components/**/*.tsx';
 const SHADCN_EXCLUDE =
-  /(?:\/dist\/|\/__generated__\/|\/__tests__\/|\.test\.tsx$|\.stories\.tsx$|\.example\.tsx$)/;
+  /(?:\/dist\/|\/__generated__\/|\/__tests__\/|-test-utils\.tsx$|\.test\.tsx$|\.stories\.tsx$|\.example\.tsx$)/;
 
 const EXCLUDE =
   /(?:\/dist\/|\/__generated__\/|\/__tests__\/|\.test\.tsx$|\.server\.tsx$|\.stories\.tsx$|\.example\.tsx$|packages\/react-router-shadcn\/)/;
@@ -248,7 +248,13 @@ export const analyzePrimitiveSource = (
 
   for (const statement of source.statements) {
     // Exported interface names.
+    // An exported `<Part>Props` — interface, or a `type` alias for union-props
+    // primitives (VR1 accepts both in the primitive profile).
     if (ts.isInterfaceDeclaration(statement) && isExported(statement)) {
+      exportedInterfaces.add(statement.name.text);
+      continue;
+    }
+    if (ts.isTypeAliasDeclaration(statement) && isExported(statement)) {
       exportedInterfaces.add(statement.name.text);
       continue;
     }

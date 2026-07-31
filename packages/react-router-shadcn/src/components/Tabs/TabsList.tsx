@@ -29,6 +29,18 @@ export const TabsList = React.forwardRef<
 >((props, ref): React.ReactElement => {
   const { className, variant = 'default', ...rest } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <TabsPrimitive.List
       className={cn(tabsListVariants({ variant }), className)}

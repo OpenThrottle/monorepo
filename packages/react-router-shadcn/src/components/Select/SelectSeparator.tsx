@@ -9,7 +9,7 @@ export interface SelectSeparatorProps extends React.ComponentPropsWithoutRef<
 export const SelectSeparator = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Separator>,
   SelectSeparatorProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

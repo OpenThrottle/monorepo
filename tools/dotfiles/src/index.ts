@@ -300,7 +300,7 @@ export const eslintConfig = tslint.config([
    */
   {
     files: ['**/packages/react-router-shadcn/**/*.tsx'],
-    ignores: ['**/*.test.tsx', '**/__tests__/**'],
+    ignores: ['**/*-test-utils.tsx', '**/*.test.tsx', '**/__tests__/**'],
     rules: {
       'max-lines': 'off',
       'openthrottle/component-primitive-shape': [

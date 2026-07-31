@@ -172,6 +172,11 @@ The base rules R1–R7 apply as amended below. Same stable ids, prefixed `V` for
   `extends`-only interface is fine (`interface CardProps extends …<'div'> {}`) —
   its presence is the point, exactly as in the base standard.
 - A part with no extra props still declares the interface (may be empty-body).
+- **Union-props exception:** a radix primitive whose props are a union (e.g.
+  `ToggleGroup`'s single-vs-multiple `Root` props) cannot be an
+  `interface extends` (TS2312). Such a part uses an exported **`type`** alias
+  (`export type PartProps = React.ComponentPropsWithoutRef<…> & …`) instead;
+  VR1 accepts an exported `type <Part>Props` as well as an `interface`.
 
 ### VR2 — Explicit `forwardRef` signature and return type
 

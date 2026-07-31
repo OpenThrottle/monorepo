@@ -6,6 +6,7 @@ export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElem
 export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
   (props, ref): React.ReactElement => {
     const { className, ...rest } = props;
+
     // Hooks
 
     // Setup

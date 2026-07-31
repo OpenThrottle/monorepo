@@ -29,7 +29,12 @@ export default [
    */
   {
     files: ['**/components/**/*.tsx'],
-    ignores: ['**/*.example.tsx', '**/*.stories.tsx', '**/*.test.tsx'],
+    ignores: [
+      '**/*-test-utils.tsx',
+      '**/*.example.tsx',
+      '**/*.stories.tsx',
+      '**/*.test.tsx',
+    ],
     rules: {
       // VR6 (size cap) is report-only via the audit during rollout.
       'max-lines': 'off',

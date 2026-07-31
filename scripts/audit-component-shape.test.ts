@@ -38,6 +38,25 @@ describe('analyzePrimitiveSource', () => {
     expect(report.missingProps).toEqual([]);
   });
 
+  it('accepts an exported `type <Part>Props` alias (union-props primitive)', () => {
+    const report = analyzePrimitiveSource(
+      `import * as React from 'react';
+
+export type ToggleGroupProps = React.ComponentProps<'div'> & { size?: 'sm' };
+
+export const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
+  (props, ref): React.ReactElement => <div ref={ref} {...props} />,
+);
+
+ToggleGroup.displayName = 'ToggleGroup';
+`,
+      'ToggleGroup.tsx',
+    );
+
+    expect(report.parts).toEqual(['ToggleGroup']);
+    expect(report.missingProps).toEqual([]);
+  });
+
   it('does not treat a cva variant object as a part', () => {
     const report = analyzePrimitiveSource(
       `import * as React from 'react';
