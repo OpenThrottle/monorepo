@@ -12,6 +12,12 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// The live console has its own suite (ws client + resource route); stub it here
+// so QueueJobDetail tests stay focused on the detail chrome and actions.
+vi.mock('~/routing/queues/components/QueueJobLogConsole', () => ({
+  QueueJobLogConsole: () => null,
+}));
+
 const baseJob = (): QueueJobDetailJob => ({
   data: null,
   executionBackend: null,
@@ -46,7 +52,7 @@ describe('QueueJobDetail Component', () => {
     const view = renderDetail(job, 'workflow-jobs');
 
     expect(view.getByTestId('QueueJobDetail')).toBeInTheDocument();
-    expect(view.getByText('completed')).toBeInTheDocument();
+    expect(view.getByText('Completed')).toBeInTheDocument();
     expect(view.getByTestId('queue-job-correlation-id')).toHaveTextContent(
       'bull-job-1',
     );

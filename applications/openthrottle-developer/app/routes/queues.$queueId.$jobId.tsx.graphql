@@ -48,3 +48,29 @@ mutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {
     signaledActiveRunToStop
   }
 }
+
+fragment QueueJobLogEvent on QueueJobLogEventObject {
+  cursor
+  jobId
+  level
+  message
+  queueName
+  source
+  timestamp
+}
+
+query QueueJobLogs($input: QueueJobLogsInput!) {
+  queueJobLogs(input: $input) {
+    events {
+      ...QueueJobLogEvent
+    }
+    hasMore
+    nextCursor
+  }
+}
+
+subscription QueueJobLogTail($jobId: String!, $queueName: String!) {
+  queueJobLogTail(jobId: $jobId, queueName: $queueName) {
+    ...QueueJobLogEvent
+  }
+}

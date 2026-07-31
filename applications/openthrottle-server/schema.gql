@@ -1007,6 +1007,20 @@ type ServerMetricsObject {
   cpuSystemMs: Float!
 }
 
+type CleanQueueResultObject {
+  """Whether the clean was accepted."""
+  success: Boolean!
+
+  """Queue name when success is true."""
+  queueName: String
+
+  """Number of jobs removed (0 when success is false)."""
+  removedCount: Int!
+
+  """Error message when success is false."""
+  error: String
+}
+
 type CreateQueueResultObject {
   """Whether the queue was created (or accepted for registration)."""
   success: Boolean!
@@ -1321,6 +1335,11 @@ type JobsResultObject {
 
   """Whether more jobs exist after this page."""
   hasNext: Boolean!
+
+  """
+  Total jobs across the requested states (state-filtered), for accurate pagination.
+  """
+  total: Int!
 }
 
 type QueueDetailsObject {
@@ -1344,6 +1363,17 @@ type QueueDetailsObject {
 
   """Paginated jobs for this queue (optional; omit for stats-only)."""
   jobs: JobsResultObject
+}
+
+type QueueControlResultObject {
+  """Whether the control action was accepted."""
+  success: Boolean!
+
+  """Queue name when success is true."""
+  queueName: String
+
+  """Error message when success is false."""
+  error: String
 }
 
 type RemoveRepeatableJobResultObject {
@@ -3421,6 +3451,19 @@ type Mutation {
   """
   removeRepeatableJob(input: RemoveRepeatableJobInput!): RemoveRepeatableJobResultObject!
 
+  """
+  Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue.
+  """
+  pauseQueue(input: QueueControlInput!): QueueControlResultObject!
+
+  """Resume a paused queue so workers pick up jobs again."""
+  resumeQueue(input: QueueControlInput!): QueueControlResultObject!
+
+  """
+  Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed.
+  """
+  cleanQueue(input: CleanQueueInput!): CleanQueueResultObject!
+
   """Create a note"""
   createNote(input: CreateNoteInput!): NoteObject!
 
@@ -3948,6 +3991,30 @@ input RemoveRepeatableJobInput {
   Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.
   """
   key: String!
+}
+
+input QueueControlInput {
+  """Queue name (e.g. plans)."""
+  queueName: String!
+}
+
+input CleanQueueInput {
+  """Queue name (e.g. plans)."""
+  queueName: String!
+
+  """Which finished jobs to remove: "completed" or "failed" only."""
+  state: String!
+
+  """Must be true to confirm this destructive action."""
+  confirm: Boolean!
+
+  """
+  Only remove jobs finished at least this many milliseconds ago (0 = any age).
+  """
+  graceMs: Int
+
+  """Maximum number of jobs to remove (0 = no limit)."""
+  limit: Int
 }
 
 input CreateNoteInput {

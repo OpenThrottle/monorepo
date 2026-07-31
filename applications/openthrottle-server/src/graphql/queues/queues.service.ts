@@ -166,6 +166,8 @@ interface JobDto {
 interface GetJobsResult {
   readonly hasNext: boolean;
   readonly jobs: JobDto[];
+  /** Total jobs across the requested states (state-filtered), for accurate pagination. */
+  readonly total: number;
 }
 
 /** @description Payload for {@link QueuesService.enqueuePlanRalphOrchestrator}. */
@@ -390,7 +392,7 @@ export class QueuesService implements OnModuleDestroy {
   ): Promise<GetJobsResult> {
     const queue = this.getQueueByName(queueName);
     if (!queue) {
-      return { hasNext: false, jobs: [] };
+      return { hasNext: false, jobs: [], total: 0 };
     }
 
     const types = states.filter((s): s is JobState =>
@@ -398,7 +400,7 @@ export class QueuesService implements OnModuleDestroy {
     );
 
     if (types.length === 0) {
-      return { hasNext: false, jobs: [] };
+      return { hasNext: false, jobs: [], total: 0 };
     }
 
     const start = offset;
@@ -409,7 +411,10 @@ export class QueuesService implements OnModuleDestroy {
 
     const jobs = await Promise.all(slice.map((job) => this.mapJobToDto(job)));
 
-    return { hasNext, jobs };
+    const totalRaw = await queue.getJobCountByTypes(...types);
+    const total = typeof totalRaw === 'number' ? totalRaw : 0;
+
+    return { hasNext, jobs, total };
   }
 
   /**
@@ -517,6 +522,84 @@ export class QueuesService implements OnModuleDestroy {
     const id = job.id ?? jobId;
 
     return { jobId: String(id) };
+  }
+
+  /**
+   * @description Pauses a queue so workers stop picking up new jobs (in-flight jobs finish). Reversible via resumeQueue. Returns queueName on success or error message.
+   */
+  async pauseQueue(
+    queueName: string,
+  ): Promise<{ queueName: string } | { error: string }> {
+    const queue = this.getQueueByName(queueName);
+    if (!queue) {
+      return { error: `Queue not found: ${queueName}` };
+    }
+
+    try {
+      await queue.pause();
+      return { queueName };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to pause queue: ${message}` };
+    }
+  }
+
+  /**
+   * @description Resumes a paused queue so workers pick up jobs again. Returns queueName on success or error message.
+   */
+  async resumeQueue(
+    queueName: string,
+  ): Promise<{ queueName: string } | { error: string }> {
+    const queue = this.getQueueByName(queueName);
+    if (!queue) {
+      return { error: `Queue not found: ${queueName}` };
+    }
+
+    try {
+      await queue.resume();
+      return { queueName };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to resume queue: ${message}` };
+    }
+  }
+
+  /**
+   * @description Removes finished jobs from a queue. Guarded: only `completed` or `failed` jobs may be cleaned.
+   * @param queueName - Registered queue name.
+   * @param state - Which finished jobs to remove ('completed' or 'failed').
+   * @param graceMs - Only remove jobs finished at least this many ms ago (0 = any age).
+   * @param limit - Max jobs to remove (0 = no limit).
+   */
+  async cleanQueue(
+    queueName: string,
+    state: string,
+    graceMs: number,
+    limit: number,
+  ): Promise<{ removedCount: number } | { error: string }> {
+    const queue = this.getQueueByName(queueName);
+    if (!queue) {
+      return { error: `Queue not found: ${queueName}` };
+    }
+
+    if (state !== 'completed' && state !== 'failed') {
+      return {
+        error: 'Only completed or failed jobs can be cleaned',
+      };
+    }
+
+    const safeGrace =
+      Number.isFinite(graceMs) && graceMs > 0 ? Math.floor(graceMs) : 0;
+    const safeLimit =
+      Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 0;
+
+    try {
+      const removed = await queue.clean(safeGrace, safeLimit, state);
+      return { removedCount: Array.isArray(removed) ? removed.length : 0 };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to clean queue: ${message}` };
+    }
   }
 
   /**

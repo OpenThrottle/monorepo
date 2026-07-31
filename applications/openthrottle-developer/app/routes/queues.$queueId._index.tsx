@@ -9,19 +9,35 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  OpenThrottlePaginationSimple,
-  OpenThrottleStatCard,
-} from '@openthrottle/react-router-ui';
+import { OpenThrottlePaginationSimple } from '@openthrottle/react-router-ui';
 import { ListOrderedIcon } from 'lucide-react';
-import { GetQueueDocument } from '~/__generated__/graphql';
+import { useSearchParams } from 'react-router';
+import {
+  GetQueueDocument,
+  QueueDetailCleanQueueDocument,
+  QueueDetailPauseQueueDocument,
+  QueueDetailResumeQueueDocument,
+} from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { QueueDetailControls } from '~/routing/queues/components/QueueDetailControls';
+import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
+import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
+import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 
 const QUEUE_JOBS_LIMIT_MIN = 10;
 const QUEUE_JOBS_LIMIT_MAX = 100;
+
+/** Job states selectable from the detail toolbar and used as the loader default. */
+const QUEUE_JOB_STATE_FILTER_OPTIONS = [
+  'waiting',
+  'active',
+  'completed',
+  'failed',
+  'delayed',
+] as const;
 
 /**
  * @description Parses `page` and `limit` search params for BullMQ job pagination (GraphQL offset/limit).
@@ -65,6 +81,14 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const { limit, offset, page } = parseQueueJobsPagination(args.url.toString());
 
+  const selectedStates = new URL(args.url.toString()).searchParams.getAll(
+    'state',
+  );
+  const states =
+    selectedStates.length > 0
+      ? selectedStates
+      : [...QUEUE_JOB_STATE_FILTER_OPTIONS];
+
   const { queue } = await executeGraphqlWithAuth(
     args.request,
     GetQueueDocument,
@@ -73,7 +97,7 @@ export const loader = async (args: Route.LoaderArgs) => {
         limit,
         name: queueName,
         offset,
-        states: ['waiting', 'active', 'completed', 'failed', 'delayed'],
+        states,
       },
     },
   );
@@ -102,19 +126,21 @@ export default function Component(
   const { limit, page, queue } = loaderData;
 
   // Hooks
-  const params = new URLSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Setup
-  const jobs = queue.jobs?.jobs ?? [];
   const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
-  // const hasNext = queue.jobs?.hasNext ?? false;
-
-  const _buildJobsPageHref = (nextPage: number): string => {
-    params.set('page', String(nextPage));
-    params.set('limit', String(limit));
-
-    return `${queueBasePath}?${params.toString()}`;
-  };
+  const allJobs = queue.jobs?.jobs ?? [];
+  const total = queue.jobs?.total ?? 0;
+  const query = (searchParams.get('q') ?? '').trim().toLowerCase();
+  const jobs =
+    query === ''
+      ? allJobs
+      : allJobs.filter(
+          (job) =>
+            job.id.toLowerCase().includes(query) ||
+            (job.name ?? '').toLowerCase().includes(query),
+        );
 
   // Handlers
 
@@ -126,54 +152,116 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="grid gap-4 md:grid-cols-5 md:gap-8 lg:gap-12">
-        <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
-        <OpenThrottleStatCard title="Active" value={queue.activeCount} />
-        <OpenThrottleStatCard title="Waiting" value={queue.waitingCount} />
-        <OpenThrottleStatCard title="Delayed" value={queue.delayedCount} />
-        <OpenThrottleStatCard title="Failed" value={queue.failedCount} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <GlobalHeading heading="h1" icon={ListOrderedIcon} title={queue.name}>
+          <QueueHealthPill
+            activeCount={queue.activeCount}
+            delayedCount={queue.delayedCount}
+            failedCount={queue.failedCount}
+            waitingCount={queue.waitingCount}
+          />
+        </GlobalHeading>
+        <QueueDetailControls queueName={queue.name} />
       </div>
 
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={ListOrderedIcon}
-          title={`Queues: ${queue.name}`}
-        />
-
-        <p
-          className="text-muted-foreground mb-6 text-sm"
-          data-testid="queue-detail-operational-hint"
-        >
-          Jobs use URL pagination (
-          <code className="bg-muted rounded px-1 text-xs">?page=</code>,{' '}
-          <code className="bg-muted rounded px-1 text-xs">?limit=</code>,{' '}
-          {QUEUE_JOBS_LIMIT_MIN}–{QUEUE_JOBS_LIMIT_MAX}). Open a job for the
-          full payload, timestamps, failure or return value, retry (
-          <code className="bg-muted rounded px-1 text-xs">retryJob</code>),
-          cancel plan run when applicable (
-          <code className="bg-muted rounded px-1 text-xs">cancelPlanRun</code>),
-          and plan/task deep links from the parsed payload.
-        </p>
-      </div>
-
-      <QueueJobsTable
-        className="bg-card mb-4"
-        jobs={jobs}
-        queueName={queue.name}
+      <QueueStatRow
+        columns={5}
+        stats={[
+          {
+            color: 'bg-green-300',
+            title: 'Completed',
+            value: queue.completedCount,
+          },
+          { color: 'bg-yellow-300', title: 'Active', value: queue.activeCount },
+          { color: 'bg-blue-300', title: 'Waiting', value: queue.waitingCount },
+          {
+            color: 'bg-violet-300',
+            title: 'Delayed',
+            value: queue.delayedCount,
+          },
+          { color: 'bg-red-300', title: 'Failed', value: queue.failedCount },
+        ]}
       />
+
+      <QueueOpsToolbar
+        searchAriaLabel="Find a job on this page"
+        searchPlaceholder="Find a job on this page"
+        stateOptions={QUEUE_JOB_STATE_FILTER_OPTIONS}
+      />
+
+      <QueueJobsTable className="bg-card" jobs={jobs} queueName={queue.name} />
+
       <OpenThrottlePaginationSimple
         basePath={queueBasePath}
         limit={limit}
         page={page}
-        total={queue.jobs?.jobs?.length ?? 0}
+        resultLabel="jobs"
+        total={total}
       />
     </GlobalScreen>
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (args: Route.ActionArgs) => {
+  const queueName = args.params.queueId;
+  if (queueName == null || queueName === '') {
+    return { error: 'Queue name is required.' };
+  }
+
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'pauseQueue') {
+    const { pauseQueue } = await executeGraphqlWithAuth(
+      args.request,
+      QueueDetailPauseQueueDocument,
+      { input: { queueName } },
+    );
+
+    if (!pauseQueue?.success) {
+      return { error: pauseQueue?.error ?? 'Failed to pause queue.' };
+    }
+
+    return { paused: pauseQueue.queueName ?? queueName };
+  }
+
+  if (intent === 'resumeQueue') {
+    const { resumeQueue } = await executeGraphqlWithAuth(
+      args.request,
+      QueueDetailResumeQueueDocument,
+      { input: { queueName } },
+    );
+
+    if (!resumeQueue?.success) {
+      return { error: resumeQueue?.error ?? 'Failed to resume queue.' };
+    }
+
+    return { resumed: resumeQueue.queueName ?? queueName };
+  }
+
+  if (intent === 'cleanQueue') {
+    const stateField = formData.get('state');
+    const state = typeof stateField === 'string' ? stateField : '';
+    const confirm = formData.get('confirm') === 'true';
+
+    const { cleanQueue } = await executeGraphqlWithAuth(
+      args.request,
+      QueueDetailCleanQueueDocument,
+      { input: { confirm, queueName, state } },
+    );
+
+    if (!cleanQueue?.success) {
+      return { error: cleanQueue?.error ?? 'Failed to clean queue.' };
+    }
+
+    return {
+      cleaned: {
+        queueName: cleanQueue.queueName ?? queueName,
+        removedCount: cleanQueue.removedCount,
+      },
+    };
+  }
+
   return {};
 };
 

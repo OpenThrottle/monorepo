@@ -12,3 +12,19 @@ query getQueues {
     ...QueueCard
   }
 }
+
+mutation QueuesPauseQueue($input: QueueControlInput!) {
+  pauseQueue(input: $input) {
+    error
+    queueName
+    success
+  }
+}
+
+mutation QueuesResumeQueue($input: QueueControlInput!) {
+  resumeQueue(input: $input) {
+    error
+    queueName
+    success
+  }
+}

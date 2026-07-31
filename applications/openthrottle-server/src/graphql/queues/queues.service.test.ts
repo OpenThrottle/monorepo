@@ -320,7 +320,7 @@ describe('QueuesService', () => {
         false,
       );
 
-      expect(result).toEqual({ hasNext: false, jobs: [] });
+      expect(result).toEqual({ hasNext: false, jobs: [], total: 0 });
       expect(mockGetJobs).not.toHaveBeenCalled();
     });
 
@@ -333,7 +333,7 @@ describe('QueuesService', () => {
         false,
       );
 
-      expect(result).toEqual({ hasNext: false, jobs: [] });
+      expect(result).toEqual({ hasNext: false, jobs: [], total: 0 });
       expect(mockGetJobs).not.toHaveBeenCalled();
     });
 
@@ -382,6 +382,23 @@ describe('QueuesService', () => {
       expect(result.hasNext).toBe(true);
       expect(result.jobs).toHaveLength(1);
       expect(result.jobs[0].id).toBe('j1');
+    });
+
+    test('returns state-filtered total from getJobCountByTypes', async () => {
+      const j1 = createMockJob({ id: 'j1' });
+      mockGetJobs.mockResolvedValueOnce([j1]);
+      vi.mocked(mockPlansQueue.getJobCountByTypes).mockResolvedValueOnce(25);
+
+      const result = await service.getJobs(
+        PLANS_QUEUE_NAME,
+        ['failed'],
+        0,
+        10,
+        false,
+      );
+
+      expect(result.total).toBe(25);
+      expect(mockPlansQueue.getJobCountByTypes).toHaveBeenCalledWith('failed');
     });
   });
 
@@ -1002,6 +1019,85 @@ describe('QueuesService', () => {
         error: 'Repeatable job not found or could not be removed',
       });
       expect(mockRemoveRepeatableByKey).toHaveBeenCalledWith('bad-key');
+    });
+  });
+
+  describe('pauseQueue', () => {
+    test('returns error when queue not found', async () => {
+      const result = await service.pauseQueue('other');
+
+      expect(result).toEqual({ error: 'Queue not found: other' });
+    });
+
+    test('pauses the queue and returns queueName', async () => {
+      vi.mocked(mockPlansQueue.pause).mockResolvedValueOnce(undefined);
+
+      const result = await service.pauseQueue(PLANS_QUEUE_NAME);
+
+      expect(result).toEqual({ queueName: PLANS_QUEUE_NAME });
+      expect(mockPlansQueue.pause).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resumeQueue', () => {
+    test('returns error when queue not found', async () => {
+      const result = await service.resumeQueue('other');
+
+      expect(result).toEqual({ error: 'Queue not found: other' });
+    });
+
+    test('resumes the queue and returns queueName', async () => {
+      vi.mocked(mockPlansQueue.resume).mockResolvedValueOnce(undefined);
+
+      const result = await service.resumeQueue(PLANS_QUEUE_NAME);
+
+      expect(result).toEqual({ queueName: PLANS_QUEUE_NAME });
+      expect(mockPlansQueue.resume).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('cleanQueue', () => {
+    test('returns error when queue not found', async () => {
+      const result = await service.cleanQueue('other', 'completed', 0, 0);
+
+      expect(result).toEqual({ error: 'Queue not found: other' });
+    });
+
+    test('rejects non-cleanable states', async () => {
+      const result = await service.cleanQueue(PLANS_QUEUE_NAME, 'active', 0, 0);
+
+      expect(result).toEqual({
+        error: 'Only completed or failed jobs can be cleaned',
+      });
+      expect(mockPlansQueue.clean).not.toHaveBeenCalled();
+    });
+
+    test('cleans completed jobs and returns removedCount', async () => {
+      vi.mocked(mockPlansQueue.clean).mockResolvedValueOnce(['a', 'b', 'c']);
+
+      const result = await service.cleanQueue(
+        PLANS_QUEUE_NAME,
+        'completed',
+        0,
+        0,
+      );
+
+      expect(result).toEqual({ removedCount: 3 });
+      expect(mockPlansQueue.clean).toHaveBeenCalledWith(0, 0, 'completed');
+    });
+
+    test('clamps negative grace/limit to zero and passes the state through', async () => {
+      vi.mocked(mockPlansQueue.clean).mockResolvedValueOnce([]);
+
+      const result = await service.cleanQueue(
+        PLANS_QUEUE_NAME,
+        'failed',
+        -100,
+        -5,
+      );
+
+      expect(result).toEqual({ removedCount: 0 });
+      expect(mockPlansQueue.clean).toHaveBeenCalledWith(0, 0, 'failed');
     });
   });
 });

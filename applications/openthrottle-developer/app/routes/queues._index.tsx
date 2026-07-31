@@ -4,14 +4,21 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GetQueuesDocument } from '~/__generated__/graphql';
+import { useSearchParams } from 'react-router';
+import {
+  GetQueuesDocument,
+  QueuesPauseQueueDocument,
+  QueuesResumeQueueDocument,
+} from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
 import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
 import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { SITE_TITLE } from '~/global/config/settings';
+import { summarizeQueues } from '~/routing/queues/utils/summarize-queues';
 import type { Route } from '@/app/routes/+types/queues._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -44,9 +51,16 @@ export default function Component(
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
+  const [searchParams] = useSearchParams();
 
   // Setup
   const { queues } = loaderData;
+  const query = (searchParams.get('q') ?? '').trim().toLowerCase();
+  const filteredQueues =
+    query === ''
+      ? queues
+      : queues.filter((queue) => queue.name.toLowerCase().includes(query));
+  const summary = summarizeQueues(queues);
 
   // Handlers
 
@@ -59,14 +73,72 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
-      <QueuesTable className="bg-card" queues={queues} />
-      <QueueStateChart queues={queues} />
-      <QueuesStats queues={queues} />
+
+      <QueueStatRow
+        columns={4}
+        stats={[
+          { color: 'bg-yellow-300', title: 'Backlog', value: summary.backlog },
+          { color: 'bg-blue-300', title: 'In flight', value: summary.inFlight },
+          { color: 'bg-red-300', title: 'Failed', value: summary.failed },
+          {
+            color: 'bg-green-300',
+            title: 'Completed',
+            value: summary.completed,
+          },
+        ]}
+      />
+
+      <QueuesTable className="bg-card" queues={filteredQueues} />
+
+      <div className="grid gap-4 md:grid-cols-2 md:gap-8">
+        <QueueStateChart queues={filteredQueues} />
+        <QueuesStats queues={filteredQueues} />
+      </div>
     </GlobalScreen>
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+  const queueNameRaw = formData.get('queueName');
+  const queueName =
+    typeof queueNameRaw === 'string' && queueNameRaw.trim() !== ''
+      ? queueNameRaw.trim()
+      : '';
+
+  if (queueName === '') {
+    return { error: 'Queue name is required.' };
+  }
+
+  if (intent === 'pauseQueue') {
+    const { pauseQueue } = await executeGraphqlWithAuth(
+      args.request,
+      QueuesPauseQueueDocument,
+      { input: { queueName } },
+    );
+
+    if (!pauseQueue?.success) {
+      return { error: pauseQueue?.error ?? 'Failed to pause queue.' };
+    }
+
+    return { paused: pauseQueue.queueName ?? queueName };
+  }
+
+  if (intent === 'resumeQueue') {
+    const { resumeQueue } = await executeGraphqlWithAuth(
+      args.request,
+      QueuesResumeQueueDocument,
+      { input: { queueName } },
+    );
+
+    if (!resumeQueue?.success) {
+      return { error: resumeQueue?.error ?? 'Failed to resume queue.' };
+    }
+
+    return { resumed: resumeQueue.queueName ?? queueName };
+  }
+
   return {};
 };
 

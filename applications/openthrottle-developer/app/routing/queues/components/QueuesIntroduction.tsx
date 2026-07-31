@@ -1,11 +1,17 @@
 import * as React from 'react';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { ListOrderedIcon } from 'lucide-react';
+import { Link } from 'react-router';
+import { ListOrderedIcon, PlusIcon } from 'lucide-react';
+import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 
 export interface QueuesIntroductionProps {
   className?: string;
 }
 
+/**
+ * @description Queues dashboard header: title, a one-line description, and the live ops toolbar (search + refresh + create).
+ */
 export const QueuesIntroduction = (
   props: QueuesIntroductionProps,
 ): React.ReactElement => {
@@ -25,17 +31,26 @@ export const QueuesIntroduction = (
 
   return (
     <div className={className}>
-      <GlobalHeading heading="h1" icon={ListOrderedIcon} title="Queues">
-        {/* <QueuesToolbar queues={queues} /> */}
-      </GlobalHeading>
+      <GlobalHeading heading="h1" icon={ListOrderedIcon} title="Queues" />
       <p
-        className="text-muted-foreground mt-4 text-sm"
+        className="text-muted-foreground mt-2 mb-4 text-sm"
         data-testid="queues-operational-hint"
       >
-        Worker queues (BullMQ). Open a queue to browse jobs; open a job for full
-        payload JSON, correlation id, retry when failed, cancel plan run when
-        the payload includes a plan id, and a copyable support bundle.
+        Live view of your background worker queues — backlog, in-flight work,
+        and failures at a glance. Open a queue to browse its jobs, or a job for
+        its full payload, timeline, and recovery actions.
       </p>
+      <QueueOpsToolbar
+        actions={
+          <Button asChild={true} className="shrink-0" variant="outline">
+            <Link to="/queues/create">
+              <PlusIcon className="h-4 w-4" /> Create queue
+            </Link>
+          </Button>
+        }
+        searchAriaLabel="Search queues"
+        searchPlaceholder="Search queues"
+      />
     </div>
   );
 };

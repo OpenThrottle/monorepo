@@ -1,36 +1,28 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { render } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
 import QueuesIndex from '../queues._index';
-import type { Route } from '@/app/routes/+types/queues._index';
-
-const matches: Route.ComponentProps['matches'] = [
-  buildRootMatch(),
-  {
-    handle: undefined,
-    id: 'routes/queues._index',
-    loaderData: { queues: [] },
-    params: {},
-    pathname: '/',
-  },
-];
 
 describe('routes/queues._index.tsx', () => {
-  test('renders queues introduction and table', () => {
-    render(
-      <MemoryRouter>
-        <QueuesIndex
-          actionData={undefined}
-          loaderData={{ queues: [] }}
-          matches={matches}
-          params={{}}
-        />
-      </MemoryRouter>,
-    );
+  test('renders queues introduction, summary stats and table', async () => {
+    const RoutesStub = createRoutesStub([
+      {
+        Component: QueuesIndex,
+        HydrateFallback: () => null,
+        id: 'routes/queues._index',
+        loader: () => ({ queues: [] }),
+        path: '/',
+      },
+    ]);
 
-    expect(screen.getByRole('heading', { name: 'Queues' })).toBeInTheDocument();
-    expect(screen.getByTestId('QueuesTable')).toBeInTheDocument();
+    const component = render(<RoutesStub />);
+
+    expect(
+      await component.findByRole('heading', { level: 1, name: 'Queues' }),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('QueueStatRow')).toBeInTheDocument();
+    expect(component.getByTestId('QueuesTable')).toBeInTheDocument();
+    expect(component.getByTestId('QueueOpsToolbar')).toBeInTheDocument();
   });
 });
