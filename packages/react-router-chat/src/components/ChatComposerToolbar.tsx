@@ -1,32 +1,18 @@
 import * as React from 'react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Switch,
-  // ToggleGroup,
-  // ToggleGroupItem,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@openthrottle/react-router-shadcn';
-import { Loader2, Mic, Paperclip } from 'lucide-react';
 import clsx from 'clsx';
 import { ChatCheckoutSelector } from './ChatCheckoutSelector';
-import { ChatModelPicker } from './ChatModelPicker';
+import { ChatComposerAttachControl } from './ChatComposerAttachControl';
+import { ChatComposerMicControl } from './ChatComposerMicControl';
+import { ChatComposerModelControl } from './ChatComposerModelControl';
+import { ChatComposerPersistControl } from './ChatComposerPersistControl';
+import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
 import { ChatPermissionModeControl } from './ChatPermissionModeControl';
 import { ChatReasoningTierControl } from './ChatReasoningTierControl';
-import { ChatComposerMicState, ChatComposerMode } from '../types';
+import { ChatComposerMicState } from '../types';
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
+  ChatComposerMode,
   ChatContextSource,
   ChatModelGroup,
   ChatModelOption,
@@ -129,14 +115,12 @@ export const ChatComposerToolbar = (
     contextSources,
     disabledModelIds,
     micState = ChatComposerMicState.idle,
-    // mode,
     modelGroups,
     modelId,
     models,
     onAddContext,
     onCheckoutChange,
     onMicToggle,
-    onModeChange,
     onModelChange,
     onPermissionModeChange,
     onPersistChange,
@@ -156,272 +140,14 @@ export const ChatComposerToolbar = (
   // Hooks
 
   // Setup
-  const hasModels = models != null && models.length > 0;
-  const useGroupedPicker = hasModels && modelGroups != null;
-  const hasPersonas = personas != null && personas.length > 0;
-  const hasContextSources = contextSources != null && contextSources.length > 0;
-  const showAttach = onAddContext != null;
-  const showReasoningTier = capabilities != null;
-  const showPermission = capabilities != null;
   const showCheckout =
     capabilities?.requiresRepository === true && checkouts != null;
-  const showMic = onMicToggle != null;
-  const showPersist = onPersistChange != null;
-  const isMicFinalizing = micState === ChatComposerMicState.finalizing;
-  const isMicRecording = micState === ChatComposerMicState.recording;
-  const micLabel = isMicRecording
-    ? 'Stop voice input'
-    : isMicFinalizing
-      ? 'Transcribing…'
-      : micState === ChatComposerMicState.disabled
-        ? 'Voice input unavailable'
-        : 'Start voice input';
+  // The Plan/Build mode toggle is intentionally not surfaced today; `mode` /
+  // `onModeChange` remain accepted so callers can wire it without an API change.
 
   // Handlers
-  const _onModeValueChange = (value: string): void => {
-    if (value === ChatComposerMode.build || value === ChatComposerMode.plan) {
-      onModeChange?.(value);
-    }
-  };
 
   // Markup
-  const modelControl = useGroupedPicker ? (
-    <ChatModelPicker
-      disabledModelIds={disabledModelIds}
-      groups={modelGroups ?? []}
-      models={models ?? []}
-      onModelChange={onModelChange ?? (() => undefined)}
-      onToggleFavorite={onToggleFavorite}
-      selectedModelId={modelId}
-    />
-  ) : hasModels ? (
-    <Select onValueChange={onModelChange} value={modelId}>
-      <Tooltip delayDuration={500}>
-        <TooltipTrigger asChild={true}>
-          <SelectTrigger
-            aria-label="Model"
-            className="h-8 w-auto min-w-32 gap-1"
-            data-testid="ChatComposerToolbar-model-select"
-          >
-            <SelectValue placeholder="Model" />
-          </SelectTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Model</TooltipContent>
-      </Tooltip>
-      <SelectContent>
-        {models.map((model) => (
-          <SelectItem key={model.id} value={model.id}>
-            {model.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  ) : null;
-
-  const personaControl = hasPersonas ? (
-    <Select onValueChange={onPersonaChange} value={personaId}>
-      <Tooltip delayDuration={500}>
-        <TooltipTrigger asChild={true}>
-          <SelectTrigger
-            aria-label="Agent"
-            className="h-8 w-auto min-w-32 gap-1"
-            data-testid="ChatComposerToolbar-persona-select"
-          >
-            <SelectValue placeholder="Agent" />
-          </SelectTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Agent</TooltipContent>
-      </Tooltip>
-      <SelectContent>
-        {personas.map((persona) => (
-          <SelectItem key={persona.id} value={persona.id}>
-            {persona.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  ) : null;
-
-  const modeControl = null;
-  // const modeControl =
-  //   mode != null ? (
-  //     <ToggleGroup
-  //       aria-label="Mode"
-  //       data-testid="ChatComposerToolbar-mode-toggle"
-  //       onValueChange={onModeValueChange}
-  //       size="sm"
-  //       type="single"
-  //       value={mode}
-  //       variant="outline"
-  //     >
-  //       <Tooltip delayDuration={500}>
-  //         <TooltipTrigger asChild={true}>
-  //           <ToggleGroupItem
-  //             data-testid="ChatComposerToolbar-mode-plan"
-  //             value={ChatComposerMode.plan}
-  //           >
-  //             Plan
-  //           </ToggleGroupItem>
-  //         </TooltipTrigger>
-  //         <TooltipContent side="top">
-  //           Plan — describe intent to get a decomposed plan
-  //         </TooltipContent>
-  //       </Tooltip>
-  //       <Tooltip delayDuration={500}>
-  //         <TooltipTrigger asChild={true}>
-  //           <ToggleGroupItem
-  //             data-testid="ChatComposerToolbar-mode-build"
-  //             value={ChatComposerMode.build}
-  //           >
-  //             Build
-  //           </ToggleGroupItem>
-  //         </TooltipTrigger>
-  //         <TooltipContent side="top">Build — agentic execution</TooltipContent>
-  //       </Tooltip>
-  //     </ToggleGroup>
-  //   ) : null;
-
-  const reasoningTierControl =
-    showReasoningTier && capabilities != null ? (
-      <ChatReasoningTierControl
-        capabilities={capabilities}
-        onReasoningChange={onReasoningChange}
-        onServiceTierChange={onServiceTierChange}
-        reasoning={reasoning}
-        serviceTier={serviceTier}
-      />
-    ) : null;
-
-  const permissionControl =
-    showPermission && capabilities != null ? (
-      <ChatPermissionModeControl
-        capabilities={capabilities}
-        onPermissionModeChange={onPermissionModeChange}
-        permissionMode={permissionMode}
-      />
-    ) : null;
-
-  const checkoutControl =
-    showCheckout && checkouts != null ? (
-      <ChatCheckoutSelector
-        checkouts={checkouts}
-        onCheckoutChange={onCheckoutChange ?? (() => undefined)}
-        selectedCheckoutId={selectedCheckoutId}
-      />
-    ) : null;
-
-  const attachControl = !showAttach ? null : hasContextSources ? (
-    <DropdownMenu>
-      <Tooltip delayDuration={500}>
-        <TooltipTrigger asChild={true}>
-          <DropdownMenuTrigger asChild={true}>
-            <Button
-              aria-label="Add context"
-              data-testid="ChatComposerToolbar-attach"
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <Paperclip className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Add context</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="start">
-        {contextSources.map((source) => (
-          <DropdownMenuItem
-            key={source.id}
-            onSelect={() => onAddContext(source.id)}
-          >
-            {source.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  ) : (
-    <Tooltip delayDuration={500}>
-      <TooltipTrigger asChild={true}>
-        <Button
-          aria-label="Add context"
-          data-testid="ChatComposerToolbar-attach"
-          disabled={true}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Paperclip className="size-4" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top">No context sources available</TooltipContent>
-    </Tooltip>
-  );
-
-  const micControl = !showMic ? null : (
-    <Tooltip delayDuration={500}>
-      <TooltipTrigger asChild={true}>
-        <Button
-          aria-label={micLabel}
-          aria-pressed={isMicRecording}
-          className={clsx({
-            'text-destructive hover:text-destructive': isMicRecording,
-          })}
-          data-mic-state={micState}
-          data-testid="ChatComposerToolbar-mic"
-          disabled={
-            micState === ChatComposerMicState.disabled || isMicFinalizing
-          }
-          onClick={onMicToggle}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          {isMicFinalizing ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Mic
-              className={clsx('size-4', {
-                'animate-pulse': isMicRecording,
-              })}
-            />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top">{micLabel}</TooltipContent>
-    </Tooltip>
-  );
-
-  const persistControl = !showPersist ? null : (
-    <Tooltip delayDuration={500}>
-      <TooltipTrigger asChild={true}>
-        <label
-          className="flex cursor-pointer items-center gap-1.5"
-          data-testid="ChatComposerToolbar-persist"
-        >
-          <Switch
-            aria-label="Save conversation"
-            checked={persist}
-            data-testid="ChatComposerToolbar-persist-switch"
-            onCheckedChange={onPersistChange}
-            size="sm"
-          />
-          <span
-            className={clsx(
-              'text-xs',
-              persist ? 'text-muted-foreground' : 'text-destructive',
-            )}
-          >
-            {persist ? 'Saved' : 'Private'}
-          </span>
-        </label>
-      </TooltipTrigger>
-      <TooltipContent side="top">
-        {persist
-          ? 'Saving — this conversation is stored in your history'
-          : 'Private — this conversation is not saved'}
-      </TooltipContent>
-    </Tooltip>
-  );
 
   // Life Cycle
 
@@ -432,15 +158,51 @@ export const ChatComposerToolbar = (
       className={clsx('flex flex-wrap items-center gap-2', className)}
       data-testid="ChatComposerToolbar"
     >
-      {modelControl}
-      {reasoningTierControl}
-      {permissionControl}
-      {checkoutControl}
-      {personaControl}
-      {modeControl}
-      {attachControl}
-      {micControl}
-      {persistControl}
+      <ChatComposerModelControl
+        disabledModelIds={disabledModelIds}
+        modelGroups={modelGroups}
+        modelId={modelId}
+        models={models}
+        onModelChange={onModelChange}
+        onToggleFavorite={onToggleFavorite}
+      />
+      {capabilities != null ? (
+        <ChatReasoningTierControl
+          capabilities={capabilities}
+          onReasoningChange={onReasoningChange}
+          onServiceTierChange={onServiceTierChange}
+          reasoning={reasoning}
+          serviceTier={serviceTier}
+        />
+      ) : null}
+      {capabilities != null ? (
+        <ChatPermissionModeControl
+          capabilities={capabilities}
+          onPermissionModeChange={onPermissionModeChange}
+          permissionMode={permissionMode}
+        />
+      ) : null}
+      {showCheckout && checkouts != null ? (
+        <ChatCheckoutSelector
+          checkouts={checkouts}
+          onCheckoutChange={onCheckoutChange ?? (() => undefined)}
+          selectedCheckoutId={selectedCheckoutId}
+        />
+      ) : null}
+      <ChatComposerPersonaSelect
+        onPersonaChange={onPersonaChange}
+        personas={personas}
+        selectedPersonaId={personaId}
+      />
+      <ChatComposerAttachControl
+        contextSources={contextSources}
+        onAddContext={onAddContext}
+      />
+      <ChatComposerMicControl micState={micState} onMicToggle={onMicToggle} />
+      <ChatComposerPersistControl
+        onPersistChange={onPersistChange}
+        persist={persist}
+      />
     </div>
   );
 };

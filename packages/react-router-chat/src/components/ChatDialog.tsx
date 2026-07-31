@@ -11,19 +11,15 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import { BotIcon, MessageSquarePlus } from 'lucide-react';
-import { useChatOptional } from '../context/chat-context';
 import type { ChatComposerControls } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
-import { ChatConversationSheet } from './ChatConversationSheet';
+import { ChatDialogHeader } from './ChatDialogHeader';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatThread } from './ChatThread';
+import { useChatDialog } from '../hooks/use-chat-dialog';
 import type { ChatMessage } from '../types';
 
 type ChatDialogVariant = 'dialog' | 'sheet';
@@ -78,29 +74,26 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   } = props;
 
   // Hooks
-  const chatContext = useChatOptional();
+  const {
+    composer,
+    composerDisabled,
+    conversationSidebar,
+    messages,
+    onOpenChange,
+    onSendMessage,
+    onStartNewChat,
+    open,
+  } = useChatDialog({
+    composer: composerProp,
+    composerDisabled: composerDisabledProp,
+    conversationSidebar: conversationSidebarProp,
+    messages: messagesProp,
+    onOpenChange: onOpenChangeProp,
+    onSendMessage: onSendMessageProp,
+    open: openProp,
+  });
 
   // Setup
-  const messages = messagesProp ?? chatContext?.messages;
-  const onSendMessage = onSendMessageProp ?? chatContext?.onSendMessage;
-  const onOpenChange = onOpenChangeProp ?? chatContext?.onOpenChange;
-  const open = openProp ?? chatContext?.open;
-  const composerDisabled =
-    composerDisabledProp ?? chatContext?.composerDisabled ?? false;
-  const onStartNewChat = chatContext?.onStartNewChat;
-  // Optional agentic surface: a prop overrides the provider. When present the
-  // dialog renders the toolbar + streaming; when undefined it stays the bare
-  // legacy shell (the dormant agentsRunChatTurn path).
-  const composer = composerProp ?? chatContext?.composer;
-  const conversationSidebar =
-    conversationSidebarProp ?? chatContext?.conversationSidebar;
-
-  if (!messages || !onSendMessage) {
-    throw new Error(
-      'ChatDialog requires messages and onSendMessage props, or a ChatProvider ancestor.',
-    );
-  }
-
   const triggerNode = trigger ?? (
     <Button size="sm" type="button" variant="secondary">
       {triggerLabel}
@@ -126,39 +119,12 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     </div>
   );
 
-  const conversationSwitcherControl =
-    conversationSidebar != null ? (
-      <ChatConversationSheet
-        {...conversationSidebar}
-        side="right"
-        triggerTestId="ChatDialog-conversations-trigger"
-      />
-    ) : null;
-
-  const newChatControl =
-    onStartNewChat != null ? (
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild={true}>
-          <Button
-            aria-label="New chat"
-            className="shrink-0"
-            onClick={onStartNewChat}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <MessageSquarePlus aria-hidden={true} className="size-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>New chat</TooltipContent>
-      </Tooltip>
-    ) : null;
-
-  const headerTitle = (
-    <span className="flex min-w-0 flex-1 items-center gap-4">
-      <BotIcon aria-hidden={true} className="text-muted-foreground shrink-0" />
-      <span className="truncate">{title}</span>
-    </span>
+  const header = (
+    <ChatDialogHeader
+      conversationSidebar={conversationSidebar}
+      onStartNewChat={onStartNewChat}
+      title={title}
+    />
   );
 
   // Handlers
@@ -183,9 +149,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
         >
           <SheetHeader>
             <SheetTitle className="flex w-full items-center gap-2">
-              {headerTitle}
-              {conversationSwitcherControl}
-              {newChatControl}
+              {header}
             </SheetTitle>
           </SheetHeader>
           {shellBody}
@@ -206,9 +170,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       >
         <DialogHeader>
           <DialogTitle className="flex w-full items-center gap-2">
-            {headerTitle}
-            {conversationSwitcherControl}
-            {newChatControl}
+            {header}
           </DialogTitle>
         </DialogHeader>
         {shellBody}

@@ -8,28 +8,10 @@ import {
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
   VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '../utils/settings-docs-links';
-import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { URL_MATRIX_ROWS } from '../data/url-matrix-rows';
+import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
 import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
 import { MonitorCloudIcon } from 'lucide-react';
-
-const URL_MATRIX_ROWS = [
-  { key: 'API_URL_EXTERNAL' as const, label: 'API (external)' },
-  { key: 'API_URL_INTERNAL' as const, label: 'API (internal)' },
-  { key: 'APP_URL' as const, label: 'APP_URL' },
-  { key: 'APP_URL_ADMIN' as const, label: 'Admin' },
-  { key: 'APP_URL_CMS' as const, label: 'CMS' },
-  { key: 'APP_URL_DEVELOPER' as const, label: 'Developer' },
-  { key: 'APP_URL_EMAIL' as const, label: 'Email' },
-  { key: 'APP_URL_SERVER' as const, label: 'Server' },
-  { key: 'APP_URL_WEBSITE' as const, label: 'Website' },
-] satisfies {
-  key: keyof OpenThrottleEnv;
-  label: string;
-}[];
-
-const normalizeUrlBase = (url: string): string => {
-  return url.replace(/\/$/, '');
-};
 
 export interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnosticsLoaderData {
   className?: string;
@@ -45,31 +27,19 @@ export const SettingsEnvironmentDiagnostics = (
   const { env, idPrefix = 'settings-diagnostics', supportBundle } = props;
 
   // Hooks
-  const [origin, setOrigin] = React.useState<string | null>(null);
+  const { handleCopySupportBundle, origin, originMatches } =
+    useSettingsEnvironmentDiagnostics({
+      appUrlDeveloper: env.APP_URL_DEVELOPER,
+      supportBundle,
+    });
 
   // Setup
-  const devPortalExpected = normalizeUrlBase(env.APP_URL_DEVELOPER);
-  const originMatches =
-    origin === null ? null : normalizeUrlBase(origin) === devPortalExpected;
 
   // Handlers
-  const handleCopySupportBundle = async (): Promise<void> => {
-    const text = JSON.stringify(supportBundle, null, 2);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // ignore
-    }
-  };
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    if (globalThis.window !== undefined) {
-      setOrigin(globalThis.window.location.origin);
-    }
-  }, []);
 
   // 🔌 Short Circuit
 

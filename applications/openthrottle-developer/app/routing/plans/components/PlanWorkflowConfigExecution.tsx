@@ -7,22 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import type {
-  WorkflowRalphExecutionBackendUi,
-  WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import {
+  EXECUTION_BACKENDS,
+  isExecutionBackend,
+} from '~/routing/plans/utils/plan-workflow-config-execution';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-
-/** Runner backends offered in the execution selector, in display order. */
-const EXECUTION_BACKENDS = [
-  'cursor',
-  'claude',
-] as const satisfies readonly WorkflowRalphExecutionBackendUi[];
-
-const isExecutionBackend = (
-  value: string,
-): value is WorkflowRalphExecutionBackendUi =>
-  EXECUTION_BACKENDS.some((backend) => backend === value);
 
 export interface PlanWorkflowConfigExecutionProps {
   className?: string;

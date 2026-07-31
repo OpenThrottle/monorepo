@@ -37,7 +37,7 @@ export interface CalendarProps {
  *
  * @public
  */
-export function Calendar(props: CalendarProps): ReactElement | null {
+export const Calendar = (props: CalendarProps): ReactElement | null => {
   const {
     className,
     height = '100%',
@@ -104,4 +104,4 @@ export function Calendar(props: CalendarProps): ReactElement | null {
       />
     </div>
   );
-}
+};

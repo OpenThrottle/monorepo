@@ -3,18 +3,13 @@ import clsx from 'clsx';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { RunningIndicator } from './RunningIndicator';
+import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
 import { formatChatTimestamp } from '../utils/index';
 import type { ChatMessage } from '../types';
 
 export interface ChatThreadMessageProps {
   readonly message: ChatMessage;
 }
-
-const roleLabel: Record<ChatMessage['role'], string> = {
-  assistant: 'Assistant',
-  system: 'System',
-  user: 'You',
-};
 
 /**
  * @description Single chat thread row. Memoized so appending a message does not
@@ -63,7 +58,7 @@ const ChatThreadMessageComponent = (
         })}
       >
         <span className="text-muted-foreground text-xs font-medium">
-          {roleLabel[message.role]}
+          {CHAT_ROLE_LABEL[message.role]}
         </span>
         {message.createdAt ? (
           <time

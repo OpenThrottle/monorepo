@@ -21,15 +21,25 @@ export const GlobalMetricsInfoTrigger = (
 ): React.ReactElement => {
   const { className } = props;
 
+  // Hooks
   const { setOpen } = useUrlSyncedOverlay({
     // clearParamsOnClose: ['keep'],
     openValue: MODAL_KEY,
     param: MODAL_PARAM,
   });
 
+  // Setup
+
+  // Handlers
   const handleClick = React.useCallback((): void => {
     setOpen(true);
   }, [setOpen]);
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <button

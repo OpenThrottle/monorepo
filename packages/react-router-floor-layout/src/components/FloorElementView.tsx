@@ -1,12 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
-import {
-  type PointerEvent as ReactPointerEvent,
-  type ReactElement,
-  memo,
-  useMemo,
-} from 'react';
+import * as React from 'react';
 
 import { type FloorElement, FloorElementType } from '../types';
+import { describeFloorElement } from '../utils/elements';
 import { seatPositions } from '../utils/seats';
 
 /**
@@ -20,12 +16,7 @@ export interface FloorElementViewProps {
   /** Whether this element is the current single selection. */
   readonly isSelected?: boolean;
   /** Pointer-down on the element (drives selection + move drag). */
-  readonly onPointerDown?: (event: ReactPointerEvent) => void;
-}
-
-function describe(element: FloorElement): string {
-  const kind = element.type.replace(/-/g, ' ');
-  return element.label ? `${kind}: ${element.label}` : kind;
+  readonly onPointerDown?: (event: React.PointerEvent) => void;
 }
 
 /**
@@ -35,30 +26,29 @@ function describe(element: FloorElement): string {
  * centered label and best-effort a11y (`role`/`aria-label`/`<title>`). Seat
  * glyphs for tables are layered on in the element-shapes task. Stateless: all
  * interaction is reported via `onPointerDown`.
- *
- * @public
  */
-function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
-  // const {} = props;
+const FloorElementViewImpl = (
+  props: FloorElementViewProps,
+): React.ReactElement => {
+  const { element, isSelected = false, onPointerDown } = props;
 
   // Hooks
 
   // Setup
-  const { element, isSelected = false, onPointerDown } = props;
   const { height, label, rotation, type, width, x, y } = element;
+  const elementSeats = 'seats' in element ? element.seats : undefined;
+  // Keyed on the table geometry/seat-count that drive placement, so the pure
+  // `seatPositions` walk only re-runs when one of them changes (not on every
+  // unrelated parent render or live-drag frame).
+  const seats = React.useMemo(
+    () => ('seats' in element ? seatPositions(element) : []),
+    [elementSeats, height, type, width, x, y],
+  );
   const left = x - width / 2;
   const top = y - height / 2;
   const isZone = type === FloorElementType.ZONE;
   const isRound = type === FloorElementType.TABLE_ROUND;
   const isStool = type === FloorElementType.STOOL;
-  const elementSeats = 'seats' in element ? element.seats : undefined;
-  // Keyed on the table geometry/seat-count that drive placement, so the pure
-  // `seatPositions` walk only re-runs when one of them changes (not on every
-  // unrelated parent render or live-drag frame).
-  const seats = useMemo(
-    () => ('seats' in element ? seatPositions(element) : []),
-    [elementSeats, height, type, width, x, y],
-  );
 
   const shapeClass = cn(
     'transition-[stroke,fill] [vector-effect:non-scaling-stroke]',
@@ -82,13 +72,13 @@ function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
 
   return (
     <g
-      aria-label={describe(element)}
+      aria-label={describeFloorElement(element)}
       onPointerDown={onPointerDown}
       role="img"
       style={{ cursor: 'grab' }}
       transform={`rotate(${rotation} ${x} ${y})`}
     >
-      <title>{describe(element)}</title>
+      <title>{describeFloorElement(element)}</title>
       {seats.map((seat, index) => (
         <circle
           className="fill-muted stroke-muted-foreground/50"
@@ -138,7 +128,7 @@ function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
       ) : null}
     </g>
   );
-}
+};
 
 /**
  * @description Memoized SVG view of a single floor element. Memoizing keeps the
@@ -148,4 +138,4 @@ function FloorElementViewComponent(props: FloorElementViewProps): ReactElement {
  *
  * @public
  */
-export const FloorElementView = memo(FloorElementViewComponent);
+export const FloorElementView = React.memo(FloorElementViewImpl);

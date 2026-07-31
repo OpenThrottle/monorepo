@@ -4,6 +4,7 @@ import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
+import { formatRankSummary } from '~/routing/search/utils/search-why-this-result';
 
 export interface SearchWhyThisResultProps {
   className?: string;
@@ -11,14 +12,6 @@ export interface SearchWhyThisResultProps {
   defaultOpen?: boolean;
   rankMeta?: SearchRankMeta;
   result: SearchChunk;
-}
-
-/**
- * @description One-line position label: global index, page, and within-page index.
- */
-function formatRankSummary(meta: SearchRankMeta): string {
-  const globalIndex = (meta.page - 1) * meta.pageSize + meta.indexOnPage + 1;
-  return `Result ${globalIndex} of ${meta.total} (page ${meta.page}, position ${meta.indexOnPage + 1} of ${meta.pageSize} on this page). Ordering is by embedding similarity, not keyword match.`;
 }
 
 /**

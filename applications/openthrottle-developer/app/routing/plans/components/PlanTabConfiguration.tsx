@@ -1,11 +1,8 @@
 import * as React from 'react';
-import { useAtom, useAtomValue } from 'jotai';
-import {
-  Card,
-  CardContent,
-  TabsContent,
-} from '@openthrottle/react-router-shadcn';
+import { useAtom } from 'jotai';
+import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { PlanTabConfigurationValidation } from '~/routing/plans/components/PlanTabConfigurationValidation';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
@@ -19,7 +16,6 @@ import {
   jobRunHookDraftRowsAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
-  workflowRalphRunOptionsValidationAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
@@ -91,7 +87,6 @@ export const PlanTabConfiguration = (
   const [checkoutId, setCheckoutId] = useAtom(workflowCheckoutIdAtom);
   const [repositoryId, setRepositoryId] = useAtom(workflowRepositoryIdAtom);
   const [jobRunHookRows, setJobRunHookRows] = useAtom(jobRunHookDraftRowsAtom);
-  const validation = useAtomValue(workflowRalphRunOptionsValidationAtom);
 
   // Setup
 
@@ -116,26 +111,7 @@ export const PlanTabConfiguration = (
           />
         </Card>
 
-        <div className="space-y-4 md:space-y-8">
-          <CardContent className="flex flex-1 flex-col gap-4">
-            {!validation.ok ? (
-              <div
-                className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
-                data-testid="workflow-run-validation"
-                role="alert"
-              >
-                <p className="font-medium">
-                  Workflow options blocked until fixed
-                </p>
-                <ul className="mt-1 list-inside list-disc text-xs">
-                  {validation.issues.map((issue, index) => (
-                    <li key={`${issue.code}-${index}`}>{issue.message}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </CardContent>
-        </div>
+        <PlanTabConfigurationValidation />
 
         <PlanWorkflowConfigTarget
           heading="01. Target"

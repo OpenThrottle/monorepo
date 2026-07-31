@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -9,6 +8,7 @@ import {
 import { Link } from 'react-router';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { formatTaskDate } from '~/routing/plans/utils/task-details';
 
 export interface TaskDetailsProps {
   className?: string;
@@ -17,20 +17,6 @@ export interface TaskDetailsProps {
 }
 
 const SUMMARY_PREVIEW_LINES = 3;
-
-/**
- * @description Formats task date (createdAt/updatedAt) for display; returns "—" if invalid.
- */
-function formatTaskDate(value: string | number | unknown): string {
-  if (value == null) return '—';
-
-  const isNumber = typeof value === 'number';
-  const date = isNumber ? new Date(value) : new Date(String(value));
-
-  return Number.isNaN(date.getTime())
-    ? '—'
-    : format(date, 'MMM d, yyyy h:mm a');
-}
 
 export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
   const { className, planId, task } = props;

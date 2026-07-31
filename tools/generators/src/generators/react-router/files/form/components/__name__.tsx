@@ -1,3 +1,4 @@
+import * as React from 'react';
 import clsx from 'clsx';
 import { FocusError } from 'focus-formik-error';
 import { Form, FormProps } from 'react-router';
@@ -32,7 +33,7 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
 
   // Life Cycle
 
-  // 🔌 Short Circuits
+  // 🔌 Short Circuit
 
   return (
     <Form
@@ -72,4 +73,4 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
   );
 };
 
-<%= name %>.id = '<%= name %>';
+<%= name %>.id = '<%= nameKebab %>';

@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { MailFolder, MailFolderId } from '~/types/mail';
 
-interface MoveToFolderDropdownProps {
+export interface MoveToFolderDropdownProps {
   /** Current folder id to disable in the list (e.g. message already in this folder). */
   readonly currentFolderId?: MailFolderId;
   /** List of folders to show; typically MOCK_FOLDERS or API result. */

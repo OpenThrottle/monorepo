@@ -16,39 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import type { ProcessMetricsSnapshot } from '../data/metrics-types';
+import { TASK_RUN_INTERPRETATION_HINTS } from '../data/data.copy';
+import { METRIC_ROWS } from '../data/metric-rows';
 import { computeTaskRunDeltas } from '../data/task-run-metrics-deltas';
 import { useJobTaskRunMetrics } from '../hooks/useJobTaskRunMetrics';
-
-/** Format MB to 2 decimal places for display. */
-function formatMb(value: number): string {
-  return value.toFixed(2);
-}
-
-/** Format CPU ms (cumulative or delta) for display; integer when reasonable. */
-function formatCpuMs(value: number): string {
-  return Number(value.toFixed(0)).toLocaleString();
-}
-
-const METRIC_ROWS: ReadonlyArray<{
-  readonly format: (v: number) => string;
-  readonly key: keyof ProcessMetricsSnapshot;
-  readonly label: string;
-  readonly unit: string;
-}> = [
-  { format: formatMb, key: 'rssMb', label: 'RSS', unit: 'MB' },
-  { format: formatMb, key: 'heapUsedMb', label: 'Heap used', unit: 'MB' },
-  { format: formatMb, key: 'heapTotalMb', label: 'Heap total', unit: 'MB' },
-  { format: formatMb, key: 'externalMb', label: 'External', unit: 'MB' },
-  { format: formatCpuMs, key: 'cpuUserMs', label: 'CPU user', unit: 'ms' },
-  { format: formatCpuMs, key: 'cpuSystemMs', label: 'CPU system', unit: 'ms' },
-];
-
-const INTERPRETATION_HINTS = [
-  'RSS (start → end): increase = more process memory used by the end of the run.',
-  'Heap (start → end): growth = more JS objects allocated during the run.',
-  'CPU user/system delta = CPU time consumed during the run (user = JS/V8, system = kernel e.g. I/O).',
-] as const;
 
 export interface TaskRunMetricsCardProps {
   /** API base URL for openthrottle-server. Defaults to config. */
@@ -61,13 +32,15 @@ export interface TaskRunMetricsCardProps {
 /**
  * @description Renders a card with task-run metrics (atStart, atEnd, deltas) for a plans-queue job. Shows interpretation hints per server-and-task-metrics.md §6.4.
  */
-export function TaskRunMetricsCard(
+export const TaskRunMetricsCard = (
   props: TaskRunMetricsCardProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { apiBaseUrl, className, jobId } = props;
 
+  // Hooks
   const { error, job, loading } = useJobTaskRunMetrics(jobId, { apiBaseUrl });
 
+  // Setup
   const hasJobNoMetrics =
     !loading && error == null && job != null && job.taskRunMetrics == null;
   const metrics = job?.taskRunMetrics ?? null;
@@ -75,6 +48,14 @@ export function TaskRunMetricsCard(
     metrics != null
       ? computeTaskRunDeltas(metrics.atStart, metrics.atEnd)
       : null;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className={className} data-testid="TaskRunMetricsCard">
@@ -154,7 +135,7 @@ export function TaskRunMetricsCard(
                 How to interpret
               </p>
               <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-xs">
-                {INTERPRETATION_HINTS.map((hint, i) => (
+                {TASK_RUN_INTERPRETATION_HINTS.map((hint, i) => (
                   <li key={i}>{hint}</li>
                 ))}
               </ul>
@@ -164,4 +145,4 @@ export function TaskRunMetricsCard(
       </CardContent>
     </Card>
   );
-}
+};

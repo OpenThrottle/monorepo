@@ -13,11 +13,14 @@ import { GitBranch } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
-
-const ROOT_VALUE = 'root';
-const CUSTOM_VALUE = 'custom';
-const CHECKOUT_PREFIX = 'checkout:';
-const REPOSITORY_PREFIX = 'repo:';
+import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
+import {
+  basename,
+  CHECKOUT_PREFIX,
+  CUSTOM_VALUE,
+  REPOSITORY_PREFIX,
+  ROOT_VALUE,
+} from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
 
 export interface PlanWorkflowConfigWorkspaceSelectorProps {
   readonly checkoutId: string;
@@ -30,13 +33,6 @@ export interface PlanWorkflowConfigWorkspaceSelectorProps {
   readonly repositoryId: string;
   readonly workingDirectory: string;
 }
-
-/** @description Last path segment (repo folder name), for a friendly checkout label. */
-const basename = (path: string): string => {
-  const trimmed = path.replace(/\/+$/, '');
-  const segments = trimmed.split('/');
-  return segments[segments.length - 1] || trimmed;
-};
 
 /**
  * @description Primary "Workspace" run-config control: pick a registered checkout
@@ -61,87 +57,25 @@ export const PlanWorkflowConfigWorkspaceSelector = (
   } = props;
 
   // Hooks
-  const prefilledRef = React.useRef(false);
+  const { handleValueChange, selectedCheckout, selectedValue } =
+    usePlanWorkflowConfigWorkspaceSelector({
+      checkoutId,
+      onCheckoutIdChange,
+      onRepositoryIdChange,
+      onWorkingDirectoryChange,
+      planProjectId,
+      repositories,
+      repositoryId,
+      workingDirectory,
+    });
 
   // Setup
-  const selectedValue =
-    checkoutId !== ''
-      ? `${CHECKOUT_PREFIX}${checkoutId}`
-      : repositoryId !== ''
-        ? `${REPOSITORY_PREFIX}${repositoryId}`
-        : workingDirectory.trim() !== ''
-          ? CUSTOM_VALUE
-          : ROOT_VALUE;
-
-  const selectedCheckout = React.useMemo(() => {
-    if (checkoutId === '') return undefined;
-    for (const repo of repositories) {
-      const match = repo.checkouts.find(
-        (checkout) => checkout.id === checkoutId,
-      );
-      if (match) return match;
-    }
-    return undefined;
-  }, [checkoutId, repositories]);
 
   // Handlers
-  const handleValueChange = (value: string): void => {
-    if (value === ROOT_VALUE) {
-      onCheckoutIdChange('');
-      onRepositoryIdChange('');
-      onWorkingDirectoryChange('');
-      return;
-    }
-    if (value === CUSTOM_VALUE) {
-      onCheckoutIdChange('');
-      onRepositoryIdChange('');
-      return;
-    }
-    if (value.startsWith(CHECKOUT_PREFIX)) {
-      onCheckoutIdChange(value.slice(CHECKOUT_PREFIX.length));
-      onRepositoryIdChange('');
-      onWorkingDirectoryChange('');
-      return;
-    }
-    if (value.startsWith(REPOSITORY_PREFIX)) {
-      onRepositoryIdChange(value.slice(REPOSITORY_PREFIX.length));
-      onCheckoutIdChange('');
-      onWorkingDirectoryChange('');
-    }
-  };
 
   // Markup
 
   // Life Cycle
-  // Pre-fill (once): when nothing is selected and the plan's project maps to a
-  // single repository that has exactly one checkout, default to that repositoryId.
-  React.useEffect(() => {
-    if (prefilledRef.current) return;
-    prefilledRef.current = true;
-
-    const nothingSelected =
-      checkoutId === '' &&
-      repositoryId === '' &&
-      workingDirectory.trim() === '';
-    if (!nothingSelected || planProjectId == null || planProjectId === '') {
-      return;
-    }
-
-    const projectRepos = repositories.filter(
-      (repo) => repo.projectId === planProjectId,
-    );
-    const only = projectRepos.length === 1 ? projectRepos[0] : undefined;
-    if (only && only.checkouts.length === 1) {
-      onRepositoryIdChange(only.id);
-    }
-  }, [
-    checkoutId,
-    onRepositoryIdChange,
-    planProjectId,
-    repositories,
-    repositoryId,
-    workingDirectory,
-  ]);
 
   // 🔌 Short Circuit
 

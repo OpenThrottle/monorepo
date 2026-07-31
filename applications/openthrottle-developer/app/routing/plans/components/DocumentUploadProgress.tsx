@@ -2,11 +2,11 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Progress, Spinner } from '@openthrottle/react-router-shadcn';
 
-type DocumentUploadProgressState =
+export type DocumentUploadProgressState =
   | { readonly kind: 'busy'; readonly message: string; readonly value: number }
   | { readonly kind: 'idle' };
 
-interface DocumentUploadProgressProps {
+export interface DocumentUploadProgressProps {
   readonly className?: string;
   readonly state: DocumentUploadProgressState;
 }
@@ -19,6 +19,17 @@ export const DocumentUploadProgress = (
 ): React.ReactElement | null => {
   const { className, state } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (state.kind === 'idle') {
     return null;
   }

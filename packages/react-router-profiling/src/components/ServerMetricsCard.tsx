@@ -17,32 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import type { ProcessMetricsSnapshot } from '../data/metrics-types';
+import { METRIC_ROWS } from '../data/metric-rows';
 import { useServerMetrics } from '../hooks/useServerMetrics';
-
-/** Format MB to 2 decimal places for display. */
-function formatMb(value: number): string {
-  return value.toFixed(2);
-}
-
-/** Format CPU ms (cumulative) for display; integer when reasonable. */
-function formatCpuMs(value: number): string {
-  return Number(value.toFixed(0)).toLocaleString();
-}
-
-const METRIC_ROWS: ReadonlyArray<{
-  readonly format: (v: number) => string;
-  readonly key: keyof ProcessMetricsSnapshot;
-  readonly label: string;
-  readonly unit: string;
-}> = [
-  { format: formatMb, key: 'rssMb', label: 'RSS', unit: 'MB' },
-  { format: formatMb, key: 'heapUsedMb', label: 'Heap used', unit: 'MB' },
-  { format: formatMb, key: 'heapTotalMb', label: 'Heap total', unit: 'MB' },
-  { format: formatMb, key: 'externalMb', label: 'External', unit: 'MB' },
-  { format: formatCpuMs, key: 'cpuUserMs', label: 'CPU user', unit: 'ms' },
-  { format: formatCpuMs, key: 'cpuSystemMs', label: 'CPU system', unit: 'ms' },
-];
 
 export interface ServerMetricsCardProps {
   /** API base URL for openthrottle-server. Defaults to config. */
@@ -55,19 +31,29 @@ export interface ServerMetricsCardProps {
 /**
  * @description Renders a card with current server process metrics (memory and CPU). Supports on-demand refresh or optional polling per {@link ServerMetricsCardProps.intervalMs}.
  */
-export function ServerMetricsCard(
+export const ServerMetricsCard = (
   props: ServerMetricsCardProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { apiBaseUrl, className, intervalMs = 0 } = props;
 
+  // Hooks
   const { error, loading, refetch, serverMetrics } = useServerMetrics({
     apiBaseUrl,
     intervalMs,
   });
 
+  // Setup
+
+  // Handlers
   const handleRefresh = React.useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className={className} data-testid="ServerMetricsCard">
@@ -126,4 +112,4 @@ export function ServerMetricsCard(
       </CardContent>
     </Card>
   );
-}
+};

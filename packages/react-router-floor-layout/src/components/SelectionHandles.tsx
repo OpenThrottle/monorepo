@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import * as React from 'react';
 
 import { usePointerDrag } from '../hooks/usePointerDrag';
 import { type UseViewportResult } from '../hooks/useViewport';
@@ -40,7 +40,9 @@ export interface SelectionHandlesProps {
  *
  * @public
  */
-export function SelectionHandles(props: SelectionHandlesProps): ReactElement {
+export const SelectionHandles = (
+  props: SelectionHandlesProps,
+): React.ReactElement => {
   const {
     element,
     gridSize,
@@ -146,4 +148,4 @@ export function SelectionHandles(props: SelectionHandlesProps): ReactElement {
       />
     </g>
   );
-}
+};

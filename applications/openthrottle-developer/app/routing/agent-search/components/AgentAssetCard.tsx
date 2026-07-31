@@ -7,10 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import type {
-  AgentAssetPromptType,
-  AgentAssetResult,
-} from '~/routing/agent-search/types';
+import {
+  AGENT_ASSET_LIST_HREF_BY_TYPE,
+  AGENT_ASSET_PROMPT_TYPE_LABEL,
+} from '~/routing/agent-search/data/agent-asset-card';
+import type { AgentAssetResult } from '~/routing/agent-search/types';
 
 export interface AgentAssetCardProps {
   className?: string;
@@ -18,20 +19,6 @@ export interface AgentAssetCardProps {
 }
 
 const TITLE_CLASS = 'text-lg leading-tight tracking-tight';
-
-/** Disk-backed list surface per prompt type (null when no in-app page exists yet). */
-const LIST_HREF_BY_TYPE: Readonly<Record<AgentAssetPromptType, string | null>> =
-  {
-    personas: '/personas',
-    rules: null,
-    skills: '/skills',
-  };
-
-const PROMPT_TYPE_LABEL: Readonly<Record<AgentAssetPromptType, string>> = {
-  personas: 'Persona',
-  rules: 'Rule',
-  skills: 'Skill',
-};
 
 /**
  * @description Read-only result card for an agent asset (skill, rule, or persona). Shows the
@@ -46,7 +33,7 @@ export const AgentAssetCard = (
   // Hooks
 
   // Setup
-  const listHref = LIST_HREF_BY_TYPE[result.promptType];
+  const listHref = AGENT_ASSET_LIST_HREF_BY_TYPE[result.promptType];
 
   // Handlers
 
@@ -70,7 +57,7 @@ export const AgentAssetCard = (
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <Badge color="blue" data-testid="AgentAssetCard-typeBadge" size="xs">
-            {PROMPT_TYPE_LABEL[result.promptType]}
+            {AGENT_ASSET_PROMPT_TYPE_LABEL[result.promptType]}
           </Badge>
           <Badge
             color={result.source === 'db' ? 'green' : 'slate'}

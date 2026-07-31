@@ -1,5 +1,5 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
-import { type ReactElement } from 'react';
+import * as React from 'react';
 
 /**
  * Props for {@link FloorToolbar}.
@@ -36,7 +36,7 @@ export interface FloorToolbarProps {
  *
  * @public
  */
-export function FloorToolbar(props: FloorToolbarProps): ReactElement {
+export const FloorToolbar = (props: FloorToolbarProps): React.ReactElement => {
   const {
     canRedo,
     canUndo,
@@ -117,4 +117,4 @@ export function FloorToolbar(props: FloorToolbarProps): ReactElement {
       </Button>
     </div>
   );
-}
+};

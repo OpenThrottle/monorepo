@@ -8,6 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { formatGroupLabel } from '../utils/buildDocsNav';
+import { groupFaqEntries } from '../utils/groupFaqEntries';
 import { slugify } from '../utils/slugify';
 import type { DocEntry } from '../utils/buildDocsManifest';
 
@@ -16,25 +17,6 @@ export interface FaqViewProps {
   /** FAQ-section entries (e.g. `manifest.filter((e) => e.section === 'faq')`). */
   readonly entries: readonly DocEntry[];
 }
-
-interface FaqGroup {
-  readonly entries: readonly DocEntry[];
-  readonly label: string;
-}
-
-const groupFaqEntries = (entries: readonly DocEntry[]): readonly FaqGroup[] => {
-  const groups = new Map<string, DocEntry[]>();
-
-  for (const entry of entries) {
-    const items = groups.get(entry.group) ?? [];
-    items.push(entry);
-    groups.set(entry.group, items);
-  }
-
-  return [...groups.entries()]
-    .map(([label, grouped]): FaqGroup => ({ entries: grouped, label }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-};
 
 /**
  * Render FAQ entries as grouped accordions: each entry's `title` is the question

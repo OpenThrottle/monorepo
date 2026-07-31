@@ -49,6 +49,8 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
   } = props;
 
   // Hooks
+
+  // Setup
   const headings = React.useMemo(
     () => (toc ? extractDocHeadings(entry.content) : []),
     [toc, entry.content],
@@ -62,15 +64,19 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
     return Object.keys(merged).length > 0 ? merged : undefined;
   }, [codeCopy, toc]);
 
-  // Setup
   const pager =
     prevNext && sequence !== undefined
       ? getDocPager(sequence, entry.path)
       : null;
 
-  // 🔌 Short Circuit
+  // Handlers
 
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={clsx('flex flex-col gap-8 xl:flex-row', className)}

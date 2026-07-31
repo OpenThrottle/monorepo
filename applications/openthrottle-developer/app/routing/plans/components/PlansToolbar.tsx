@@ -1,12 +1,13 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import { FileUpIcon, PlusIcon } from 'lucide-react';
 import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
+import { usePlansToolbar } from '~/routing/plans/hooks/usePlansToolbar';
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
 export interface PlansToolbarProps {
@@ -37,116 +38,22 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   } = props;
 
   // Hooks
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchInput, setSearchInput] = React.useState(
-    () => searchParams.get('q') ?? '',
-  );
-  const [semanticChecked, setSemanticChecked] = React.useState(
-    () =>
-      searchParams.get('semantic') === '1' ||
-      searchParams.get('semantic') === 'true',
-  );
-
-  const handleAssigneeChange = React.useCallback(
-    (newAssignees: string[]) => {
-      const next = new URLSearchParams(searchParams);
-      next.delete('assignee');
-      for (const a of newAssignees) {
-        next.append('assignee', a);
-      }
-      next.set('page', '1');
-      next.set('limit', String(limit));
-      setSearchParams(next, { replace: true });
-    },
-    [limit, searchParams, setSearchParams],
-  );
-
-  const handleStatusChange = React.useCallback(
-    (newStatuses: string[]) => {
-      const next = new URLSearchParams(searchParams);
-      next.delete('status');
-      for (const s of newStatuses) {
-        next.append('status', s);
-      }
-      next.set('page', '1');
-      next.set('limit', String(limit));
-      setSearchParams(next, { replace: true });
-    },
-    [limit, searchParams, setSearchParams],
-  );
-
-  const applyParams = React.useCallback(
-    (updates: {
-      sortBy?: PlansSortBy;
-      sortOrder?: PlansSortOrder;
-      view?: PlansToolbarProps['view'];
-    }) => {
-      const next = new URLSearchParams(searchParams);
-      if (updates.sortBy !== undefined) next.set('sortBy', updates.sortBy);
-      if (updates.sortOrder !== undefined) {
-        next.set('sortOrder', updates.sortOrder);
-      }
-      if (updates.view !== undefined) next.set('view', updates.view);
-
-      next.set('page', String(page));
-      next.set('limit', String(limit));
-
-      setSearchParams(next, { replace: true });
-    },
-
-    [limit, page, searchParams, setSearchParams],
-  );
-
-  const handleSortChange = React.useCallback(
-    (newSortBy: PlansSortBy, newSortOrder: PlansSortOrder) => {
-      applyParams({ sortBy: newSortBy, sortOrder: newSortOrder });
-    },
-    [applyParams],
-  );
-
-  const handleSearchSubmit = React.useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-
-      const next = new URLSearchParams(searchParams);
-      const q = searchInput.trim();
-
-      if (q) {
-        next.set('q', q);
-        if (semanticChecked) {
-          next.set('semantic', '1');
-        } else {
-          next.delete('semantic');
-        }
-      } else {
-        next.delete('q');
-        next.delete('semantic');
-      }
-
-      next.set('page', '1');
-      next.set('limit', String(limit));
-
-      setSearchParams(next, { replace: true });
-    },
-
-    [limit, searchParams, searchInput, semanticChecked, setSearchParams],
-  );
+  const {
+    handleAssigneeChange,
+    handleSearchSubmit,
+    handleSortChange,
+    handleStatusChange,
+    searchInput,
+    setSearchInput,
+  } = usePlansToolbar({ limit, page });
 
   // Setup
-  const searchQuery = searchParams.get('q') ?? '';
-  const searchModeSemantic =
-    searchParams.get('semantic') === '1' ||
-    searchParams.get('semantic') === 'true';
 
   // Handlers
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setSearchInput(searchQuery);
-    setSemanticChecked(searchModeSemantic);
-  }, [searchQuery, searchModeSemantic]);
 
   // 🔌 Short Circuit
 

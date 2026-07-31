@@ -1,54 +1,26 @@
 import * as React from 'react';
 import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  toast,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { ConfirmModal } from '~/global/components/ConfirmModal';
-import { MoveToFolderDropdown } from '~/global/components/MoveToFolderDropdown';
 import { mailInboxMessagePath } from '~/global/data/data.navigation';
-import { MOCK_FOLDERS } from '~/global/data/mock.mail';
+import { MESSAGE_LIST_EMPTY_COPY } from '~/routing/inbox/data/data.copy';
+import { MessageListBulkActions } from '~/routing/inbox/components/MessageListBulkActions';
+import { MessageListSkeleton } from '~/routing/inbox/components/MessageListSkeleton';
+import { useMessageListSelection } from '~/routing/inbox/hooks/useMessageListSelection';
 import type { MailFolderId, MailMessageSummary } from '~/types/mail';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
-
-/** Copy for empty state per folder. Used when messages.length === 0. */
-const EMPTY_COPY: Record<
-  MailFolderId,
-  { readonly description: string; readonly title: string }
-> = {
-  [MAIL_FOLDER_IDS.inbox]: {
-    description: 'New messages will appear here.',
-    title: 'No messages in Inbox',
-  },
-  [MAIL_FOLDER_IDS.sent]: {
-    description: 'Messages you send will appear here.',
-    title: 'No sent messages',
-  },
-  [MAIL_FOLDER_IDS.drafts]: {
-    description: 'Drafts you save will appear here.',
-    title: 'No drafts',
-  },
-  [MAIL_FOLDER_IDS.trash]: {
-    description: 'Deleted messages will appear here.',
-    title: 'Trash is empty',
-  },
-};
 
 export interface MessageListProps {
   readonly className?: string;
@@ -84,91 +56,40 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
   } = props;
 
   // Hooks
-  const selectAllRef = React.useRef<HTMLInputElement | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const {
+    handleBulkDeleteConfirm,
+    handleCancelBulkDelete,
+    handleRequestBulkDelete,
+    handleSelectAll,
+    handleSelectOne,
+    hasSelection,
+    isAllSelected,
+    selectAllRef,
+    selectedSet,
+    showDeleteConfirm,
+  } = useMessageListSelection({ messages, onSelectionChange, selectedIds });
 
   // Setup
   const selectionEnabled = onSelectionChange != null;
-  const selectedSet = selectedIds ?? new Set<string>();
-  const hasSelection = selectedSet.size > 0;
-  const emptyCopy = EMPTY_COPY[folderId];
-  const isAllSelected =
-    messages.length > 0 && messages.every((m) => selectedSet.has(m.id));
-  const isSomeSelected = messages.some((m) => selectedSet.has(m.id));
-
-  React.useEffect(() => {
-    const el = selectAllRef.current;
-    if (el) el.indeterminate = isSomeSelected && !isAllSelected;
-  }, [isSomeSelected, isAllSelected]);
+  const emptyCopy = MESSAGE_LIST_EMPTY_COPY[folderId];
 
   // Handlers
-  const handleSelectAll = (checked: boolean) => {
-    if (!onSelectionChange) return;
-    onSelectionChange(checked ? new Set(messages.map((m) => m.id)) : new Set());
-  };
-
-  const handleSelectOne = (id: string, checked: boolean) => {
-    if (!onSelectionChange) return;
-    const next = new Set(selectedSet);
-    if (checked) next.add(id);
-    else next.delete(id);
-    onSelectionChange(next);
-  };
-
-  const handleBulkDeleteConfirm = React.useCallback(() => {
-    // Wire to delete/move-to-trash API when backend exists; for now clear selection and toast.
-    onSelectionChange?.(new Set());
-    setShowDeleteConfirm(false);
-    toast.success(`${selectedSet.size} message(s) moved to trash`);
-  }, [onSelectionChange, selectedSet.size]);
 
   // Markup
 
   // Life Cycle
 
-  // 🔌 Short Circuit — loading: show skeleton table
+  // 🔌 Short Circuit
+  // Loading: show skeleton table.
   if (loading) {
     return (
       <div className={clsx('p-4', className)} data-testid="MessageList">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {selectionEnabled && <TableHead className="w-10" />}
-              <TableHead className="w-[40%]">Subject</TableHead>
-              <TableHead className="w-[30%]">From</TableHead>
-              <TableHead className="w-[20%]">Date</TableHead>
-              <TableHead className="w-[10%]">Read</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                {selectionEnabled && (
-                  <TableCell className="w-10">
-                    <Skeleton className="h-4 w-4 rounded" />
-                  </TableCell>
-                )}
-                <TableCell>
-                  <Skeleton className="h-4 w-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-8" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <MessageListSkeleton selectionEnabled={selectionEnabled} />
       </div>
     );
   }
 
-  // 🔌 Short Circuit — empty: show Empty component with folder-specific copy
+  // Empty: show Empty component with folder-specific copy.
   if (messages.length === 0) {
     return (
       <div className={clsx('p-4', className)} data-testid="MessageList">
@@ -189,54 +110,15 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
     >
       {/* Bulk actions bar when 1+ rows selected. Wire Mark read / Delete to API when backend exists. */}
       {selectionEnabled && hasSelection && (
-        <div
-          className="bg-muted/50 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2"
-          data-testid="MessageList-bulkActions"
-        >
-          <span className="text-muted-foreground text-sm">
-            {selectedSet.size} selected
-          </span>
-          {/* Disabled until the mark-read API is wired, so it doesn't read as a broken no-op. */}
-          <Button disabled={true} size="sm" variant="outline">
-            Mark read (coming soon)
-          </Button>
-          <Button
-            data-testid="MessageList-bulkDelete"
-            onClick={() => setShowDeleteConfirm(true)}
-            size="sm"
-            variant="outline"
-          >
-            Delete
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild={true}>
-              <Button size="sm" variant="ghost">
-                More
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {/* Disabled until the mark-unread API is wired. */}
-              <DropdownMenuItem disabled={true}>
-                Mark unread (coming soon)
-              </DropdownMenuItem>
-              <MoveToFolderDropdown
-                currentFolderId={folderId}
-                folders={MOCK_FOLDERS}
-                onSelect={(targetFolderId) =>
-                  onMoveToFolder?.(selectedSet, targetFolderId)
-                }
-                triggerLabel="Move to folder…"
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            onClick={() => onSelectionChange(new Set())}
-            size="sm"
-            variant="ghost"
-          >
-            Clear selection
-          </Button>
-        </div>
+        <MessageListBulkActions
+          folderId={folderId}
+          onClearSelection={() => onSelectionChange(new Set())}
+          onMoveToFolder={(targetFolderId) =>
+            onMoveToFolder?.(selectedSet, targetFolderId)
+          }
+          onRequestDelete={handleRequestBulkDelete}
+          selectedCount={selectedSet.size}
+        />
       )}
 
       {/* Confirm modal for bulk delete. */}
@@ -244,7 +126,7 @@ export const MessageList = (props: MessageListProps): React.ReactElement => {
         confirmLabel="Move to trash"
         description={`${selectedSet.size} message(s) will be moved to trash. You can recover them from trash before they are permanently deleted.`}
         destructive={true}
-        onCancel={() => setShowDeleteConfirm(false)}
+        onCancel={handleCancelBulkDelete}
         onConfirm={handleBulkDeleteConfirm}
         open={showDeleteConfirm}
         title="Move selected to trash?"

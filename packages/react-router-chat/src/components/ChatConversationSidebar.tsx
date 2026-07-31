@@ -1,23 +1,16 @@
 import * as React from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
   Button,
   Empty,
-  Input,
   ScrollArea,
   Skeleton,
 } from '@openthrottle/react-router-shadcn';
-import { MessageSquarePlus, Pencil, Trash2 } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 import clsx from 'clsx';
+import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
+import { ChatConversationRow } from './ChatConversationRow';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import { formatRelativeChatTimestamp } from '../utils/index';
+import { useChatConversationSidebar } from '../hooks/use-chat-conversation-sidebar';
 import type { AgentConversationListItem } from '../types';
 
 export interface ChatConversationSidebarProps {
@@ -83,11 +76,18 @@ export const ChatConversationSidebar = (
   } = props;
 
   // Hooks
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const [draftTitle, setDraftTitle] = React.useState('');
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(
-    null,
-  );
+  const {
+    cancelRename,
+    confirmDelete,
+    draftTitle,
+    editingId,
+    onRenameKeyDown,
+    pendingDeleteId,
+    requestDelete,
+    resetPendingDelete,
+    setDraftTitle,
+    startRename,
+  } = useChatConversationSidebar({ onDelete, onRename });
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
@@ -97,43 +97,6 @@ export const ChatConversationSidebar = (
     conversations.length < (totalCount ?? conversations.length);
 
   // Handlers
-  const startRename = (conversation: AgentConversationListItem): void => {
-    setEditingId(conversation.id);
-    setDraftTitle(conversation.title ?? '');
-  };
-
-  const cancelRename = (): void => {
-    setEditingId(null);
-    setDraftTitle('');
-  };
-
-  const commitRename = (conversationId: string): void => {
-    const next = draftTitle.trim();
-    if (next.length > 0) {
-      onRename(conversationId, next);
-    }
-    cancelRename();
-  };
-
-  const onRenameKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    conversationId: string,
-  ): void => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      commitRename(conversationId);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      cancelRename();
-    }
-  };
-
-  const confirmDelete = (): void => {
-    if (pendingDeleteId != null) {
-      onDelete(pendingDeleteId);
-    }
-    setPendingDeleteId(null);
-  };
 
   // Markup
   const header = (
@@ -176,83 +139,21 @@ export const ChatConversationSidebar = (
     </Empty>
   );
 
-  const rows = conversations.map((conversation) => {
-    const isActive = conversation.id === activeConversationId;
-    const isEditing = conversation.id === editingId;
-    const label =
-      conversation.title != null && conversation.title.trim() !== ''
-        ? conversation.title
-        : copy.untitled;
-
-    if (isEditing) {
-      return (
-        <div className="px-2 py-0.5" key={conversation.id}>
-          <Input
-            aria-label={copy.renamePlaceholder}
-            autoFocus={true}
-            className="h-9"
-            data-testid={`ChatConversationSidebar-rename-input-${conversation.id}`}
-            onBlur={cancelRename}
-            onChange={(event) => setDraftTitle(event.target.value)}
-            onKeyDown={(event) => onRenameKeyDown(event, conversation.id)}
-            placeholder={copy.renamePlaceholder}
-            value={draftTitle}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div
-        className={clsx(
-          // 'group/row flex items-center gap-1 rounded-md ',
-          'group/row hover:bg-accent/50 flex max-w-full px-2 py-2',
-          isActive && 'bg-accent',
-        )}
-        key={conversation.id}
-      >
-        <div className="flex-1">
-          <button
-            aria-current={isActive ? 'true' : undefined}
-            className="flex cursor-pointer flex-col text-left"
-            // className="hover:bg-accent/50 flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-1 text-left"
-            data-testid={`ChatConversationSidebar-select-${conversation.id}`}
-            onClick={() => onSelect(conversation.id)}
-            type="button"
-          >
-            <div className="line-clamp-1 text-sm">{label}</div>
-            <div className="text-xs">
-              {formatRelativeChatTimestamp(conversation.updatedAt)}
-            </div>
-          </button>
-        </div>
-        <div>
-          <Button
-            aria-label={`Rename ${label}`}
-            // className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
-            data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
-            onClick={() => startRename(conversation)}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button
-            aria-label={`Delete ${label}`}
-            // className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
-            data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
-            onClick={() => setPendingDeleteId(conversation.id)}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      </div>
-    );
-  });
+  const rows = conversations.map((conversation) => (
+    <ChatConversationRow
+      conversation={conversation}
+      draftTitle={draftTitle}
+      isActive={conversation.id === activeConversationId}
+      isEditing={conversation.id === editingId}
+      key={conversation.id}
+      onCancelRename={cancelRename}
+      onDraftTitleChange={setDraftTitle}
+      onRenameKeyDown={(event) => onRenameKeyDown(event, conversation.id)}
+      onRequestDelete={() => requestDelete(conversation.id)}
+      onSelect={() => onSelect(conversation.id)}
+      onStartRename={() => startRename(conversation)}
+    />
+  ));
 
   const loadMore = hasMore ? (
     <div className="px-2 py-1">
@@ -291,32 +192,11 @@ export const ChatConversationSidebar = (
         {loadMore}
       </ScrollArea>
 
-      <AlertDialog
-        onOpenChange={(open) => {
-          if (!open) {
-            setPendingDeleteId(null);
-          }
-        }}
+      <ChatConversationDeleteDialog
+        onConfirm={confirmDelete}
+        onDismiss={resetPendingDelete}
         open={pendingDeleteId != null}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{copy.deleteConfirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {copy.deleteConfirmDescription}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{copy.deleteConfirmCancel}</AlertDialogCancel>
-            <AlertDialogAction
-              data-testid="ChatConversationSidebar-confirm-delete"
-              onClick={confirmDelete}
-            >
-              {copy.deleteConfirmAction}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </div>
   );
 };

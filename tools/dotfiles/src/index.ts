@@ -1,3 +1,4 @@
+import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
 import js from '@eslint/js';
 import pluginImport from 'eslint-plugin-import';
@@ -151,6 +152,9 @@ export const eslintConfig = tslint.config([
       import: pluginImport,
       jest: pluginJest,
       json: pluginJson,
+      openthrottle: {
+        rules: { 'component-primitive-shape': componentPrimitiveShape },
+      },
       react: pluginReact,
       'react-hooks': pluginReactHooks,
       'simple-import-sort': pluginImportSort,
@@ -251,6 +255,34 @@ export const eslintConfig = tslint.config([
     files: ['**/root.tsx'],
     rules: {
       'react/no-multi-comp': 'off',
+    },
+  },
+
+  /**
+   * The component primitive shape (docs/monorepo/component-primitive-shape.md).
+   * Scoped to authored component files; vendored shadcn primitives, generated
+   * output (globally ignored above), tests, server modules, and stories are
+   * excluded. Enforced repo-wide at `error` now that every in-scope area is at
+   * spec — regressions block the build. (react-router-shadcn is handled by its
+   * own follow-up variant standard and stays excluded here.)
+   */
+  {
+    files: ['**/components/**/*.tsx'],
+    ignores: [
+      '**/*.example.tsx',
+      '**/*.server.tsx',
+      '**/*.stories.tsx',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      '**/packages/react-router-shadcn/**',
+    ],
+    rules: {
+      // R6 — component file-size cap (start at 210; tune after the baseline).
+      'max-lines': [
+        'error',
+        { max: 210, skipBlankLines: false, skipComments: false },
+      ],
+      'openthrottle/component-primitive-shape': 'error',
     },
   },
 ]);

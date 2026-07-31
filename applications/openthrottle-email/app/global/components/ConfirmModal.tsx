@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from '@openthrottle/react-router-shadcn';
 
-interface ConfirmModalProps {
+export interface ConfirmModalProps {
   /** Label for the cancel button. Defaults to "Cancel". */
   readonly cancelLabel?: string;
   /** Label for the confirm button (e.g. "Delete", "Archive"). */
@@ -34,14 +34,14 @@ interface ConfirmModalProps {
  */
 export const ConfirmModal = (props: ConfirmModalProps): React.ReactElement => {
   const {
-    open,
-    onConfirm,
-    onCancel,
-    title,
-    description,
-    confirmLabel,
     cancelLabel = 'Cancel',
+    confirmLabel,
+    description,
     destructive = false,
+    onCancel,
+    onConfirm,
+    open,
+    title,
   } = props;
 
   // Hooks

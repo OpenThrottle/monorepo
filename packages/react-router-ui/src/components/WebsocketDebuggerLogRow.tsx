@@ -23,7 +23,19 @@ export const WebsocketDebuggerLogRow = (
   props: WebsocketDebuggerLogRowProps,
 ): React.ReactElement => {
   const { entry } = props;
+
+  // Hooks
+
+  // Setup
   const eventLabel = EVENT_LABEL_BY_NAME.get(entry.event) ?? entry.event;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <article

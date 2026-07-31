@@ -4,9 +4,9 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@openthrottle/react-router-shadcn';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { PR_TIME_IN_STATE_CHART_CONFIG } from '~/routing/dashboard/data/pr-time-in-state-chart';
 
 /** One row for the chart: state + count + avgDaysInState. */
 interface PrTimeInStateDatum {
@@ -14,14 +14,6 @@ interface PrTimeInStateDatum {
   count: number;
   state: string;
 }
-
-const CHART_CONFIG: ChartConfig = {
-  avgDaysInState: {
-    color: 'var(--chart-2)',
-    label: 'Avg days in state',
-  },
-  count: { color: 'var(--chart-1)', label: 'Count' },
-};
 
 export interface DashboardPrTimeInStateCardProps {
   className?: string;
@@ -77,7 +69,7 @@ export const DashboardPrTimeInStateCard = (
     >
       <ChartContainer
         className="mt-4 min-h-[240px] w-full"
-        config={CHART_CONFIG}
+        config={PR_TIME_IN_STATE_CHART_CONFIG}
       >
         <BarChart
           data={chartData}

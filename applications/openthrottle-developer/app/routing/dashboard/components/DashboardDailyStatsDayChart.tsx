@@ -6,9 +6,9 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Bar, BarChart, Cell, XAxis, YAxis } from 'recharts';
 import {
-  CHART_CONFIG,
+  DAILY_STATS_CHART_CONFIG,
   type DailyStatsChartDatum,
-} from '~/routing/dashboard/components/DashboardDailyStatsCard';
+} from '~/routing/dashboard/data/daily-stats-chart';
 import { DAILY_STATS_METRICS } from '~/routing/dashboard/data/data.copy';
 
 export interface DashboardDailyStatsDayChartProps {
@@ -47,7 +47,10 @@ export const DashboardDailyStatsDayChart = (
 
   return (
     <div className="w-full" data-testid="DashboardDailyStatsDayChart">
-      <ChartContainer className="min-h-[220px] w-full" config={CHART_CONFIG}>
+      <ChartContainer
+        className="min-h-[220px] w-full"
+        config={DAILY_STATS_CHART_CONFIG}
+      >
         <BarChart
           data={chartData}
           layout="vertical"

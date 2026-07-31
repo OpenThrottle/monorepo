@@ -8,28 +8,19 @@ import {
 import * as React from 'react';
 import {
   PLANS_SORT_BY_OPTIONS,
-  PLANS_SORT_ORDER,
   PlansSortBy,
   PlansSortOrder,
 } from '~/routing/plans/config/types';
+import {
+  isPlansSortBy,
+  isPlansSortOrder,
+} from '~/routing/plans/utils/plans-sort';
 
 export interface SortDropdownProps {
   onChange: (sortBy: PlansSortBy, sortOrder: PlansSortOrder) => void;
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
 }
-
-const PLANS_SORT_BY_VALUES: readonly PlansSortBy[] = [
-  'createdAt',
-  'name',
-  'updatedAt',
-];
-
-const isPlansSortBy = (value: string): value is PlansSortBy =>
-  PLANS_SORT_BY_VALUES.some((candidate) => candidate === value);
-
-const isPlansSortOrder = (value: string): value is PlansSortOrder =>
-  PLANS_SORT_ORDER.some((candidate) => candidate === value);
 
 /**
  * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches OpenThrottle API SortDropdown: value (sortBy + sortOrder), onChange(sortBy, sortOrder).

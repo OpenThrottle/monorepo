@@ -13,6 +13,7 @@ import {
   formatIso,
   formatRelativeFromIso,
 } from '~/routing/prompts/utils/utils.prompts';
+import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 import type { GetPromptQuery } from '~/__generated__/graphql';
 
@@ -21,36 +22,6 @@ export interface PromptDetailMetadataPanelProps {
   /** Current editor buffer (use for fingerprint; may differ from API until save). */
   debugContent: string;
   prompt: NonNullable<GetPromptQuery['customPrompt']>;
-}
-
-/**
- * JSON snapshot for support / diff tools; keys are alphabetized for stable
- * copy-paste.
- */
-function buildPromptDebugSnapshotJson(
-  prompt: NonNullable<GetPromptQuery['customPrompt']>,
-  debugContent: string,
-): string {
-  const bufferFp = fnv1a32Hex(debugContent);
-  const savedFp = fnv1a32Hex(prompt.content);
-  return JSON.stringify(
-    {
-      contentFingerprint: bufferFp,
-      createdAt: prompt.createdAt,
-      filePath: prompt.filePath ?? null,
-      hasUnsavedEditorBuffer: debugContent !== prompt.content,
-      labels: prompt.labels,
-      projectId: prompt.projectId ?? null,
-      promptId: prompt.id,
-      promptType: String(prompt.promptType),
-      savedContentFingerprint: savedFp,
-      title: prompt.title,
-      updatedAt: prompt.updatedAt,
-      userId: prompt.userId ?? null,
-    },
-    null,
-    2,
-  );
 }
 
 /**
@@ -67,19 +38,6 @@ export const PromptDetailMetadataPanel = (
 
   // Setup
   const Chevron = open ? ChevronDown : ChevronRight;
-
-  // Handlers
-  const handleCopy = async (value: string): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(value);
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleCopySnapshot = (): void => {
-    void handleCopy(buildPromptDebugSnapshotJson(prompt, debugContent));
-  };
 
   const labelsJoined =
     prompt.labels.length > 0 ? prompt.labels.join(', ') : '(none)';
@@ -125,6 +83,19 @@ export const PromptDetailMetadataPanel = (
       : []),
     ...(prompt.userId ? [{ label: 'userId', value: prompt.userId }] : []),
   ];
+
+  // Handlers
+  const handleCopy = async (value: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCopySnapshot = (): void => {
+    void handleCopy(buildPromptDebugSnapshotJson(prompt, debugContent));
+  };
 
   // Markup
 

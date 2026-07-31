@@ -4,45 +4,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import {
+  formatCompactSummary,
+  formatQueueStatsTooltip,
+} from '~/routing/dashboard/utils/queue-stats';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
-
-export interface Column {
-  key: keyof Pick<
-    DashboardQueueStatsCardFragment,
-    | 'waitingCount'
-    | 'activeCount'
-    | 'completedCount'
-    | 'failedCount'
-    | 'delayedCount'
-  >;
-  label: string;
-}
-
-export const COLUMNS: Column[] = [
-  { key: 'waitingCount', label: 'Waiting' },
-  { key: 'activeCount', label: 'Active' },
-  { key: 'completedCount', label: 'Completed' },
-  { key: 'failedCount', label: 'Failed' },
-  { key: 'delayedCount', label: 'Delayed' },
-];
-
-/**
- * Formats queue stats for tooltip (full labels and counts).
- */
-export function formatQueueStatsTooltip(
-  queue: DashboardQueueStatsCardFragment,
-): string {
-  return COLUMNS.map((col) => `${col.label}: ${queue[col.key]}`).join(', ');
-}
-
-/**
- * Compact inline summary for a single queue (W:2 A:1 C:10 F:0 D:0).
- */
-export function formatCompactSummary(
-  queue: DashboardQueueStatsCardFragment,
-): string {
-  return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
-}
 
 /**
  * @deprecated Temporarily commented out on dashboard index; restore when re-enabling queue stats grid.

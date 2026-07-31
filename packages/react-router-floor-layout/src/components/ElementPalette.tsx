@@ -1,9 +1,5 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
-import {
-  type PointerEvent as ReactPointerEvent,
-  type ReactElement,
-  useRef,
-} from 'react';
+import * as React from 'react';
 
 import { PALETTE_ITEMS, type PaletteItem } from '../data/elements';
 import { usePointerDrag } from '../hooks/usePointerDrag';
@@ -46,7 +42,9 @@ export interface ElementPaletteProps {
  *
  * @public
  */
-export const ElementPalette = (props: ElementPaletteProps): ReactElement => {
+export const ElementPalette = (
+  props: ElementPaletteProps,
+): React.ReactElement => {
   const {
     bounds,
     className,
@@ -58,10 +56,8 @@ export const ElementPalette = (props: ElementPaletteProps): ReactElement => {
     snapEnabled = true,
   } = props;
 
-  // Setup
-
   // Hooks
-  const activeType = useRef<FloorElementType | null>(null);
+  const activeType = React.useRef<FloorElementType | null>(null);
   const create = usePointerDrag({
     bounds,
     clientToWorld,
@@ -78,10 +74,12 @@ export const ElementPalette = (props: ElementPaletteProps): ReactElement => {
     snapGrid: snapEnabled ? gridSize : 0,
   });
 
+  // Setup
+
   // Handlers
   const handleItemPointerDown = (
     type: FloorElementType,
-    event: ReactPointerEvent,
+    event: React.PointerEvent,
   ): void => {
     activeType.current = type;
     create.start(event);

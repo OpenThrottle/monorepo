@@ -10,6 +10,18 @@ export const PersonasToolbar = (
 ): React.ReactElement => {
   const { className } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={clsx('text-muted-foreground text-sm', className)}

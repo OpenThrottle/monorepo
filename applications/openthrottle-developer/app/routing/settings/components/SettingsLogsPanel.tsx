@@ -11,28 +11,14 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { TerminalSquareIcon } from 'lucide-react';
 import {
-  clearClientLogSink,
   CLIENT_LOG_BUFFER_MAX_ENTRIES,
   CLIENT_LOG_LEVELS,
-  getClientLogEntries,
-  subscribeClientLogSink,
 } from '~/routing/settings/client-log-sink';
+import { SettingsLogsIntro } from '~/routing/settings/components/SettingsLogsIntro';
+import { SettingsLogsServerStreams } from '~/routing/settings/components/SettingsLogsServerStreams';
 import { SettingsSupportBundle } from '~/routing/settings/components/SettingsSupportBundle';
-import type { ClientLogLevel } from '~/routing/settings/client-log-sink';
-import {
-  copyText,
-  entryToJsonRecord,
-  formatEntryLine,
-  getEmptyServerSnapshot,
-} from '~/routing/settings/utils/settings.support';
-import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-
-const isClientLogLevel = (value: string): value is ClientLogLevel =>
-  CLIENT_LOG_LEVELS.some((level) => level === value);
+import { useSettingsLogsPanel } from '~/routing/settings/hooks/useSettingsLogsPanel';
 
 export interface SettingsLogsPanelProps {}
 
@@ -40,77 +26,27 @@ export const SettingsLogsPanel = (
   _props: SettingsLogsPanelProps,
 ): React.ReactElement => {
   // Hooks
-  const logPreRef = React.useRef<HTMLPreElement>(null);
-  const searchFieldId = React.useId();
-  const [isClient, setIsClient] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [levelSelection, setLevelSelection] = React.useState<ClientLogLevel[]>([
-    ...CLIENT_LOG_LEVELS,
-  ]);
-
-  const entries = React.useSyncExternalStore(
-    subscribeClientLogSink,
-    getClientLogEntries,
-    getEmptyServerSnapshot,
-  );
+  const {
+    entries,
+    filteredEntries,
+    handleClear,
+    handleCopyLines,
+    handleCopyLogJson,
+    handleCopyLogNdjson,
+    handleLevelSelectionChange,
+    isClient,
+    levelSelection,
+    logPreRef,
+    logText,
+    searchFieldId,
+    searchQuery,
+    setSearchQuery,
+    viewerEmptyReason,
+  } = useSettingsLogsPanel();
 
   // Setup
-  const levelsDisabled = levelSelection.length === 0;
-  const selectedLevelSet = React.useMemo(
-    () => new Set(levelSelection),
-    [levelSelection],
-  );
-
-  const filteredEntries = React.useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return entries.filter((entry) => {
-      if (!selectedLevelSet.has(entry.level)) {
-        return false;
-      }
-      if (!q) {
-        return true;
-      }
-      return (
-        entry.message.toLowerCase().includes(q) ||
-        entry.level.toLowerCase().includes(q)
-      );
-    });
-  }, [entries, searchQuery, selectedLevelSet]);
-
-  const viewerEmptyReason =
-    entries.length === 0
-      ? 'empty-buffer'
-      : levelsDisabled
-        ? 'levels-none'
-        : filteredEntries.length === 0
-          ? 'no-match'
-          : 'none';
-
-  const logText = React.useMemo(
-    () => filteredEntries.map(formatEntryLine).join('\n'),
-    [filteredEntries],
-  );
 
   // Handlers
-  const handleCopyLines = async (): Promise<void> => {
-    await copyText(logText || '(empty)');
-  };
-
-  const handleCopyLogJson = async (): Promise<void> => {
-    const payload = filteredEntries.map(entryToJsonRecord);
-    await copyText(JSON.stringify(payload, null, 2));
-  };
-
-  const handleCopyLogNdjson = async (): Promise<void> => {
-    const lines = filteredEntries.map((e) =>
-      JSON.stringify(entryToJsonRecord(e)),
-    );
-    await copyText(lines.join('\n') || '');
-  };
-
-  const handleClear = (): void => {
-    clearClientLogSink();
-  };
 
   // Markup
   const renderViewerBody = (): React.ReactNode => {
@@ -144,41 +80,12 @@ export const SettingsLogsPanel = (
   };
 
   // Life Cycle
-  React.useEffect(() => {
-    const el = logPreRef.current;
-    if (!el) {
-      return;
-    }
-    el.scrollTop = el.scrollHeight;
-  }, [filteredEntries]);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // 🔌 Short Circuit
 
   return (
     <>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h3"
-          icon={TerminalSquareIcon}
-          title="Logs"
-        />
-        <p className="text-muted-foreground mb-4 text-sm">
-          Capture browser console output in this tab, copy lines, and export a
-          sanitized support bundle (JSON) with env metadata and log lines.
-          Server workflow and agent streams are described below—when an operator
-          API exists, optional tailing can plug into the same bundle shape.
-        </p>
-        <p className="text-foreground mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
-          Logs may include URLs or user-visible strings. Only copy or export
-          what you intend to share; the support bundle redacts env secrets but
-          not every substring inside log lines.
-        </p>
-      </div>
+      <SettingsLogsIntro />
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
@@ -236,9 +143,7 @@ export const SettingsLogsPanel = (
             <ToggleGroup
               aria-label="Filter by log level"
               className="flex flex-wrap justify-start gap-1"
-              onValueChange={(next) => {
-                setLevelSelection(next.filter(isClientLogLevel));
-              }}
+              onValueChange={handleLevelSelectionChange}
               size="sm"
               type="multiple"
               value={[...levelSelection]}
@@ -287,33 +192,7 @@ export const SettingsLogsPanel = (
 
       <SettingsSupportBundle />
 
-      <OpenThrottleFieldset
-        id="workflow-agent-logs"
-        legend="Workflow & Server Logs"
-      >
-        <div className="text-muted-foreground space-y-3 text-sm">
-          <p>
-            A tail or subscription to workflow-ralph stderr, queue worker logs,
-            or plan-output streams is not wired to this UI yet. Until an
-            authenticated operator API exposes those streams, use Plan detail
-            for OpenThrottle output and capture CLI stderr per{' '}
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={DEFAULT_SETTINGS_LOGS_DOC}
-              rel="noreferrer"
-              target="_blank"
-            >
-              tools/workflows README
-            </a>
-            .
-          </p>
-          <p className="text-xs">
-            Future API contract (sketch): query or SSE scoped to the signed-in
-            operator; correlation IDs linking queue jobs, plan IDs, and task
-            IDs; no raw secrets in payloads.
-          </p>
-        </div>
-      </OpenThrottleFieldset>
+      <SettingsLogsServerStreams />
     </>
   );
 };

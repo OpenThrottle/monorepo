@@ -41,6 +41,15 @@ export interface SkillAvailabilityRuleValue {
   readonly tagDeny: readonly string[];
 }
 
+/** Blank rule used to seed the add form (no id, no entries, every environment). */
+export const SKILL_AVAILABILITY_EMPTY_RULE: SkillAvailabilityRuleValue = {
+  environment: null,
+  slugAllow: [],
+  slugDeny: [],
+  tagAllow: [],
+  tagDeny: [],
+};
+
 /** A single tag in the workspace vocabulary. */
 export interface SkillTagValue {
   readonly id: string;
@@ -66,6 +75,16 @@ export function isSkillAvailabilityEnvironment(
   value: string,
 ): value is SkillAvailabilityEnvironment {
   return SKILL_AVAILABILITY_ENVIRONMENTS.some((known) => known === value);
+}
+
+/** Narrow a ToggleGroup value to a known environment choice (the `all` sentinel or a real env). */
+export function isSkillAvailabilityEnvironmentChoice(
+  value: string,
+): value is SkillAvailabilityEnvironmentChoice {
+  return (
+    value === SKILL_AVAILABILITY_ENVIRONMENT_ALL ||
+    isSkillAvailabilityEnvironment(value)
+  );
 }
 
 /**

@@ -1,31 +1,12 @@
 import * as React from 'react';
 import type { ChartTooltipContentProps } from '@openthrottle/react-router-shadcn';
 import {
+  isQueueStatsChartRow,
   QUEUE_STATS_CHART_CONFIG,
   QUEUE_STATS_CHART_SERIES,
 } from '~/routing/queues/utils/queue-stats-chart';
 
-export type QueueStatsChartTooltipProps = ChartTooltipContentProps;
-
-type QueueStatsChartRow = Record<
-  (typeof QUEUE_STATS_CHART_SERIES)[number],
-  number
-> & {
-  name: string;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const isQueueStatsChartRow = (value: unknown): value is QueueStatsChartRow => {
-  if (!isRecord(value)) {
-    return false;
-  }
-  return (
-    typeof value.name === 'string' &&
-    QUEUE_STATS_CHART_SERIES.every((key) => typeof value[key] === 'number')
-  );
-};
+export interface QueueStatsChartTooltipProps extends ChartTooltipContentProps {}
 
 /**
  * @description Tooltip for QueuesStats: always lists all five table counts even when completed is hidden from bars.

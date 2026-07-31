@@ -4,12 +4,9 @@ import { Link } from 'react-router';
 import { getPlanStatusBadgeColor } from '~/routing/plans/utils/utils.plans';
 import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
 
-/**
- * @description True when a task/plan status string is a known {@link planStatusValues} key (safe before passing to {@link PlanStatusBadge}).
- */
-export const isPlanStatusKey = (value: string): value is PlanStatusKey => {
-  return Object.prototype.hasOwnProperty.call(planStatusValues, value);
-};
+// Re-exported from utils so existing importers keep a stable path; the predicate
+// itself lives with the other plan-status helpers (component-primitive-shape R4).
+export { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanStatusBadgeProps {
   className?: string;

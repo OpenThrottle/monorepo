@@ -5,15 +5,9 @@ import type {
   OpenThrottleTabsProps as OpenThrottleTabsPropsContract,
   UrlSyncedTabConfig,
 } from '../tabs/open-throttle-tabs.api';
+import { isFullyControlled } from '../utils/is-fully-controlled';
 
 type TabsRestProps = Omit<OpenThrottleTabsPropsContract, 'urlSync'>;
-
-function isFullyControlled(
-  value: TabsRestProps['value'],
-  onValueChange: TabsRestProps['onValueChange'],
-): boolean {
-  return value !== undefined && onValueChange !== undefined;
-}
 
 export interface OpenThrottleTabsWithUrlSyncProps extends TabsRestProps {
   readonly urlSync: UrlSyncedTabConfig;
@@ -25,8 +19,20 @@ export const OpenThrottleTabsWithUrlSync = React.forwardRef<
   OpenThrottleTabsWithUrlSyncProps
 >((props, ref): React.ReactElement => {
   const { className, onValueChange, urlSync, value, ...rest } = props;
+
+  // Hooks
   const synced = useUrlSyncedTabValue(urlSync);
+
+  // Setup
   const controlled = isFullyControlled(value, onValueChange);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Tabs

@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { GlobalModal } from '@openthrottle/react-router-ui-global';
 import { useSearchParams } from 'react-router';
-import {
-  CHART_CONFIG,
-  formatChartDate,
-} from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
+import { formatChartDate } from '~/routing/dashboard/utils/daily-stats-chart';
 import { DashboardDailyStatsDayChart } from '~/routing/dashboard/components/DashboardDailyStatsDayChart';
 import {
   DAILY_STATS_METRICS,
@@ -145,7 +143,10 @@ export const DashboardDailyStatsModal = (
                 <span
                   aria-hidden={true}
                   className="size-2.5 shrink-0 rounded-[2px]"
-                  style={{ backgroundColor: CHART_CONFIG[metric.key]?.color }}
+                  style={{
+                    backgroundColor:
+                      DAILY_STATS_CHART_CONFIG[metric.key]?.color,
+                  }}
                 />
                 <dt className="text-muted-foreground">{metric.label}</dt>
                 <dd className="ml-auto font-medium tabular-nums">

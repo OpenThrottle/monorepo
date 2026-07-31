@@ -37,6 +37,8 @@ export const SemanticSearchResults = (
 ): React.ReactElement => {
   const { className, loading = false, result } = props;
 
+  // Hooks
+
   // Setup
   const hasQuery = result.query.trim() !== '';
   const hasMatches = result.matches.length > 0;

@@ -9,11 +9,10 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
+import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
+import { CommanderFooter } from './CommanderFooter';
 
-/**
- * Single command palette item: action (onSelect) or navigation (href).
- * At least one of onSelect or href should be set for the item to be actionable.
- */
+/** Single command palette item: action (onSelect) or navigation (href). At least one of onSelect or href should be set for the item to be actionable. */
 export interface CommanderItem {
   readonly href?: string;
   readonly icon?: React.ReactNode;
@@ -27,17 +26,13 @@ export interface CommanderItem {
   readonly value?: string;
 }
 
-/**
- * Group of commander items with a heading (e.g. "Navigation", "Actions").
- */
+/** Group of commander items with a heading (e.g. "Navigation", "Actions"). */
 export interface CommanderGroup {
   readonly heading: string;
   readonly items: readonly CommanderItem[];
 }
 
-/**
- * Controlled open state (open + onOpenChange) or uncontrolled (defaultOpen with internal state).
- */
+/** Controlled open state (open + onOpenChange) or uncontrolled (defaultOpen with internal state). */
 export interface OpenThrottleCommanderProps {
   readonly className?: string;
   /** Uncontrolled: initial open state when open/onOpenChange are not provided. */
@@ -84,73 +79,33 @@ export const OpenThrottleCommander = (
   } = props;
 
   // Hooks
-  const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
-  const [search, setSearch] = React.useState('');
-  const isControlled = openProp !== undefined && onOpenChangeProp !== undefined;
+  const {
+    extraItems,
+    handleEmptyStateSearch,
+    handleSelect,
+    open,
+    search,
+    setOpen,
+    setSearch,
+    showEmptyEscapeHatch,
+    trimmedSearch,
+  } = useOpenThrottleCommander({
+    defaultOpen,
+    emptyStateExtras,
+    onEmptyStateSearch,
+    onOpenChange: onOpenChangeProp,
+    open: openProp,
+  });
 
   // Setup
-  const open = isControlled ? openProp : internalOpen;
-  const setOpen = isControlled
-    ? (value: boolean) => onOpenChangeProp?.(value)
-    : setInternalOpen;
 
   // Handlers
-  const handleSelect = React.useCallback(
-    (item: CommanderItem) => {
-      item.onSelect?.();
-      setOpen(false);
-    },
-    [setOpen],
-  );
-
-  const handleEmptyStateSearch = React.useCallback((): void => {
-    const trimmed = search.trim();
-    if (trimmed && onEmptyStateSearch) {
-      onEmptyStateSearch(trimmed);
-      setOpen(false);
-    }
-  }, [onEmptyStateSearch, search, setOpen]);
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    if (open) {
-      setSearch('');
-    }
-  }, [open]);
-
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setOpen(true);
-        return;
-      }
-
-      if (open && e.key === 'Escape') {
-        e.preventDefault();
-        setOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, setOpen]);
 
   // 🔌 Short Circuit
-
-  const trimmedSearch = search.trim();
-  const extraItems =
-    trimmedSearch.length > 0 && emptyStateExtras != null
-      ? emptyStateExtras(trimmedSearch)
-      : [];
-
-  const showSearchEscape =
-    Boolean(onEmptyStateSearch) && trimmedSearch.length > 0;
-  const showUuidExtras = trimmedSearch.length > 0 && extraItems.length > 0;
-  const showEmptyEscapeHatch = showSearchEscape || showUuidExtras;
 
   return (
     <CommandDialog
@@ -242,35 +197,7 @@ export const OpenThrottleCommander = (
         )}
       </CommandList>
 
-      <div className="border-border text-muted-foreground flex items-center justify-between gap-4 border-t px-2 py-2 text-[10px]">
-        {footerHint ? (
-          <span className="line-clamp-2 max-w-[min(100%,18rem)] text-left leading-snug">
-            {footerHint}
-          </span>
-        ) : (
-          <span />
-        )}
-        <div className="flex shrink-0 items-center justify-end gap-4">
-          <div className="flex items-center gap-1.5">
-            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
-              ↑↓
-            </CommandShortcut>
-            <span className="font-regular">navigate</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
-              ↵
-            </CommandShortcut>
-            <span className="font-regular">select</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
-              esc
-            </CommandShortcut>
-            <span className="font-regular">close</span>
-          </div>
-        </div>
-      </div>
+      <CommanderFooter footerHint={footerHint} />
     </CommandDialog>
   );
 };

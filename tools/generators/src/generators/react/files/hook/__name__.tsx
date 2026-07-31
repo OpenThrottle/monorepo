@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import * as React from 'react';
 
 export interface <%= namePascal %>Options {}
 
@@ -9,12 +9,12 @@ export const <%= name %> = (_options: <%= namePascal %>Options) => {
   // const {} = _options;
 
   // Hooks
-  const [value, setValue] = useState<string>();
+  const [value, setValue] = React.useState<string>();
 
   // Setup
 
   // Handlers
-  const onCopy = (value: any) => {
+  const onCopy = (value: string) => {
     // in case we want to grab its value later
     setValue(value);
   };

@@ -20,7 +20,7 @@ import {
   describeCancelPlanRunResult,
 } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 
-interface KillPlanRunButtonProps {
+export interface KillPlanRunButtonProps {
   readonly planId: string;
   readonly planTitle: string;
   /** When false, the control is not shown. */

@@ -14,15 +14,8 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
+import { PLAN_CATEGORIES } from '~/routing/plans/data/plan-form-categories';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
-
-const PLAN_CATEGORIES = [
-  'feature',
-  'ideas',
-  'infrastructure',
-  'other',
-  'product',
-] as const;
 
 export interface PlanFormProps {
   actionData?: { error?: string } | null;
