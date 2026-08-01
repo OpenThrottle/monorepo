@@ -5,6 +5,13 @@
  * inlining sentence-length literals in components.
  */
 
+/** Copy for the dashboard "Recent chats" card (recent agent conversations). */
+export const RECENT_CHATS_CARD_COPY = {
+  empty: `No chats yet`,
+  title: `Recent chats`,
+  untitled: `Untitled chat`,
+} as const;
+
 export const DAILY_STATS_MODAL_COPY = {
   completionAttributionCaveat: `Historical completion dates are approximate for rows completed before completed_at existed (backfilled from updated_at after migrate-time re-stamps). New completions use an immutable completed_at stamp.`,
   emptyDescription: `No daily stats available for the selected range.`,
