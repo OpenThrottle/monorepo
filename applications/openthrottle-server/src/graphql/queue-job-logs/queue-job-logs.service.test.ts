@@ -138,6 +138,38 @@ describe('QueueJobLogsService', () => {
     expect(page.events[0]?.level).toBe('warn');
   });
 
+  it('treats an omitted levelIn (undefined) as no filter', async () => {
+    // GraphQL delivers an omitted nullable field as `undefined`, not `null`
+    // (the developer app's QueueJobLogs query never sends levelIn). The guard
+    // must handle both, or `undefined.length` crashes the resolver.
+    await writeRun([
+      { data: 'out', timestamp: '2026-05-04T23:00:00.000Z', type: 'stdout' },
+      { data: 'err', timestamp: '2026-05-04T23:00:01.000Z', type: 'stderr' },
+    ]);
+
+    const page = await service.read(baseInput({ levelIn: undefined }));
+    expect(page.events.map((event) => event.message)).toEqual(['out', 'err']);
+  });
+
+  it('reads a page when every optional field is omitted (undefined)', async () => {
+    // The real GraphQL runtime shape: nullable fields the client never sends
+    // arrive as `undefined`, not `null`. Every guard must tolerate that.
+    await writeRun([
+      { data: 'out', timestamp: '2026-05-04T23:00:00.000Z', type: 'stdout' },
+    ]);
+
+    const page = await service.read({
+      after: undefined,
+      jobId: JOB,
+      levelIn: undefined,
+      limit: undefined,
+      queueName: QUEUE,
+      since: undefined,
+    });
+    expect(page.events.map((event) => event.message)).toEqual(['out']);
+    expect(page.hasMore).toBe(false);
+  });
+
   it('pages by cursor and reports hasMore', async () => {
     await writeRun([
       { data: 'one', timestamp: '2026-05-04T23:00:00.000Z', type: 'stdout' },
