@@ -39,6 +39,10 @@
           "command": "nest start --path {projectRoot}/tsconfig.app.json --watch"
         },
         "dependsOn": [
+          {
+            "target": "ensure-worktree",
+            "projects": "monorepo"
+          },
           "^dev"
         ]
       },

@@ -1,6 +1,35 @@
 # Git worktree setup timing (copy `node_modules` vs `pnpm install`)
 
-This doc compares two Cursor worktree setups from `.cursor/worktrees.json`:
+## Current flow: one tool-agnostic entrypoint (+ self-heal)
+
+Worktree setup is **not** tool-specific. There is one create+provision
+entrypoint, `scripts/create_worktree.sh`, and every consumer routes through it:
+
+| Consumer          | How it reaches `create_worktree.sh`                                   |
+| ----------------- | --------------------------------------------------------------------- |
+| CLI / humans / CI | `pnpm worktree:new <name>` (name as `$1`)                             |
+| Claude Code       | `.claude/settings.json` `WorktreeCreate` hook (JSON payload on stdin) |
+| Cursor            | `.cursor/worktrees.json` `setup-worktree` (provision-in-place)        |
+
+`create_worktree.sh` creates the worktree, allocates its
+[port block](worktree-port-allocation.md), and runs the idempotent
+`scripts/setup_worktree.sh` to provision it (env reset + port remap, compose
+isolation, service-account token sync, `pnpm install`, `pnpm build`).
+
+git has **no** post-`worktree add` hook, so a plain `git worktree add` (a human,
+CI, or another agent) provisions nothing. That case self-heals on first use:
+`scripts/ensure_worktree.sh` runs before any `pnpm nx run <app>:dev` (wired via
+`nx.json` `targetDefaults.dev.dependsOn` → `monorepo:ensure-worktree`) and, if it
+finds an unprovisioned linked worktree, runs `setup_worktree.sh` once. It is a
+no-op in the primary checkout and on already-provisioned worktrees, and can also
+be run by hand with `pnpm worktree:heal`. Default login user seeding
+(`FullThrottle2026!`) belongs to the primary checkout's `setup.sh` (worktrees
+share its Postgres) — see [worktree-port-allocation.md § Shared database](worktree-port-allocation.md#shared-database).
+
+---
+
+The sections below are a historical timing comparison of two Cursor worktree
+setups from `.cursor/worktrees.json`:
 
 1. **Baseline:** copy `node_modules` from the main repo, then `./scripts/setup.sh`.
 2. **Comparison:** `./scripts/setup_worktree.sh` — `setup_environment.sh`, `pnpm install`, `pnpm build` (no `node_modules` copy, not the full `setup.sh` stack).

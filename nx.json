@@ -250,6 +250,7 @@
     },
     "dev": {
       "dependsOn": [
+        { "target": "ensure-worktree", "projects": "monorepo" },
         "^dev",
         "^generate",
         "^codegen-graphql-watch",
@@ -257,7 +258,7 @@
         "codegen-graphql-watch",
         "codegen-react-router-watch"
       ],
-      "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies."
+      "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies. Depends on monorepo:ensure-worktree so any `dev` in an unprovisioned linked worktree self-heals on first use (no-op in the primary checkout and on provisioned worktrees)."
     },
     "check-agent-assets-ssot": {
       "cache": true,

@@ -372,6 +372,14 @@
       "build": {
         "executor": "nx:noop"
       },
+      "ensure-worktree": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "./scripts/ensure_worktree.sh",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "check-agent-assets-ssot": {},
       "check-migration-table-comments": {},
       "format-check": {},
@@ -487,7 +495,9 @@
     "sync:openthrottle:website": "scripts/sync-subtree.sh applications/openthrottle-website openthrottle-website main",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts",
-    "voice:start": "docker compose --profile voice up whisper"
+    "voice:start": "docker compose --profile voice up whisper",
+    "worktree:heal": "./scripts/ensure_worktree.sh",
+    "worktree:new": "./scripts/create_worktree.sh"
   },
   "sideEffects": false,
   "type": "module"
