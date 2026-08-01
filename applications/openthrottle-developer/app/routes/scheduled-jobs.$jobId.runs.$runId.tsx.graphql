@@ -23,3 +23,9 @@ query scheduledAgentJobRunDetail($runId: ID!, $jobId: ID!) {
     name
   }
 }
+
+mutation cancelScheduledAgentJobRun($runId: ID!) {
+  cancelScheduledAgentJobRun(runId: $runId) {
+    ...ScheduledJobRunDetail
+  }
+}

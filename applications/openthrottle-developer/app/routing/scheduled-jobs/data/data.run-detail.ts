@@ -20,10 +20,18 @@ export const RUN_STATUS_TO_JOB_STATE: Record<string, string> = {
 };
 
 /**
+ * @description Run statuses that can still be cancelled (a cancel marker is only meaningful before a
+ * run reaches a terminal state). Drives whether the run-detail view offers the Cancel action.
+ */
+export const CANCELABLE_RUN_STATUSES = new Set(['queued', 'running']);
+
+/**
  * @description Static copy/labels for the scheduled-job run-detail view. Kept out of the component
  * per the data/component split so wording changes never touch markup.
  */
 export const RUN_DETAIL_COPY = {
+  cancel: 'Cancel run',
+  cancelRequested: 'Cancel requested…',
   fields: {
     bullmqJobId: 'BullMQ job id',
     createdAt: 'Created',

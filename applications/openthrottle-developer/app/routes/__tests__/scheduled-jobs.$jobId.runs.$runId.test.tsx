@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { describe, expect, test } from 'vitest';
+import { waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
 import ScheduledJobRunDetail from '../scheduled-jobs.$jobId.runs.$runId';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness } from '~/testing/route-fixtures';
@@ -46,7 +48,10 @@ const matches: Route.ComponentProps['matches'] = [
 // The embedded QueueJobLogConsole backfills history via a fetcher to
 // /resources/queue-job-logs on mount; stub that route so the fetch resolves
 // (empty page) instead of throwing "No route matches URL" in the test router.
-const renderRun = (value: ScheduledJobRunDetailFragment) =>
+const renderRun = (
+  value: ScheduledJobRunDetailFragment,
+  options: { action?: () => unknown } = {},
+) =>
   renderRouteHarness([
     {
       Component: (): React.ReactElement => (
@@ -57,6 +62,7 @@ const renderRun = (value: ScheduledJobRunDetailFragment) =>
           params={{ jobId: 'job-1', runId: 'run-1' }}
         />
       ),
+      action: options.action,
       path: '/',
     },
     {
@@ -132,5 +138,46 @@ describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
     expect(
       component.getByText(/logs available once the run is enqueued/i),
     ).toBeInTheDocument();
+  });
+
+  test('offers Cancel run for a running, not-yet-cancelled run', () => {
+    const component = renderRun(run({ finishedAt: null, status: 'running' }));
+
+    expect(
+      component.getByRole('button', { name: /cancel run/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('hides Cancel run for a terminal run', () => {
+    const component = renderRun(run({ status: 'succeeded' }));
+
+    expect(component.queryByRole('button', { name: /cancel run/i })).toBeNull();
+  });
+
+  test('shows Cancel requested instead of the button once cancel is requested', () => {
+    const component = renderRun(
+      run({
+        cancelRequestedAt: '2026-07-31T09:00:30.000Z',
+        finishedAt: null,
+        status: 'running',
+      }),
+    );
+
+    expect(component.queryByRole('button', { name: /cancel run/i })).toBeNull();
+    expect(
+      component.getByRole('button', { name: /cancel requested/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('submitting Cancel run calls the route action', async () => {
+    const action = vi.fn(() => ({ ok: true }));
+    const component = renderRun(run({ finishedAt: null, status: 'running' }), {
+      action,
+    });
+
+    const user = userEvent.setup();
+    await user.click(component.getByRole('button', { name: /cancel run/i }));
+
+    await waitFor(() => expect(action).toHaveBeenCalled());
   });
 });

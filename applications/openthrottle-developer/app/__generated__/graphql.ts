@@ -7328,6 +7328,30 @@ export type ScheduledAgentJobRunDetailQuery = {
   } | null;
 };
 
+export type CancelScheduledAgentJobRunMutationVariables = Exact<{
+  runId: Scalars['ID']['input'];
+}>;
+
+export type CancelScheduledAgentJobRunMutation = {
+  __typename?: 'Mutation';
+  cancelScheduledAgentJobRun: {
+    __typename?: 'ScheduledAgentJobRunObject';
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    createdAt: any;
+    driverId: string;
+    errorMessage?: string | null;
+    exitCode?: number | null;
+    finishedAt?: any | null;
+    id: string;
+    model?: string | null;
+    scheduledAgentJobId: string;
+    startedAt?: any | null;
+    status: string;
+    trigger: string;
+  };
+};
+
 export type ScheduledJobCardFragment = {
   __typename?: 'ScheduledAgentJobObject';
   cronPattern: string;
@@ -18500,6 +18524,89 @@ export const ScheduledAgentJobRunDetailDocument = {
 } as unknown as DocumentNode<
   ScheduledAgentJobRunDetailQuery,
   ScheduledAgentJobRunDetailQueryVariables
+>;
+export const CancelScheduledAgentJobRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'cancelScheduledAgentJobRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'runId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelScheduledAgentJobRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'runId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'runId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobRunDetail' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobRunDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelScheduledAgentJobRunMutation,
+  CancelScheduledAgentJobRunMutationVariables
 >;
 export const ScheduledAgentJobsDocument = {
   kind: 'Document',
