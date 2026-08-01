@@ -16,12 +16,12 @@ import {
 } from '~/__generated__/graphql';
 import { ScheduledJobRunsTable } from '~/routing/scheduled-jobs/components/ScheduledJobRunsTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId';
+import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Scheduled Job',
+  breadcrumb: (match) => match.loaderData?.job?.name ?? 'Scheduled Job',
   links: (_match) => [{ children: 'Scheduled Jobs', to: '/scheduled-jobs' }],
 };
 
