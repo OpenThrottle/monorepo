@@ -2196,6 +2196,60 @@ type SkillTagVocabularyResult {
   totalCount: Int!
 }
 
+type SkillUsageEventObject {
+  """Subagent id when the Skill call happened inside a nested agent."""
+  agentId: String
+
+  """Subagent type when present (e.g. general-purpose)."""
+  agentType: String
+
+  """
+  Skill args after client privacy seam. Null when privacyLevel is name-only.
+  """
+  args: String
+
+  """Working directory reported by the harness at invocation time."""
+  cwd: String
+
+  """Git branch at capture time (best-effort)."""
+  gitBranch: String
+
+  """Hook that captured the event (PreToolUse or UserPromptExpansion)."""
+  hookEventName: String
+
+  """Skill usage event id."""
+  id: ID!
+
+  """Invocation path: skill_tool or slash."""
+  invocationPath: String
+
+  """Client-reported invocation timestamp."""
+  occurredAt: DateTime!
+
+  """
+  Client privacy level applied before ingest: name-only | truncated | full.
+  """
+  privacyLevel: String!
+
+  """Harness prompt_id when present."""
+  promptId: String
+
+  """Server receipt time (set on insert)."""
+  receivedAt: DateTime!
+
+  """ours | third-party — derived by the client against skills/."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+
+  """Harness tool_use_id for the Skill call when present."""
+  toolUseId: String
+}
+
 """
 A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user.
 """
@@ -3963,6 +4017,11 @@ type Mutation {
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
 
   """
+  Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent.
+  """
+  recordSkillUsage(input: RecordSkillUsageInput!): SkillUsageEventObject!
+
+  """
   Create or update a tag→action rule. The JSON payload is validated against the action type's schema.
   """
   upsertTagActionRule(input: UpsertTagActionRuleInput!): TagActionRuleObject!
@@ -4962,6 +5021,52 @@ input RenameSkillTagInput {
 input RemoveSkillTagInput {
   """Tag slug to remove."""
   tag: String!
+}
+
+input RecordSkillUsageInput {
+  """Subagent id when the Skill call happened inside a nested agent."""
+  agentId: String
+
+  """Subagent type when present."""
+  agentType: String
+
+  """Args after client privacy seam. Pass null for name-only."""
+  args: String
+
+  """Working directory at invocation time."""
+  cwd: String
+
+  """Git branch at capture time."""
+  gitBranch: String
+
+  """Hook event name (PreToolUse or UserPromptExpansion)."""
+  hookEventName: String
+
+  """Invocation path: skill_tool or slash."""
+  invocationPath: String
+
+  """Client-reported invocation timestamp (JSONL timestamp)."""
+  occurredAt: DateTime!
+
+  """
+  Client privacy level: name-only | truncated | full. Defaults to truncated.
+  """
+  privacyLevel: String
+
+  """Harness prompt_id when present."""
+  promptId: String
+
+  """ours | third-party."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+
+  """Harness tool_use_id when present."""
+  toolUseId: String
 }
 
 input UpsertTagActionRuleInput {

@@ -218,6 +218,21 @@ export { SkillTagsService } from './modules/skill-tags/skill-tags.service';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity';
 export {
+  SKILL_USAGE_PRIVACY_LEVELS,
+  SKILL_USAGE_SCOPES,
+  SkillUsageEvent,
+} from './modules/skill-usage-events/skill-usage-events.entity';
+export type {
+  SkillUsageEventData,
+  SkillUsagePrivacyLevel,
+  SkillUsageScope,
+} from './modules/skill-usage-events/skill-usage-events.entity';
+export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module';
+export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service';
+export type { RecordSkillUsageInput } from './modules/skill-usage-events/skill-usage-events.service';
+export { skillUsageEventsFactory } from './modules/skill-usage-events/skill-usage-events.factory';
+export type { SkillUsageEventFactoryData } from './modules/skill-usage-events/skill-usage-events.factory';
+export {
   RULE_APPLICATION_STATES,
   RuleApplication,
 } from './modules/tag-action-rules/rule-application.entity';

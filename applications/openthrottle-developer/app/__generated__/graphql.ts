@@ -1569,6 +1569,8 @@ export type Mutation = {
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
+  /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. */
+  recordSkillUsage: SkillUsageEventObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -1953,6 +1955,10 @@ export type MutationPromoteTaskToPlanArgs = {
 
 export type MutationRecordPlanRunHeartbeatArgs = {
   input: RecordPlanRunHeartbeatInput;
+};
+
+export type MutationRecordSkillUsageArgs = {
+  input: RecordSkillUsageInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -3280,6 +3286,37 @@ export type RecordPlanRunHeartbeatInput = {
   planRunId: Scalars['ID']['input'];
 };
 
+export type RecordSkillUsageInput = {
+  /** Subagent id when the Skill call happened inside a nested agent. */
+  agentId?: InputMaybe<Scalars['String']['input']>;
+  /** Subagent type when present. */
+  agentType?: InputMaybe<Scalars['String']['input']>;
+  /** Args after client privacy seam. Pass null for name-only. */
+  args?: InputMaybe<Scalars['String']['input']>;
+  /** Working directory at invocation time. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Git branch at capture time. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Hook event name (PreToolUse or UserPromptExpansion). */
+  hookEventName?: InputMaybe<Scalars['String']['input']>;
+  /** Invocation path: skill_tool or slash. */
+  invocationPath?: InputMaybe<Scalars['String']['input']>;
+  /** Client-reported invocation timestamp (JSONL timestamp). */
+  occurredAt: Scalars['DateTime']['input'];
+  /** Client privacy level: name-only | truncated | full. Defaults to truncated. */
+  privacyLevel?: InputMaybe<Scalars['String']['input']>;
+  /** Harness prompt_id when present. */
+  promptId?: InputMaybe<Scalars['String']['input']>;
+  /** ours | third-party. */
+  scope: Scalars['String']['input'];
+  /** Harness session id when present. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['input'];
+  /** Harness tool_use_id when present. */
+  toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RecordWorkArtifactInput = {
   /** Optional human-readable note (e.g. commit message) */
   message?: InputMaybe<Scalars['String']['input']>;
@@ -3891,6 +3928,42 @@ export type SkillTagVocabularyResult = {
   tags: Array<SkillTagObject>;
   /** Number of tags in the vocabulary. */
   totalCount: Scalars['Int']['output'];
+};
+
+export type SkillUsageEventObject = {
+  __typename?: 'SkillUsageEventObject';
+  /** Subagent id when the Skill call happened inside a nested agent. */
+  agentId?: Maybe<Scalars['String']['output']>;
+  /** Subagent type when present (e.g. general-purpose). */
+  agentType?: Maybe<Scalars['String']['output']>;
+  /** Skill args after client privacy seam. Null when privacyLevel is name-only. */
+  args?: Maybe<Scalars['String']['output']>;
+  /** Working directory reported by the harness at invocation time. */
+  cwd?: Maybe<Scalars['String']['output']>;
+  /** Git branch at capture time (best-effort). */
+  gitBranch?: Maybe<Scalars['String']['output']>;
+  /** Hook that captured the event (PreToolUse or UserPromptExpansion). */
+  hookEventName?: Maybe<Scalars['String']['output']>;
+  /** Skill usage event id. */
+  id: Scalars['ID']['output'];
+  /** Invocation path: skill_tool or slash. */
+  invocationPath?: Maybe<Scalars['String']['output']>;
+  /** Client-reported invocation timestamp. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** Client privacy level applied before ingest: name-only | truncated | full. */
+  privacyLevel: Scalars['String']['output'];
+  /** Harness prompt_id when present. */
+  promptId?: Maybe<Scalars['String']['output']>;
+  /** Server receipt time (set on insert). */
+  receivedAt: Scalars['DateTime']['output'];
+  /** ours | third-party — derived by the client against skills/. */
+  scope: Scalars['String']['output'];
+  /** Harness session id when present. */
+  sessionId?: Maybe<Scalars['String']['output']>;
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['output'];
+  /** Harness tool_use_id for the Skill call when present. */
+  toolUseId?: Maybe<Scalars['String']['output']>;
 };
 
 export type StartConversationStreamInput = {
