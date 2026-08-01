@@ -1,0 +1,5 @@
+mutation createScheduledAgentJob($input: CreateScheduledAgentJobInputType!) {
+  createScheduledAgentJob(input: $input) {
+    ...ScheduledJobCard
+  }
+}

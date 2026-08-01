@@ -1,0 +1,18 @@
+fragment ScheduledJobCard on ScheduledAgentJobObject {
+  cronPattern
+  driverId
+  enabled
+  id
+  lastRunAt
+  model
+  name
+  nextRunAt
+  timezone
+  updatedAt
+}
+
+query scheduledAgentJobs {
+  scheduledAgentJobs {
+    ...ScheduledJobCard
+  }
+}

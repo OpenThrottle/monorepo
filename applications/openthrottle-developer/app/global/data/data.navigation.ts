@@ -9,6 +9,7 @@ import {
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
+  CalendarClockIcon,
   CalendarDaysIcon,
   ChartAreaIcon,
   CircleHelpIcon,
@@ -114,6 +115,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴
         icon: WandSparklesIcon,
         to: '/rules',
+      },
+      {
+        children: 'Scheduled Jobs',
+        disabled: false,
+        icon: CalendarClockIcon,
+        to: '/scheduled-jobs',
       },
       {
         beta: false,

@@ -77,6 +77,8 @@ import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-ski
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { RepositoryInspectionModule } from './graphql/repository-inspection/repository-inspection.module';
+import { ScheduledAgentJobsGraphqlModule } from './graphql/scheduled-agent-jobs/scheduled-agent-jobs-graphql.module';
+import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs-queue.module';
 import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module';
@@ -229,6 +231,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           PlanRulesQueueModule,
           PlanRunsStaleSweepQueueModule,
           PlansQueueModule,
+          ScheduledAgentJobsQueueModule,
           TaggingQueueModule,
           TaskPromotionQueueModule,
           WorkLedgerSweepQueueModule,
@@ -265,6 +268,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           QueuesGraphqlModule,
           RepositoryInspectionModule,
           RolesGraphqlModule,
+          ScheduledAgentJobsGraphqlModule,
           ServiceAccountsGraphqlModule,
           SearchGraphqlModule,
           SkillAvailabilityGraphqlModule,
