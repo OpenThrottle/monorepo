@@ -18,5 +18,18 @@ then
   exit 1;
 fi
 
+# Mirror the CI component primitive-shape gate (see the "🧱 Component
+# primitive-shape audit" step in .github/workflows/continuous-integration.yml)
+# so an R4/R5 violation fails HERE, at push time, instead of after the PR is
+# opened. Run the exact command CI runs — keep the two in lockstep.
+echo "🧱 Pre Push: Component primitive-shape audit (strict)"
+if ! pnpm run audit:component-shape:strict
+then
+  echo "\n\n 🚫 Component primitive-shape audit failed (R4/R5). Fix the violations listed above before pushing — this is the same gate CI enforces. \n\n"
+
+  # Exit with a non-zero status code to stop the push
+  exit 1;
+fi
+
 # We're good to go here
 exit 0
