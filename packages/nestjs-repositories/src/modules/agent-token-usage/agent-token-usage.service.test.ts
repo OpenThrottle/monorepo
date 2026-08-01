@@ -1,4 +1,3 @@
-import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
@@ -6,18 +5,17 @@ import { AgentTokenUsage } from './agent-token-usage.entity';
 import { AgentTokenUsageService } from './agent-token-usage.service';
 
 describe('AgentTokenUsageService', () => {
-  type UsageRepository = ReturnType<AgentTokenUsageService['getRepository']>;
-
-  const buildService = async (
-    repoOverrides: Parameters<typeof createMock<UsageRepository>>[0],
-  ): Promise<AgentTokenUsageService> => {
+  // Plain untyped mock repo (provided as `useValue`) so the vi.fn stand-ins for
+  // TypeORM's overloaded create/save are not type-checked against those
+  // signatures — mirrors the other repository service tests.
+  const buildService = async (mockRepo: {
+    create: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  }): Promise<AgentTokenUsageService> => {
     const app = await Test.createTestingModule({
       providers: [
         AgentTokenUsageService,
-        {
-          provide: getRepositoryToken(AgentTokenUsage),
-          useValue: createMock<UsageRepository>(repoOverrides),
-        },
+        { provide: getRepositoryToken(AgentTokenUsage), useValue: mockRepo },
       ],
     }).compile();
 

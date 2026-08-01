@@ -76,7 +76,11 @@ export { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.e
 export type { AgentTokenUsageData } from './modules/agent-token-usage/agent-token-usage.entity';
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module';
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service';
-export type { RecordTokenUsageInput } from './modules/agent-token-usage/agent-token-usage.service';
+export type {
+  RecordTokenUsageInput,
+  TokenUsageRangeQuery,
+  TokenUsageTotals,
+} from './modules/agent-token-usage/agent-token-usage.service';
 export { agentTokenUsageFactory } from './modules/agent-token-usage/agent-token-usage.factory';
 export type { AgentTokenUsageFactoryData } from './modules/agent-token-usage/agent-token-usage.factory';
 export {
