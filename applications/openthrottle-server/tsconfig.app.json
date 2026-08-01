@@ -9,6 +9,9 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
+      "path": "../../packages/agentic-token-usage/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
     },
     {
@@ -82,6 +85,9 @@
     },
     {
       "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
     },
     {
       "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"

@@ -22,7 +22,7 @@ describe('UsageAnalyticsGaps Component', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/No model token, cost, or latency metrics/i),
+      screen.getByText(/Token and cost usage is captured/i),
     ).toBeInTheDocument();
   });
 

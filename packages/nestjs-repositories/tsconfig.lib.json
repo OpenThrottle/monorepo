@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../agentic-token-usage/tsconfig.lib.json"
+    },
+    {
       "path": "../openthrottle-skills/tsconfig.lib.json"
     },
     {

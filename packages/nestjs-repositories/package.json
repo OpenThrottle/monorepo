@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@nestjs/typeorm": "catalog:",
+    "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",

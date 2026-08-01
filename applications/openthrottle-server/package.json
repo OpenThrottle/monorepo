@@ -17,6 +17,7 @@
     "@nestjs/jwt": "catalog:",
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
+    "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-agentic-workflow": "workspace:^",
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-bullmq": "workspace:^",

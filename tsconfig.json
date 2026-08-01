@@ -207,6 +207,9 @@
     },
     {
       "path": "./packages/openthrottle-drivers"
+    },
+    {
+      "path": "./packages/agentic-token-usage"
     }
   ]
 }

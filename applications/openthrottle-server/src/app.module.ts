@@ -87,6 +87,7 @@ import { TagActionRulesGraphqlModule } from './graphql/tag-action-rules/tag-acti
 import { TagsGraphqlModule } from './graphql/tags/tags-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
+import { TokenUsageGraphqlModule } from './graphql/token-usage/token-usage-graphql.module';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
 import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger-graphql.module';
@@ -277,6 +278,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           TagsGraphqlModule,
           TaskEmbeddingsGraphqlModule,
           TasksGraphqlModule,
+          TokenUsageGraphqlModule,
           TranscriptionStreamGraphqlModule,
           UsersGraphqlModule,
           WorkLedgerGraphqlModule,

@@ -2286,6 +2286,80 @@ type TaskEmbeddingObject {
   taskId: String!
 }
 
+type TokenUsageRowObject {
+  """Cache-read tokens for the turn, when reported."""
+  cacheReadTokens: Float
+
+  """Cache-write tokens for the turn, when reported."""
+  cacheWriteTokens: Float
+
+  """Source conversation id, when the usage came from chat; null otherwise."""
+  conversationId: ID
+
+  """Reported dollar cost of the turn, when priced."""
+  costUsd: Float
+
+  """Turn completion timestamp."""
+  createdAt: DateTime!
+
+  """Usage row id."""
+  id: ID!
+
+  """Input/prompt tokens for the turn, when reported."""
+  inputTokens: Float
+
+  """Model the usage is attributed to, when known."""
+  model: String
+
+  """Output/completion tokens for the turn, when reported."""
+  outputTokens: Float
+
+  """
+  Provider identity (driver id: claude|codex|cursor|grok|opencode|openai).
+  """
+  provider: String!
+
+  """Reasoning tokens for the turn, when reported separately."""
+  reasoningTokens: Float
+
+  """Total tokens for the turn, when reported."""
+  totalTokens: Float
+}
+
+type TokenUsageTotalsObject {
+  """Summed cache-read tokens over the range."""
+  cacheReadTokens: Float!
+
+  """Summed cache-write tokens over the range."""
+  cacheWriteTokens: Float!
+
+  """Summed dollar cost over the range."""
+  costUsd: Float!
+
+  """Summed input tokens over the range."""
+  inputTokens: Float!
+
+  """Summed output tokens over the range."""
+  outputTokens: Float!
+
+  """Summed reasoning tokens over the range."""
+  reasoningTokens: Float!
+
+  """Summed total tokens over the range."""
+  totalTokens: Float!
+
+  """Number of turns (usage rows) contributing to the totals."""
+  turnCount: Int!
+}
+
+type TokenUsageResultObject {
+  """Per-turn usage rows in the range, newest first."""
+  items: [TokenUsageRowObject!]!
+
+  """Summed usage + turn count over the same filtered range."""
+  totals: TokenUsageTotalsObject!
+}
+
 type TranscriptionStreamChunkObject {
   """
   True exactly once, on the terminal chunk (stop, idle reap, or hard cap).
@@ -2961,6 +3035,20 @@ type Query {
   List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending
   """
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
+
+  """
+  Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals.
+  """
+  tokenUsage(
+    """Start date (inclusive), YYYY-MM-DD"""
+    start: String!
+
+    """End date (inclusive), YYYY-MM-DD"""
+    end: String!
+
+    """Restrict to one provider; omit for all providers."""
+    provider: String
+  ): TokenUsageResultObject!
 
   """Get a user by ID"""
   user(id: ID!): UserObject

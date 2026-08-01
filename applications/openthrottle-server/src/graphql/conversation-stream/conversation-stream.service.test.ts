@@ -1,6 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentConversationsService,
+  AgentTokenUsageService,
+} from '@openthrottle/nestjs-repositories';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -73,12 +76,15 @@ const baseRun: StartConversationStreamRun = {
 function buildService(): {
   conversations: AgentConversationsService;
   publish: ReturnType<typeof vi.fn>;
+  recordTurnUsage: ReturnType<typeof vi.fn>;
   service: ConversationStreamService;
 } {
   const conversations = createMock<AgentConversationsService>({
     appendMessages: vi.fn().mockResolvedValue([]),
     updateModelSnapshot: vi.fn().mockResolvedValue(undefined),
   });
+  const recordTurnUsage = vi.fn().mockResolvedValue(undefined);
+  const tokenUsage = createMock<AgentTokenUsageService>({ recordTurnUsage });
   const publish = vi.fn().mockResolvedValue(undefined);
   // A live iterator that ends immediately, so subscribe() yields only its
   // replay buffer in these tests.
@@ -89,6 +95,7 @@ function buildService(): {
   const service = new ConversationStreamService(
     conversations,
     createMock<LoggerService>(),
+    tokenUsage,
     {
       asyncIterator,
       publish,
@@ -96,7 +103,7 @@ function buildService(): {
       unsubscribe: vi.fn(),
     },
   );
-  return { conversations, publish, service };
+  return { conversations, publish, recordTurnUsage, service };
 }
 
 afterEach(() => {
@@ -204,9 +211,15 @@ describe('ConversationStreamService', () => {
       };
     }
     claudeStreamMock.mockImplementation(claudeWithUsage);
-    const { conversations, publish, service } = buildService();
+    const { conversations, publish, recordTurnUsage, service } = buildService();
 
-    await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
+    await service.runStream({
+      ...baseRun,
+      backend: 'claude',
+      cwd: '/repo',
+      model: 'claude-opus-4-8',
+      provider: 'claude',
+    });
 
     const published = publish.mock.calls.map(
       ([, payload]) => payload.conversationStreamChunkAdded,
@@ -249,6 +262,104 @@ describe('ConversationStreamService', () => {
         }),
       ],
     );
+    // And a durable normalized usage row is written for the turn.
+    expect(recordTurnUsage).toHaveBeenCalledTimes(1);
+    expect(recordTurnUsage).toHaveBeenCalledWith({
+      conversationId: 'conv-1',
+      messageId: 'assistant-msg-1',
+      model: 'claude-opus-4-8',
+      provider: 'claude',
+      usage: {
+        costUsd: 0.04,
+        inputTokens: 1200,
+        outputTokens: 340,
+        totalTokens: 1540,
+      },
+      userId: 'user-1',
+    });
+  });
+
+  it('does NOT write a usage row for a Private-mode (persist:false) turn', async () => {
+    async function* claudeWithUsage(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      error?: string | null;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield { delta: 'Hi', done: false, kind: 'text' };
+      yield {
+        delta: '',
+        done: true,
+        error: null,
+        kind: 'usage',
+        metadata: { usage: { input_tokens: 10, output_tokens: 2 } },
+      };
+    }
+    claudeStreamMock.mockImplementation(claudeWithUsage);
+    const { conversations, recordTurnUsage, service } = buildService();
+
+    await service.runStream({ ...baseRun, backend: 'claude', persist: false });
+
+    expect(conversations.appendMessages).not.toHaveBeenCalled();
+    expect(recordTurnUsage).not.toHaveBeenCalled();
+  });
+
+  it('sums opencode multiple mid-stream usage chunks into ONE usage row', async () => {
+    async function* opencodeWithUsage(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield { delta: 'Wor', done: false, kind: 'text' };
+      yield {
+        delta: '',
+        done: false,
+        kind: 'usage',
+        metadata: {
+          cost: 0.01,
+          tokens: { cache: { read: 100, write: 0 }, input: 500, output: 20 },
+        },
+      };
+      yield { delta: 'king', done: false, kind: 'text' };
+      yield {
+        delta: '',
+        done: false,
+        kind: 'usage',
+        metadata: {
+          cost: 0.02,
+          tokens: { cache: { read: 40, write: 0 }, input: 300, output: 80 },
+        },
+      };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    opencodeStreamMock.mockImplementation(opencodeWithUsage);
+    const { recordTurnUsage, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'opencode',
+      model: 'sonnet',
+      provider: 'opencode',
+    });
+
+    expect(recordTurnUsage).toHaveBeenCalledTimes(1);
+    expect(recordTurnUsage).toHaveBeenCalledWith({
+      conversationId: 'conv-1',
+      messageId: 'assistant-msg-1',
+      model: 'sonnet',
+      provider: 'opencode',
+      usage: {
+        cacheReadTokens: 140,
+        cacheWriteTokens: 0,
+        costUsd: expect.closeTo(0.03, 5),
+        inputTokens: 800,
+        outputTokens: 100,
+        totalTokens: 900,
+      },
+      userId: 'user-1',
+    });
   });
 
   it('forwards a backend error reported on the terminal chunk', async () => {
