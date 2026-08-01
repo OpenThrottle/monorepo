@@ -229,7 +229,15 @@ export type {
 } from './modules/skill-usage-events/skill-usage-events.entity';
 export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module';
 export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service';
-export type { RecordSkillUsageInput } from './modules/skill-usage-events/skill-usage-events.service';
+export type {
+  RecordSkillUsageInput,
+  SkillUsageAggregation,
+  SkillUsageByDayRow,
+  SkillUsageByScopeRow,
+  SkillUsageBySkillRow,
+  SkillUsageFilterOptions,
+  SkillUsageRangeQuery,
+} from './modules/skill-usage-events/skill-usage-events.service';
 export { skillUsageEventsFactory } from './modules/skill-usage-events/skill-usage-events.factory';
 export type { SkillUsageEventFactoryData } from './modules/skill-usage-events/skill-usage-events.factory';
 export {

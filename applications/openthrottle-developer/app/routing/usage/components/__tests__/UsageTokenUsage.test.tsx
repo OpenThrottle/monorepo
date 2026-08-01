@@ -111,6 +111,25 @@ describe('UsageTokenUsage Component', () => {
     expect(claudeLink).toHaveAttribute('aria-current', 'true');
   });
 
+  test('provider filter links preserve skill-usage search params', () => {
+    const component = renderComponent({
+      items: [],
+      rangeDays: 30,
+      selectedProvider: null,
+      skillCwdParam: '/tmp/repo',
+      skillGitBranchParam: 'main',
+      skillScopeParam: 'ours',
+      totals: buildTotals({}),
+    });
+
+    const claudeLink = component.getByRole('link', { name: 'Claude' });
+    const href = claudeLink.getAttribute('href') ?? '';
+    expect(href).toContain('provider=claude');
+    expect(href).toContain('skillScope=ours');
+    expect(href).toContain('skillBranch=main');
+    expect(href).toContain('skillCwd=%2Ftmp%2Frepo');
+  });
+
   test('shows a provider-scoped empty state when no rows', () => {
     const component = renderComponent({
       items: [],

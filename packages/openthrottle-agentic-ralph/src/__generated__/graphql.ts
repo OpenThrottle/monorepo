@@ -2780,6 +2780,8 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
+  skillUsage: SkillUsageResultObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
   /** The authenticated user's tag→action rules, oldest first. */
@@ -3057,6 +3059,14 @@ export type QuerySkillAvailabilityArgs = {
 
 export type QuerySkillAvailabilityRuleSetArgs = {
   projectId: Scalars['ID']['input'];
+};
+
+export type QuerySkillUsageArgs = {
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  end: Scalars['String']['input'];
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  scope?: InputMaybe<Scalars['String']['input']>;
+  start: Scalars['String']['input'];
 };
 
 export type QueryTagActionRuleArgs = {
@@ -3930,6 +3940,36 @@ export type SkillTagVocabularyResult = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type SkillUsageByDayObject = {
+  __typename?: 'SkillUsageByDayObject';
+  /** UTC calendar day (YYYY-MM-DD). */
+  date: Scalars['String']['output'];
+  /** ours-scoped invocations on this day. */
+  oursCount: Scalars['Int']['output'];
+  /** third-party-scoped invocations on this day. */
+  thirdPartyCount: Scalars['Int']['output'];
+  /** Total invocations on this day. */
+  totalCount: Scalars['Int']['output'];
+};
+
+export type SkillUsageByScopeObject = {
+  __typename?: 'SkillUsageByScopeObject';
+  /** Invocation count for this scope in the filtered range. */
+  count: Scalars['Int']['output'];
+  /** ours | third-party. */
+  scope: Scalars['String']['output'];
+};
+
+export type SkillUsageBySkillObject = {
+  __typename?: 'SkillUsageBySkillObject';
+  /** Invocation count for this skill in the filtered range. */
+  count: Scalars['Int']['output'];
+  /** ours | third-party for this skill row. */
+  scope: Scalars['String']['output'];
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['output'];
+};
+
 export type SkillUsageEventObject = {
   __typename?: 'SkillUsageEventObject';
   /** Subagent id when the Skill call happened inside a nested agent. */
@@ -3964,6 +4004,28 @@ export type SkillUsageEventObject = {
   skillName: Scalars['String']['output'];
   /** Harness tool_use_id for the Skill call when present. */
   toolUseId?: Maybe<Scalars['String']['output']>;
+};
+
+export type SkillUsageFilterOptionsObject = {
+  __typename?: 'SkillUsageFilterOptionsObject';
+  /** Distinct non-null cwd values in the date window (for project/path filter). */
+  cwds: Array<Scalars['String']['output']>;
+  /** Distinct non-null git branch values in the date window. */
+  gitBranches: Array<Scalars['String']['output']>;
+};
+
+export type SkillUsageResultObject = {
+  __typename?: 'SkillUsageResultObject';
+  /** Per-day series (UTC), oldest first, with ours/third-party split. */
+  byDay: Array<SkillUsageByDayObject>;
+  /** ours vs third-party totals for the filtered range. */
+  byScope: Array<SkillUsageByScopeObject>;
+  /** Top skills by count (highest first; capped). */
+  bySkill: Array<SkillUsageBySkillObject>;
+  /** Distinct branch/cwd values in the date window for filter dropdowns. */
+  filterOptions: SkillUsageFilterOptionsObject;
+  /** Total invocations matching the filtered range. */
+  totalCount: Scalars['Int']['output'];
 };
 
 export type StartConversationStreamInput = {

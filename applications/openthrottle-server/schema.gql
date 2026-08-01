@@ -2250,6 +2250,66 @@ type SkillUsageEventObject {
   toolUseId: String
 }
 
+type SkillUsageBySkillObject {
+  """Invocation count for this skill in the filtered range."""
+  count: Int!
+
+  """ours | third-party for this skill row."""
+  scope: String!
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+}
+
+type SkillUsageByScopeObject {
+  """Invocation count for this scope in the filtered range."""
+  count: Int!
+
+  """ours | third-party."""
+  scope: String!
+}
+
+type SkillUsageByDayObject {
+  """UTC calendar day (YYYY-MM-DD)."""
+  date: String!
+
+  """ours-scoped invocations on this day."""
+  oursCount: Int!
+
+  """third-party-scoped invocations on this day."""
+  thirdPartyCount: Int!
+
+  """Total invocations on this day."""
+  totalCount: Int!
+}
+
+type SkillUsageFilterOptionsObject {
+  """
+  Distinct non-null cwd values in the date window (for project/path filter).
+  """
+  cwds: [String!]!
+
+  """Distinct non-null git branch values in the date window."""
+  gitBranches: [String!]!
+}
+
+type SkillUsageResultObject {
+  """Per-day series (UTC), oldest first, with ours/third-party split."""
+  byDay: [SkillUsageByDayObject!]!
+
+  """ours vs third-party totals for the filtered range."""
+  byScope: [SkillUsageByScopeObject!]!
+
+  """Top skills by count (highest first; capped)."""
+  bySkill: [SkillUsageBySkillObject!]!
+
+  """Distinct branch/cwd values in the date window for filter dropdowns."""
+  filterOptions: SkillUsageFilterOptionsObject!
+
+  """Total invocations matching the filtered range."""
+  totalCount: Int!
+}
+
 """
 A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user.
 """
@@ -3188,6 +3248,28 @@ type Query {
   List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending
   """
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
+
+  """
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
+  """
+  skillUsage(
+    """Start date (inclusive), YYYY-MM-DD"""
+    start: String!
+
+    """End date (inclusive), YYYY-MM-DD"""
+    end: String!
+
+    """Restrict to ours or third-party; omit for both."""
+    scope: String
+
+    """Restrict to one git branch; omit for all branches."""
+    gitBranch: String
+
+    """
+    Restrict to one working directory (project path proxy); omit for all.
+    """
+    cwd: String
+  ): SkillUsageResultObject!
 
   """
   Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals.

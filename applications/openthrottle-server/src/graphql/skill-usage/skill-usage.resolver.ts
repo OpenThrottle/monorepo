@@ -1,7 +1,8 @@
 /**
- * @description GraphQL resolver for skill usage ingest. Persists harness-
- * captured Skill invocations (ours + third-party). Args are stored as-sent;
- * the server never re-expands truncated/redacted payloads.
+ * @description GraphQL resolver for skill usage ingest + aggregation.
+ * Persists harness-captured Skill invocations (ours + third-party) and serves
+ * the Developer Usage surface. Args are stored as-sent; the server never
+ * re-expands truncated/redacted payloads.
  */
 
 import {
@@ -11,11 +12,19 @@ import {
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { BadRequestException, UseGuards } from '@nestjs/common';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { RecordSkillUsageInput } from './skill-usage.input';
-import { toSkillUsageEventObject } from './skill-usage.mapper';
-import { SkillUsageEventObject } from './skill-usage.object';
+import {
+  toSkillUsageEventObject,
+  toSkillUsageResultObject,
+} from './skill-usage.mapper';
+import {
+  SkillUsageEventObject,
+  SkillUsageResultObject,
+} from './skill-usage.object';
 
 const isSkillUsageScope = (value: string): value is SkillUsageScope =>
   value === SKILL_USAGE_SCOPES.OURS || value === SKILL_USAGE_SCOPES.THIRD_PARTY;
@@ -27,9 +36,18 @@ const isSkillUsagePrivacyLevel = (
   value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
   value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED;
 
+const YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
+
+const assertYyyyMmDd = (label: string, value: string): void => {
+  if (!YYYY_MM_DD.test(value)) {
+    throw new BadRequestException(`${label} must be YYYY-MM-DD`);
+  }
+};
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc)
-// Service accounts (ot_sa_…) and human JWTs both work; Phase 2b hook posts with
-// OPENTHROTTLE_MCP_AUTH_TOKEN.
+// Ingest: service accounts (ot_sa_…) and human JWTs both work; Phase 2b hook
+// posts with OPENTHROTTLE_MCP_AUTH_TOKEN. Aggregation query: SETTINGS_READ
+// (mirrors tokenUsage).
 @Resolver(() => SkillUsageEventObject)
 export class SkillUsageResolver {
   constructor(
@@ -88,5 +106,59 @@ export class SkillUsageResolver {
     });
 
     return toSkillUsageEventObject(saved);
+  }
+
+  @Query(() => SkillUsageResultObject, {
+    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async skillUsage(
+    @Args('start', { description: 'Start date (inclusive), YYYY-MM-DD' })
+    start: string,
+    @Args('end', { description: 'End date (inclusive), YYYY-MM-DD' })
+    end: string,
+    @Args('scope', {
+      description: 'Restrict to ours or third-party; omit for both.',
+      nullable: true,
+      type: () => String,
+    })
+    scope?: string | null,
+    @Args('gitBranch', {
+      description: 'Restrict to one git branch; omit for all branches.',
+      nullable: true,
+      type: () => String,
+    })
+    gitBranch?: string | null,
+    @Args('cwd', {
+      description:
+        'Restrict to one working directory (project path proxy); omit for all.',
+      nullable: true,
+      type: () => String,
+    })
+    cwd?: string | null,
+  ): Promise<SkillUsageResultObject> {
+    assertYyyyMmDd('start', start);
+    assertYyyyMmDd('end', end);
+
+    let resolvedScope: SkillUsageScope | null = null;
+    if (scope != null && scope !== '') {
+      if (!isSkillUsageScope(scope)) {
+        throw new BadRequestException(
+          `scope must be "${SKILL_USAGE_SCOPES.OURS}" or "${SKILL_USAGE_SCOPES.THIRD_PARTY}"`,
+        );
+      }
+      resolvedScope = scope;
+    }
+
+    const aggregation = await this.skillUsageEventsService.getUsageAggregation({
+      cwd: cwd ?? null,
+      end,
+      gitBranch: gitBranch ?? null,
+      scope: resolvedScope,
+      start,
+    });
+
+    return toSkillUsageResultObject(aggregation);
   }
 }
