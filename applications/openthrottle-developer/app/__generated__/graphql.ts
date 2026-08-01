@@ -7665,6 +7665,59 @@ export type RevokeServiceAccountCredentialMutation = {
   revokeServiceAccountCredential: boolean;
 };
 
+export type ConnectMcpConnectorMutationVariables = Exact<{
+  input: ConnectMcpConnectorInput;
+}>;
+
+export type ConnectMcpConnectorMutation = {
+  __typename?: 'Mutation';
+  connectMcpConnector: {
+    __typename?: 'McpConnectorConnectionResultObject';
+    connection: {
+      __typename?: 'McpConnectorConnectionObject';
+      authType: string;
+      connectedAt: any;
+      connectorKey: string;
+      credentialLabel?: string | null;
+      credentialPrefix?: string | null;
+      enabled: boolean;
+      id: string;
+      lastUsedAt?: any | null;
+    };
+  };
+};
+
+export type SetMcpConnectorEnabledMutationVariables = Exact<{
+  input: SetMcpConnectorEnabledInput;
+}>;
+
+export type SetMcpConnectorEnabledMutation = {
+  __typename?: 'Mutation';
+  setMcpConnectorEnabled?: {
+    __typename?: 'McpConnectorConnectionResultObject';
+    connection: {
+      __typename?: 'McpConnectorConnectionObject';
+      authType: string;
+      connectedAt: any;
+      connectorKey: string;
+      credentialLabel?: string | null;
+      credentialPrefix?: string | null;
+      enabled: boolean;
+      id: string;
+      lastUsedAt?: any | null;
+    };
+  } | null;
+};
+
+export type DisconnectMcpConnectorMutationVariables = Exact<{
+  connectorKey: Scalars['ID']['input'];
+}>;
+
+export type DisconnectMcpConnectorMutation = {
+  __typename?: 'Mutation';
+  disconnectMcpConnector: boolean;
+};
+
 export type McpConnectorFieldsFragment = {
   __typename?: 'McpConnectorObject';
   authType: string;
@@ -19471,6 +19524,231 @@ export const RevokeServiceAccountCredentialDocument = {
 } as unknown as DocumentNode<
   RevokeServiceAccountCredentialMutation,
   RevokeServiceAccountCredentialMutationVariables
+>;
+export const ConnectMcpConnectorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'connectMcpConnector' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ConnectMcpConnectorInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'connectMcpConnector' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'McpConnectorConnectionFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ConnectMcpConnectorMutation,
+  ConnectMcpConnectorMutationVariables
+>;
+export const SetMcpConnectorEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setMcpConnectorEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SetMcpConnectorEnabledInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setMcpConnectorEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'connection' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'McpConnectorConnectionFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetMcpConnectorEnabledMutation,
+  SetMcpConnectorEnabledMutationVariables
+>;
+export const DisconnectMcpConnectorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'disconnectMcpConnector' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'connectorKey' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'disconnectMcpConnector' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'connectorKey' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'connectorKey' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DisconnectMcpConnectorMutation,
+  DisconnectMcpConnectorMutationVariables
 >;
 export const GetSettingsMcpDocument = {
   kind: 'Document',
