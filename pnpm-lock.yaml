@@ -2266,6 +2266,9 @@ importers:
       '@openthrottle/nestjs-repositories':
         specifier: workspace:^
         version: link:../../packages/nestjs-repositories
+      '@openthrottle/nestjs-rollout':
+        specifier: workspace:^
+        version: link:../../packages/nestjs-rollout
       '@openthrottle/nestjs-stripe':
         specifier: workspace:^
         version: link:../../packages/nestjs-stripe

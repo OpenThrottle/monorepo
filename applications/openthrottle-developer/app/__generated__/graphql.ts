@@ -622,6 +622,17 @@ export type CreateRoleInput = {
   name: Scalars['String']['input'];
 };
 
+export type CreateRolloutFlagInput = {
+  /** Description of what the flag gates. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Master switch. Defaults to off. */
+  enabled?: Scalars['Boolean']['input'];
+  /** Unique flag key (kebab/dotted string). Must be unique. */
+  key: Scalars['String']['input'];
+  /** RBAC role names to target. Empty => enabled for everyone. */
+  targetRoles?: Array<Scalars['String']['input']>;
+};
+
 export type CreateScheduledAgentJobInputType = {
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). */
   cronPattern: Scalars['String']['input'];
@@ -1010,6 +1021,14 @@ export type EvaluatePlanRulesResultObject = {
   planId: Scalars['String']['output'];
   /** Trigger kind recorded on the enqueued pass (always "manual" for this mutation). */
   triggerKind: Scalars['String']['output'];
+};
+
+export type FeatureFlagObject = {
+  __typename?: 'FeatureFlagObject';
+  /** Whether the flag is on for the current actor. */
+  enabled: Scalars['Boolean']['output'];
+  /** Flag key. */
+  key: Scalars['String']['output'];
 };
 
 export type GeneratorDetailObject = {
@@ -1406,6 +1425,8 @@ export type Mutation = {
   createQueue: CreateQueueResultObject;
   /** Create a role */
   createRole: RoleObject;
+  /** Create a rollout feature flag */
+  createRolloutFlag: RolloutFlagObject;
   /** Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings. */
   createScheduledAgentJob: ScheduledAgentJobObject;
   /** Create a service account (admin, human only). */
@@ -1437,6 +1458,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
+  /** Delete a rollout feature flag */
+  deleteRolloutFlag: Scalars['Boolean']['output'];
   /** Delete a scheduled agent job and its scheduler (owner only). Returns whether a row was removed. */
   deleteScheduledAgentJob: Scalars['Boolean']['output'];
   /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
@@ -1568,6 +1591,8 @@ export type Mutation = {
   updateRepository: RepositoryObject;
   /** Update a role */
   updateRole?: Maybe<RoleObject>;
+  /** Update a rollout feature flag */
+  updateRolloutFlag?: Maybe<RolloutFlagObject>;
   /** Update a scheduled agent job (owner only). Re-projects the BullMQ scheduler. */
   updateScheduledAgentJob: ScheduledAgentJobObject;
   /** Update a service account (admin, human only). */
@@ -1711,6 +1736,10 @@ export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
 };
 
+export type MutationCreateRolloutFlagArgs = {
+  input: CreateRolloutFlagInput;
+};
+
 export type MutationCreateScheduledAgentJobArgs = {
   input: CreateScheduledAgentJobInputType;
 };
@@ -1764,6 +1793,10 @@ export type MutationDeleteProjectArgs = {
 };
 
 export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationDeleteRolloutFlagArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1995,6 +2028,10 @@ export type MutationUpdateRepositoryArgs = {
 
 export type MutationUpdateRoleArgs = {
   input: UpdateRoleInput;
+};
+
+export type MutationUpdateRolloutFlagArgs = {
+  input: UpdateRolloutFlagInput;
 };
 
 export type MutationUpdateScheduledAgentJobArgs = {
@@ -2556,6 +2593,8 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
+  /** Evaluated feature flags for the current actor */
+  myFeatureFlags: Array<FeatureFlagObject>;
   /** Get permission names for the current user */
   myPermissions: Array<Scalars['String']['output']>;
   /** Get a note by ID */
@@ -2624,6 +2663,10 @@ export type Query = {
   rolesForServiceAccount: Array<RoleObject>;
   /** Get roles assigned to a user */
   rolesForUser: Array<RoleObject>;
+  /** Get a rollout feature flag by id */
+  rolloutFlag?: Maybe<RolloutFlagObject>;
+  /** List all rollout feature flags */
+  rolloutFlags: Array<RolloutFlagObject>;
   /** The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications. */
   ruleApplications: Array<RuleApplicationObject>;
   /** One scheduled agent job by id, or null. */
@@ -2880,6 +2923,10 @@ export type QueryRolesForServiceAccountArgs = {
 
 export type QueryRolesForUserArgs = {
   userId: Scalars['ID']['input'];
+};
+
+export type QueryRolloutFlagArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryRuleApplicationsArgs = {
@@ -3456,6 +3503,20 @@ export type RoleObject = {
   name: Scalars['String']['output'];
   /** Permissions assigned to this role */
   permissions: Array<PermissionObject>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RolloutFlagObject = {
+  __typename?: 'RolloutFlagObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  /** Master switch. When false the flag is off for everyone. */
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Unique flag key (e.g. new-dashboard or billing.invoices) */
+  key: Scalars['String']['output'];
+  /** RBAC role names the flag targets. Empty => enabled for everyone. */
+  targetRoles: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -4218,6 +4279,19 @@ export type UpdateRoleInput = {
   id: Scalars['ID']['input'];
   /** Role name. Pass null to leave unchanged. */
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateRolloutFlagInput = {
+  /** Description. Pass null to clear, omit to leave unchanged. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Master switch. Omit to leave unchanged. */
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Flag id to update */
+  id: Scalars['ID']['input'];
+  /** Flag key. Omit to leave unchanged; must stay unique. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  /** RBAC role names to target. Omit to leave unchanged. */
+  targetRoles?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type UpdateScheduledAgentJobInputType = {
