@@ -66,3 +66,36 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
   remoteLocalOnly: 'Local only (no remote detected)',
   saveButton: 'Save changes',
 } as const;
+
+/**
+ * @description Copy for the rollout (feature-flagging) settings routes.
+ */
+export const ROLLOUT_COPY = {
+  createButton: 'New flag',
+  createDescription:
+    'Feature flags gate functionality by RBAC role. A flag is on when enabled and either untargeted (everyone) or the actor holds a targeted role.',
+  createTitle: 'Create a feature flag',
+  deleteButton: 'Delete',
+  deleteConfirm: 'Delete this feature flag? This cannot be undone.',
+  descriptionHelp: 'Optional. What does this flag gate?',
+  descriptionLabel: 'Description',
+  descriptionPlaceholder: 'Gates the redesigned dashboard',
+  editButton: 'Edit',
+  editDescription: 'Update the flag key, description, targeting, and state.',
+  editTitle: 'Edit feature flag',
+  emptyState: 'No feature flags yet. Create one to get started.',
+  enabledHelp:
+    'When off, the flag is off for everyone regardless of targeting.',
+  enabledLabel: 'Enabled',
+  intro:
+    'Rollout is OpenThrottle’s feature-flagging system. Flags are global or targeted to RBAC roles and evaluated server-side.',
+  keyHelp: 'Unique, stable identifier used in code (e.g. new-dashboard).',
+  keyLabel: 'Key',
+  keyPlaceholder: 'new-dashboard',
+  saveButton: 'Save changes',
+  targetRolesHelp:
+    'Comma-separated RBAC role names (e.g. admin, viewer). Leave blank to enable for everyone.',
+  targetRolesLabel: 'Target roles',
+  targetRolesPlaceholder: 'admin, viewer',
+  title: 'Rollout',
+} as const;

@@ -7585,6 +7585,96 @@ export type RevokeServiceAccountCredentialMutation = {
   revokeServiceAccountCredential: boolean;
 };
 
+export type GetRolloutFlagQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type GetRolloutFlagQuery = {
+  __typename?: 'Query';
+  rolloutFlag?: {
+    __typename?: 'RolloutFlagObject';
+    createdAt: any;
+    description?: string | null;
+    enabled: boolean;
+    id: string;
+    key: string;
+    targetRoles: Array<string>;
+    updatedAt: any;
+  } | null;
+};
+
+export type UpdateRolloutFlagMutationVariables = Exact<{
+  input: UpdateRolloutFlagInput;
+}>;
+
+export type UpdateRolloutFlagMutation = {
+  __typename?: 'Mutation';
+  updateRolloutFlag?: {
+    __typename?: 'RolloutFlagObject';
+    createdAt: any;
+    description?: string | null;
+    enabled: boolean;
+    id: string;
+    key: string;
+    targetRoles: Array<string>;
+    updatedAt: any;
+  } | null;
+};
+
+export type RolloutFlagFieldsFragment = {
+  __typename?: 'RolloutFlagObject';
+  createdAt: any;
+  description?: string | null;
+  enabled: boolean;
+  id: string;
+  key: string;
+  targetRoles: Array<string>;
+  updatedAt: any;
+};
+
+export type ListRolloutFlagsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ListRolloutFlagsQuery = {
+  __typename?: 'Query';
+  rolloutFlags: Array<{
+    __typename?: 'RolloutFlagObject';
+    createdAt: any;
+    description?: string | null;
+    enabled: boolean;
+    id: string;
+    key: string;
+    targetRoles: Array<string>;
+    updatedAt: any;
+  }>;
+};
+
+export type CreateRolloutFlagMutationVariables = Exact<{
+  input: CreateRolloutFlagInput;
+}>;
+
+export type CreateRolloutFlagMutation = {
+  __typename?: 'Mutation';
+  createRolloutFlag: {
+    __typename?: 'RolloutFlagObject';
+    createdAt: any;
+    description?: string | null;
+    enabled: boolean;
+    id: string;
+    key: string;
+    targetRoles: Array<string>;
+    updatedAt: any;
+  };
+};
+
+export type DeleteRolloutFlagMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type DeleteRolloutFlagMutation = {
+  __typename?: 'Mutation';
+  deleteRolloutFlag: boolean;
+};
+
 export type RepositoryCheckoutFieldsFragment = {
   __typename?: 'RepositoryCheckoutObject';
   createdAt: any;
@@ -10005,6 +10095,31 @@ export const ServiceAccountListItemFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ServiceAccountListItemFragment, unknown>;
+export const RolloutFlagFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RolloutFlagFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RolloutFlagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'targetRoles' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RolloutFlagFieldsFragment, unknown>;
 export const RepositoryCheckoutFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19166,6 +19281,321 @@ export const RevokeServiceAccountCredentialDocument = {
 } as unknown as DocumentNode<
   RevokeServiceAccountCredentialMutation,
   RevokeServiceAccountCredentialMutationVariables
+>;
+export const GetRolloutFlagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getRolloutFlag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'rolloutFlag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RolloutFlagFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RolloutFlagFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RolloutFlagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'targetRoles' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetRolloutFlagQuery, GetRolloutFlagQueryVariables>;
+export const UpdateRolloutFlagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateRolloutFlag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateRolloutFlagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateRolloutFlag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RolloutFlagFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RolloutFlagFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RolloutFlagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'targetRoles' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateRolloutFlagMutation,
+  UpdateRolloutFlagMutationVariables
+>;
+export const ListRolloutFlagsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'listRolloutFlags' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'rolloutFlags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RolloutFlagFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RolloutFlagFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RolloutFlagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'targetRoles' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ListRolloutFlagsQuery,
+  ListRolloutFlagsQueryVariables
+>;
+export const CreateRolloutFlagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createRolloutFlag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateRolloutFlagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createRolloutFlag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RolloutFlagFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RolloutFlagFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RolloutFlagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'targetRoles' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateRolloutFlagMutation,
+  CreateRolloutFlagMutationVariables
+>;
+export const DeleteRolloutFlagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteRolloutFlag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteRolloutFlag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteRolloutFlagMutation,
+  DeleteRolloutFlagMutationVariables
 >;
 export const GetWorkspaceSettingsDocument = {
   kind: 'Document',

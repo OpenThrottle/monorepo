@@ -27,6 +27,7 @@ import {
   StickyNoteIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
+  ToggleRightIcon,
   UserCircleIcon,
   WandSparklesIcon,
 } from 'lucide-react';
@@ -181,6 +182,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴 🟠 🟡
         icon: TerminalSquareIcon,
         to: '/settings/logs',
+      },
+      {
+        children: 'Rollout',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: ToggleRightIcon,
+        to: '/settings/rollout',
       },
       {
         children: 'Workspace',
