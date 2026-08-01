@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
+import {
+  QUEUE_STAT_ROW_COLUMN_CLASS,
+  type QueueStatRowColumns,
+} from '~/routing/queues/data/queue-stat-row';
 
 export interface QueueStatRowItem {
   readonly color?: string;
@@ -11,19 +15,9 @@ export interface QueueStatRowItem {
 
 export interface QueueStatRowProps {
   className?: string;
-  columns?: 2 | 3 | 4 | 5;
+  columns?: QueueStatRowColumns;
   stats: readonly QueueStatRowItem[];
 }
-
-const COLUMN_CLASS: Record<
-  NonNullable<QueueStatRowProps['columns']>,
-  string
-> = {
-  2: 'md:grid-cols-2',
-  3: 'md:grid-cols-3',
-  4: 'md:grid-cols-4',
-  5: 'md:grid-cols-5',
-};
 
 /**
  * @description Reusable summary stat row over OpenThrottleStatCard so every Queues surface frames counts the same way.
@@ -47,7 +41,7 @@ export const QueueStatRow = (props: QueueStatRowProps): React.ReactElement => {
     <div
       className={clsx(
         'grid gap-4 md:gap-8 lg:gap-12',
-        COLUMN_CLASS[columns],
+        QUEUE_STAT_ROW_COLUMN_CLASS[columns],
         className,
       )}
       data-testid="QueueStatRow"

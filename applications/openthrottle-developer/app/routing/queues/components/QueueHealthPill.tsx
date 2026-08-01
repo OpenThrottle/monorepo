@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/queue-health-display';
 import {
   computeQueueHealth,
   type QueueHealthCounts,
-  type QueueHealthLevel,
 } from '~/routing/queues/utils/queue-health';
 
 export interface QueueHealthPillProps extends QueueHealthCounts {
@@ -12,12 +12,6 @@ export interface QueueHealthPillProps extends QueueHealthCounts {
   'data-testid'?: string;
   showLabel?: boolean;
 }
-
-const DOT_CLASS: Record<QueueHealthLevel, string> = {
-  critical: 'bg-red-500',
-  degraded: 'bg-amber-500',
-  healthy: 'bg-green-500',
-};
 
 /**
  * @description Green/amber/red health pill rolling a queue's failed + backlog counts into one scannable signal.
@@ -65,7 +59,10 @@ export const QueueHealthPill = (
     >
       <span
         aria-hidden={true}
-        className={clsx('size-2 rounded-full', DOT_CLASS[health.level])}
+        className={clsx(
+          'size-2 rounded-full',
+          QUEUE_HEALTH_DOT_CLASS[health.level],
+        )}
       />
       {showLabel ? health.label : null}
     </Badge>

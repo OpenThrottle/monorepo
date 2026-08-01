@@ -5,13 +5,8 @@ import { ArrowRightIcon } from 'lucide-react';
 import clsx from 'clsx';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
+import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/queue-health-display';
 import { computeQueueHealth } from '~/routing/queues/utils/queue-health';
-
-const HEALTH_RANK: Record<string, number> = {
-  critical: 0,
-  degraded: 1,
-  healthy: 2,
-};
 
 const TOP_QUEUES = 6;
 
@@ -45,7 +40,7 @@ export const DashboardQueueHealthCard = (
       }))
       .sort((a, b) => {
         const rankDiff =
-          HEALTH_RANK[a.health.level] - HEALTH_RANK[b.health.level];
+          QUEUE_HEALTH_RANK[a.health.level] - QUEUE_HEALTH_RANK[b.health.level];
         if (rankDiff !== 0) return rankDiff;
         if (a.queue.failedCount !== b.queue.failedCount) {
           return b.queue.failedCount - a.queue.failedCount;

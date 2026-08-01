@@ -8,44 +8,19 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
+import {
+  QUEUE_JOB_FINISHED_STATES,
+  QUEUE_JOB_LOG_LEVELS,
+  QUEUE_JOB_LOG_STATUS_META,
+} from '~/routing/queues/data/queue-job-log-console';
 import { useQueueJobLogs } from '~/routing/queues/hooks/useQueueJobLogs';
-import type {
-  QueueJobLogEvent,
-  QueueJobLogStreamStatus,
-} from '~/routing/queues/hooks/useQueueJobLogs';
-
-const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
-
-const FINISHED_STATES = new Set(['completed', 'failed']);
-
-const STATUS_META: Record<
-  QueueJobLogStreamStatus,
-  { dot: string; label: string }
-> = {
-  ended: { dot: 'bg-muted-foreground', label: 'Stream ended' },
-  error: { dot: 'bg-red-500', label: 'Stream error' },
-  idle: { dot: 'bg-muted-foreground', label: 'Live updates unavailable' },
-  live: { dot: 'bg-green-500', label: 'Live' },
-};
+import { formatQueueJobLogLine } from '~/routing/queues/utils/queue-job-log-line';
 
 export interface QueueJobLogConsoleProps {
   className?: string;
   jobId: string;
   jobState: string;
   queueName: string;
-}
-
-function formatTimestamp(value: unknown): string {
-  if (typeof value !== 'string' && typeof value !== 'number') {
-    return '';
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
-}
-
-function formatLine(event: QueueJobLogEvent): string {
-  const ts = formatTimestamp(event.timestamp);
-  return `${ts} ${event.level.toUpperCase().padEnd(5)} ${event.source}  ${event.message}`;
 }
 
 /**
@@ -83,11 +58,11 @@ export const QueueJobLogConsole = (
     [events, levels, query],
   );
   const copyText = React.useMemo(
-    () => filtered.map(formatLine).join('\n'),
+    () => filtered.map(formatQueueJobLogLine).join('\n'),
     [filtered],
   );
-  const statusMeta = STATUS_META[status];
-  const isFinished = FINISHED_STATES.has(jobState);
+  const statusMeta = QUEUE_JOB_LOG_STATUS_META[status];
+  const isFinished = QUEUE_JOB_FINISHED_STATES.has(jobState);
 
   // Handlers
   const handleScroll = React.useCallback(() => {
@@ -144,7 +119,7 @@ export const QueueJobLogConsole = (
           value={levels}
           variant="outline"
         >
-          {LOG_LEVELS.map((level) => (
+          {QUEUE_JOB_LOG_LEVELS.map((level) => (
             <ToggleGroupItem key={level} value={level}>
               {level}
             </ToggleGroupItem>
@@ -183,7 +158,7 @@ export const QueueJobLogConsole = (
           tabIndex={0}
         >
           {filtered.map((event) => (
-            <div key={event.cursor}>{formatLine(event)}</div>
+            <div key={event.cursor}>{formatQueueJobLogLine(event)}</div>
           ))}
         </pre>
       )}
