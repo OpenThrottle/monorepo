@@ -1895,6 +1895,9 @@ type ScheduledAgentJobRunObject {
   errorMessage: String
   startedAt: DateTime
   finishedAt: DateTime
+
+  """When cancellation was requested; null if never cancelled."""
+  cancelRequestedAt: DateTime
   createdAt: DateTime!
 }
 
@@ -2930,6 +2933,9 @@ type Query {
 
   """Run history for a scheduled agent job, newest first."""
   scheduledAgentJobRuns(scheduledAgentJobId: ID!, limit: Int): [ScheduledAgentJobRunObject!]!
+
+  """One run of a scheduled agent job by run id, or null."""
+  scheduledAgentJobRun(runId: ID!): ScheduledAgentJobRunObject
 
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!

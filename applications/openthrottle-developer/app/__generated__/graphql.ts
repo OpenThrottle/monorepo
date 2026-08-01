@@ -2628,6 +2628,8 @@ export type Query = {
   ruleApplications: Array<RuleApplicationObject>;
   /** One scheduled agent job by id, or null. */
   scheduledAgentJob?: Maybe<ScheduledAgentJobObject>;
+  /** One run of a scheduled agent job by run id, or null. */
+  scheduledAgentJobRun?: Maybe<ScheduledAgentJobRunObject>;
   /** Run history for a scheduled agent job, newest first. */
   scheduledAgentJobRuns: Array<ScheduledAgentJobRunObject>;
   /** All scheduled agent jobs, newest first. */
@@ -2886,6 +2888,10 @@ export type QueryRuleApplicationsArgs = {
 
 export type QueryScheduledAgentJobArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobRunArgs = {
+  runId: Scalars['ID']['input'];
 };
 
 export type QueryScheduledAgentJobRunsArgs = {
@@ -3508,6 +3514,8 @@ export type ScheduledAgentJobRunObject = {
   __typename?: 'ScheduledAgentJobRunObject';
   /** BullMQ job id — join key to queueJobLogs; null before the run is enqueued. */
   bullmqJobId?: Maybe<Scalars['String']['output']>;
+  /** When cancellation was requested; null if never cancelled. */
+  cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   driverId: Scalars['String']['output'];
   /** Failure detail; null on success. */
