@@ -33,31 +33,27 @@ export default (config: ConfigEnv) => {
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description `maxWorkers` caps concurrent worker processes. This is the
-       * largest suite in the workspace and CI runs every project's lint/typecheck/
-       * test on ONE shared 4-vCPU box via `nx ... --parallel`, so several app
-       * suites + tsc typechecks run at once. Per-file heap here is modest (~355MB
-       * peak, no accumulation — measured), so the developer suite alone is fine;
-       * the OOM-kills come from box-wide memory contention, and this suite's plan-
-       * detail workers are the biggest/most-frequent victims (reported as
-       * `❯ … (0 test)`, a silent container SIGKILL). Capping to 2 (not the 4-vCPU
-       * default) roughly halves this suite's contribution to peak box memory.
-       * Vitest 4 removed the per-pool `poolOptions.forks.maxForks` knob; the cap is
-       * this top-level `maxWorkers`. Proper fix (shard across boxes) is OT plan
-       * e448a51d; do NOT raise `--max-old-space-size` — it fights the box limit.
+       * @description `maxWorkers` caps concurrent worker processes. CI now runs the
+       * `test` target with `nx ... --parallel=1` (see continuous-integration.yml),
+       * so this suite has the shared box to itself — no cross-suite memory
+       * contention. Keep the cap at the 4-vCPU default: MORE workers is better here,
+       * because `forks` reuses each worker process across the files it is handed and
+       * its RSS accumulates (fewer workers -> more files each -> higher peak RSS ->
+       * OOM; empirically `maxWorkers: 2` crashed MORE files than 4). Vitest 4 removed
+       * the per-pool `poolOptions.forks.maxForks` knob; this top-level `maxWorkers`
+       * is the cap. Do NOT raise `--max-old-space-size` — it fights the box limit.
        */
-      maxWorkers: 2,
+      maxWorkers: 4,
       /**
-       * @description `forks` runs each test file in a fresh child process and
-       * reclaims its memory on teardown between files. We moved off `vmForks`
-       * because its reused worker accumulates V8 VM contexts across this large
-       * suite (354 files) and crashes the worker under CI memory pressure — the
-       * crash surfaces as in-flight files reporting `(0 test)` with no error
-       * stack and no Vitest summary (a flaky, non-deterministic CI failure with
-       * zero real assertion failures). `forks` is slower on wall-clock (it
-       * re-imports the module graph per file — the cost `vmForks` avoided) but is
-       * stable. Sharding the suite to claw back the wall-clock regression is
-       * tracked as a follow-up.
+       * @description `forks` runs each test file with an isolated module registry
+       * (no cross-file global leakage) in a REUSED worker process. We moved off
+       * `vmForks` because its reused worker accumulates V8 VM contexts across this
+       * large suite (354 files) and crashes under CI memory pressure — surfacing as
+       * in-flight files reporting `(0 test)` with no error stack (a silent container
+       * SIGKILL, not a V8 heap error). `forks` accumulates far less and is stable,
+       * but is slower (re-imports the module graph per file — the cost `vmForks`
+       * avoided). Sharding the suite across boxes to claw back the wall-clock (and
+       * re-enable parallel test execution) is tracked in OT plan e448a51d.
        */
       pool: 'forks',
       reporters: ['default'],

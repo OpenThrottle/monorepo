@@ -145,9 +145,19 @@ jobs:
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
+      # lint + typecheck run at full parallelism — they are not the memory hog.
+      # `test` is serialized (`--parallel=1`): every app's Vitest target spawns its
+      # own worker pool, and co-running the heavy jsdom suites (esp.
+      # openthrottle-developer, 354 files) on this single shared 4-vCPU box exceeds
+      # its memory ceiling — the OOM-killer then SIGKILLs an in-flight worker, which
+      # surfaces as files reporting `(0 test)`. Serializing test keeps each suite
+      # alone on the box (well under the 15m ceiling for current affected sets).
+      # Proper fix (distribute across boxes) is the wired-but-disabled sharding
+      # above / OT plan e448a51d.
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm exec nx affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target=lint,typecheck --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
