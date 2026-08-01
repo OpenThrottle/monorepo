@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Form, Link } from 'react-router';
+import { Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
@@ -193,17 +193,14 @@ export const GlobalLayoutHeader = (
           <GithubLogoIcon />
         </Button>
       </Link>
-
-      <Form action="/" className="flex items-center gap-2" method="post">
-        <input name="intent" type="hidden" value="logout" />
+      <Link className="text-foreground" reloadDocument={true} to="/auth/logout">
         <Button
           className="relative size-6 shrink-0 rounded-full"
-          id="global-nav-logout"
           variant="ghost"
         >
           <SignOutIcon />
         </Button>
-      </Form>
+      </Link>
     </nav>
   );
 };
