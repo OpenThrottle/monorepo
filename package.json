@@ -487,7 +487,8 @@
     "sync:openthrottle:website": "scripts/sync-subtree.sh applications/openthrottle-website openthrottle-website main",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts",
-    "voice:start": "docker compose --profile voice up whisper"
+    "voice:start": "docker compose --profile voice up whisper",
+    "worktree:new": "./scripts/create_worktree.sh"
   },
   "sideEffects": false,
   "type": "module"
