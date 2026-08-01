@@ -142,7 +142,11 @@ export default function Component(
               No runs yet. Use “Run now” to trigger one.
             </p>
           ) : (
-            <ScheduledJobRunsTable className="bg-card" runs={runs} />
+            <ScheduledJobRunsTable
+              className="bg-card"
+              jobId={job.id}
+              runs={runs}
+            />
           )}
         </section>
       </div>
