@@ -9,6 +9,9 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
+      "path": "../../packages/agentic-token-usage/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
     },
     {

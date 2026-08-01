@@ -1,4 +1,5 @@
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module';
+import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
 import { getTypeOrmOptions } from './database.config';
@@ -31,6 +32,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
   controllers: [],
   exports: [
     AgentConversationsModule,
+    AgentTokenUsageModule,
     CustomPromptsModule,
     DailyStatsModule,
     NotesModule,
@@ -62,6 +64,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
       },
     }),
     AgentConversationsModule,
+    AgentTokenUsageModule,
     CustomPromptsModule,
     DailyStatsModule,
     LoggerModule,

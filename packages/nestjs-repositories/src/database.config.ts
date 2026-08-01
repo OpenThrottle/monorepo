@@ -6,6 +6,7 @@
 import type { DataSourceOptions } from 'typeorm';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
+import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity';
 import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
 import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity';
@@ -70,6 +71,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
     entities: [
       AgentConversation,
       AgentConversationMessage,
+      AgentTokenUsage,
       CodeEmbedding,
       CodeIndexSnapshot,
       CustomPrompt,

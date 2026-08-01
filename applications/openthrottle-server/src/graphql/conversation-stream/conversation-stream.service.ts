@@ -13,8 +13,17 @@ import {
   conversationStreamTopic,
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
+import {
+  hasUsageCounts,
+  normalizeUsage,
+  sumUsage,
+  type NormalizedTokenUsage,
+} from '@openthrottle/agentic-token-usage';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentConversationsService,
+  AgentTokenUsageService,
+} from '@openthrottle/nestjs-repositories';
 import {
   CONVERSATION_CLI_BACKENDS,
   CONVERSATION_STREAM_CHUNK_KINDS,
@@ -137,6 +146,7 @@ export class ConversationStreamService {
   constructor(
     private readonly conversations: AgentConversationsService,
     private readonly logger: LoggerService,
+    private readonly tokenUsage: AgentTokenUsageService,
     @Inject(PUB_SUB) private readonly pubSub: PubSubEngine,
   ) {}
 
@@ -518,6 +528,55 @@ export class ConversationStreamService {
       const message = isError ? error.message : String(error);
 
       this.logger.error(`conversation-stream persist failed: ${message}`);
+    }
+
+    // Durable per-turn token usage — separate from the message write so a usage
+    // failure never blocks (or is blocked by) message persistence. Also gated on
+    // run.persist (Private turns write nothing).
+    await this.persistTurnUsage(run, toolEvents);
+  }
+
+  /**
+   * Fold the turn's `usage`-kind events through the shared normalizer into ONE
+   * {@link NormalizedTokenUsage} (summing opencode's multiple mid-stream chunks;
+   * an identity passthrough for single-terminal backends) and write a single
+   * `agent_token_usage` row. Nothing is written for a Private turn, when no
+   * backend reported usage, or when the folded usage carries no counts.
+   * Fire-and-forget: failures are logged, never thrown into the stream.
+   */
+  private async persistTurnUsage(
+    run: StartConversationStreamRun,
+    toolEvents: ReadonlyArray<Record<string, unknown>>,
+  ): Promise<void> {
+    if (!run.persist) {
+      return;
+    }
+
+    try {
+      const folded = toolEvents
+        .filter((event) => event.kind === CONVERSATION_STREAM_CHUNK_KINDS.usage)
+        .reduce<NormalizedTokenUsage>(
+          (accumulated, event) =>
+            sumUsage(accumulated, normalizeUsage(event.metadata)),
+          {},
+        );
+
+      if (!hasUsageCounts(folded)) {
+        return;
+      }
+
+      await this.tokenUsage.recordTurnUsage({
+        conversationId: run.conversationId,
+        messageId: run.assistantMessageId,
+        model: folded.model ?? run.model,
+        provider: (run.provider ?? run.backend).toLowerCase(),
+        usage: folded,
+        userId: run.userId,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.error(`conversation-stream usage persist failed: ${message}`);
     }
   }
 
