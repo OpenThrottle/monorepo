@@ -5,6 +5,7 @@ import {
 import {
   BellIcon,
   BinaryIcon,
+  BlocksIcon,
   BookOpenIcon,
   BrainCircuitIcon,
   BrainIcon,
@@ -182,6 +183,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴 🟠 🟡
         icon: TerminalSquareIcon,
         to: '/settings/logs',
+      },
+      {
+        beta: true,
+        children: 'MCP',
+        disabled: true, // 🔴 🟠 🟡 🟢
+        icon: BlocksIcon,
+        to: '/settings/mcp',
       },
       {
         beta: true,

@@ -12,6 +12,7 @@ import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-sna
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity';
 import { Note } from './modules/notes/note.entity';
 import { Permission } from './modules/roles/permission.entity';
 import { Plan } from './modules/plans/plan.entity';
@@ -76,6 +77,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       CodeIndexSnapshot,
       CustomPrompt,
       DailyStat,
+      McpConnectorConnection,
       Note,
       Permission,
       Plan,

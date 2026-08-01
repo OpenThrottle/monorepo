@@ -1,0 +1,19 @@
+mutation connectMcpConnector($input: ConnectMcpConnectorInput!) {
+  connectMcpConnector(input: $input) {
+    connection {
+      ...McpConnectorConnectionFields
+    }
+  }
+}
+
+mutation setMcpConnectorEnabled($input: SetMcpConnectorEnabledInput!) {
+  setMcpConnectorEnabled(input: $input) {
+    connection {
+      ...McpConnectorConnectionFields
+    }
+  }
+}
+
+mutation disconnectMcpConnector($connectorKey: ID!) {
+  disconnectMcpConnector(connectorKey: $connectorKey)
+}

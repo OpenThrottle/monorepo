@@ -3,6 +3,7 @@ import type { MiddlewareFunction } from 'react-router';
 import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
+  isJwtExpired,
 } from '../utils/index';
 
 const BETA_ROUTE_PREFIXES = [
@@ -32,6 +33,12 @@ export const authMiddleware: MiddlewareFunction = (args) => {
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
 
+  // A present-but-expired token must be treated exactly like a missing one:
+  // otherwise it sails through here, loaders fire authenticated requests that
+  // 401, and a deferred loader's rejection becomes an unhandled promise
+  // rejection that crashes the SSR server.
+  const hasValidToken = token != null && !isJwtExpired(token);
+
   const isBetaRoute = BETA_ROUTE_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
@@ -40,8 +47,8 @@ export const authMiddleware: MiddlewareFunction = (args) => {
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 
-  if (!token && !isPublicRoute) {
-    const message = `🚨 authMiddleware: no token + non-public route`;
+  if (!hasValidToken && !isPublicRoute) {
+    const message = `🚨 authMiddleware: missing or expired token + non-public route`;
     if (!isProd) console.log(message, { pathname, token });
 
     throw redirect('/auth', {
