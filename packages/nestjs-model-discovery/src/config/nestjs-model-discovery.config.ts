@@ -11,8 +11,16 @@ import * as Joi from 'joi';
 /** ConfigService namespace for the model-discovery wrapper. */
 export const MODEL_DISCOVERY_CONFIG_NAMESPACE = 'modelDiscovery';
 
-/** Default in-process cache TTL: back-to-back reads reuse one scan for 60s. */
+/** Default in-process soft cache TTL: back-to-back reads reuse one scan for 60s. */
 export const DEFAULT_CACHE_TTL_MS = 60_000;
+
+/**
+ * Default hard-staleness multiplier over the soft TTL. Between the soft and hard
+ * TTL the last-good snapshot is served while a background refresh runs
+ * (stale-while-revalidate); past the hard TTL the next read blocks on a fresh
+ * scan so an idle process never serves arbitrarily stale data.
+ */
+export const DEFAULT_HARD_TTL_MULTIPLIER = 10;
 
 /**
  * Resolved model-discovery configuration. Hosts/ports are resolved up front by
@@ -20,10 +28,19 @@ export const DEFAULT_CACHE_TTL_MS = 60_000;
  * env-free.
  */
 export interface ModelDiscoveryConfig {
-  /** In-process cache TTL in ms. `0` disables caching (always re-scan). */
+  /**
+   * In-process soft cache TTL in ms. Within this window a snapshot is served
+   * fresh; past it (but within {@link hardTtlMs}) it is served stale while a
+   * background refresh runs. `0` disables caching (always re-scan).
+   */
   readonly cacheTtlMs: number;
   /** Provider-fingerprint probe timeout, ms. */
   readonly fingerprintTimeoutMs: number;
+  /**
+   * Hard-staleness bound in ms. Past this the snapshot is too stale to serve and
+   * the next read blocks on a fresh scan. Always `>= cacheTtlMs` (clamped).
+   */
+  readonly hardTtlMs: number;
   /** Hosts to probe. */
   readonly hosts: readonly string[];
   /** Max in-flight probes. */
@@ -59,6 +76,7 @@ function intFromEnv(
 export const configValidationSchema = Joi.object({
   LLM_DISCOVERY_CACHE_TTL_MS: Joi.number().integer().min(0).optional(),
   LLM_DISCOVERY_CONCURRENCY: Joi.number().integer().min(1).optional(),
+  LLM_DISCOVERY_HARD_TTL_MS: Joi.number().integer().min(0).optional(),
   LLM_FINGERPRINT_TIMEOUT_MS: Joi.number().integer().min(1).optional(),
   LLM_HOSTS: Joi.string().optional(),
   LLM_PORTS: Joi.string().optional(),
@@ -86,15 +104,27 @@ export function buildModelDiscoveryConfig(
     );
   }
 
+  const cacheTtlMs = intFromEnv(
+    env.LLM_DISCOVERY_CACHE_TTL_MS,
+    DEFAULT_CACHE_TTL_MS,
+    true,
+  );
+
   return {
-    cacheTtlMs: intFromEnv(
-      env.LLM_DISCOVERY_CACHE_TTL_MS,
-      DEFAULT_CACHE_TTL_MS,
-      true,
-    ),
+    cacheTtlMs,
     fingerprintTimeoutMs: intFromEnv(
       env.LLM_FINGERPRINT_TIMEOUT_MS,
       DEFAULT_FINGERPRINT_TIMEOUT_MS,
+    ),
+    // Hard bound defaults to 10x the soft TTL; clamped up so it can never be
+    // smaller than the soft TTL (which would defeat stale-while-revalidate).
+    hardTtlMs: Math.max(
+      cacheTtlMs,
+      intFromEnv(
+        env.LLM_DISCOVERY_HARD_TTL_MS,
+        cacheTtlMs * DEFAULT_HARD_TTL_MULTIPLIER,
+        true,
+      ),
     ),
     hosts: resolveHosts(env),
     maxConcurrency: intFromEnv(

@@ -22,6 +22,10 @@ import {
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import {
+  readChatOptionsCache,
+  writeChatOptionsCache,
+} from '~/routing/home/data/chat-options-cache';
+import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
 } from '~/routing/home/data/chat-toolbar';
@@ -69,6 +73,11 @@ export function useHeaderChatController(args: {
 
   // Hooks
   const optionsFetcher = useFetcher<ChatOptionsResponse>();
+  // Seed from the client-side discovery cache (module-scope + sessionStorage) so
+  // a warm mount / same-session navigation reuses the last good result and skips
+  // the `/resources/chat-options` probe while it is fresh. `null` when absent or
+  // expired, in which case the effect below fetches.
+  const [cachedOptions] = React.useState(() => readChatOptionsCache());
   const turn = useAgenticChatTurn();
   const conversationList = useConversationList();
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
@@ -77,8 +86,8 @@ export function useHeaderChatController(args: {
   // Elevated permission modes decay to the safe default once per browser session.
   useSessionPermissionDecay();
 
-  // Setup
-  const options = optionsFetcher.data ?? EMPTY_OPTIONS;
+  // Setup — prefer a live fetch, then the fresh client cache, then empty.
+  const options = optionsFetcher.data ?? cachedOptions ?? EMPTY_OPTIONS;
   const models = options.models;
   const repositories = options.repositories;
   const personas =
@@ -223,10 +232,26 @@ export function useHeaderChatController(args: {
     if (!enabled) {
       return;
     }
+    // A fresh client cache was seeded — reuse it and skip the probe.
+    if (cachedOptions !== null) {
+      return;
+    }
     if (optionsFetcher.state === 'idle' && optionsFetcher.data === undefined) {
       optionsFetcher.load(CHAT_OPTIONS_ROUTE);
     }
-  }, [enabled, optionsFetcher]);
+  }, [cachedOptions, enabled, optionsFetcher]);
+
+  // Persist a fetched non-empty result to the client cache so the next warm
+  // mount / reload reuses it. Empty results (a failed or genuinely empty scan)
+  // are never cached, so a transient failure can't hide a working discovery.
+  React.useEffect(() => {
+    if (
+      optionsFetcher.data !== undefined &&
+      optionsFetcher.data.models.length > 0
+    ) {
+      writeChatOptionsCache(optionsFetcher.data);
+    }
+  }, [optionsFetcher.data]);
 
   // Refresh the switcher list once when a turn creates a NEW persisted
   // conversation (skipped in Private mode + on restore; ref-deduped).

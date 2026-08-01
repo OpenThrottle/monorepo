@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Await } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 import { ChatConversationSheet } from '@openthrottle/react-router-chat';
 import {
   GlobalErrorBoundary,
@@ -10,9 +11,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { HomeComposer } from '~/routing/home/components/HomeComposer';
 import { HomeComposerSkeleton } from '~/routing/home/components/HomeComposerSkeleton';
 import {
-  loadAgentClis,
-  loadDiscoveredModels,
-  loadDriverEndpointModels,
+  loadComposerModels,
   loadPersonas,
   loadRepositories,
 } from '~/routing/home/data/models.server';
@@ -31,30 +30,39 @@ export const loader = (args: Route.LoaderArgs) => {
   // Deferred: return the composer-data bundle as a naked promise (RR8 Single
   // Fetch serializes/streams it) so the route shell — hero + conversation
   // sidebar — paints immediately instead of blocking on cold model discovery
-  // (loadDiscoveredModels / loadDriverEndpointModels probe local model servers).
-  // Bundled into one Promise.all so reconcileChatToolbarState reconciles the
-  // three lists atomically on the client.
+  // (loadComposerModels probes local model servers). loadComposerModels issues
+  // each discovery query once and derives the local / agent / driver×endpoint
+  // lists from the shared payloads. Bundled into one Promise.all so
+  // reconcileChatToolbarState reconciles them atomically on the client.
   const composerData = Promise.all([
-    loadDiscoveredModels(args.request),
-    loadAgentClis(args.request),
-    loadDriverEndpointModels(args.request),
+    loadComposerModels(args.request),
     loadRepositories(args.request),
     loadPersonas(args.request),
-  ]).then(
-    ([
-      localModels,
-      agentClis,
-      driverEndpointModels,
-      repositories,
-      personas,
-    ]) => ({
-      models: [...localModels, ...agentClis, ...driverEndpointModels],
-      personas,
-      repositories,
-    }),
-  );
+  ]).then(([models, repositories, personas]) => ({
+    models,
+    personas,
+    repositories,
+  }));
 
   return { composerData };
+};
+
+// The composer discovery data is route-stable, and both the server (SWR cache)
+// and the header chat (client cache) already keep repeat loads cheap. Skip
+// re-running this loader for same-path navigations (e.g. search-param changes
+// from opening a dialog) so a churn of `?…` updates doesn't re-probe. A form
+// submission or a navigation from a different route still revalidates.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  currentUrl,
+  defaultShouldRevalidate,
+  formMethod,
+  nextUrl,
+}) => {
+  if (formMethod === undefined && currentUrl.pathname === nextUrl.pathname) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
 };
 
 export const links: Route.LinksFunction = () => {

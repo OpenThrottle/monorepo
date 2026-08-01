@@ -4,6 +4,7 @@ import {
   buildModelDiscoveryConfig,
   configValidationSchema,
   DEFAULT_CACHE_TTL_MS,
+  DEFAULT_HARD_TTL_MULTIPLIER,
 } from './nestjs-model-discovery.config';
 
 describe('configValidationSchema', () => {
@@ -68,5 +69,35 @@ describe('buildModelDiscoveryConfig', () => {
       LLM_DISCOVERY_CACHE_TTL_MS: '0',
     });
     expect(config.cacheTtlMs).toBe(0);
+  });
+
+  it('defaults the hard TTL to a multiple of the soft TTL', () => {
+    const config = buildModelDiscoveryConfig({});
+    expect(config.hardTtlMs).toBe(
+      DEFAULT_CACHE_TTL_MS * DEFAULT_HARD_TTL_MULTIPLIER,
+    );
+  });
+
+  it('honours an explicit hard TTL', () => {
+    const config = buildModelDiscoveryConfig({
+      LLM_DISCOVERY_CACHE_TTL_MS: '30000',
+      LLM_DISCOVERY_HARD_TTL_MS: '90000',
+    });
+    expect(config.hardTtlMs).toBe(90_000);
+  });
+
+  it('clamps the hard TTL up to the soft TTL when smaller', () => {
+    const config = buildModelDiscoveryConfig({
+      LLM_DISCOVERY_CACHE_TTL_MS: '60000',
+      LLM_DISCOVERY_HARD_TTL_MS: '1000',
+    });
+    expect(config.hardTtlMs).toBe(60_000);
+  });
+
+  it('collapses the hard TTL to 0 when caching is disabled', () => {
+    const config = buildModelDiscoveryConfig({
+      LLM_DISCOVERY_CACHE_TTL_MS: '0',
+    });
+    expect(config.hardTtlMs).toBe(0);
   });
 });
