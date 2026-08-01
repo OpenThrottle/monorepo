@@ -2246,6 +2246,11 @@ type SkillUsageEventObject {
   """Skill identifier (e.g. ot-plans, vercel:deploy)."""
   skillName: String!
 
+  """
+  Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Null for rows ingested before source tracking.
+  """
+  source: String
+
   """Harness tool_use_id for the Skill call when present."""
   toolUseId: String
 }
@@ -5203,6 +5208,11 @@ input RecordSkillUsageInput {
 
   """Skill identifier (e.g. ot-plans, vercel:deploy)."""
   skillName: String!
+
+  """
+  Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter.
+  """
+  source: String
 
   """Harness tool_use_id when present."""
   toolUseId: String

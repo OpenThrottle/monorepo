@@ -3329,6 +3329,8 @@ export type RecordSkillUsageInput = {
   sessionId?: InputMaybe<Scalars['String']['input']>;
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['input'];
+  /** Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter. */
+  source?: InputMaybe<Scalars['String']['input']>;
   /** Harness tool_use_id when present. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -4039,6 +4041,8 @@ export type SkillUsageEventObject = {
   sessionId?: Maybe<Scalars['String']['output']>;
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['output'];
+  /** Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Null for rows ingested before source tracking. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Harness tool_use_id for the Skill call when present. */
   toolUseId?: Maybe<Scalars['String']['output']>;
 };

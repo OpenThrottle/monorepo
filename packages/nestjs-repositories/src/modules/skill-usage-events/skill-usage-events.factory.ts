@@ -27,6 +27,7 @@ export type SkillUsageEventFactoryData = Pick<
   | 'scope'
   | 'sessionId'
   | 'skillName'
+  | 'source'
   | 'toolUseId'
 >;
 
@@ -58,6 +59,7 @@ export const skillUsageEventsFactory =
         'vercel:deploy',
         'engineering:code-review',
       ]),
+      source: faker.helpers.arrayElement(['claude-code', 'cursor']),
       toolUseId: null,
     };
   });

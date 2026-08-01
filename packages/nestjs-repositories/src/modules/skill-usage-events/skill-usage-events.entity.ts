@@ -44,6 +44,7 @@ export interface SkillUsageEventData {
   readonly scope: SkillUsageScope;
   readonly sessionId: string | null;
   readonly skillName: string;
+  readonly source: string | null;
   readonly toolUseId: string | null;
 }
 
@@ -69,6 +70,9 @@ export class SkillUsageEvent {
 
   @Column({ name: 'scope', type: 'text' })
   scope!: SkillUsageScope;
+
+  @Column({ name: 'source', nullable: true, type: 'text' })
+  source!: string | null;
 
   @Column({ name: 'invocation_path', nullable: true, type: 'text' })
   invocationPath!: string | null;

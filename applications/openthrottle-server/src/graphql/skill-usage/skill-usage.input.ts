@@ -84,6 +84,12 @@ export class RecordSkillUsageInput {
   skillName!: string;
 
   @Field(() => String, {
+    description: `Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter.`,
+    nullable: true,
+  })
+  source?: string | null;
+
+  @Field(() => String, {
     description: `Harness tool_use_id when present.`,
     nullable: true,
   })

@@ -41,6 +41,7 @@ export const toSkillUsageEventObject = (
   object.scope = row.scope;
   object.sessionId = row.sessionId;
   object.skillName = row.skillName;
+  object.source = row.source;
   object.toolUseId = row.toolUseId;
 
   return object;

@@ -42,6 +42,7 @@ describe('SkillUsageResolver', () => {
     scope: SKILL_USAGE_SCOPES.OURS,
     sessionId: 'session-1',
     skillName: 'ot-plans',
+    source: 'claude-code',
     toolUseId: null,
   };
 
@@ -72,6 +73,7 @@ describe('SkillUsageResolver', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
       });
 
       expect(recordSkillUsage).toHaveBeenCalledWith({
@@ -88,6 +90,7 @@ describe('SkillUsageResolver', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: null,
       });
       expect(result.id).toBe('event-1');

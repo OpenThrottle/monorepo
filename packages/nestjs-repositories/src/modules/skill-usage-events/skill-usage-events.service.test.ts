@@ -129,6 +129,7 @@ describe('SkillUsageEventsService', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
 
@@ -146,6 +147,7 @@ describe('SkillUsageEventsService', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
       expect(saved.id).toBe('event-1');
@@ -180,6 +182,7 @@ describe('SkillUsageEventsService', () => {
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
           sessionId: null,
           skillName: 'vercel:deploy',
+          source: null,
           toolUseId: null,
         });
       });

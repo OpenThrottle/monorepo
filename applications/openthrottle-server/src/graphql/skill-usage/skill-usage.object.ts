@@ -91,6 +91,12 @@ export class SkillUsageEventObject {
   skillName!: string;
 
   @Field(() => String, {
+    description: `Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Null for rows ingested before source tracking.`,
+    nullable: true,
+  })
+  source!: string | null;
+
+  @Field(() => String, {
     description: `Harness tool_use_id for the Skill call when present.`,
     nullable: true,
   })
