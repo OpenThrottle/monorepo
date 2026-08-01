@@ -22,6 +22,7 @@ import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/Das
 import { DashboardPrCardsSkeleton } from '~/routing/dashboard/components/DashboardPrCardsSkeleton';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
+import { DashboardRecentChatsCard } from '~/routing/dashboard/components/DashboardRecentChatsCard';
 // import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
@@ -94,7 +95,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { core, githubStats } = loaderData;
+  const { core, githubStats, recentChats } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -217,6 +218,25 @@ export default function Component(
               resolve={githubStats}
             >
               {(stats) => <DashboardOpenPrsByAuthorCard githubStats={stats} />}
+            </Await>
+          </React.Suspense>
+        </div>
+
+        <div>
+          {/* Deferred (recentChats): own boundary so a slow/failed conversation
+              fetch never blocks the other cards. The card self-titles. */}
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load recent chats.
+                </p>
+              }
+              resolve={recentChats}
+            >
+              {(data) => (
+                <DashboardRecentChatsCard conversations={data.conversations} />
+              )}
             </Await>
           </React.Suspense>
         </div>
