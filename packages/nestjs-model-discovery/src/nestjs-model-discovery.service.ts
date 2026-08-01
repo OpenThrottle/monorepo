@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import { discoverModels } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  discoverModels,
+  StaleWhileRevalidateCache,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config';
 import { MODEL_DISCOVERY_CONFIG_NAMESPACE } from './config/nestjs-model-discovery.config';
@@ -13,20 +16,16 @@ export interface DiscoverOptions {
   readonly forceRefresh?: boolean;
 }
 
-interface CacheEntry {
-  readonly expiresAt: number;
-  readonly result: DiscoveryResult;
-}
-
 /**
- * Injectable, in-process-cached wrapper around the model-discovery core. A
- * local scan is sub-second, so freshness comes from a short TTL cache rather
- * than Redis/BullMQ. GraphQL-agnostic — the resolver lives in the server.
+ * Injectable, stale-while-revalidate-cached wrapper around the model-discovery
+ * core. A local scan is sub-second but the result changes rarely, so repeat
+ * loads serve the last-good snapshot (refreshing out of band once past the soft
+ * TTL) rather than paying the cold ~48-probe cost. GraphQL-agnostic — the
+ * resolver lives in the server.
  */
 @Injectable()
 export class NestjsModelDiscoveryService {
-  private cache: CacheEntry | null = null;
-  private inFlight: Promise<DiscoveryResult> | null = null;
+  private readonly cache = new StaleWhileRevalidateCache<DiscoveryResult>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -54,45 +53,29 @@ export class NestjsModelDiscoveryService {
   }
 
   /**
-   * Discover local OpenAI-compatible model servers. Returns the cached snapshot
-   * when it is still within the TTL window; otherwise runs a fresh scan, stamps
-   * `scannedAt`, and refreshes the cache. Concurrent callers that miss the cache
-   * share a single in-flight scan rather than each launching their own sweep.
+   * Discover local OpenAI-compatible model servers with stale-while-revalidate
+   * caching. Within the soft TTL the snapshot is served fresh; past it (but
+   * within the hard TTL) the last-good snapshot is served immediately while a
+   * single coalesced background refresh runs; only the first-ever call and calls
+   * past the hard TTL block on a scan. `forceRefresh` bypasses the snapshot.
    */
   async discover(options: DiscoverOptions = {}): Promise<DiscoveryResult> {
-    const now = Date.now();
-    if (
-      !options.forceRefresh &&
-      this.cache !== null &&
-      now < this.cache.expiresAt
-    ) {
-      return this.cache.result;
-    }
+    const config = this.getConfig();
 
-    if (!options.forceRefresh && this.inFlight !== null) {
-      return this.inFlight;
-    }
-
-    const scan = this.scan(now);
-    this.inFlight = scan;
-
-    try {
-      return await scan;
-    } finally {
-      if (this.inFlight === scan) {
-        this.inFlight = null;
-      }
-    }
+    return this.cache.get(
+      () => this.scan(config),
+      { hardTtlMs: config.hardTtlMs, softTtlMs: config.cacheTtlMs },
+      options.forceRefresh ?? false,
+    );
   }
 
   /** Drop the cached snapshot so the next {@link discover} re-scans. */
   invalidate(): void {
-    this.cache = null;
+    this.cache.invalidate();
   }
 
-  /** Run a fresh scan, stamp `scannedAt`, and refresh the cache. */
-  private async scan(now: number): Promise<DiscoveryResult> {
-    const config = this.getConfig();
+  /** Run a fresh scan and stamp `scannedAt`. */
+  private async scan(config: ModelDiscoveryConfig): Promise<DiscoveryResult> {
     const result = await discoverModels({
       fingerprintTimeoutMs: config.fingerprintTimeoutMs,
       hosts: config.hosts,
@@ -102,7 +85,6 @@ export class NestjsModelDiscoveryService {
       scannedAt: new Date().toISOString(),
     });
 
-    this.cache = { expiresAt: now + config.cacheTtlMs, result };
     this.logger.debug(
       `🔭 model-discovery: ${result.endpoints.length} endpoint(s) across ${result.scannedHosts.length} host(s)`,
     );

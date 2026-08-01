@@ -28,6 +28,7 @@ const discoverModelsMock = vi.mocked(discoverModels);
 const baseConfig: ModelDiscoveryConfig = {
   cacheTtlMs: 60_000,
   fingerprintTimeoutMs: 1500,
+  hardTtlMs: 600_000,
   hosts: ['localhost'],
   maxConcurrency: 10,
   ports: [9999],
@@ -113,6 +114,41 @@ describe('NestjsModelDiscoveryService', () => {
     expect(fetchMock.mock.calls.length).toBe(1);
   });
 
+  it('serves the stale snapshot and refreshes in the background past the soft TTL', async () => {
+    vi.useFakeTimers();
+    try {
+      const service = await buildService(baseConfig);
+      const first = await service.discover();
+      const callsAfterFirst = fetchMock.mock.calls.length;
+
+      // Cross the soft TTL (60s) but stay within the hard TTL (600s).
+      vi.advanceTimersByTime(120_000);
+      const stale = await service.discover();
+
+      // Same snapshot returned synchronously, and exactly one background sweep
+      // kicked off (one probed port = one fetch).
+      expect(stale).toBe(first);
+      expect(fetchMock.mock.calls.length).toBe(callsAfterFirst + 1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('blocks on a fresh scan once past the hard TTL', async () => {
+    vi.useFakeTimers();
+    try {
+      const service = await buildService(baseConfig);
+      const first = await service.discover();
+
+      vi.advanceTimersByTime(700_000); // past hardTtlMs (600s)
+      const refreshed = await service.discover();
+
+      expect(refreshed).not.toBe(first);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('throws when the config namespace is missing', async () => {
     const configService = createMock<ConfigService>();
     vi.mocked(configService.get).mockReturnValue(undefined);
@@ -127,8 +163,12 @@ describe('NestjsModelDiscoveryService', () => {
     await expect(service.discover()).rejects.toThrow(/config namespace/);
   });
 
-  it('never caches when cacheTtlMs is 0', async () => {
-    const service = await buildService({ ...baseConfig, cacheTtlMs: 0 });
+  it('never caches when cacheTtlMs is 0 (soft and hard both 0)', async () => {
+    const service = await buildService({
+      ...baseConfig,
+      cacheTtlMs: 0,
+      hardTtlMs: 0,
+    });
     await service.discover();
     const callsAfterFirst = fetchMock.mock.calls.length;
     await service.discover();
@@ -144,6 +184,7 @@ describe('NestjsModelDiscoveryService', () => {
     const config: ModelDiscoveryConfig = {
       cacheTtlMs: 60_000,
       fingerprintTimeoutMs: 1234,
+      hardTtlMs: 600_000,
       hosts: ['host-a', 'host-b'],
       maxConcurrency: 7,
       ports: [11434, 1234],
