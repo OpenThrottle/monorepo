@@ -7665,6 +7665,62 @@ export type RevokeServiceAccountCredentialMutation = {
   revokeServiceAccountCredential: boolean;
 };
 
+export type McpConnectorFieldsFragment = {
+  __typename?: 'McpConnectorObject';
+  authType: string;
+  category: string;
+  description: string;
+  docsUrl: string;
+  endpointUrl?: string | null;
+  iconHint: string;
+  key: string;
+  name: string;
+  provider: string;
+  transport: string;
+};
+
+export type McpConnectorConnectionFieldsFragment = {
+  __typename?: 'McpConnectorConnectionObject';
+  authType: string;
+  connectedAt: any;
+  connectorKey: string;
+  credentialLabel?: string | null;
+  credentialPrefix?: string | null;
+  enabled: boolean;
+  id: string;
+  lastUsedAt?: any | null;
+};
+
+export type GetSettingsMcpQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetSettingsMcpQuery = {
+  __typename?: 'Query';
+  mcpConnectors: Array<{
+    __typename?: 'McpConnectorObject';
+    authType: string;
+    category: string;
+    description: string;
+    docsUrl: string;
+    endpointUrl?: string | null;
+    iconHint: string;
+    key: string;
+    name: string;
+    provider: string;
+    transport: string;
+  }>;
+  mcpConnectorConnections: Array<{
+    __typename?: 'McpConnectorConnectionObject';
+    authType: string;
+    connectedAt: any;
+    connectorKey: string;
+    credentialLabel?: string | null;
+    credentialPrefix?: string | null;
+    enabled: boolean;
+    id: string;
+    lastUsedAt?: any | null;
+  }>;
+};
+
 export type GetRolloutFlagQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -10175,6 +10231,60 @@ export const ServiceAccountListItemFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ServiceAccountListItemFragment, unknown>;
+export const McpConnectorFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'docsUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iconHint' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'transport' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<McpConnectorFieldsFragment, unknown>;
+export const McpConnectorConnectionFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<McpConnectorConnectionFieldsFragment, unknown>;
 export const RolloutFlagFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -19362,6 +19472,91 @@ export const RevokeServiceAccountCredentialDocument = {
   RevokeServiceAccountCredentialMutation,
   RevokeServiceAccountCredentialMutationVariables
 >;
+export const GetSettingsMcpDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSettingsMcp' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mcpConnectors' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'McpConnectorFields' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mcpConnectorConnections' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'docsUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endpointUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iconHint' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'transport' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetSettingsMcpQuery, GetSettingsMcpQueryVariables>;
 export const GetRolloutFlagDocument = {
   kind: 'Document',
   definitions: [

@@ -516,15 +516,6 @@ export type CommitsPerPrRowObject = {
   prNumber: Scalars['Int']['output'];
 };
 
-export type ConnectMcpConnectorInput = {
-  /** API token for api_token connectors; ignored for oauth. Never persisted raw — stored as a bcrypt hash + masked hint. */
-  apiToken?: InputMaybe<Scalars['String']['input']>;
-  /** Catalog key of the connector to connect. */
-  connectorKey: Scalars['ID']['input'];
-  /** Optional label for the credential. */
-  label?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type ConversationStreamChunkObject = {
   __typename?: 'ConversationStreamChunkObject';
   conversationId: Scalars['String']['output'];
@@ -1348,50 +1339,6 @@ export type LoginResultObject = {
   accessToken: Scalars['String']['output'];
 };
 
-export type McpConnectorConnectionObject = {
-  __typename?: 'McpConnectorConnectionObject';
-  /** Auth mechanism recorded at connect time: api_token or oauth. */
-  authType: Scalars['String']['output'];
-  connectedAt: Scalars['DateTime']['output'];
-  /** Catalog key this connection is for. */
-  connectorKey: Scalars['ID']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  credentialLabel?: Maybe<Scalars['String']['output']>;
-  /** Masked credential hint for display (api_token only); never the raw secret. */
-  credentialPrefix?: Maybe<Scalars['String']['output']>;
-  enabled: Scalars['Boolean']['output'];
-  id: Scalars['ID']['output'];
-  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  userId: Scalars['ID']['output'];
-};
-
-export type McpConnectorConnectionResultObject = {
-  __typename?: 'McpConnectorConnectionResultObject';
-  /** The connection after the mutation (credential hash is never returned). */
-  connection: McpConnectorConnectionObject;
-};
-
-export type McpConnectorObject = {
-  __typename?: 'McpConnectorObject';
-  /** Auth mechanism: api_token or oauth. */
-  authType: Scalars['String']['output'];
-  category: Scalars['String']['output'];
-  description: Scalars['String']['output'];
-  docsUrl: Scalars['String']['output'];
-  /** Remote endpoint URL, or null for local-stdio / directory-brokered connectors. */
-  endpointUrl?: Maybe<Scalars['String']['output']>;
-  /** Icon hint slug for the UI to resolve. */
-  iconHint: Scalars['String']['output'];
-  /** Stable catalog key; referenced by a connection's connectorKey. */
-  key: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  /** Source registry/host: anthropic-directory, mcp-registry, or vendor-remote. */
-  provider: Scalars['String']['output'];
-  /** Transport: local-stdio, remote-http, or remote-sse. */
-  transport: Scalars['String']['output'];
-};
-
 /** Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility. */
 export type MetricsObject = {
   __typename?: 'MetricsObject';
@@ -1462,8 +1409,6 @@ export type Mutation = {
   cleanQueue: CleanQueueResultObject;
   /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
   cloneRepository: AddWorkspaceFolderPayloadObject;
-  /** Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted. */
-  connectMcpConnector: McpConnectorConnectionResultObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
   /** Create a new custom prompt */
@@ -1534,8 +1479,6 @@ export type Mutation = {
   disableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Disable a user; they will not be able to log in. */
   disableUser?: Maybe<UserObject>;
-  /** Disconnect the authenticated user's connection for a connector. Returns true when a connection was removed. */
-  disconnectMcpConnector: Scalars['Boolean']['output'];
   /** Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error. */
   duplicateJob: DuplicateJobResultObject;
   /** Re-enable a disabled service account (admin, human only). */
@@ -1610,8 +1553,6 @@ export type Mutation = {
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
-  /** Enable or disable the authenticated user's connection for a connector. */
-  setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
   /** Enable or disable a scheduled agent job (owner only); registers/removes its scheduler. */
@@ -1763,10 +1704,6 @@ export type MutationCloneRepositoryArgs = {
   input: CloneRepositoryInput;
 };
 
-export type MutationConnectMcpConnectorArgs = {
-  input: ConnectMcpConnectorInput;
-};
-
 export type MutationCreateAgentConversationArgs = {
   input?: InputMaybe<CreateAgentConversationInput>;
 };
@@ -1893,10 +1830,6 @@ export type MutationDisableServiceAccountArgs = {
 
 export type MutationDisableUserArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type MutationDisconnectMcpConnectorArgs = {
-  connectorKey: Scalars['ID']['input'];
 };
 
 export type MutationDuplicateJobArgs = {
@@ -2039,10 +1972,6 @@ export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
   sortOrder: Scalars['Int']['input'];
-};
-
-export type MutationSetMcpConnectorEnabledArgs = {
-  input: SetMcpConnectorEnabledInput;
 };
 
 export type MutationSetPlanStatusArgs = {
@@ -2660,10 +2589,6 @@ export type Query = {
   listPlansByStatus: ListPlansByStatusResultObject;
   /** List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans. */
   listSources: ListSourcesResultObject;
-  /** The authenticated user's MCP connector connections. */
-  mcpConnectorConnections: Array<McpConnectorConnectionObject>;
-  /** The curated MCP connector catalog (static server-side seed). */
-  mcpConnectors: Array<McpConnectorObject>;
   /** Get the currently authenticated user */
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
@@ -3766,11 +3691,6 @@ export type ServiceAccountObject = {
   id: Scalars['String']['output'];
   /** Stable identifier (e.g. openthrottle-mcp, workflow-ralph). */
   name: Scalars['String']['output'];
-};
-
-export type SetMcpConnectorEnabledInput = {
-  connectorKey: Scalars['ID']['input'];
-  enabled: Scalars['Boolean']['input'];
 };
 
 export type SetPlanStatusInput = {
