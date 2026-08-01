@@ -1,21 +1,12 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import type { BadgeProps } from '@openthrottle/react-router-shadcn';
 import type { McpConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
+import { MCP_CONNECTION_STATUS_DISPLAY } from '~/routing/settings/data/mcp-connection-status';
 
 export interface SettingsMcpConnectionStatusBadgeProps {
   className?: string;
   status: McpConnectorStatus;
 }
-
-const STATUS_DISPLAY: Record<
-  McpConnectorStatus,
-  { color: BadgeProps['color']; label: string }
-> = {
-  disabled: { color: 'amber', label: 'Disabled' },
-  disconnected: { color: 'slate', label: 'Not connected' },
-  enabled: { color: 'green', label: 'Connected' },
-};
 
 export const SettingsMcpConnectionStatusBadge = (
   props: SettingsMcpConnectionStatusBadgeProps,
@@ -25,7 +16,7 @@ export const SettingsMcpConnectionStatusBadge = (
   // Hooks
 
   // Setup
-  const display = STATUS_DISPLAY[status];
+  const display = MCP_CONNECTION_STATUS_DISPLAY[status];
 
   // Handlers
 
