@@ -15,6 +15,18 @@ export const OpenThrottleEntrance = (
 ): React.ReactElement => {
   const { children, className } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}

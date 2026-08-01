@@ -2,42 +2,14 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
-import { formatDate } from 'date-fns';
 import { Link, useSearchParams } from 'react-router';
 import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
+import {
+  formatNoteDate,
+  notePreviewLabel,
+} from '~/routing/notes/utils/notes-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { NoteCardFragment } from '~/__generated__/graphql';
-
-export function notePreviewLabel(content: string): string {
-  const firstLine = content.split('\n')[0]?.trim() ?? '';
-  const stripped = firstLine.replace(/^#+\s*/, '').trim();
-
-  if (stripped.length > 0) {
-    return stripped.length > 80 ? `${stripped.slice(0, 80)}…` : stripped;
-  }
-
-  const trimmed = content.trim();
-
-  if (trimmed.length === 0) {
-    return 'Untitled note';
-  }
-
-  return trimmed.length > 80 ? `${trimmed.slice(0, 80)}…` : trimmed;
-}
-
-export function formatNoteDate(raw: NoteCardFragment['updatedAt']): string {
-  if (raw == null) {
-    return '—';
-  }
-
-  try {
-    const date = typeof raw === 'string' ? new Date(raw) : raw;
-
-    return formatDate(date, 'MM/dd/yyyy');
-  } catch {
-    return '—';
-  }
-}
 
 export interface NotesTableProps {
   className?: string;

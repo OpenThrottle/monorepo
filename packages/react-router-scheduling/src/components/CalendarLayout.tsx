@@ -8,6 +8,7 @@ import {
 import type { ReactElement } from 'react';
 import { useEffect, useRef } from 'react';
 import {
+  CALENDAR_LAYOUT_DEFAULT_EVENTS,
   DEFAULT_VIEW,
   DEFAULT_VIEW_LABELS,
   DEFAULT_VIEWS,
@@ -42,10 +43,6 @@ export interface CalendarLayoutProps {
   readonly views?: readonly CalendarView[];
 }
 
-// Stable empty default so an omitted `events` prop keeps the same array
-// identity across renders (the events-sync effect diffs by reference).
-const NO_EVENTS: CalendarEvent[] = [];
-
 /**
  * @description Batteries-included scheduling surface: composes `useSchedule`,
  * `useCalendar`, a navigation/view toolbar (shadcn `Button` + `ToggleGroup`), and
@@ -54,12 +51,12 @@ const NO_EVENTS: CalendarEvent[] = [];
  *
  * @public
  */
-export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
+export const CalendarLayout = (props: CalendarLayoutProps): ReactElement => {
   const {
     className,
     defaultDate,
     defaultView = DEFAULT_VIEW,
-    events = NO_EVENTS,
+    events = CALENDAR_LAYOUT_DEFAULT_EVENTS,
     height = '600px',
     slots,
     views = DEFAULT_VIEWS,
@@ -162,4 +159,4 @@ export function CalendarLayout(props: CalendarLayoutProps): ReactElement {
       <Calendar height={height} schedule={schedule} slots={slots} />
     </div>
   );
-}
+};

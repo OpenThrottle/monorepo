@@ -9,7 +9,7 @@ export interface SheetDescriptionProps extends React.ComponentPropsWithoutRef<
 export const SheetDescription = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Description>,
   SheetDescriptionProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

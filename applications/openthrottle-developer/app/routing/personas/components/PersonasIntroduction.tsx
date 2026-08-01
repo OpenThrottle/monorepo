@@ -12,6 +12,18 @@ export const PersonasIntroduction = (
 ): React.ReactElement => {
   const { entries = [] } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div>
       <GlobalHeading

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { resolveTotalTokens } from '../utils/chat-usage-counter';
 import type { ChatTokenUsage } from '../types';
 import { formatTokenCount, formatUsageCost, hasUsageCounts } from '../usage';
 
@@ -15,19 +16,6 @@ export interface ChatUsageCounterProps {
   readonly usage: ChatTokenUsage;
 }
 
-/** Best-effort session token total (explicit total, else input + output). */
-const resolveTotalTokens = (usage: ChatTokenUsage): number | undefined => {
-  if (usage.totalTokens !== undefined) {
-    return usage.totalTokens;
-  }
-
-  if (usage.inputTokens === undefined && usage.outputTokens === undefined) {
-    return undefined;
-  }
-
-  return (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
-};
-
 /**
  * Compact, muted running token counter for the composer footer — the
  * Claude-style "N tokens" readout. Presentational: the consumer owns the
@@ -41,10 +29,7 @@ export const ChatUsageCounter = (
 ): React.ReactElement | null => {
   const { className, streaming = false, usage } = props;
 
-  // 🔌 Short Circuit
-  if (!hasUsageCounts(usage)) {
-    return null;
-  }
+  // Hooks
 
   // Setup
   const total = resolveTotalTokens(usage);
@@ -59,13 +44,19 @@ export const ChatUsageCounter = (
   }
 
   const label = parts.join(' · ');
-  if (label === '') {
+  const intent = streaming ? 'Live token usage' : 'Conversation total';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (!hasUsageCounts(usage) || label === '') {
     return null;
   }
 
-  const intent = streaming ? 'Live token usage' : 'Conversation total';
-
-  // Markup
   return (
     <span
       aria-label={`${intent}: ${label}`}

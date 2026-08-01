@@ -2,6 +2,8 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 
+export interface DocCodeBlockProps extends React.ComponentPropsWithoutRef<'pre'> {}
+
 /**
  * Drop-in replacement for the Markdown `pre` element that adds a hover copy
  * button to fenced code blocks. The button copies the block's exact rendered
@@ -10,15 +12,15 @@ import { CheckIcon, CopyIcon } from 'lucide-react';
  *
  * @public
  */
-export const DocCodeBlock = (
-  props: React.ComponentPropsWithoutRef<'pre'>,
-): React.ReactElement => {
+export const DocCodeBlock = (props: DocCodeBlockProps): React.ReactElement => {
   const { children, className, ...rest } = props;
 
   // Hooks
   const preRef = React.useRef<HTMLPreElement>(null);
   const [copied, setCopied] = React.useState(false);
   const timeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Setup
 
   // Handlers
   const handleCopy = React.useCallback(async (): Promise<void> => {
@@ -35,6 +37,8 @@ export const DocCodeBlock = (
     }
   }, []);
 
+  // Markup
+
   // Life Cycle
   React.useEffect(
     () => () => {
@@ -45,7 +49,8 @@ export const DocCodeBlock = (
     [],
   );
 
-  // Markup
+  // 🔌 Short Circuit
+
   return (
     <div className="group relative">
       <pre {...rest} className={className} ref={preRef}>

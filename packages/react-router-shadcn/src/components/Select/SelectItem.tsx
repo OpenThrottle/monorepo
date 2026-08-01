@@ -10,7 +10,7 @@ export interface SelectItemProps extends React.ComponentPropsWithoutRef<
 export const SelectItem = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Item>,
   SelectItemProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, children, ...rest } = props;
 
   // Hooks

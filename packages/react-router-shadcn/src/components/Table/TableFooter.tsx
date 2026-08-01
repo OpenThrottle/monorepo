@@ -8,6 +8,7 @@ export const TableFooter = React.forwardRef<
   TableFooterProps
 >((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
+
   // Hooks
 
   // Setup

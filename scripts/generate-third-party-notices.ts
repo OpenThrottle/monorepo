@@ -66,10 +66,12 @@ export const normalizeAuthor = (author: unknown): string | undefined => {
   if (typeof author === 'string') {
     return author.trim() || undefined;
   }
+
   if (typeof author === 'object' && author !== null && 'name' in author) {
     const { name } = author;
     return typeof name === 'string' ? name.trim() || undefined : undefined;
   }
+
   return undefined;
 };
 
@@ -89,6 +91,7 @@ export const collectAttributions = (
       exception.license,
     ]),
   );
+
   const rows: Attribution[] = [];
   for (const packages of Object.values(output)) {
     for (const pkg of packages) {
@@ -110,6 +113,7 @@ export const collectAttributions = (
       });
     }
   }
+
   return rows.sort(
     (a, b) =>
       compareCodeUnits(a.name, b.name) ||
@@ -129,6 +133,7 @@ export const renderThirdPartyNotices = (
   for (const row of rows) {
     counts.set(row.license, (counts.get(row.license) ?? 0) + 1);
   }
+
   const summary = [...counts.entries()].sort(
     (a, b) => b[1] - a[1] || compareCodeUnits(a[0], b[0]),
   );
@@ -276,6 +281,77 @@ export const collectEmbeddedNotices = async (
 
 const OUTPUT_FILENAME = 'THIRD-PARTY-LICENSES.md';
 
+/** Matches a package row (`| \`name\` | …`) so the drift diff can name packages. */
+const PACKAGE_ROW = /^\| `([^`]+)` \|/;
+
+/**
+ * @description Line-level diff between the committed manifest and the one freshly
+ * rendered on this host, used by `--check` to show WHAT drifted. Manifest lines are
+ * unique (package rows, summary counts), so an order-preserving set difference
+ * pinpoints the changed rows without a full LCS. `added` = lines only in the
+ * freshly-rendered output (e.g. a platform-specific package that leaked in on this
+ * OS); `removed` = lines only in the committed file. Exported for unit testing.
+ */
+export const diffManifestLines = (
+  existing: string,
+  rendered: string,
+): { added: string[]; removed: string[] } => {
+  const existingLines = new Set(existing.split('\n'));
+  const renderedLines = new Set(rendered.split('\n'));
+  return {
+    added: rendered.split('\n').filter((line) => !existingLines.has(line)),
+    removed: existing.split('\n').filter((line) => !renderedLines.has(line)),
+  };
+};
+
+/** Pull the package names out of any package-table rows in a set of diff lines. */
+export const packageNamesFromLines = (lines: readonly string[]): string[] =>
+  lines
+    .map((line) => line.match(PACKAGE_ROW)?.[1])
+    .filter((name): name is string => name !== undefined);
+
+/**
+ * @description Emit the drift detail behind the "out of date" failure to stderr: the
+ * package names that appear only on this host vs only in the committed file (the usual
+ * culprit is an `os`/`cpu`-specific package not yet handled by
+ * `collectPlatformSpecificPackages`), followed by the raw line diff (capped).
+ */
+const MAX_DIFF_LINES = 40;
+export const logManifestDrift = (
+  existing: string,
+  rendered: string,
+  log: (message: string) => void = console.error,
+): void => {
+  const { added, removed } = diffManifestLines(existing, rendered);
+  log(
+    `   Freshly generated on this host differs from the committed ${OUTPUT_FILENAME} by ` +
+      `${added.length} added / ${removed.length} removed line(s).`,
+  );
+
+  const addedPackages = packageNamesFromLines(added);
+  const removedPackages = packageNamesFromLines(removed);
+  if (addedPackages.length > 0) {
+    log(
+      `   Packages only in the freshly-generated manifest (present on THIS host — ` +
+        `likely a platform-specific package to exclude): ${addedPackages.join(', ')}`,
+    );
+  }
+  if (removedPackages.length > 0) {
+    log(
+      `   Packages only in the committed manifest (absent on this host): ${removedPackages.join(', ')}`,
+    );
+  }
+
+  log('   ---- line diff (freshly-generated vs committed) ----');
+  for (const line of added.slice(0, MAX_DIFF_LINES)) log(`   + ${line}`);
+  for (const line of removed.slice(0, MAX_DIFF_LINES)) log(`   - ${line}`);
+  if (added.length > MAX_DIFF_LINES || removed.length > MAX_DIFF_LINES) {
+    log(
+      `   … diff truncated at ${MAX_DIFF_LINES} lines each; run \`pnpm generate:notices\` locally for the full result.`,
+    );
+  }
+};
+
 async function main(): Promise<void> {
   const cwd = process.cwd();
   const checkMode = process.argv.includes('--check');
@@ -297,11 +373,14 @@ async function main(): Promise<void> {
       console.error(
         `❌ ${OUTPUT_FILENAME} is out of date. Run \`pnpm generate:notices\` and commit the result.`,
       );
+      logManifestDrift(existing, rendered);
       process.exit(1);
     }
+
     console.log(
       `✅ ${OUTPUT_FILENAME} is up to date (${rows.length} packages).`,
     );
+
     return;
   }
 

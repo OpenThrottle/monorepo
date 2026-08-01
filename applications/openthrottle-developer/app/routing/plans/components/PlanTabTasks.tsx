@@ -7,40 +7,25 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { List, Table2 } from 'lucide-react';
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
-import { getRequirementsCount } from '~/routing/plans/utils/formatters';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskItems } from '~/routing/plans/components/PlanTaskItems';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
-import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
-import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
+import { buildPlanTabTasksColumns } from '~/routing/plans/utils/plan-tab-tasks-columns';
 import {
-  getPlanTaskStepIndex,
-  sortPlanTasksByListOrder,
-} from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
-import type { ColumnDef } from '@tanstack/react-table';
-
-const PLAN_TASKS_VIEW = {
-  list: 'list',
-  table: 'table',
-} as const;
-
-type PlanTasksView = (typeof PLAN_TASKS_VIEW)[keyof typeof PLAN_TASKS_VIEW];
-
-const isPlanTasksView = (value: unknown): value is PlanTasksView =>
-  value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table;
+  isPlanTasksView,
+  PLAN_TASKS_VIEW,
+} from '~/routing/plans/utils/plan-tab-tasks-view';
+import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
+import type { PlanTasksView } from '~/routing/plans/utils/plan-tab-tasks-view';
 
 export interface PlanTabTasksProps {
-  tasks: PlanTaskRowFragment[];
+  // className?: string;
 }
 
-export const PlanTabTasks = (): React.ReactElement => {
+export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
   // Hooks
   const [view, setView] = usePersistentSetting<PlanTasksView>(
     'plans.tasksView',
@@ -54,7 +39,7 @@ export const PlanTabTasks = (): React.ReactElement => {
     [tasks],
   );
   const columns = React.useMemo(
-    () => PlanTabTasks.buildTable(managedTaskIds),
+    () => buildPlanTabTasksColumns(managedTaskIds),
     [managedTaskIds],
   );
 
@@ -127,134 +112,4 @@ export const PlanTabTasks = (): React.ReactElement => {
       )}
     </TabsContent>
   );
-};
-
-PlanTabTasks.buildTable = (
-  managedTaskIds: ReadonlySet<string>,
-): ColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
-  return [
-    {
-      cell: ({ row }) => (
-        <span
-          aria-label={`Step ${getPlanTaskStepIndex(row.index)}`}
-          className="text-muted-foreground tabular-nums"
-        >
-          #{getPlanTaskStepIndex(row.index)}
-        </span>
-      ),
-      header: () => <span className="inline-block w-full text-center">#</span>,
-      id: 'step',
-    },
-    {
-      accessorKey: 'status',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        return (
-          <div className="p-2">
-            {isPlanStatusKey(status) ? (
-              <PlanStatusBadge status={status} />
-            ) : (
-              status
-            )}
-          </div>
-        );
-      },
-      header: () => <span className="p-2 text-center">Status</span>,
-    },
-    {
-      accessorKey: 'title',
-      cell: ({ row }) => (
-        <PlanTasksTableCellTitle
-          isManaged={managedTaskIds.has(row.original.id)}
-          row={row}
-        />
-      ),
-      header: () => 'Title / Context',
-    },
-    {
-      accessorKey: 'category',
-      cell: ({ row }) => (
-        <span className="text-muted-foreground">
-          {row.original.category ?? '—'}
-        </span>
-      ),
-      header: () => 'Category',
-    },
-    // {
-    //   accessorKey: 'projectRelation',
-    //   cell: ({ row }) => {
-    //     const project = row.original.projectRelation;
-    //     if (project == null) {
-    //       return <span className="text-muted-foreground">—</span>;
-    //     }
-    //     return (
-    //       <Link
-    //         className="text-xs underline underline-offset-2 hover:text-primary"
-    //         to={`/projects/${project.id}`}
-    //         viewTransition={true}
-    //       >
-    //         {project.name}
-    //       </Link>
-    //     );
-    //   },
-    //   header: () => 'Project',
-    // },
-    {
-      accessorKey: 'requirementsJson',
-      cell: ({ row }) => {
-        const count = getRequirementsCount(row.original.requirementsJson);
-        return (
-          <span className="text-muted-foreground tabular-nums">
-            {count === 0 ? '—' : count}
-          </span>
-        );
-      },
-      header: () => (
-        <span className="inline-block w-full text-center">Requirements</span>
-      ),
-    },
-    // {
-    //   accessorKey: 'updatedAt',
-    //   cell: ({ row }) => {
-    //     const task = row.original;
-    //     const relative = formatUpdatedAt(task.updatedAt);
-    //     const exact = formatDateShort(task.updatedAt);
-
-    //     if (relative == null) {
-    //       return <span className="text-muted-foreground text-xs">—</span>;
-    //     }
-
-    //     const content = (
-    //       <span className="text-muted-foreground text-xs whitespace-nowrap">
-    //         {relative}
-    //       </span>
-    //     );
-
-    //     if (exact != null) {
-    //       return (
-    //         <Tooltip>
-    //           <TooltipTrigger asChild={true}>
-    //             <span className="cursor-default">{content}</span>
-    //           </TooltipTrigger>
-    //           <TooltipContent>
-    //             Updated {exact}
-    //             {formatDateShort(task.createdAt) != null
-    //               ? ` · Created ${formatDateShort(task.createdAt)}`
-    //               : ''}
-    //           </TooltipContent>
-    //         </Tooltip>
-    //       );
-    //     }
-    //     return content;
-    //   },
-    //   header: () => (
-    //     <span className="inline-block w-full text-right">Updated</span>
-    //   ),
-    // },
-    {
-      cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
-      header: () => 'Actions',
-      id: 'actions',
-    },
-  ];
 };

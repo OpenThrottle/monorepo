@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { ProposedPlanDecomposition } from '~/routing/plans/types/document-decompose';
 
-interface DocumentDecomposePreviewProps {
+export interface DocumentDecomposePreviewProps {
   readonly className?: string;
   readonly proposal: ProposedPlanDecomposition | undefined;
 }
@@ -22,6 +22,17 @@ export const DocumentDecomposePreview = (
 ): React.ReactElement => {
   const { className, proposal } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!proposal) {
     return (
       <div

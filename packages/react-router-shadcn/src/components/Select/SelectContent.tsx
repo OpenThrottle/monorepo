@@ -20,6 +20,12 @@ export const SelectContent = React.forwardRef<
 
   // Handlers
 
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content

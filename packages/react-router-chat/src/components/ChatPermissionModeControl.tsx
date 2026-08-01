@@ -6,8 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Check, Lock, Pencil, Unlock } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import clsx from 'clsx';
+import { PERMISSION_MODE_META } from '../data/chat-permission-mode-meta';
 import { ChatPermissionMode } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
@@ -19,31 +20,6 @@ export interface ChatPermissionModeControlProps {
   /** Currently-selected permission mode. */
   readonly permissionMode?: ChatPermissionMode;
 }
-
-interface PermissionModeMeta {
-  readonly description: string;
-  readonly icon: React.ComponentType<{ readonly className?: string }>;
-  readonly label: string;
-}
-
-/** Canonical UI copy + icon per permission mode (from the screenshots). */
-const PERMISSION_MODE_META: Record<ChatPermissionMode, PermissionModeMeta> = {
-  [ChatPermissionMode.autoAcceptEdits]: {
-    description: 'Auto-approve edits, ask before other actions',
-    icon: Pencil,
-    label: 'Auto-accept edits',
-  },
-  [ChatPermissionMode.fullAccess]: {
-    description: 'Allow commands and edits without prompts',
-    icon: Unlock,
-    label: 'Full access',
-  },
-  [ChatPermissionMode.supervised]: {
-    description: 'Ask before commands and file changes',
-    icon: Lock,
-    label: 'Supervised',
-  },
-};
 
 /**
  * @description Controlled, presentational permission-mode selector

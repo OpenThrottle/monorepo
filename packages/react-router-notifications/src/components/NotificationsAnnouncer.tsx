@@ -18,9 +18,9 @@ export interface NotificationsAnnouncerProps {
  *
  * @public
  */
-export function NotificationsAnnouncer(
+export const NotificationsAnnouncer = (
   props: NotificationsAnnouncerProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { message, severity } = props;
 
   // Hooks
@@ -46,4 +46,4 @@ export function NotificationsAnnouncer(
       {message ?? ''}
     </div>
   );
-}
+};

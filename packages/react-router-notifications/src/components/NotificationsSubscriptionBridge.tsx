@@ -1,15 +1,12 @@
 import * as React from 'react';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type {
-  NotificationEventName,
-  NotificationPayload,
-} from '@openthrottle/openthrottle-notifications';
 import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { useNavigate } from 'react-router';
 import { toastForNotification } from '../data/notifications-store.context';
 import { useNotificationsStore } from '../hooks/useNotificationsStore';
+import { toStorePayload } from '../utils/to-store-payload';
 import {
   getSystemNotificationsPreference,
   showSystemNotification,
@@ -42,25 +39,6 @@ export interface NotificationsSubscriptionBridgeProps<
 }
 
 /**
- * @description Re-types the transport payload to the store's domain types at
- * this single boundary. The GraphQL `notifications` node is structurally the
- * store's payload (message, severity, link, planId, …) with `event` as the
- * discriminator, but the generated document types are looser (GraphQL
- * nullability) than the strict {@link NotificationPayload} union, so this is the
- * one place the boundary is bridged. Types only — no runtime coercion (the
- * returned `payload` is the same `node` object).
- */
-function toStorePayload(node: NotificationsSubscriptionData['notifications']): {
-  event: NotificationEventName;
-  payload: NotificationPayload;
-};
-function toStorePayload(
-  node: NotificationsSubscriptionData['notifications'],
-): unknown {
-  return { event: node.event, payload: node };
-}
-
-/**
  * @description Realtime notifications bridge. Subscribes to the `notifications`
  * firehose over graphql-ws and feeds the notifications store / toast /
  * system-notification pipeline. Mount once inside {@link NotificationsStoreProvider};
@@ -68,9 +46,11 @@ function toStorePayload(
  *
  * @public
  */
-export function NotificationsSubscriptionBridge<
+export const NotificationsSubscriptionBridge = <
   TData extends NotificationsSubscriptionData,
->(props: NotificationsSubscriptionBridgeProps<TData>): React.ReactElement {
+>(
+  props: NotificationsSubscriptionBridgeProps<TData>,
+): React.ReactElement => {
   const { children, client, document } = props;
 
   // Hooks
@@ -107,4 +87,4 @@ export function NotificationsSubscriptionBridge<
   // 🔌 Short Circuit
 
   return <>{children}</>;
-}
+};

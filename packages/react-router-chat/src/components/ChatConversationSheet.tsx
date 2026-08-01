@@ -79,11 +79,12 @@ export const ChatConversationSheet = (
     setOpen(false);
   };
 
+  // Markup
+
   // Life Cycle
 
   // 🔌 Short Circuit
 
-  // Markup
   return (
     <Sheet onOpenChange={setOpen} open={isOpen}>
       <Tooltip delayDuration={300}>

@@ -20,7 +20,18 @@ export interface FaqHeroProps {
 export const FaqHero = (props: FaqHeroProps): React.ReactElement => {
   const { categories, className, description } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={clsx('flex flex-col gap-4', className)}

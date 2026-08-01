@@ -6,18 +6,12 @@ import {
   type AgentSearchCounts,
   type AgentSearchTab,
 } from '~/routing/agent-search/types';
+import { AGENT_SEARCH_TAB_LABEL } from '~/routing/agent-search/data/agent-search-tabs';
 
 export interface AgentSearchTabsProps {
   counts: AgentSearchCounts;
   tab: AgentSearchTab;
 }
-
-const TAB_LABEL: Readonly<Record<AgentSearchTab, string>> = {
-  all: 'All',
-  personas: 'Personas',
-  rules: 'Rules',
-  skills: 'Skills',
-};
 
 /**
  * @description Prompt-type tabs (all | skills | rules | personas) wired to the `type` URL param.
@@ -59,7 +53,7 @@ export const AgentSearchTabs = (
       <TabsList>
         {AGENT_SEARCH_TABS.map((value) => (
           <TabsTrigger key={value} value={value}>
-            {TAB_LABEL[value]} ({counts[value]})
+            {AGENT_SEARCH_TAB_LABEL[value]} ({counts[value]})
           </TabsTrigger>
         ))}
       </TabsList>

@@ -8,6 +8,8 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 import type { ExportedSymbol, IdeExportsResult } from '../data/view-models';
+import { groupSymbolsByPath } from '../utils/groupSymbolsByPath';
+import { symbolKey } from '../utils/symbolKey';
 import { SymbolRow } from './SymbolRow';
 
 export interface ExportsListProps {
@@ -21,30 +23,6 @@ export interface ExportsListProps {
   /** The currently selected symbol, for highlighting. */
   selectedSymbol?: ExportedSymbol;
 }
-
-/** Stable identity for a symbol, used for selection + React keys. */
-const symbolKey = (symbol: ExportedSymbol): string =>
-  `${symbol.path}|${symbol.line}|${symbol.name}|${symbol.isDefault}`;
-
-/** Group symbols by their declaring file, with paths sorted. */
-const groupByPath = (
-  symbols: ExportedSymbol[],
-): Array<{ path: string; symbols: ExportedSymbol[] }> => {
-  const byPath = new Map<string, ExportedSymbol[]>();
-
-  for (const symbol of symbols) {
-    const existing = byPath.get(symbol.path);
-    if (existing === undefined) {
-      byPath.set(symbol.path, [symbol]);
-    } else {
-      existing.push(symbol);
-    }
-  }
-
-  return [...byPath.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([path, group]) => ({ path, symbols: group }));
-};
 
 /**
  * Renders a workspace's exported symbols grouped by file. A `Skeleton` while the
@@ -62,9 +40,11 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
     selectedSymbol,
   } = props;
 
+  // Hooks
+
   // Setup
   const groups = React.useMemo(
-    () => groupByPath(result.symbols),
+    () => groupSymbolsByPath(result.symbols),
     [result.symbols],
   );
   const selectedKey =

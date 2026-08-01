@@ -24,6 +24,8 @@ export const DocHeadingAnchor = (
   const [copied, setCopied] = React.useState(false);
   const timeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Setup
+
   // Handlers
   const handleCopy = React.useCallback(async (): Promise<void> => {
     try {
@@ -37,6 +39,8 @@ export const DocHeadingAnchor = (
       // Clipboard unavailable / denied — leave the affordance inert.
     }
   }, [slug]);
+
+  // Markup
 
   // Life Cycle
   React.useEffect(

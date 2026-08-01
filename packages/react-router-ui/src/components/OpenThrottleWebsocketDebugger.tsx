@@ -9,12 +9,9 @@ import {
   TooltipTrigger,
   cn,
 } from '@openthrottle/react-router-shadcn';
+import { useOpenThrottleWebsocketDebugger } from '../hooks/useOpenThrottleWebsocketDebugger';
 import {
-  filterWebsocketDebuggerEntries,
   formatWebsocketDebuggerStatusColor,
-  useWebsocketDebuggerLog,
-  useWebsocketDebuggerSocketSubscription,
-  WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
   WEBSOCKET_DEBUGGER_EVENT_OPTIONS,
 } from './websocket-debugger';
 import type {
@@ -48,14 +45,6 @@ const MULTI_SELECT_OPTIONS = WEBSOCKET_DEBUGGER_EVENT_OPTIONS.map((option) => ({
   value: option.value,
 }));
 
-const KNOWN_EVENT_NAMES = new Set<string>(
-  WEBSOCKET_DEBUGGER_EVENT_OPTIONS.map((option) => option.value),
-);
-
-const isNotificationEventName = (
-  value: string,
-): value is NotificationEventName => KNOWN_EVENT_NAMES.has(value);
-
 export const OpenThrottleWebsocketDebugger = (
   props: OpenThrottleWebsocketDebuggerProps,
 ): React.ReactElement => {
@@ -67,73 +56,31 @@ export const OpenThrottleWebsocketDebugger = (
     selectedEventNames: selectedEventNamesProp,
     socket,
     subscribeToEvents,
-    subscriptionEnabled = true,
+    subscriptionEnabled,
   } = props;
 
   // Hooks
   const {
-    append,
-    clear,
-    entries,
-    selectedEventNames: internalSelectedEventNames,
-    setSelectedEventNames: setInternalSelectedEventNames,
-  } = useWebsocketDebuggerLog({
-    initialSelectedEventNames:
-      selectedEventNamesProp ?? WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
-  });
-
-  const isFilterControlled =
-    selectedEventNamesProp !== undefined &&
-    onSelectedEventNamesChange !== undefined;
-
-  const selectedEventNames = isFilterControlled
-    ? selectedEventNamesProp
-    : internalSelectedEventNames;
-
-  const setSelectedEventNames = isFilterControlled
-    ? onSelectedEventNamesChange
-    : setInternalSelectedEventNames;
-
-  const displayEntries = React.useMemo(
-    () => filterWebsocketDebuggerEntries(entries, selectedEventNames),
-    [entries, selectedEventNames],
-  );
-
-  const hasSeededInitialEntriesRef = React.useRef(false);
-
-  // Setup
-
-  useWebsocketDebuggerSocketSubscription({
-    append,
-    enabled: subscriptionEnabled && initialEntries == null,
+    displayEntries,
+    handleClear,
+    handleFilterChange,
+    selectedEventNames,
+  } = useOpenThrottleWebsocketDebugger({
+    initialEntries,
+    onSelectedEventNamesChange,
+    selectedEventNames: selectedEventNamesProp,
     socket,
     subscribeToEvents,
+    subscriptionEnabled,
   });
 
-  React.useEffect(() => {
-    if (initialEntries == null || hasSeededInitialEntriesRef.current) {
-      return;
-    }
-
-    hasSeededInitialEntriesRef.current = true;
-
-    for (const entry of [...initialEntries].reverse()) {
-      append(entry.event, entry.payload);
-    }
-  }, [append, initialEntries]);
-
-  // Handlers
-  const handleFilterChange = (values: string[]): void => {
-    setSelectedEventNames(values.filter(isNotificationEventName));
-  };
-
-  const handleClear = (): void => {
-    clear();
-  };
-
-  // Markup
+  // Setup
   const statusLabel = connectionStatus ?? 'disconnected';
   const statusColorClass = formatWebsocketDebuggerStatusColor(statusLabel);
+
+  // Handlers
+
+  // Markup
 
   // Life Cycle
 

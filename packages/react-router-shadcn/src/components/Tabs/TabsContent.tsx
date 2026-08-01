@@ -12,6 +12,18 @@ export const TabsContent = React.forwardRef<
 >((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <TabsPrimitive.Content
       className={cn('flex-1 outline-none', className)}

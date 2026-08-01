@@ -51,7 +51,7 @@ export const ComposeForm = (props: ComposeFormProps): React.ReactElement => {
 
   // Life Cycle
 
-  // 🔌 Short Circuits
+  // 🔌 Short Circuit
 
   return (
     <Form

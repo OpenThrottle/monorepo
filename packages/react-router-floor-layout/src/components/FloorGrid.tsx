@@ -1,4 +1,4 @@
-import { type ReactElement, useId } from 'react';
+import * as React from 'react';
 
 /**
  * Props for {@link FloorGrid}.
@@ -22,11 +22,11 @@ export interface FloorGridProps {
  *
  * @public
  */
-export function FloorGrid(props: FloorGridProps): ReactElement {
+export const FloorGrid = (props: FloorGridProps): React.ReactElement => {
   const { gridSize, height, width } = props;
 
   // Hooks
-  const patternId = useId();
+  const patternId = React.useId();
 
   // Setup
 
@@ -85,4 +85,4 @@ export function FloorGrid(props: FloorGridProps): ReactElement {
       />
     </g>
   );
-}
+};

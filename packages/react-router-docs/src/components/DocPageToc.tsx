@@ -27,6 +27,12 @@ export const DocPageToc = (props: DocPageTocProps): React.ReactElement => {
     headings[0]?.id ?? null,
   );
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
   // Life Cycle
   React.useEffect(() => {
     if (headings.length === 0 || typeof IntersectionObserver === 'undefined') {
@@ -60,7 +66,6 @@ export const DocPageToc = (props: DocPageTocProps): React.ReactElement => {
     return <></>;
   }
 
-  // Markup
   return (
     <nav
       aria-label={title}

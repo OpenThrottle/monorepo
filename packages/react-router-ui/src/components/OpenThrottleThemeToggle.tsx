@@ -5,7 +5,7 @@ import {
   type ToggleGroupProps,
 } from '@openthrottle/react-router-shadcn';
 import { isThemeMode, type ThemeMode } from '@openthrottle/react-router-utils';
-import { MonitorIcon, MoonIcon, SunIcon, type LucideIcon } from 'lucide-react';
+import { THEME_TOGGLE_OPTIONS } from '../data/theme-toggle-options';
 
 export interface OpenThrottleThemeToggleProps {
   /** Accessible label for the toggle group. Defaults to `Color mode`. */
@@ -22,19 +22,6 @@ export interface OpenThrottleThemeToggleProps {
   /** Currently selected color mode. */
   value: ThemeMode;
 }
-
-interface ThemeToggleOption {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: ThemeMode;
-}
-
-/** Order matters: light → dark → system, matching the appearance settings. */
-const THEME_TOGGLE_OPTIONS: readonly ThemeToggleOption[] = [
-  { icon: SunIcon, label: 'Light', value: 'light' },
-  { icon: MoonIcon, label: 'Dark', value: 'dark' },
-  { icon: MonitorIcon, label: 'System', value: 'system' },
-];
 
 /**
  * @public

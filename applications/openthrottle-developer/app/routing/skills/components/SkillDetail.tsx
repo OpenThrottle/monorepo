@@ -11,13 +11,13 @@ import {
 import { Editor } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { PencilIcon } from 'lucide-react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
 import {
   SKILL_DETAIL_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
-import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+import { useSkillDetail } from '~/routing/skills/hooks/useSkillDetail';
 
 export interface SkillDetailProps {
   className?: string;
@@ -46,38 +46,22 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
   } = props;
 
   // Hooks
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [draft, setDraft] = React.useState(content);
-  const wasSavingRef = React.useRef(false);
+  const {
+    draft,
+    handleCancel,
+    handleDraftChange,
+    handleEdit,
+    handleSave,
+    invocationBadge,
+    isDirty,
+    isEditing,
+    isOpenThrottle,
+    sourceTooltip,
+  } = useSkillDetail({ content, entry, onSave, saveError, saving });
 
   // Setup
-  const isOpenThrottle = entry.source === 'openthrottle';
-  const { badge: invocationBadge } = getResolvedModelInvocationDisplay(entry);
-  const isDirty = draft !== content;
-  const sourceTooltip = isOpenThrottle
-    ? SKILLS_SOURCE_COPY.openthrottleTooltip
-    : entry.sourceUrl
-      ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${entry.sourceUrl}`
-      : SKILLS_SOURCE_COPY.externalTooltip;
 
   // Handlers
-  const handleEdit = (): void => {
-    setDraft(content);
-    setIsEditing(true);
-  };
-
-  const handleCancel = (): void => {
-    setDraft(content);
-    setIsEditing(false);
-  };
-
-  const handleDraftChange = (value: string | undefined): void => {
-    setDraft(value ?? '');
-  };
-
-  const handleSave = (): void => {
-    onSave?.(draft);
-  };
 
   // Markup
   const sourceBadge = (
@@ -92,78 +76,7 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
     </Badge>
   );
 
-  const editControls = isEditing ? (
-    <div className="flex items-center gap-2">
-      {saveError ? (
-        <p
-          className="text-destructive text-xs"
-          data-testid="skill-save-error"
-          role="alert"
-        >
-          {saveError}
-        </p>
-      ) : null}
-      <Button
-        data-testid="skill-save-button"
-        disabled={!isDirty || saving}
-        onClick={handleSave}
-        size="xs"
-      >
-        {SKILL_DETAIL_COPY.saveLabel}
-      </Button>
-      <Button
-        data-testid="skill-cancel-button"
-        disabled={saving}
-        onClick={handleCancel}
-        size="xs"
-        variant="outline"
-      >
-        {SKILL_DETAIL_COPY.cancelLabel}
-      </Button>
-    </div>
-  ) : editable ? (
-    <Button
-      data-testid="skill-edit-button"
-      onClick={handleEdit}
-      size="xs"
-      variant="outline"
-    >
-      <PencilIcon className="size-4" />
-      {SKILL_DETAIL_COPY.editLabel}
-    </Button>
-  ) : (
-    <Tooltip>
-      <TooltipTrigger asChild={true}>
-        {/* span keeps the tooltip live over the disabled button */}
-        <span data-testid="skill-edit-disabled">
-          <Button disabled={true} size="xs" variant="outline">
-            <PencilIcon className="size-4" />
-            {SKILL_DETAIL_COPY.editLabel}
-          </Button>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs" side="top">
-        {SKILL_DETAIL_COPY.editDisabledTooltip}
-      </TooltipContent>
-    </Tooltip>
-  );
-
   // Life Cycle
-  React.useEffect(() => {
-    // A save that finished without a rejection revalidated the loader; leave
-    // edit mode and let the read view pick up the fresh content.
-    if (wasSavingRef.current && !saving && !saveError) {
-      setIsEditing(false);
-    }
-    wasSavingRef.current = saving;
-  }, [saveError, saving]);
-
-  React.useEffect(() => {
-    // Keep a non-dirty draft following loader revalidations (e.g. post-save).
-    if (!isEditing) {
-      setDraft(content);
-    }
-  }, [content, isEditing]);
 
   // 🔌 Short Circuit
 
@@ -215,7 +128,16 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
 
           <div className="flex-1" />
 
-          {editControls}
+          <SkillDetailEditControls
+            editable={editable}
+            isDirty={isDirty}
+            isEditing={isEditing}
+            onCancel={handleCancel}
+            onEdit={handleEdit}
+            onSave={handleSave}
+            saveError={saveError}
+            saving={saving}
+          />
         </div>
 
         <p className="text-muted-foreground text-sm">{entry.summary}</p>

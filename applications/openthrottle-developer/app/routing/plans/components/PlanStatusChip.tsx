@@ -1,18 +1,8 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
-import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
-
-const STATUS_DOT_COLOR: Record<PlanStatusKey, string> = {
-  BACKLOG: 'bg-violet-500',
-  BLOCKED: 'bg-red-500',
-  CANCELED: 'bg-slate-500',
-  COMPLETED: 'bg-lime-500',
-  IN_PROGRESS: 'bg-yellow-500',
-  PENDING: 'bg-sky-500',
-  QUEUED: 'bg-amber-500',
-  SKIPPED: 'bg-red-500',
-};
+import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
+import { planStatusValues } from '~/routing/plans/types';
 
 export interface PlanStatusChipProps {
   className?: string;
@@ -34,7 +24,9 @@ export const PlanStatusChip = (
   // Setup
   const isKnown = isPlanStatusKey(status);
   const label = isKnown ? planStatusValues[status] : status;
-  const color = isKnown ? STATUS_DOT_COLOR[status] : 'bg-muted-foreground/50';
+  const color = isKnown
+    ? PLAN_STATUS_DOT_COLOR[status]
+    : 'bg-muted-foreground/50';
 
   // Handlers
 

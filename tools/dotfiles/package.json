@@ -13,6 +13,7 @@
     "@nx/eslint-plugin": "catalog:",
     "@typescript-eslint/eslint-plugin": "catalog:",
     "@typescript-eslint/parser": "catalog:",
+    "@typescript-eslint/rule-tester": "catalog:",
     "@typescript-eslint/utils": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-eslint-comments": "catalog:",

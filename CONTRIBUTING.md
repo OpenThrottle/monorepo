@@ -153,5 +153,9 @@ your first PR.
   CI gates, `typecheck` vs `test`, and the local commands that mirror CI.
 - [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
   `@public` export convention.
+- [docs/monorepo/component-primitive-shape.md](./docs/monorepo/component-primitive-shape.md)
+  — the enforced shape every authored React component follows (derived from the
+  `@tools/generators` template); scaffold with the generator and run
+  `pnpm run audit:component-shape`.
 - [docs/Skills.md](./docs/Skills.md) — agent skills and rules (`.agents/` is the
   source of truth; run `skill-sync`, never hand-edit generated trees).

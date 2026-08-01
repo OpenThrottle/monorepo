@@ -21,12 +21,21 @@ export interface DocPagePagerProps {
 export const DocPagePager = (props: DocPagePagerProps): React.ReactElement => {
   const { className, next = null, prev = null } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
   if (prev === null && next === null) {
     return <></>;
   }
 
-  // Markup
   return (
     <nav
       aria-label="Pagination"

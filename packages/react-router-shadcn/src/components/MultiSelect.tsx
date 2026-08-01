@@ -33,7 +33,7 @@ export interface MultiSelectProps {
 export const MultiSelect = React.forwardRef<
   HTMLButtonElement,
   MultiSelectProps
->((props, ref): React.JSX.Element => {
+>((props, ref): React.ReactElement => {
   const {
     className,
     emptyText = 'No options found.',

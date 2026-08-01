@@ -55,6 +55,16 @@ export const OpenThrottleToolbar = (
     utilityContent,
   } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
 
   return (

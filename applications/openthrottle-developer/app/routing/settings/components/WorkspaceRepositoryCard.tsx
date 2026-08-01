@@ -12,27 +12,15 @@ import {
 import { FolderGit2Icon, RefreshCwIcon } from 'lucide-react';
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { driftLabels } from '~/routing/settings/utils/drift-labels';
+import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
-export interface CheckoutDrift {
-  branchMoved: boolean;
-  pathMissing: boolean;
-  remoteChanged: boolean;
-}
+export type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 export interface WorkspaceRepositoryCardProps {
   driftByCheckoutId?: Record<string, CheckoutDrift>;
   repository: WorkspaceRepositoryFieldsFragment;
 }
-
-const driftLabels = (drift: CheckoutDrift): string[] => {
-  const labels: string[] = [];
-  if (drift.branchMoved) labels.push(WORKSPACE_FOLDERS_COPY.driftBranchMoved);
-  if (drift.pathMissing) labels.push(WORKSPACE_FOLDERS_COPY.driftPathMissing);
-  if (drift.remoteChanged) {
-    labels.push(WORKSPACE_FOLDERS_COPY.driftRemoteChanged);
-  }
-  return labels;
-};
 
 export const WorkspaceRepositoryCard = (
   props: WorkspaceRepositoryCardProps,

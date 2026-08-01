@@ -12,6 +12,18 @@ export const Tabs = React.forwardRef<
 >((props, ref): React.ReactElement => {
   const { className, orientation = 'horizontal', ...rest } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <TabsPrimitive.Root
       className={cn(

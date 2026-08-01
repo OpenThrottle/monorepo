@@ -1,15 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { useFetcher } from 'react-router';
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
   Button,
   Input,
   Label,
@@ -17,40 +8,18 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import { SkillAvailabilityRuleRemoveButton } from '~/routing/skills/components/SkillAvailabilityRuleRemoveButton';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { useSkillAvailabilityRuleForm } from '~/routing/skills/hooks/useSkillAvailabilityRuleForm';
 import {
   environmentChoiceToValue,
-  environmentValueToChoice,
-  findInvalidSlugs,
-  isSkillAvailabilityEnvironment,
-  parseSlugInput,
-  ruleHasAnyEntry,
   serializeList,
   SKILL_AVAILABILITY_ENVIRONMENT_ALL,
   SKILL_AVAILABILITY_ENVIRONMENTS,
-  type SkillAvailabilityEnvironmentChoice,
   type SkillAvailabilityRuleValue,
 } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;
-
-const EMPTY_RULE: SkillAvailabilityRuleValue = {
-  environment: null,
-  slugAllow: [],
-  slugDeny: [],
-  tagAllow: [],
-  tagDeny: [],
-};
-
-/** Narrow a ToggleGroup value to a known environment choice (the `all` sentinel or a real env). */
-function isEnvironmentChoice(
-  value: string,
-): value is SkillAvailabilityEnvironmentChoice {
-  return (
-    value === SKILL_AVAILABILITY_ENVIRONMENT_ALL ||
-    isSkillAvailabilityEnvironment(value)
-  );
-}
 
 export interface SkillAvailabilityRuleFormProps {
   readonly className?: string;
@@ -73,67 +42,32 @@ export const SkillAvailabilityRuleForm = (
   props: SkillAvailabilityRuleFormProps,
 ): React.ReactElement => {
   const { className, mode, rule, vocabulary } = props;
-  const seed = rule ?? EMPTY_RULE;
 
   // Hooks
-  const fetcher = useFetcher();
-  const removeFetcher = useFetcher();
-  const [environmentChoice, setEnvironmentChoice] =
-    React.useState<SkillAvailabilityEnvironmentChoice>(
-      environmentValueToChoice(seed.environment),
-    );
-  const [tagAllow, setTagAllow] = React.useState<string[]>([...seed.tagAllow]);
-  const [tagDeny, setTagDeny] = React.useState<string[]>([...seed.tagDeny]);
-  const [slugAllowRaw, setSlugAllowRaw] = React.useState(
-    seed.slugAllow.join(', '),
-  );
-  const [slugDenyRaw, setSlugDenyRaw] = React.useState(
-    seed.slugDeny.join(', '),
-  );
-  const [clientError, setClientError] = React.useState<string | undefined>(
-    undefined,
-  );
+  const {
+    clientError,
+    environmentChoice,
+    fetcher,
+    handleEnvironmentChange,
+    handleSubmit,
+    isSubmitting,
+    serverError,
+    setSlugAllowRaw,
+    setSlugDenyRaw,
+    setTagAllow,
+    setTagDeny,
+    slugAllow,
+    slugAllowRaw,
+    slugDeny,
+    slugDenyRaw,
+    tagAllow,
+    tagDeny,
+    tagOptions,
+  } = useSkillAvailabilityRuleForm({ rule, vocabulary });
 
   // Setup
-  const slugAllow = React.useMemo(
-    () => parseSlugInput(slugAllowRaw),
-    [slugAllowRaw],
-  );
-  const slugDeny = React.useMemo(
-    () => parseSlugInput(slugDenyRaw),
-    [slugDenyRaw],
-  );
-  const tagOptions = vocabulary.map((tag) => ({ label: tag, value: tag }));
-  const isSubmitting = fetcher.state !== 'idle';
-  const serverError =
-    fetcher.data != null &&
-    typeof fetcher.data === 'object' &&
-    'error' in fetcher.data &&
-    typeof fetcher.data.error === 'string'
-      ? fetcher.data.error
-      : undefined;
 
   // Handlers
-  const handleEnvironmentChange = (value: string): void => {
-    if (isEnvironmentChoice(value)) {
-      setEnvironmentChoice(value);
-    }
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
-    const invalidSlugs = findInvalidSlugs([...slugAllow, ...slugDeny]);
-    if (invalidSlugs.length > 0) {
-      event.preventDefault();
-      setClientError(`${COPY.invalidSlugError} ${invalidSlugs.join(', ')}`);
-      return;
-    }
-    if (!ruleHasAnyEntry({ slugAllow, slugDeny, tagAllow, tagDeny })) {
-      event.preventDefault();
-      setClientError(COPY.emptySlugError);
-      return;
-    }
-    setClientError(undefined);
-  };
 
   // Markup
 
@@ -259,31 +193,7 @@ export const SkillAvailabilityRuleForm = (
       </fetcher.Form>
 
       {mode === 'edit' && rule?.id != null ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild={true}>
-            <Button type="button" variant="outline">
-              {COPY.removeLabel}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{COPY.removeLabel}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {COPY.removeLabel} — this cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <removeFetcher.Form method="post">
-              <input name="intent" type="hidden" value="removeRule" />
-              <input name="ruleId" type="hidden" value={rule.id} />
-              <AlertDialogFooter>
-                <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                <Button type="submit" variant="destructive">
-                  {COPY.removeLabel}
-                </Button>
-              </AlertDialogFooter>
-            </removeFetcher.Form>
-          </AlertDialogContent>
-        </AlertDialog>
+        <SkillAvailabilityRuleRemoveButton ruleId={rule.id} />
       ) : null}
     </div>
   );

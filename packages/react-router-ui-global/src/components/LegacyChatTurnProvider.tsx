@@ -24,11 +24,22 @@ export const LegacyChatTurnProvider = (
 ): React.ReactElement => {
   const { chatPersist, children } = props;
 
+  // Hooks
   const { composerDisabled, messages, sendUserMessage, startNewChat } =
     useChatTurnFetcher({
       action: '/',
       persist: chatPersist,
     });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <ChatProvider

@@ -9,7 +9,7 @@ export interface AccordionItemProps extends React.ComponentPropsWithoutRef<
 export const AccordionItem = React.forwardRef<
   React.ComponentRef<typeof AccordionPrimitive.Item>,
   AccordionItemProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

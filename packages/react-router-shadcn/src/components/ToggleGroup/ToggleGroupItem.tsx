@@ -7,15 +7,15 @@ import { cn } from '../../utils/cn';
 import { ToggleGroupContext } from './toggle-group-context';
 import { toggleGroupItemVariants } from './toggleGroupItemVariants';
 
-export type ToggleGroupItemProps = React.ComponentPropsWithoutRef<
-  typeof ToggleGroupPrimitive.Item
-> &
-  VariantProps<typeof toggleGroupItemVariants>;
+export interface ToggleGroupItemProps
+  extends
+    React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item>,
+    VariantProps<typeof toggleGroupItemVariants> {}
 
 export const ToggleGroupItem = React.forwardRef<
   React.ComponentRef<typeof ToggleGroupPrimitive.Item>,
   ToggleGroupItemProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, size, variant, ...rest } = props;
 
   // Hooks

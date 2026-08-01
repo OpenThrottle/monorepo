@@ -11,10 +11,9 @@ import {
   rootLoaderStepLabel,
   truncateForBanner,
 } from '~/global/utils/root-loader-diagnostics';
+import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
 
-const SNIPPET_MAX = 360;
-
-interface GlobalRootLoaderFailureBannerProps {
+export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;
   readonly failure: RootLoaderFailure | null;
   readonly isRevalidating?: boolean;
@@ -33,44 +32,23 @@ export const GlobalRootLoaderFailureBanner = (
 
   // Hooks
   const [dismissed, setDismissed] = React.useState(false);
+  const wasRevalidating = React.useRef(false);
+
+  // Setup
   const failureKey = failure
     ? `${failure.step}:${failure.kind}:${failure.message}`
     : null;
-  const wasRevalidating = React.useRef(false);
-
-  // Reset dismiss when the failure payload changes (new diagnosis) or after a retry completes.
-  React.useEffect(() => {
-    setDismissed(false);
-  }, [failureKey]);
-
-  React.useEffect(() => {
-    if (wasRevalidating.current && !isRevalidating) {
-      setDismissed(false);
-    }
-    wasRevalidating.current = isRevalidating === true;
-  }, [isRevalidating]);
-
-  // Setup
   const userSessionAmbiguous = !userLoadOk;
   const visible = (failure != null || userSessionAmbiguous) && !dismissed;
-
-  // Handlers
-  const handleDismiss = React.useCallback(() => {
-    setDismissed(true);
-  }, []);
-
-  // 🔌 Short Circuit
-  if (!visible) {
-    return null;
-  }
 
   const title = failure
     ? rootLoaderFailureKindLabel(failure.kind)
     : 'Session could not be verified';
   const rawMessage = failure?.message ?? '';
-  const isTruncated = rawMessage.trim().length > SNIPPET_MAX;
+  const isTruncated =
+    rawMessage.trim().length > ROOT_LOADER_FAILURE_SNIPPET_MAX;
   const detail = failure
-    ? truncateForBanner(failure.message, SNIPPET_MAX)
+    ? truncateForBanner(failure.message, ROOT_LOADER_FAILURE_SNIPPET_MAX)
     : 'The request to load your account failed. You may be offline or the API may be unreachable. Retry after checking the network and server.';
 
   const stepLine = failure
@@ -86,6 +64,31 @@ export const GlobalRootLoaderFailureBanner = (
   }
 
   const graphqlBase = diagnostics?.graphQlRequestBaseUrl?.trim();
+
+  // Handlers
+  const handleDismiss = React.useCallback(() => {
+    setDismissed(true);
+  }, []);
+
+  // Markup
+
+  // Life Cycle
+  // Reset dismiss when the failure payload changes (new diagnosis) or after a retry completes.
+  React.useEffect(() => {
+    setDismissed(false);
+  }, [failureKey]);
+
+  React.useEffect(() => {
+    if (wasRevalidating.current && !isRevalidating) {
+      setDismissed(false);
+    }
+    wasRevalidating.current = isRevalidating === true;
+  }, [isRevalidating]);
+
+  // 🔌 Short Circuit
+  if (!visible) {
+    return null;
+  }
 
   return (
     <div

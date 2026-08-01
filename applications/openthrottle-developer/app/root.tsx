@@ -7,7 +7,6 @@ import {
 } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
-  GlobalHelpModal,
   GlobalLayout,
   GlobalLayoutHeader,
   GlobalMetrics,
@@ -577,15 +576,6 @@ export default function App(): React.ReactElement {
                   diagnosticsHref="/settings/debug#graphql-endpoint-health"
                 />
               ) : null}
-
-              {/*
-                URL-synced help dialog (?modal=help). Rendered unconditionally
-                — outside the isHeaderHidden / isMetricsHidden route-chrome
-                gates — so a shared ?modal=help link opens on any route,
-                including auth and prompts. Distinct value from the metrics
-                dialog (?modal=ServerMetricsInfo), so no key collision.
-              */}
-              <GlobalHelpModal />
 
               <OpenThrottleCommander
                 className="m-0! p-0!"

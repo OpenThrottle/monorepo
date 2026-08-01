@@ -12,34 +12,17 @@ import {
   SidebarRail,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import type { LinkProps } from 'react-router';
 import { NavLink, useLocation } from 'react-router';
-import { TrayIcon } from '@phosphor-icons/react/dist/ssr/Tray';
-import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
-import { PencilSimpleLineIcon } from '@phosphor-icons/react/dist/ssr/PencilSimpleLine';
-import { GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
-import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
-import { FileDashedIcon } from '@phosphor-icons/react/dist/ssr/FileDashed';
 import { OpenThrottleSidebarHeader } from '@openthrottle/react-router-ui';
 import { getMockUnreadCountByFolder } from '~/global/data/mock.mail';
 import { MAIL_PATHS, mailNavigation } from '~/global/data/data.navigation';
+import {
+  getNavIcon,
+  getPath,
+  normalizePath,
+  pathToFolderId,
+} from '~/global/utils/mail-navigation';
 import type { MailFolderId } from '~/types/mail';
-import { MAIL_FOLDER_IDS } from '~/types/mail';
-
-function getNavIcon(
-  path: string,
-): React.ComponentType<{ className?: string }> | undefined {
-  const norm = normalizePath(path);
-  if (norm === normalizePath(MAIL_PATHS.inbox)) return TrayIcon;
-  if (norm === MAIL_PATHS.sent) return PaperPlaneTiltIcon;
-  if (norm === MAIL_PATHS.drafts) return FileDashedIcon;
-  if (norm === MAIL_PATHS.trash) return TrashIcon;
-  if (norm === MAIL_PATHS.search) return MagnifyingGlassIcon;
-  if (norm === MAIL_PATHS.compose) return PencilSimpleLineIcon;
-  if (norm === '/settings') return GearIcon;
-  return undefined;
-}
 
 export interface MailSidebarProps {
   readonly className?: string;
@@ -50,35 +33,14 @@ export interface MailSidebarProps {
   readonly folderUnreadCounts?: Partial<Record<MailFolderId, number>>;
 }
 
-function getPath(to: LinkProps['to']): string {
-  return typeof to === 'string' ? to : (to.pathname ?? '/');
-}
-
-/** Normalize path for comparison (strip trailing slash so /mail and /mail/ match). */
-function normalizePath(p: string): string {
-  const s = p.replace(/\/$/, '') || '/';
-  return s === '' ? '/' : s;
-}
-
-/** Maps sidebar nav path to folder id for badge display; returns null for non-folder links (Compose, Settings). */
-function pathToFolderId(path: string): MailFolderId | null {
-  const normalized = normalizePath(path);
-  if (normalized === normalizePath(MAIL_PATHS.inbox)) {
-    return MAIL_FOLDER_IDS.inbox;
-  }
-  if (normalized === MAIL_PATHS.sent) return MAIL_FOLDER_IDS.sent;
-  if (normalized === MAIL_PATHS.drafts) return MAIL_FOLDER_IDS.drafts;
-  if (normalized === MAIL_PATHS.trash) return MAIL_FOLDER_IDS.trash;
-  return null;
-}
-
 export const MailSidebar = (props: MailSidebarProps): React.ReactElement => {
   const { className, folderUnreadCounts } = props;
 
   // Hooks
   const location = useLocation();
 
-  // Setup — use prop or mock for folder badges (wire to API when backend is ready)
+  // Setup
+  // Use prop or mock for folder badges (wire to API when backend is ready).
   const unreadCounts = React.useMemo(
     () => folderUnreadCounts ?? getMockUnreadCountByFolder(),
     [folderUnreadCounts],

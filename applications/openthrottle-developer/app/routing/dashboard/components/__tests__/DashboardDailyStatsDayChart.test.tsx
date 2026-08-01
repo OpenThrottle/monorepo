@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { DashboardDailyStatsDayChart } from '../DashboardDailyStatsDayChart';
-import type { DailyStatsChartDatum } from '../DashboardDailyStatsCard';
+import type { DailyStatsChartDatum } from '~/routing/dashboard/data/daily-stats-chart';
 
 const datum: DailyStatsChartDatum = {
   date: '2026-01-01',

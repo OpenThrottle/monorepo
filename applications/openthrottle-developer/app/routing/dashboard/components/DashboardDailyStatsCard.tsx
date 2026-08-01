@@ -4,59 +4,15 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@openthrottle/react-router-shadcn';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
 import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
+import {
+  formatChartDate,
+  mapToChartData,
+} from '~/routing/dashboard/utils/daily-stats-chart';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
-
-/** One row of chart data: date plus the six series. */
-export interface DailyStatsChartDatum {
-  date: string;
-  plansCompleted: number;
-  plansCreated: number;
-  plansUpdated: number;
-  tasksCompleted: number;
-  tasksCreated: number;
-  tasksUpdated: number;
-}
-
-export const CHART_CONFIG: ChartConfig = {
-  plansCompleted: { color: 'var(--chart-2)', label: 'Plans completed' },
-  plansCreated: { color: 'var(--chart-1)', label: 'Plans created' },
-  plansUpdated: { color: 'var(--chart-3)', label: 'Plans updated' },
-  tasksCompleted: { color: 'var(--chart-5)', label: 'Tasks completed' },
-  tasksCreated: { color: 'var(--chart-4)', label: 'Tasks created' },
-  tasksUpdated: { color: 'var(--chart-5)', label: 'Tasks updated' },
-};
-
-/**
- * @description Formats YYYY-MM-DD for X-axis display (e.g. "Feb 11").
- */
-export function formatChartDate(value: string): string {
-  const d = new Date(value + 'T00:00:00');
-
-  return Number.isNaN(d.getTime())
-    ? value
-    : d.toLocaleDateString('en-US', { dateStyle: 'full' });
-}
-
-/**
- * @description Maps DashboardDailyStatsCardFragment[] to chart data and config for Recharts.
- */
-export function mapToChartData(
-  items: DashboardDailyStatsCardFragment[],
-): DailyStatsChartDatum[] {
-  return items.map((item) => ({
-    date: item.date,
-    plansCompleted: item.plansCompleted,
-    plansCreated: item.plansCreated,
-    plansUpdated: item.plansUpdated,
-    tasksCompleted: item.tasksCompleted,
-    tasksCreated: item.tasksCreated,
-    tasksUpdated: item.tasksUpdated,
-  }));
-}
 
 export interface DashboardDailyStatsCardProps {
   className?: string;
@@ -115,7 +71,7 @@ export const DashboardDailyStatsCard = (
         className={clsx('mt-4 min-h-[240px] w-full', {
           'cursor-pointer': onSelectDate !== undefined,
         })}
-        config={CHART_CONFIG}
+        config={DAILY_STATS_CHART_CONFIG}
       >
         <BarChart
           data={chartData}

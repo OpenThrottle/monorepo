@@ -2,15 +2,13 @@ import * as React from 'react';
 import { MultiSelect } from '@openthrottle/react-router-shadcn';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
+import { isWorkspaceEditorId } from '~/routing/settings/utils/is-workspace-editor-id';
 
 export interface WorkspaceEditorMultiSelectProps {
   name?: string;
   onChange: (value: WorkspaceEditorId[]) => void;
   value: WorkspaceEditorId[];
 }
-
-const isWorkspaceEditorId = (value: string): value is WorkspaceEditorId =>
-  WORKSPACE_EDITOR_OPTIONS.some((opt) => opt.value === value);
 
 /**
  * @description Multi-select for workspace editor preferences (Cursor, VS Code).

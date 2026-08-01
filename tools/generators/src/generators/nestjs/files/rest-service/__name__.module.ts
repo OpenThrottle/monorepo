@@ -1,11 +1,11 @@
-import { Module as ModuleDecorator } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { <%= namePascal %>Controller } from './<%= name %>.controller';
 import { <%= namePascal %>Service } from './<%= name %>.service';
 
-@ModuleDecorator({
+@Module({
   controllers: [<%= namePascal %>Controller],
   // exports: [],
   imports: [],
   providers: [<%= namePascal %>Service],
 })
-export class Module {}
+export class <%= namePascal %>Module {}

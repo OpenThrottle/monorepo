@@ -6,6 +6,9 @@ import { cn } from '../../utils/cn';
 import { ToggleGroupContext } from './toggle-group-context';
 import type { ToggleGroupContextValue } from './toggle-group-context';
 
+// `ToggleGroupPrimitive.Root` props are a union (single vs multiple), which an
+// `interface` cannot `extend` — so this props contract is an exported `type`
+// (VR1 accepts an exported `type <Part>Props` for union-props primitives).
 export type ToggleGroupProps = React.ComponentPropsWithoutRef<
   typeof ToggleGroupPrimitive.Root
 > &
@@ -14,7 +17,7 @@ export type ToggleGroupProps = React.ComponentPropsWithoutRef<
 export const ToggleGroup = React.forwardRef<
   React.ComponentRef<typeof ToggleGroupPrimitive.Root>,
   ToggleGroupProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, children, size, variant, ...rest } = props;
 
   // Hooks

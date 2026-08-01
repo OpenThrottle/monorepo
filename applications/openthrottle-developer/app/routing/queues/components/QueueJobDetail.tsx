@@ -11,19 +11,12 @@ import { QueueJobPayload } from '~/routing/queues/components/QueueJobPayload';
 import { QueueJobResults } from '~/routing/queues/components/QueueJobResults';
 import { QueueJobTimestamps } from '~/routing/queues/components/QueueJobTimestamps';
 import { useFetcher, useRevalidator } from 'react-router';
+import { JOB_STATE_BADGE_VARIANT } from '~/routing/queues/data/job-state-badge-variant';
 import type {
   GetQueueJobDetailsQuery,
   QueueJobDetailCancelPlanRunMutation,
   QueueJobDetailRetryMutation,
 } from '~/__generated__/graphql';
-
-const JOB_STATE_BADGE_VARIANT: Record<string, 'green' | 'red' | 'yellow'> = {
-  active: 'yellow',
-  completed: 'green',
-  delayed: 'yellow',
-  failed: 'red',
-  waiting: 'yellow',
-};
 
 const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 

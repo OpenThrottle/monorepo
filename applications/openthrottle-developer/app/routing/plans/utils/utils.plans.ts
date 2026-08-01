@@ -1,6 +1,14 @@
 import { BadgeProps } from '@openthrottle/react-router-shadcn';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { PlanStatusKey } from '~/routing/plans/types';
+import { planStatusValues, PlanStatusKey } from '~/routing/plans/types';
+
+/**
+ * @description True when a task/plan status string is a known
+ * {@link planStatusValues} key (safe before passing to `PlanStatusBadge`).
+ */
+export const isPlanStatusKey = (value: string): value is PlanStatusKey => {
+  return Object.prototype.hasOwnProperty.call(planStatusValues, value);
+};
 
 /**
  * Terminal task statuses that count as "resolved" for the plan-detail Tasks
