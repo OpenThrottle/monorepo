@@ -1,9 +1,10 @@
 /**
- * @description GraphQL input for recordSkillUsage. Mirrors the Phase 1 JSONL
- * event; args must already be privacy-processed by the client.
+ * @description GraphQL inputs for skill-usage ingest: harness starts
+ * (recordSkillUsage) and opt-in outcomes (recordSkillUsageOutcome). Args on
+ * starts must already be privacy-processed by the client.
  */
 
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
 
 @InputType()
 export class RecordSkillUsageInput {
@@ -84,6 +85,60 @@ export class RecordSkillUsageInput {
 
   @Field(() => String, {
     description: `Harness tool_use_id when present.`,
+    nullable: true,
+  })
+  toolUseId?: string | null;
+}
+
+@InputType()
+export class RecordSkillUsageOutcomeInput {
+  @Field(() => String, {
+    description: `Working directory at outcome time.`,
+    nullable: true,
+  })
+  cwd?: string | null;
+
+  @Field(() => Int, {
+    description: `Wall-clock duration in milliseconds when the skill reports it.`,
+    nullable: true,
+  })
+  durationMs?: number | null;
+
+  @Field(() => String, {
+    description: `Git branch at outcome time.`,
+    nullable: true,
+  })
+  gitBranch?: string | null;
+
+  @Field(() => Date, {
+    description: `Client-reported outcome timestamp.`,
+  })
+  occurredAt!: Date;
+
+  @Field(() => String, {
+    description: `success | abandoned | error.`,
+  })
+  outcome!: string;
+
+  @Field(() => String, {
+    description: `ours | third-party. Defaults to ours for authored-skill enrichment.`,
+    nullable: true,
+  })
+  scope?: string | null;
+
+  @Field(() => String, {
+    description: `Harness session id — primary correlation key with skillName.`,
+    nullable: true,
+  })
+  sessionId?: string | null;
+
+  @Field(() => String, {
+    description: `Skill identifier matching the start event.`,
+  })
+  skillName!: string;
+
+  @Field(() => String, {
+    description: `Optional tool_use_id for tighter start↔outcome correlation.`,
     nullable: true,
   })
   toolUseId?: string | null;

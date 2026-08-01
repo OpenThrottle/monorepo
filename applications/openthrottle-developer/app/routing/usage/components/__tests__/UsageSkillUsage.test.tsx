@@ -19,9 +19,14 @@ import type {
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,
 ): UsageSkillUsageBySkillFragment => ({
+  abandonedCount: 0,
+  avgDurationMs: null,
   count: 1,
+  errorCount: 0,
+  outcomeCount: 0,
   scope: SKILL_USAGE_SCOPES.OURS,
   skillName: 'ot-plans',
+  successCount: 0,
   ...overrides,
 });
 
@@ -98,9 +103,12 @@ describe('UsageSkillUsage Component', () => {
       ],
       bySkill: [
         buildBySkill({
+          avgDurationMs: 1500,
           count: 5,
+          outcomeCount: 3,
           scope: SKILL_USAGE_SCOPES.OURS,
           skillName: 'ot-plans',
+          successCount: 3,
         }),
         buildBySkill({
           count: 2,
@@ -120,6 +128,18 @@ describe('UsageSkillUsage Component', () => {
     expect(
       component.getByRole('columnheader', { name: 'Scope' }),
     ).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', {
+        name: SKILL_USAGE_COPY.outcomesColumn,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', {
+        name: SKILL_USAGE_COPY.avgDurationColumn,
+      }),
+    ).toBeInTheDocument();
+    expect(component.getByRole('cell', { name: '3/5' })).toBeInTheDocument();
+    expect(component.getByRole('cell', { name: '1.5s' })).toBeInTheDocument();
     expect(component.getAllByText('Ours').length).toBeGreaterThan(0);
     expect(component.getAllByText('Third-party').length).toBeGreaterThan(0);
     expect(component.getByText('7')).toBeInTheDocument();

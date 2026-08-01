@@ -100,9 +100,30 @@ export class SkillUsageEventObject {
 @ObjectType()
 export class SkillUsageBySkillObject {
   @Field(() => Int, {
-    description: `Invocation count for this skill in the filtered range.`,
+    description: `Opt-in abandoned outcomes for this skill in the filtered range.`,
+  })
+  abandonedCount!: number;
+
+  @Field(() => Int, {
+    description: `Average reported duration_ms for outcomes with a duration; null when none.`,
+    nullable: true,
+  })
+  avgDurationMs!: number | null;
+
+  @Field(() => Int, {
+    description: `Harness start (invocation) count for this skill in the filtered range.`,
   })
   count!: number;
+
+  @Field(() => Int, {
+    description: `Opt-in error outcomes for this skill in the filtered range.`,
+  })
+  errorCount!: number;
+
+  @Field(() => Int, {
+    description: `Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.`,
+  })
+  outcomeCount!: number;
 
   @Field(() => String, {
     description: `ours | third-party for this skill row.`,
@@ -113,6 +134,72 @@ export class SkillUsageBySkillObject {
     description: `Skill identifier (e.g. ot-plans, vercel:deploy).`,
   })
   skillName!: string;
+
+  @Field(() => Int, {
+    description: `Opt-in success outcomes for this skill in the filtered range.`,
+  })
+  successCount!: number;
+}
+
+@ObjectType()
+export class SkillUsageOutcomeObject {
+  @Field(() => String, {
+    description: `Working directory at outcome time.`,
+    nullable: true,
+  })
+  cwd!: string | null;
+
+  @Field(() => Int, {
+    description: `Wall-clock duration in milliseconds when reported.`,
+    nullable: true,
+  })
+  durationMs!: number | null;
+
+  @Field(() => String, {
+    description: `Git branch at outcome time.`,
+    nullable: true,
+  })
+  gitBranch!: string | null;
+
+  @Field(() => ID, { description: `Skill usage outcome id.` })
+  id!: string;
+
+  @Field(() => Date, {
+    description: `Client-reported outcome timestamp.`,
+  })
+  occurredAt!: Date;
+
+  @Field(() => String, {
+    description: `success | abandoned | error.`,
+  })
+  outcome!: string;
+
+  @Field(() => Date, {
+    description: `Server receipt time (set on insert).`,
+  })
+  receivedAt!: Date;
+
+  @Field(() => String, {
+    description: `ours | third-party.`,
+  })
+  scope!: string;
+
+  @Field(() => String, {
+    description: `Harness session id when present.`,
+    nullable: true,
+  })
+  sessionId!: string | null;
+
+  @Field(() => String, {
+    description: `Skill identifier matching the start event.`,
+  })
+  skillName!: string;
+
+  @Field(() => String, {
+    description: `Optional tool_use_id for tighter correlation.`,
+    nullable: true,
+  })
+  toolUseId!: string | null;
 }
 
 @ObjectType()

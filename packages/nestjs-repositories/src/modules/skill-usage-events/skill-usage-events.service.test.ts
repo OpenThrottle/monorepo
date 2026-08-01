@@ -7,6 +7,10 @@ import {
   SkillUsageEvent,
 } from './skill-usage-events.entity';
 import { SkillUsageEventsService } from './skill-usage-events.service';
+import {
+  SKILL_USAGE_OUTCOMES,
+  SkillUsageOutcome,
+} from './skill-usage-outcomes.entity';
 
 type QueryBuilderMock = {
   addGroupBy: ReturnType<typeof vi.fn>;
@@ -60,10 +64,17 @@ const createQueryBuilderMock = (
 };
 
 describe('SkillUsageEventsService', () => {
-  const buildService = async (mockRepo: {
-    create?: ReturnType<typeof vi.fn>;
-    createQueryBuilder?: ReturnType<typeof vi.fn>;
-    save?: ReturnType<typeof vi.fn>;
+  const buildService = async (mockRepos: {
+    events?: {
+      create?: ReturnType<typeof vi.fn>;
+      createQueryBuilder?: ReturnType<typeof vi.fn>;
+      save?: ReturnType<typeof vi.fn>;
+    };
+    outcomes?: {
+      create?: ReturnType<typeof vi.fn>;
+      createQueryBuilder?: ReturnType<typeof vi.fn>;
+      save?: ReturnType<typeof vi.fn>;
+    };
   }): Promise<SkillUsageEventsService> => {
     const app = await Test.createTestingModule({
       providers: [
@@ -72,9 +83,22 @@ describe('SkillUsageEventsService', () => {
           provide: getRepositoryToken(SkillUsageEvent),
           useValue: {
             create: vi.fn(),
-            createQueryBuilder: vi.fn(),
+            createQueryBuilder: vi
+              .fn()
+              .mockReturnValue(createQueryBuilderMock()),
             save: vi.fn(),
-            ...mockRepo,
+            ...mockRepos.events,
+          },
+        },
+        {
+          provide: getRepositoryToken(SkillUsageOutcome),
+          useValue: {
+            create: vi.fn(),
+            createQueryBuilder: vi
+              .fn()
+              .mockReturnValue(createQueryBuilderMock()),
+            save: vi.fn(),
+            ...mockRepos.outcomes,
           },
         },
       ],
@@ -89,7 +113,7 @@ describe('SkillUsageEventsService', () => {
       const save = vi.fn((row: Partial<SkillUsageEvent>) =>
         Promise.resolve({ ...row, id: 'event-1', receivedAt: new Date() }),
       );
-      const service = await buildService({ create, save });
+      const service = await buildService({ events: { create, save } });
       const occurredAt = new Date('2026-07-31T12:00:00.000Z');
 
       const saved = await service.recordSkillUsage({
@@ -133,7 +157,7 @@ describe('SkillUsageEventsService', () => {
         const save = vi.fn((row: Partial<SkillUsageEvent>) =>
           Promise.resolve({ ...row, id: 'event-2', receivedAt: new Date() }),
         );
-        const service = await buildService({ create, save });
+        const service = await buildService({ events: { create, save } });
         const occurredAt = new Date('2026-07-31T13:00:00.000Z');
 
         await service.recordSkillUsage({
@@ -167,7 +191,7 @@ describe('SkillUsageEventsService', () => {
         const save = vi.fn((row: Partial<SkillUsageEvent>) =>
           Promise.resolve({ ...row, id: 'event-3', receivedAt: new Date() }),
         );
-        const service = await buildService({ create, save });
+        const service = await buildService({ events: { create, save } });
         const occurredAt = new Date('2026-07-31T14:00:00.000Z');
 
         await service.recordSkillUsage({
@@ -189,9 +213,73 @@ describe('SkillUsageEventsService', () => {
     });
   });
 
+  describe('recordSkillUsageOutcome', () => {
+    it('maps outcome + duration and defaults scope to ours', async () => {
+      const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
+      const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
+        Promise.resolve({ ...row, id: 'outcome-1', receivedAt: new Date() }),
+      );
+      const service = await buildService({ outcomes: { create, save } });
+      const occurredAt = new Date('2026-07-31T12:05:00.000Z');
+
+      const saved = await service.recordSkillUsageOutcome({
+        cwd: '/repo',
+        durationMs: 4200,
+        gitBranch: 'example-usage-tracking',
+        occurredAt,
+        outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+        sessionId: 'session-1',
+        skillName: 'ot-plans',
+        toolUseId: 'tool-1',
+      });
+
+      expect(create).toHaveBeenCalledWith({
+        cwd: '/repo',
+        durationMs: 4200,
+        gitBranch: 'example-usage-tracking',
+        occurredAt,
+        outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+        scope: SKILL_USAGE_SCOPES.OURS,
+        sessionId: 'session-1',
+        skillName: 'ot-plans',
+        toolUseId: 'tool-1',
+      });
+      expect(saved.id).toBe('outcome-1');
+    });
+
+    describe('when durationMs and sessionId are omitted', () => {
+      it('nulls optional correlation/duration fields', async () => {
+        const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
+        const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
+          Promise.resolve({ ...row, id: 'outcome-2', receivedAt: new Date() }),
+        );
+        const service = await buildService({ outcomes: { create, save } });
+        const occurredAt = new Date('2026-07-31T12:06:00.000Z');
+
+        await service.recordSkillUsageOutcome({
+          occurredAt,
+          outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
+          skillName: 'ot-plans',
+        });
+
+        expect(create).toHaveBeenCalledWith({
+          cwd: null,
+          durationMs: null,
+          gitBranch: null,
+          occurredAt,
+          outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
+          scope: SKILL_USAGE_SCOPES.OURS,
+          sessionId: null,
+          skillName: 'ot-plans',
+          toolUseId: null,
+        });
+      });
+    });
+  });
+
   describe('listBySkill', () => {
-    it('groups by skill_name + scope, orders by count desc, and maps rows', async () => {
-      const qb = createQueryBuilderMock({
+    it('groups starts by skill_name + scope and merges outcome stats', async () => {
+      const eventsQb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([
           {
             count: '12',
@@ -205,39 +293,63 @@ describe('SkillUsageEventsService', () => {
           },
         ]),
       });
-      const createQueryBuilder = vi.fn().mockReturnValue(qb);
-      const service = await buildService({ createQueryBuilder });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            abandonedCount: '1',
+            avgDurationMs: '1500.4',
+            errorCount: '0',
+            outcomeCount: '8',
+            skillName: 'ot-plans',
+            successCount: '7',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
 
       const rows = await service.listBySkill({
         end: '2026-07-31',
         start: '2026-07-01',
       });
 
-      expect(createQueryBuilder).toHaveBeenCalledWith('e');
-      expect(qb.where).toHaveBeenCalledWith('e.occurred_at >= :start', {
-        start: '2026-07-01',
-      });
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        'e.occurred_at < :endExclusive',
-        { endExclusive: '2026-08-01T00:00:00.000Z' },
-      );
-      expect(qb.groupBy).toHaveBeenCalledWith('e.skill_name');
-      expect(qb.limit).toHaveBeenCalledWith(50);
+      expect(eventsQb.groupBy).toHaveBeenCalledWith('e.skill_name');
+      expect(eventsQb.limit).toHaveBeenCalledWith(50);
       expect(rows).toEqual([
-        { count: 12, scope: SKILL_USAGE_SCOPES.OURS, skillName: 'ot-plans' },
         {
+          abandonedCount: 1,
+          avgDurationMs: 1500,
+          count: 12,
+          errorCount: 0,
+          outcomeCount: 8,
+          scope: SKILL_USAGE_SCOPES.OURS,
+          skillName: 'ot-plans',
+          successCount: 7,
+        },
+        {
+          abandonedCount: 0,
+          avgDurationMs: null,
           count: 3,
+          errorCount: 0,
+          outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
           skillName: 'vercel:deploy',
+          successCount: 0,
         },
       ]);
     });
 
     describe('when gitBranch and cwd filters are set', () => {
-      it('adds equality predicates for both', async () => {
-        const qb = createQueryBuilderMock();
+      it('adds equality predicates on both start and outcome queries', async () => {
+        const eventsQb = createQueryBuilderMock();
+        const outcomesQb = createQueryBuilderMock();
         const service = await buildService({
-          createQueryBuilder: vi.fn().mockReturnValue(qb),
+          events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+          outcomes: {
+            createQueryBuilder: vi.fn().mockReturnValue(outcomesQb),
+          },
         });
 
         await service.listBySkill({
@@ -247,10 +359,18 @@ describe('SkillUsageEventsService', () => {
           start: '2026-07-01',
         });
 
-        expect(qb.andWhere).toHaveBeenCalledWith('e.git_branch = :gitBranch', {
-          gitBranch: 'main',
+        expect(eventsQb.andWhere).toHaveBeenCalledWith(
+          'e.git_branch = :gitBranch',
+          { gitBranch: 'main' },
+        );
+        expect(eventsQb.andWhere).toHaveBeenCalledWith('e.cwd = :cwd', {
+          cwd: '/repo',
         });
-        expect(qb.andWhere).toHaveBeenCalledWith('e.cwd = :cwd', {
+        expect(outcomesQb.andWhere).toHaveBeenCalledWith(
+          'o.git_branch = :gitBranch',
+          { gitBranch: 'main' },
+        );
+        expect(outcomesQb.andWhere).toHaveBeenCalledWith('o.cwd = :cwd', {
           cwd: '/repo',
         });
       });
@@ -266,7 +386,7 @@ describe('SkillUsageEventsService', () => {
         ]),
       });
       const service = await buildService({
-        createQueryBuilder: vi.fn().mockReturnValue(qb),
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
       });
 
       const rows = await service.listByScope({
@@ -294,7 +414,7 @@ describe('SkillUsageEventsService', () => {
         ]),
       });
       const service = await buildService({
-        createQueryBuilder: vi.fn().mockReturnValue(qb),
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
       });
 
       const rows = await service.listByDay({
@@ -324,6 +444,9 @@ describe('SkillUsageEventsService', () => {
           },
         ]),
       });
+      const outcomeQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([]),
+      });
       const scopeQb = createQueryBuilderMock({
         getRawMany: vi
           .fn()
@@ -349,7 +472,7 @@ describe('SkillUsageEventsService', () => {
         getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
       });
 
-      const createQueryBuilder = vi
+      const eventsCreateQueryBuilder = vi
         .fn()
         .mockReturnValueOnce(skillQb)
         .mockReturnValueOnce(scopeQb)
@@ -358,14 +481,30 @@ describe('SkillUsageEventsService', () => {
         .mockReturnValueOnce(branchQb)
         .mockReturnValueOnce(cwdQb);
 
-      const service = await buildService({ createQueryBuilder });
+      const service = await buildService({
+        events: { createQueryBuilder: eventsCreateQueryBuilder },
+        outcomes: {
+          createQueryBuilder: vi.fn().mockReturnValue(outcomeQb),
+        },
+      });
       const result = await service.getUsageAggregation({
         end: '2026-07-31',
         start: '2026-07-01',
       });
 
       expect(result.totalCount).toBe(5);
-      expect(result.bySkill).toHaveLength(1);
+      expect(result.bySkill).toEqual([
+        {
+          abandonedCount: 0,
+          avgDurationMs: null,
+          count: 5,
+          errorCount: 0,
+          outcomeCount: 0,
+          scope: SKILL_USAGE_SCOPES.OURS,
+          skillName: 'ot-plans',
+          successCount: 0,
+        },
+      ]);
       expect(result.byScope).toEqual([
         { count: 5, scope: SKILL_USAGE_SCOPES.OURS },
       ]);

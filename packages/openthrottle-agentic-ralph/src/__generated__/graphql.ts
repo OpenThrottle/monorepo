@@ -1571,6 +1571,8 @@ export type Mutation = {
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. */
   recordSkillUsage: SkillUsageEventObject;
+  /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
+  recordSkillUsageOutcome: SkillUsageOutcomeObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -1959,6 +1961,10 @@ export type MutationRecordPlanRunHeartbeatArgs = {
 
 export type MutationRecordSkillUsageArgs = {
   input: RecordSkillUsageInput;
+};
+
+export type MutationRecordSkillUsageOutcomeArgs = {
+  input: RecordSkillUsageOutcomeInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -2780,7 +2786,7 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
-  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
@@ -3324,6 +3330,27 @@ export type RecordSkillUsageInput = {
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['input'];
   /** Harness tool_use_id when present. */
+  toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordSkillUsageOutcomeInput = {
+  /** Working directory at outcome time. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Wall-clock duration in milliseconds when the skill reports it. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Git branch at outcome time. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Client-reported outcome timestamp. */
+  occurredAt: Scalars['DateTime']['input'];
+  /** success | abandoned | error. */
+  outcome: Scalars['String']['input'];
+  /** ours | third-party. Defaults to ours for authored-skill enrichment. */
+  scope?: InputMaybe<Scalars['String']['input']>;
+  /** Harness session id — primary correlation key with skillName. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Skill identifier matching the start event. */
+  skillName: Scalars['String']['input'];
+  /** Optional tool_use_id for tighter start↔outcome correlation. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3962,12 +3989,22 @@ export type SkillUsageByScopeObject = {
 
 export type SkillUsageBySkillObject = {
   __typename?: 'SkillUsageBySkillObject';
-  /** Invocation count for this skill in the filtered range. */
+  /** Opt-in abandoned outcomes for this skill in the filtered range. */
+  abandonedCount: Scalars['Int']['output'];
+  /** Average reported duration_ms for outcomes with a duration; null when none. */
+  avgDurationMs?: Maybe<Scalars['Int']['output']>;
+  /** Harness start (invocation) count for this skill in the filtered range. */
   count: Scalars['Int']['output'];
+  /** Opt-in error outcomes for this skill in the filtered range. */
+  errorCount: Scalars['Int']['output'];
+  /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
+  outcomeCount: Scalars['Int']['output'];
   /** ours | third-party for this skill row. */
   scope: Scalars['String']['output'];
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['output'];
+  /** Opt-in success outcomes for this skill in the filtered range. */
+  successCount: Scalars['Int']['output'];
 };
 
 export type SkillUsageEventObject = {
@@ -4012,6 +4049,32 @@ export type SkillUsageFilterOptionsObject = {
   cwds: Array<Scalars['String']['output']>;
   /** Distinct non-null git branch values in the date window. */
   gitBranches: Array<Scalars['String']['output']>;
+};
+
+export type SkillUsageOutcomeObject = {
+  __typename?: 'SkillUsageOutcomeObject';
+  /** Working directory at outcome time. */
+  cwd?: Maybe<Scalars['String']['output']>;
+  /** Wall-clock duration in milliseconds when reported. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Git branch at outcome time. */
+  gitBranch?: Maybe<Scalars['String']['output']>;
+  /** Skill usage outcome id. */
+  id: Scalars['ID']['output'];
+  /** Client-reported outcome timestamp. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** success | abandoned | error. */
+  outcome: Scalars['String']['output'];
+  /** Server receipt time (set on insert). */
+  receivedAt: Scalars['DateTime']['output'];
+  /** ours | third-party. */
+  scope: Scalars['String']['output'];
+  /** Harness session id when present. */
+  sessionId?: Maybe<Scalars['String']['output']>;
+  /** Skill identifier matching the start event. */
+  skillName: Scalars['String']['output'];
+  /** Optional tool_use_id for tighter correlation. */
+  toolUseId?: Maybe<Scalars['String']['output']>;
 };
 
 export type SkillUsageResultObject = {

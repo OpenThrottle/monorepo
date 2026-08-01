@@ -1,14 +1,17 @@
 /**
  * @description GraphQL resolver for skill usage ingest + aggregation.
- * Persists harness-captured Skill invocations (ours + third-party) and serves
- * the Developer Usage surface. Args are stored as-sent; the server never
- * re-expands truncated/redacted payloads.
+ * Persists harness-captured Skill invocations (ours + third-party), opt-in
+ * outcome enrichment for authored skills, and serves the Developer Usage
+ * surface. Args are stored as-sent; the server never re-expands
+ * truncated/redacted payloads.
  */
 
 import {
+  SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEventsService,
+  type SkillUsageOutcomeValue,
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
@@ -16,13 +19,18 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { RecordSkillUsageInput } from './skill-usage.input';
+import {
+  RecordSkillUsageInput,
+  RecordSkillUsageOutcomeInput,
+} from './skill-usage.input';
 import {
   toSkillUsageEventObject,
+  toSkillUsageOutcomeObject,
   toSkillUsageResultObject,
 } from './skill-usage.mapper';
 import {
   SkillUsageEventObject,
+  SkillUsageOutcomeObject,
   SkillUsageResultObject,
 } from './skill-usage.object';
 
@@ -36,6 +44,11 @@ const isSkillUsagePrivacyLevel = (
   value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
   value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED;
 
+const isSkillUsageOutcome = (value: string): value is SkillUsageOutcomeValue =>
+  value === SKILL_USAGE_OUTCOMES.ABANDONED ||
+  value === SKILL_USAGE_OUTCOMES.ERROR ||
+  value === SKILL_USAGE_OUTCOMES.SUCCESS;
+
 const YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
 
 const assertYyyyMmDd = (label: string, value: string): void => {
@@ -46,8 +59,8 @@ const assertYyyyMmDd = (label: string, value: string): void => {
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc)
 // Ingest: service accounts (ot_sa_…) and human JWTs both work; Phase 2b hook
-// posts with OPENTHROTTLE_MCP_AUTH_TOKEN. Aggregation query: SETTINGS_READ
-// (mirrors tokenUsage).
+// / Phase 4 outcome helper post with OPENTHROTTLE_MCP_AUTH_TOKEN. Aggregation
+// query: SETTINGS_READ (mirrors tokenUsage).
 @Resolver(() => SkillUsageEventObject)
 export class SkillUsageResolver {
   constructor(
@@ -108,8 +121,67 @@ export class SkillUsageResolver {
     return toSkillUsageEventObject(saved);
   }
 
+  @Mutation(() => SkillUsageOutcomeObject, {
+    description: `Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state.`,
+  })
+  async recordSkillUsageOutcome(
+    @Args('input', { type: () => RecordSkillUsageOutcomeInput })
+    input: RecordSkillUsageOutcomeInput,
+  ): Promise<SkillUsageOutcomeObject> {
+    const skillName = input.skillName?.trim();
+    if (!skillName) {
+      throw new BadRequestException('skillName is required');
+    }
+
+    const outcomeRaw = input.outcome?.trim() ?? '';
+    if (!isSkillUsageOutcome(outcomeRaw)) {
+      throw new BadRequestException(
+        `outcome must be one of: ${Object.values(SKILL_USAGE_OUTCOMES).join(', ')}`,
+      );
+    }
+
+    let resolvedScope: SkillUsageScope = SKILL_USAGE_SCOPES.OURS;
+    if (input.scope != null && input.scope !== '') {
+      if (!isSkillUsageScope(input.scope)) {
+        throw new BadRequestException(
+          `scope must be "${SKILL_USAGE_SCOPES.OURS}" or "${SKILL_USAGE_SCOPES.THIRD_PARTY}"`,
+        );
+      }
+      resolvedScope = input.scope;
+    }
+
+    if (
+      input.durationMs != null &&
+      (!Number.isFinite(input.durationMs) || input.durationMs < 0)
+    ) {
+      throw new BadRequestException('durationMs must be a non-negative number');
+    }
+
+    const occurredAt =
+      input.occurredAt instanceof Date
+        ? input.occurredAt
+        : new Date(input.occurredAt);
+    if (Number.isNaN(occurredAt.getTime())) {
+      throw new BadRequestException('occurredAt must be a valid date');
+    }
+
+    const saved = await this.skillUsageEventsService.recordSkillUsageOutcome({
+      cwd: input.cwd ?? null,
+      durationMs: input.durationMs ?? null,
+      gitBranch: input.gitBranch ?? null,
+      occurredAt,
+      outcome: outcomeRaw,
+      scope: resolvedScope,
+      sessionId: input.sessionId ?? null,
+      skillName,
+      toolUseId: input.toolUseId ?? null,
+    });
+
+    return toSkillUsageOutcomeObject(saved);
+  }
+
   @Query(() => SkillUsageResultObject, {
-    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.`,
+    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.`,
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_READ)

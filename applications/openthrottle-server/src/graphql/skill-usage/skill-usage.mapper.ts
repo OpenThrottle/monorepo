@@ -9,6 +9,7 @@ import type {
   SkillUsageBySkillRow,
   SkillUsageEvent,
   SkillUsageFilterOptions,
+  SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
 import {
   SkillUsageByDayObject,
@@ -16,6 +17,7 @@ import {
   SkillUsageBySkillObject,
   SkillUsageEventObject,
   SkillUsageFilterOptionsObject,
+  SkillUsageOutcomeObject,
   SkillUsageResultObject,
 } from './skill-usage.object';
 
@@ -44,14 +46,39 @@ export const toSkillUsageEventObject = (
   return object;
 };
 
+export const toSkillUsageOutcomeObject = (
+  row: SkillUsageOutcome,
+): SkillUsageOutcomeObject => {
+  const object = new SkillUsageOutcomeObject();
+
+  object.cwd = row.cwd;
+  object.durationMs = row.durationMs;
+  object.gitBranch = row.gitBranch;
+  object.id = row.id;
+  object.occurredAt = row.occurredAt;
+  object.outcome = row.outcome;
+  object.receivedAt = row.receivedAt;
+  object.scope = row.scope;
+  object.sessionId = row.sessionId;
+  object.skillName = row.skillName;
+  object.toolUseId = row.toolUseId;
+
+  return object;
+};
+
 export const toSkillUsageBySkillObject = (
   row: SkillUsageBySkillRow,
 ): SkillUsageBySkillObject => {
   const object = new SkillUsageBySkillObject();
 
+  object.abandonedCount = row.abandonedCount;
+  object.avgDurationMs = row.avgDurationMs;
   object.count = row.count;
+  object.errorCount = row.errorCount;
+  object.outcomeCount = row.outcomeCount;
   object.scope = row.scope;
   object.skillName = row.skillName;
+  object.successCount = row.successCount;
 
   return object;
 };

@@ -1,9 +1,11 @@
 import {
   RolesService,
+  SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEventsService,
   type SkillUsageEvent,
+  type SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
@@ -15,11 +17,13 @@ import { SkillUsageResolver } from './skill-usage.resolver';
 describe('SkillUsageResolver', () => {
   let resolver: SkillUsageResolver;
   const recordSkillUsage = vi.fn();
+  const recordSkillUsageOutcome = vi.fn();
   const getUsageAggregation = vi.fn();
 
   const mockService = createMock<SkillUsageEventsService>({
     getUsageAggregation,
     recordSkillUsage,
+    recordSkillUsageOutcome,
   });
 
   const savedRow: SkillUsageEvent = {
@@ -157,6 +161,77 @@ describe('SkillUsageResolver', () => {
     });
   });
 
+  describe('recordSkillUsageOutcome', () => {
+    const savedOutcome: SkillUsageOutcome = {
+      cwd: '/repo',
+      durationMs: 4200,
+      gitBranch: 'example-usage-tracking',
+      id: 'outcome-1',
+      occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+      outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+      receivedAt: new Date('2026-07-31T12:05:01.000Z'),
+      scope: SKILL_USAGE_SCOPES.OURS,
+      sessionId: 'session-1',
+      skillName: 'ot-plans',
+      toolUseId: 'tool-1',
+    };
+
+    test('persists a valid outcome and returns the mapped object', async () => {
+      recordSkillUsageOutcome.mockResolvedValue(savedOutcome);
+
+      const result = await resolver.recordSkillUsageOutcome({
+        cwd: '/repo',
+        durationMs: 4200,
+        gitBranch: 'example-usage-tracking',
+        occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+        outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+        sessionId: 'session-1',
+        skillName: 'ot-plans',
+        toolUseId: 'tool-1',
+      });
+
+      expect(recordSkillUsageOutcome).toHaveBeenCalledWith({
+        cwd: '/repo',
+        durationMs: 4200,
+        gitBranch: 'example-usage-tracking',
+        occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+        outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+        scope: SKILL_USAGE_SCOPES.OURS,
+        sessionId: 'session-1',
+        skillName: 'ot-plans',
+        toolUseId: 'tool-1',
+      });
+      expect(result.id).toBe('outcome-1');
+      expect(result.outcome).toBe(SKILL_USAGE_OUTCOMES.SUCCESS);
+      expect(result.durationMs).toBe(4200);
+    });
+
+    describe('when outcome is invalid', () => {
+      test('rejects with BadRequestException', async () => {
+        await expect(
+          resolver.recordSkillUsageOutcome({
+            occurredAt: new Date(),
+            outcome: 'done',
+            skillName: 'ot-plans',
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+
+    describe('when durationMs is negative', () => {
+      test('rejects with BadRequestException', async () => {
+        await expect(
+          resolver.recordSkillUsageOutcome({
+            durationMs: -1,
+            occurredAt: new Date(),
+            outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+            skillName: 'ot-plans',
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+  });
+
   describe('skillUsage', () => {
     test('returns mapped aggregation for a valid date window', async () => {
       getUsageAggregation.mockResolvedValue({
@@ -173,7 +248,16 @@ describe('SkillUsageResolver', () => {
           { count: 1, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
         ],
         bySkill: [
-          { count: 2, scope: SKILL_USAGE_SCOPES.OURS, skillName: 'ot-plans' },
+          {
+            abandonedCount: 0,
+            avgDurationMs: 1500,
+            count: 2,
+            errorCount: 0,
+            outcomeCount: 1,
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+            successCount: 1,
+          },
         ],
         filterOptions: { cwds: ['/repo'], gitBranches: ['main'] },
         totalCount: 3,

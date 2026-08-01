@@ -32,6 +32,7 @@ import { ServiceAccountCredential } from './modules/service-accounts/service-acc
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity';
 import { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity';
 import { SkillUsageEvent } from './modules/skill-usage-events/skill-usage-events.entity';
+import { SkillUsageOutcome } from './modules/skill-usage-events/skill-usage-outcomes.entity';
 import { Subscription } from './modules/subscriptions/subscription.entity';
 import { Task } from './modules/tasks/task.entity';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
@@ -100,6 +101,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       SkillAvailabilityRule,
       SkillAvailabilityRuleSet,
       SkillUsageEvent,
+      SkillUsageOutcome,
       Subscription,
       TagActionRule,
       Task,

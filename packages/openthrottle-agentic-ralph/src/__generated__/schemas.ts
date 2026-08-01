@@ -84,6 +84,7 @@ import {
   RalphPlanRunTuningInput,
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
+  RecordSkillUsageOutcomeInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
@@ -998,6 +999,22 @@ export function RecordSkillUsageInputSchema(): z.ZodObject<
     privacyLevel: z.string().nullish(),
     promptId: z.string().nullish(),
     scope: z.string(),
+    sessionId: z.string().nullish(),
+    skillName: z.string(),
+    toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
+  Properties<RecordSkillUsageOutcomeInput>
+> {
+  return z.object({
+    cwd: z.string().nullish(),
+    durationMs: z.number().nullish(),
+    gitBranch: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    outcome: z.string(),
+    scope: z.string().nullish(),
     sessionId: z.string().nullish(),
     skillName: z.string(),
     toolUseId: z.string().nullish(),

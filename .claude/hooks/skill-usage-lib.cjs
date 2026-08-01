@@ -32,14 +32,35 @@ const PRIVACY_LEVELS = Object.freeze({
 const DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 const DEFAULT_ARGS_MAX_LEN = 256;
 const DEFAULT_JSONL_REL = path.join('.cache', 'skill-usage', 'events.jsonl');
+const DEFAULT_OUTCOMES_JSONL_REL = path.join(
+  '.cache',
+  'skill-usage',
+  'outcomes.jsonl',
+);
 /** Short enough that a dead server never stalls Skill tool use. */
 const DEFAULT_POST_TIMEOUT_MS = 750;
+
+const SKILL_USAGE_OUTCOMES = Object.freeze({
+  ABANDONED: 'abandoned',
+  ERROR: 'error',
+  SUCCESS: 'success',
+});
 
 const RECORD_SKILL_USAGE_MUTATION = `
 mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
   recordSkillUsage(input: $input) {
     id
     skillName
+  }
+}
+`;
+
+const RECORD_SKILL_USAGE_OUTCOME_MUTATION = `
+mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
+  recordSkillUsageOutcome(input: $input) {
+    id
+    skillName
+    outcome
   }
 }
 `;
@@ -288,6 +309,107 @@ const appendJsonl = (jsonlPath, event) => {
  * @returns {string}
  */
 const defaultJsonlPath = (repoRoot) => path.join(repoRoot, DEFAULT_JSONL_REL);
+
+/**
+ * @param {string} repoRoot
+ * @returns {string}
+ */
+const defaultOutcomesJsonlPath = (repoRoot) =>
+  path.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
+
+/**
+ * Build an outcome enrichment event for our skills (Phase 4).
+ * Opt-in / additive — never a replacement for harness start capture.
+ *
+ * @param {object} params
+ * @param {string} params.skillName
+ * @param {'success' | 'abandoned' | 'error'} params.outcome
+ * @param {string} params.repoRoot
+ * @param {string | null} [params.sessionId]
+ * @param {string | null} [params.toolUseId]
+ * @param {number | null} [params.durationMs]
+ * @param {string} [params.timestamp]
+ * @param {string} [params.gitBranch]
+ * @param {string | null} [params.cwd]
+ * @returns {object | null}
+ */
+const buildOutcomeEvent = ({
+  skillName,
+  outcome,
+  repoRoot,
+  sessionId = null,
+  toolUseId = null,
+  durationMs = null,
+  timestamp = new Date().toISOString(),
+  gitBranch,
+  cwd,
+}) => {
+  const name = typeof skillName === 'string' ? skillName.trim() : '';
+  if (!name) {
+    return null;
+  }
+  if (
+    outcome !== SKILL_USAGE_OUTCOMES.SUCCESS &&
+    outcome !== SKILL_USAGE_OUTCOMES.ABANDONED &&
+    outcome !== SKILL_USAGE_OUTCOMES.ERROR
+  ) {
+    return null;
+  }
+
+  const scope = detectScope(name, repoRoot);
+  const resolvedCwd = cwd || repoRoot;
+  const resolvedDuration =
+    durationMs == null || Number.isNaN(Number(durationMs))
+      ? null
+      : Math.max(0, Math.round(Number(durationMs)));
+
+  return {
+    timestamp,
+    skill_name: name,
+    session_id: sessionId,
+    tool_use_id: toolUseId,
+    outcome,
+    duration_ms: resolvedDuration,
+    cwd: resolvedCwd,
+    git_branch: gitBranch ?? resolveGitBranch(repoRoot),
+    scope,
+    event_kind: 'outcome',
+  };
+};
+
+/**
+ * Map outcome event → RecordSkillUsageOutcomeInput (camelCase).
+ * @param {object} event
+ * @returns {Record<string, unknown>}
+ */
+const toRecordSkillUsageOutcomeInput = (event) => {
+  const input = {
+    occurredAt: event.timestamp,
+    outcome: event.outcome,
+    skillName: event.skill_name,
+  };
+
+  if (event.scope != null) {
+    input.scope = event.scope;
+  }
+  if (event.cwd != null) {
+    input.cwd = event.cwd;
+  }
+  if (event.git_branch != null && event.git_branch !== '') {
+    input.gitBranch = event.git_branch;
+  }
+  if (event.session_id != null) {
+    input.sessionId = event.session_id;
+  }
+  if (event.tool_use_id != null) {
+    input.toolUseId = event.tool_use_id;
+  }
+  if (event.duration_ms != null) {
+    input.durationMs = event.duration_ms;
+  }
+
+  return input;
+};
 
 /**
  * Best-effort stderr log; never throws.
@@ -671,23 +793,204 @@ const persistUsageEvent = async ({
   }
 };
 
+/**
+ * POST one outcome to recordSkillUsageOutcome. Fail-open result object.
+ *
+ * @param {object} params
+ * @param {object} params.event
+ * @param {string} params.graphqlUrl
+ * @param {string} [params.authToken]
+ * @param {number} [params.timeoutMs]
+ * @param {typeof fetch} [params.fetchImpl]
+ * @returns {Promise<{ ok: true, id: string } | { ok: false, reason: string }>}
+ */
+const postSkillUsageOutcome = async ({
+  event,
+  graphqlUrl,
+  authToken = '',
+  timeoutMs = DEFAULT_POST_TIMEOUT_MS,
+  fetchImpl = globalThis.fetch,
+}) => {
+  if (typeof fetchImpl !== 'function') {
+    return { ok: false, reason: 'fetch unavailable' };
+  }
+  if (!graphqlUrl) {
+    return { ok: false, reason: 'missing graphql url' };
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({
+        query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+        variables: { input: toRecordSkillUsageOutcomeInput(event) },
+      }),
+      headers,
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err) {
+    const reason =
+      err instanceof Error && err.name === 'TimeoutError'
+        ? 'timeout'
+        : err instanceof Error
+          ? err.message
+          : String(err);
+    return { ok: false, reason };
+  }
+
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `invalid json (${response.status}): ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    };
+  }
+
+  if (payload?.errors?.length) {
+    return {
+      ok: false,
+      reason: payload.errors.map((e) => e.message).join('; '),
+    };
+  }
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      reason: `http ${response.status}`,
+    };
+  }
+
+  const id = payload?.data?.recordSkillUsageOutcome?.id;
+  if (!id) {
+    return { ok: false, reason: 'missing recordSkillUsageOutcome.id' };
+  }
+
+  return { ok: true, id: String(id) };
+};
+
+/**
+ * Persist outcome to OT server; on any failure append outcomes JSONL.
+ * Always resolves; never throws.
+ *
+ * @param {object} params
+ * @param {object} params.event
+ * @param {string} params.repoRoot
+ * @param {string} [params.jsonlPath]
+ * @param {number} [params.timeoutMs]
+ * @param {typeof fetch} [params.fetchImpl]
+ * @param {string} [params.graphqlUrl]
+ * @param {string} [params.authToken]
+ * @returns {Promise<{ sink: 'server' | 'jsonl', detail?: string, id?: string }>}
+ */
+const persistOutcomeEvent = async ({
+  event,
+  repoRoot,
+  jsonlPath,
+  timeoutMs,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride,
+}) => {
+  const outPath = jsonlPath || defaultOutcomesJsonlPath(repoRoot);
+
+  if (process.env.SKILL_USAGE_DISABLE_SERVER === '1') {
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError('outcome jsonl append failed', err);
+    }
+    return { sink: 'jsonl', detail: 'SKILL_USAGE_DISABLE_SERVER=1' };
+  }
+
+  const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+  const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+
+  if (!graphqlUrl) {
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError('outcome jsonl append failed', err);
+    }
+    return { sink: 'jsonl', detail: 'missing graphql url' };
+  }
+
+  const resolvedTimeout =
+    timeoutMs ??
+    (Number(process.env.SKILL_USAGE_POST_TIMEOUT_MS) ||
+      DEFAULT_POST_TIMEOUT_MS);
+
+  try {
+    const result = await postSkillUsageOutcome({
+      authToken,
+      event,
+      fetchImpl,
+      graphqlUrl,
+      timeoutMs: resolvedTimeout,
+    });
+
+    if (result.ok) {
+      return { sink: 'server', id: result.id };
+    }
+
+    logHookError(
+      `outcome server post failed; falling back to jsonl (${result.reason})`,
+    );
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError('outcome jsonl append failed', err);
+    }
+    return { sink: 'jsonl', detail: result.reason };
+  } catch (err) {
+    logHookError('persistOutcomeEvent failed', err);
+    try {
+      appendJsonl(outPath, event);
+    } catch (appendErr) {
+      logHookError('outcome jsonl append failed', appendErr);
+    }
+    return {
+      sink: 'jsonl',
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
+
 module.exports = {
   DEFAULT_ARGS_MAX_LEN,
   DEFAULT_JSONL_REL,
+  DEFAULT_OUTCOMES_JSONL_REL,
   DEFAULT_POST_TIMEOUT_MS,
   DEFAULT_PRIVACY_LEVEL,
   PRIVACY_LEVELS,
   RECORD_SKILL_USAGE_MUTATION,
+  RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+  SKILL_USAGE_OUTCOMES,
   appendJsonl,
   applyPrivacy,
+  buildOutcomeEvent,
   buildUsageEvent,
   defaultJsonlPath,
+  defaultOutcomesJsonlPath,
   detectScope,
   loadRepoEnv,
   logHookError,
   normalizeHookPayload,
+  persistOutcomeEvent,
   persistUsageEvent,
   postSkillUsageEvent,
+  postSkillUsageOutcome,
   graphqlUrlFromEnvMap,
   readRepoEnvFile,
   redactSecrets,
@@ -696,4 +999,5 @@ module.exports = {
   resolveGraphqlUrl,
   resolveOtEnv,
   toRecordSkillUsageInput,
+  toRecordSkillUsageOutcomeInput,
 };

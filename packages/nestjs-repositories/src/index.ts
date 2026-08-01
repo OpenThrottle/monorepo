@@ -227,10 +227,19 @@ export type {
   SkillUsagePrivacyLevel,
   SkillUsageScope,
 } from './modules/skill-usage-events/skill-usage-events.entity';
+export {
+  SKILL_USAGE_OUTCOMES,
+  SkillUsageOutcome,
+} from './modules/skill-usage-events/skill-usage-outcomes.entity';
+export type {
+  SkillUsageOutcomeData,
+  SkillUsageOutcomeValue,
+} from './modules/skill-usage-events/skill-usage-outcomes.entity';
 export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module';
 export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service';
 export type {
   RecordSkillUsageInput,
+  RecordSkillUsageOutcomeInput,
   SkillUsageAggregation,
   SkillUsageByDayRow,
   SkillUsageByScopeRow,
@@ -240,6 +249,8 @@ export type {
 } from './modules/skill-usage-events/skill-usage-events.service';
 export { skillUsageEventsFactory } from './modules/skill-usage-events/skill-usage-events.factory';
 export type { SkillUsageEventFactoryData } from './modules/skill-usage-events/skill-usage-events.factory';
+export { skillUsageOutcomesFactory } from './modules/skill-usage-events/skill-usage-outcomes.factory';
+export type { SkillUsageOutcomeFactoryData } from './modules/skill-usage-events/skill-usage-outcomes.factory';
 export {
   RULE_APPLICATION_STATES,
   RuleApplication,

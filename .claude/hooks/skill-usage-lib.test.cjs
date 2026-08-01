@@ -12,15 +12,20 @@ const { describe, it, before, after } = require('node:test');
 
 const {
   PRIVACY_LEVELS,
+  SKILL_USAGE_OUTCOMES,
   appendJsonl,
   applyPrivacy,
+  buildOutcomeEvent,
   buildUsageEvent,
   detectScope,
   normalizeHookPayload,
+  persistOutcomeEvent,
   persistUsageEvent,
   postSkillUsageEvent,
+  postSkillUsageOutcome,
   resolveGraphqlUrl,
   toRecordSkillUsageInput,
+  toRecordSkillUsageOutcomeInput,
 } = require('./skill-usage-lib.cjs');
 
 describe('applyPrivacy', () => {
@@ -434,5 +439,135 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
         process.env.SKILL_USAGE_DISABLE_SERVER = prev;
       }
     }
+  });
+});
+
+describe('buildOutcomeEvent', () => {
+  let tmpRoot;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-outcome-'));
+    fs.mkdirSync(path.join(tmpRoot, 'skills', 'ot-plans'), { recursive: true });
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  it('builds an ours-scoped outcome correlated by session + skill', () => {
+    const event = buildOutcomeEvent({
+      durationMs: 4200.6,
+      outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+      repoRoot: tmpRoot,
+      sessionId: 'sess-1',
+      skillName: 'ot-plans',
+      timestamp: '2026-08-01T12:00:00.000Z',
+      toolUseId: 'tool-1',
+    });
+    assert.equal(event.skill_name, 'ot-plans');
+    assert.equal(event.session_id, 'sess-1');
+    assert.equal(event.tool_use_id, 'tool-1');
+    assert.equal(event.outcome, 'success');
+    assert.equal(event.duration_ms, 4201);
+    assert.equal(event.scope, 'ours');
+    assert.equal(event.event_kind, 'outcome');
+  });
+
+  it('rejects invalid outcome values', () => {
+    assert.equal(
+      buildOutcomeEvent({
+        outcome: 'done',
+        repoRoot: tmpRoot,
+        skillName: 'ot-plans',
+      }),
+      null,
+    );
+  });
+});
+
+describe('toRecordSkillUsageOutcomeInput / persistOutcomeEvent', () => {
+  let tmpRoot;
+  let jsonlPath;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-outcome-post-'));
+    jsonlPath = path.join(tmpRoot, 'outcomes.jsonl');
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  const sampleOutcome = {
+    timestamp: '2026-08-01T12:00:00.000Z',
+    skill_name: 'ot-plans',
+    session_id: 'sess-1',
+    tool_use_id: 'tool-1',
+    outcome: 'success',
+    duration_ms: 4200,
+    cwd: '/tmp',
+    git_branch: 'example-usage-tracking',
+    scope: 'ours',
+    event_kind: 'outcome',
+  };
+
+  it('maps snake_case outcome event to GraphQL input', () => {
+    assert.deepEqual(toRecordSkillUsageOutcomeInput(sampleOutcome), {
+      cwd: '/tmp',
+      durationMs: 4200,
+      gitBranch: 'example-usage-tracking',
+      occurredAt: '2026-08-01T12:00:00.000Z',
+      outcome: 'success',
+      scope: 'ours',
+      sessionId: 'sess-1',
+      skillName: 'ot-plans',
+      toolUseId: 'tool-1',
+    });
+  });
+
+  it('posts successfully and returns server id', async () => {
+    const fetchImpl = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      assert.equal(body.variables.input.skillName, 'ot-plans');
+      assert.equal(body.variables.input.outcome, 'success');
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            data: {
+              recordSkillUsageOutcome: {
+                id: 'out-1',
+                outcome: 'success',
+                skillName: 'ot-plans',
+              },
+            },
+          };
+        },
+      };
+    };
+
+    const result = await postSkillUsageOutcome({
+      authToken: 'tok',
+      event: sampleOutcome,
+      fetchImpl,
+      graphqlUrl: 'http://example.test/graphql',
+      timeoutMs: 200,
+    });
+    assert.deepEqual(result, { ok: true, id: 'out-1' });
+  });
+
+  it('falls back to outcomes JSONL when fetch fails', async () => {
+    const result = await persistOutcomeEvent({
+      event: sampleOutcome,
+      fetchImpl: async () => {
+        throw new Error('ECONNREFUSED');
+      },
+      graphqlUrl: 'http://127.0.0.1:1/graphql',
+      jsonlPath,
+      repoRoot: tmpRoot,
+      timeoutMs: 50,
+    });
+
+    assert.equal(result.sink, 'jsonl');
+    const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
+    assert.equal(line.event_kind, 'outcome');
+    assert.equal(line.skill_name, 'ot-plans');
   });
 });

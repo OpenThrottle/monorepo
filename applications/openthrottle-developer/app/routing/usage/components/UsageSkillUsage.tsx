@@ -16,6 +16,8 @@ import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsa
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
+  skillUsageAvgDurationLabel,
+  skillUsageOutcomesLabel,
   skillUsageScopeLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
@@ -123,6 +125,12 @@ export const UsageSkillUsage = (
                 <TableHead>Skill</TableHead>
                 <TableHead>Scope</TableHead>
                 <TableHead className="text-right">Invocations</TableHead>
+                <TableHead className="text-right">
+                  {SKILL_USAGE_COPY.outcomesColumn}
+                </TableHead>
+                <TableHead className="text-right">
+                  {SKILL_USAGE_COPY.avgDurationColumn}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,6 +151,19 @@ export const UsageSkillUsage = (
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {row.count}
+                  </TableCell>
+                  <TableCell
+                    className="text-right tabular-nums"
+                    title={
+                      row.outcomeCount > 0
+                        ? `${row.successCount} success · ${row.abandonedCount} abandoned · ${row.errorCount} error`
+                        : 'No opt-in outcome reported (valid for third-party and uninstrumented skills)'
+                    }
+                  >
+                    {skillUsageOutcomesLabel(row.outcomeCount, row.count)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {skillUsageAvgDurationLabel(row.avgDurationMs)}
                   </TableCell>
                 </TableRow>
               ))}

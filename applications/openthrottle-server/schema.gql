@@ -2251,14 +2251,68 @@ type SkillUsageEventObject {
 }
 
 type SkillUsageBySkillObject {
-  """Invocation count for this skill in the filtered range."""
+  """Opt-in abandoned outcomes for this skill in the filtered range."""
+  abandonedCount: Int!
+
+  """
+  Average reported duration_ms for outcomes with a duration; null when none.
+  """
+  avgDurationMs: Int
+
+  """Harness start (invocation) count for this skill in the filtered range."""
   count: Int!
+
+  """Opt-in error outcomes for this skill in the filtered range."""
+  errorCount: Int!
+
+  """
+  Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.
+  """
+  outcomeCount: Int!
 
   """ours | third-party for this skill row."""
   scope: String!
 
   """Skill identifier (e.g. ot-plans, vercel:deploy)."""
   skillName: String!
+
+  """Opt-in success outcomes for this skill in the filtered range."""
+  successCount: Int!
+}
+
+type SkillUsageOutcomeObject {
+  """Working directory at outcome time."""
+  cwd: String
+
+  """Wall-clock duration in milliseconds when reported."""
+  durationMs: Int
+
+  """Git branch at outcome time."""
+  gitBranch: String
+
+  """Skill usage outcome id."""
+  id: ID!
+
+  """Client-reported outcome timestamp."""
+  occurredAt: DateTime!
+
+  """success | abandoned | error."""
+  outcome: String!
+
+  """Server receipt time (set on insert)."""
+  receivedAt: DateTime!
+
+  """ours | third-party."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier matching the start event."""
+  skillName: String!
+
+  """Optional tool_use_id for tighter correlation."""
+  toolUseId: String
 }
 
 type SkillUsageByScopeObject {
@@ -3250,7 +3304,7 @@ type Query {
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
 
   """
-  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills, ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
   """
   skillUsage(
     """Start date (inclusive), YYYY-MM-DD"""
@@ -4102,6 +4156,11 @@ type Mutation {
   Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent.
   """
   recordSkillUsage(input: RecordSkillUsageInput!): SkillUsageEventObject!
+
+  """
+  Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state.
+  """
+  recordSkillUsageOutcome(input: RecordSkillUsageOutcomeInput!): SkillUsageOutcomeObject!
 
   """
   Create or update a tag→action rule. The JSON payload is validated against the action type's schema.
@@ -5148,6 +5207,35 @@ input RecordSkillUsageInput {
   skillName: String!
 
   """Harness tool_use_id when present."""
+  toolUseId: String
+}
+
+input RecordSkillUsageOutcomeInput {
+  """Working directory at outcome time."""
+  cwd: String
+
+  """Wall-clock duration in milliseconds when the skill reports it."""
+  durationMs: Int
+
+  """Git branch at outcome time."""
+  gitBranch: String
+
+  """Client-reported outcome timestamp."""
+  occurredAt: DateTime!
+
+  """success | abandoned | error."""
+  outcome: String!
+
+  """ours | third-party. Defaults to ours for authored-skill enrichment."""
+  scope: String
+
+  """Harness session id — primary correlation key with skillName."""
+  sessionId: String
+
+  """Skill identifier matching the start event."""
+  skillName: String!
+
+  """Optional tool_use_id for tighter start↔outcome correlation."""
   toolUseId: String
 }
 

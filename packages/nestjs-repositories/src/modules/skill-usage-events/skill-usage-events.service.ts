@@ -1,7 +1,8 @@
 /**
  * @description Typed persistence for skill_usage_events — harness-captured
- * skill invocations (ours + third-party). Owns writes from the ingest mutation
- * and read/aggregation for the Developer Usage surface. Stores args exactly as
+ * skill invocations (ours + third-party) — plus opt-in skill_usage_outcomes
+ * enrichment for skills we author. Owns writes from the ingest mutations and
+ * read/aggregation for the Developer Usage surface. Stores args exactly as
  * the client sent them (already privacy-processed).
  */
 
@@ -15,6 +16,11 @@ import {
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
 } from './skill-usage-events.entity';
+import {
+  SKILL_USAGE_OUTCOMES,
+  SkillUsageOutcome,
+  type SkillUsageOutcomeValue,
+} from './skill-usage-outcomes.entity';
 
 /**
  * One skill-usage event to persist. Mirrors the Phase 1 JSONL shape; `args`
@@ -38,6 +44,22 @@ export interface RecordSkillUsageInput {
 }
 
 /**
+ * Opt-in outcome enrichment for a skill we author. Correlates to a start
+ * event via sessionId + skillName (and optionally toolUseId).
+ */
+export interface RecordSkillUsageOutcomeInput {
+  readonly cwd?: string | null;
+  readonly durationMs?: number | null;
+  readonly gitBranch?: string | null;
+  readonly occurredAt: Date;
+  readonly outcome: SkillUsageOutcomeValue;
+  readonly scope?: SkillUsageScope;
+  readonly sessionId?: string | null;
+  readonly skillName: string;
+  readonly toolUseId?: string | null;
+}
+
+/**
  * Aggregation window for skill usage. `start`/`end` are inclusive YYYY-MM-DD
  * days (UTC). Optional filters narrow by scope, git branch, or working dir.
  */
@@ -49,11 +71,16 @@ export interface SkillUsageRangeQuery {
   readonly start: string;
 }
 
-/** Count of invocations for one skill (+ its scope label). */
+/** Count of invocations for one skill (+ its scope label) with outcome stats. */
 export interface SkillUsageBySkillRow {
+  readonly abandonedCount: number;
+  readonly avgDurationMs: number | null;
   readonly count: number;
+  readonly errorCount: number;
+  readonly outcomeCount: number;
   readonly scope: SkillUsageScope;
   readonly skillName: string;
+  readonly successCount: number;
 }
 
 /** Count of invocations for one scope (ours | third-party). */
@@ -85,6 +112,23 @@ export interface SkillUsageAggregation {
   readonly totalCount: number;
 }
 
+/** Per-skill outcome aggregates used to enrich the start leaderboard. */
+interface SkillUsageOutcomeStats {
+  readonly abandonedCount: number;
+  readonly avgDurationMs: number | null;
+  readonly errorCount: number;
+  readonly outcomeCount: number;
+  readonly successCount: number;
+}
+
+const EMPTY_OUTCOME_STATS: SkillUsageOutcomeStats = {
+  abandonedCount: 0,
+  avgDurationMs: null,
+  errorCount: 0,
+  outcomeCount: 0,
+  successCount: 0,
+};
+
 /** Day after `end` (YYYY-MM-DD) as an ISO instant, for a half-open [start, endExclusive) range. */
 const exclusiveEndInstant = (end: string): string => {
   const date = new Date(`${end}T00:00:00.000Z`);
@@ -96,6 +140,15 @@ const exclusiveEndInstant = (end: string): string => {
 /** COUNT/SUM raw → number, coalescing NULL (no rows) to 0. */
 const toNumber = (value: unknown): number =>
   value == null ? 0 : Number(value);
+
+/** AVG raw → number | null (NULL when no duration samples). */
+const toAvgOrNull = (value: unknown): number | null => {
+  if (value == null) {
+    return null;
+  }
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n) : null;
+};
 
 /** Narrow a raw SQL scope value to SkillUsageScope; fall back to ours. */
 const toSkillUsageScope = (value: unknown): SkillUsageScope => {
@@ -117,6 +170,8 @@ export class SkillUsageEventsService {
   constructor(
     @InjectRepository(SkillUsageEvent)
     private readonly eventsRepository: Repository<SkillUsageEvent>,
+    @InjectRepository(SkillUsageOutcome)
+    private readonly outcomesRepository: Repository<SkillUsageOutcome>,
   ) {}
 
   /** The underlying repository, for read/aggregate access by consumers. */
@@ -152,11 +207,34 @@ export class SkillUsageEventsService {
   }
 
   /**
+   * Insert one opt-in outcome enrichment event. Correlates to a start via
+   * sessionId + skillName (toolUseId optional). Absence of an outcome for a
+   * start is a valid state.
+   */
+  async recordSkillUsageOutcome(
+    input: RecordSkillUsageOutcomeInput,
+  ): Promise<SkillUsageOutcome> {
+    const row = this.outcomesRepository.create({
+      cwd: input.cwd ?? null,
+      durationMs: input.durationMs ?? null,
+      gitBranch: input.gitBranch ?? null,
+      occurredAt: input.occurredAt,
+      outcome: input.outcome,
+      scope: input.scope ?? SKILL_USAGE_SCOPES.OURS,
+      sessionId: input.sessionId ?? null,
+      skillName: input.skillName,
+      toolUseId: input.toolUseId ?? null,
+    });
+
+    return this.outcomesRepository.save(row);
+  }
+
+  /**
    * Aggregated skill usage over `[start, end]` (inclusive days, UTC): top
-   * skills, ours-vs-third-party split, per-day series, and filter option lists.
-   * Branch/cwd filters apply to the aggregates; filterOptions are computed
-   * over the same date range without those two filters so the dropdowns stay
-   * populated while a filter is active.
+   * skills (with opt-in outcome stats), ours-vs-third-party split, per-day
+   * series, and filter option lists. Branch/cwd filters apply to the
+   * aggregates; filterOptions are computed over the same date range without
+   * those two filters so the dropdowns stay populated while a filter is active.
    */
   async getUsageAggregation(
     query: SkillUsageRangeQuery,
@@ -173,26 +251,32 @@ export class SkillUsageEventsService {
     return { byDay, byScope, bySkill, filterOptions, totalCount };
   }
 
-  /** Top skills by invocation count (skill_name + scope), highest first. */
+  /**
+   * Top skills by start-invocation count (skill_name + scope), highest first,
+   * enriched with opt-in outcome stats keyed by skill_name.
+   */
   async listBySkill(
     query: SkillUsageRangeQuery,
   ): Promise<SkillUsageBySkillRow[]> {
-    const rows = await this.rangeQuery(query)
-      .select('e.skill_name', 'skillName')
-      .addSelect('e.scope', 'scope')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('e.skill_name')
-      .addGroupBy('e.scope')
-      .orderBy('count', 'DESC')
-      .addOrderBy('e.skill_name', 'ASC')
-      .limit(BY_SKILL_LIMIT)
-      .getRawMany<Record<string, unknown>>();
+    const [startRows, outcomeBySkill] = await Promise.all([
+      this.listStartCountsBySkill(query),
+      this.listOutcomeStatsBySkill(query),
+    ]);
 
-    return rows.map((row) => ({
-      count: toNumber(row.count),
-      scope: toSkillUsageScope(row.scope),
-      skillName: String(row.skillName),
-    }));
+    return startRows.map((row) => {
+      const outcomes = outcomeBySkill.get(row.skillName) ?? EMPTY_OUTCOME_STATS;
+
+      return {
+        abandonedCount: outcomes.abandonedCount,
+        avgDurationMs: outcomes.avgDurationMs,
+        count: row.count,
+        errorCount: outcomes.errorCount,
+        outcomeCount: outcomes.outcomeCount,
+        scope: row.scope,
+        skillName: row.skillName,
+        successCount: outcomes.successCount,
+      };
+    });
   }
 
   /** Invocation counts grouped by scope (ours | third-party). */
@@ -276,6 +360,87 @@ export class SkillUsageEventsService {
       cwds: cwdRows.map((row) => row.value),
       gitBranches: branchRows.map((row) => row.value),
     };
+  }
+
+  /** Start counts only (no outcome join). */
+  private async listStartCountsBySkill(query: SkillUsageRangeQuery): Promise<
+    ReadonlyArray<{
+      readonly count: number;
+      readonly scope: SkillUsageScope;
+      readonly skillName: string;
+    }>
+  > {
+    const rows = await this.rangeQuery(query)
+      .select('e.skill_name', 'skillName')
+      .addSelect('e.scope', 'scope')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('e.skill_name')
+      .addGroupBy('e.scope')
+      .orderBy('count', 'DESC')
+      .addOrderBy('e.skill_name', 'ASC')
+      .limit(BY_SKILL_LIMIT)
+      .getRawMany<Record<string, unknown>>();
+
+    return rows.map((row) => ({
+      count: toNumber(row.count),
+      scope: toSkillUsageScope(row.scope),
+      skillName: String(row.skillName),
+    }));
+  }
+
+  /** Outcome aggregates by skill_name for the same filter window. */
+  private async listOutcomeStatsBySkill(
+    query: SkillUsageRangeQuery,
+  ): Promise<Map<string, SkillUsageOutcomeStats>> {
+    const qb = this.outcomesRepository
+      .createQueryBuilder('o')
+      .select('o.skill_name', 'skillName')
+      .addSelect('COUNT(*)', 'outcomeCount')
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SUCCESS}')`,
+        'successCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.ABANDONED}')`,
+        'abandonedCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.ERROR}')`,
+        'errorCount',
+      )
+      .addSelect('AVG(o.duration_ms)', 'avgDurationMs')
+      .where('o.occurred_at >= :start', { start: query.start })
+      .andWhere('o.occurred_at < :endExclusive', {
+        endExclusive: exclusiveEndInstant(query.end),
+      })
+      .groupBy('o.skill_name');
+
+    if (query.scope != null) {
+      qb.andWhere('o.scope = :scope', { scope: query.scope });
+    }
+
+    if (query.gitBranch != null && query.gitBranch !== '') {
+      qb.andWhere('o.git_branch = :gitBranch', { gitBranch: query.gitBranch });
+    }
+
+    if (query.cwd != null && query.cwd !== '') {
+      qb.andWhere('o.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    const rows = await qb.getRawMany<Record<string, unknown>>();
+    const map = new Map<string, SkillUsageOutcomeStats>();
+
+    for (const row of rows) {
+      map.set(String(row.skillName), {
+        abandonedCount: toNumber(row.abandonedCount),
+        avgDurationMs: toAvgOrNull(row.avgDurationMs),
+        errorCount: toNumber(row.errorCount),
+        outcomeCount: toNumber(row.outcomeCount),
+        successCount: toNumber(row.successCount),
+      });
+    }
+
+    return map;
   }
 
   /** Shared date-window filter (no optional scope/branch/cwd). */

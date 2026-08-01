@@ -56,6 +56,11 @@ fragment UsageSkillUsageBySkill on SkillUsageBySkillObject {
   skillName
   scope
   count
+  outcomeCount
+  successCount
+  abandonedCount
+  errorCount
+  avgDurationMs
 }
 
 fragment UsageSkillUsageByScope on SkillUsageByScopeObject {
