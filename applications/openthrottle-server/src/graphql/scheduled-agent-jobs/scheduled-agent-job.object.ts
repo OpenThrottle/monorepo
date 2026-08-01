@@ -5,7 +5,7 @@
  * (queueName "Scheduled Agent Jobs", jobId = bullmqJobId).
  */
 
-import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({
   description: `A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.`,
@@ -140,6 +140,54 @@ export class ScheduledAgentJobRunObject {
     nullable: true,
   })
   cancelRequestedAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey.`,
+    nullable: true,
+  })
+  settingsSnapshotJson!: string | null;
+
+  @Field(() => Float, {
+    description: `Input/prompt tokens for the run, parsed from the CLI output; null when unreported. Float because GraphQL Int is 32-bit.`,
+    nullable: true,
+  })
+  inputTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Output/completion tokens for the run; null when unreported.`,
+    nullable: true,
+  })
+  outputTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Prompt-cache read tokens for the run; null when unreported.`,
+    nullable: true,
+  })
+  cacheReadTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Prompt-cache write tokens for the run; null when unreported.`,
+    nullable: true,
+  })
+  cacheWriteTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Reasoning tokens for the run, when accounted separately; null when unreported.`,
+    nullable: true,
+  })
+  reasoningTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Total tokens for the run; null when nothing reported.`,
+    nullable: true,
+  })
+  totalTokens!: number | null;
+
+  @Field(() => Float, {
+    description: `Estimated dollar cost of the run, when the backend prices it; null when unpriced.`,
+    nullable: true,
+  })
+  costUsd!: number | null;
 
   @Field(() => Date)
   createdAt!: Date;

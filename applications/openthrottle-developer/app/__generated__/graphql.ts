@@ -3726,8 +3726,14 @@ export type ScheduledAgentJobRunObject = {
   __typename?: 'ScheduledAgentJobRunObject';
   /** BullMQ job id — join key to queueJobLogs; null before the run is enqueued. */
   bullmqJobId?: Maybe<Scalars['String']['output']>;
+  /** Prompt-cache read tokens for the run; null when unreported. */
+  cacheReadTokens?: Maybe<Scalars['Float']['output']>;
+  /** Prompt-cache write tokens for the run; null when unreported. */
+  cacheWriteTokens?: Maybe<Scalars['Float']['output']>;
   /** When cancellation was requested; null if never cancelled. */
   cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Estimated dollar cost of the run, when the backend prices it; null when unpriced. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
   createdAt: Scalars['DateTime']['output'];
   driverId: Scalars['String']['output'];
   /** Failure detail; null on success. */
@@ -3736,11 +3742,21 @@ export type ScheduledAgentJobRunObject = {
   exitCode?: Maybe<Scalars['Int']['output']>;
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
+  /** Input/prompt tokens for the run, parsed from the CLI output; null when unreported. Float because GraphQL Int is 32-bit. */
+  inputTokens?: Maybe<Scalars['Float']['output']>;
   model?: Maybe<Scalars['String']['output']>;
+  /** Output/completion tokens for the run; null when unreported. */
+  outputTokens?: Maybe<Scalars['Float']['output']>;
+  /** Reasoning tokens for the run, when accounted separately; null when unreported. */
+  reasoningTokens?: Maybe<Scalars['Float']['output']>;
   scheduledAgentJobId: Scalars['ID']['output'];
+  /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
+  settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
   /** queued | running | succeeded | failed | cancelled. */
   status: Scalars['String']['output'];
+  /** Total tokens for the run; null when nothing reported. */
+  totalTokens?: Maybe<Scalars['Float']['output']>;
   /** schedule | manual (run-now). */
   trigger: Scalars['String']['output'];
 };

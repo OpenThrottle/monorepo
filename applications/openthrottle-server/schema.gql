@@ -1952,6 +1952,38 @@ type ScheduledAgentJobRunObject {
 
   """When cancellation was requested; null if never cancelled."""
   cancelRequestedAt: DateTime
+
+  """
+  Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey.
+  """
+  settingsSnapshotJson: String
+
+  """
+  Input/prompt tokens for the run, parsed from the CLI output; null when unreported. Float because GraphQL Int is 32-bit.
+  """
+  inputTokens: Float
+
+  """Output/completion tokens for the run; null when unreported."""
+  outputTokens: Float
+
+  """Prompt-cache read tokens for the run; null when unreported."""
+  cacheReadTokens: Float
+
+  """Prompt-cache write tokens for the run; null when unreported."""
+  cacheWriteTokens: Float
+
+  """
+  Reasoning tokens for the run, when accounted separately; null when unreported.
+  """
+  reasoningTokens: Float
+
+  """Total tokens for the run; null when nothing reported."""
+  totalTokens: Float
+
+  """
+  Estimated dollar cost of the run, when the backend prices it; null when unpriced.
+  """
+  costUsd: Float
   createdAt: DateTime!
 }
 
