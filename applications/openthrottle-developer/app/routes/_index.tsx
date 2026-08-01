@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Await } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 import { ChatConversationSheet } from '@openthrottle/react-router-chat';
 import {
   GlobalErrorBoundary,
@@ -44,6 +45,24 @@ export const loader = (args: Route.LoaderArgs) => {
   }));
 
   return { composerData };
+};
+
+// The composer discovery data is route-stable, and both the server (SWR cache)
+// and the header chat (client cache) already keep repeat loads cheap. Skip
+// re-running this loader for same-path navigations (e.g. search-param changes
+// from opening a dialog) so a churn of `?…` updates doesn't re-probe. A form
+// submission or a navigation from a different route still revalidates.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  currentUrl,
+  defaultShouldRevalidate,
+  formMethod,
+  nextUrl,
+}) => {
+  if (formMethod === undefined && currentUrl.pathname === nextUrl.pathname) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
 };
 
 export const links: Route.LinksFunction = () => {

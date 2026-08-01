@@ -10,7 +10,7 @@ import { createStore, getDefaultStore, Provider } from 'jotai';
 import type { RenderResult } from '@testing-library/react';
 import { renderRouteHarness } from '~/testing/route-fixtures';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import Index from '../_index';
+import Index, { shouldRevalidate } from '../_index';
 import type { Route } from '@/app/routes/+types/_index';
 
 /**
@@ -188,5 +188,31 @@ describe('routes/_index.tsx toolbar persistence', () => {
       localStorage.getItem(CHAT_TOOLBAR_STORAGE_KEY) ?? '{}',
     );
     expect(stored.modelId).toBe('ghost-endpoint::model');
+  });
+});
+
+describe('routes/_index shouldRevalidate', () => {
+  const call = (current: string, next: string, formMethod?: 'POST'): boolean =>
+    shouldRevalidate({
+      currentParams: {},
+      currentUrl: new URL(current),
+      defaultShouldRevalidate: true,
+      formMethod,
+      nextParams: {},
+      nextUrl: new URL(next),
+    });
+
+  test('skips revalidation for a same-path navigation (search-param change)', () => {
+    expect(call('http://localhost/?a=1', 'http://localhost/?a=2')).toBe(false);
+  });
+
+  test('revalidates when navigating in from a different path', () => {
+    expect(call('http://localhost/plans', 'http://localhost/')).toBe(true);
+  });
+
+  test('revalidates on a same-path form submission', () => {
+    expect(call('http://localhost/', 'http://localhost/?x=1', 'POST')).toBe(
+      true,
+    );
   });
 });
