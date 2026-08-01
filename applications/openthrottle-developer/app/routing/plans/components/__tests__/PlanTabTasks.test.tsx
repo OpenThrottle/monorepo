@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
 import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 
 const mockTask: PlanTaskRowFragment = {
   __typename: 'TaskObject',
@@ -49,7 +50,9 @@ describe('PlanTabTasks Component', () => {
   test('renders empty tasks state when there are no tasks', () => {
     const { getByRole } = renderTabTasks([]);
 
-    expect(getByRole('heading', { name: 'No plans yet' })).toBeInTheDocument();
+    expect(
+      getByRole('heading', { name: PLAN_TASKS_EMPTY_COPY.title }),
+    ).toBeInTheDocument();
   });
 
   test('renders the list view by default', () => {

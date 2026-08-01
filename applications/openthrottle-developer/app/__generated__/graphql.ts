@@ -6614,6 +6614,7 @@ export type PlanCardFragment = {
     id: string;
     name: string;
   } | null;
+  tags: Array<{ __typename?: 'PlanTagObject'; dimension: string; tag: string }>;
 };
 
 export type GetPlanAssigneeOptionsQueryVariables = Exact<{
@@ -6675,6 +6676,11 @@ export type GetPlansByStatusQuery = {
         id: string;
         name: string;
       } | null;
+      tags: Array<{
+        __typename?: 'PlanTagObject';
+        dimension: string;
+        tag: string;
+      }>;
     }>;
   };
 };
@@ -10009,6 +10015,17 @@ export const PlanCardFragmentDoc = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
@@ -16393,6 +16410,17 @@ export const GetPlansByStatusDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },

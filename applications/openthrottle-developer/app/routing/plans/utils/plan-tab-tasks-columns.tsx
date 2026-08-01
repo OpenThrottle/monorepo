@@ -11,7 +11,6 @@ import {
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
-import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { getPlanTaskStepIndex } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -56,88 +55,11 @@ export const buildPlanTabTasksColumns = (
           row={row}
         />
       ),
+      // Category and requirements now live inline in the title cell (matching
+      // the plans index list language), so they are no longer standalone
+      // columns here.
       header: () => 'Title / Context',
     },
-    {
-      accessorKey: 'category',
-      cell: ({ row }) => (
-        <span className="text-muted-foreground">
-          {row.original.category ?? '—'}
-        </span>
-      ),
-      header: () => 'Category',
-    },
-    // {
-    //   accessorKey: 'projectRelation',
-    //   cell: ({ row }) => {
-    //     const project = row.original.projectRelation;
-    //     if (project == null) {
-    //       return <span className="text-muted-foreground">—</span>;
-    //     }
-    //     return (
-    //       <Link
-    //         className="text-xs underline underline-offset-2 hover:text-primary"
-    //         to={`/projects/${project.id}`}
-    //         viewTransition={true}
-    //       >
-    //         {project.name}
-    //       </Link>
-    //     );
-    //   },
-    //   header: () => 'Project',
-    // },
-    {
-      accessorKey: 'requirementsJson',
-      cell: ({ row }) => {
-        const count = getRequirementsCount(row.original.requirementsJson);
-        return (
-          <span className="text-muted-foreground tabular-nums">
-            {count === 0 ? '—' : count}
-          </span>
-        );
-      },
-      header: () => (
-        <span className="inline-block w-full text-center">Requirements</span>
-      ),
-    },
-    // {
-    //   accessorKey: 'updatedAt',
-    //   cell: ({ row }) => {
-    //     const task = row.original;
-    //     const relative = formatUpdatedAt(task.updatedAt);
-    //     const exact = formatDateShort(task.updatedAt);
-
-    //     if (relative == null) {
-    //       return <span className="text-muted-foreground text-xs">—</span>;
-    //     }
-
-    //     const content = (
-    //       <span className="text-muted-foreground text-xs whitespace-nowrap">
-    //         {relative}
-    //       </span>
-    //     );
-
-    //     if (exact != null) {
-    //       return (
-    //         <Tooltip>
-    //           <TooltipTrigger asChild={true}>
-    //             <span className="cursor-default">{content}</span>
-    //           </TooltipTrigger>
-    //           <TooltipContent>
-    //             Updated {exact}
-    //             {formatDateShort(task.createdAt) != null
-    //               ? ` · Created ${formatDateShort(task.createdAt)}`
-    //               : ''}
-    //           </TooltipContent>
-    //         </Tooltip>
-    //       );
-    //     }
-    //     return content;
-    //   },
-    //   header: () => (
-    //     <span className="inline-block w-full text-right">Updated</span>
-    //   ),
-    // },
     {
       cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
       header: () => 'Actions',

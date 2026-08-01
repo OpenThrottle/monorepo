@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { NotebookTextIcon } from 'lucide-react';
-import { Link } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import type { PlanStatusKey } from '~/routing/plans/types';
@@ -14,10 +13,12 @@ export interface PlanDetailRouteHeaderProps {
 }
 
 /**
- * @description Heading block for the plan detail route: title, status badge
- * (linking to the filtered plans list), project badge/link, and last-updated
- * date. Extracted from {@link PlanDetailRoute} per component-primitive-shape
- * R6.
+ * @description Issue-style heading for the plan detail route: the plan title,
+ * then a metadata row (status badge linking to the filtered list,
+ * author→assignee, tags, created/updated). Navigation breadcrumbs live in the
+ * global app header now. Primary run/lifecycle actions stay in the sibling
+ * {@link PlanToolbar}. Extracted from {@link PlanDetailRoute} per
+ * component-primitive-shape R6.
  */
 export const PlanDetailRouteHeader = (
   props: PlanDetailRouteHeaderProps,
@@ -27,6 +28,8 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
+  const tags = plan.tags ?? [];
+  const title = plan.title ?? 'Untitled';
 
   // Handlers
 
@@ -38,34 +41,41 @@ export const PlanDetailRouteHeader = (
 
   return (
     <div>
-      <GlobalHeading
-        className="mb-4"
-        icon={NotebookTextIcon}
-        title={plan.title ?? 'Untitled'}
-      />
-      <div className="text-muted-foreground line-clamp-3 flex items-center gap-2 text-sm">
+      <GlobalHeading className="mb-4" icon={NotebookTextIcon} title={title} />
+
+      <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
         <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
-        <span>&bull;</span>
-        {plan.projectRelation?.id != null ? (
-          <Badge asChild={true} color="slate" size="xs">
-            <Link
-              to={`/projects/${plan.projectRelation.id}`}
-              viewTransition={true}
-            >
-              {plan.projectRelation.name}
-            </Link>
+        {plan.author ? (
+          <span aria-label={`Author: ${plan.author}`}>
+            {plan.assignee ? `${plan.author} → ${plan.assignee}` : plan.author}
+          </span>
+        ) : plan.assignee ? (
+          <span aria-label={`Assignee: ${plan.assignee}`}>
+            Assignee: {plan.assignee}
+          </span>
+        ) : null}
+
+        {tags.map((tag) => (
+          <Badge
+            aria-label={`Tag: ${tag.tag}`}
+            className={
+              tag.dimension === 'phase'
+                ? 'border-amber-500/60 bg-amber-500/10'
+                : undefined
+            }
+            color="slate"
+            key={`${tag.dimension}:${tag.tag}`}
+            size="xs"
+          >
+            {tag.tag}
           </Badge>
-        ) : (
-          <Badge color="slate" size="xs">
-            {plan.projectRelation?.name
-              ? plan.projectRelation.name
-              : plan.project}
-          </Badge>
-        )}
-        <span>&bull;</span>
-        <span>Last updated</span>
-        <span>&bull;</span>
-        <span className="font-medium">{formatPlanDate(plan.updatedAt)}</span>
+        ))}
+
+        <span aria-hidden={true}>&bull;</span>
+        <span>Created {formatPlanDate(plan.createdAt)}</span>
+
+        <span aria-hidden={true}>&bull;</span>
+        <span>Updated {formatPlanDate(plan.updatedAt)}</span>
       </div>
     </div>
   );

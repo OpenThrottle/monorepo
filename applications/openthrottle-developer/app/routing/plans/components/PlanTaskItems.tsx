@@ -41,7 +41,7 @@ export const PlanTaskItems = (
 
   // 🔌 Short Circuit
   if (sortedTasks.length === 0) {
-    return <PlanTasksEmpty />;
+    return <PlanTasksEmpty variant="tasks" />;
   }
 
   return (

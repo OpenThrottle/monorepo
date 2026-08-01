@@ -21,6 +21,7 @@ const mockPlan: PlanCardFragment = {
     name: 'Test Project',
   },
   status: 'IN_PROGRESS',
+  tags: [],
   taskCount: 0,
   title: 'Test Plan',
   updatedAt: '2025-01-02T00:00:00Z',
