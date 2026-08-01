@@ -10,6 +10,7 @@ import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '~/routing/usage/data/skill-usage-copy';
+import { skillUsageScopeCount } from '~/routing/usage/utils/skill-usage-scope-count';
 import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 
 export interface UsageSkillUsageSummaryProps {
@@ -17,11 +18,6 @@ export interface UsageSkillUsageSummaryProps {
   className?: string;
   totalCount: number;
 }
-
-const scopeCount = (
-  byScope: readonly UsageSkillUsageByScopeFragment[],
-  scope: string,
-): number => byScope.find((row) => row.scope === scope)?.count ?? 0;
 
 export const UsageSkillUsageSummary = (
   props: UsageSkillUsageSummaryProps,
@@ -31,8 +27,11 @@ export const UsageSkillUsageSummary = (
   // Hooks
 
   // Setup
-  const oursTotal = scopeCount(byScope, SKILL_USAGE_SCOPES.OURS);
-  const thirdPartyTotal = scopeCount(byScope, SKILL_USAGE_SCOPES.THIRD_PARTY);
+  const oursTotal = skillUsageScopeCount(byScope, SKILL_USAGE_SCOPES.OURS);
+  const thirdPartyTotal = skillUsageScopeCount(
+    byScope,
+    SKILL_USAGE_SCOPES.THIRD_PARTY,
+  );
 
   // Handlers
 

@@ -6,6 +6,7 @@ import {
   skillUsageCwdLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
+import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
 import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
 
@@ -18,14 +19,6 @@ export interface UsageSkillUsageFiltersProps {
   selectedGitBranch: string | null;
   selectedScope: SkillUsageScopeFilter;
 }
-
-const chipClass = (active: boolean): string =>
-  clsx(
-    'rounded-full border px-3 py-1 text-xs transition-colors',
-    active
-      ? 'border-primary bg-primary text-primary-foreground'
-      : 'text-muted-foreground hover:text-foreground border-border',
-  );
 
 export const UsageSkillUsageFilters = (
   props: UsageSkillUsageFiltersProps,
@@ -72,7 +65,7 @@ export const UsageSkillUsageFilters = (
           return (
             <Link
               aria-current={active ? 'true' : undefined}
-              className={chipClass(active)}
+              className={skillUsageChipClass(active)}
               key={option.label}
               to={buildUsageSearch({
                 cwd: selectedCwd,
@@ -98,7 +91,7 @@ export const UsageSkillUsageFilters = (
             >
               <Link
                 aria-current={selectedGitBranch === null ? 'true' : undefined}
-                className={chipClass(selectedGitBranch === null)}
+                className={skillUsageChipClass(selectedGitBranch === null)}
                 to={buildUsageSearch({
                   cwd: selectedCwd,
                   gitBranch: null,
@@ -114,7 +107,7 @@ export const UsageSkillUsageFilters = (
                 return (
                   <Link
                     aria-current={active ? 'true' : undefined}
-                    className={chipClass(active)}
+                    className={skillUsageChipClass(active)}
                     key={branch}
                     to={buildUsageSearch({
                       cwd: selectedCwd,
@@ -138,7 +131,7 @@ export const UsageSkillUsageFilters = (
             >
               <Link
                 aria-current={selectedCwd === null ? 'true' : undefined}
-                className={chipClass(selectedCwd === null)}
+                className={skillUsageChipClass(selectedCwd === null)}
                 to={buildUsageSearch({
                   cwd: null,
                   gitBranch: selectedGitBranch,
@@ -154,7 +147,7 @@ export const UsageSkillUsageFilters = (
                 return (
                   <Link
                     aria-current={active ? 'true' : undefined}
-                    className={chipClass(active)}
+                    className={skillUsageChipClass(active)}
                     key={cwd}
                     title={cwd}
                     to={buildUsageSearch({
