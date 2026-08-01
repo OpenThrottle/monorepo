@@ -1,14 +1,23 @@
 import * as React from 'react';
-import { Card } from '@openthrottle/react-router-shadcn';
+import { Button, Card } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import {
   formatRelativeChatTimestamp,
   type AgentConversationListItem,
 } from '@openthrottle/react-router-chat';
 import clsx from 'clsx';
-import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+import {
+  RECENT_CHATS_CARD_COPY,
+  RECENT_CHATS_CARD_DESTINATION_LABELS,
+} from '~/routing/dashboard/data/data.copy';
+import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
 
 const MAX_ROWS = 3;
+
+/** Curated footer destinations, resolved from the shared jump-link data. */
+const FOOTER_DESTINATIONS = WORKSPACE_FULL_JUMP_LINKS.filter((link) =>
+  RECENT_CHATS_CARD_DESTINATION_LABELS.includes(link.label),
+);
 
 export interface DashboardRecentChatsCardProps {
   className?: string;
@@ -97,6 +106,26 @@ export const DashboardRecentChatsCard = (
           })}
         </ul>
       )}
+
+      <div className="border-border flex flex-wrap gap-1.5 border-t pt-3">
+        <Button asChild={true} size="xs" variant="ghost">
+          <Link to="/" viewTransition={true}>
+            {copy.viewAll}
+          </Link>
+        </Button>
+        <Button asChild={true} size="xs" variant="ghost">
+          <Link to="/" viewTransition={true}>
+            {copy.newChat}
+          </Link>
+        </Button>
+        {FOOTER_DESTINATIONS.map((item) => (
+          <Button asChild={true} key={item.to} size="xs" variant="ghost">
+            <Link to={item.to} viewTransition={true}>
+              {item.label}
+            </Link>
+          </Button>
+        ))}
+      </div>
     </Card>
   );
 };
