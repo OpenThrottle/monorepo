@@ -1,0 +1,31 @@
+fragment ScheduledJobRunDetail on ScheduledAgentJobRunObject {
+  bullmqJobId
+  cancelRequestedAt
+  createdAt
+  driverId
+  errorMessage
+  exitCode
+  finishedAt
+  id
+  model
+  scheduledAgentJobId
+  startedAt
+  status
+  trigger
+}
+
+query scheduledAgentJobRunDetail($runId: ID!, $jobId: ID!) {
+  scheduledAgentJobRun(runId: $runId) {
+    ...ScheduledJobRunDetail
+  }
+  scheduledAgentJob(id: $jobId) {
+    id
+    name
+  }
+}
+
+mutation cancelScheduledAgentJobRun($runId: ID!) {
+  cancelScheduledAgentJobRun(runId: $runId) {
+    ...ScheduledJobRunDetail
+  }
+}

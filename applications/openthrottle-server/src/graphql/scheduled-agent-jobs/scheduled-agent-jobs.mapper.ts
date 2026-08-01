@@ -37,6 +37,7 @@ export const toScheduledAgentJobRunObject = (
   run: ScheduledAgentJobRun,
 ): ScheduledAgentJobRunObject => ({
   bullmqJobId: run.bullmqJobId,
+  cancelRequestedAt: run.cancelRequestedAt,
   createdAt: run.createdAt,
   driverId: run.driverId,
   errorMessage: run.errorMessage,

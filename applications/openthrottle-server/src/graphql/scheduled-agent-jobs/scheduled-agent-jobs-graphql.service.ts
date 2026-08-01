@@ -84,6 +84,10 @@ export class ScheduledAgentJobsGraphqlService {
     return this.jobsService.listRunsForJob(scheduledAgentJobId, limit);
   }
 
+  getRun(runId: string): Promise<ScheduledAgentJobRun | null> {
+    return this.jobsService.findRunById(runId);
+  }
+
   async create(args: CreateArgs): Promise<ScheduledAgentJob> {
     const driverId = this.validateDriver(args.driverId, {
       model: args.model,

@@ -135,6 +135,12 @@ export class ScheduledAgentJobRunObject {
   @Field(() => Date, { nullable: true })
   finishedAt!: Date | null;
 
+  @Field(() => Date, {
+    description: `When cancellation was requested; null if never cancelled.`,
+    nullable: true,
+  })
+  cancelRequestedAt!: Date | null;
+
   @Field(() => Date)
   createdAt!: Date;
 }

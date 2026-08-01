@@ -172,6 +172,20 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     expect(run.id).toBe('run-1');
   });
 
+  it('getRun returns the run when found', async () => {
+    vi.mocked(jobsService.findRunById).mockResolvedValue(
+      createMock<ScheduledAgentJobRun>({ id: 'run-1', status: 'running' }),
+    );
+    const run = await service.getRun('run-1');
+    expect(jobsService.findRunById).toHaveBeenCalledWith('run-1');
+    expect(run?.id).toBe('run-1');
+  });
+
+  it('getRun returns null when the run is missing', async () => {
+    vi.mocked(jobsService.findRunById).mockResolvedValue(null);
+    expect(await service.getRun('nope')).toBeNull();
+  });
+
   it('delete removes the scheduler then the row', async () => {
     const ok = await service.delete('j1');
     expect(scheduler.removeScheduler).toHaveBeenCalledWith('scheduled-job:j1');
