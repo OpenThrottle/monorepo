@@ -41,9 +41,6 @@ export interface UsageTokenUsageProps {
   totals: UsageTokenUsageTotalsFragment;
 }
 
-const providerHref = (id: string | null): string =>
-  id === null ? '?' : `?provider=${id}`;
-
 export const UsageTokenUsage = (
   props: UsageTokenUsageProps,
 ): React.ReactElement => {
@@ -113,7 +110,7 @@ export const UsageTokenUsage = (
                   : 'text-muted-foreground hover:text-foreground border-border',
               )}
               key={option.label}
-              to={providerHref(option.id)}
+              to={option.id === null ? '?' : `?provider=${option.id}`}
             >
               {option.label}
             </Link>
