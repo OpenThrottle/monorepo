@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * Phase 1 + 2b — Skill usage capture (PreToolUse/Skill + UserPromptExpansion).
+ * Claude Code entrypoint for skill-usage capture (PreToolUse/Skill +
+ * UserPromptExpansion). Thin adapter: parse Claude's payload → neutral event →
+ * shared persist. All tool-neutral logic lives in
+ * .agents/hooks/skill-usage/lib.cjs; the Claude payload shape lives in
+ * ./skill-usage-claude-adapter.cjs.
  *
  * Fail-open: any error is swallowed; always exit 0 so the skill is never blocked.
  *
@@ -8,7 +12,7 @@
  * Fallback: append one JSONL line under
  *   <repo>/.cache/skill-usage/events.jsonl  (gitignored via .cache)
  *
- * Privacy default: truncated via applyPrivacy (see skill-usage-lib.cjs).
+ * Privacy default: truncated via applyPrivacy (see the shared lib).
  *
  * Env (worktree `.env` preferred over stale parent shell for OT URL/auth):
  *   OPENTHROTTLE_SERVER_APP_URL / OPENTHROTTLE_GRAPHQL_URL — server target
@@ -28,9 +32,12 @@ const {
   buildUsageEvent,
   defaultJsonlPath,
   logHookError,
-  normalizeHookPayload,
   persistUsageEvent,
-} = require('./skill-usage-lib.cjs');
+} = require('../../.agents/hooks/skill-usage/lib.cjs');
+const {
+  CLAUDE_SOURCE,
+  normalizeClaudePayload,
+} = require('./skill-usage-claude-adapter.cjs');
 
 const main = async () => {
   try {
@@ -52,7 +59,7 @@ const main = async () => {
       return;
     }
 
-    const normalized = normalizeHookPayload(raw);
+    const normalized = normalizeClaudePayload(raw);
     if (!normalized) {
       return;
     }
@@ -61,6 +68,7 @@ const main = async () => {
       normalized,
       privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot,
+      source: CLAUDE_SOURCE,
     });
     if (!event) {
       return;

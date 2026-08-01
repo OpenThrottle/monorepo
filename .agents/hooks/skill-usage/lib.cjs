@@ -1,8 +1,20 @@
 /**
- * Skill usage capture — shared helpers (Phase 1 + 2b).
+ * Skill usage capture — tool-neutral shared core.
+ *
+ * This library knows nothing about any specific agent/editor. Each tool ships
+ * a thin adapter (see .agents/hooks/skill-usage/README.md + adapter.template.cjs
+ * and .claude/hooks/skill-usage-capture.cjs) that:
+ *   1. parses ITS OWN native hook payload into a NormalizedInvocation, and
+ *   2. calls buildUsageEvent({ normalized, source, repoRoot }) → persistUsageEvent.
+ * `source` is the producer id (e.g. "claude-code", "cursor") so events stay
+ * attributable per tool.
+ *
+ * NormalizedInvocation (the producer contract — what an adapter must supply):
+ *   { skill_name, args, session_id, cwd, invocation_path,
+ *     …optional agent_id/agent_type/tool_use_id/prompt_id/hook_event_name }
  *
  * Event shape (one JSONL line / GraphQL input source):
- *   { timestamp, skill_name, args, session_id, cwd, git_branch, scope,
+ *   { timestamp, source, skill_name, args, session_id, cwd, git_branch, scope,
  *     invocation_path, privacy_level, …optional agent/tool ids }
  *
  * Scope rule (Phase 0):
@@ -148,94 +160,6 @@ const detectScope = (skillName, repoRoot) => {
 };
 
 /**
- * @param {unknown} raw
- * @returns {{
- *   skill_name: string | null,
- *   args: unknown,
- *   session_id: string | null,
- *   cwd: string | null,
- *   invocation_path: 'skill_tool' | 'slash' | null,
- *   agent_id?: string,
- *   agent_type?: string,
- *   tool_use_id?: string,
- *   prompt_id?: string,
- *   hook_event_name?: string,
- * } | null}
- */
-const normalizeHookPayload = (raw) => {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-
-  const payload = /** @type {Record<string, unknown>} */ (raw);
-  const hookEvent =
-    typeof payload.hook_event_name === 'string' ? payload.hook_event_name : '';
-
-  if (hookEvent === 'PreToolUse' || payload.tool_name === 'Skill') {
-    const toolInput =
-      payload.tool_input && typeof payload.tool_input === 'object'
-        ? /** @type {Record<string, unknown>} */ (payload.tool_input)
-        : {};
-    const skillName =
-      typeof toolInput.skill === 'string'
-        ? toolInput.skill
-        : typeof toolInput.name === 'string'
-          ? toolInput.name
-          : null;
-    if (!skillName) {
-      return null;
-    }
-    return {
-      skill_name: skillName,
-      args: toolInput.args ?? '',
-      session_id:
-        typeof payload.session_id === 'string' ? payload.session_id : null,
-      cwd: typeof payload.cwd === 'string' ? payload.cwd : null,
-      invocation_path: 'skill_tool',
-      ...(typeof payload.agent_id === 'string'
-        ? { agent_id: payload.agent_id }
-        : {}),
-      ...(typeof payload.agent_type === 'string'
-        ? { agent_type: payload.agent_type }
-        : {}),
-      ...(typeof payload.tool_use_id === 'string'
-        ? { tool_use_id: payload.tool_use_id }
-        : {}),
-      ...(typeof payload.prompt_id === 'string'
-        ? { prompt_id: payload.prompt_id }
-        : {}),
-      hook_event_name: hookEvent || 'PreToolUse',
-    };
-  }
-
-  if (
-    hookEvent === 'UserPromptExpansion' ||
-    payload.expansion_type === 'slash_command'
-  ) {
-    const skillName =
-      typeof payload.command_name === 'string' ? payload.command_name : null;
-    if (!skillName) {
-      return null;
-    }
-    return {
-      skill_name: skillName,
-      args:
-        typeof payload.command_args === 'string' ? payload.command_args : '',
-      session_id:
-        typeof payload.session_id === 'string' ? payload.session_id : null,
-      cwd: typeof payload.cwd === 'string' ? payload.cwd : null,
-      invocation_path: 'slash',
-      ...(typeof payload.prompt_id === 'string'
-        ? { prompt_id: payload.prompt_id }
-        : {}),
-      hook_event_name: hookEvent || 'UserPromptExpansion',
-    };
-  }
-
-  return null;
-};
-
-/**
  * @param {string} repoRoot
  * @returns {string}
  */
@@ -253,9 +177,25 @@ const resolveGitBranch = (repoRoot) => {
 };
 
 /**
+ * Build a tool-neutral usage event from an adapter's NormalizedInvocation.
+ *
  * @param {object} params
- * @param {ReturnType<typeof normalizeHookPayload>} params.normalized
+ * @param {{
+ *   skill_name: string | null,
+ *   args?: unknown,
+ *   session_id?: string | null,
+ *   cwd?: string | null,
+ *   invocation_path?: string | null,
+ *   agent_id?: string,
+ *   agent_type?: string,
+ *   tool_use_id?: string,
+ *   prompt_id?: string,
+ *   hook_event_name?: string,
+ *   source?: string,
+ * } | null} params.normalized
  * @param {string} params.repoRoot
+ * @param {string} [params.source] — producer id (e.g. "claude-code"); falls
+ *   back to normalized.source when omitted.
  * @param {'name-only' | 'truncated' | 'full'} [params.privacyLevel]
  * @param {string} [params.timestamp]
  * @param {string} [params.gitBranch]
@@ -263,6 +203,7 @@ const resolveGitBranch = (repoRoot) => {
 const buildUsageEvent = ({
   normalized,
   repoRoot,
+  source,
   privacyLevel = DEFAULT_PRIVACY_LEVEL,
   timestamp = new Date().toISOString(),
   gitBranch,
@@ -274,17 +215,19 @@ const buildUsageEvent = ({
   const cwd = normalized.cwd || repoRoot;
   const scope = detectScope(normalized.skill_name, repoRoot);
   const args = applyPrivacy(privacyLevel, normalized.args);
+  const resolvedSource = source ?? normalized.source ?? null;
 
   return {
     timestamp,
     skill_name: normalized.skill_name,
     args,
-    session_id: normalized.session_id,
+    session_id: normalized.session_id ?? null,
     cwd,
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
     scope,
-    invocation_path: normalized.invocation_path,
+    invocation_path: normalized.invocation_path ?? null,
     privacy_level: privacyLevel,
+    ...(resolvedSource ? { source: resolvedSource } : {}),
     ...(normalized.agent_id ? { agent_id: normalized.agent_id } : {}),
     ...(normalized.agent_type ? { agent_type: normalized.agent_type } : {}),
     ...(normalized.tool_use_id ? { tool_use_id: normalized.tool_use_id } : {}),
@@ -582,6 +525,9 @@ const toRecordSkillUsageInput = (event) => {
     skillName: event.skill_name,
   };
 
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.args !== undefined) {
     input.args = event.args;
   }
@@ -986,7 +932,6 @@ module.exports = {
   detectScope,
   loadRepoEnv,
   logHookError,
-  normalizeHookPayload,
   persistOutcomeEvent,
   persistUsageEvent,
   postSkillUsageEvent,

@@ -36,7 +36,7 @@ const {
   defaultOutcomesJsonlPath,
   logHookError,
   persistOutcomeEvent,
-} = require('./skill-usage-lib.cjs');
+} = require('../../.agents/hooks/skill-usage/lib.cjs');
 
 /**
  * @param {string[]} argv

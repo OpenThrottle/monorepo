@@ -8,7 +8,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { detectScope } = require('./skill-usage-lib.cjs');
+const { detectScope } = require('../../.agents/hooks/skill-usage/lib.cjs');
 
 const skillName = process.argv[2];
 const repoRoot = process.argv[3] || process.cwd();
