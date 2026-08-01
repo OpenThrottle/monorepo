@@ -2,7 +2,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 import ScheduledJobRunDetail from '../scheduled-jobs.$jobId.runs.$runId';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import { renderRouteHarness } from '~/testing/route-fixtures';
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.runs.$runId';
 
@@ -33,21 +33,37 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/scheduled-jobs.$jobId.runs.$runId',
-    loaderData: { job, run: run() },
+    loaderData: {
+      job,
+      queueName: 'Scheduled Agent Jobs',
+      run: run(),
+    },
     params: { jobId: 'job-1', runId: 'run-1' },
     pathname: '/scheduled-jobs/job-1/runs/run-1',
   },
 ];
 
+// The embedded QueueJobLogConsole backfills history via a fetcher to
+// /resources/queue-job-logs on mount; stub that route so the fetch resolves
+// (empty page) instead of throwing "No route matches URL" in the test router.
 const renderRun = (value: ScheduledJobRunDetailFragment) =>
-  renderRoutesStub(
-    <ScheduledJobRunDetail
-      actionData={undefined}
-      loaderData={{ job, run: value }}
-      matches={matches}
-      params={{ jobId: 'job-1', runId: 'run-1' }}
-    />,
-  );
+  renderRouteHarness([
+    {
+      Component: (): React.ReactElement => (
+        <ScheduledJobRunDetail
+          actionData={undefined}
+          loaderData={{ job, queueName: 'Scheduled Agent Jobs', run: value }}
+          matches={matches}
+          params={{ jobId: 'job-1', runId: 'run-1' }}
+        />
+      ),
+      path: '/',
+    },
+    {
+      loader: () => ({ events: [], hasMore: false, nextCursor: null }),
+      path: '/resources/queue-job-logs',
+    },
+  ]);
 
 describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
   test('renders a succeeded run with metadata, duration, and back link', () => {
@@ -99,5 +115,22 @@ describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
     );
 
     expect(component.getByText(/cancellation requested/i)).toBeInTheDocument();
+  });
+
+  test('mounts the log console for an enqueued run', () => {
+    const component = renderRun(run({ bullmqJobId: 'run-1' }));
+
+    expect(component.getByTestId('QueueJobLogConsole')).toBeInTheDocument();
+  });
+
+  test('shows a pending-logs placeholder when the run is not yet enqueued', () => {
+    const component = renderRun(
+      run({ bullmqJobId: null, finishedAt: null, status: 'queued' }),
+    );
+
+    expect(component.queryByTestId('QueueJobLogConsole')).toBeNull();
+    expect(
+      component.getByText(/logs available once the run is enqueued/i),
+    ).toBeInTheDocument();
   });
 });

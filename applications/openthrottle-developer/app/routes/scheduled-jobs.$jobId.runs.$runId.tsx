@@ -9,7 +9,13 @@ import {
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { ScheduledAgentJobRunDetailDocument } from '~/__generated__/graphql';
+import { QueueJobLogConsole } from '~/routing/queues/components/QueueJobLogConsole';
 import { RunDetail } from '~/routing/scheduled-jobs/components/RunDetail';
+import {
+  RUN_DETAIL_COPY,
+  RUN_STATUS_TO_JOB_STATE,
+  SCHEDULED_AGENT_JOBS_QUEUE_NAME,
+} from '~/routing/scheduled-jobs/data/data.run-detail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.runs.$runId';
 
@@ -40,7 +46,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Scheduled job run not found', { status: 404 });
   }
 
-  return { job: scheduledAgentJob, run: scheduledAgentJobRun };
+  return {
+    job: scheduledAgentJob,
+    queueName: SCHEDULED_AGENT_JOBS_QUEUE_NAME,
+    run: scheduledAgentJobRun,
+  };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -59,7 +69,7 @@ export default function Component(
   // Hooks
 
   // Setup
-  const { job, run } = loaderData;
+  const { job, queueName, run } = loaderData;
 
   // Handlers
 
@@ -86,6 +96,23 @@ export default function Component(
         </div>
 
         <RunDetail run={run} />
+
+        <section>
+          <h2 className="mb-2 text-sm font-medium">
+            {RUN_DETAIL_COPY.logsHeading}
+          </h2>
+          {run.bullmqJobId ? (
+            <QueueJobLogConsole
+              jobId={run.bullmqJobId}
+              jobState={RUN_STATUS_TO_JOB_STATE[run.status] ?? 'waiting'}
+              queueName={queueName}
+            />
+          ) : (
+            <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+              {RUN_DETAIL_COPY.logsPending}
+            </p>
+          )}
+        </section>
       </div>
     </GlobalScreen>
   );
