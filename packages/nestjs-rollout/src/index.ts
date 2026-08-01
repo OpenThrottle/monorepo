@@ -1,7 +1,12 @@
-// export * from './components';
-// export * from './config';
-// export * from './data';
-// export * from './hooks';
-// export * from './utils';
+/**
+ * @public
+ * @packageDocumentation
+ * OpenThrottle rollout: RBAC-aware feature flags. The package owns the domain
+ * (entity, module, and RolloutService with role-targeted evaluation); the GraphQL
+ * resolver lives in openthrottle-server.
+ */
 
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;
+export { RolloutFlag } from './modules/rollout-flags/rollout-flag.entity';
+export type { RolloutFlagData } from './modules/rollout-flags/rollout-flag.entity';
+export { RolloutFlagsModule } from './modules/rollout-flags/rollout-flags.module';
+export { RolloutService } from './modules/rollout-flags/rollout.service';
