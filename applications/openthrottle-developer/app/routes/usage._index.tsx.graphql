@@ -15,3 +15,39 @@ query getUsageDailyStats($start: String!, $end: String!) {
     }
   }
 }
+
+fragment UsageTokenUsageRow on TokenUsageRowObject {
+  id
+  provider
+  model
+  inputTokens
+  outputTokens
+  cacheReadTokens
+  cacheWriteTokens
+  reasoningTokens
+  totalTokens
+  costUsd
+  createdAt
+}
+
+fragment UsageTokenUsageTotals on TokenUsageTotalsObject {
+  inputTokens
+  outputTokens
+  cacheReadTokens
+  cacheWriteTokens
+  reasoningTokens
+  totalTokens
+  costUsd
+  turnCount
+}
+
+query getUsageTokenUsage($start: String!, $end: String!, $provider: String) {
+  tokenUsage(start: $start, end: $end, provider: $provider) {
+    items {
+      ...UsageTokenUsageRow
+    }
+    totals {
+      ...UsageTokenUsageTotals
+    }
+  }
+}

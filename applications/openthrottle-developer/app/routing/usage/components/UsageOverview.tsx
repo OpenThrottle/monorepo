@@ -33,8 +33,11 @@ export const UsageOverview = (
         <p>
           Plan and task counts come from OpenThrottle daily stats (last{' '}
           {rangeDays} days). They approximate automation load from Ralph,
-          workflows, and manual work in the portal—they do not include model
-          token usage or per-prompt billing. For prompt-level debugging, use{' '}
+          workflows, and manual work in the portal. Model token and cost usage
+          is captured separately in the{' '}
+          <span className="text-foreground">Model token usage</span> section
+          below; per-prompt billing is still not tracked. For prompt-level
+          debugging, use{' '}
           <Link className="underline" to="/prompts">
             Prompts
           </Link>{' '}

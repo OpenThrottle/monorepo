@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { loader } from '../usage._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
@@ -9,45 +9,113 @@ const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 
+const dailyStatsResponse = {
+  dailyStatsRange: {
+    items: [
+      {
+        date: '2026-01-01',
+        plansCompleted: 1,
+        plansCreated: 0,
+        plansUpdated: 0,
+        tasksCompleted: 2,
+        tasksCreated: 0,
+        tasksUpdated: 0,
+      },
+    ],
+  },
+};
+
+const tokenUsageResponse = {
+  tokenUsage: {
+    items: [
+      {
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        costUsd: 0.05,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        id: 'usage-1',
+        inputTokens: 1000,
+        model: 'claude-opus-4-8',
+        outputTokens: 300,
+        provider: 'claude',
+        reasoningTokens: 0,
+        totalTokens: 1300,
+      },
+    ],
+    totals: {
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costUsd: 0.05,
+      inputTokens: 1000,
+      outputTokens: 300,
+      reasoningTokens: 0,
+      totalTokens: 1300,
+      turnCount: 1,
+    },
+  },
+};
+
+const runLoader = (url: string) => {
+  const request = new Request(url);
+
+  return loader({
+    context: createTestRouterContext(),
+    params: {},
+    pattern: '/usage',
+    request,
+    url: new URL(request.url),
+  });
+};
+
 describe('routes/usage._index.tsx', () => {
   describe('loader', () => {
-    test('returns daily stats for a 30-day window', async () => {
-      const items = [
-        {
-          date: '2026-01-01',
-          plansCompleted: 1,
-          plansCreated: 0,
-          plansUpdated: 0,
-          tasksCompleted: 2,
-          tasksCreated: 0,
-          tasksUpdated: 0,
-        },
-      ];
+    beforeEach(() => {
+      // Two calls per load: daily stats first, token usage second.
+      mockExecuteGraphqlWithAuth
+        .mockReset()
+        .mockResolvedValueOnce(dailyStatsResponse)
+        .mockResolvedValueOnce(tokenUsageResponse);
+    });
 
-      mockExecuteGraphqlWithAuth.mockResolvedValue({
-        dailyStatsRange: { items },
-      });
+    test('returns daily stats + token usage for a 30-day window (all providers)', async () => {
+      const result = await runLoader('http://localhost/usage');
 
-      const request = new Request('http://localhost/usage');
-      const result = await loader({
-        context: createTestRouterContext(),
-        params: {},
-        pattern: '/usage',
-        request,
-        url: new URL(request.url),
-      });
-
-      expect(result.dailyStats).toEqual(items);
+      expect(result.dailyStats).toEqual(
+        dailyStatsResponse.dailyStatsRange.items,
+      );
       expect(result.rangeDays).toBe(30);
-      expect(typeof result.rangeStartIso).toBe('string');
-      expect(typeof result.rangeEndIso).toBe('string');
-      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
-        request,
+      expect(result.selectedProvider).toBeNull();
+      expect(result.tokenUsageItems).toEqual(
+        tokenUsageResponse.tokenUsage.items,
+      );
+      expect(result.tokenUsageTotals).toEqual(
+        tokenUsageResponse.tokenUsage.totals,
+      );
+
+      // Token usage is queried on YYYY-MM-DD with no provider filter.
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Request),
         expect.anything(),
         expect.objectContaining({
-          end: expect.any(String),
-          start: expect.any(String),
+          end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+          provider: null,
+          start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         }),
+      );
+    });
+
+    test('forwards ?provider= to the token usage query', async () => {
+      const result = await runLoader(
+        'http://localhost/usage?provider=opencode',
+      );
+
+      expect(result.selectedProvider).toBe('opencode');
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Request),
+        expect.anything(),
+        expect.objectContaining({ provider: 'opencode' }),
       );
     });
   });
