@@ -2670,6 +2670,8 @@ export type Query = {
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
+  /** Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals. */
+  tokenUsage: TokenUsageResultObject;
   unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
   user?: Maybe<UserObject>;
@@ -2949,6 +2951,12 @@ export type QueryTasksByPlanIdArgs = {
 
 export type QueryTasksByProjectIdArgs = {
   input: TasksByProjectIdInput;
+};
+
+export type QueryTokenUsageArgs = {
+  end: Scalars['String']['input'];
+  provider?: InputMaybe<Scalars['String']['input']>;
+  start: Scalars['String']['input'];
 };
 
 export type QueryUnverifiedWorkArtifactsArgs = {
@@ -4050,6 +4058,62 @@ export type TasksByProjectIdResultObject = {
   __typename?: 'TasksByProjectIdResultObject';
   tasks: Array<TaskObject>;
   totalCount: Scalars['Int']['output'];
+};
+
+export type TokenUsageResultObject = {
+  __typename?: 'TokenUsageResultObject';
+  /** Per-turn usage rows in the range, newest first. */
+  items: Array<TokenUsageRowObject>;
+  /** Summed usage + turn count over the same filtered range. */
+  totals: TokenUsageTotalsObject;
+};
+
+export type TokenUsageRowObject = {
+  __typename?: 'TokenUsageRowObject';
+  /** Cache-read tokens for the turn, when reported. */
+  cacheReadTokens?: Maybe<Scalars['Float']['output']>;
+  /** Cache-write tokens for the turn, when reported. */
+  cacheWriteTokens?: Maybe<Scalars['Float']['output']>;
+  /** Source conversation id, when the usage came from chat; null otherwise. */
+  conversationId?: Maybe<Scalars['ID']['output']>;
+  /** Reported dollar cost of the turn, when priced. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** Turn completion timestamp. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Usage row id. */
+  id: Scalars['ID']['output'];
+  /** Input/prompt tokens for the turn, when reported. */
+  inputTokens?: Maybe<Scalars['Float']['output']>;
+  /** Model the usage is attributed to, when known. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Output/completion tokens for the turn, when reported. */
+  outputTokens?: Maybe<Scalars['Float']['output']>;
+  /** Provider identity (driver id: claude|codex|cursor|grok|opencode|openai). */
+  provider: Scalars['String']['output'];
+  /** Reasoning tokens for the turn, when reported separately. */
+  reasoningTokens?: Maybe<Scalars['Float']['output']>;
+  /** Total tokens for the turn, when reported. */
+  totalTokens?: Maybe<Scalars['Float']['output']>;
+};
+
+export type TokenUsageTotalsObject = {
+  __typename?: 'TokenUsageTotalsObject';
+  /** Summed cache-read tokens over the range. */
+  cacheReadTokens: Scalars['Float']['output'];
+  /** Summed cache-write tokens over the range. */
+  cacheWriteTokens: Scalars['Float']['output'];
+  /** Summed dollar cost over the range. */
+  costUsd: Scalars['Float']['output'];
+  /** Summed input tokens over the range. */
+  inputTokens: Scalars['Float']['output'];
+  /** Summed output tokens over the range. */
+  outputTokens: Scalars['Float']['output'];
+  /** Summed reasoning tokens over the range. */
+  reasoningTokens: Scalars['Float']['output'];
+  /** Summed total tokens over the range. */
+  totalTokens: Scalars['Float']['output'];
+  /** Number of turns (usage rows) contributing to the totals. */
+  turnCount: Scalars['Int']['output'];
 };
 
 export type TranscriptionStreamChunkObject = {
@@ -8389,6 +8453,71 @@ export type GetUsageDailyStatsQuery = {
   };
 };
 
+export type UsageTokenUsageRowFragment = {
+  __typename?: 'TokenUsageRowObject';
+  id: string;
+  provider: string;
+  model?: string | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  cacheReadTokens?: number | null;
+  cacheWriteTokens?: number | null;
+  reasoningTokens?: number | null;
+  totalTokens?: number | null;
+  costUsd?: number | null;
+  createdAt: any;
+};
+
+export type UsageTokenUsageTotalsFragment = {
+  __typename?: 'TokenUsageTotalsObject';
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  reasoningTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  turnCount: number;
+};
+
+export type GetUsageTokenUsageQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+  provider?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type GetUsageTokenUsageQuery = {
+  __typename?: 'Query';
+  tokenUsage: {
+    __typename?: 'TokenUsageResultObject';
+    items: Array<{
+      __typename?: 'TokenUsageRowObject';
+      id: string;
+      provider: string;
+      model?: string | null;
+      inputTokens?: number | null;
+      outputTokens?: number | null;
+      cacheReadTokens?: number | null;
+      cacheWriteTokens?: number | null;
+      reasoningTokens?: number | null;
+      totalTokens?: number | null;
+      costUsd?: number | null;
+      createdAt: any;
+    }>;
+    totals: {
+      __typename?: 'TokenUsageTotalsObject';
+      inputTokens: number;
+      outputTokens: number;
+      cacheReadTokens: number;
+      cacheWriteTokens: number;
+      reasoningTokens: number;
+      totalTokens: number;
+      costUsd: number;
+      turnCount: number;
+    };
+  };
+};
+
 export const HealthCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -10074,6 +10203,61 @@ export const UsageDailyStatsRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageDailyStatsRowFragment, unknown>;
+export const UsageTokenUsageRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTokenUsageRowFragment, unknown>;
+export const UsageTokenUsageTotalsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageTotalsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageTokenUsageTotalsFragment, unknown>;
 export const GetMyUserDocument = {
   kind: 'Document',
   definitions: [
@@ -21537,4 +21721,163 @@ export const GetUsageDailyStatsDocument = {
 } as unknown as DocumentNode<
   GetUsageDailyStatsQuery,
   GetUsageDailyStatsQueryVariables
+>;
+export const GetUsageTokenUsageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageTokenUsage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'provider' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tokenUsage' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'provider' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'provider' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageTokenUsageRow' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totals' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageTokenUsageTotals' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TokenUsageTotalsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageTokenUsageQuery,
+  GetUsageTokenUsageQueryVariables
 >;

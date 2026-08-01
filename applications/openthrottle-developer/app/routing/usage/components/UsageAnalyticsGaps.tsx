@@ -36,7 +36,10 @@ export const UsageAnalyticsGaps = (
       <div className="text-muted-foreground mt-4 text-xs md:mt-8">
         <ul className="list-disc space-y-1 pl-5">
           <li>No per-prompt, per-skill, or per-command invocation counts.</li>
-          <li>No model token, cost, or latency metrics.</li>
+          <li>
+            No latency metrics. Token and cost usage is captured — see{' '}
+            <span className="text-foreground">Model token usage</span> above.
+          </li>
           <li>
             No visibility into user-local skills under{' '}
             <code className="text-xs">~/.cursor/skills-cursor</code> (not

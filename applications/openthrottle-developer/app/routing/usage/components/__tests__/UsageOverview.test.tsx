@@ -15,7 +15,7 @@ describe('UsageOverview Component', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/last 30 days/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/do not include model token usage/i),
+      screen.getByText(/per-prompt billing is still not tracked/i),
     ).toBeInTheDocument();
   });
 

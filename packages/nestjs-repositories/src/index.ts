@@ -72,6 +72,17 @@ export type {
 } from './modules/agent-conversations/agent-conversations.factory';
 export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service';
 export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service';
+export { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity';
+export type { AgentTokenUsageData } from './modules/agent-token-usage/agent-token-usage.entity';
+export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module';
+export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service';
+export type {
+  RecordTokenUsageInput,
+  TokenUsageRangeQuery,
+  TokenUsageTotals,
+} from './modules/agent-token-usage/agent-token-usage.service';
+export { agentTokenUsageFactory } from './modules/agent-token-usage/agent-token-usage.factory';
+export type { AgentTokenUsageFactoryData } from './modules/agent-token-usage/agent-token-usage.factory';
 export {
   capAgentConversationContent,
   capAgentConversationToolMetadata,

@@ -36,7 +36,8 @@ export const UsageDailyActivityOverview = (
         Daily counts are aggregated in OpenThrottle for each calendar day over
         the last {rangeDays} days. They reflect OpenThrottle plan and task
         activity surfaced through the developer portal and automation—not
-        IDE-only runs or model billing.
+        IDE-only runs. Model token and cost usage is tracked separately in the
+        Model token usage section above.
       </p>
       <p className="text-muted-foreground mb-4 text-xs md:mb-8">
         {USAGE_COMPLETION_ATTRIBUTION_CAVEAT}

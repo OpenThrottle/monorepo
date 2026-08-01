@@ -1068,6 +1068,9 @@ importers:
       '@nestjs/websockets':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/platform-socket.io@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/agentic-token-usage':
+        specifier: workspace:^
+        version: link:packages/agentic-token-usage
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:packages/graphql-codegen
@@ -2218,6 +2221,9 @@ importers:
       '@nestjs/platform-express':
         specifier: 'catalog:'
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)
+      '@openthrottle/agentic-token-usage':
+        specifier: workspace:^
+        version: link:../../packages/agentic-token-usage
       '@openthrottle/nestjs-agentic-workflow':
         specifier: workspace:^
         version: link:../../packages/nestjs-agentic-workflow
@@ -2357,6 +2363,8 @@ importers:
         version: link:../../packages/react-router-testing
 
   infra: {}
+
+  packages/agentic-token-usage: {}
 
   packages/graphql-codegen:
     dependencies:
@@ -2699,6 +2707,9 @@ importers:
       '@nestjs/typeorm':
         specifier: 'catalog:'
         version: 11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@6.0.3)))
+      '@openthrottle/agentic-token-usage':
+        specifier: workspace:^
+        version: link:../agentic-token-usage
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
@@ -3032,6 +3043,9 @@ importers:
 
   packages/react-router-chat:
     dependencies:
+      '@openthrottle/agentic-token-usage':
+        specifier: workspace:^
+        version: link:../agentic-token-usage
       '@openthrottle/react-router-markdown':
         specifier: workspace:^
         version: link:../react-router-markdown

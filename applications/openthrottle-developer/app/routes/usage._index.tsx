@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
-import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
+import {
+  GetUsageDailyStatsDocument,
+  GetUsageTokenUsageDocument,
+} from '~/__generated__/graphql';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -14,6 +17,7 @@ import { UsageDailyActivityOverview } from '~/routing/usage/components/UsageDail
 import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';
 import { UsageOverview } from '~/routing/usage/components/UsageOverview';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
+import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
@@ -25,26 +29,43 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
+  const providerParam = new URL(args.request.url).searchParams.get('provider');
+  const selectedProvider =
+    providerParam !== null && providerParam !== '' ? providerParam : null;
+
   const end = new Date();
   const endIso = end.toISOString();
 
   const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
 
-  const result = await executeGraphqlWithAuth(
-    args.request,
-    GetUsageDailyStatsDocument,
-    { end: endIso, start: startIso },
-  );
+  // tokenUsage filters on YYYY-MM-DD (see the tokenUsage resolver contract).
+  const startDate = startIso.slice(0, 10);
+  const endDate = endIso.slice(0, 10);
+
+  const [dailyResult, tokenUsageResult] = await Promise.all([
+    executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
+      end: endIso,
+      start: startIso,
+    }),
+    executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
+      end: endDate,
+      provider: selectedProvider,
+      start: startDate,
+    }),
+  ]);
 
   const dailyStats: DashboardDailyStatsCardFragment[] =
-    result.dailyStatsRange.items ?? [];
+    dailyResult.dailyStatsRange.items ?? [];
 
   return {
     dailyStats,
     rangeDays: 30,
     rangeEndIso: endIso,
     rangeStartIso: startIso,
+    selectedProvider,
+    tokenUsageItems: tokenUsageResult.tokenUsage.items,
+    tokenUsageTotals: tokenUsageResult.tokenUsage.totals,
   };
 };
 
@@ -60,7 +81,15 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = loaderData;
+  const {
+    dailyStats,
+    rangeDays,
+    rangeEndIso,
+    rangeStartIso,
+    selectedProvider,
+    tokenUsageItems,
+    tokenUsageTotals,
+  } = loaderData;
 
   // Hooks
 
@@ -78,6 +107,12 @@ export default function Component(
     <GlobalScreen>
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
+      <UsageTokenUsage
+        items={tokenUsageItems}
+        rangeDays={rangeDays}
+        selectedProvider={selectedProvider}
+        totals={tokenUsageTotals}
+      />
       <div data-testid="UsageDailyActivity">
         <DashboardDailyStatsCard className="my-4" dailyStats={dailyStats} />
       </div>
