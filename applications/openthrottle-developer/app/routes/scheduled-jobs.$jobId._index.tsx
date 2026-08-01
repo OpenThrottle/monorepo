@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Form, redirect } from 'react-router';
+import { Form, Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
@@ -91,6 +91,9 @@ export default function Component(
           </div>
 
           <div className="flex gap-2">
+            <Button asChild={true} variant="outline">
+              <Link to="./edit">Edit</Link>
+            </Button>
             <Form method="post">
               <input name="intent" type="hidden" value="run-now" />
               <Button type="submit" variant="outline">
