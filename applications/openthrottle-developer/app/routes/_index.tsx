@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
-import { Await } from 'react-router';
+import { Suspense, useEffect, useRef } from 'react';
+import { Await, useSearchParams } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
 import { ChatConversationSheet } from '@openthrottle/react-router-chat';
 import {
@@ -92,6 +92,18 @@ export default function Component(
 
   const isEmptyThread = turn.messages.length === 0;
 
+  // Deep-link entry point: `/?conversationId=<id>` (e.g. from the dashboard
+  // "Recent chats" card) restores that conversation on mount. `turn` is fresh
+  // each render, so read it through a ref to keep the effect keyed only on the
+  // param; a ref of the last-restored id makes restore fire once per distinct
+  // param value (not on every render, nor when in-page navigation changes other
+  // search params).
+  const [searchParams] = useSearchParams();
+  const conversationIdParam = searchParams.get('conversationId');
+  const restoredConversationIdRef = useRef<string | null>(null);
+  const turnRef = useRef(turn);
+  turnRef.current = turn;
+
   // Handlers
   const onNewChat = (): void => {
     turn.reset();
@@ -104,6 +116,23 @@ export default function Component(
   // Markup
 
   // Life Cycle
+  useEffect(() => {
+    const id = conversationIdParam?.trim() ?? '';
+    if (id === '') {
+      return;
+    }
+
+    const activeTurn = turnRef.current;
+    if (
+      id === activeTurn.conversationId ||
+      id === restoredConversationIdRef.current
+    ) {
+      return;
+    }
+
+    restoredConversationIdRef.current = id;
+    activeTurn.restore({ conversationId: id });
+  }, [conversationIdParam]);
 
   // 🔌 Short Circuit
 
