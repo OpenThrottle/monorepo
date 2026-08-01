@@ -1007,6 +1007,60 @@ type ServerMetricsObject {
   cpuSystemMs: Float!
 }
 
+type McpConnectorConnectionObject {
+  """Auth mechanism recorded at connect time: api_token or oauth."""
+  authType: String!
+  connectedAt: DateTime!
+
+  """Catalog key this connection is for."""
+  connectorKey: ID!
+  createdAt: DateTime!
+  credentialLabel: String
+
+  """
+  Masked credential hint for display (api_token only); never the raw secret.
+  """
+  credentialPrefix: String
+  enabled: Boolean!
+  id: ID!
+  lastUsedAt: DateTime
+  updatedAt: DateTime!
+  userId: ID!
+}
+
+type McpConnectorConnectionResultObject {
+  """The connection after the mutation (credential hash is never returned)."""
+  connection: McpConnectorConnectionObject!
+}
+
+type McpConnectorObject {
+  """Auth mechanism: api_token or oauth."""
+  authType: String!
+  category: String!
+  description: String!
+  docsUrl: String!
+
+  """
+  Remote endpoint URL, or null for local-stdio / directory-brokered connectors.
+  """
+  endpointUrl: String
+
+  """Icon hint slug for the UI to resolve."""
+  iconHint: String!
+
+  """Stable catalog key; referenced by a connection's connectorKey."""
+  key: ID!
+  name: String!
+
+  """
+  Source registry/host: anthropic-directory, mcp-registry, or vendor-remote.
+  """
+  provider: String!
+
+  """Transport: local-stdio, remote-http, or remote-sse."""
+  transport: String!
+}
+
 type CleanQueueResultObject {
   """Whether the clean was accepted."""
   success: Boolean!
@@ -2822,6 +2876,12 @@ type Query {
   """
   commitsPerPr(input: CommitsPerPrInput!): [CommitsPerPrRowObject!]!
 
+  """The curated MCP connector catalog (static server-side seed)."""
+  mcpConnectors: [McpConnectorObject!]!
+
+  """The authenticated user's MCP connector connections."""
+  mcpConnectorConnections: [McpConnectorConnectionObject!]!
+
   """
   Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged.
   """
@@ -3638,6 +3698,19 @@ type Mutation {
   writeCustomPromptToFileSystem(id: ID!): Boolean!
 
   """
+  Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted.
+  """
+  connectMcpConnector(input: ConnectMcpConnectorInput!): McpConnectorConnectionResultObject!
+
+  """Enable or disable the authenticated user's connection for a connector."""
+  setMcpConnectorEnabled(input: SetMcpConnectorEnabledInput!): McpConnectorConnectionResultObject
+
+  """
+  Disconnect the authenticated user's connection for a connector. Returns true when a connection was removed.
+  """
+  disconnectMcpConnector(connectorKey: ID!): Boolean!
+
+  """
   Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error.
   """
   createQueue(input: CreateQueueInput!): CreateQueueResultObject!
@@ -4194,6 +4267,24 @@ input UpdateCustomPromptInput {
 
   """Write content to the file system at filePath if provided"""
   writeToFileSystem: Boolean! = false
+}
+
+input ConnectMcpConnectorInput {
+  """
+  API token for api_token connectors; ignored for oauth. Never persisted raw — stored as a bcrypt hash + masked hint.
+  """
+  apiToken: String
+
+  """Catalog key of the connector to connect."""
+  connectorKey: ID!
+
+  """Optional label for the credential."""
+  label: String
+}
+
+input SetMcpConnectorEnabledInput {
+  connectorKey: ID!
+  enabled: Boolean!
 }
 
 input CreateQueueInput {

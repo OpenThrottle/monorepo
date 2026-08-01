@@ -54,6 +54,7 @@ import { GlobalAuthGuard } from './guards/global-auth.guard';
 import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
 import { HealthModule } from './modules/health/health.module';
+import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors-graphql.module';
 import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
@@ -257,6 +258,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           GeneratorsGraphqlModule,
           GithubGraphqlModule,
           HealthGraphqlModule,
+          McpConnectorsGraphqlModule,
           MetricsGraphqlModule,
           ModelDiscoveryGraphqlModule,
           NotesGraphqlModule,
