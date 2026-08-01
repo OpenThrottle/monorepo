@@ -5,8 +5,8 @@
       {
         "hooks": [
           {
-            "command": "./.claude/hooks/skill-usage-spike-dump.sh",
-            "statusMessage": "Skill usage spike (PreToolUse)",
+            "command": "./.claude/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (PreToolUse)",
             "type": "command"
           }
         ],
@@ -17,8 +17,8 @@
       {
         "hooks": [
           {
-            "command": "./.claude/hooks/skill-usage-spike-dump.sh",
-            "statusMessage": "Skill usage spike (UserPromptExpansion)",
+            "command": "./.claude/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (UserPromptExpansion)",
             "type": "command"
           }
         ]
