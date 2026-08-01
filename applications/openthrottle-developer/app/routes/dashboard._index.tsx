@@ -26,6 +26,7 @@ import { DashboardRecentActivity } from '~/routing/dashboard/components/Dashboar
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 
@@ -72,7 +73,13 @@ export const loader = (args: Route.LoaderArgs) => {
     { owner, repo },
   );
 
-  return { core, githubStats };
+  // Deferred (recentChats): the 3 most-recent agent conversations, streamed in
+  // its own Await boundary (mirroring githubStats) so it never blocks the
+  // activity chart. Resolves to ListAgentConversationsResult; a rejection is
+  // handled downstream by the card's errorElement.
+  const recentChats = callListAgentConversations(args.request, { limit: 3 });
+
+  return { core, githubStats, recentChats };
 };
 
 export const links: Route.LinksFunction = () => {
