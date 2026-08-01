@@ -33,31 +33,48 @@ export default (config: ConfigEnv) => {
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description `maxWorkers` caps concurrent worker processes. CI now runs the
+       * @description `maxWorkers` caps concurrent worker processes. CI runs the
        * `test` target with `nx ... --parallel=1` (see continuous-integration.yml),
-       * so this suite has the shared box to itself — no cross-suite memory
-       * contention. Keep the cap at the 4-vCPU default: MORE workers is better here,
-       * because `forks` reuses each worker process across the files it is handed and
-       * its RSS accumulates (fewer workers -> more files each -> higher peak RSS ->
-       * OOM; empirically `maxWorkers: 2` crashed MORE files than 4). Vitest 4 removed
-       * the per-pool `poolOptions.forks.maxForks` knob; this top-level `maxWorkers`
-       * is the cap. Do NOT raise `--max-old-space-size` — it fights the box limit.
+       * so this suite has the shared 4-vCPU box to itself — no cross-suite memory
+       * contention. Keep the cap at the 4-vCPU default: with `vmForks` + a per-worker
+       * `vmMemoryLimit` (below), peak heap is bounded at ~4 x 512MB regardless of file
+       * count, so 4 workers saturate the box safely. Vitest 4 removed the per-pool
+       * `poolOptions.*.maxForks` knob; this top-level `maxWorkers` is the cap. Do NOT
+       * raise `--max-old-space-size` — it fights the box limit, not the accumulation.
        */
       maxWorkers: 4,
       /**
-       * @description `forks` runs each test file with an isolated module registry
-       * (no cross-file global leakage) in a REUSED worker process. We moved off
-       * `vmForks` because its reused worker accumulates V8 VM contexts across this
-       * large suite (354 files) and crashes under CI memory pressure — surfacing as
-       * in-flight files reporting `(0 test)` with no error stack (a silent container
-       * SIGKILL, not a V8 heap error). `forks` accumulates far less and is stable,
-       * but is slower (re-imports the module graph per file — the cost `vmForks`
-       * avoided). Sharding the suite across boxes to claw back the wall-clock (and
-       * re-enable parallel test execution) is tracked in OT plan e448a51d.
+       * @description `vmForks` runs each test file with an isolated module registry
+       * but REUSES the worker process, so the module graph is imported once per worker
+       * and amortized across the ~364 files it handles — the big wall-clock win over
+       * `forks`, which re-imports per file (measured on this suite: forks 253s vs
+       * vmForks 86s, ~2.9x; OT plan e448a51d task ae26a40c).
+       *
+       * The catch that sent us to `forks` earlier: an UNBOUNDED reused vmForks worker
+       * accumulates V8 VM contexts across the whole suite and, under the 4-vCPU CI
+       * box's memory ceiling, gets SIGKILLed mid-file — surfacing as in-flight files
+       * reporting `(0 test)` with no error stack (a silent container OOM, not a V8
+       * heap error). `test.vmMemoryLimit` is the fix: Vitest recycles a worker once
+       * its heap exceeds the limit, so accumulation is bounded to ~512MB/worker while
+       * keeping the import amortization. This is the config-only alternative to
+       * sharding the suite across boxes — chosen because CI deliberately stays on ONE
+       * box (jobCount: 1, cost tradeoff documented in continuous-integration.yml), so
+       * a --shard matrix would only help by adding runners we intentionally don't pay
+       * for, whereas a faster pool recovers the wall-clock at zero CI cost.
+       *
+       * If the `(0 test)` OOM ever reappears, LOWER `vmMemoryLimit` (more frequent
+       * recycles) before touching `maxWorkers` or the box size.
        */
-      pool: 'forks',
+      pool: 'vmForks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
+      /**
+       * @description Recycle a reused vmForks worker once its heap crosses this
+       * limit, bounding the V8 VM-context accumulation that OOM-crashed the suite
+       * under `vmForks` before. See the `pool` comment above. Tune DOWN if the
+       * `(0 test)` crash returns; 512MB already sits at the vmForks speed floor.
+       */
+      vmMemoryLimit: '512MB',
     },
   });
 
