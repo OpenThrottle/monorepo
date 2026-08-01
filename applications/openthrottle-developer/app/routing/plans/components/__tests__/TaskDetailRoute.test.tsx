@@ -83,9 +83,34 @@ describe('TaskDetailRoute Component', () => {
   });
 
   test('renders heading, toolbar, and the Details tab by default', () => {
-    expect(component.getByText('Task: Test Task')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Test Task' }),
+    ).toBeInTheDocument();
     expect(component.getByTestId('PlanTaskToolbar')).toBeInTheDocument();
     expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
+  });
+
+  test('shows the task status chip and a Plan → Task breadcrumb', () => {
+    // Scope to this render — the beforeEach also mounts a TaskDetailRoute in body.
+    const scoped = within(
+      renderRoute(buildProps(mockTask, buildPlan('PENDING'))).container,
+    );
+
+    // Status uses the shared PlanStatusBadge label (PENDING → "Pending"); it
+    // renders in the header and again in the toolbar's status action.
+    expect(
+      scoped.getAllByTestId('PlanStatusBadge').length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(scoped.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
+    // Breadcrumb links back to the plans list and the parent plan.
+    expect(scoped.getByRole('link', { name: 'Plans' })).toHaveAttribute(
+      'href',
+      '/plans',
+    );
+    expect(scoped.getByRole('link', { name: 'Parent Plan' })).toHaveAttribute(
+      'href',
+      '/plans/plan-1',
+    );
   });
 
   test('exposes the Details, Output, Artifacts, and Hooks tabs', () => {

@@ -5,6 +5,7 @@ import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
@@ -133,7 +134,9 @@ describe('routes/plans.$planId.tsx', () => {
     );
     expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
 
-    expect(component.getByText('Test Plan')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Test Plan' }),
+    ).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
     // MarkdownRenderer compiles the description asynchronously, so await it.
     expect(
@@ -181,9 +184,11 @@ describe('routes/plans.$planId.tsx', () => {
 
     await user.click(screen.getByRole('tab', { name: /Tasks/ }));
 
-    expect(await component.findByText('No plans yet')).toBeInTheDocument();
     expect(
-      component.getByText('Create your first plan to get started.'),
+      await component.findByText(PLAN_TASKS_EMPTY_COPY.title),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(PLAN_TASKS_EMPTY_COPY.description),
     ).toBeInTheDocument();
   });
 

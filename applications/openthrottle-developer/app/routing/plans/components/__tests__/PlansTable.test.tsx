@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { PlansTable } from '../PlansTable';
 import type { PlansTableProps } from '../PlansTable';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockPlans: PlanCardFragment[] = [
@@ -26,6 +27,10 @@ const mockPlans: PlanCardFragment[] = [
     },
     status: 'IN_PROGRESS',
     summary: 'First plan summary',
+    tags: [
+      { __typename: 'PlanTagObject', dimension: 'phase', tag: 'discovery' },
+      { __typename: 'PlanTagObject', dimension: 'domain', tag: 'frontend' },
+    ],
     taskCount: 3,
     title: 'First Plan',
     updatedAt: '2025-01-03T00:00:00Z',
@@ -46,6 +51,7 @@ const mockPlans: PlanCardFragment[] = [
     },
     status: 'PENDING',
     summary: null,
+    tags: [],
     taskCount: 0,
     title: 'Second Plan',
     updatedAt: '2025-01-02T00:00:00Z',
@@ -63,11 +69,12 @@ describe('PlansTable Component', () => {
   test('shows empty state when plans is empty', () => {
     const component = renderPlansTable({ plans: [] });
 
-    expect(component.getByText('No plans yet')).toBeInTheDocument();
-    expect(component.getByRole('link', { name: 'New plan' })).toHaveAttribute(
-      'href',
-      '/plans/create',
-    );
+    expect(
+      component.getByText(PLANS_INDEX_EMPTY_COPY.emptyTitle),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: PLANS_INDEX_EMPTY_COPY.emptyAction }),
+    ).toHaveAttribute('href', '/plans/create');
   });
 
   test('renders table structure with column headers when plans exist', () => {
@@ -78,14 +85,22 @@ describe('PlansTable Component', () => {
       withPlans.getByRole('columnheader', { name: 'Status' }),
     ).toBeInTheDocument();
     expect(
-      withPlans.getByRole('columnheader', { name: 'Tasks' }),
-    ).toBeInTheDocument();
-    expect(
       withPlans.getByRole('columnheader', { name: 'Plan' }),
     ).toBeInTheDocument();
     expect(
       withPlans.getByRole('columnheader', { name: 'Actions' }),
     ).toBeInTheDocument();
+  });
+
+  test('renders plan tags inline on the row', () => {
+    const { getByLabelText, queryByLabelText } = renderPlansTable({
+      plans: mockPlans,
+    });
+
+    expect(getByLabelText('Tag: discovery')).toBeInTheDocument();
+    expect(getByLabelText('Tag: frontend')).toBeInTheDocument();
+    // Second plan has no tags — nothing extra rendered for it.
+    expect(queryByLabelText('Tag: chore')).not.toBeInTheDocument();
   });
 
   test('renders plans from props when provided', () => {

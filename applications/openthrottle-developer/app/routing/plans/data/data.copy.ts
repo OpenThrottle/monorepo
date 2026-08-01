@@ -11,6 +11,40 @@ export const PLAN_TASK_NOT_FOUND_COPY = {
 } as const;
 
 /**
+ * @description Copy for the task-detail Details tab. `noDescription` fills the
+ * main column when a task carries neither a description nor a summary, so the
+ * issue-style layout never renders an empty body.
+ */
+export const TASK_DETAIL_COPY = {
+  noDescription: `No description provided yet.`,
+} as const;
+
+/**
+ * @description Empty-state copy for the plans index list. Two cases: a truly
+ * empty workspace (no plans at all) vs an active filter/search with no matches.
+ * The filtered case links back to the unfiltered list; the empty case links to
+ * plan creation. Single-sourced so {@link PlanTasksEmpty} and its specs agree.
+ */
+export const PLANS_INDEX_EMPTY_COPY = {
+  emptyAction: `New plan`,
+  emptyDescription: `Create your first plan to get started.`,
+  emptyTitle: `No plans yet`,
+  filteredAction: `Clear filters`,
+  filteredDescription: `No plans match the current filters. Clear them to see every plan.`,
+  filteredTitle: `No plans match your filters`,
+} as const;
+
+/**
+ * @description Empty-state copy for a plan's Tasks tab (list and table views)
+ * when the plan has no tasks. Distinct from {@link PLANS_INDEX_EMPTY_COPY} so a
+ * task-less plan never borrows the plans-index "No plans yet" wording.
+ */
+export const PLAN_TASKS_EMPTY_COPY = {
+  description: `Add a task to break this plan into executable work.`,
+  title: `No tasks yet`,
+} as const;
+
+/**
  * @description Copy for the "managed" badge shown on tag→action rule-injected
  * tasks (e.g. GitHub Commit). Their placement is a reconciled invariant — a
  * manual reorder snaps back on the next rule-evaluation pass — so the badge and
