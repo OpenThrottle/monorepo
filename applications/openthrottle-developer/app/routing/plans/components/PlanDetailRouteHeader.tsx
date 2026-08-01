@@ -1,16 +1,7 @@
 import * as React from 'react';
-import {
-  Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@openthrottle/react-router-shadcn';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { NotebookTextIcon } from 'lucide-react';
-import { Link } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import type { PlanStatusKey } from '~/routing/plans/types';
@@ -37,9 +28,8 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
-  const title = plan.title ?? 'Untitled';
-  const project = plan.projectRelation;
   const tags = plan.tags ?? [];
+  const title = plan.title ?? 'Untitled';
 
   // Handlers
 
@@ -51,34 +41,6 @@ export const PlanDetailRouteHeader = (
 
   return (
     <div>
-      <Breadcrumb className="mb-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          {project != null ? (
-            <>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild={true}>
-                  <Link to={`/projects/${project.id}`} viewTransition={true}>
-                    {project.name}
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </>
-          ) : null}
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <GlobalHeading className="mb-4" icon={NotebookTextIcon} title={title} />
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
@@ -92,6 +54,7 @@ export const PlanDetailRouteHeader = (
             Assignee: {plan.assignee}
           </span>
         ) : null}
+
         {tags.map((tag) => (
           <Badge
             aria-label={`Tag: ${tag.tag}`}
@@ -107,8 +70,10 @@ export const PlanDetailRouteHeader = (
             {tag.tag}
           </Badge>
         ))}
+
         <span aria-hidden={true}>&bull;</span>
         <span>Created {formatPlanDate(plan.createdAt)}</span>
+
         <span aria-hidden={true}>&bull;</span>
         <span>Updated {formatPlanDate(plan.updatedAt)}</span>
       </div>
