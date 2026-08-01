@@ -1,0 +1,51 @@
+fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
+  bullmqJobId
+  createdAt
+  driverId
+  errorMessage
+  exitCode
+  finishedAt
+  id
+  model
+  startedAt
+  status
+  trigger
+}
+
+query scheduledAgentJobDetail($id: ID!) {
+  scheduledAgentJob(id: $id) {
+    ...ScheduledJobCard
+    createdAt
+    cwd
+    prompt
+    settingsJson
+    timeoutMs
+  }
+  scheduledAgentJobRuns(scheduledAgentJobId: $id, limit: 50) {
+    ...ScheduledJobRunRow
+  }
+}
+
+mutation updateScheduledAgentJob($input: UpdateScheduledAgentJobInputType!) {
+  updateScheduledAgentJob(input: $input) {
+    ...ScheduledJobCard
+  }
+}
+
+mutation setScheduledAgentJobEnabled(
+  $input: SetScheduledAgentJobEnabledInputType!
+) {
+  setScheduledAgentJobEnabled(input: $input) {
+    ...ScheduledJobCard
+  }
+}
+
+mutation runScheduledAgentJobNow($id: ID!) {
+  runScheduledAgentJobNow(id: $id) {
+    ...ScheduledJobRunRow
+  }
+}
+
+mutation deleteScheduledAgentJob($id: ID!) {
+  deleteScheduledAgentJob(id: $id)
+}

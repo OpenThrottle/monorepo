@@ -13,6 +13,7 @@ import { ProjectSkillsModule } from './modules/project-skills/project-skills.mod
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RepositoriesModule } from './modules/repositories/repositories.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module';
 import { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
 import { SkillAvailabilityModule } from './modules/skill-availability/skill-availability.module';
 import { SkillTagsModule } from './modules/skill-tags/skill-tags.module';
@@ -41,6 +42,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RepositoriesModule,
     RolesModule,
+    ScheduledAgentJobsModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
     SkillTagsModule,
@@ -72,6 +74,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     ProjectsModule,
     RepositoriesModule,
     RolesModule,
+    ScheduledAgentJobsModule,
     ServiceAccountsModule,
     SkillAvailabilityModule,
     SkillTagsModule,

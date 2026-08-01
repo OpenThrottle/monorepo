@@ -23,6 +23,8 @@ import { Repository } from './modules/repositories/repository.entity';
 import { RepositoryCheckout } from './modules/repositories/repository-checkout.entity';
 import { ProjectTag } from './modules/tags/project-tag.entity';
 import { Role } from './modules/roles/role.entity';
+import { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity';
+import { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
 import { ServiceAccount } from './modules/service-accounts/service-account.entity';
 import { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
 import { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity';
@@ -86,6 +88,8 @@ export function getTypeOrmOptions(): DataSourceOptions {
       RepositoryCheckout,
       Role,
       RuleApplication,
+      ScheduledAgentJob,
+      ScheduledAgentJobRun,
       ServiceAccount,
       ServiceAccountCredential,
       SkillAvailabilityRule,

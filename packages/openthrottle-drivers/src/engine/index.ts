@@ -19,6 +19,14 @@ import type { DriverLogger } from '../utils/logger.ts';
  */
 export interface RunDriverOptions {
   readonly logger?: DriverLogger;
+  /**
+   * Called by `runDriverAsync` with the child's exit code on a **normal** process close only — it
+   * does NOT fire when the run ends via timeout or abort (those resolve with a `<promise>ERROR</promise>`
+   * sentinel and no exit code). Callers use its absence to distinguish a killed run from a clean exit,
+   * and its value to tell a zero (success) exit from a non-zero (failure) one. The `Promise<string>`
+   * return is unchanged, so existing callers are unaffected.
+   */
+  readonly onExit?: (exitCode: number | null) => void;
 }
 
 /**
@@ -203,6 +211,7 @@ export const runDriverAsync = (
         stdoutLen: stdout.length,
       });
 
+      options.onExit?.(status);
       resolve(result);
     };
 

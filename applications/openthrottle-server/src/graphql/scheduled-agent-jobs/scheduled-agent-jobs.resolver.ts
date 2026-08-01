@@ -1,0 +1,184 @@
+/**
+ * @description GraphQL resolver for scheduled agent jobs: list/get/runs queries and
+ * create/update/delete/setEnabled/runNow/cancelRun mutations. Gated by DB-backed permissions
+ * (settings:read for reads, settings:write for writes) plus an owner check on schedule mutations.
+ * Run logs are NOT here — read them via queueJobLogs/queueJobLogTail keyed by the run's bullmqJobId.
+ * Coexists with (never replaces) the low-level repeatableJobs/removeRepeatableJob queue introspection.
+ */
+
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  CurrentUser,
+  type AuthPrincipal,
+} from '@openthrottle/nestjs-auth';
+import { ForbiddenException, UseGuards } from '@nestjs/common';
+import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import {
+  ScheduledAgentJobObject,
+  ScheduledAgentJobRunObject,
+} from './scheduled-agent-job.object';
+import {
+  CreateScheduledAgentJobInputType,
+  SetScheduledAgentJobEnabledInputType,
+  UpdateScheduledAgentJobInputType,
+} from './scheduled-agent-jobs.input';
+import {
+  toScheduledAgentJobObject,
+  toScheduledAgentJobRunObject,
+} from './scheduled-agent-jobs.mapper';
+
+const ownerUserIdFor = (principal: AuthPrincipal): string | null =>
+  principal.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
+
+@Resolver(() => ScheduledAgentJobObject)
+@UseGuards(GqlPermissionsGuard)
+export class ScheduledAgentJobsResolver {
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly service: ScheduledAgentJobsGraphqlService,
+  ) {}
+
+  @Query(() => [ScheduledAgentJobObject], {
+    description: `All scheduled agent jobs, newest first.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJobs(): Promise<ScheduledAgentJobObject[]> {
+    const jobs = await this.service.list();
+    return jobs.map(toScheduledAgentJobObject);
+  }
+
+  @Query(() => ScheduledAgentJobObject, {
+    description: `One scheduled agent job by id, or null.`,
+    nullable: true,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJob(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<ScheduledAgentJobObject | null> {
+    const job = await this.service.get(id);
+    return job === null ? null : toScheduledAgentJobObject(job);
+  }
+
+  @Query(() => [ScheduledAgentJobRunObject], {
+    description: `Run history for a scheduled agent job, newest first.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJobRuns(
+    @Args('scheduledAgentJobId', { type: () => ID })
+    scheduledAgentJobId: string,
+    @Args('limit', { nullable: true, type: () => Int }) limit?: number,
+  ): Promise<ScheduledAgentJobRunObject[]> {
+    const runs = await this.service.listRuns(scheduledAgentJobId, limit);
+    return runs.map(toScheduledAgentJobRunObject);
+  }
+
+  @Mutation(() => ScheduledAgentJobObject, {
+    description: `Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async createScheduledAgentJob(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => CreateScheduledAgentJobInputType })
+    input: CreateScheduledAgentJobInputType,
+  ): Promise<ScheduledAgentJobObject> {
+    const job = await this.service.create({
+      ...input,
+      ownerUserId: ownerUserIdFor(principal),
+    });
+    return toScheduledAgentJobObject(job);
+  }
+
+  @Mutation(() => ScheduledAgentJobObject, {
+    description: `Update a scheduled agent job (owner only). Re-projects the BullMQ scheduler.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async updateScheduledAgentJob(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => UpdateScheduledAgentJobInputType })
+    input: UpdateScheduledAgentJobInputType,
+  ): Promise<ScheduledAgentJobObject> {
+    await this.assertOwner(input.id, principal);
+    const { id, ...rest } = input;
+    const job = await this.service.update(id, rest);
+    return toScheduledAgentJobObject(job);
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Delete a scheduled agent job and its scheduler (owner only). Returns whether a row was removed.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async deleteScheduledAgentJob(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<boolean> {
+    await this.assertOwner(id, principal);
+    return this.service.delete(id);
+  }
+
+  @Mutation(() => ScheduledAgentJobObject, {
+    description: `Enable or disable a scheduled agent job (owner only); registers/removes its scheduler.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setScheduledAgentJobEnabled(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => SetScheduledAgentJobEnabledInputType })
+    input: SetScheduledAgentJobEnabledInputType,
+  ): Promise<ScheduledAgentJobObject> {
+    await this.assertOwner(input.id, principal);
+    const job = await this.service.setEnabled(input.id, input.enabled);
+    return toScheduledAgentJobObject(job);
+  }
+
+  @Mutation(() => ScheduledAgentJobRunObject, {
+    description: `Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async runScheduledAgentJobNow(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<ScheduledAgentJobRunObject> {
+    await this.assertOwner(id, principal);
+    const run = await this.service.runNow(id);
+    return toScheduledAgentJobRunObject(run);
+  }
+
+  @Mutation(() => ScheduledAgentJobRunObject, {
+    description: `Request cancellation of an in-flight run (durable marker + best-effort in-process abort).`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async cancelScheduledAgentJobRun(
+    @Args('runId', { type: () => ID }) runId: string,
+  ): Promise<ScheduledAgentJobRunObject> {
+    const run = await this.service.cancelRun(runId);
+    return toScheduledAgentJobRunObject(run);
+  }
+
+  /** @description Rejects a mutation on a schedule owned by a different user. Null-owner rows are open. */
+  private async assertOwner(
+    id: string,
+    principal: AuthPrincipal,
+  ): Promise<ScheduledAgentJob> {
+    const job = await this.service.get(id);
+    if (job === null) {
+      throw new ForbiddenException(`Scheduled job ${id} not found`);
+    }
+
+    const callerId = ownerUserIdFor(principal);
+    if (
+      job.ownerUserId !== null &&
+      callerId !== null &&
+      job.ownerUserId !== callerId
+    ) {
+      throw new ForbiddenException(
+        `Scheduled job ${id} is owned by another user`,
+      );
+    }
+
+    return job;
+  }
+}
