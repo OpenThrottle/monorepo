@@ -10,6 +10,10 @@ import {
 } from '@openthrottle/react-router-chat-state';
 import { GlobalProviders } from '@openthrottle/react-router-ui-global';
 import { getDefaultStore } from 'jotai';
+import {
+  clearChatOptionsCache,
+  writeChatOptionsCache,
+} from '~/routing/home/data/chat-options-cache';
 import { useHeaderChatController } from '../useHeaderChatController';
 
 // Return no ws client so the stream subscription never opens a real socket
@@ -34,14 +38,19 @@ describe('useHeaderChatController (header chat surface)', () => {
   let actionSpy: ReturnType<
     typeof vi.fn<(entries: Record<string, FormDataEntryValue>) => void>
   >;
+  let chatOptionsLoader: ReturnType<typeof vi.fn<() => typeof chatOptions>>;
 
   beforeEach(() => {
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
     actionSpy = vi.fn();
+    chatOptionsLoader = vi.fn(() => chatOptions);
+    // Isolate the client-side discovery cache between tests.
+    clearChatOptionsCache();
   });
 
   afterEach(() => {
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
+    clearChatOptionsCache();
   });
 
   const renderHeader = (): RenderResult => {
@@ -57,7 +66,7 @@ describe('useHeaderChatController (header chat surface)', () => {
     const RoutesStub = createRoutesStub([
       { Component: Harness, path: '/' },
       {
-        loader: () => chatOptions,
+        loader: () => chatOptionsLoader(),
         path: '/resources/chat-options',
       },
       {
@@ -111,6 +120,20 @@ describe('useHeaderChatController (header chat surface)', () => {
         expect.objectContaining({ intent: 'start', message: 'Hello agent' }),
       ),
     );
+  });
+
+  test('reuses a warm client cache and skips the chat-options probe', async () => {
+    // A prior mount left a fresh discovery result in the client cache.
+    writeChatOptionsCache(chatOptions);
+
+    const component = renderHeader();
+
+    // Composer is enabled straight from the cache…
+    const input = component.getByLabelText('Message');
+    await waitFor(() => expect(input).not.toBeDisabled());
+
+    // …and the resource-route loader was never hit (no re-probe).
+    expect(chatOptionsLoader).not.toHaveBeenCalled();
   });
 
   test('reconciles a stale persisted model id without crashing', async () => {

@@ -3,6 +3,10 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type {
+  DiscoverAgentClisQuery,
+  DiscoverLocalModelsQuery,
+} from '~/__generated__/graphql';
 import {
   DiscoverAgentClisDocument,
   DiscoverLocalModelsDocument,
@@ -23,6 +27,44 @@ export interface RepositoryOption {
   readonly id: string;
 }
 
+type AgentClisPayload = DiscoverAgentClisQuery['discoverAgentClis'];
+type LocalModelsPayload = DiscoverLocalModelsQuery['discoverLocalModels'];
+
+/**
+ * Fetch the agent-CLI discovery payload once. Returns `null` on failure so each
+ * derived list degrades to `[]` independently and the composer still renders.
+ */
+async function fetchAgentClis(
+  request: Request,
+): Promise<AgentClisPayload | null> {
+  try {
+    const data = await executeGraphqlWithAuth(
+      request,
+      DiscoverAgentClisDocument,
+    );
+
+    return data.discoverAgentClis;
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch the local-model discovery payload once. `null` on failure (see above). */
+async function fetchLocalModels(
+  request: Request,
+): Promise<LocalModelsPayload | null> {
+  try {
+    const data = await executeGraphqlWithAuth(
+      request,
+      DiscoverLocalModelsDocument,
+    );
+
+    return data.discoverLocalModels;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * @description Server-only loader helper: discover locally-running models for the
  * home composer dropdown. Returns an empty list when discovery fails or no local
@@ -32,16 +74,9 @@ export interface RepositoryOption {
 export async function loadDiscoveredModels(
   request: Request,
 ): Promise<ChatModelOption[]> {
-  try {
-    const data = await executeGraphqlWithAuth(
-      request,
-      DiscoverLocalModelsDocument,
-    );
+  const localModels = await fetchLocalModels(request);
 
-    return toChatModelOptions(data.discoverLocalModels);
-  } catch {
-    return [];
-  }
+  return localModels ? toChatModelOptions(localModels) : [];
 }
 
 /**
@@ -52,41 +87,35 @@ export async function loadDiscoveredModels(
 export async function loadAgentClis(
   request: Request,
 ): Promise<ChatModelOption[]> {
-  try {
-    const data = await executeGraphqlWithAuth(
-      request,
-      DiscoverAgentClisDocument,
-    );
+  const agents = await fetchAgentClis(request);
 
-    return toAgentChatOptions(data.discoverAgentClis);
-  } catch {
-    return [];
-  }
+  return agents ? toAgentChatOptions(agents) : [];
 }
 
 /**
- * @description Server-only loader helper: join discovered agent CLIs with
- * discovered local endpoints into "driver × local endpoint/model" composer
- * options (only base-URL-capable drivers). Fetches both discovery queries
- * (server-side cached, 60s TTL); empty on failure so the composer still renders
- * the un-joined driver + endpoint groups.
+ * @description Server-only loader helper for the home composer: fetch BOTH
+ * discovery queries exactly once and derive all three composer lists — local
+ * models, agent CLIs, and the driver×local-endpoint join — from the shared
+ * payloads (previously each query ran twice per home load because the
+ * driver×endpoint join re-fetched them). Each list degrades to `[]`
+ * independently on a discovery gap; concatenation order matches the prior
+ * `[...local, ...agents, ...driverEndpoint]`.
  */
-export async function loadDriverEndpointModels(
+export async function loadComposerModels(
   request: Request,
 ): Promise<ChatModelOption[]> {
-  try {
-    const [agents, localModels] = await Promise.all([
-      executeGraphqlWithAuth(request, DiscoverAgentClisDocument),
-      executeGraphqlWithAuth(request, DiscoverLocalModelsDocument),
-    ]);
+  const [agents, localModels] = await Promise.all([
+    fetchAgentClis(request),
+    fetchLocalModels(request),
+  ]);
 
-    return toDriverEndpointChatOptions(
-      agents.discoverAgentClis,
-      localModels.discoverLocalModels,
-    );
-  } catch {
-    return [];
-  }
+  return [
+    ...(localModels ? toChatModelOptions(localModels) : []),
+    ...(agents ? toAgentChatOptions(agents) : []),
+    ...(agents && localModels
+      ? toDriverEndpointChatOptions(agents, localModels)
+      : []),
+  ];
 }
 
 /**

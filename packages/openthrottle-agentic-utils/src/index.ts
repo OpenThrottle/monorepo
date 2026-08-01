@@ -3,6 +3,7 @@ export * from './data/artwork.ts';
 export * from './data/prompts.ts';
 export * from './types/index.ts';
 export * from './types/model-discovery.ts';
+export * from './utils/cache/index.ts';
 export * from './utils/chat-completions/index.ts';
 export * from './utils/conversation-backend/index.ts';
 export * from './utils/configuration.ts';
