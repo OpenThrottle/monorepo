@@ -90,7 +90,7 @@ describe('TaskDetailRoute Component', () => {
     expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
   });
 
-  test('shows the task status chip and a Plan → Task breadcrumb', () => {
+  test('shows the task status chip in the header', () => {
     // Scope to this render — the beforeEach also mounts a TaskDetailRoute in body.
     const scoped = within(
       renderRoute(buildProps(mockTask, buildPlan('PENDING'))).container,
@@ -102,15 +102,6 @@ describe('TaskDetailRoute Component', () => {
       scoped.getAllByTestId('PlanStatusBadge').length,
     ).toBeGreaterThanOrEqual(1);
     expect(scoped.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
-    // Breadcrumb links back to the plans list and the parent plan.
-    expect(scoped.getByRole('link', { name: 'Plans' })).toHaveAttribute(
-      'href',
-      '/plans',
-    );
-    expect(scoped.getByRole('link', { name: 'Parent Plan' })).toHaveAttribute(
-      'href',
-      '/plans/plan-1',
-    );
   });
 
   test('exposes the Details, Output, Artifacts, and Hooks tabs', () => {

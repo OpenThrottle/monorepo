@@ -13,12 +13,12 @@ export interface PlanDetailRouteHeaderProps {
 }
 
 /**
- * @description Issue-style heading for the plan detail route: a breadcrumb
- * (Plans → Project → Plan, project segment shown only when linked), the plan
- * title, then a metadata row (status badge linking to the filtered list,
- * author→assignee, tags, created/updated). Primary run/lifecycle actions stay
- * in the sibling {@link PlanToolbar}. Extracted from {@link PlanDetailRoute}
- * per component-primitive-shape R6.
+ * @description Issue-style heading for the plan detail route: the plan title,
+ * then a metadata row (status badge linking to the filtered list,
+ * author→assignee, tags, created/updated). Navigation breadcrumbs live in the
+ * global app header now. Primary run/lifecycle actions stay in the sibling
+ * {@link PlanToolbar}. Extracted from {@link PlanDetailRoute} per
+ * component-primitive-shape R6.
  */
 export const PlanDetailRouteHeader = (
   props: PlanDetailRouteHeaderProps,

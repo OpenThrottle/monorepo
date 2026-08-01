@@ -49,37 +49,14 @@ describe('PlanDetailRouteHeader Component', () => {
     expect(getByLabelText('Tag: discovery')).toBeInTheDocument();
   });
 
-  test('breadcrumb links to the plans list when no project is linked', () => {
+  test('links the status badge to the filtered plans list', () => {
     const { getByRole } = renderRoutesStub(
       <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
     );
 
-    expect(getByRole('link', { name: 'Plans' })).toHaveAttribute(
+    expect(getByRole('link', { name: 'In Progress' })).toHaveAttribute(
       'href',
-      '/plans',
-    );
-  });
-
-  test('breadcrumb links to the project when the plan is project-linked', () => {
-    const linkedPlan: PlanDetailsFragment = {
-      ...basePlan,
-      projectRelation: {
-        __typename: 'ProjectObject',
-        id: 'proj-1',
-        name: 'Project One',
-      },
-    };
-    const { getByRole } = renderRoutesStub(
-      <PlanDetailRouteHeader plan={linkedPlan} status="IN_PROGRESS" />,
-    );
-
-    expect(getByRole('link', { name: 'Plans' })).toHaveAttribute(
-      'href',
-      '/plans',
-    );
-    expect(getByRole('link', { name: 'Project One' })).toHaveAttribute(
-      'href',
-      '/projects/proj-1',
+      '/plans?status=IN_PROGRESS',
     );
   });
 });

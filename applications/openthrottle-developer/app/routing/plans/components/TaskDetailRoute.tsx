@@ -83,12 +83,7 @@ export const TaskDetailRoute = (
   // 🔌 Short Circuit
   return (
     <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
-      <TaskDetailRouteHeader
-        planId={effectivePlanId}
-        planTitle={plan?.title ?? 'Plan'}
-        status={task.status ?? ''}
-        title={task.title}
-      />
+      <TaskDetailRouteHeader status={task.status ?? ''} title={task.title} />
 
       <PlanTaskToolbar
         className="bg-card border-card-border rounded-lg border p-4"

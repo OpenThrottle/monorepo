@@ -9,18 +9,16 @@ import {
 import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
 
 export interface TaskDetailRouteHeaderProps {
-  readonly planId: string;
-  readonly planTitle: string;
   readonly status: string;
   readonly title: string;
 }
 
 /**
- * @description Issue-style header for the task detail route: a breadcrumb
- * (Plans → Plan → Task), the task title, and a status chip that stays visible
- * across every tab. Status reuses {@link PlanStatusBadge} (task statuses are a
- * subset of the plan-status labels), falling back to a raw badge for any
- * unmapped value. Extracted from {@link TaskDetailRoute} per
+ * @description Issue-style header for the task detail route: the task title and
+ * a status chip that stays visible across every tab. (Navigation breadcrumbs
+ * live in the global app header now.) Status reuses {@link PlanStatusBadge}
+ * (task statuses are a subset of the plan-status labels), falling back to a raw
+ * badge for any unmapped value. Extracted from {@link TaskDetailRoute} per
  * component-primitive-shape R6.
  */
 export const TaskDetailRouteHeader = (
