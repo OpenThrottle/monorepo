@@ -58,6 +58,9 @@
       "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-rollout/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-rbac/tsconfig.lib.json"
     },
     {

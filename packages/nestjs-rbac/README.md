@@ -22,6 +22,8 @@ Roles and permissions are defined in the package and used by guards (see task â€
 
 | Permission       | Description                 |
 | ---------------- | --------------------------- |
+| `flags:read`     | Read feature flags.         |
+| `flags:write`    | Create/update/delete flags. |
 | `plans:read`     | Read plans.                 |
 | `plans:write`    | Create/update/delete plans. |
 | `settings:read`  | Read app settings.          |
@@ -31,9 +33,9 @@ Roles and permissions are defined in the package and used by guards (see task â€
 
 ### Mapping (role â†’ permissions)
 
-- **admin:** `settings:read`, `settings:write`, `users:read`, `users:write`
-- **user:** `settings:read`, `settings:write`, `users:read`
-- **viewer:** `settings:read`, `users:read`
+- **admin:** `flags:read`, `flags:write`, `settings:read`, `settings:write`, `users:read`, `users:write`
+- **user:** `flags:read`, `settings:read`, `settings:write`, `users:read`
+- **viewer:** `flags:read`, `settings:read`, `users:read`
 - **mcp:** `plans:read`, `plans:write`
 - **workflow-ralph:** `plans:read`, `plans:write`
 

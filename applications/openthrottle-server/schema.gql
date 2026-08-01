@@ -2652,6 +2652,30 @@ type RefreshCheckoutPayloadObject {
   supersededProjectId: String
 }
 
+type FeatureFlagObject {
+  """Whether the flag is on for the current actor."""
+  enabled: Boolean!
+
+  """Flag key."""
+  key: String!
+}
+
+type RolloutFlagObject {
+  createdAt: DateTime!
+  description: String
+
+  """Master switch. When false the flag is off for everyone."""
+  enabled: Boolean!
+  id: ID!
+
+  """Unique flag key (e.g. new-dashboard or billing.invoices)"""
+  key: String!
+
+  """RBAC role names the flag targets. Empty => enabled for everyone."""
+  targetRoles: [String!]!
+  updatedAt: DateTime!
+}
+
 type Query {
   """
   Database health: ok | unconfigured | unreachable. Used by app status page.
@@ -2924,6 +2948,15 @@ type Query {
 
   """Get permission names for the current user"""
   myPermissions: [String!]!
+
+  """List all rollout feature flags"""
+  rolloutFlags: [RolloutFlagObject!]!
+
+  """Get a rollout feature flag by id"""
+  rolloutFlag(id: ID!): RolloutFlagObject
+
+  """Evaluated feature flags for the current actor"""
+  myFeatureFlags: [FeatureFlagObject!]!
 
   """All scheduled agent jobs, newest first."""
   scheduledAgentJobs: [ScheduledAgentJobObject!]!
@@ -3758,6 +3791,15 @@ type Mutation {
 
   """Remove a permission from a role"""
   removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
+
+  """Create a rollout feature flag"""
+  createRolloutFlag(input: CreateRolloutFlagInput!): RolloutFlagObject!
+
+  """Update a rollout feature flag"""
+  updateRolloutFlag(input: UpdateRolloutFlagInput!): RolloutFlagObject
+
+  """Delete a rollout feature flag"""
+  deleteRolloutFlag(id: ID!): Boolean!
 
   """
   Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings.
@@ -4672,6 +4714,37 @@ input RemovePermissionFromRoleInput {
 
   """Role id to remove the permission from"""
   roleId: ID!
+}
+
+input CreateRolloutFlagInput {
+  """Description of what the flag gates."""
+  description: String
+
+  """Master switch. Defaults to off."""
+  enabled: Boolean! = false
+
+  """Unique flag key (kebab/dotted string). Must be unique."""
+  key: String!
+
+  """RBAC role names to target. Empty => enabled for everyone."""
+  targetRoles: [String!]! = []
+}
+
+input UpdateRolloutFlagInput {
+  """Description. Pass null to clear, omit to leave unchanged."""
+  description: String
+
+  """Master switch. Omit to leave unchanged."""
+  enabled: Boolean
+
+  """Flag id to update"""
+  id: ID!
+
+  """Flag key. Omit to leave unchanged; must stay unique."""
+  key: String
+
+  """RBAC role names to target. Omit to leave unchanged."""
+  targetRoles: [String!]
 }
 
 input CreateScheduledAgentJobInputType {

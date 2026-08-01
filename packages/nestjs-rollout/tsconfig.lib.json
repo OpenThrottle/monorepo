@@ -1,0 +1,34 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src"]
+  },
+  "include": ["src/**/*.json", "src/**/*"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
+  ],
+  "references": [
+    {
+      "path": "../nestjs-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-repositories/tsconfig.lib.json"
+    },
+    {
+      "path": "../nestjs-testing/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}
