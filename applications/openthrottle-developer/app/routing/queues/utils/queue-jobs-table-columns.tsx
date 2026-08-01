@@ -5,11 +5,12 @@
  */
 
 import * as React from 'react';
-import { Badge, BadgeProps, Button } from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import type { GetQueueQuery } from '~/__generated__/graphql';
+import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 
@@ -39,36 +40,12 @@ export function buildQueueJobsTableColumns(
       cell: ({ row }) => {
         const job = row.original;
 
-        let color: BadgeProps['color'] = 'default';
-
-        switch (job.state) {
-          case 'active':
-            color = 'yellow';
-            break;
-          case 'completed':
-            color = 'green';
-            break;
-          case 'delayed':
-            color = 'amber';
-            break;
-          case 'failed':
-            color = 'red';
-            break;
-          default:
-            color = 'default';
-            break;
-        }
-
         return (
           <div className="px-3 py-2">
-            <Badge
-              color={color}
+            <QueueStateBadge
               data-testid={`job-state-${job.id}`}
-              // size="sm"
-              // variant={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}
-            >
-              {job.state}
-            </Badge>
+              state={job.state}
+            />
           </div>
         );
       },
@@ -121,7 +98,7 @@ export function buildQueueJobsTableColumns(
         <div className="px-3 py-2">
           <div className="text-sm font-medium">Job</div>
           <p className="text-muted-foreground mt-0.5 text-xs font-normal">
-            BullMQ id and name
+            Job id and name
           </p>
         </div>
       ),

@@ -1,9 +1,13 @@
 import * as React from 'react';
-import { Card, DataTable } from '@openthrottle/react-router-shadcn';
+import { Card, DataTable, toast } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
+import { useFetcher } from 'react-router';
 import type { QueueCardFragment } from '~/__generated__/graphql';
-import { QUEUES_TABLE_COLUMNS } from '~/routing/queues/data/queues-table-columns';
+import {
+  buildQueuesTableColumns,
+  type QueueControlIntent,
+} from '~/routing/queues/data/queues-table-columns';
 import { queueRowId } from '~/routing/queues/utils/queues-table';
 
 export interface QueuesTableProps {
@@ -11,10 +15,31 @@ export interface QueuesTableProps {
   queues: QueueCardFragment[];
 }
 
+/** Action-result payload from the `/queues` route, surfaced as a toast. */
+export interface QueuesTableActionData {
+  error?: string;
+  paused?: string;
+  resumed?: string;
+}
+
 export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   const { className, queues } = props;
 
   // Hooks
+  const fetcher = useFetcher<QueuesTableActionData>();
+  const handledRef = React.useRef<QueuesTableActionData | null>(null);
+
+  const submitControl = React.useCallback(
+    (queueName: string, intent: QueueControlIntent) => {
+      fetcher.submit({ intent, queueName }, { method: 'post' });
+    },
+    [fetcher],
+  );
+
+  const columns = React.useMemo(
+    () => buildQueuesTableColumns(submitControl),
+    [submitControl],
+  );
 
   // Setup
 
@@ -23,6 +48,24 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) {
+      return;
+    }
+    if (handledRef.current === fetcher.data) {
+      return;
+    }
+    handledRef.current = fetcher.data;
+
+    const data = fetcher.data;
+    if (data.error != null && data.error !== '') {
+      toast.error(data.error);
+    } else if (data.paused != null && data.paused !== '') {
+      toast.success(`Paused ${data.paused}`);
+    } else if (data.resumed != null && data.resumed !== '') {
+      toast.success(`Resumed ${data.resumed}`);
+    }
+  }, [fetcher.state, fetcher.data]);
 
   // 🔌 Short Circuit
   if (queues.length === 0) {
@@ -44,7 +87,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
       data-testid="QueuesTable"
     >
       <DataTable<QueueCardFragment, string | number | undefined>
-        columns={QUEUES_TABLE_COLUMNS}
+        columns={columns}
         data={queues}
         getRowId={queueRowId}
       />

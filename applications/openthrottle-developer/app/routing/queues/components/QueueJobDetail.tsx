@@ -1,17 +1,18 @@
 import * as React from 'react';
-import { Badge, Button, toast } from '@openthrottle/react-router-shadcn';
+import { Button, toast } from '@openthrottle/react-router-shadcn';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
 } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { QueueCorrelationAndSupport } from '~/routing/queues/components/QueueCorrelationAndSupport';
+import { QueueJobLogConsole } from '~/routing/queues/components/QueueJobLogConsole';
 import { QueueJobMetrics } from '~/routing/queues/components/QueueJobMetrics';
 import { QueueJobPayload } from '~/routing/queues/components/QueueJobPayload';
 import { QueueJobResults } from '~/routing/queues/components/QueueJobResults';
 import { QueueJobTimestamps } from '~/routing/queues/components/QueueJobTimestamps';
+import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
 import { useFetcher, useRevalidator } from 'react-router';
-import { JOB_STATE_BADGE_VARIANT } from '~/routing/queues/data/job-state-badge-variant';
 import type {
   GetQueueJobDetailsQuery,
   QueueJobDetailCancelPlanRunMutation,
@@ -126,14 +127,18 @@ export const QueueJobDetail = (
     <div className="space-y-6" data-testid="QueueJobDetail">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge color={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}>
-            {job.state}
-          </Badge>
+          <QueueStateBadge state={job.state} />
           {job.name != null && job.name !== '' && (
             <span className="text-lg leading-tight font-medium">
               {job.name}
             </span>
           )}
+          <span
+            className="text-muted-foreground font-mono text-xs"
+            title="Job id"
+          >
+            #{job.id}
+          </span>
         </div>
         <div className="flex flex-wrap gap-2">
           {canRetry && (
@@ -172,6 +177,12 @@ export const QueueJobDetail = (
         </div>
       )}
 
+      <QueueJobLogConsole
+        jobId={job.id}
+        jobState={job.state}
+        queueName={queueName}
+      />
+
       <QueueCorrelationAndSupport job={job} queueName={queueName} />
       <QueueJobPayload job={job} />
       <div className="grid gap-4 md:grid-cols-2">
@@ -179,14 +190,6 @@ export const QueueJobDetail = (
         <QueueJobMetrics job={job} />
       </div>
       <QueueJobResults job={job} />
-
-      <p className="text-muted-foreground text-xs">
-        Retry calls GraphQL{' '}
-        <code className="bg-muted rounded px-1">retryJob</code> (failed jobs
-        only). Cancel calls{' '}
-        <code className="bg-muted rounded px-1">cancelPlanRun</code> for the
-        plan id in the payload — same behavior as the plan toolbar stop control.
-      </p>
     </div>
   );
 };

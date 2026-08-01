@@ -419,6 +419,31 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+export type CleanQueueInput = {
+  /** Must be true to confirm this destructive action. */
+  confirm: Scalars['Boolean']['input'];
+  /** Only remove jobs finished at least this many milliseconds ago (0 = any age). */
+  graceMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Maximum number of jobs to remove (0 = no limit). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Queue name (e.g. plans). */
+  queueName: Scalars['String']['input'];
+  /** Which finished jobs to remove: "completed" or "failed" only. */
+  state: Scalars['String']['input'];
+};
+
+export type CleanQueueResultObject = {
+  __typename?: 'CleanQueueResultObject';
+  /** Error message when success is false. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Queue name when success is true. */
+  queueName?: Maybe<Scalars['String']['output']>;
+  /** Number of jobs removed (0 when success is false). */
+  removedCount: Scalars['Int']['output'];
+  /** Whether the clean was accepted. */
+  success: Scalars['Boolean']['output'];
+};
+
 /** Clone a git repository into the managed checkout root and register it. */
 export type CloneRepositoryInput = {
   /** Git clone URL (https or ssh). Cloned with ambient host credentials (SSH agent / gh); OT stores no secrets. */
@@ -1065,6 +1090,8 @@ export type JobsResultObject = {
   hasNext: Scalars['Boolean']['output'];
   /** Paginated list of jobs for the queue. */
   jobs: Array<JobObject>;
+  /** Total jobs across the requested states (state-filtered), for accurate pagination. */
+  total: Scalars['Int']['output'];
 };
 
 export type LastActivityCommitPartObject = {
@@ -1334,6 +1361,8 @@ export type Mutation = {
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed. */
+  cleanQueue: CleanQueueResultObject;
   /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
   cloneRepository: AddWorkspaceFolderPayloadObject;
   /** Create an agent conversation for the authenticated human user. */
@@ -1425,6 +1454,8 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
+  /** Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue. */
+  pauseQueue: QueueControlResultObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
@@ -1460,6 +1491,8 @@ export type Mutation = {
   reorderPlanTasks: Array<TaskObject>;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
+  /** Resume a paused queue so workers pick up jobs again. */
+  resumeQueue: QueueControlResultObject;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
   retryJob: RetryJobResultObject;
   /** Revoke a service account credential (admin, human only). */
@@ -1597,6 +1630,10 @@ export type MutationCancelConversationStreamArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCleanQueueArgs = {
+  input: CleanQueueInput;
 };
 
 export type MutationCloneRepositoryArgs = {
@@ -1759,6 +1796,10 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
+export type MutationPauseQueueArgs = {
+  input: QueueControlInput;
+};
+
 export type MutationPromoteTaskToPlanArgs = {
   input: PromoteTaskToPlanInput;
 };
@@ -1829,6 +1870,10 @@ export type MutationReorderPlanTasksArgs = {
 
 export type MutationRestoreCustomPromptArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationResumeQueueArgs = {
+  input: QueueControlInput;
 };
 
 export type MutationRetryJobArgs = {
@@ -2866,6 +2911,21 @@ export type QueryWorkspaceLocalRepositoryArgs = {
 
 export type QueryWorkspaceRepositoryArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueueControlInput = {
+  /** Queue name (e.g. plans). */
+  queueName: Scalars['String']['input'];
+};
+
+export type QueueControlResultObject = {
+  __typename?: 'QueueControlResultObject';
+  /** Error message when success is false. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Queue name when success is true. */
+  queueName?: Maybe<Scalars['String']['output']>;
+  /** Whether the control action was accepted. */
+  success: Scalars['Boolean']['output'];
 };
 
 export type QueueDetailsInput = {

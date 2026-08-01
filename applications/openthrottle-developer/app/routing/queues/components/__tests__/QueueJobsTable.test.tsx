@@ -107,7 +107,7 @@ describe('QueueJobsTable Component', () => {
     component = renderTable(props);
 
     expect(component.getByTestId('job-state-job-with-plan')).toHaveTextContent(
-      'completed',
+      'Completed',
     );
     expect(
       component.getByTestId('queue-jobs-table-plan-job-with-plan'),
@@ -131,7 +131,7 @@ describe('QueueJobsTable Component', () => {
     component = renderTable(props);
 
     expect(component.getByTestId('job-state-job-failed-1')).toHaveTextContent(
-      'failed',
+      'Failed',
     );
     expect(
       component.getByTestId('job-failedReason-job-failed-1'),
