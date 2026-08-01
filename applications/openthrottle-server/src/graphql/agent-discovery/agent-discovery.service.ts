@@ -20,11 +20,15 @@ interface CacheEntry {
 @Injectable()
 export class AgentDiscoveryService {
   private cache: CacheEntry | null = null;
+  private inFlight: Promise<AgentCliDiscoveryResult> | null = null;
 
   constructor(private readonly logger: LoggerService) {}
 
   /**
    * Probe the allowlisted agent CLIs, returning a cached snapshot within the TTL.
+   * Concurrent callers that miss the cache share a single in-flight scan rather
+   * than each launching their own full CLI sweep (parity with
+   * `NestjsModelDiscoveryService`).
    */
   async discover(): Promise<AgentCliDiscoveryResult> {
     const now = Date.now();
@@ -32,6 +36,24 @@ export class AgentDiscoveryService {
       return this.cache.result;
     }
 
+    if (this.inFlight !== null) {
+      return this.inFlight;
+    }
+
+    const scan = this.scan(now);
+    this.inFlight = scan;
+
+    try {
+      return await scan;
+    } finally {
+      if (this.inFlight === scan) {
+        this.inFlight = null;
+      }
+    }
+  }
+
+  /** Run a fresh CLI sweep, stamp `scannedAt`, and refresh the cache. */
+  private async scan(now: number): Promise<AgentCliDiscoveryResult> {
     const result = await discoverAgentClis({
       scannedAt: new Date().toISOString(),
     });
