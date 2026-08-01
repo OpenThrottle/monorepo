@@ -1,3 +1,4 @@
+import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import type * as React from 'react';
 
 /** Who authored a chat message in the thread. */
@@ -73,29 +74,15 @@ export interface ChatTurnToolEvent {
 
 /**
  * Normalized, best-effort token accounting for a single turn (or a cumulative
- * session total). Every field is optional: backends report wildly different
- * subsets, and an absent field means "not reported by this backend" — never
- * zero. Produced by {@link normalizeUsage} from a backend's raw metadata and
- * accumulated by {@link sumUsage}.
+ * session total). Canonical shape now lives in the isomorphic
+ * `@openthrottle/agentic-token-usage` leaf as {@link NormalizedTokenUsage};
+ * `ChatTokenUsage` is a backward-compatible alias so existing chat import sites
+ * keep working. Produced by `normalizeUsage` from a backend's raw metadata and
+ * accumulated by `sumUsage` (both re-exported from `./usage`).
  *
  * @public
  */
-export interface ChatTokenUsage {
-  /** Tokens served from the prompt cache (claude `cache_read_input_tokens`, opencode `cache.read`). */
-  readonly cacheReadTokens?: number;
-  /** Tokens written to the prompt cache (claude `cache_creation_input_tokens`, opencode `cache.write`). */
-  readonly cacheWriteTokens?: number;
-  /** Reported dollar cost of the turn, when the backend prices it (claude `totalCostUsd`, opencode `cost`). */
-  readonly costUsd?: number;
-  /** Prompt/input tokens. */
-  readonly inputTokens?: number;
-  /** Model identifier the usage is attributed to, when the backend names it. */
-  readonly model?: string;
-  /** Completion/output tokens. */
-  readonly outputTokens?: number;
-  /** Total tokens: the backend's explicit total, else the sum of input + output when either is present. */
-  readonly totalTokens?: number;
-}
+export type ChatTokenUsage = NormalizedTokenUsage;
 
 /** Terminal token-accounting / result summary for the turn. @public */
 export interface ChatTurnUsageEvent {

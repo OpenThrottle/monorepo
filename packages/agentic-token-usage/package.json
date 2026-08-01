@@ -4,28 +4,22 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {
-    "@openthrottle/agentic-token-usage": "workspace:^",
-    "@openthrottle/react-router-markdown": "workspace:^",
-    "@openthrottle/react-router-shadcn": "workspace:^",
-    "@openthrottle/react-router-ui": "workspace:^",
-    "clsx": "catalog:"
-  },
-  "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
+  "dependencies": {},
+  "description": "Isomorphic (Node + browser safe) canonical token-usage normalization: folds every agent-CLI backend's heterogeneous usage metadata into one NormalizedTokenUsage shape. Shared by the server persistence path and the chat UI so the SAME normalization runs everywhere.",
+  "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
+  "name": "@openthrottle/agentic-token-usage",
   "module": "./src/index.ts",
-  "name": "@openthrottle/react-router-chat",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:@openthrottle/react-router-chat",
+      "name:@openthrottle/agentic-token-usage",
       "production:true",
       "publish:false",
-      "technology:react",
-      "technology:react-router",
+      "technology:nodejs",
       "type:package"
     ],
     "targets": {
@@ -36,11 +30,7 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "react-router": "catalog:"
-  },
+  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",
@@ -62,7 +52,6 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "style": "./src/index.css",
   "type": "module",
   "types": "./src/index.ts",
   "version": "1.0.0"

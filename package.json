@@ -53,6 +53,7 @@
     "@nestjs/throttler": "catalog:",
     "@nestjs/typeorm": "catalog:",
     "@nestjs/websockets": "catalog:",
+    "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-agentic-workflow": "workspace:^",
     "@openthrottle/nestjs-auth": "workspace:^",
