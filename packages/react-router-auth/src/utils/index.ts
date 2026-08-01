@@ -111,3 +111,37 @@ export function getAuthTokenFromCookie(cookieHeader: string): string | null {
 export function getClearAuthCookieHeader(options?: AuthCookieOptions): string {
   return `${AUTH_COOKIE_NAME}=; ${buildAuthCookieAttributes(0, options)}`;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+/**
+ * @description Cheap pre-flight check: true when a JWT's `exp` claim is in the
+ * past, or the token is structurally unparseable. The signature is NOT verified
+ * (the API still verifies it on every request) — this only lets the auth
+ * middleware redirect an expired session to login instead of letting loaders
+ * fire authenticated requests that 401 (which, in a deferred loader, surface as
+ * an unhandled rejection and crash the SSR server). A token with no `exp` claim
+ * is treated as non-expiring here and deferred to the API.
+ */
+export function isJwtExpired(token: string): boolean {
+  const parts = token.split('.');
+
+  if (parts.length !== 3 || parts[1] === undefined) {
+    return true;
+  }
+
+  let payload: unknown;
+
+  try {
+    payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+  } catch {
+    return true;
+  }
+
+  if (!isRecord(payload) || typeof payload.exp !== 'number') {
+    return false;
+  }
+
+  return payload.exp <= Math.floor(Date.now() / 1000);
+}
