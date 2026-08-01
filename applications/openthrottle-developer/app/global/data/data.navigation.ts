@@ -185,8 +185,9 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/logs',
       },
       {
+        beta: true,
         children: 'MCP',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: true, // 🔴 🟠 🟡 🟢
         icon: BlocksIcon,
         to: '/settings/mcp',
       },
