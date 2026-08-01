@@ -3261,6 +3261,26 @@ type Query {
   """
   skillTagVocabulary: SkillTagVocabularyResult!
 
+  """
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
+  """
+  skillUsage(
+    """Start date (inclusive), YYYY-MM-DD"""
+    start: String!
+
+    """End date (inclusive), YYYY-MM-DD"""
+    end: String!
+
+    """Restrict to ours or third-party; omit for both."""
+    scope: String
+
+    """Restrict to one git branch; omit for all branches."""
+    gitBranch: String
+
+    """Restrict to one working directory (project path proxy); omit for all."""
+    cwd: String
+  ): SkillUsageResultObject!
+
   """The authenticated user's tag→action rules, oldest first."""
   tagActionRules: [TagActionRuleObject!]!
 
@@ -3302,28 +3322,6 @@ type Query {
   List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending
   """
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
-
-  """
-  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
-  """
-  skillUsage(
-    """Start date (inclusive), YYYY-MM-DD"""
-    start: String!
-
-    """End date (inclusive), YYYY-MM-DD"""
-    end: String!
-
-    """Restrict to ours or third-party; omit for both."""
-    scope: String
-
-    """Restrict to one git branch; omit for all branches."""
-    gitBranch: String
-
-    """
-    Restrict to one working directory (project path proxy); omit for all.
-    """
-    cwd: String
-  ): SkillUsageResultObject!
 
   """
   Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals.
