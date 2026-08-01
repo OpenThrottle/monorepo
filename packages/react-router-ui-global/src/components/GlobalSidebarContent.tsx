@@ -80,6 +80,10 @@ export const GlobalSidebarContent = (
       return null;
     }
 
+    if (item.beta || !isBetaEnabled) {
+      return null;
+    }
+
     return (
       <SidebarMenuItem
         className="m-0"
