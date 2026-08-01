@@ -6,9 +6,14 @@ otherwise fight the ports the main checkout already binds (`server` on `6021`,
 **10-port block in the 7000 range**, so any number of them can run alongside the
 main checkout.
 
-This is wired into the [WorktreeCreate hook](git-worktree-setup-timing.md):
-`scripts/create_worktree.sh` allocates the block, and
-`scripts/setup_worktree.sh` rewrites the worktree's `.env` files onto it.
+This is wired into the **tool-agnostic worktree entrypoint**
+([setup timing](git-worktree-setup-timing.md)): `scripts/create_worktree.sh`
+allocates the block, and `scripts/setup_worktree.sh` rewrites the worktree's
+`.env` files onto it. Creating a worktree any of the three ways —
+`pnpm worktree:new <name>`, the Claude `WorktreeCreate` hook, or Cursor — runs
+the same path, and a plain `git worktree add` self-heals on first `pnpm nx run …:dev`
+via `scripts/ensure_worktree.sh`. See
+[git-worktree-setup-timing.md](git-worktree-setup-timing.md) for the full flow.
 
 ## What gets offset (and what doesn't)
 
@@ -133,11 +138,12 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 ## Files
 
 - `scripts/worktree_ports.sh` — allocation helper (sourced, not executed).
-- `scripts/create_worktree.sh` — resolves + exports the block after creating the worktree.
+- `scripts/create_worktree.sh` — the single create+provision entrypoint (`pnpm worktree:new`, Claude hook, Cursor); resolves + exports the block after creating the worktree.
+- `scripts/ensure_worktree.sh` — lazy self-heal guard; provisions a plain `git worktree add` on first `dev`.
 - `scripts/setup_worktree.sh` — rewrites `.env`, writes the compose vars, generates the override.
 - `docker-compose.yml` — `container_name` values parametrized with `OT_CONTAINER_PREFIX`.
 
 ## See also
 
-- [git-worktree-setup-timing.md](git-worktree-setup-timing.md) — the WorktreeCreate hook and setup ordering.
+- [git-worktree-setup-timing.md](git-worktree-setup-timing.md) — the single entrypoint, self-heal guard, and setup ordering.
 - [local-services-and-ports.md](local-services-and-ports.md) — the canonical `6010`–`6025` port map.

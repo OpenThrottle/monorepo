@@ -2,5 +2,9 @@
 {
   "cursor.worktreeCleanupIntervalHours": 72,
   "cursor.worktreeMaxCount": 20,
-  "setup-worktree": ["cwd=$WORKTREE_PATH", "./scripts/setup_worktree.sh"]
+  // Cursor creates the worktree itself, then runs this from cwd=$WORKTREE_PATH.
+  // create_worktree.sh with no name arg + no stdin payload detects it is inside
+  // a linked worktree and provisions it in place — the same entrypoint the Claude
+  // hook and `pnpm worktree:new` use, so the tools can't drift.
+  "setup-worktree": ["cwd=$WORKTREE_PATH", "./scripts/create_worktree.sh"]
 }

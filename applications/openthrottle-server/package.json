@@ -101,6 +101,10 @@
       "dev": {
         "continuous": true,
         "dependsOn": [
+          {
+            "target": "ensure-worktree",
+            "projects": "monorepo"
+          },
           "^dev"
         ],
         "executor": "nx:run-commands",

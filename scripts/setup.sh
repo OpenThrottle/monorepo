@@ -39,6 +39,13 @@ pnpm database:start
 pnpm database:migrate
 pnpm database:bootstrap-service-accounts
 
+# 4b. Seed the default local login user (FullThrottle2026!) so a freshly set-up
+#     machine can log into the developer/admin apps without a manual out-of-band
+#     step. Idempotent: an existing user keeps their password. This runs on the
+#     primary checkout only (setup.sh is a primary-checkout script); worktrees
+#     share this Postgres, so they inherit the seeded user and must NOT re-seed.
+pnpm database:bootstrap-default-user
+
 echo "🤖 setup.sh complete: run "
 
 # Echo we're done and the run command to start things up
