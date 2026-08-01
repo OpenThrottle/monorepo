@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { act, render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -148,11 +148,12 @@ describe('ChatThread Component', () => {
     });
   });
 
-  // Auto-scroll guards. jsdom has no layout engine and no real scrollIntoView,
+  // Auto-scroll behavior. jsdom has no layout engine and no real scrollIntoView,
   // so we can't assert pixel positions (see Recharts/jsdom caveat). Instead we
-  // spy on scrollIntoView and assert the effect's guards: skip the no-op scroll
-  // on an empty thread, and jump to the bottom on the first non-empty paint.
-  describe('auto-scroll effect guards', () => {
+  // spy on scrollIntoView and drive the message prop through a stateful harness
+  // (so the component — and its refs — persist across updates) to assert the
+  // event-driven triggers: user-send, first assistant token, and the guards.
+  describe('auto-scroll behavior', () => {
     let scrollIntoView: ReturnType<typeof vi.fn<Element['scrollIntoView']>>;
 
     beforeEach(() => {
@@ -164,6 +165,37 @@ describe('ChatThread Component', () => {
       vi.restoreAllMocks();
     });
 
+    /**
+     * Render {@link ChatThread} inside a harness whose `messages` are stateful,
+     * so a single mounted instance survives updates and its scroll-tracking refs
+     * carry over between renders (a fresh render would reset them).
+     */
+    const renderControllable = (
+      initial: readonly ChatMessage[],
+    ): {
+      readonly result: RenderResult;
+      readonly update: (next: readonly ChatMessage[]) => void;
+    } => {
+      const setter: { current: (next: readonly ChatMessage[]) => void } = {
+        current: () => {},
+      };
+      // eslint-disable-next-line react/no-multi-comp -- test-local stateful harness
+      const Harness = (): React.ReactElement => {
+        const [messages, setMessages] =
+          React.useState<readonly ChatMessage[]>(initial);
+        setter.current = setMessages;
+        return <ChatThread messages={messages} />;
+      };
+      const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
+      const result = render(<RoutesStub />);
+      const update = (next: readonly ChatMessage[]): void => {
+        act(() => {
+          setter.current(next);
+        });
+      };
+      return { result, update };
+    };
+
     test('should not scroll when the thread is empty', () => {
       renderThread({ messages: [] });
       expect(scrollIntoView).not.toHaveBeenCalled();
@@ -174,6 +206,104 @@ describe('ChatThread Component', () => {
         messages: [{ body: 'Hello', id: '1', role: 'user' }],
       });
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto' });
+    });
+
+    test('should scroll when a new user message is appended', () => {
+      const { update } = renderControllable([
+        { body: 'Earlier reply', id: 'a0', role: 'assistant' },
+      ]);
+      // First paint already jumped; only assert the append-driven scroll.
+      scrollIntoView.mockClear();
+
+      update([
+        { body: 'Earlier reply', id: 'a0', role: 'assistant' },
+        { body: 'New question', id: 'u1', role: 'user' },
+      ]);
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+    });
+
+    test('should scroll once when the assistant streams its first token', () => {
+      const { update } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: '', id: 'a1', pending: true, role: 'assistant' },
+      ]);
+      scrollIntoView.mockClear();
+
+      // First token: empty/pending → non-empty body on the same assistant id.
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Hel', id: 'a1', role: 'assistant' },
+      ]);
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+    });
+
+    test('should not scroll again as the same assistant turn keeps streaming', () => {
+      const { update } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: '', id: 'a1', pending: true, role: 'assistant' },
+      ]);
+      scrollIntoView.mockClear();
+
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Hel', id: 'a1', role: 'assistant' },
+      ]);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+
+      // Subsequent tokens grow the body but keep the id → no further scroll.
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Hello world, here is more', id: 'a1', role: 'assistant' },
+      ]);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+
+    test('should suppress the first-response scroll when scrolled up, but still scroll on user-send', () => {
+      const { result, update } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: '', id: 'a1', pending: true, role: 'assistant' },
+      ]);
+      scrollIntoView.mockClear();
+
+      // Simulate the user scrolling up past the near-bottom threshold. jsdom has
+      // no layout, so stub the container geometry, then fire a scroll event to
+      // update the internal near-bottom ref.
+      const container = within(result.container).getByTestId('ChatThread');
+      Object.defineProperty(container, 'scrollHeight', {
+        configurable: true,
+        value: 1000,
+      });
+      Object.defineProperty(container, 'clientHeight', {
+        configurable: true,
+        value: 300,
+      });
+      Object.defineProperty(container, 'scrollTop', {
+        configurable: true,
+        value: 0,
+      });
+      act(() => {
+        container.dispatchEvent(new Event('scroll'));
+      });
+
+      // First assistant token while scrolled up → suppressed.
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Reply', id: 'a1', role: 'assistant' },
+      ]);
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      // A new user message still yanks to the bottom regardless of scroll state.
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Reply', id: 'a1', role: 'assistant' },
+        { body: 'Follow-up', id: 'u2', role: 'user' },
+      ]);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
     });
   });
 });
