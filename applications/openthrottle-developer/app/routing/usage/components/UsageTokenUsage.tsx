@@ -151,11 +151,7 @@ export const UsageTokenUsage = (
 
       <p className="text-muted-foreground mt-3 text-xs">
         {formatTokenCount(totals.totalTokens)} tokens across {totals.turnCount}{' '}
-        turn{totals.turnCount === 1 ? '' : 's'}
-        {totals.cacheWriteTokens > 0
-          ? ` · ${formatTokenCount(totals.cacheWriteTokens)} cache-write`
-          : ''}
-        .
+        turn{totals.turnCount === 1 ? '' : 's'}.
       </p>
 
       {groups.length === 0 ? (
