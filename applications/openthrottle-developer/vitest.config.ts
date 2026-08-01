@@ -1,5 +1,5 @@
 import { ConfigEnv, loadEnv } from 'vite';
-import { configDefaults, defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
 /**
  * @description Nx may set NODE_ENV=production for the test task; that pulls in
@@ -30,32 +30,23 @@ export default (config: ConfigEnv) => {
         NODE_ENV: 'test',
       },
       environment: 'jsdom',
-      /**
-       * @description Quarantined specs. Both import the heaviest plan-detail
-       * route/component graph, and under the memory-limited CI runner that import
-       * OOM-kills the Vitest worker at COLLECTION time — reported as `❯ … (0 test)`
-       * with no stack (a silent container SIGKILL, not a V8 heap error). It is a
-       * memory-ceiling problem, not a logic bug: both pass locally and in isolation.
-       * `describe.skip` does NOT help — a skipped file is still imported; only
-       * `exclude` keeps the file from being loaded at all. Restore these once the
-       * suite is sharded (fewer files/job -> no OOM): OT plan e448a51d.
-       */
-      exclude: [
-        ...configDefaults.exclude,
-        '**/PlanWorkflowRunTransparency.test.tsx',
-        '**/plans.$planId._index.subscription-revalidation.test.tsx',
-      ],
       globals: true,
       include: ['**/*.test.(ts|tsx)'],
       /**
-       * @description `maxWorkers` caps the number of concurrent worker processes,
-       * bounding peak memory (peak ≈ maxWorkers × per-file working set) — the
-       * direct anti-OOM lever. In Vitest 4 the per-pool `poolOptions.forks.maxForks`
-       * knob was removed in favour of this top-level cap. Deliberately do NOT raise
-       * `--max-old-space-size` — that lets each fork grow before GC and fights the
-       * container memory limit.
+       * @description `maxWorkers` caps concurrent worker processes. This is the
+       * largest suite in the workspace and CI runs every project's lint/typecheck/
+       * test on ONE shared 4-vCPU box via `nx ... --parallel`, so several app
+       * suites + tsc typechecks run at once. Per-file heap here is modest (~355MB
+       * peak, no accumulation — measured), so the developer suite alone is fine;
+       * the OOM-kills come from box-wide memory contention, and this suite's plan-
+       * detail workers are the biggest/most-frequent victims (reported as
+       * `❯ … (0 test)`, a silent container SIGKILL). Capping to 2 (not the 4-vCPU
+       * default) roughly halves this suite's contribution to peak box memory.
+       * Vitest 4 removed the per-pool `poolOptions.forks.maxForks` knob; the cap is
+       * this top-level `maxWorkers`. Proper fix (shard across boxes) is OT plan
+       * e448a51d; do NOT raise `--max-old-space-size` — it fights the box limit.
        */
-      maxWorkers: 4,
+      maxWorkers: 2,
       /**
        * @description `forks` runs each test file in a fresh child process and
        * reclaims its memory on teardown between files. We moved off `vmForks`
