@@ -55,6 +55,34 @@ const tokenUsageResponse = {
   },
 };
 
+const skillUsageResponse = {
+  skillUsage: {
+    byDay: [
+      {
+        date: '2026-01-01',
+        oursCount: 1,
+        thirdPartyCount: 0,
+        totalCount: 1,
+      },
+    ],
+    byScope: [{ count: 1, scope: 'ours' }],
+    bySkill: [
+      {
+        abandonedCount: 0,
+        avgDurationMs: null,
+        count: 1,
+        errorCount: 0,
+        outcomeCount: 0,
+        scope: 'ours',
+        skillName: 'ot-plans',
+        successCount: 0,
+      },
+    ],
+    filterOptions: { cwds: [], gitBranches: [] },
+    totalCount: 1,
+  },
+};
+
 const runLoader = (url: string) => {
   const request = new Request(url);
 
@@ -70,14 +98,15 @@ const runLoader = (url: string) => {
 describe('routes/usage._index.tsx', () => {
   describe('loader', () => {
     beforeEach(() => {
-      // Two calls per load: daily stats first, token usage second.
+      // Three parallel calls: daily stats, token usage, skill usage.
       mockExecuteGraphqlWithAuth
         .mockReset()
         .mockResolvedValueOnce(dailyStatsResponse)
-        .mockResolvedValueOnce(tokenUsageResponse);
+        .mockResolvedValueOnce(tokenUsageResponse)
+        .mockResolvedValueOnce(skillUsageResponse);
     });
 
-    test('returns daily stats + token usage for a 30-day window (all providers)', async () => {
+    test('returns daily stats + token usage + skill usage for a 30-day window', async () => {
       const result = await runLoader('http://localhost/usage');
 
       expect(result.dailyStats).toEqual(
@@ -85,12 +114,16 @@ describe('routes/usage._index.tsx', () => {
       );
       expect(result.rangeDays).toBe(30);
       expect(result.selectedProvider).toBeNull();
+      expect(result.selectedSkillScope).toBeNull();
+      expect(result.selectedSkillGitBranch).toBeNull();
+      expect(result.selectedSkillCwd).toBeNull();
       expect(result.tokenUsageItems).toEqual(
         tokenUsageResponse.tokenUsage.items,
       );
       expect(result.tokenUsageTotals).toEqual(
         tokenUsageResponse.tokenUsage.totals,
       );
+      expect(result.skillUsage).toEqual(skillUsageResponse.skillUsage);
 
       // Token usage is queried on YYYY-MM-DD with no provider filter.
       expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
@@ -100,6 +133,20 @@ describe('routes/usage._index.tsx', () => {
         expect.objectContaining({
           end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
           provider: null,
+          start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        }),
+      );
+
+      // Skill usage is queried on YYYY-MM-DD with no scope/branch/cwd filter.
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        3,
+        expect.any(Request),
+        expect.anything(),
+        expect.objectContaining({
+          cwd: null,
+          end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+          gitBranch: null,
+          scope: null,
           start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         }),
       );
@@ -116,6 +163,26 @@ describe('routes/usage._index.tsx', () => {
         expect.any(Request),
         expect.anything(),
         expect.objectContaining({ provider: 'opencode' }),
+      );
+    });
+
+    test('forwards skillScope/skillBranch/skillCwd to the skill usage query', async () => {
+      const result = await runLoader(
+        'http://localhost/usage?skillScope=ours&skillBranch=main&skillCwd=%2Frepo',
+      );
+
+      expect(result.selectedSkillScope).toBe('ours');
+      expect(result.selectedSkillGitBranch).toBe('main');
+      expect(result.selectedSkillCwd).toBe('/repo');
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        3,
+        expect.any(Request),
+        expect.anything(),
+        expect.objectContaining({
+          cwd: '/repo',
+          gitBranch: 'main',
+          scope: 'ours',
+        }),
       );
     });
   });

@@ -2196,6 +2196,179 @@ type SkillTagVocabularyResult {
   totalCount: Int!
 }
 
+type SkillUsageEventObject {
+  """Subagent id when the Skill call happened inside a nested agent."""
+  agentId: String
+
+  """Subagent type when present (e.g. general-purpose)."""
+  agentType: String
+
+  """
+  Skill args after client privacy seam. Null when privacyLevel is name-only.
+  """
+  args: String
+
+  """Working directory reported by the harness at invocation time."""
+  cwd: String
+
+  """Git branch at capture time (best-effort)."""
+  gitBranch: String
+
+  """Hook that captured the event (PreToolUse or UserPromptExpansion)."""
+  hookEventName: String
+
+  """Skill usage event id."""
+  id: ID!
+
+  """Invocation path: skill_tool or slash."""
+  invocationPath: String
+
+  """Client-reported invocation timestamp."""
+  occurredAt: DateTime!
+
+  """
+  Client privacy level applied before ingest: name-only | truncated | full.
+  """
+  privacyLevel: String!
+
+  """Harness prompt_id when present."""
+  promptId: String
+
+  """Server receipt time (set on insert)."""
+  receivedAt: DateTime!
+
+  """ours | third-party — derived by the client against skills/."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+
+  """
+  Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Null for rows ingested before source tracking.
+  """
+  source: String
+
+  """Harness tool_use_id for the Skill call when present."""
+  toolUseId: String
+}
+
+type SkillUsageBySkillObject {
+  """Opt-in abandoned outcomes for this skill in the filtered range."""
+  abandonedCount: Int!
+
+  """
+  Average reported duration_ms for outcomes with a duration; null when none.
+  """
+  avgDurationMs: Int
+
+  """Harness start (invocation) count for this skill in the filtered range."""
+  count: Int!
+
+  """Opt-in error outcomes for this skill in the filtered range."""
+  errorCount: Int!
+
+  """
+  Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.
+  """
+  outcomeCount: Int!
+
+  """ours | third-party for this skill row."""
+  scope: String!
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+
+  """Opt-in success outcomes for this skill in the filtered range."""
+  successCount: Int!
+}
+
+type SkillUsageOutcomeObject {
+  """Working directory at outcome time."""
+  cwd: String
+
+  """Wall-clock duration in milliseconds when reported."""
+  durationMs: Int
+
+  """Git branch at outcome time."""
+  gitBranch: String
+
+  """Skill usage outcome id."""
+  id: ID!
+
+  """Client-reported outcome timestamp."""
+  occurredAt: DateTime!
+
+  """success | abandoned | error."""
+  outcome: String!
+
+  """Server receipt time (set on insert)."""
+  receivedAt: DateTime!
+
+  """ours | third-party."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier matching the start event."""
+  skillName: String!
+
+  """Optional tool_use_id for tighter correlation."""
+  toolUseId: String
+}
+
+type SkillUsageByScopeObject {
+  """Invocation count for this scope in the filtered range."""
+  count: Int!
+
+  """ours | third-party."""
+  scope: String!
+}
+
+type SkillUsageByDayObject {
+  """UTC calendar day (YYYY-MM-DD)."""
+  date: String!
+
+  """ours-scoped invocations on this day."""
+  oursCount: Int!
+
+  """third-party-scoped invocations on this day."""
+  thirdPartyCount: Int!
+
+  """Total invocations on this day."""
+  totalCount: Int!
+}
+
+type SkillUsageFilterOptionsObject {
+  """
+  Distinct non-null cwd values in the date window (for project/path filter).
+  """
+  cwds: [String!]!
+
+  """Distinct non-null git branch values in the date window."""
+  gitBranches: [String!]!
+}
+
+type SkillUsageResultObject {
+  """Per-day series (UTC), oldest first, with ours/third-party split."""
+  byDay: [SkillUsageByDayObject!]!
+
+  """ours vs third-party totals for the filtered range."""
+  byScope: [SkillUsageByScopeObject!]!
+
+  """Top skills by count (highest first; capped)."""
+  bySkill: [SkillUsageBySkillObject!]!
+
+  """Distinct branch/cwd values in the date window for filter dropdowns."""
+  filterOptions: SkillUsageFilterOptionsObject!
+
+  """Total invocations matching the filtered range."""
+  totalCount: Int!
+}
+
 """
 A declarative tag→action rule: when a plan's effective tag set satisfies tagAll (AND) plus the optional qualifiers, the action dispatches. Owned by the authenticated user.
 """
@@ -3093,6 +3266,26 @@ type Query {
   """
   skillTagVocabulary: SkillTagVocabularyResult!
 
+  """
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
+  """
+  skillUsage(
+    """Start date (inclusive), YYYY-MM-DD"""
+    start: String!
+
+    """End date (inclusive), YYYY-MM-DD"""
+    end: String!
+
+    """Restrict to ours or third-party; omit for both."""
+    scope: String
+
+    """Restrict to one git branch; omit for all branches."""
+    gitBranch: String
+
+    """Restrict to one working directory (project path proxy); omit for all."""
+    cwd: String
+  ): SkillUsageResultObject!
+
   """The authenticated user's tag→action rules, oldest first."""
   tagActionRules: [TagActionRuleObject!]!
 
@@ -3961,6 +4154,16 @@ type Mutation {
   Remove a tag from the authenticated user's skill-tag vocabulary. Returns false when the tag was not present.
   """
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
+
+  """
+  Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent.
+  """
+  recordSkillUsage(input: RecordSkillUsageInput!): SkillUsageEventObject!
+
+  """
+  Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state.
+  """
+  recordSkillUsageOutcome(input: RecordSkillUsageOutcomeInput!): SkillUsageOutcomeObject!
 
   """
   Create or update a tag→action rule. The JSON payload is validated against the action type's schema.
@@ -4962,6 +5165,86 @@ input RenameSkillTagInput {
 input RemoveSkillTagInput {
   """Tag slug to remove."""
   tag: String!
+}
+
+input RecordSkillUsageInput {
+  """Subagent id when the Skill call happened inside a nested agent."""
+  agentId: String
+
+  """Subagent type when present."""
+  agentType: String
+
+  """Args after client privacy seam. Pass null for name-only."""
+  args: String
+
+  """Working directory at invocation time."""
+  cwd: String
+
+  """Git branch at capture time."""
+  gitBranch: String
+
+  """Hook event name (PreToolUse or UserPromptExpansion)."""
+  hookEventName: String
+
+  """Invocation path: skill_tool or slash."""
+  invocationPath: String
+
+  """Client-reported invocation timestamp (JSONL timestamp)."""
+  occurredAt: DateTime!
+
+  """
+  Client privacy level: name-only | truncated | full. Defaults to truncated.
+  """
+  privacyLevel: String
+
+  """Harness prompt_id when present."""
+  promptId: String
+
+  """ours | third-party."""
+  scope: String!
+
+  """Harness session id when present."""
+  sessionId: String
+
+  """Skill identifier (e.g. ot-plans, vercel:deploy)."""
+  skillName: String!
+
+  """
+  Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter.
+  """
+  source: String
+
+  """Harness tool_use_id when present."""
+  toolUseId: String
+}
+
+input RecordSkillUsageOutcomeInput {
+  """Working directory at outcome time."""
+  cwd: String
+
+  """Wall-clock duration in milliseconds when the skill reports it."""
+  durationMs: Int
+
+  """Git branch at outcome time."""
+  gitBranch: String
+
+  """Client-reported outcome timestamp."""
+  occurredAt: DateTime!
+
+  """success | abandoned | error."""
+  outcome: String!
+
+  """ours | third-party. Defaults to ours for authored-skill enrichment."""
+  scope: String
+
+  """Harness session id — primary correlation key with skillName."""
+  sessionId: String
+
+  """Skill identifier matching the start event."""
+  skillName: String!
+
+  """Optional tool_use_id for tighter start↔outcome correlation."""
+  toolUseId: String
 }
 
 input UpsertTagActionRuleInput {

@@ -1,6 +1,29 @@
 {
   "enabledMcpjsonServers": [],
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (PreToolUse)",
+            "type": "command"
+          }
+        ],
+        "matcher": "Skill"
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (UserPromptExpansion)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "WorktreeCreate": [
       {
         "hooks": [

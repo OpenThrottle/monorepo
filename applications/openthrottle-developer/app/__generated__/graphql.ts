@@ -1569,6 +1569,10 @@ export type Mutation = {
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
+  /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. */
+  recordSkillUsage: SkillUsageEventObject;
+  /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
+  recordSkillUsageOutcome: SkillUsageOutcomeObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -1953,6 +1957,14 @@ export type MutationPromoteTaskToPlanArgs = {
 
 export type MutationRecordPlanRunHeartbeatArgs = {
   input: RecordPlanRunHeartbeatInput;
+};
+
+export type MutationRecordSkillUsageArgs = {
+  input: RecordSkillUsageInput;
+};
+
+export type MutationRecordSkillUsageOutcomeArgs = {
+  input: RecordSkillUsageOutcomeInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -2774,6 +2786,8 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
+  skillUsage: SkillUsageResultObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
   /** The authenticated user's tag→action rules, oldest first. */
@@ -3053,6 +3067,14 @@ export type QuerySkillAvailabilityRuleSetArgs = {
   projectId: Scalars['ID']['input'];
 };
 
+export type QuerySkillUsageArgs = {
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  end: Scalars['String']['input'];
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  scope?: InputMaybe<Scalars['String']['input']>;
+  start: Scalars['String']['input'];
+};
+
 export type QueryTagActionRuleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3278,6 +3300,60 @@ export type RalphPlanRunTuningInput = {
 export type RecordPlanRunHeartbeatInput = {
   /** Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun). */
   planRunId: Scalars['ID']['input'];
+};
+
+export type RecordSkillUsageInput = {
+  /** Subagent id when the Skill call happened inside a nested agent. */
+  agentId?: InputMaybe<Scalars['String']['input']>;
+  /** Subagent type when present. */
+  agentType?: InputMaybe<Scalars['String']['input']>;
+  /** Args after client privacy seam. Pass null for name-only. */
+  args?: InputMaybe<Scalars['String']['input']>;
+  /** Working directory at invocation time. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Git branch at capture time. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Hook event name (PreToolUse or UserPromptExpansion). */
+  hookEventName?: InputMaybe<Scalars['String']['input']>;
+  /** Invocation path: skill_tool or slash. */
+  invocationPath?: InputMaybe<Scalars['String']['input']>;
+  /** Client-reported invocation timestamp (JSONL timestamp). */
+  occurredAt: Scalars['DateTime']['input'];
+  /** Client privacy level: name-only | truncated | full. Defaults to truncated. */
+  privacyLevel?: InputMaybe<Scalars['String']['input']>;
+  /** Harness prompt_id when present. */
+  promptId?: InputMaybe<Scalars['String']['input']>;
+  /** ours | third-party. */
+  scope: Scalars['String']['input'];
+  /** Harness session id when present. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['input'];
+  /** Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter. */
+  source?: InputMaybe<Scalars['String']['input']>;
+  /** Harness tool_use_id when present. */
+  toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordSkillUsageOutcomeInput = {
+  /** Working directory at outcome time. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Wall-clock duration in milliseconds when the skill reports it. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Git branch at outcome time. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Client-reported outcome timestamp. */
+  occurredAt: Scalars['DateTime']['input'];
+  /** success | abandoned | error. */
+  outcome: Scalars['String']['input'];
+  /** ours | third-party. Defaults to ours for authored-skill enrichment. */
+  scope?: InputMaybe<Scalars['String']['input']>;
+  /** Harness session id — primary correlation key with skillName. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Skill identifier matching the start event. */
+  skillName: Scalars['String']['input'];
+  /** Optional tool_use_id for tighter start↔outcome correlation. */
+  toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RecordWorkArtifactInput = {
@@ -3890,6 +3966,132 @@ export type SkillTagVocabularyResult = {
   /** Tags in the user's vocabulary, alphabetically by tag. */
   tags: Array<SkillTagObject>;
   /** Number of tags in the vocabulary. */
+  totalCount: Scalars['Int']['output'];
+};
+
+export type SkillUsageByDayObject = {
+  __typename?: 'SkillUsageByDayObject';
+  /** UTC calendar day (YYYY-MM-DD). */
+  date: Scalars['String']['output'];
+  /** ours-scoped invocations on this day. */
+  oursCount: Scalars['Int']['output'];
+  /** third-party-scoped invocations on this day. */
+  thirdPartyCount: Scalars['Int']['output'];
+  /** Total invocations on this day. */
+  totalCount: Scalars['Int']['output'];
+};
+
+export type SkillUsageByScopeObject = {
+  __typename?: 'SkillUsageByScopeObject';
+  /** Invocation count for this scope in the filtered range. */
+  count: Scalars['Int']['output'];
+  /** ours | third-party. */
+  scope: Scalars['String']['output'];
+};
+
+export type SkillUsageBySkillObject = {
+  __typename?: 'SkillUsageBySkillObject';
+  /** Opt-in abandoned outcomes for this skill in the filtered range. */
+  abandonedCount: Scalars['Int']['output'];
+  /** Average reported duration_ms for outcomes with a duration; null when none. */
+  avgDurationMs?: Maybe<Scalars['Int']['output']>;
+  /** Harness start (invocation) count for this skill in the filtered range. */
+  count: Scalars['Int']['output'];
+  /** Opt-in error outcomes for this skill in the filtered range. */
+  errorCount: Scalars['Int']['output'];
+  /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
+  outcomeCount: Scalars['Int']['output'];
+  /** ours | third-party for this skill row. */
+  scope: Scalars['String']['output'];
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['output'];
+  /** Opt-in success outcomes for this skill in the filtered range. */
+  successCount: Scalars['Int']['output'];
+};
+
+export type SkillUsageEventObject = {
+  __typename?: 'SkillUsageEventObject';
+  /** Subagent id when the Skill call happened inside a nested agent. */
+  agentId?: Maybe<Scalars['String']['output']>;
+  /** Subagent type when present (e.g. general-purpose). */
+  agentType?: Maybe<Scalars['String']['output']>;
+  /** Skill args after client privacy seam. Null when privacyLevel is name-only. */
+  args?: Maybe<Scalars['String']['output']>;
+  /** Working directory reported by the harness at invocation time. */
+  cwd?: Maybe<Scalars['String']['output']>;
+  /** Git branch at capture time (best-effort). */
+  gitBranch?: Maybe<Scalars['String']['output']>;
+  /** Hook that captured the event (PreToolUse or UserPromptExpansion). */
+  hookEventName?: Maybe<Scalars['String']['output']>;
+  /** Skill usage event id. */
+  id: Scalars['ID']['output'];
+  /** Invocation path: skill_tool or slash. */
+  invocationPath?: Maybe<Scalars['String']['output']>;
+  /** Client-reported invocation timestamp. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** Client privacy level applied before ingest: name-only | truncated | full. */
+  privacyLevel: Scalars['String']['output'];
+  /** Harness prompt_id when present. */
+  promptId?: Maybe<Scalars['String']['output']>;
+  /** Server receipt time (set on insert). */
+  receivedAt: Scalars['DateTime']['output'];
+  /** ours | third-party — derived by the client against skills/. */
+  scope: Scalars['String']['output'];
+  /** Harness session id when present. */
+  sessionId?: Maybe<Scalars['String']['output']>;
+  /** Skill identifier (e.g. ot-plans, vercel:deploy). */
+  skillName: Scalars['String']['output'];
+  /** Producer id of the capturing tool/adapter (e.g. claude-code, cursor). Null for rows ingested before source tracking. */
+  source?: Maybe<Scalars['String']['output']>;
+  /** Harness tool_use_id for the Skill call when present. */
+  toolUseId?: Maybe<Scalars['String']['output']>;
+};
+
+export type SkillUsageFilterOptionsObject = {
+  __typename?: 'SkillUsageFilterOptionsObject';
+  /** Distinct non-null cwd values in the date window (for project/path filter). */
+  cwds: Array<Scalars['String']['output']>;
+  /** Distinct non-null git branch values in the date window. */
+  gitBranches: Array<Scalars['String']['output']>;
+};
+
+export type SkillUsageOutcomeObject = {
+  __typename?: 'SkillUsageOutcomeObject';
+  /** Working directory at outcome time. */
+  cwd?: Maybe<Scalars['String']['output']>;
+  /** Wall-clock duration in milliseconds when reported. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Git branch at outcome time. */
+  gitBranch?: Maybe<Scalars['String']['output']>;
+  /** Skill usage outcome id. */
+  id: Scalars['ID']['output'];
+  /** Client-reported outcome timestamp. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** success | abandoned | error. */
+  outcome: Scalars['String']['output'];
+  /** Server receipt time (set on insert). */
+  receivedAt: Scalars['DateTime']['output'];
+  /** ours | third-party. */
+  scope: Scalars['String']['output'];
+  /** Harness session id when present. */
+  sessionId?: Maybe<Scalars['String']['output']>;
+  /** Skill identifier matching the start event. */
+  skillName: Scalars['String']['output'];
+  /** Optional tool_use_id for tighter correlation. */
+  toolUseId?: Maybe<Scalars['String']['output']>;
+};
+
+export type SkillUsageResultObject = {
+  __typename?: 'SkillUsageResultObject';
+  /** Per-day series (UTC), oldest first, with ours/third-party split. */
+  byDay: Array<SkillUsageByDayObject>;
+  /** ours vs third-party totals for the filtered range. */
+  byScope: Array<SkillUsageByScopeObject>;
+  /** Top skills by count (highest first; capped). */
+  bySkill: Array<SkillUsageBySkillObject>;
+  /** Distinct branch/cwd values in the date window for filter dropdowns. */
+  filterOptions: SkillUsageFilterOptionsObject;
+  /** Total invocations matching the filtered range. */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -8950,6 +9152,82 @@ export type GetUsageTokenUsageQuery = {
   };
 };
 
+export type UsageSkillUsageBySkillFragment = {
+  __typename?: 'SkillUsageBySkillObject';
+  skillName: string;
+  scope: string;
+  count: number;
+  outcomeCount: number;
+  successCount: number;
+  abandonedCount: number;
+  errorCount: number;
+  avgDurationMs?: number | null;
+};
+
+export type UsageSkillUsageByScopeFragment = {
+  __typename?: 'SkillUsageByScopeObject';
+  scope: string;
+  count: number;
+};
+
+export type UsageSkillUsageByDayFragment = {
+  __typename?: 'SkillUsageByDayObject';
+  date: string;
+  oursCount: number;
+  thirdPartyCount: number;
+  totalCount: number;
+};
+
+export type UsageSkillUsageFilterOptionsFragment = {
+  __typename?: 'SkillUsageFilterOptionsObject';
+  gitBranches: Array<string>;
+  cwds: Array<string>;
+};
+
+export type GetUsageSkillUsageQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+  scope?: InputMaybe<Scalars['String']['input']>;
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  cwd?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type GetUsageSkillUsageQuery = {
+  __typename?: 'Query';
+  skillUsage: {
+    __typename?: 'SkillUsageResultObject';
+    totalCount: number;
+    bySkill: Array<{
+      __typename?: 'SkillUsageBySkillObject';
+      skillName: string;
+      scope: string;
+      count: number;
+      outcomeCount: number;
+      successCount: number;
+      abandonedCount: number;
+      errorCount: number;
+      avgDurationMs?: number | null;
+    }>;
+    byScope: Array<{
+      __typename?: 'SkillUsageByScopeObject';
+      scope: string;
+      count: number;
+    }>;
+    byDay: Array<{
+      __typename?: 'SkillUsageByDayObject';
+      date: string;
+      oursCount: number;
+      thirdPartyCount: number;
+      totalCount: number;
+    }>;
+    filterOptions: {
+      __typename?: 'SkillUsageFilterOptionsObject';
+      gitBranches: Array<string>;
+      cwds: Array<string>;
+    };
+  };
+};
+
 export const HealthCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -10803,6 +11081,94 @@ export const UsageTokenUsageTotalsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageTokenUsageTotalsFragment, unknown>;
+export const UsageSkillUsageBySkillFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageBySkillFragment, unknown>;
+export const UsageSkillUsageByScopeFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageByScopeFragment, unknown>;
+export const UsageSkillUsageByDayFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageByDayFragment, unknown>;
+export const UsageSkillUsageFilterOptionsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageFilterOptionsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cwds' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageSkillUsageFilterOptionsFragment, unknown>;
 export const GetMyUserDocument = {
   kind: 'Document',
   definitions: [
@@ -23248,4 +23614,245 @@ export const GetUsageTokenUsageDocument = {
 } as unknown as DocumentNode<
   GetUsageTokenUsageQuery,
   GetUsageTokenUsageQueryVariables
+>;
+export const GetUsageSkillUsageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageSkillUsage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'scope' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'gitBranch' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'cwd' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillUsage' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'scope' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'gitBranch' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'gitBranch' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'cwd' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'cwd' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'bySkill' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'byScope' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'byDay' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filterOptions' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'UsageSkillUsageFilterOptions',
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageFilterOptionsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cwds' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageSkillUsageQuery,
+  GetUsageSkillUsageQueryVariables
 >;

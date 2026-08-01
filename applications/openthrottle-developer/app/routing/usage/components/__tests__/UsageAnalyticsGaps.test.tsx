@@ -17,9 +17,10 @@ describe('UsageAnalyticsGaps Component', () => {
       screen.getByText(/coarse workload signal only/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /No per-prompt, per-skill, or per-command invocation counts/i,
-      ),
+      screen.getByText(/No per-prompt or per-command invocation counts/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Skill invocations are captured at the harness/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/Token and cost usage is captured/i),

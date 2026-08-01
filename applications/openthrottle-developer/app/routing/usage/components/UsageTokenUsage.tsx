@@ -17,11 +17,10 @@ import {
   formatUsageCost,
 } from '@openthrottle/react-router-chat';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
 import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
-import { Link } from 'react-router';
 import {
   TOKEN_USAGE_COPY,
-  TOKEN_USAGE_PROVIDERS,
   TOKEN_USAGE_STATS,
   tokenUsageProviderLabel,
 } from '~/routing/usage/data/token-usage-copy';
@@ -37,6 +36,10 @@ export interface UsageTokenUsageProps {
   rangeDays: number;
   /** Provider id from `?provider=`, or null for all providers. */
   selectedProvider: string | null;
+  /** Skill-usage search params to preserve when changing provider. */
+  skillCwdParam?: string | null;
+  skillGitBranchParam?: string | null;
+  skillScopeParam?: string | null;
   /** Summed usage over the current selection. */
   totals: UsageTokenUsageTotalsFragment;
 }
@@ -44,7 +47,16 @@ export interface UsageTokenUsageProps {
 export const UsageTokenUsage = (
   props: UsageTokenUsageProps,
 ): React.ReactElement => {
-  const { className, items, rangeDays, selectedProvider, totals } = props;
+  const {
+    className,
+    items,
+    rangeDays,
+    selectedProvider,
+    skillCwdParam = null,
+    skillGitBranchParam = null,
+    skillScopeParam = null,
+    totals,
+  } = props;
 
   // Hooks
 
@@ -65,14 +77,6 @@ export const UsageTokenUsage = (
           tokenUsageProviderLabel(selectedProvider),
         );
 
-  const filterOptions: ReadonlyArray<{ id: string | null; label: string }> = [
-    { id: null, label: 'All providers' },
-    ...TOKEN_USAGE_PROVIDERS.map((provider) => ({
-      id: provider.id,
-      label: provider.label,
-    })),
-  ];
-
   // Handlers
 
   // Markup
@@ -92,31 +96,12 @@ export const UsageTokenUsage = (
         {TOKEN_USAGE_COPY.intro(rangeDays)}
       </p>
 
-      <div
-        aria-label="Filter usage by provider"
-        className="mb-6 flex flex-wrap gap-2"
-        role="group"
-      >
-        {filterOptions.map((option) => {
-          const active = option.id === selectedProvider;
-
-          return (
-            <Link
-              aria-current={active ? 'true' : undefined}
-              className={clsx(
-                'rounded-full border px-3 py-1 text-xs transition-colors',
-                active
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground border-border',
-              )}
-              key={option.label}
-              to={option.id === null ? '?' : `?provider=${option.id}`}
-            >
-              {option.label}
-            </Link>
-          );
-        })}
-      </div>
+      <UsageTokenUsageFilters
+        selectedProvider={selectedProvider}
+        skillCwdParam={skillCwdParam}
+        skillGitBranchParam={skillGitBranchParam}
+        skillScopeParam={skillScopeParam}
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TOKEN_USAGE_STATS.map((stat) => {

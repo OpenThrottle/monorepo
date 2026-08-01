@@ -83,6 +83,8 @@ import {
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RecordPlanRunHeartbeatInput,
+  RecordSkillUsageInput,
+  RecordSkillUsageOutcomeInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
@@ -979,6 +981,44 @@ export function RecordPlanRunHeartbeatInputSchema(): z.ZodObject<
 > {
   return z.object({
     planRunId: z.string(),
+  });
+}
+
+export function RecordSkillUsageInputSchema(): z.ZodObject<
+  Properties<RecordSkillUsageInput>
+> {
+  return z.object({
+    agentId: z.string().nullish(),
+    agentType: z.string().nullish(),
+    args: z.string().nullish(),
+    cwd: z.string().nullish(),
+    gitBranch: z.string().nullish(),
+    hookEventName: z.string().nullish(),
+    invocationPath: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    privacyLevel: z.string().nullish(),
+    promptId: z.string().nullish(),
+    scope: z.string(),
+    sessionId: z.string().nullish(),
+    skillName: z.string(),
+    source: z.string().nullish(),
+    toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
+  Properties<RecordSkillUsageOutcomeInput>
+> {
+  return z.object({
+    cwd: z.string().nullish(),
+    durationMs: z.number().nullish(),
+    gitBranch: z.string().nullish(),
+    occurredAt: definedNonNullAnySchema,
+    outcome: z.string(),
+    scope: z.string().nullish(),
+    sessionId: z.string().nullish(),
+    skillName: z.string(),
+    toolUseId: z.string().nullish(),
   });
 }
 
