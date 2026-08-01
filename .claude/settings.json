@@ -1,6 +1,29 @@
 {
   "enabledMcpjsonServers": [],
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-spike-dump.sh",
+            "statusMessage": "Skill usage spike (PreToolUse)",
+            "type": "command"
+          }
+        ],
+        "matcher": "Skill"
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-spike-dump.sh",
+            "statusMessage": "Skill usage spike (UserPromptExpansion)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "WorktreeCreate": [
       {
         "hooks": [
