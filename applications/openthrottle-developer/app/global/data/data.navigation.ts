@@ -184,8 +184,9 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/logs',
       },
       {
+        beta: true,
         children: 'Rollout',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: true, // 🔴
         icon: ToggleRightIcon,
         to: '/settings/rollout',
       },
