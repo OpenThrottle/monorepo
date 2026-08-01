@@ -11,16 +11,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { formatRolloutTimestamp } from '~/routing/settings/utils/rollout-flag-format';
 
 export interface RolloutFlagDetailProps {
   editTo: string;
   flag: RolloutFlagFieldsFragment;
 }
-
-const formatTimestamp = (value: string): string => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-};
 
 /**
  * @description Read-only detail card for a single rollout feature flag.
@@ -85,8 +81,8 @@ export const RolloutFlagDetail = (
         </div>
 
         <div className="text-muted-foreground text-xs">
-          Updated {formatTimestamp(flag.updatedAt)} · Created{' '}
-          {formatTimestamp(flag.createdAt)}
+          Updated {formatRolloutTimestamp(flag.updatedAt)} · Created{' '}
+          {formatRolloutTimestamp(flag.createdAt)}
         </div>
       </CardContent>
     </Card>
