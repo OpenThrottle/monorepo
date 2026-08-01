@@ -21,6 +21,8 @@ async function* fakeStream(
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.useRealTimers();
+  delete process.env.OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS;
 });
 
 describe('streamChatCompletion', () => {
@@ -44,7 +46,7 @@ describe('streamChatCompletion', () => {
     ]);
   });
 
-  it('forwards model, mapped messages, and the abort signal to the SDK', async () => {
+  it('forwards model, mapped messages, and an abort signal to the SDK', async () => {
     createMock.mockResolvedValue(fakeStream(['ok']));
     const controller = new AbortController();
 
@@ -59,6 +61,9 @@ describe('streamChatCompletion', () => {
     })[Symbol.asyncIterator]();
     await iterator.next();
 
+    // The caller signal is no longer forwarded verbatim — it is composed with
+    // the internal idle-timeout controller (see the idle-timeout test) — so we
+    // assert the request payload exactly and that *an* AbortSignal is passed.
     expect(createMock).toHaveBeenCalledWith(
       {
         messages: [
@@ -68,7 +73,7 @@ describe('streamChatCompletion', () => {
         model: 'qwen',
         stream: true,
       },
-      { signal: controller.signal },
+      { signal: expect.any(AbortSignal) },
     );
   });
 
@@ -84,6 +89,45 @@ describe('streamChatCompletion', () => {
         void _chunk;
       }
     }).rejects.toThrow('connection refused');
+  });
+
+  it('aborts a silent stream on idle and surfaces a clear timeout error', async () => {
+    vi.useFakeTimers();
+    process.env.OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS = '5000';
+
+    // A stream that yields nothing and only settles (rejecting) when the
+    // request signal aborts — i.e. it hangs until the idle timeout fires.
+    createMock.mockImplementation(
+      (_request: unknown, options: { signal?: AbortSignal }) => {
+        const signal = options.signal;
+        async function* silent(): AsyncGenerator<{
+          choices: Array<{ delta: { content: string } }>;
+        }> {
+          await new Promise<never>((_resolve, reject) => {
+            signal?.addEventListener('abort', () =>
+              reject(new DOMException('aborted', 'AbortError')),
+            );
+          });
+          yield { choices: [{ delta: { content: 'never' } }] };
+        }
+        return Promise.resolve(silent());
+      },
+    );
+
+    const drain = (async (): Promise<void> => {
+      for await (const _chunk of streamChatCompletion({
+        baseUrl: 'http://localhost:11434/v1',
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'llama3',
+      })) {
+        void _chunk;
+      }
+    })();
+    // Surface the rejection to vitest without an unhandled rejection while we
+    // advance the fake idle timer.
+    const assertion = expect(drain).rejects.toThrow(/stalled/);
+    await vi.advanceTimersByTimeAsync(5000);
+    await assertion;
   });
 
   it('propagates a mid-stream abort error', async () => {

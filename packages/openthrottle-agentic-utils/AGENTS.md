@@ -39,6 +39,28 @@ true`. A guard test (`__tests__/registry.test.ts`) enforces (3) ⟺ (4); discove
   the composer, the resolver's accepted-backend allowlist, and server routing all
   light up from there.
 
+## Idle timeouts (stall protection)
+
+Every streaming path is bounded so a wedged backend can't hang a chat turn:
+
+- **CLI backends** self-terminate via `resolveAgentTimeouts()` — idle (no output
+  for `idleMs`, default `120_000`, env `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`) +
+  wall-clock (`wallClockMs`, default `900_000`) with a SIGTERM→SIGKILL teardown.
+- **HTTP/openai backend** (`chat-completions/stream.ts`) applies the same
+  `resolveAgentTimeouts().idleMs` as a per-part idle timeout: it composes an
+  internal `AbortController` with the caller signal (`AbortSignal.any`), resets on
+  each streamed part, and on stall aborts the SDK request and throws a clear
+  "endpoint stalled" error.
+- **Server orchestrator backstop:** `resolveChatIdleTimeoutMs()` (env
+  `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`; default = `resolveAgentTimeouts().idleMs` +
+  `30_000` margin = **`150_000`**) is consumed by
+  `ConversationStreamService.runStream()` to terminate ANY backend — idle-only, no
+  orchestrator wall-clock. The margin keeps it above the CLI/HTTP idle so a
+  backend's own cleaner terminal wins first; it fires only for a truly stalled
+  turn (or the HTTP backend ignoring its signal). On expiry it publishes a
+  terminal chunk marked retryable so the client can auto-retry. Full contract:
+  `docs/reliability/chat-idle-timeout-retry.md`.
+
 ## Invariants & gotchas
 
 - No Nx `build` target (`__build`/`__build-package` placeholders — see [../AGENTS.md](../AGENTS.md)),

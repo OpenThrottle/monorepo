@@ -14,7 +14,6 @@ applications/openthrottle-server/schema.gql
 
 # Legal texts must be preserved verbatim — Prettier would reflow the indented
 # Apache-2.0 / EULA wording and corrupt it.
-LICENSE
 LICENSE-EULA.md
 LICENSE.md
 **/LICENSE.md

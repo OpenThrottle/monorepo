@@ -92,6 +92,27 @@ read/write). The synthetic id still drives the `conversation:<id>:stream` topic
   authorize the owner without a DB row (the synthetic id is an unguessable UUID
   handed only to its owner). Added by plan `16c97e11`.
 
+## Idle-timeout backstop + retryable terminal chunk (plan `039454a0`)
+
+`ConversationStreamService.runStream()` wraps the backend stream in a per-chunk
+idle timer (`withIdleTimeout`) so a wedged backend — including the otherwise
+unbounded HTTP/openai one, even if it ignores its `AbortSignal` — always
+terminates the turn instead of hanging the loop and leaving the client stuck.
+
+- **Knob:** `resolveChatIdleTimeoutMs()` (env `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`;
+  default = `resolveAgentTimeouts().idleMs` + `30_000` margin = **`150_000` ms**).
+  Idle-only — no orchestrator wall-clock cap; the 30s margin keeps the backstop
+  above the CLI/HTTP idle (120s) so their own cleaner terminal wins first.
+- **On expiry:** abort the backend, persist whatever streamed (partial output is
+  kept), and publish a terminal `done` chunk carrying a clear message +
+  `metadataJson = { retryable: true, timedOut: true }`.
+- **Client recovery:** the shared reducer surfaces the marker as
+  `StreamState.retryableIds`; `useAgenticChatTurn` auto-retries the turn **once**
+  (a client stall watchdog covers a silently-dead subscription), then exposes a
+  manual **Retry** affordance. Private-mode turns emit the terminal chunk and
+  recover identically (the publish path is independent of `persist`).
+- Full design + constants: [docs/reliability/chat-idle-timeout-retry.md](../../../docs/reliability/chat-idle-timeout-retry.md).
+
 ## Frontend v1 (openthrottle-developer)
 
 When the user is authenticated, the developer app passes `persist: true` on every chat turn and loads history on mount. See [packages/react-router-chat/README.md](../../../packages/react-router-chat/README.md) § Persisted conversations.

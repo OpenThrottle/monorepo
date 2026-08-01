@@ -5,6 +5,7 @@ import {
   applyTurnToolResult,
   applyTurnUsage,
   failRunningTurnTools,
+  isRetryableTerminalMetadata,
   parseChunkMetadata,
   toolLabelFromMetadataJson,
 } from './turn-events';
@@ -38,6 +39,13 @@ export interface StreamState {
   readonly events: ReadonlyMap<string, readonly ChatTurnEvent[]>;
   /** True while a stream is in flight (between the first delta and `done`). */
   readonly isStreaming: boolean;
+  /**
+   * messageIds whose terminal chunk carried the server's retryable timeout
+   * marker (`TerminalTimeoutMetadata`) — the turn stalled and was safely
+   * interrupted, so the client may auto-retry it (vs a fatal error, which is
+   * `completedIds` without `retryableIds`).
+   */
+  readonly retryableIds: ReadonlySet<string>;
   /** Seen `messageId:sortOrder` keys for dedupe. */
   readonly seen: ReadonlySet<string>;
 }
@@ -48,6 +56,7 @@ export const INITIAL_STREAM_STATE: StreamState = {
   completedIds: new Set(),
   events: new Map(),
   isStreaming: false,
+  retryableIds: new Set(),
   seen: new Set(),
 };
 
@@ -101,7 +110,21 @@ export function reduceStreamChunk(
     const completedIds = new Set(state.completedIds);
     completedIds.add(chunk.messageId);
 
-    return { bodies, completedIds, events, isStreaming: false, seen };
+    // A retryable timeout terminal is recorded so the client can auto-retry it;
+    // a success or fatal error terminal completes without the marker.
+    const retryableIds = new Set(state.retryableIds);
+    if (isRetryableTerminalMetadata(chunk.metadataJson ?? null)) {
+      retryableIds.add(chunk.messageId);
+    }
+
+    return {
+      bodies,
+      completedIds,
+      events,
+      isStreaming: false,
+      retryableIds,
+      seen,
+    };
   }
 
   // Assistant text accumulates into the flat body; tool calls show a dim
@@ -173,6 +196,7 @@ export function reduceStreamChunk(
     completedIds: state.completedIds,
     events,
     isStreaming: true,
+    retryableIds: state.retryableIds,
     seen,
   };
 }

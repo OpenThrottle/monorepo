@@ -247,6 +247,7 @@ export function useHeaderChatController(args: {
 
   // 🔌 Short Circuit
   const composer: ChatComposerControls = {
+    canRetry: turn.canRetry,
     capabilities,
     checkouts,
     contextSources: CHAT_TOOLBAR_CONTEXT_SOURCES,
@@ -262,6 +263,7 @@ export function useHeaderChatController(args: {
     onPersistChange: setPersist,
     onPersonaChange: setPersonaId,
     onReasoningChange: setReasoning,
+    onRetry: turn.onRetry,
     onServiceTierChange: setServiceTier,
     onStop: turn.onStop,
     permissionMode,

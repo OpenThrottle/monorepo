@@ -129,6 +129,25 @@ describe('ChatThread Component', () => {
     });
   });
 
+  describe('retry affordance', () => {
+    const messages: readonly ChatMessage[] = [
+      { body: 'Hello', id: '1', role: 'user' },
+      { body: '', id: '2', role: 'assistant' },
+    ];
+
+    test('renders the Retry notice when canRetry and onRetry are set', () => {
+      component = renderThread({ canRetry: true, messages, onRetry: vi.fn() });
+      expect(component.getByTestId('ChatRetryNotice')).toBeInTheDocument();
+    });
+
+    test('does not render the Retry notice without canRetry', () => {
+      component = renderThread({ messages, onRetry: vi.fn() });
+      expect(
+        component.queryByTestId('ChatRetryNotice'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   // Auto-scroll guards. jsdom has no layout engine and no real scrollIntoView,
   // so we can't assert pixel positions (see Recharts/jsdom caveat). Instead we
   // spy on scrollIntoView and assert the effect's guards: skip the no-op scroll
