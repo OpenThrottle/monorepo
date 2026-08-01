@@ -622,6 +622,29 @@ export type CreateRoleInput = {
   name: Scalars['String']['input'];
 };
 
+export type CreateScheduledAgentJobInputType = {
+  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). */
+  cronPattern: Scalars['String']['input'];
+  /** Process cwd for the agent CLI; omit for WORKSPACE_ROOT. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Agent driver id (claude | codex | cursor | grok | opencode). */
+  driverId: Scalars['String']['input'];
+  /** Whether the schedule starts enabled (default true). */
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Model preset; omit for the driver default. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Human-friendly schedule name. */
+  name: Scalars['String']['input'];
+  /** Prompt passed to the agent CLI. */
+  prompt: Scalars['String']['input'];
+  /** JSON AgentPromptSettings ({ endpoint?, worktree? }); no endpoint.apiKey. Omit for none. */
+  settingsJson?: InputMaybe<Scalars['String']['input']>;
+  /** Per-run timeout override in ms; omit for the queue default. */
+  timeoutMs?: InputMaybe<Scalars['Int']['input']>;
+  /** IANA timezone; omit for UTC. */
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CreateServiceAccountCredentialInput = {
   expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
   label?: InputMaybe<Scalars['String']['input']>;
@@ -1361,6 +1384,8 @@ export type Mutation = {
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
+  cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
   /** Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed. */
   cleanQueue: CleanQueueResultObject;
   /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
@@ -1381,6 +1406,8 @@ export type Mutation = {
   createQueue: CreateQueueResultObject;
   /** Create a role */
   createRole: RoleObject;
+  /** Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings. */
+  createScheduledAgentJob: ScheduledAgentJobObject;
   /** Create a service account (admin, human only). */
   createServiceAccount: ServiceAccountObject;
   /** Create a credential; returns plaintext token once (admin, human only). */
@@ -1410,6 +1437,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
+  /** Delete a scheduled agent job and its scheduler (owner only). Returns whether a row was removed. */
+  deleteScheduledAgentJob: Scalars['Boolean']['output'];
   /** Delete a project's rule set (cascading its rules). Returns false when the project had no rule set. */
   deleteSkillAvailabilityRuleSet: Scalars['Boolean']['output'];
   /** Delete a tag→action rule (its ledger rows CASCADE). Returns false when absent. */
@@ -1497,10 +1526,14 @@ export type Mutation = {
   retryJob: RetryJobResultObject;
   /** Revoke a service account credential (admin, human only). */
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
+  /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
+  runScheduledAgentJobNow: ScheduledAgentJobRunObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
+  /** Enable or disable a scheduled agent job (owner only); registers/removes its scheduler. */
+  setScheduledAgentJobEnabled: ScheduledAgentJobObject;
   /**
    * Assign, change, or clear the OpenThrottle project link for a local repository.
    * @deprecated Project links now live on the repository row; use the repository-level surface.
@@ -1535,6 +1568,8 @@ export type Mutation = {
   updateRepository: RepositoryObject;
   /** Update a role */
   updateRole?: Maybe<RoleObject>;
+  /** Update a scheduled agent job (owner only). Re-projects the BullMQ scheduler. */
+  updateScheduledAgentJob: ScheduledAgentJobObject;
   /** Update a service account (admin, human only). */
   updateServiceAccount?: Maybe<ServiceAccountObject>;
   /** Replace a rule's tag/slug lists and environment by rule id. Tag references are validated against the caller's skill-tag vocabulary. */
@@ -1632,6 +1667,10 @@ export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
 };
 
+export type MutationCancelScheduledAgentJobRunArgs = {
+  runId: Scalars['ID']['input'];
+};
+
 export type MutationCleanQueueArgs = {
   input: CleanQueueInput;
 };
@@ -1670,6 +1709,10 @@ export type MutationCreateQueueArgs = {
 
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
+};
+
+export type MutationCreateScheduledAgentJobArgs = {
+  input: CreateScheduledAgentJobInputType;
 };
 
 export type MutationCreateServiceAccountArgs = {
@@ -1721,6 +1764,10 @@ export type MutationDeleteProjectArgs = {
 };
 
 export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationDeleteScheduledAgentJobArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1884,6 +1931,10 @@ export type MutationRevokeServiceAccountCredentialArgs = {
   credentialId: Scalars['ID']['input'];
 };
 
+export type MutationRunScheduledAgentJobNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
@@ -1892,6 +1943,10 @@ export type MutationSendTranscriptionAudioChunkArgs = {
 
 export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
+};
+
+export type MutationSetScheduledAgentJobEnabledArgs = {
+  input: SetScheduledAgentJobEnabledInputType;
 };
 
 export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
@@ -1940,6 +1995,10 @@ export type MutationUpdateRepositoryArgs = {
 
 export type MutationUpdateRoleArgs = {
   input: UpdateRoleInput;
+};
+
+export type MutationUpdateScheduledAgentJobArgs = {
+  input: UpdateScheduledAgentJobInputType;
 };
 
 export type MutationUpdateServiceAccountArgs = {
@@ -2567,6 +2626,12 @@ export type Query = {
   rolesForUser: Array<RoleObject>;
   /** The apply-once ledger rows for a plan, oldest first. Surfaces flagged/orphaned applications. */
   ruleApplications: Array<RuleApplicationObject>;
+  /** One scheduled agent job by id, or null. */
+  scheduledAgentJob?: Maybe<ScheduledAgentJobObject>;
+  /** Run history for a scheduled agent job, newest first. */
+  scheduledAgentJobRuns: Array<ScheduledAgentJobRunObject>;
+  /** All scheduled agent jobs, newest first. */
+  scheduledAgentJobs: Array<ScheduledAgentJobObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over agent-asset (custom_prompt) embeddings. Embeds the query and returns ranked, de-duped assets (skills, rules, personas by default). Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
@@ -2815,6 +2880,15 @@ export type QueryRolesForUserArgs = {
 
 export type QueryRuleApplicationsArgs = {
   planId: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobRunsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  scheduledAgentJobId: Scalars['ID']['input'];
 };
 
 export type QuerySearchArgs = {
@@ -3387,6 +3461,62 @@ export type RuleApplicationObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue. */
+export type ScheduledAgentJobObject = {
+  __typename?: 'ScheduledAgentJobObject';
+  createdAt: Scalars['DateTime']['output'];
+  /** 5- or 6-field cron pattern. */
+  cronPattern: Scalars['String']['output'];
+  /** Process cwd for the agent CLI; null uses WORKSPACE_ROOT. */
+  cwd?: Maybe<Scalars['String']['output']>;
+  /** Agent driver id (claude | codex | cursor | grok | opencode). */
+  driverId: Scalars['String']['output'];
+  /** Whether the schedule is active (registered as a BullMQ scheduler). */
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Last time a run started. */
+  lastRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Model preset; null uses the driver default. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Human-friendly schedule name. */
+  name: Scalars['String']['output'];
+  /** Next scheduled fire time (from the BullMQ scheduler). */
+  nextRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Owning user id; null for system-seeded schedules. */
+  ownerUserId?: Maybe<Scalars['ID']['output']>;
+  /** Prompt passed to the agent CLI. */
+  prompt: Scalars['String']['output'];
+  /** JSON-serialized AgentPromptSettings ({ endpoint?, worktree? }); endpoint.apiKey is never present. */
+  settingsJson: Scalars['String']['output'];
+  /** Per-run timeout override in ms; null uses the queue default. */
+  timeoutMs?: Maybe<Scalars['Int']['output']>;
+  /** IANA timezone for the cron pattern; null means UTC. */
+  timezone?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** One run of a scheduled agent job. Logs stream to queueJobLogs/queueJobLogTail keyed by bullmqJobId. */
+export type ScheduledAgentJobRunObject = {
+  __typename?: 'ScheduledAgentJobRunObject';
+  /** BullMQ job id — join key to queueJobLogs; null before the run is enqueued. */
+  bullmqJobId?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  driverId: Scalars['String']['output'];
+  /** Failure detail; null on success. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Child process exit code; null on timeout/cancel/spawn error. */
+  exitCode?: Maybe<Scalars['Int']['output']>;
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  model?: Maybe<Scalars['String']['output']>;
+  scheduledAgentJobId: Scalars['ID']['output'];
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** queued | running | succeeded | failed | cancelled. */
+  status: Scalars['String']['output'];
+  /** schedule | manual (run-now). */
+  trigger: Scalars['String']['output'];
+};
+
 export type SearchChunk = {
   __typename?: 'SearchChunk';
   /** Chunk content (plan or task text). */
@@ -3491,6 +3621,11 @@ export type SetPlanStatusInput = {
   planId: Scalars['ID']['input'];
   /** New status (e.g. COMPLETED, IN_PROGRESS, PENDING, QUEUED). Normalized to uppercase. */
   status: Scalars['String']['input'];
+};
+
+export type SetScheduledAgentJobEnabledInputType = {
+  enabled: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type SetWorkspaceLocalRepositoryProjectInput = {
@@ -4011,6 +4146,21 @@ export type UpdateRoleInput = {
   id: Scalars['ID']['input'];
   /** Role name. Pass null to leave unchanged. */
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateScheduledAgentJobInputType = {
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  driverId?: InputMaybe<Scalars['String']['input']>;
+  /** Schedule to update. */
+  id: Scalars['ID']['input'];
+  model?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  prompt?: InputMaybe<Scalars['String']['input']>;
+  /** JSON AgentPromptSettings; no endpoint.apiKey. */
+  settingsJson?: InputMaybe<Scalars['String']['input']>;
+  timeoutMs?: InputMaybe<Scalars['Int']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateServiceAccountInput = {
@@ -6931,6 +7081,188 @@ export type RulesDeleteTagActionRuleMutation = {
   deleteTagActionRule: boolean;
 };
 
+export type ScheduledJobRunRowFragment = {
+  __typename?: 'ScheduledAgentJobRunObject';
+  bullmqJobId?: string | null;
+  createdAt: any;
+  driverId: string;
+  errorMessage?: string | null;
+  exitCode?: number | null;
+  finishedAt?: any | null;
+  id: string;
+  model?: string | null;
+  startedAt?: any | null;
+  status: string;
+  trigger: string;
+};
+
+export type ScheduledAgentJobDetailQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type ScheduledAgentJobDetailQuery = {
+  __typename?: 'Query';
+  scheduledAgentJob?: {
+    __typename?: 'ScheduledAgentJobObject';
+    createdAt: any;
+    cwd?: string | null;
+    prompt: string;
+    settingsJson: string;
+    timeoutMs?: number | null;
+    cronPattern: string;
+    driverId: string;
+    enabled: boolean;
+    id: string;
+    lastRunAt?: any | null;
+    model?: string | null;
+    name: string;
+    nextRunAt?: any | null;
+    timezone?: string | null;
+    updatedAt: any;
+  } | null;
+  scheduledAgentJobRuns: Array<{
+    __typename?: 'ScheduledAgentJobRunObject';
+    bullmqJobId?: string | null;
+    createdAt: any;
+    driverId: string;
+    errorMessage?: string | null;
+    exitCode?: number | null;
+    finishedAt?: any | null;
+    id: string;
+    model?: string | null;
+    startedAt?: any | null;
+    status: string;
+    trigger: string;
+  }>;
+};
+
+export type UpdateScheduledAgentJobMutationVariables = Exact<{
+  input: UpdateScheduledAgentJobInputType;
+}>;
+
+export type UpdateScheduledAgentJobMutation = {
+  __typename?: 'Mutation';
+  updateScheduledAgentJob: {
+    __typename?: 'ScheduledAgentJobObject';
+    cronPattern: string;
+    driverId: string;
+    enabled: boolean;
+    id: string;
+    lastRunAt?: any | null;
+    model?: string | null;
+    name: string;
+    nextRunAt?: any | null;
+    timezone?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type SetScheduledAgentJobEnabledMutationVariables = Exact<{
+  input: SetScheduledAgentJobEnabledInputType;
+}>;
+
+export type SetScheduledAgentJobEnabledMutation = {
+  __typename?: 'Mutation';
+  setScheduledAgentJobEnabled: {
+    __typename?: 'ScheduledAgentJobObject';
+    cronPattern: string;
+    driverId: string;
+    enabled: boolean;
+    id: string;
+    lastRunAt?: any | null;
+    model?: string | null;
+    name: string;
+    nextRunAt?: any | null;
+    timezone?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type RunScheduledAgentJobNowMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type RunScheduledAgentJobNowMutation = {
+  __typename?: 'Mutation';
+  runScheduledAgentJobNow: {
+    __typename?: 'ScheduledAgentJobRunObject';
+    bullmqJobId?: string | null;
+    createdAt: any;
+    driverId: string;
+    errorMessage?: string | null;
+    exitCode?: number | null;
+    finishedAt?: any | null;
+    id: string;
+    model?: string | null;
+    startedAt?: any | null;
+    status: string;
+    trigger: string;
+  };
+};
+
+export type DeleteScheduledAgentJobMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type DeleteScheduledAgentJobMutation = {
+  __typename?: 'Mutation';
+  deleteScheduledAgentJob: boolean;
+};
+
+export type ScheduledJobCardFragment = {
+  __typename?: 'ScheduledAgentJobObject';
+  cronPattern: string;
+  driverId: string;
+  enabled: boolean;
+  id: string;
+  lastRunAt?: any | null;
+  model?: string | null;
+  name: string;
+  nextRunAt?: any | null;
+  timezone?: string | null;
+  updatedAt: any;
+};
+
+export type ScheduledAgentJobsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ScheduledAgentJobsQuery = {
+  __typename?: 'Query';
+  scheduledAgentJobs: Array<{
+    __typename?: 'ScheduledAgentJobObject';
+    cronPattern: string;
+    driverId: string;
+    enabled: boolean;
+    id: string;
+    lastRunAt?: any | null;
+    model?: string | null;
+    name: string;
+    nextRunAt?: any | null;
+    timezone?: string | null;
+    updatedAt: any;
+  }>;
+};
+
+export type CreateScheduledAgentJobMutationVariables = Exact<{
+  input: CreateScheduledAgentJobInputType;
+}>;
+
+export type CreateScheduledAgentJobMutation = {
+  __typename?: 'Mutation';
+  createScheduledAgentJob: {
+    __typename?: 'ScheduledAgentJobObject';
+    cronPattern: string;
+    driverId: string;
+    enabled: boolean;
+    id: string;
+    lastRunAt?: any | null;
+    model?: string | null;
+    name: string;
+    nextRunAt?: any | null;
+    timezone?: string | null;
+    updatedAt: any;
+  };
+};
+
 export type GetSearchResultsQueryVariables = Exact<{
   input: SearchInput;
 }>;
@@ -9251,6 +9583,63 @@ export const TagActionRuleRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<TagActionRuleRowFragment, unknown>;
+export const ScheduledJobRunRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobRunRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduledJobRunRowFragment, unknown>;
+export const ScheduledJobCardFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduledJobCardFragment, unknown>;
 export const ServiceAccountCredentialFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -17309,6 +17698,554 @@ export const RulesDeleteTagActionRuleDocument = {
 } as unknown as DocumentNode<
   RulesDeleteTagActionRuleMutation,
   RulesDeleteTagActionRuleMutationVariables
+>;
+export const ScheduledAgentJobDetailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'scheduledAgentJobDetail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'settingsJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'timeoutMs' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobRuns' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scheduledAgentJobId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'IntValue', value: '50' },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobRunRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobRunRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ScheduledAgentJobDetailQuery,
+  ScheduledAgentJobDetailQueryVariables
+>;
+export const UpdateScheduledAgentJobDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateScheduledAgentJob' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateScheduledAgentJobInputType' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateScheduledAgentJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateScheduledAgentJobMutation,
+  UpdateScheduledAgentJobMutationVariables
+>;
+export const SetScheduledAgentJobEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setScheduledAgentJobEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'SetScheduledAgentJobEnabledInputType',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setScheduledAgentJobEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetScheduledAgentJobEnabledMutation,
+  SetScheduledAgentJobEnabledMutationVariables
+>;
+export const RunScheduledAgentJobNowDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'runScheduledAgentJobNow' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'runScheduledAgentJobNow' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobRunRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobRunRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RunScheduledAgentJobNowMutation,
+  RunScheduledAgentJobNowMutationVariables
+>;
+export const DeleteScheduledAgentJobDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteScheduledAgentJob' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteScheduledAgentJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteScheduledAgentJobMutation,
+  DeleteScheduledAgentJobMutationVariables
+>;
+export const ScheduledAgentJobsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'scheduledAgentJobs' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ScheduledAgentJobsQuery,
+  ScheduledAgentJobsQueryVariables
+>;
+export const CreateScheduledAgentJobDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createScheduledAgentJob' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateScheduledAgentJobInputType' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createScheduledAgentJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateScheduledAgentJobMutation,
+  CreateScheduledAgentJobMutationVariables
 >;
 export const GetSearchResultsDocument = {
   kind: 'Document',

@@ -114,6 +114,31 @@ export { Permission } from './modules/roles/permission.entity';
 export { PermissionsService } from './modules/roles/permissions.service';
 export { Role } from './modules/roles/role.entity';
 export { RolesService } from './modules/roles/roles.service';
+export { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity';
+export type {
+  ScheduledAgentJobData,
+  ScheduledAgentJobDriverId,
+  ScheduledAgentJobEndpointSettings,
+  ScheduledAgentJobSettings,
+  ScheduledAgentJobWorktreeSettings,
+} from './modules/scheduled-agent-jobs/scheduled-agent-job.entity';
+export { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
+export type {
+  ScheduledAgentJobRunData,
+  ScheduledAgentJobRunStatus,
+  ScheduledAgentJobRunTrigger,
+} from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
+export { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module';
+export {
+  schedulerKeyForJob,
+  ScheduledAgentJobsService,
+} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service';
+export type {
+  CreateScheduledAgentJobInput,
+  CreateScheduledAgentJobRunInput,
+  FinishScheduledAgentJobRunInput,
+  UpdateScheduledAgentJobInput,
+} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service';
 export { ServiceAccount } from './modules/service-accounts/service-account.entity';
 export { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
 export {

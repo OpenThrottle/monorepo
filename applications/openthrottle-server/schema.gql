@@ -1818,6 +1818,86 @@ type ProjectSkillsResult {
   totalCount: Int!
 }
 
+"""
+A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.
+"""
+type ScheduledAgentJobObject {
+  id: ID!
+
+  """Human-friendly schedule name."""
+  name: String!
+
+  """Prompt passed to the agent CLI."""
+  prompt: String!
+
+  """Agent driver id (claude | codex | cursor | grok | opencode)."""
+  driverId: String!
+
+  """Model preset; null uses the driver default."""
+  model: String
+
+  """
+  JSON-serialized AgentPromptSettings ({ endpoint?, worktree? }); endpoint.apiKey is never present.
+  """
+  settingsJson: String!
+
+  """5- or 6-field cron pattern."""
+  cronPattern: String!
+
+  """IANA timezone for the cron pattern; null means UTC."""
+  timezone: String
+
+  """Per-run timeout override in ms; null uses the queue default."""
+  timeoutMs: Int
+
+  """Whether the schedule is active (registered as a BullMQ scheduler)."""
+  enabled: Boolean!
+
+  """Process cwd for the agent CLI; null uses WORKSPACE_ROOT."""
+  cwd: String
+
+  """Owning user id; null for system-seeded schedules."""
+  ownerUserId: ID
+
+  """Last time a run started."""
+  lastRunAt: DateTime
+
+  """Next scheduled fire time (from the BullMQ scheduler)."""
+  nextRunAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+One run of a scheduled agent job. Logs stream to queueJobLogs/queueJobLogTail keyed by bullmqJobId.
+"""
+type ScheduledAgentJobRunObject {
+  id: ID!
+  scheduledAgentJobId: ID!
+
+  """
+  BullMQ job id — join key to queueJobLogs; null before the run is enqueued.
+  """
+  bullmqJobId: String
+
+  """queued | running | succeeded | failed | cancelled."""
+  status: String!
+  driverId: String!
+  model: String
+
+  """schedule | manual (run-now)."""
+  trigger: String!
+
+  """Child process exit code; null on timeout/cancel/spawn error."""
+  exitCode: Int
+
+  """Failure detail; null on success."""
+  errorMessage: String
+  startedAt: DateTime
+  finishedAt: DateTime
+  createdAt: DateTime!
+}
+
 type ServiceAccountCredentialObject {
   createdAt: DateTime!
   expiresAt: DateTime
@@ -2768,6 +2848,15 @@ type Query {
   """Get permission names for the current user"""
   myPermissions: [String!]!
 
+  """All scheduled agent jobs, newest first."""
+  scheduledAgentJobs: [ScheduledAgentJobObject!]!
+
+  """One scheduled agent job by id, or null."""
+  scheduledAgentJob(id: ID!): ScheduledAgentJobObject
+
+  """Run history for a scheduled agent job, newest first."""
+  scheduledAgentJobRuns(scheduledAgentJobId: ID!, limit: Int): [ScheduledAgentJobRunObject!]!
+
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!
 
@@ -3575,6 +3664,36 @@ type Mutation {
 
   """Remove a permission from a role"""
   removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
+
+  """
+  Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings.
+  """
+  createScheduledAgentJob(input: CreateScheduledAgentJobInputType!): ScheduledAgentJobObject!
+
+  """
+  Update a scheduled agent job (owner only). Re-projects the BullMQ scheduler.
+  """
+  updateScheduledAgentJob(input: UpdateScheduledAgentJobInputType!): ScheduledAgentJobObject!
+
+  """
+  Delete a scheduled agent job and its scheduler (owner only). Returns whether a row was removed.
+  """
+  deleteScheduledAgentJob(id: ID!): Boolean!
+
+  """
+  Enable or disable a scheduled agent job (owner only); registers/removes its scheduler.
+  """
+  setScheduledAgentJobEnabled(input: SetScheduledAgentJobEnabledInputType!): ScheduledAgentJobObject!
+
+  """
+  Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.
+  """
+  runScheduledAgentJobNow(id: ID!): ScheduledAgentJobRunObject!
+
+  """
+  Request cancellation of an in-flight run (durable marker + best-effort in-process abort).
+  """
+  cancelScheduledAgentJobRun(runId: ID!): ScheduledAgentJobRunObject!
 
   """Create a service account (admin, human only)."""
   createServiceAccount(input: CreateServiceAccountInput!): ServiceAccountObject!
@@ -4459,6 +4578,61 @@ input RemovePermissionFromRoleInput {
 
   """Role id to remove the permission from"""
   roleId: ID!
+}
+
+input CreateScheduledAgentJobInputType {
+  """Human-friendly schedule name."""
+  name: String!
+
+  """Prompt passed to the agent CLI."""
+  prompt: String!
+
+  """Agent driver id (claude | codex | cursor | grok | opencode)."""
+  driverId: String!
+
+  """Model preset; omit for the driver default."""
+  model: String
+
+  """
+  JSON AgentPromptSettings ({ endpoint?, worktree? }); no endpoint.apiKey. Omit for none.
+  """
+  settingsJson: String
+
+  """5- or 6-field cron pattern (may not fire every minute or sub-minute)."""
+  cronPattern: String!
+
+  """IANA timezone; omit for UTC."""
+  timezone: String
+
+  """Per-run timeout override in ms; omit for the queue default."""
+  timeoutMs: Int
+
+  """Process cwd for the agent CLI; omit for WORKSPACE_ROOT."""
+  cwd: String
+
+  """Whether the schedule starts enabled (default true)."""
+  enabled: Boolean
+}
+
+input UpdateScheduledAgentJobInputType {
+  """Schedule to update."""
+  id: ID!
+  name: String
+  prompt: String
+  driverId: String
+  model: String
+
+  """JSON AgentPromptSettings; no endpoint.apiKey."""
+  settingsJson: String
+  cronPattern: String
+  timezone: String
+  timeoutMs: Int
+  cwd: String
+}
+
+input SetScheduledAgentJobEnabledInputType {
+  id: ID!
+  enabled: Boolean!
 }
 
 input CreateServiceAccountInput {

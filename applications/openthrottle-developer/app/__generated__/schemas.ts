@@ -30,6 +30,7 @@ import {
   CreateProjectInput,
   CreateQueueInput,
   CreateRoleInput,
+  CreateScheduledAgentJobInputType,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   CreateTaskInput,
@@ -101,6 +102,7 @@ import {
   SearchInput,
   SearchPlansInput,
   SetPlanStatusInput,
+  SetScheduledAgentJobEnabledInputType,
   SetWorkspaceLocalRepositoryProjectInput,
   SettleCliPlanRunInput,
   SkillAvailabilityRuleInput,
@@ -117,6 +119,7 @@ import {
   UpdateProjectInput,
   UpdateRepositoryInput,
   UpdateRoleInput,
+  UpdateScheduledAgentJobInputType,
   UpdateServiceAccountInput,
   UpdateTaskInput,
   UpdateUserInput,
@@ -465,6 +468,23 @@ export function CreateRoleInputSchema(): z.ZodObject<
   return z.object({
     description: z.string().nullish(),
     name: z.string(),
+  });
+}
+
+export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
+  Properties<CreateScheduledAgentJobInputType>
+> {
+  return z.object({
+    cronPattern: z.string(),
+    cwd: z.string().nullish(),
+    driverId: z.string(),
+    enabled: z.boolean().nullish(),
+    model: z.string().nullish(),
+    name: z.string(),
+    prompt: z.string(),
+    settingsJson: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
   });
 }
 
@@ -1127,6 +1147,15 @@ export function SetPlanStatusInputSchema(): z.ZodObject<
   });
 }
 
+export function SetScheduledAgentJobEnabledInputTypeSchema(): z.ZodObject<
+  Properties<SetScheduledAgentJobEnabledInputType>
+> {
+  return z.object({
+    enabled: z.boolean(),
+    id: z.string(),
+  });
+}
+
 export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   Properties<SetWorkspaceLocalRepositoryProjectInput>
 > {
@@ -1311,6 +1340,23 @@ export function UpdateRoleInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     id: z.string(),
     name: z.string().nullish(),
+  });
+}
+
+export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
+  Properties<UpdateScheduledAgentJobInputType>
+> {
+  return z.object({
+    cronPattern: z.string().nullish(),
+    cwd: z.string().nullish(),
+    driverId: z.string().nullish(),
+    id: z.string(),
+    model: z.string().nullish(),
+    name: z.string().nullish(),
+    prompt: z.string().nullish(),
+    settingsJson: z.string().nullish(),
+    timeoutMs: z.number().nullish(),
+    timezone: z.string().nullish(),
   });
 }
 
