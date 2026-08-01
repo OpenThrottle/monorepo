@@ -1,14 +1,21 @@
 fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
   bullmqJobId
+  cacheReadTokens
+  cacheWriteTokens
+  costUsd
   createdAt
   driverId
   errorMessage
   exitCode
   finishedAt
   id
+  inputTokens
   model
+  outputTokens
+  reasoningTokens
   startedAt
   status
+  totalTokens
   trigger
 }
 

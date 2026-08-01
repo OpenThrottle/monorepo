@@ -7534,15 +7534,22 @@ export type RulesDeleteTagActionRuleMutation = {
 export type ScheduledJobRunRowFragment = {
   __typename?: 'ScheduledAgentJobRunObject';
   bullmqJobId?: string | null;
+  cacheReadTokens?: number | null;
+  cacheWriteTokens?: number | null;
+  costUsd?: number | null;
   createdAt: any;
   driverId: string;
   errorMessage?: string | null;
   exitCode?: number | null;
   finishedAt?: any | null;
   id: string;
+  inputTokens?: number | null;
   model?: string | null;
+  outputTokens?: number | null;
+  reasoningTokens?: number | null;
   startedAt?: any | null;
   status: string;
+  totalTokens?: number | null;
   trigger: string;
 };
 
@@ -7573,15 +7580,22 @@ export type ScheduledAgentJobDetailQuery = {
   scheduledAgentJobRuns: Array<{
     __typename?: 'ScheduledAgentJobRunObject';
     bullmqJobId?: string | null;
+    cacheReadTokens?: number | null;
+    cacheWriteTokens?: number | null;
+    costUsd?: number | null;
     createdAt: any;
     driverId: string;
     errorMessage?: string | null;
     exitCode?: number | null;
     finishedAt?: any | null;
     id: string;
+    inputTokens?: number | null;
     model?: string | null;
+    outputTokens?: number | null;
+    reasoningTokens?: number | null;
     startedAt?: any | null;
     status: string;
+    totalTokens?: number | null;
     trigger: string;
   }>;
 };
@@ -7637,15 +7651,22 @@ export type RunScheduledAgentJobNowMutation = {
   runScheduledAgentJobNow: {
     __typename?: 'ScheduledAgentJobRunObject';
     bullmqJobId?: string | null;
+    cacheReadTokens?: number | null;
+    cacheWriteTokens?: number | null;
+    costUsd?: number | null;
     createdAt: any;
     driverId: string;
     errorMessage?: string | null;
     exitCode?: number | null;
     finishedAt?: any | null;
     id: string;
+    inputTokens?: number | null;
     model?: string | null;
+    outputTokens?: number | null;
+    reasoningTokens?: number | null;
     startedAt?: any | null;
     status: string;
+    totalTokens?: number | null;
     trigger: string;
   };
 };
@@ -7662,17 +7683,25 @@ export type DeleteScheduledAgentJobMutation = {
 export type ScheduledJobRunDetailFragment = {
   __typename?: 'ScheduledAgentJobRunObject';
   bullmqJobId?: string | null;
+  cacheReadTokens?: number | null;
+  cacheWriteTokens?: number | null;
   cancelRequestedAt?: any | null;
+  costUsd?: number | null;
   createdAt: any;
   driverId: string;
   errorMessage?: string | null;
   exitCode?: number | null;
   finishedAt?: any | null;
   id: string;
+  inputTokens?: number | null;
   model?: string | null;
+  outputTokens?: number | null;
+  reasoningTokens?: number | null;
   scheduledAgentJobId: string;
+  settingsSnapshotJson?: string | null;
   startedAt?: any | null;
   status: string;
+  totalTokens?: number | null;
   trigger: string;
 };
 
@@ -7686,17 +7715,25 @@ export type ScheduledAgentJobRunDetailQuery = {
   scheduledAgentJobRun?: {
     __typename?: 'ScheduledAgentJobRunObject';
     bullmqJobId?: string | null;
+    cacheReadTokens?: number | null;
+    cacheWriteTokens?: number | null;
     cancelRequestedAt?: any | null;
+    costUsd?: number | null;
     createdAt: any;
     driverId: string;
     errorMessage?: string | null;
     exitCode?: number | null;
     finishedAt?: any | null;
     id: string;
+    inputTokens?: number | null;
     model?: string | null;
+    outputTokens?: number | null;
+    reasoningTokens?: number | null;
     scheduledAgentJobId: string;
+    settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
+    totalTokens?: number | null;
     trigger: string;
   } | null;
   scheduledAgentJob?: {
@@ -7715,17 +7752,25 @@ export type CancelScheduledAgentJobRunMutation = {
   cancelScheduledAgentJobRun: {
     __typename?: 'ScheduledAgentJobRunObject';
     bullmqJobId?: string | null;
+    cacheReadTokens?: number | null;
+    cacheWriteTokens?: number | null;
     cancelRequestedAt?: any | null;
+    costUsd?: number | null;
     createdAt: any;
     driverId: string;
     errorMessage?: string | null;
     exitCode?: number | null;
     finishedAt?: any | null;
     id: string;
+    inputTokens?: number | null;
     model?: string | null;
+    outputTokens?: number | null;
+    reasoningTokens?: number | null;
     scheduledAgentJobId: string;
+    settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
+    totalTokens?: number | null;
     trigger: string;
   };
 };
@@ -10469,15 +10514,22 @@ export const ScheduledJobRunRowFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },
@@ -10498,20 +10550,31 @@ export const ScheduledJobRunDetailFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'settingsSnapshotJson' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },
@@ -18954,15 +19017,22 @@ export const ScheduledAgentJobDetailDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },
@@ -19192,15 +19262,22 @@ export const RunScheduledAgentJobNowDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },
@@ -19344,20 +19421,31 @@ export const ScheduledAgentJobRunDetailDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'settingsSnapshotJson' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },
@@ -19427,20 +19515,31 @@ export const CancelScheduledAgentJobRunDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
           { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'settingsSnapshotJson' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
         ],
       },

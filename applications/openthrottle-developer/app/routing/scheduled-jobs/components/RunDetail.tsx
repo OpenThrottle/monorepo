@@ -4,6 +4,12 @@ import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
 import { RUN_DETAIL_COPY } from '~/routing/scheduled-jobs/data/data.run-detail';
 import { RUN_STATUS_VARIANT } from '~/routing/scheduled-jobs/data/data.run-status';
 import { formatDuration } from '~/routing/scheduled-jobs/utils/format-duration';
+import {
+  formatRunCost,
+  formatSettingsSnapshot,
+  hasRunUsage,
+  runUsageRows,
+} from '~/routing/scheduled-jobs/utils/format-usage';
 import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
 
 export interface RunDetailProps {
@@ -53,6 +59,10 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
     { label: fields.createdAt, value: formatWhen(run.createdAt) },
   ];
 
+  const usageRows = runUsageRows(run);
+  const showUsage = hasRunUsage(run);
+  const snapshot = formatSettingsSnapshot(run.settingsSnapshotJson);
+
   // Handlers
 
   // Markup
@@ -73,6 +83,47 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
           </div>
         ))}
       </dl>
+
+      <div className="mt-4">
+        <p className="text-muted-foreground mb-1 text-xs">
+          {RUN_DETAIL_COPY.usage.heading}
+        </p>
+        {showUsage ? (
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+            {usageRows.map((row) => (
+              <div className="flex flex-col gap-0.5" key={row.label}>
+                <dt className="text-muted-foreground text-xs">{row.label}</dt>
+                <dd className="text-sm tabular-nums">{row.value}</dd>
+              </div>
+            ))}
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-muted-foreground text-xs">
+                {RUN_DETAIL_COPY.usage.cost}
+              </dt>
+              <dd className="text-sm tabular-nums">{formatRunCost(run)}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            {RUN_DETAIL_COPY.usage.empty}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <p className="text-muted-foreground mb-1 text-xs">
+          {RUN_DETAIL_COPY.settings.heading}
+        </p>
+        {snapshot ? (
+          <pre className="bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs">
+            {snapshot}
+          </pre>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            {RUN_DETAIL_COPY.settings.empty}
+          </p>
+        )}
+      </div>
 
       {run.cancelRequestedAt ? (
         <p className="text-muted-foreground mt-4 text-xs" role="status">
