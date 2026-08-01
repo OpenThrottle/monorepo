@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 import {
   Badge,
   Table,
@@ -10,17 +11,19 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { RUN_STATUS_VARIANT } from '~/routing/scheduled-jobs/data/data.run-status';
+import { formatDuration } from '~/routing/scheduled-jobs/utils/format-duration';
 import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
 
 export interface ScheduledJobRunsTableProps {
   className?: string;
+  jobId: string;
   runs: ScheduledJobRunRowFragment[];
 }
 
 export const ScheduledJobRunsTable = (
   props: ScheduledJobRunsTableProps,
 ): React.ReactElement => {
-  const { className, runs } = props;
+  const { className, jobId, runs } = props;
 
   // Hooks
 
@@ -42,24 +45,38 @@ export const ScheduledJobRunsTable = (
           <TableHead>Trigger</TableHead>
           <TableHead>Started</TableHead>
           <TableHead>Finished</TableHead>
+          <TableHead>Duration</TableHead>
           <TableHead>Exit</TableHead>
-          <TableHead>Detail</TableHead>
+          <TableHead>
+            <span className="sr-only">Open run</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {runs.map((run) => (
           <TableRow key={run.id}>
             <TableCell>
-              <Badge variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}>
+              <Badge
+                title={run.errorMessage ?? undefined}
+                variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}
+              >
                 {run.status}
               </Badge>
             </TableCell>
             <TableCell>{run.trigger}</TableCell>
             <TableCell>{formatWhen(run.startedAt)}</TableCell>
             <TableCell>{formatWhen(run.finishedAt)}</TableCell>
+            <TableCell>
+              {formatDuration(run.startedAt, run.finishedAt)}
+            </TableCell>
             <TableCell>{run.exitCode ?? '—'}</TableCell>
-            <TableCell className="text-muted-foreground max-w-xs truncate text-xs">
-              {run.errorMessage ?? ''}
+            <TableCell className="text-right">
+              <Link
+                className="text-primary text-sm underline-offset-4 hover:underline"
+                to={`/scheduled-jobs/${jobId}/runs/${run.id}`}
+              >
+                View
+              </Link>
             </TableCell>
           </TableRow>
         ))}

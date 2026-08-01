@@ -77,6 +77,18 @@ export class ScheduledAgentJobsResolver {
     return runs.map(toScheduledAgentJobRunObject);
   }
 
+  @Query(() => ScheduledAgentJobRunObject, {
+    description: `One run of a scheduled agent job by run id, or null.`,
+    nullable: true,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJobRun(
+    @Args('runId', { type: () => ID }) runId: string,
+  ): Promise<ScheduledAgentJobRunObject | null> {
+    const run = await this.service.getRun(runId);
+    return run === null ? null : toScheduledAgentJobRunObject(run);
+  }
+
   @Mutation(() => ScheduledAgentJobObject, {
     description: `Create a scheduled agent job. Validates cron, driver id, model/endpoint capability, and settings.`,
   })

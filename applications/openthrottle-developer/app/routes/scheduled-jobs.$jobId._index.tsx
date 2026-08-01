@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Form, redirect } from 'react-router';
+import { Form, Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
@@ -16,12 +16,12 @@ import {
 } from '~/__generated__/graphql';
 import { ScheduledJobRunsTable } from '~/routing/scheduled-jobs/components/ScheduledJobRunsTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId';
+import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Scheduled Job',
+  breadcrumb: (match) => match.loaderData?.job?.name ?? 'Scheduled Job',
   links: (_match) => [{ children: 'Scheduled Jobs', to: '/scheduled-jobs' }],
 };
 
@@ -91,6 +91,9 @@ export default function Component(
           </div>
 
           <div className="flex gap-2">
+            <Button asChild={true} variant="outline">
+              <Link to="./edit">Edit</Link>
+            </Button>
             <Form method="post">
               <input name="intent" type="hidden" value="run-now" />
               <Button type="submit" variant="outline">
@@ -142,7 +145,11 @@ export default function Component(
               No runs yet. Use “Run now” to trigger one.
             </p>
           ) : (
-            <ScheduledJobRunsTable className="bg-card" runs={runs} />
+            <ScheduledJobRunsTable
+              className="bg-card"
+              jobId={job.id}
+              runs={runs}
+            />
           )}
         </section>
       </div>
