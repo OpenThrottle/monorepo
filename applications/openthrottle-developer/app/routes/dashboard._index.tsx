@@ -15,6 +15,7 @@ import {
 } from '~/__generated__/graphql';
 import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
@@ -125,10 +126,20 @@ export default function Component(
         className="--lg:grid-cols-3 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 lg:gap-12"
         data-testid="dashboard-content-grid"
       >
-        {/*
-        <DashboardQueueStats data={queues} />
-        <DashboardQuickNavigation />
-        */}
+        <div className="col-span-2 md:col-span-1">
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load queue health.
+                </p>
+              }
+              resolve={core}
+            >
+              {(data) => <DashboardQueueHealthCard queues={data.queues} />}
+            </Await>
+          </React.Suspense>
+        </div>
 
         <div className="col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">

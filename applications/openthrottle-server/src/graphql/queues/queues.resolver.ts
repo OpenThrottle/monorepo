@@ -5,6 +5,8 @@
  */
 
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CleanQueueInput } from './clean-queue.input';
+import { CleanQueueResultObject } from './clean-queue-result.object';
 import { CreateQueueInput } from './create-queue.input';
 import { CreateQueueResultObject } from './create-queue-result.object';
 import { DuplicateJobInput } from './duplicate-job.input';
@@ -16,6 +18,8 @@ import { JobObject } from './job.object';
 import { JobsResultObject, QueueDetailsObject } from './queue-details.object';
 import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { QueueControlInput } from './queue-control.input';
+import { QueueControlResultObject } from './queue-control-result.object';
 import { QueueDetailsInput } from './queue-details.input';
 import { QueuesService } from './queues.service';
 import { QueueStatsObject } from './queue-stats.object';
@@ -76,6 +80,7 @@ export class QueuesResolver {
 
       const jobsResult = new JobsResultObject();
       jobsResult.hasNext = result.hasNext;
+      jobsResult.total = result.total;
       jobsResult.jobs = result.jobs.map((dto) => {
         const job = new JobObject();
         job.data = dto.data;
@@ -325,6 +330,89 @@ export class QueuesResolver {
       out.error = null;
     } else {
       out.success = false;
+      out.error = result.error;
+    }
+    return out;
+  }
+
+  @Mutation(() => QueueControlResultObject, {
+    description: `Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue.`,
+  })
+  async pauseQueue(
+    @Args('input', { type: () => QueueControlInput })
+    input: QueueControlInput,
+  ): Promise<QueueControlResultObject> {
+    const result = await this.queuesService.pauseQueue(input.queueName);
+
+    const out = new QueueControlResultObject();
+    if ('queueName' in result) {
+      out.success = true;
+      out.queueName = result.queueName;
+      out.error = null;
+    } else {
+      out.success = false;
+      out.queueName = null;
+      out.error = result.error;
+    }
+    return out;
+  }
+
+  @Mutation(() => QueueControlResultObject, {
+    description: `Resume a paused queue so workers pick up jobs again.`,
+  })
+  async resumeQueue(
+    @Args('input', { type: () => QueueControlInput })
+    input: QueueControlInput,
+  ): Promise<QueueControlResultObject> {
+    const result = await this.queuesService.resumeQueue(input.queueName);
+
+    const out = new QueueControlResultObject();
+    if ('queueName' in result) {
+      out.success = true;
+      out.queueName = result.queueName;
+      out.error = null;
+    } else {
+      out.success = false;
+      out.queueName = null;
+      out.error = result.error;
+    }
+    return out;
+  }
+
+  @Mutation(() => CleanQueueResultObject, {
+    description: `Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed.`,
+  })
+  async cleanQueue(
+    @Args('input', { type: () => CleanQueueInput })
+    input: CleanQueueInput,
+  ): Promise<CleanQueueResultObject> {
+    const out = new CleanQueueResultObject();
+
+    if (!input.confirm) {
+      out.success = false;
+      out.queueName = null;
+      out.removedCount = 0;
+      out.error =
+        'Confirmation required: set confirm to true to clean this queue.';
+      return out;
+    }
+
+    const result = await this.queuesService.cleanQueue(
+      input.queueName,
+      input.state,
+      input.graceMs ?? 0,
+      input.limit ?? 0,
+    );
+
+    if ('removedCount' in result) {
+      out.success = true;
+      out.queueName = input.queueName;
+      out.removedCount = result.removedCount;
+      out.error = null;
+    } else {
+      out.success = false;
+      out.queueName = null;
+      out.removedCount = 0;
       out.error = result.error;
     }
     return out;

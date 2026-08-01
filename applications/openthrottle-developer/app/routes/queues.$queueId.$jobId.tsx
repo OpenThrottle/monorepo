@@ -2,7 +2,6 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -16,7 +15,6 @@ import {
   QueueJobDetailRetryDocument,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { ListOrderedIcon } from 'lucide-react';
 import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
@@ -105,25 +103,6 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={ListOrderedIcon}
-          title={`${job.name} #${job.id}`}
-        />
-        <p className="text-muted-foreground text-sm">
-          Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab ducimus,
-          vero nostrum voluptates consectetur ipsum possimus aliquid odio nulla
-          pariatur quaerat debitis alias perferendis inventore voluptatum illum
-          fuga fugiat reprehenderit!
-        </p>
-      </div>
-
-      {/* <h1 className="text-xl font-semibold mb-6 text-accent">
-        Queue job <span className="font-mono text-base">{job.id}</span>
-      </h1> */}
-
       <QueueJobDetail job={job} queueName={queueName} />
     </GlobalScreen>
   );

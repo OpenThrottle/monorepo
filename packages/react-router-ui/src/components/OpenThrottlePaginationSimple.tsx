@@ -1,63 +1,78 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 export interface OpenThrottlePaginationSimpleProps {
-  /** Base path for pagination links (default /projects). Use /plans for plans index. */
+  /** Base path for pagination links (default /). */
   readonly basePath?: string;
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
-  /** Label for the counted items in the summary line (default &quot;projects&quot;). */
+  /** Label for the counted items in the summary line (default "results"). */
   readonly resultLabel?: string;
+  /** Total number of items across all pages. */
   readonly total: number;
 }
 
+/**
+ * @description Prev/next pager driven by a real item `total`. Computes page count from total/limit and
+ * preserves the current query string (filters, search) on each page link.
+ */
 export const OpenThrottlePaginationSimple = (
   props: OpenThrottlePaginationSimpleProps,
 ): React.ReactElement | null => {
   const {
-    // basePath = '/',
-    // className,
+    basePath = '/',
+    className,
     limit,
     page,
-    // resultLabel = 'projects',
+    resultLabel = 'results',
     total,
   } = props;
 
   // Hooks
-  const [_bool, _setBool] = React.useState(false);
+  const [searchParams] = useSearchParams();
 
   // Setup
-  const hasNext = false;
+  const safeLimit = limit > 0 ? limit : 1;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
 
   // Handlers
+  const hrefForPage = (nextPage: number): string => {
+    const next = new URLSearchParams(searchParams);
+    next.set('page', String(nextPage));
+    next.set('limit', String(limit));
+    return `${basePath}?${next.toString()}`;
+  };
 
   // Markup
 
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (total <= 1) {
+  if (totalPages <= 1) {
     return null;
   }
 
   return (
     <div
-      className="mt-8 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between"
+      className={[
+        'mt-8 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-testid="queue-jobs-pagination"
     >
       <p className="text-muted-foreground text-sm">
-        Page {page} of {total} · {limit} per page
+        Page {page} of {totalPages} · {total.toLocaleString()} {resultLabel}
       </p>
       <div className="flex flex-wrap gap-2">
-        {page > 1 ? (
+        {hasPrev ? (
           <Button asChild={true} size="sm" variant="outline">
-            <Link
-              rel="prev"
-              // to={buildJobsPageHref(page - 1)}
-              to="/"
-            >
+            <Link rel="prev" to={hrefForPage(page - 1)}>
               Previous
             </Link>
           </Button>
@@ -73,11 +88,7 @@ export const OpenThrottlePaginationSimple = (
         )}
         {hasNext ? (
           <Button asChild={true} size="sm" variant="outline">
-            <Link
-              rel="next"
-              // to={buildJobsPageHref(page + 1)}
-              to="/"
-            >
+            <Link rel="next" to={hrefForPage(page + 1)}>
               Next
             </Link>
           </Button>

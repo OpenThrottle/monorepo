@@ -20,6 +20,7 @@ describe('QueuesResolver', () => {
   ];
 
   const mockQueuesService = createMock<QueuesService>({
+    cleanQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     createQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     duplicateJob: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     enqueueAgenticTest: vi.fn().mockResolvedValue({ error: 'not implemented' }),
@@ -27,13 +28,15 @@ describe('QueuesResolver', () => {
       .fn()
       .mockResolvedValue({ error: 'not implemented' }),
     getJob: vi.fn().mockResolvedValue(null),
-    getJobs: vi.fn().mockResolvedValue({ hasNext: false, jobs: [] }),
+    getJobs: vi.fn().mockResolvedValue({ hasNext: false, jobs: [], total: 0 }),
     getRepeatableJobs: vi.fn().mockResolvedValue([]),
     getStats: vi.fn().mockResolvedValue(mockStats),
     getStatsForQueue: vi.fn().mockResolvedValue(mockStats[0]),
+    pauseQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     removeRepeatableByKey: vi
       .fn()
       .mockResolvedValue({ error: 'not implemented' }),
+    resumeQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     retryJob: vi.fn().mockResolvedValue({ error: 'not implemented' }),
   });
 
@@ -87,6 +90,7 @@ describe('QueuesResolver', () => {
             timestamp: 1000,
           },
         ],
+        total: 42,
       });
 
       const result = await resolver.queue({
@@ -103,6 +107,7 @@ describe('QueuesResolver', () => {
       expect(result?.jobs?.jobs[0].id).toBe('job-1');
       expect(result?.jobs?.jobs[0].state).toBe('waiting');
       expect(result?.jobs?.hasNext).toBe(true);
+      expect(result?.jobs?.total).toBe(42);
       expect(result?.jobs?.jobs[0].taskRunMetrics).toBeNull();
       expect(mockQueuesService.getJobs).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
@@ -151,6 +156,7 @@ describe('QueuesResolver', () => {
             timestamp: 1234567700,
           },
         ],
+        total: 1,
       });
 
       const result = await resolver.queue({
@@ -652,6 +658,110 @@ describe('QueuesResolver', () => {
         PLANS_QUEUE_NAME,
         'bad-key',
       );
+    });
+  });
+
+  describe('pauseQueue', () => {
+    test('returns success with queueName when service pauses', async () => {
+      vi.mocked(mockQueuesService.pauseQueue).mockResolvedValueOnce({
+        queueName: PLANS_QUEUE_NAME,
+      });
+
+      const result = await resolver.pauseQueue({ queueName: PLANS_QUEUE_NAME });
+
+      expect(result.success).toBe(true);
+      expect(result.queueName).toBe(PLANS_QUEUE_NAME);
+      expect(result.error).toBeNull();
+      expect(mockQueuesService.pauseQueue).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+      );
+    });
+
+    test('returns failure when service returns error', async () => {
+      vi.mocked(mockQueuesService.pauseQueue).mockResolvedValueOnce({
+        error: 'Queue not found: nope',
+      });
+
+      const result = await resolver.pauseQueue({ queueName: 'nope' });
+
+      expect(result.success).toBe(false);
+      expect(result.queueName).toBeNull();
+      expect(result.error).toBe('Queue not found: nope');
+    });
+  });
+
+  describe('resumeQueue', () => {
+    test('returns success with queueName when service resumes', async () => {
+      vi.mocked(mockQueuesService.resumeQueue).mockResolvedValueOnce({
+        queueName: PLANS_QUEUE_NAME,
+      });
+
+      const result = await resolver.resumeQueue({
+        queueName: PLANS_QUEUE_NAME,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.queueName).toBe(PLANS_QUEUE_NAME);
+      expect(result.error).toBeNull();
+      expect(mockQueuesService.resumeQueue).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+      );
+    });
+  });
+
+  describe('cleanQueue', () => {
+    test('rejects without confirmation and never calls the service', async () => {
+      const result = await resolver.cleanQueue({
+        confirm: false,
+        queueName: PLANS_QUEUE_NAME,
+        state: 'completed',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.removedCount).toBe(0);
+      expect(result.error).toMatch(/confirm/i);
+      expect(mockQueuesService.cleanQueue).not.toHaveBeenCalled();
+    });
+
+    test('cleans when confirmed and reports removedCount', async () => {
+      vi.mocked(mockQueuesService.cleanQueue).mockResolvedValueOnce({
+        removedCount: 7,
+      });
+
+      const result = await resolver.cleanQueue({
+        confirm: true,
+        graceMs: 1000,
+        limit: 50,
+        queueName: PLANS_QUEUE_NAME,
+        state: 'failed',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.queueName).toBe(PLANS_QUEUE_NAME);
+      expect(result.removedCount).toBe(7);
+      expect(result.error).toBeNull();
+      expect(mockQueuesService.cleanQueue).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'failed',
+        1000,
+        50,
+      );
+    });
+
+    test('surfaces a service error (e.g. non-cleanable state)', async () => {
+      vi.mocked(mockQueuesService.cleanQueue).mockResolvedValueOnce({
+        error: 'Only completed or failed jobs can be cleaned',
+      });
+
+      const result = await resolver.cleanQueue({
+        confirm: true,
+        queueName: PLANS_QUEUE_NAME,
+        state: 'active',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.removedCount).toBe(0);
+      expect(result.error).toBe('Only completed or failed jobs can be cleaned');
     });
   });
 });

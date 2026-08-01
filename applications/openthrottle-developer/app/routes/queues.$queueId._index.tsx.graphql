@@ -21,6 +21,7 @@ fragment QueueDetails on QueueDetailsObject {
     jobs {
       ...QueueJobDetails
     }
+    total
   }
   name
   waitingCount
@@ -29,5 +30,30 @@ fragment QueueDetails on QueueDetailsObject {
 query getQueue($input: QueueDetailsInput!) {
   queue(input: $input) {
     ...QueueDetails
+  }
+}
+
+mutation QueueDetailPauseQueue($input: QueueControlInput!) {
+  pauseQueue(input: $input) {
+    error
+    queueName
+    success
+  }
+}
+
+mutation QueueDetailResumeQueue($input: QueueControlInput!) {
+  resumeQueue(input: $input) {
+    error
+    queueName
+    success
+  }
+}
+
+mutation QueueDetailCleanQueue($input: CleanQueueInput!) {
+  cleanQueue(input: $input) {
+    error
+    queueName
+    removedCount
+    success
   }
 }

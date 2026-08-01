@@ -2,7 +2,7 @@
  * @description GraphQL object types for queue details: QueueDetailsObject (stats + optional paginated jobs) and JobsResultObject.
  */
 
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { JobObject } from './job.object';
 import { QueueStatsObject } from './queue-stats.object';
 
@@ -17,6 +17,12 @@ export class JobsResultObject {
     description: 'Whether more jobs exist after this page.',
   })
   hasNext!: boolean;
+
+  @Field(() => Int, {
+    description:
+      'Total jobs across the requested states (state-filtered), for accurate pagination.',
+  })
+  total!: number;
 }
 
 @ObjectType()

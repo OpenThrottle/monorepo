@@ -241,9 +241,9 @@ export interface QueueStatsChartViewOption {
 /**
  * @description Evaluation of chart approaches for skewed queue volumes (task 523146e3-b36c-479a-8e1a-25ecd1d57631).
  *
- * Prior art: {@link DashboardQueueStats} on the dashboard index uses a compact list + shadcn Tooltip for all five
- * counts (no shared bar scale). QueuesStats keeps a grouped BarChart for cross-queue comparison; the fix must
- * preserve that while taming `plans` / high-volume `completed` on a single X-axis.
+ * Prior art: the dashboard queue-health card (`DashboardQueueHealthCard`) uses a compact ranked list for
+ * at-a-glance health (no shared bar scale). QueuesStats keeps a grouped BarChart for cross-queue comparison;
+ * the fix must preserve that while taming `plans` / high-volume `completed` on a single X-axis.
  */
 export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOption> =
   [
@@ -266,7 +266,7 @@ export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOp
         'Aligns with operator focus: backlog (waiting + delayed) and in-flight (active).',
       ],
       summary:
-        'Default BarChart uses waiting, delayed, active, failed only; optional toggle adds completed to the grouped bars. Tooltip always lists all five counts (same pattern as DashboardQueueStats tooltips).',
+        'Default BarChart uses waiting, delayed, active, failed only; optional toggle adds completed to the grouped bars. Tooltip always lists all five counts.',
       verdict: 'finalist',
     },
     {

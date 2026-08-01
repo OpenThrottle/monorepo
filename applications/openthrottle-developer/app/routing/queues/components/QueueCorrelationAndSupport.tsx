@@ -75,8 +75,7 @@ export const QueueCorrelationAndSupport = (
     >
       <div className="space-y-2 text-sm">
         <p className="text-muted-foreground text-sm">
-          Use these values when matching logs, workers, or support tickets. Job
-          id is the BullMQ id for this queue.
+          Use these values when matching logs, workers, or support tickets.
         </p>
         <p>
           <span className="text-muted-foreground">Queue</span>{' '}

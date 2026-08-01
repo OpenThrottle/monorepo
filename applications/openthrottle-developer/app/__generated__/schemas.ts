@@ -18,6 +18,7 @@ import {
   AssignRoleToUserInput,
   AttachWorkSessionSubjectInput,
   CancelPlanRunInput,
+  CleanQueueInput,
   CloneRepositoryInput,
   CodeSemanticSearchInput,
   CommitsPerPrInput,
@@ -72,6 +73,7 @@ import {
   PressureLevel,
   PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
+  QueueControlInput,
   QueueDetailsInput,
   QueueJobLogLevel,
   QueueJobLogsInput,
@@ -333,6 +335,18 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
+  });
+}
+
+export function CleanQueueInputSchema(): z.ZodObject<
+  Properties<CleanQueueInput>
+> {
+  return z.object({
+    confirm: z.boolean(),
+    graceMs: z.number().nullish(),
+    limit: z.number().nullish(),
+    queueName: z.string(),
+    state: z.string(),
   });
 }
 
@@ -861,6 +875,14 @@ export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
     owner: z.string(),
     period: z.string(),
     repo: z.string(),
+  });
+}
+
+export function QueueControlInputSchema(): z.ZodObject<
+  Properties<QueueControlInput>
+> {
+  return z.object({
+    queueName: z.string(),
   });
 }
 

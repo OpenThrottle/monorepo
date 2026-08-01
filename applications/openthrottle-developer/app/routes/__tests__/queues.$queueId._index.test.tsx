@@ -40,6 +40,7 @@ const mockQueue = {
   jobs: {
     hasNext: false,
     jobs: emptyJobs,
+    total: 0,
   },
   name: 'plans',
   waitingCount: 0,
@@ -166,14 +167,14 @@ describe('routes/queues.$queueId.tsx', () => {
           ...mockLoaderData,
           queue: {
             ...mockQueue,
-            jobs: { hasNext: false, jobs: [mockJob] },
+            jobs: { hasNext: false, jobs: [mockJob], total: 1 },
           },
         }}
         matches={buildQueueMatches({
           ...mockLoaderData,
           queue: {
             ...mockQueue,
-            jobs: { hasNext: false, jobs: [mockJob] },
+            jobs: { hasNext: false, jobs: [mockJob], total: 1 },
           },
         })}
         params={{ queueId: 'plans' }}
@@ -184,7 +185,7 @@ describe('routes/queues.$queueId.tsx', () => {
 
     expect(component.getByTestId('QueueJobsTable')).toBeInTheDocument();
     expect(component.getByTestId('job-state-job-1')).toHaveTextContent(
-      'waiting',
+      'Waiting',
     );
     expect(
       component.getByTestId('queue-jobs-table-plan-job-1'),

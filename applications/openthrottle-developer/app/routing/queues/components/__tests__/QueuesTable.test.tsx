@@ -141,6 +141,33 @@ describe('QueuesTable Component', () => {
     expect(component.getByLabelText('0 failed')).toBeInTheDocument();
   });
 
+  test('renders a health pill and queue-controls menu per row', async () => {
+    props = { queues: mockQueues };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const TableComponent = () => <QueuesTable {...props} />;
+    const RoutesStub = createRoutesStub([
+      { Component: TableComponent, path: '/' },
+    ]);
+    component.rerender(<RoutesStub />);
+
+    expect(
+      component.getByRole('columnheader', { name: /Health/i }),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('queue-health-default')).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(
+      component.getByRole('button', { name: 'Queue controls for default' }),
+    );
+
+    expect(
+      await component.findByRole('menuitem', { name: /Pause queue/i }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('menuitem', { name: /Resume queue/i }),
+    ).toBeInTheDocument();
+  });
+
   test('queue name links and View actions receive keyboard focus in row order', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
@@ -157,11 +184,8 @@ describe('QueuesTable Component', () => {
     const defaultView = component.getByRole('link', {
       name: 'View queue details for default',
     });
-    const notificationsName = component.getByRole('link', {
-      name: 'View queue: notifications',
-    });
-    const notificationsView = component.getByRole('link', {
-      name: 'View queue details for notifications',
+    const defaultControls = component.getByRole('button', {
+      name: 'Queue controls for default',
     });
 
     await user.tab();
@@ -169,8 +193,6 @@ describe('QueuesTable Component', () => {
     await user.tab();
     expect(defaultView).toHaveFocus();
     await user.tab();
-    expect(notificationsName).toHaveFocus();
-    await user.tab();
-    expect(notificationsView).toHaveFocus();
+    expect(defaultControls).toHaveFocus();
   });
 });
