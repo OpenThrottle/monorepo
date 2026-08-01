@@ -1,16 +1,7 @@
 import * as React from 'react';
-import {
-  Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@openthrottle/react-router-shadcn';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ListOrderedIcon } from 'lucide-react';
-import { Link } from 'react-router';
 import {
   isPlanStatusKey,
   PlanStatusBadge,
@@ -35,7 +26,7 @@ export interface TaskDetailRouteHeaderProps {
 export const TaskDetailRouteHeader = (
   props: TaskDetailRouteHeaderProps,
 ): React.ReactElement => {
-  const { planId, planTitle, status, title } = props;
+  const { status, title } = props;
 
   // Hooks
 
@@ -51,30 +42,6 @@ export const TaskDetailRouteHeader = (
 
   return (
     <div>
-      <Breadcrumb className="mb-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to={`/plans/${planId}`} viewTransition={true}>
-                {planTitle}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <GlobalHeading className="mb-4" icon={ListOrderedIcon} title={title} />
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
