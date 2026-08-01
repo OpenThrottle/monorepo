@@ -1,12 +1,23 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { ChatRetryNotice } from './ChatRetryNotice';
 import { ChatThreadMessage } from './ChatThreadMessage';
 import type { ChatMessage } from '../types';
 
 export interface ChatThreadProps {
+  /**
+   * When true, render a manual {@link ChatRetryNotice} after the last message —
+   * the last turn timed out and its automatic retry was already spent. Requires
+   * {@link onRetry}.
+   */
+  readonly canRetry?: boolean;
   readonly className?: string;
   readonly emptyStateLabel?: string;
+  /** Disable the Retry button while a replay is in flight. */
+  readonly isRetrying?: boolean;
   readonly messages: readonly ChatMessage[];
+  /** Replay the last turn (wired to the Retry affordance). */
+  readonly onRetry?: () => void;
 }
 
 /** Distance (px) from the bottom within which auto-scroll stays engaged. */
@@ -21,9 +32,12 @@ const NEAR_BOTTOM_THRESHOLD_PX = 64;
  */
 export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   const {
+    canRetry = false,
     className,
     emptyStateLabel = 'No messages yet. Send one to start.',
+    isRetrying = false,
     messages,
+    onRetry,
   } = props;
 
   // Hooks
@@ -89,6 +103,9 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
           <ChatThreadMessage key={message.id} message={message} />
         ))
       )}
+      {canRetry && onRetry !== undefined ? (
+        <ChatRetryNotice isRetrying={isRetrying} onRetry={onRetry} />
+      ) : null}
       <div ref={endRef} />
     </div>
   );

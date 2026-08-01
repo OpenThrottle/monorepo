@@ -31,6 +31,19 @@ export interface ConversationStreamChunkPayload {
 }
 
 /**
+ * Machine-readable marker carried on a terminal (`done: true`) chunk's
+ * `metadataJson` when the orchestrator idle-timeout backstop fired, so the
+ * client can distinguish "timed out — safe to retry" from a fatal error. A
+ * healthy completion and a fatal failure both leave `metadataJson` null.
+ */
+export interface TerminalTimeoutMetadata {
+  /** The client reads this to decide whether to auto-retry the turn. */
+  readonly retryable: boolean;
+  /** Provenance marker: the terminal chunk was synthesized by the idle timeout. */
+  readonly timedOut: boolean;
+}
+
+/**
  * PubSub publish envelope. The key MUST equal {@link CONVERSATION_STREAM_CHUNK_FIELD}
  * (the subscription field name) so @nestjs/graphql resolves the payload. Buffered
  * replay yields the same envelope shape as the live PubSub iterator.

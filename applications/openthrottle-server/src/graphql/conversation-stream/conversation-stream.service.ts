@@ -24,12 +24,15 @@ import {
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
   type ConversationServiceTier,
+  type ConversationStreamChunk,
   openAiConversationBackend,
+  resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
   type ConversationStreamChunkEnvelope,
   type ConversationStreamChunkPayload,
+  type TerminalTimeoutMetadata,
 } from './conversation-stream.types';
 
 /**
@@ -247,8 +250,26 @@ export class ConversationStreamService {
       systemPrompt: run.systemPrompt ?? undefined,
     };
 
+    // Idle-timeout backstop: the single choke point that terminates ANY backend
+    // server-side — including one that ignores its AbortSignal (a wedged HTTP
+    // endpoint) — when no chunk has arrived for `idleMs`. Sits above the CLI
+    // backends' own idle timeout so their cleaner self-terminated terminal chunk
+    // wins first; this only fires for a truly stalled turn. Idle-only, no
+    // wall-clock cap. `withIdleTimeout` ends the stream (aborting the backend)
+    // when idle, so the `for await` below always terminates.
+    const idleMs = resolveChatIdleTimeoutMs();
+    let timedOut = false;
+    const guarded = this.withIdleTimeout(
+      backend.stream(backendRun),
+      idleMs,
+      () => {
+        timedOut = true;
+        controller.abort();
+      },
+    );
+
     try {
-      for await (const chunk of backend.stream(backendRun)) {
+      for await (const chunk of guarded) {
         if (chunk.done) {
           // A terminal chunk can still carry token accounting — claude and
           // cursor-agent ride their usage on the `done:true` chunk (kind
@@ -325,16 +346,27 @@ export class ConversationStreamService {
         sortOrder += 1;
       }
 
+      // Persist whatever streamed (a timed-out turn keeps its partial output),
+      // then publish the terminal chunk. On idle timeout it carries a clear
+      // message + the retryable marker so the client can auto-retry; a normal
+      // completion forwards any backend terminalError with no marker.
       await this.persistAssistant(run, accumulated, toolEvents);
+
+      const timeoutMetadata: TerminalTimeoutMetadata = {
+        retryable: true,
+        timedOut: true,
+      };
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
         done: true,
-        error: terminalError,
+        error: timedOut
+          ? `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`
+          : terminalError,
         id: randomUUID(),
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
-        metadataJson: null,
+        metadataJson: timedOut ? JSON.stringify(timeoutMetadata) : null,
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {
@@ -359,6 +391,58 @@ export class ConversationStreamService {
       });
     } finally {
       this.controllers.delete(run.conversationId);
+    }
+  }
+
+  /**
+   * Re-yield a backend stream, but end it (after invoking `onIdle`) if no chunk
+   * arrives within `idleMs`. Each `.next()` is raced against a fresh idle timer
+   * that resets on every delivered chunk; on idle it calls `onIdle` (which
+   * aborts the backend) and returns, so the consuming `for await` terminates
+   * even against a backend that ignores its AbortSignal. The timer is always
+   * cleared, and the source iterator's `return()` runs in `finally` (its own
+   * cleanup, e.g. CLI teardown) on idle, on the consumer breaking, and on normal
+   * exhaustion. `Promise.race` attaches a handler to the losing `.next()` arm so
+   * a later backend rejection can never surface as an unhandled rejection.
+   */
+  private async *withIdleTimeout(
+    source: AsyncIterable<ConversationStreamChunk>,
+    idleMs: number,
+    onIdle: () => void,
+  ): AsyncGenerator<ConversationStreamChunk> {
+    const iterator = source[Symbol.asyncIterator]();
+
+    try {
+      while (true) {
+        let idleTimer: NodeJS.Timeout | undefined;
+        const idle = new Promise<'idle'>((resolve) => {
+          idleTimer = setTimeout(() => resolve('idle'), idleMs);
+          idleTimer.unref();
+        });
+
+        let outcome: IteratorResult<ConversationStreamChunk> | 'idle';
+        try {
+          // Racing next() against the idle timer is the whole point of this
+          // backstop; the sequential await is intentional.
+          // eslint-disable-next-line no-await-in-loop
+          outcome = await Promise.race([iterator.next(), idle]);
+        } finally {
+          if (idleTimer !== undefined) {
+            clearTimeout(idleTimer);
+          }
+        }
+
+        if (outcome === 'idle') {
+          onIdle();
+          return;
+        }
+        if (outcome.done === true) {
+          return;
+        }
+        yield outcome.value;
+      }
+    } finally {
+      void iterator.return?.(undefined)?.catch(() => undefined);
     }
   }
 

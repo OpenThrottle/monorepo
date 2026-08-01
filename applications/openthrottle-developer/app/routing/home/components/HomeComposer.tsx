@@ -122,7 +122,12 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
 
   return (
     <>
-      <ChatThread emptyStateLabel="" messages={turn.messages} />
+      <ChatThread
+        canRetry={turn.canRetry}
+        emptyStateLabel=""
+        messages={turn.messages}
+        onRetry={turn.onRetry}
+      />
       <InlineErrors errors={[turn.error, voice.error]} />
       {!hasModels ? (
         <p className="text-muted-foreground mb-2 text-center text-sm">

@@ -5,17 +5,17 @@ Version 2.0**, and commercial/enterprise modules are reserved under a separate
 **End User License Agreement (EULA)**.
 
 > ⚠️ **Relicensing in progress — pending legal review.** This file and the
-> accompanying `LICENSE` / `LICENSE-EULA.md` reflect the intended EULA →
+> accompanying `LICENSE.md` / `LICENSE-EULA.md` reflect the intended EULA →
 > Apache-2.0 open-core relicense. They are **not final until an attorney has
 > reviewed them** and the repository is published. See the plan tracked in
 > OpenThrottle for status.
 
 ## At a glance
 
-| Scope                                        | License            | Where                                    |
-| -------------------------------------------- | ------------------ | ---------------------------------------- |
-| **Core** — everything first-party today      | **Apache-2.0**     | root `LICENSE`; per-project `LICENSE.md` |
-| **Commercial / enterprise** — future modules | EULA (proprietary) | reserved; template in `LICENSE-EULA.md`  |
+| Scope                                        | License            | Where                                   |
+| -------------------------------------------- | ------------------ | --------------------------------------- |
+| **Core** — everything first-party today      | **Apache-2.0**     | root & per-project `LICENSE.md`         |
+| **Commercial / enterprise** — future modules | EULA (proprietary) | reserved; template in `LICENSE-EULA.md` |
 
 As of this relicense, **all current first-party code is Apache-2.0**. There are
 no commercial packages yet — the EULA is retained only as the template for
@@ -27,7 +27,7 @@ future enterprise modules (see [Open core](#open-core-why)).
    tool carries one. Today they are all Apache-2.0.
 2. **Check the `license` field in the project's `package.json`.** Core projects
    declare `"license": "Apache-2.0"`.
-3. **Root `LICENSE`** is the canonical Apache-2.0 text for the repository.
+3. **Root `LICENSE.md`** is the canonical Apache-2.0 text for the repository.
 4. A future commercial package will (a) carry the EULA in its own `LICENSE.md`
    with a header noting it is **not** Apache-licensed, and (b) set its
    `package.json` `license` accordingly. None exist yet.
@@ -120,7 +120,7 @@ and the waiver process.
 
 ## Files
 
-- [`LICENSE`](./LICENSE) — Apache-2.0, the canonical license for the open core.
+- [`LICENSE.md`](./LICENSE.md) — Apache-2.0, the canonical license for the open core.
 - [`NOTICE`](./NOTICE) — Apache-2.0 §4(d) attribution notice (project name +
   copyright holder) plus a pointer to the third-party attribution manifest and
   any notice-required dependencies.

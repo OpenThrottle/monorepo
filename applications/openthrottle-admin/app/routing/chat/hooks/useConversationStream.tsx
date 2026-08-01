@@ -26,7 +26,18 @@ export interface UseConversationStreamArgs {
 export interface UseConversationStreamResult {
   readonly completedIds: ReadonlySet<string>;
   readonly isStreaming: boolean;
+  /**
+   * `Date.now()` of the most recently received chunk (null before the first),
+   * reset on a new conversation. Drives the client stall watchdog: its identity
+   * changes on every chunk so a consumer can reset a timer off it.
+   */
+  readonly lastActivityAt: number | null;
   readonly messages: ChatMessage[];
+  /**
+   * messageIds whose terminal chunk was a retryable timeout (safe to auto-retry
+   * rather than a fatal error). Subset of {@link completedIds}.
+   */
+  readonly retryableIds: ReadonlySet<string>;
 }
 
 export function useConversationStream(
@@ -36,6 +47,11 @@ export function useConversationStream(
 
   // Hooks
   const [state, setState] = React.useState<StreamState>(INITIAL_STREAM_STATE);
+  // Wall-clock of the last received chunk, tracked outside the pure reducer so
+  // the stall watchdog can tell "no activity for N ms" from "still streaming".
+  const [lastActivityAt, setLastActivityAt] = React.useState<number | null>(
+    null,
+  );
 
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);
@@ -45,11 +61,13 @@ export function useConversationStream(
     setState((previous) =>
       reduceStreamChunk(previous, data.conversationStreamChunkAdded),
     );
+    setLastActivityAt(Date.now());
   };
 
   // Life Cycle
   React.useEffect(() => {
     setState(INITIAL_STREAM_STATE);
+    setLastActivityAt(null);
 
     // 🪝 New conversation → drop any prior accumulation.
   }, [conversationId]);
@@ -72,6 +90,8 @@ export function useConversationStream(
   return {
     completedIds: state.completedIds,
     isStreaming: state.isStreaming,
+    lastActivityAt,
     messages,
+    retryableIds: state.retryableIds,
   };
 }
