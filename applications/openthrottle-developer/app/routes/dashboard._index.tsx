@@ -148,6 +148,29 @@ export default function Component(
             </Await>
           </React.Suspense>
         </div>
+        <div className="col-span-2 md:col-span-1">
+          {/*
+              Deferred (recentChats): own boundary so a slow/failed conversation
+              fetch never blocks the other cards. The card self-titles.
+          */}
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load recent chats.
+                </p>
+              }
+              resolve={recentChats}
+            >
+              {(data) => (
+                <DashboardRecentChatsCard
+                  className="h-full flex-1"
+                  conversations={data.conversations}
+                />
+              )}
+            </Await>
+          </React.Suspense>
+        </div>
 
         <div className="col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -218,25 +241,6 @@ export default function Component(
               resolve={githubStats}
             >
               {(stats) => <DashboardOpenPrsByAuthorCard githubStats={stats} />}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <div>
-          {/* Deferred (recentChats): own boundary so a slow/failed conversation
-              fetch never blocks the other cards. The card self-titles. */}
-          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load recent chats.
-                </p>
-              }
-              resolve={recentChats}
-            >
-              {(data) => (
-                <DashboardRecentChatsCard conversations={data.conversations} />
-              )}
             </Await>
           </React.Suspense>
         </div>
