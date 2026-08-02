@@ -1,7 +1,7 @@
 ---
 name: github-pull-request
 description: Analyze branch commits and diff, then create or update a Pull Request via gh with template-compliant title and body. USE WHEN the user runs /github/pull-request, wants to open or update a PR, or the branch is ready for review. Returns a clickable PR URL.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Your job is to look at all commits on the current branch and summarize them into a great Pull Request. Start the Pull Request in `draft` mode.

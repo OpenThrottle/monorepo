@@ -92,7 +92,7 @@ describe('toast per-type color classNames', () => {
     toast.error('error toast');
     expect(await toastElementFor('error toast')).toHaveClass(
       'border-red-500/50!',
-      'bg-red-500/20!',
+      'bg-card/80!',
     );
   });
 
@@ -101,7 +101,7 @@ describe('toast per-type color classNames', () => {
     toast.warning('warning toast');
     expect(await toastElementFor('warning toast')).toHaveClass(
       'border-amber-500/50!',
-      'bg-amber-500/20!',
+      'bg-card/80!',
     );
   });
 
@@ -110,7 +110,7 @@ describe('toast per-type color classNames', () => {
     toast.success('success toast');
     expect(await toastElementFor('success toast')).toHaveClass(
       'border-green-500/50!',
-      'bg-green-500/20!',
+      'bg-card/80!',
     );
   });
 
@@ -119,7 +119,7 @@ describe('toast per-type color classNames', () => {
     toast.info('info toast');
     expect(await toastElementFor('info toast')).toHaveClass(
       'border-sky-500/50!',
-      'bg-sky-500/20!',
+      'bg-card/80!',
     );
   });
 
