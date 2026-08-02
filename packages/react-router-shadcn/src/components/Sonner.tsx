@@ -67,6 +67,7 @@ export const toast: typeof sonnerToast = new Proxy(sonnerToast, {
           ? Reflect.apply(value, target, args)
           : undefined;
     }
+
     return value;
   },
 });
@@ -93,10 +94,10 @@ export const toast: typeof sonnerToast = new Proxy(sonnerToast, {
 const typedToastClassNames: NonNullable<
   NonNullable<SonnerToasterProps['toastOptions']>['classNames']
 > = {
-  error: 'border-red-500/50! bg-red-500/20!',
-  info: 'border-sky-500/50! bg-sky-500/20!',
-  success: 'border-green-500/50! bg-green-500/20!',
-  warning: 'border-amber-500/50! bg-amber-500/20!',
+  error: 'border-red-500/50! bg-card/80!',
+  info: 'border-sky-500/50! bg-card/80!',
+  success: 'border-green-500/50! bg-card/80!',
+  warning: 'border-amber-500/50! bg-card/80!',
 };
 
 const isToasterTheme = (value: string): value is ToasterTheme =>
