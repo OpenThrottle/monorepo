@@ -199,6 +199,7 @@ export class RepositoryInspectionService {
       currentBranch: null,
       defaultBranch: null,
       dirty: null,
+      isLinkedWorktree: false,
       isRepo: false,
       linkedWorktrees: [],
       normalizedRemoteUrl: null,
@@ -206,9 +207,18 @@ export class RepositoryInspectionService {
     };
 
     // `.git` is a directory for primary checkouts and a file for worktrees.
-    if (!existsSync(join(root, '.git'))) {
+    const dotGit = join(root, '.git');
+    if (!existsSync(dotGit)) {
       return notARepo;
     }
+    // A linked worktree's `.git` is a file (`gitdir: ...` pointer), not a dir.
+    const isLinkedWorktree = (() => {
+      try {
+        return statSync(dotGit).isFile();
+      } catch {
+        return false;
+      }
+    })();
 
     const insideWorkTree = await this.git(root, warnings, [
       'rev-parse',
@@ -252,6 +262,7 @@ export class RepositoryInspectionService {
           ? null
           : (defaultBranchRef.trim().split('/').pop() ?? null),
       dirty: status === null ? null : status.trim() !== '',
+      isLinkedWorktree,
       isRepo: true,
       linkedWorktrees: this.parseLinkedWorktrees(worktrees),
       normalizedRemoteUrl:

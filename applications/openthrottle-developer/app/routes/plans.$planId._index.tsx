@@ -429,6 +429,21 @@ export const action = async (args: Route.ActionArgs) => {
       }
     }
 
+    // Branch is a REQUIRED kickoff input (never inferred server-side). The run
+    // config form pre-fills it from the selected checkout's current branch, but
+    // the value is always sent explicitly; fail loud here when it is blank.
+    const branchRaw = formData.get('branch');
+    const branch =
+      typeof branchRaw === 'string' && branchRaw.trim() !== ''
+        ? branchRaw.trim()
+        : undefined;
+    if (branch === undefined) {
+      return {
+        runPlanError:
+          'A git branch is required to run this plan. Pick or enter the branch this run operates on.',
+      };
+    }
+
     const workingDirectoryRaw = formData.get('workingDirectory');
     const workingDirectory =
       typeof workingDirectoryRaw === 'string' &&
@@ -464,6 +479,7 @@ export const action = async (args: Route.ActionArgs) => {
 
     try {
       const input = EnqueuePlanRunInputSchema().parse({
+        branch,
         planId,
         priority,
         ...(checkoutId !== undefined ? { checkoutId } : {}),

@@ -43,6 +43,7 @@ export const PlanDetailRoute = (
 
   // Hooks
   const {
+    branch,
     checkoutId,
     fullscreen,
     isBoardView,
@@ -84,6 +85,7 @@ export const PlanDetailRoute = (
         <PlanDetailRouteHeader plan={plan} status={status} />
 
         <PlanToolbar
+          branch={branch}
           checkoutId={checkoutId}
           className="bg-card border-card-border rounded-lg border p-4"
           jobRunHooksJson={jobRunHooksJson}

@@ -116,6 +116,107 @@ describe('RepositoryCheckoutsService', () => {
     });
   });
 
+  describe('upsertWorktreeCheckout', () => {
+    const worktreePath = '/Users/dev/openthrottle-worktrees/feature';
+
+    // The create/save mocks are module-scoped; clear their call history so the
+    // per-test call-count assertions below only see this test's calls.
+    beforeEach(() => {
+      vi.mocked(mockOrmRepository.create).mockClear();
+      vi.mocked(mockOrmRepository.save).mockClear();
+    });
+
+    it('creates a managed worktree checkout when none exists at the path', async () => {
+      vi.mocked(mockOrmRepository.findOne).mockResolvedValue(null);
+
+      const result = await service.upsertWorktreeCheckout(userId, {
+        displayName: 'feature',
+        filesystemPath: worktreePath,
+        repositoryId,
+      });
+
+      expect(mockOrmRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filesystemPath: worktreePath,
+          kind: 'worktree',
+          managed: true,
+          repositoryId,
+          userId,
+        }),
+      );
+      expect(result.kind).toBe('worktree');
+      expect(result.managed).toBe(true);
+    });
+
+    it('is idempotent: returns the existing row untouched on re-provision', async () => {
+      const existing = asMock<RepositoryCheckout>({
+        ...mockEntity,
+        filesystemPath: worktreePath,
+        kind: 'worktree',
+        managed: true,
+      });
+      vi.mocked(mockOrmRepository.findOne).mockResolvedValue(existing);
+
+      const result = await service.upsertWorktreeCheckout(userId, {
+        displayName: 'feature',
+        filesystemPath: worktreePath,
+        repositoryId,
+      });
+
+      expect(result).toBe(existing);
+      // No duplicate insert and no redundant write when already aligned.
+      expect(mockOrmRepository.create).not.toHaveBeenCalled();
+      expect(mockOrmRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('normalizes a pre-existing primary row at the path up to a managed worktree', async () => {
+      const existing = asMock<RepositoryCheckout>({
+        ...mockEntity,
+        filesystemPath: worktreePath,
+        kind: 'primary',
+        managed: false,
+      });
+      vi.mocked(mockOrmRepository.findOne).mockResolvedValue(existing);
+
+      const result = await service.upsertWorktreeCheckout(userId, {
+        displayName: 'feature',
+        filesystemPath: worktreePath,
+        repositoryId,
+      });
+
+      expect(mockOrmRepository.save).toHaveBeenCalledTimes(1);
+      expect(result.kind).toBe('worktree');
+      expect(result.managed).toBe(true);
+    });
+
+    it('recovers from a concurrent-insert unique violation by returning the raced row', async () => {
+      const raced = asMock<RepositoryCheckout>({
+        ...mockEntity,
+        filesystemPath: worktreePath,
+        kind: 'worktree',
+        managed: true,
+      });
+      vi.mocked(mockOrmRepository.findOne)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(raced);
+      vi.mocked(mockOrmRepository.save).mockRejectedValueOnce(
+        new QueryFailedError(
+          'INSERT',
+          [],
+          Object.assign(new Error('duplicate'), { code: '23505' }),
+        ),
+      );
+
+      const result = await service.upsertWorktreeCheckout(userId, {
+        displayName: 'feature',
+        filesystemPath: worktreePath,
+        repositoryId,
+      });
+
+      expect(result).toBe(raced);
+    });
+  });
+
   describe('countByRepositoryId', () => {
     it('counts checkouts across users', async () => {
       vi.mocked(mockOrmRepository.count).mockResolvedValue(3);

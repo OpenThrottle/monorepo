@@ -150,6 +150,7 @@ describe('PlanEnqueueService', () => {
     // OPENTHROTTLE_DEFAULT_RUN_KIND rollback anymore.
     test('routes to the orchestrator path (no spawn add)', async () => {
       const result = await service.enqueueSpawn({
+        branch: 'feature/test',
         planId: mockPlan.id,
         priority: null,
         workingDirectory: null,
@@ -173,6 +174,7 @@ describe('PlanEnqueueService', () => {
 
       await expect(
         service.enqueueSpawn({
+          branch: 'feature/test',
           planId: 'non-existent-id',
           priority: null,
           workingDirectory: null,
@@ -210,6 +212,7 @@ describe('PlanEnqueueService', () => {
 
       await service.enqueueOrchestrator({
         actorUserId: 'user-1',
+        branch: 'feature/test',
         checkoutId: checkout.id,
         mode: null,
         planId: mockPlan.id,
@@ -236,6 +239,7 @@ describe('PlanEnqueueService', () => {
 
       await service.enqueueOrchestrator({
         actorUserId: 'user-1',
+        branch: 'feature/test',
         mode: null,
         planId: mockPlan.id,
         priority: null,
@@ -261,6 +265,7 @@ describe('PlanEnqueueService', () => {
       await expect(
         service.enqueueOrchestrator({
           actorUserId: 'user-1',
+          branch: 'feature/test',
           mode: null,
           planId: mockPlan.id,
           priority: null,
@@ -278,6 +283,7 @@ describe('PlanEnqueueService', () => {
       await expect(
         service.enqueueOrchestrator({
           actorUserId: 'user-1',
+          branch: 'feature/test',
           mode: null,
           planId: mockPlan.id,
           priority: null,
@@ -295,6 +301,7 @@ describe('PlanEnqueueService', () => {
       await expect(
         service.enqueueOrchestrator({
           actorUserId: 'user-1',
+          branch: 'feature/test',
           checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
           mode: null,
           planId: mockPlan.id,
@@ -309,6 +316,7 @@ describe('PlanEnqueueService', () => {
     test('uses the raw workingDirectory escape hatch when no ids are given', async () => {
       await service.enqueueOrchestrator({
         actorUserId: 'user-1',
+        branch: 'feature/test',
         mode: null,
         planId: mockPlan.id,
         priority: null,
@@ -326,11 +334,27 @@ describe('PlanEnqueueService', () => {
   });
 
   describe('enqueueOrchestrator', () => {
+    test('rejects a missing/blank branch before touching the plan (fail fast)', async () => {
+      await expect(
+        service.enqueueOrchestrator({
+          branch: '   ',
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      // Fails at the input boundary — never looks up the plan or enqueues.
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
     test('throws NotFoundException when plan does not exist', async () => {
       repo.findOne.mockResolvedValue(null);
 
       await expect(
         service.enqueueOrchestrator({
+          branch: 'feature/test',
           mode: null,
           planId: 'non-existent-id',
           priority: null,
@@ -342,6 +366,7 @@ describe('PlanEnqueueService', () => {
 
     test('records an orchestrator run and delegates to QueuesService', async () => {
       const result = await service.enqueueOrchestrator({
+        branch: 'feature/test',
         idempotencyKey: null,
         mode: null,
         planId: mockPlan.id,
@@ -380,6 +405,7 @@ describe('PlanEnqueueService', () => {
 
     test('passes resolved task mode and taskId into job data', async () => {
       await service.enqueueOrchestrator({
+        branch: 'feature/test',
         idempotencyKey: null,
         mode: 'task',
         planId: mockPlan.id,
@@ -404,6 +430,7 @@ describe('PlanEnqueueService', () => {
 
       await expect(
         service.enqueueOrchestrator({
+          branch: 'feature/test',
           idempotencyKey: null,
           mode: null,
           planId: mockPlan.id,
@@ -422,6 +449,7 @@ describe('PlanEnqueueService', () => {
 
       await expect(
         service.enqueueOrchestrator({
+          branch: 'feature/test',
           idempotencyKey: null,
           mode: null,
           planId: mockPlan.id,

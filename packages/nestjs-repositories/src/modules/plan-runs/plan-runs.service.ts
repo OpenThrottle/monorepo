@@ -12,8 +12,14 @@ import { PlanRun } from './plan-run.entity';
 interface RecordQueuedPlanRunInput {
   /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */
   readonly actorUserId?: string | null;
+  /** Git branch the run operates on, captured at kickoff. Null until the required-input path supplies it. */
+  readonly branch?: string | null;
   readonly bullmqJobId: string;
+  /** Worktree/checkout the run runs in (repository_checkouts.id); the durable on-disk home for deep-links. */
+  readonly checkoutId?: string | null;
   readonly executionBackend: WorkflowConfigRunner;
+  /** Resolved agent model id (queryable projection of run_config_snapshot.ralph.model). */
+  readonly model?: string | null;
   readonly planId: string;
   readonly queueName: string;
   readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
@@ -89,8 +95,11 @@ export class PlanRunsService {
     const runConfigSnapshot: object | null = input.runConfigSnapshot ?? null;
     const rowInput = {
       actorUserId: input.actorUserId ?? null,
+      branch: input.branch ?? null,
       bullmqJobId: input.bullmqJobId,
+      checkoutId: input.checkoutId ?? null,
       executionBackend: input.executionBackend,
+      model: input.model ?? null,
       planId: input.planId,
       queueName: input.queueName,
       runConfigSnapshot,

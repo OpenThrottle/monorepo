@@ -30,6 +30,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
 
     const formData = new FormData();
     formData.set('intent', 'runPlan');
+    formData.set('branch', 'feature/test');
     formData.set('ralphTuning', '');
 
     const request = new Request(
@@ -53,11 +54,40 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       PlanDetailEnqueuePlanRunDocument,
       {
         input: {
+          branch: 'feature/test',
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
         },
       },
     );
+  });
+
+  test('returns a runPlanError and never enqueues when branch is missing', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    // No branch field: branch is a required kickoff input, so the action must
+    // fail loud and never reach the enqueue mutation.
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: createTestRouterContext(),
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      pattern: '/plans/:planId',
+      request,
+      url: new URL(request.url),
+    });
+
+    expect(result).toMatchObject({
+      runPlanError: expect.stringContaining('branch'),
+    });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   test('passes jobRunHooksJson into enqueuePlanRun when form field is valid', async () => {
@@ -81,6 +111,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
 
     const formData = new FormData();
     formData.set('intent', 'runPlan');
+    formData.set('branch', 'feature/test');
     formData.set('jobRunHooksJson', hooksPayload);
 
     const request = new Request(
@@ -104,6 +135,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       PlanDetailEnqueuePlanRunDocument,
       {
         input: {
+          branch: 'feature/test',
           jobRunHooksJson: hooksPayload,
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
@@ -124,6 +156,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
 
     const formData = new FormData();
     formData.set('intent', 'runPlan');
+    formData.set('branch', 'feature/test');
     formData.set('workingDirectory', workspacePath);
 
     const request = new Request(
@@ -147,6 +180,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       PlanDetailEnqueuePlanRunDocument,
       {
         input: {
+          branch: 'feature/test',
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
           workingDirectory: workspacePath,
@@ -170,6 +204,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
 
     const formData = new FormData();
     formData.set('intent', 'runPlan');
+    formData.set('branch', 'feature/test');
     formData.set('ralphTuning', JSON.stringify(ralphPayload));
 
     const request = new Request(
@@ -193,6 +228,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       PlanDetailEnqueuePlanRunDocument,
       {
         input: {
+          branch: 'feature/test',
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
           ralph: ralphPayload,
@@ -204,6 +240,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
   test('returns error when ralphTuning JSON is invalid', async () => {
     const formData = new FormData();
     formData.set('intent', 'runPlan');
+    formData.set('branch', 'feature/test');
     formData.set('ralphTuning', 'not-json');
 
     const request = new Request(

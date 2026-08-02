@@ -167,6 +167,70 @@ export class PlanRunObject implements PlanRunData {
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => String, {
+    description:
+      'Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.',
+    nullable: true,
+  })
+  branch!: string | null;
+
+  @Field(() => String, {
+    description:
+      'Resolved agent model id for this run (e.g. claude-fable-5), captured at kickoff. Null for legacy rows lacking snapshot data.',
+    nullable: true,
+  })
+  model!: string | null;
+
+  /**
+   * Carries the run's checkout id to the `checkout` field resolver. Not exposed
+   * as a GraphQL field (consumers read the resolved `checkout` object instead).
+   */
+  checkoutId!: string | null;
+}
+
+/**
+ * The run's on-disk checkout (kind='worktree' for provisioned runs), resolved by
+ * joining plan_runs.checkout_id -> repository_checkouts. Its filesystemPath is
+ * what "open in editor" deep-links resolve against.
+ */
+@ObjectType()
+export class PlanRunCheckoutObject {
+  @Field(() => String, { description: 'Human-readable checkout label.' })
+  displayName!: string;
+
+  @Field(() => String, {
+    description: 'Absolute on-disk path of the checkout/worktree.',
+  })
+  filesystemPath!: string;
+
+  @Field(() => String, {
+    description: "Checkout kind: 'primary' or 'worktree'.",
+  })
+  kind!: string;
+}
+
+/**
+ * The pull request linked to a run, resolved over the work-ledger bridge
+ * (work_sessions.plan_run_id -> work_artifacts type='pull_request'). Powers
+ * branch↔PR surfacing: the branch is on the run, the PR hangs off its session.
+ */
+@ObjectType()
+export class PlanRunPullRequestObject {
+  @Field(() => Int, { description: 'Pull request number.' })
+  number!: number;
+
+  @Field(() => String, { description: 'owner/repo the PR belongs to.' })
+  repo!: string;
+
+  @Field(() => String, {
+    description: "Lifecycle state of the PR: 'open', 'merged', or 'closed'.",
+    nullable: true,
+  })
+  state!: string | null;
+
+  @Field(() => String, { description: 'Canonical GitHub URL for the PR.' })
+  url!: string;
 }
 
 /** Result of listPlansByStatus: plans and total count. */

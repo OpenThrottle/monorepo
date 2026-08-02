@@ -17,6 +17,13 @@ export interface RepositoryInspectionGit {
   readonly currentBranch: string | null;
   readonly defaultBranch: string | null;
   readonly dirty: boolean | null;
+  /**
+   * True when this path is itself a linked git worktree (its `.git` is a file
+   * pointer, not a directory) rather than a primary checkout. Lets the
+   * registration pipeline persist `kind='worktree'`. Absent on older snapshots
+   * (read defensively — treat missing as false).
+   */
+  readonly isLinkedWorktree: boolean;
   readonly isRepo: boolean;
   readonly linkedWorktrees: readonly string[];
   readonly normalizedRemoteUrl: string | null;

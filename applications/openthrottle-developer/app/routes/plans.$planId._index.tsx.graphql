@@ -211,12 +211,25 @@ query PlanDetailIndexLoader($planId: ID!) {
     }
   }
   planRunsByPlanId(input: { planId: $planId, limit: 10 }) {
+    branch
     bullmqJobId
+    checkout {
+      displayName
+      filesystemPath
+      kind
+    }
     createdAt
     executionBackend
     id
     isStale
     lastHeartbeatAt
+    model
+    pullRequest {
+      number
+      repo
+      state
+      url
+    }
     runConfigSnapshotJson
     runKind
     status

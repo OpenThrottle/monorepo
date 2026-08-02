@@ -14,6 +14,7 @@ import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   jobRunHookDraftRowsAtom,
+  workflowBranchAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
@@ -86,6 +87,7 @@ export const PlanTabConfiguration = (
   );
   const [checkoutId, setCheckoutId] = useAtom(workflowCheckoutIdAtom);
   const [repositoryId, setRepositoryId] = useAtom(workflowRepositoryIdAtom);
+  const [branch, setBranch] = useAtom(workflowBranchAtom);
   const [jobRunHookRows, setJobRunHookRows] = useAtom(jobRunHookDraftRowsAtom);
 
   // Setup
@@ -120,8 +122,10 @@ export const PlanTabConfiguration = (
         />
 
         <PlanWorkflowConfigWorkspaceSelector
+          branch={branch}
           checkoutId={checkoutId}
           heading="02. Workspace"
+          onBranchChange={setBranch}
           onCheckoutIdChange={setCheckoutId}
           onRepositoryIdChange={setRepositoryId}
           onWorkingDirectoryChange={setWorkingDirectory}

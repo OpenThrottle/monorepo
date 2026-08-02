@@ -967,6 +967,8 @@ export type EnqueueDocIngestionResultObject = {
 };
 
 export type EnqueuePlanRalphOrchestratorInput = {
+  /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
+  branch: Scalars['String']['input'];
   /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
   checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
@@ -990,6 +992,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
 };
 
 export type EnqueuePlanRunInput = {
+  /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
+  branch: Scalars['String']['input'];
   /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
   checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
@@ -2315,6 +2319,16 @@ export enum PlanRalphWorkflowMode {
   Task = 'task',
 }
 
+export type PlanRunCheckoutObject = {
+  __typename?: 'PlanRunCheckoutObject';
+  /** Human-readable checkout label. */
+  displayName: Scalars['String']['output'];
+  /** Absolute on-disk path of the checkout/worktree. */
+  filesystemPath: Scalars['String']['output'];
+  /** Checkout kind: 'primary' or 'worktree'. */
+  kind: Scalars['String']['output'];
+};
+
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {
   __typename?: 'PlanRunMetricsEntry';
@@ -2330,10 +2344,14 @@ export type PlanRunMetricsEntry = {
 
 export type PlanRunObject = {
   __typename?: 'PlanRunObject';
+  /** Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture. */
+  branch?: Maybe<Scalars['String']['output']>;
   /** BullMQ job id for this run. Null for detached-CLI runs that carry no queue job. */
   bullmqJobId?: Maybe<Scalars['String']['output']>;
   /** Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary. */
   cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The run's on-disk checkout (worktree/primary) joined from checkout_id; its filesystemPath powers editor deep-links. Null when the run has no resolved checkout. */
+  checkout?: Maybe<PlanRunCheckoutObject>;
   createdAt: Scalars['DateTime']['output'];
   /** Execution backend selected once for the whole run: cursor or claude. */
   executionBackend: Scalars['String']['output'];
@@ -2344,9 +2362,13 @@ export type PlanRunObject = {
   isStale: Scalars['Boolean']['output'];
   /** Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale. */
   lastHeartbeatAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Resolved agent model id for this run (e.g. claude-fable-5), captured at kickoff. Null for legacy rows lacking snapshot data. */
+  model?: Maybe<Scalars['String']['output']>;
   /** OS process id of the worker executing this run. Null when not actively executing. */
   pid?: Maybe<Scalars['Int']['output']>;
   planId: Scalars['String']['output'];
+  /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run. */
+  pullRequest?: Maybe<PlanRunPullRequestObject>;
   queueName: Scalars['String']['output'];
   /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
   runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
@@ -2356,6 +2378,18 @@ export type PlanRunObject = {
   updatedAt: Scalars['DateTime']['output'];
   /** Identifier of the worker instance executing this run. Null when not actively executing. */
   workerId?: Maybe<Scalars['String']['output']>;
+};
+
+export type PlanRunPullRequestObject = {
+  __typename?: 'PlanRunPullRequestObject';
+  /** Pull request number. */
+  number: Scalars['Int']['output'];
+  /** owner/repo the PR belongs to. */
+  repo: Scalars['String']['output'];
+  /** Lifecycle state of the PR: 'open', 'merged', or 'closed'. */
+  state?: Maybe<Scalars['String']['output']>;
+  /** Canonical GitHub URL for the PR. */
+  url: Scalars['String']['output'];
 };
 
 export type PlanRunsByPlanIdInput = {

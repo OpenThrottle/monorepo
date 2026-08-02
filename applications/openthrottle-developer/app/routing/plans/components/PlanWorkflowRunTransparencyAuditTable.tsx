@@ -4,6 +4,7 @@ import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
 import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
+import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 
 export type PlanRunAuditRow =
   PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
@@ -50,6 +51,9 @@ export const PlanWorkflowRunTransparencyAuditTable = (
               Queued (UTC)
             </th>
             <th className="text-foreground py-1.5 pr-2 font-medium">Kind</th>
+            <th className="text-foreground py-1.5 pr-2 font-medium">
+              Provenance
+            </th>
             <th className="text-foreground py-1.5 font-medium">
               vs current config
             </th>
@@ -58,7 +62,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
         <tbody>
           {planRunAuditRows.length === 0 ? (
             <tr>
-              <td className="py-2 text-[0.7rem]" colSpan={4}>
+              <td className="py-2 text-[0.7rem]" colSpan={5}>
                 No queued run audit rows yet. After you enqueue from the
                 toolbar, each run records its resolved configuration here.
               </td>
@@ -92,6 +96,13 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                   </td>
                   <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                     {row.runKind}
+                  </td>
+                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
+                    <PlanRunProvenanceCell
+                      branch={row.branch}
+                      checkout={row.checkout}
+                      pullRequest={row.pullRequest}
+                    />
                   </td>
                   <td className="py-1.5 align-top text-[0.65rem]">
                     {row.runConfigSnapshotJson == null ? (

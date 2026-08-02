@@ -292,12 +292,15 @@ export class PlansResolver {
   private mapPlanRunObject(planRun: PlanRun): PlanRunObject {
     const out = new PlanRunObject();
 
+    out.branch = planRun.branch;
     out.bullmqJobId = planRun.bullmqJobId;
     out.cancelRequestedAt = planRun.cancelRequestedAt;
+    out.checkoutId = planRun.checkoutId;
     out.createdAt = planRun.createdAt;
     out.executionBackend = planRun.executionBackend;
     out.hostname = planRun.hostname;
     out.id = planRun.id;
+    out.model = planRun.model;
     out.isStale = isPlanRunStale(planRun);
     out.lastHeartbeatAt = planRun.lastHeartbeatAt;
     out.pid = planRun.pid;
@@ -989,6 +992,7 @@ export class PlansResolver {
   ): Promise<EnqueuePlanRunResultObject> {
     const outcome = await this.planEnqueueService.enqueueSpawn({
       actorUserId: resolveActorUserId(actorSub, actorKind),
+      branch: input.branch,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
@@ -1075,6 +1079,7 @@ export class PlansResolver {
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
       actorUserId: resolveActorUserId(actorSub, actorKind),
+      branch: input.branch,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
