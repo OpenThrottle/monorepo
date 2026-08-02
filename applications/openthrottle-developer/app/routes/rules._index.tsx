@@ -3,22 +3,29 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
-import { WandSparklesIcon } from 'lucide-react';
+import { useFetcher, useSearchParams } from 'react-router';
 import {
   RulesDeleteTagActionRuleDocument,
   RulesIndexLoaderDocument,
   RulesUpsertTagActionRuleDocument,
 } from '~/__generated__/graphql';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { RulesTable } from '~/routing/rules/components/RulesTable';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { SITE_TITLE } from '~/global/config/settings';
+import { RulesIntroduction } from '~/routing/rules/components/RulesIntroduction';
+import { RulesStats } from '~/routing/rules/components/RulesStats';
+import {
+  RulesTable,
+  type TagActionRuleRowData,
+} from '~/routing/rules/components/RulesTable';
+import { RulesToolbar } from '~/routing/rules/components/RulesToolbar';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import {
+  filterRulesList,
+  parseRulesEnabledFilterFromSearchParams,
+  parseRulesSearchFromSearchParams,
+} from '~/routing/rules/utils/parsers';
 import type { Route } from '@/app/routes/+types/rules._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -99,13 +106,21 @@ export default function Component(
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
+  const [searchParams] = useSearchParams();
 
   // Setup
+  const enabledFilter = parseRulesEnabledFilterFromSearchParams(searchParams);
+  const search = parseRulesSearchFromSearchParams(searchParams);
+  const isFiltered = search.trim().length > 0 || enabledFilter !== 'all';
+  const filteredRules = filterRulesList(rules, { enabledFilter, search });
   const pending = fetcher.state !== 'idle';
   const ruleError =
     fetcher.data != null && 'ruleError' in fetcher.data
       ? fetcher.data.ruleError
       : null;
+  const totalCount = rules.length;
+  const enabledCount = rules.filter((rule) => rule.enabled).length;
+  const disabledCount = totalCount - enabledCount;
 
   // Handlers
   const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
@@ -127,22 +142,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex items-center justify-between">
-        <div>
-          <GlobalHeading
-            className="mb-4"
-            icon={WandSparklesIcon}
-            title={RULES_COPY.pageTitle}
-          />
-          <p className="text-muted-foreground mb-6 text-sm">
-            Rules are used to define the actions that will be taken when a job
-            is triggered.
-          </p>
-        </div>
-        <Button asChild={true} size="xs">
-          <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>
-        </Button>
-      </div>
+      <RulesStats
+        disabledCount={disabledCount}
+        enabledCount={enabledCount}
+        totalCount={totalCount}
+      />
+      <RulesIntroduction />
 
       {ruleError != null ? (
         <p className="text-destructive text-sm" role="alert">
@@ -150,12 +155,16 @@ export default function Component(
         </p>
       ) : null}
 
-      <RulesTable
-        onDelete={handleDelete}
-        onToggleEnabled={handleToggleEnabled}
-        pending={pending}
-        rules={rules}
-      />
+      <div className="flex flex-col gap-4">
+        <RulesToolbar />
+        <RulesTable
+          isFiltered={isFiltered}
+          onDelete={handleDelete}
+          onToggleEnabled={handleToggleEnabled}
+          pending={pending}
+          rules={filteredRules}
+        />
+      </div>
     </GlobalScreen>
   );
 }
