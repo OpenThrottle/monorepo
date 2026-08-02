@@ -22,7 +22,13 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
   const [searchParams] = useSearchParams();
 
   // Setup
-  const search = searchParams.get('q') ?? '';
+  // A zero-row result is "filtered" when any of the URL-driven filters is
+  // active (search text, status, or assignee) — not just the `q` param — so the
+  // empty state points at clearing filters rather than onboarding.
+  const hasActiveFilters =
+    (searchParams.get('q') ?? '') !== '' ||
+    searchParams.getAll('status').length > 0 ||
+    searchParams.getAll('assignee').length > 0;
   const columns = React.useMemo(
     () => buildPlansTableColumns(statusFilterUrls, runPlanFetcher),
     [plans, runPlanFetcher, statusFilterUrls],
@@ -44,7 +50,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
       <DataTable<PlanCardFragment, string | number | null | undefined>
         columns={columns}
         data={plans}
-        emptyState={<PlanTasksEmpty search={search} />}
+        emptyState={<PlanTasksEmpty filtered={hasActiveFilters} />}
       />
     </div>
   );

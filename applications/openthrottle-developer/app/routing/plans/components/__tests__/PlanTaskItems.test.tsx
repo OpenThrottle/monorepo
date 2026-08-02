@@ -5,6 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { PlanTaskItems } from '../PlanTaskItems';
 import type { PlanTaskItemsProps } from '../PlanTaskItems';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 
 const mockTask: PlanTaskRowFragment = {
   __typename: 'TaskObject',
@@ -33,7 +34,9 @@ describe('PlanTaskItems Component', () => {
   test('renders the empty state when there are no tasks', () => {
     const { getByRole, queryByTestId } = renderItems({ tasks: [] });
 
-    expect(getByRole('heading', { name: 'No plans yet' })).toBeInTheDocument();
+    expect(
+      getByRole('heading', { name: PLAN_TASKS_EMPTY_COPY.title }),
+    ).toBeInTheDocument();
     expect(queryByTestId('PlanTaskItems')).not.toBeInTheDocument();
   });
 

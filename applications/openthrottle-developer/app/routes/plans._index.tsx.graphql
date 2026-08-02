@@ -13,6 +13,10 @@ fragment PlanCard on PlanObject {
   }
   status
   summary
+  tags {
+    dimension
+    tag
+  }
   taskCount
   title
   updatedAt

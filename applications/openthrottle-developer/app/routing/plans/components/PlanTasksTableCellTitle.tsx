@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { Row } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 export interface PlanTasksTableCellTitleProps {
@@ -26,6 +28,10 @@ export const PlanTasksTableCellTitle = (
   const title = task.title ?? 'Untitled';
   const description = task.description?.trim() ?? '';
   const summary = task.summary?.trim() ?? '';
+  const category = task.category?.trim() ?? '';
+  const requirementsCount = getRequirementsCount(task.requirementsJson);
+  const hasMeta =
+    category !== '' || requirementsCount > 0 || task.assignee != null;
 
   // Handlers
 
@@ -52,10 +58,24 @@ export const PlanTasksTableCellTitle = (
         {isManaged ? <PlanManagedTaskBadge className="shrink-0" /> : null}
       </div>
 
-      {task.assignee ? (
-        <p className="text-muted-foreground text-xs">
-          Assigned to {task.assignee}
-        </p>
+      {hasMeta ? (
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+          {category !== '' ? (
+            <Badge aria-label={`Category: ${category}`} color="slate" size="xs">
+              {category}
+            </Badge>
+          ) : null}
+          {requirementsCount > 0 ? (
+            <span
+              aria-label={`${requirementsCount} requirements`}
+              className="tabular-nums"
+            >
+              {requirementsCount}{' '}
+              {requirementsCount === 1 ? 'requirement' : 'requirements'}
+            </span>
+          ) : null}
+          {task.assignee ? <span>Assigned to {task.assignee}</span> : null}
+        </div>
       ) : null}
 
       {description ? (

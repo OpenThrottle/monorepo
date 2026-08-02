@@ -5,6 +5,7 @@
  */
 import * as React from 'react';
 import {
+  Badge,
   Button,
   Input,
   Tooltip,
@@ -32,21 +33,6 @@ export const buildPlansTableColumns = (
   runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
-    {
-      accessorKey: 'taskCount',
-      cell: ({ row }) => {
-        const count = row.original.taskCount ?? 0;
-        return (
-          <div
-            aria-label={`${count} tasks`}
-            className="w-full p-2 text-center tabular-nums"
-          >
-            {count}
-          </div>
-        );
-      },
-      header: () => <span className="p-2 text-center">Tasks</span>,
-    },
     {
       accessorKey: 'status',
       cell: ({ row }) => {
@@ -77,21 +63,43 @@ export const buildPlansTableColumns = (
         const planHref = `/plans/${plan.id}`;
         const configurationHref = `${planHref}?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
         const title = plan.title ?? 'Untitled';
+        const taskCount = plan.taskCount ?? 0;
+        const tags = plan.tags ?? [];
 
         return (
           <div className="overflow-hidden p-2">
-            <h2 className="mb-2 line-clamp-1 text-sm font-medium text-ellipsis">
-              <Link
-                aria-label={`View plan: ${title}`}
-                className="hover:text-primary underline underline-offset-2"
-                data-testid="plan-list-title-link"
-                to={planHref}
-                viewTransition={true}
-              >
-                {title}
-              </Link>
-            </h2>
-            <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis">
+                <Link
+                  aria-label={`View plan: ${title}`}
+                  className="hover:text-primary underline underline-offset-2"
+                  data-testid="plan-list-title-link"
+                  to={planHref}
+                  viewTransition={true}
+                >
+                  {title}
+                </Link>
+              </h2>
+              {tags.map((tag) => (
+                <Badge
+                  aria-label={`Tag: ${tag.tag}`}
+                  className={
+                    tag.dimension === 'phase'
+                      ? 'border-amber-500/60 bg-amber-500/10'
+                      : undefined
+                  }
+                  color="slate"
+                  key={`${tag.dimension}:${tag.tag}`}
+                  size="xs"
+                >
+                  {tag.tag}
+                </Badge>
+              ))}
+            </div>
+            <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+              <span aria-label={`${taskCount} tasks`} className="tabular-nums">
+                {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
+              </span>
               {plan.hasCustomRunConfig ? (
                 <Tooltip>
                   <TooltipTrigger asChild={true}>

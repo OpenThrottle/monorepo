@@ -104,7 +104,7 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
           <DataTable<PlanTaskRowFragment, string | null | undefined>
             columns={columns}
             data={sortedTasks}
-            emptyState={<PlanTasksEmpty />}
+            emptyState={<PlanTasksEmpty variant="tasks" />}
             getRowId={getRowId}
             getRowProps={getRowProps}
           />

@@ -7,19 +7,14 @@
  */
 import * as React from 'react';
 import {
-  Badge,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import {
-  GlobalHeading,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import {
   BoltIcon,
-  ListOrderedIcon,
   PackageIcon,
   TerminalSquareIcon,
   WebhookIcon,
@@ -32,9 +27,9 @@ import { PlanTaskToolbar } from '~/routing/plans/components/PlanTaskToolbar';
 import {
   PLANS_DETAIL_TAB_SEARCH_PARAM,
   parseTaskDetailTab,
-  parseTaskStatusColor,
 } from '~/routing/plans/utils/parsers';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
+import { TaskDetailRouteHeader } from '~/routing/plans/components/TaskDetailRouteHeader';
 import { TaskTabOutput } from '~/routing/plans/components/TaskTabOutput';
 import {
   getPlanIsRunning,
@@ -60,7 +55,6 @@ export const TaskDetailRoute = (
 
   // Setup
   const effectivePlanId = task.planId ?? '';
-  const color = parseTaskStatusColor(task.status ?? '');
   const isPromoted =
     task.status === 'SKIPPED' &&
     task.tags.some((tag) => tag.tag === 'promoted');
@@ -89,18 +83,7 @@ export const TaskDetailRoute = (
   // 🔌 Short Circuit
   return (
     <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          icon={ListOrderedIcon}
-          title={`Task: ${task.title}`}
-        />
-        <div className="text-muted-foreground line-clamp-3 text-sm">
-          <Badge color={color} size="xs">
-            {task.status}
-          </Badge>
-        </div>
-      </div>
+      <TaskDetailRouteHeader status={task.status ?? ''} title={task.title} />
 
       <PlanTaskToolbar
         className="bg-card border-card-border rounded-lg border p-4"

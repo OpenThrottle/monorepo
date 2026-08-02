@@ -76,6 +76,25 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(component.getByText('Short summary')).toBeInTheDocument();
   });
 
+  test('folds category and requirements count into the title cell', () => {
+    props = {
+      row: createMockRow({
+        category: 'implementation',
+        requirementsJson: JSON.stringify(['a', 'b', 'c']),
+      }),
+    };
+
+    component.unmount();
+    renderComponent();
+
+    expect(
+      component.getByLabelText('Category: implementation'),
+    ).toBeInTheDocument();
+    expect(component.getByLabelText('3 requirements')).toHaveTextContent(
+      '3 requirements',
+    );
+  });
+
   test('falls back to Untitled and hides empty metadata', () => {
     props = {
       row: createMockRow({
