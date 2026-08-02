@@ -115,6 +115,9 @@
     "ot-postgres": {
       "tags": ["database", "openthrottle"]
     },
+    "ot-workflow-orchestration": {
+      "tags": []
+    },
     "skill-cleaner": {
       "tags": []
     },
