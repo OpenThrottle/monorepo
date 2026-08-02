@@ -5468,6 +5468,13 @@ export type SearchAgentAssetsQuery = {
   };
 };
 
+export type SignoutMutationVariables = Exact<{ [key: string]: never }>;
+
+export type SignoutMutation = {
+  __typename?: 'Mutation';
+  signout: { __typename?: 'SignoutResultObject'; success: boolean };
+};
+
 export type MintSubscriptionTokenMutationVariables = Exact<{
   [key: string]: never;
 }>;
@@ -12790,6 +12797,31 @@ export const SearchAgentAssetsDocument = {
   SearchAgentAssetsQuery,
   SearchAgentAssetsQueryVariables
 >;
+export const SignoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'signout' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SignoutMutation, SignoutMutationVariables>;
 export const MintSubscriptionTokenDocument = {
   kind: 'Document',
   definitions: [
