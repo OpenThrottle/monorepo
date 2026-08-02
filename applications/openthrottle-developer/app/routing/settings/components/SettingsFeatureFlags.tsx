@@ -51,11 +51,6 @@ export const SettingsFeatureFlags = (
             <code className="text-xs">nx run openthrottle-developer:dev</code>.
             See the monorepo doc below.
           </p>
-          <p>
-            <span className="font-medium">APP_ENABLE_ANALYTICS</span> and not
-            included in <code className="text-xs">window.env</code>; check your
-            environment or deployment config if you need them.
-          </p>
         </div>
       </div>
     </OpenThrottleFieldset>

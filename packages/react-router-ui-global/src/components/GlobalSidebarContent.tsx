@@ -16,7 +16,10 @@ import {
 import { ChevronDown, StarIcon } from 'lucide-react';
 import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
-import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import {
+  FEATURE_BETA_PREVIEW,
+  FEATURE_CHARLIE_PREVIEW,
+} from '@openthrottle/react-router-utils';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
   beta?: boolean;
@@ -50,9 +53,8 @@ export const GlobalSidebarContent = (
 
   // Setup
   const sections = Object.keys(data ?? {});
-  const isBetaEnabled = !IS_BROWSER
-    ? process.env.FEATURE_BETA_PREVIEW === 'true'
-    : window.env.FEATURE_BETA_PREVIEW === 'true';
+  const isBetaEnabled = FEATURE_BETA_PREVIEW;
+  const isCharlieEnabled = FEATURE_CHARLIE_PREVIEW;
 
   // Handlers
   const isLinkActive = (item: GlobalSidebarContentLinkProps): boolean => {
@@ -94,7 +96,8 @@ export const GlobalSidebarContent = (
         >
           <NavLink
             className={clsx('text-xs!', {
-              'text-muted-foreground pointer-events-none': item.disabled,
+              'text-muted-foreground pointer-events-none':
+                item.disabled && !isCharlieEnabled,
             })}
             to={item.to}
             viewTransition={true}

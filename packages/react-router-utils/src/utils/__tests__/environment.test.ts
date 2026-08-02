@@ -90,6 +90,7 @@ describe('getEnvironment', () => {
       APP_URL_WEBSITE: 'https://www.example.com',
       APP_VERSION: '42',
       FEATURE_BETA_PREVIEW: 'false',
+      FEATURE_CHARLIE_PREVIEW: 'false',
       NODE_ENV: 'development',
       ROLLBAR_TOKEN: '1234567890',
     });

@@ -104,7 +104,10 @@ function bucketLevel(count: number, max: number): number {
 }
 
 /**
- * @description GitHub-contributions-style calendar heatmap. Renders weekday rows × week columns of day cells, color-graded by relative daily count. Framework-agnostic: takes a plain `{ date, count }[]` and an optional `onSelectDate` for day click-through.
+ * @description GitHub-contributions-style calendar heatmap. Renders weekday
+ * rows × week columns of day cells, color-graded by relative daily count.
+ * Framework-agnostic: takes a plain `{ date, count }[]` and an optional
+ * `onSelectDate` for day click-through.
  */
 export function ContributionHeatmap(
   props: ContributionHeatmapProps,
@@ -238,7 +241,7 @@ export function ContributionHeatmap(
                   return (
                     <div
                       aria-hidden="true"
-                      className="size-3"
+                      className="size-9"
                       key={cell.date}
                     />
                   );
@@ -250,7 +253,7 @@ export function ContributionHeatmap(
                   <button
                     aria-label={cellLabel}
                     className={cn(
-                      'size-3 rounded-[2px] outline-none',
+                      'size-9 rounded-[2px] outline-none',
                       LEVEL_CLASSNAMES[cell.level],
                       isInteractive
                         ? 'focus-visible:ring-ring cursor-pointer focus-visible:ring-2'
@@ -276,7 +279,7 @@ export function ContributionHeatmap(
         {LEVEL_CLASSNAMES.map((levelClassName, level) => (
           <span
             aria-hidden="true"
-            className={cn('size-3 rounded-[2px]', levelClassName)}
+            className={cn('size-9 rounded-[2px]', levelClassName)}
             key={`legend-${level}`}
           />
         ))}

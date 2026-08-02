@@ -3,6 +3,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -21,6 +22,7 @@ import {
   parseRolloutTargetRoles,
 } from '~/routing/settings/utils/rollout-action';
 import type { Route } from '@/app/routes/+types/settings.rollout._index';
+import { ToggleRightIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -52,12 +54,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-lg font-semibold">{ROLLOUT_COPY.title}</h1>
-          <p className="text-muted-foreground text-sm">{ROLLOUT_COPY.intro}</p>
+      <div className="flex flex-col gap-4">
+        <GlobalHeading
+          heading="h1"
+          icon={ToggleRightIcon}
+          title={ROLLOUT_COPY.title}
+        />
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground text-sm">
+            {ROLLOUT_COPY.createDescription}
+          </p>
+          <RolloutFlagCreateDialog actionError={actionError} />
         </div>
-        <RolloutFlagCreateDialog actionError={actionError} />
       </div>
 
       <RolloutFlagsTable flags={flags} />

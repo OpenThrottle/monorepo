@@ -1,75 +1,10 @@
-import * as React from 'react';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { ScheduleIntroduction } from '~/routing/schedule/components/ScheduleIntroduction';
-import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
-import { ScheduleToolbar } from '~/routing/schedule/components/ScheduleToolbar';
-import { SCHEDULE_EVENTS } from '~/routing/schedule/data/data.events';
-import { filterScheduleEventsBySearch } from '~/routing/schedule/utils/events';
-import { SITE_TITLE } from '~/global/config/settings';
+import { redirect } from 'react-router';
 import type { Route } from '@/app/routes/+types/schedule._index';
 
-type HandleData = Route.ComponentProps['loaderData'];
-
-export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Schedule',
-  links: (_match) => [],
+/**
+ * @description Legacy `/schedule` → `/calendar/list` (table view moved off the
+ * calendar index after the Schedule → Calendar rename).
+ */
+export const loader = async (_args: Route.LoaderArgs) => {
+  return redirect('/calendar/list');
 };
-
-export const loader = async (args: Route.LoaderArgs) => {
-  const url = args.url;
-  const searchParams = url?.searchParams ?? new URLSearchParams();
-  const search = searchParams.get('q')?.trim() ?? '';
-
-  const events = filterScheduleEventsBySearch(SCHEDULE_EVENTS, search);
-
-  return { events, search };
-};
-
-export const links: Route.LinksFunction = () => {
-  return [];
-};
-
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Schedule | ${SITE_TITLE}` }];
-});
-
-export default function Component(
-  props: Route.ComponentProps,
-): React.ReactElement {
-  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-
-  // Hooks
-
-  // Setup
-  const { events } = loaderData;
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <GlobalScreen beta={true}>
-      <ScheduleIntroduction />
-
-      <div className="flex flex-col gap-4">
-        <ScheduleToolbar />
-        <ScheduleTable className="bg-card" events={events} />
-      </div>
-    </GlobalScreen>
-  );
-}
-
-export const action = async (_args: Route.ActionArgs) => {
-  return {};
-};
-
-export const ErrorBoundary = GlobalErrorBoundary;

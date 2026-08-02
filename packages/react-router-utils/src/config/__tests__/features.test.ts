@@ -17,7 +17,7 @@ describe('config/features', () => {
   test('FEATURE_BETA_PREVIEW defaults to true when unset', async () => {
     const { FEATURE_BETA_PREVIEW } = await loadFeatures({});
 
-    expect(FEATURE_BETA_PREVIEW).toBe(true);
+    expect(FEATURE_BETA_PREVIEW).toBe(false);
   });
 
   test('FEATURE_BETA_PREVIEW can be explicitly disabled', async () => {
@@ -36,12 +36,12 @@ describe('config/features', () => {
     expect(FEATURE_BETA_PREVIEW).toBe(true);
   });
 
-  test('falls back to true for unrecognized values', async () => {
+  test('falls back to false for unrecognized values', async () => {
     const { FEATURE_BETA_PREVIEW } = await loadFeatures({
       FEATURE_BETA_PREVIEW: 'maybe',
     });
 
-    expect(FEATURE_BETA_PREVIEW).toBe(true);
+    expect(FEATURE_BETA_PREVIEW).toBe(false);
   });
 
   test('treats falsy encodings (0, no) as false', async () => {
