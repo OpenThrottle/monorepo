@@ -398,6 +398,10 @@ export class WorkspaceFoldersService {
         checkout = await this.checkoutsService.create(userId, {
           displayName,
           filesystemPath: hostPath,
+          // A path whose `.git` is a file pointer is a linked worktree; persist
+          // it as such so run provenance (plan_runs.checkout_id) resolves the
+          // durable worktree home rather than mislabeling it a primary checkout.
+          kind: snapshot.git.isLinkedWorktree ? 'worktree' : 'primary',
           managed: opts.managed,
           repositoryId: repository.id,
         });

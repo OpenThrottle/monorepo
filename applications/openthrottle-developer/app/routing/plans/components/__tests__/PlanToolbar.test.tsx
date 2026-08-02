@@ -130,6 +130,7 @@ describe('PlanToolbar Component', () => {
   test('keeps Run and Evaluate rules enabled for a PENDING (non-terminal, not-running) plan', () => {
     const r = within(
       renderToolbar({
+        branch: 'feature/test',
         planId: 'p1',
         planStatus: 'PENDING',
         planTitle: 'My Plan',
@@ -138,6 +139,25 @@ describe('PlanToolbar Component', () => {
     expect(
       r.getByRole('button', { name: runButtonName.PENDING }),
     ).not.toBeDisabled();
+    expect(
+      r.getByRole('button', { name: /evaluate rules/i }),
+    ).not.toBeDisabled();
+  });
+
+  test('disables Run (but not Evaluate rules) when the required branch is blank', () => {
+    const r = within(
+      renderToolbar({
+        branch: '',
+        planId: 'p1',
+        planStatus: 'PENDING',
+        planTitle: 'My Plan',
+      }).container,
+    );
+    // Branch is a required enqueue input; Run is gated until it is provided.
+    expect(
+      r.getByRole('button', { name: runButtonName.PENDING }),
+    ).toBeDisabled();
+    // Evaluate rules does not enqueue a run, so it stays enabled.
     expect(
       r.getByRole('button', { name: /evaluate rules/i }),
     ).not.toBeDisabled();

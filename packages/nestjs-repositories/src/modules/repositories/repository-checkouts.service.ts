@@ -25,6 +25,12 @@ interface CreateRepositoryCheckoutData {
   readonly repositoryId: string;
 }
 
+interface UpsertWorktreeCheckoutData {
+  readonly displayName: string;
+  readonly filesystemPath: string;
+  readonly repositoryId: string;
+}
+
 const DUPLICATE_PATH_MESSAGE =
   'A local repository with this filesystem path is already registered';
 
@@ -68,6 +74,16 @@ export class RepositoryCheckoutsService {
       relations: { repository: true },
       where: { id, userId },
     });
+  }
+
+  /**
+   * @description Finds a checkout by id without a user scope. For resolving a
+   * checkout a row already authoritatively references (e.g. plan_runs.checkout_id
+   * for run provenance / editor deep-links), where the owning user is implied by
+   * the referencing row rather than the caller. Returns null when not found.
+   */
+  async findById(id: string): Promise<RepositoryCheckout | null> {
+    return this.repository.findOne({ where: { id } });
   }
 
   /**
@@ -115,6 +131,67 @@ export class RepositoryCheckoutsService {
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new ConflictException(DUPLICATE_PATH_MESSAGE);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * @description Idempotently records a worktree checkout (kind='worktree',
+   * managed=true) at `filesystemPath` for the user — the durable on-disk home a
+   * run's `plan_runs.checkout_id` references for editor deep-links. Keyed on the
+   * DB's `(user_id, filesystem_path)` uniqueness so re-provisioning the same
+   * worktree returns the existing row rather than duplicating it, and normalizes
+   * a pre-existing row at that path up to a managed worktree (e.g. a bare
+   * `git worktree add` folder later provisioned for a run). Reusable primitive
+   * for worktree-provisioning entry points.
+   */
+  async upsertWorktreeCheckout(
+    userId: string,
+    data: UpsertWorktreeCheckoutData,
+  ): Promise<RepositoryCheckout> {
+    const existing = await this.repository.findOne({
+      where: { filesystemPath: data.filesystemPath, userId },
+    });
+
+    if (existing) {
+      // Normalize an existing row at this path to a managed worktree, and adopt
+      // the resolved repository if it drifted (provisional -> canonical). No-op
+      // when already aligned, keeping repeat provisioning writes cheap.
+      const needsUpdate =
+        existing.kind !== 'worktree' ||
+        existing.managed !== true ||
+        existing.repositoryId !== data.repositoryId;
+      if (!needsUpdate) {
+        return existing;
+      }
+      existing.kind = 'worktree';
+      existing.managed = true;
+      existing.repositoryId = data.repositoryId;
+      return this.repository.save(existing);
+    }
+
+    try {
+      return await this.repository.save(
+        this.repository.create({
+          displayName: data.displayName,
+          filesystemPath: data.filesystemPath,
+          kind: 'worktree',
+          managed: true,
+          repositoryId: data.repositoryId,
+          userId,
+        }),
+      );
+    } catch (error) {
+      // Lost a race to a concurrent provisioning of the same path: the row now
+      // exists, so return it instead of surfacing the unique violation.
+      if (isUniqueViolation(error)) {
+        const raced = await this.repository.findOne({
+          where: { filesystemPath: data.filesystemPath, userId },
+        });
+        if (raced) {
+          return raced;
+        }
       }
       throw error;
     }

@@ -615,6 +615,7 @@ describe('PlansResolver', () => {
 
     test('delegates to PlanEnqueueService.enqueueSpawn and maps the outcome', async () => {
       const result = await resolver.enqueuePlanRun({
+        branch: 'feature/test',
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,
@@ -625,6 +626,7 @@ describe('PlansResolver', () => {
 
       expect(mockEnqueueSpawn).toHaveBeenCalledWith({
         actorUserId: null,
+        branch: 'feature/test',
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,
@@ -645,6 +647,7 @@ describe('PlansResolver', () => {
 
     test('maps an omitted idempotency key to null when delegating', async () => {
       await resolver.enqueuePlanRun({
+        branch: 'feature/test',
         planId: mockPlan.id,
         priority: null,
         workingDirectory: null,
@@ -657,7 +660,12 @@ describe('PlansResolver', () => {
 
     test('captures a user actor as actorUserId', async () => {
       await resolver.enqueuePlanRun(
-        { planId: mockPlan.id, priority: null, workingDirectory: null },
+        {
+          branch: 'feature/test',
+          planId: mockPlan.id,
+          priority: null,
+          workingDirectory: null,
+        },
         'user-uuid-1',
         'user',
       );
@@ -669,7 +677,12 @@ describe('PlansResolver', () => {
 
     test('records no actorUserId for a service-account principal', async () => {
       await resolver.enqueuePlanRun(
-        { planId: mockPlan.id, priority: null, workingDirectory: null },
+        {
+          branch: 'feature/test',
+          planId: mockPlan.id,
+          priority: null,
+          workingDirectory: null,
+        },
         'ot_sa_abc',
         'service_account',
       );
@@ -688,6 +701,7 @@ describe('PlansResolver', () => {
 
     test('delegates to enqueuePlanRun (enqueueSpawn) with an equivalent result', async () => {
       const input = {
+        branch: 'feature/test',
         jobRunHooksJson: null,
         planId: mockPlan.id,
         priority: null,
@@ -714,6 +728,7 @@ describe('PlansResolver', () => {
 
     test('delegates to PlanEnqueueService.enqueueOrchestrator and maps the outcome', async () => {
       const result = await resolver.enqueuePlanRalphOrchestrator({
+        branch: 'feature/test',
         idempotencyKey: null,
         mode: null,
         planId: mockPlan.id,
@@ -736,6 +751,7 @@ describe('PlansResolver', () => {
     test('requires taskId when mode is task (no delegation)', async () => {
       await expect(
         resolver.enqueuePlanRalphOrchestrator({
+          branch: 'feature/test',
           idempotencyKey: null,
           mode: PlanRalphWorkflowModeGraphQL.task,
           planId: mockPlan.id,
@@ -755,6 +771,7 @@ describe('PlansResolver', () => {
       });
 
       await resolver.enqueuePlanRalphOrchestrator({
+        branch: 'feature/test',
         idempotencyKey: null,
         mode: PlanRalphWorkflowModeGraphQL.task,
         planId: mockPlan.id,
@@ -783,6 +800,7 @@ describe('PlansResolver', () => {
 
       await expect(
         resolver.enqueuePlanRalphOrchestrator({
+          branch: 'feature/test',
           idempotencyKey: null,
           mode: PlanRalphWorkflowModeGraphQL.task,
           planId: mockPlan.id,

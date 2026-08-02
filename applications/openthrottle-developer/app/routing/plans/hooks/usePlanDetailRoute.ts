@@ -22,6 +22,7 @@ import {
   jobRunHooksValidationAtom,
   runConfigSaveBlockedAtom,
   runConfigSaveBlockedReasonAtom,
+  workflowBranchAtom,
   workflowRalphTuningJsonAtom,
   workflowCheckoutIdAtom,
   workflowRepositoryIdAtom,
@@ -37,6 +38,7 @@ export interface UsePlanDetailRouteOptions {
 }
 
 export interface UsePlanDetailRouteResult {
+  readonly branch: string;
   readonly checkoutId: string;
   readonly fullscreen: boolean;
   readonly isBoardView: boolean;
@@ -97,6 +99,7 @@ export const usePlanDetailRoute = (
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
   const checkoutId = useAtomValue(workflowCheckoutIdAtom);
   const repositoryId = useAtomValue(workflowRepositoryIdAtom);
+  const branch = useAtomValue(workflowBranchAtom);
 
   // Setup
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -183,6 +186,7 @@ export const usePlanDetailRoute = (
 
   // 🔌 Short Circuit
   return {
+    branch,
     checkoutId,
     fullscreen,
     isBoardView,

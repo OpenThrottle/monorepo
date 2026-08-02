@@ -275,6 +275,11 @@ export class RalphPlanRunTuningInput {
 @InputType()
 export class EnqueuePlanRunInput {
   @Field(() => String, {
+    description: `REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.`,
+  })
+  branch!: string;
+
+  @Field(() => String, {
     description: `Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.`,
     nullable: true,
   })
@@ -322,6 +327,11 @@ export class EnqueuePlanRunInput {
 
 @InputType()
 export class EnqueuePlanRalphOrchestratorInput {
+  @Field(() => String, {
+    description: `REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.`,
+  })
+  branch!: string;
+
   @Field(() => String, {
     description: `Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.`,
     nullable: true,
