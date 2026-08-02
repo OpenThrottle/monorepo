@@ -15,17 +15,25 @@ const run = (
 ): ScheduledJobRunDetailFragment => ({
   __typename: 'ScheduledAgentJobRunObject',
   bullmqJobId: 'run-1',
+  cacheReadTokens: 20,
+  cacheWriteTokens: 10,
   cancelRequestedAt: null,
+  costUsd: 0.0123,
   createdAt: '2026-07-31T09:00:00.000Z',
   driverId: 'claude',
   errorMessage: null,
   exitCode: 0,
   finishedAt: '2026-07-31T09:01:23.000Z',
   id: 'run-1',
+  inputTokens: 100,
   model: 'opus',
+  outputTokens: 50,
+  reasoningTokens: null,
   scheduledAgentJobId: 'job-1',
+  settingsSnapshotJson: JSON.stringify({ driverId: 'claude', model: 'opus' }),
   startedAt: '2026-07-31T09:00:00.000Z',
   status: 'succeeded',
+  totalTokens: 150,
   trigger: 'manual',
   ...overrides,
 });
@@ -83,6 +91,41 @@ describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
     expect(
       component.getByRole('link', { name: /back to job/i }),
     ).toHaveAttribute('href', '/scheduled-jobs/job-1');
+  });
+
+  test('renders the token-usage breakdown, cost, and settings snapshot', () => {
+    const component = renderRun(run());
+
+    expect(component.getByText('Token usage')).toBeInTheDocument();
+    // per-kind counts + total + formatted cost
+    expect(component.getByText('100')).toBeInTheDocument();
+    expect(component.getByText('150')).toBeInTheDocument();
+    expect(component.getByText('$0.012')).toBeInTheDocument();
+    // settings snapshot pretty-printed
+    expect(component.getByText('Settings snapshot')).toBeInTheDocument();
+    expect(component.getByText(/"driverId": "claude"/)).toBeInTheDocument();
+  });
+
+  test('shows empty-usage + empty-snapshot copy when nothing was captured', () => {
+    const component = renderRun(
+      run({
+        cacheReadTokens: null,
+        cacheWriteTokens: null,
+        costUsd: null,
+        inputTokens: null,
+        outputTokens: null,
+        reasoningTokens: null,
+        settingsSnapshotJson: null,
+        totalTokens: null,
+      }),
+    );
+
+    expect(
+      component.getByText(/no token usage was reported/i),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(/no settings snapshot was captured/i),
+    ).toBeInTheDocument();
   });
 
   test('renders the full error message for a failed run', () => {

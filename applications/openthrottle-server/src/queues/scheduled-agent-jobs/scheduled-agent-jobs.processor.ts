@@ -1,6 +1,12 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Inject, Optional } from '@nestjs/common';
 import type { OnApplicationShutdown } from '@nestjs/common';
+import {
+  hasUsageCounts,
+  normalizeUsage,
+  sumUsage,
+  type NormalizedTokenUsage,
+} from '@openthrottle/agentic-token-usage';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -10,6 +16,7 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import {
   ScheduledAgentJobsService,
+  type ScheduledAgentJobRunSettingsSnapshot,
   type ScheduledAgentJobRunStatus,
 } from '@openthrottle/nestjs-repositories';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
@@ -46,6 +53,55 @@ const runStatusForAgentStatus = (
       return 'failed';
   }
 };
+
+/**
+ * @description Fold token usage out of a run's buffered CLI output. The output is JSONL (one event
+ * per line for stream-json backends; opencode emits several mid-stream usage lines), so each line is
+ * run through the shared {@link normalizeUsage} and accumulated with {@link sumUsage} — the same fold
+ * `ConversationStreamService.persistTurnUsage` does, but over raw buffered text instead of discrete
+ * usage events. Defensive by contract: `normalizeUsage`/`sumUsage` never throw on bad/partial input,
+ * the whole fold is guarded, and a run that reported no counts folds to `null` (nothing to persist).
+ */
+export const foldRunUsage = (output: string): NormalizedTokenUsage | null => {
+  try {
+    const folded = output
+      .split('\n')
+      .reduce<NormalizedTokenUsage>(
+        (accumulated, line) =>
+          line.trim() === ''
+            ? accumulated
+            : sumUsage(accumulated, normalizeUsage(line)),
+        {},
+      );
+
+    return hasUsageCounts(folded) ? folded : null;
+  } catch {
+    return null;
+  }
+};
+
+/** @description The persisted usage columns derived from a folded run usage (all null when absent). */
+const usageColumns = (
+  usage: NormalizedTokenUsage | null,
+): {
+  readonly cacheReadTokens: number | null;
+  readonly cacheWriteTokens: number | null;
+  readonly costUsd: number | null;
+  readonly inputTokens: number | null;
+  readonly outputTokens: number | null;
+  readonly rawUsage: Record<string, unknown> | null;
+  readonly reasoningTokens: number | null;
+  readonly totalTokens: number | null;
+} => ({
+  cacheReadTokens: usage?.cacheReadTokens ?? null,
+  cacheWriteTokens: usage?.cacheWriteTokens ?? null,
+  costUsd: usage?.costUsd ?? null,
+  inputTokens: usage?.inputTokens ?? null,
+  outputTokens: usage?.outputTokens ?? null,
+  rawUsage: usage === null ? null : { ...usage },
+  reasoningTokens: usage?.reasoningTokens ?? null,
+  totalTokens: usage?.totalTokens ?? null,
+});
 
 /** @description Human error detail for a non-ok agent status; null for a clean run. */
 const errorMessageForAgentStatus = (
@@ -117,11 +173,21 @@ export class ScheduledAgentJobsProcessor
     const queueName = SCHEDULED_AGENT_JOBS_QUEUE_NAME;
     const bullmqJobId = String(job.id);
 
+    // Snapshot the effective run settings at fire time so later schedule edits don't rewrite this
+    // run's history. driver/model/run-config is all a scheduled job carries today (no reasoning
+    // tier / permission mode in the schedule model); `settings` holds any endpoint/worktree knobs.
+    const settingsSnapshot: ScheduledAgentJobRunSettingsSnapshot = {
+      driverId,
+      model: model ?? null,
+      settings: settings ?? null,
+    };
+
     const runRowId = await this.claimOrCreateRun(runId, {
       bullmqJobId,
       driverId,
       model: model ?? null,
       scheduleId,
+      settingsSnapshot,
     });
 
     const signal = this.cancellation.attach(runRowId);
@@ -151,6 +217,7 @@ export class ScheduledAgentJobsProcessor
         ),
         exitCode: result.exitCode,
         status: runStatusForAgentStatus(result.status),
+        ...usageColumns(foldRunUsage(result.output)),
       });
     } catch (error) {
       // runAgentPrompt only throws on invalid input (unknown driver / capability mismatch); an
@@ -193,12 +260,18 @@ export class ScheduledAgentJobsProcessor
       readonly driverId: ScheduledAgentJobBullJob['data']['driverId'];
       readonly model: string | null;
       readonly scheduleId: string;
+      readonly settingsSnapshot: ScheduledAgentJobRunSettingsSnapshot;
     },
   ): Promise<string> {
     if (typeof runId === 'string' && runId.length > 0) {
       const existing = await this.jobsService.findRunById(runId);
       if (existing !== null) {
-        await this.jobsService.markRunStarted(existing.id, input.bullmqJobId);
+        // Run-now row was pre-created by the enqueuer; backfill the snapshot as it starts.
+        await this.jobsService.markRunStarted(
+          existing.id,
+          input.bullmqJobId,
+          input.settingsSnapshot,
+        );
         return existing.id;
       }
     }
@@ -208,6 +281,7 @@ export class ScheduledAgentJobsProcessor
       driverId: input.driverId,
       model: input.model,
       scheduledAgentJobId: input.scheduleId,
+      settingsSnapshot: input.settingsSnapshot,
       status: 'running',
       trigger: 'schedule',
     });

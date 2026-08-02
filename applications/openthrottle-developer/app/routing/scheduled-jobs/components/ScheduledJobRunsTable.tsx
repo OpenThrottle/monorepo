@@ -12,6 +12,11 @@ import {
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { RUN_STATUS_VARIANT } from '~/routing/scheduled-jobs/data/data.run-status';
 import { formatDuration } from '~/routing/scheduled-jobs/utils/format-duration';
+import {
+  formatRunCost,
+  formatRunTotalTokens,
+  runUsageTooltip,
+} from '~/routing/scheduled-jobs/utils/format-usage';
 import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
 
 export interface ScheduledJobRunsTableProps {
@@ -43,9 +48,12 @@ export const ScheduledJobRunsTable = (
         <TableRow>
           <TableHead>Status</TableHead>
           <TableHead>Trigger</TableHead>
+          <TableHead>Model</TableHead>
           <TableHead>Started</TableHead>
           <TableHead>Finished</TableHead>
           <TableHead>Duration</TableHead>
+          <TableHead className="text-right">Tokens</TableHead>
+          <TableHead className="text-right">Cost</TableHead>
           <TableHead>Exit</TableHead>
           <TableHead>
             <span className="sr-only">Open run</span>
@@ -64,10 +72,22 @@ export const ScheduledJobRunsTable = (
               </Badge>
             </TableCell>
             <TableCell>{run.trigger}</TableCell>
+            <TableCell className="font-mono text-xs">
+              {run.model ?? '—'}
+            </TableCell>
             <TableCell>{formatWhen(run.startedAt)}</TableCell>
             <TableCell>{formatWhen(run.finishedAt)}</TableCell>
             <TableCell>
               {formatDuration(run.startedAt, run.finishedAt)}
+            </TableCell>
+            <TableCell
+              className="text-right tabular-nums"
+              title={runUsageTooltip(run)}
+            >
+              {formatRunTotalTokens(run)}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">
+              {formatRunCost(run)}
             </TableCell>
             <TableCell>{run.exitCode ?? '—'}</TableCell>
             <TableCell className="text-right">

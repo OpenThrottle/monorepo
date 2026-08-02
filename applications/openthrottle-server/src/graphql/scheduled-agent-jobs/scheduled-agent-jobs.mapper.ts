@@ -37,16 +37,26 @@ export const toScheduledAgentJobRunObject = (
   run: ScheduledAgentJobRun,
 ): ScheduledAgentJobRunObject => ({
   bullmqJobId: run.bullmqJobId,
+  cacheReadTokens: run.cacheReadTokens,
+  cacheWriteTokens: run.cacheWriteTokens,
   cancelRequestedAt: run.cancelRequestedAt,
+  costUsd: run.costUsd,
   createdAt: run.createdAt,
   driverId: run.driverId,
   errorMessage: run.errorMessage,
   exitCode: run.exitCode,
   finishedAt: run.finishedAt,
   id: run.id,
+  inputTokens: run.inputTokens,
   model: run.model,
+  outputTokens: run.outputTokens,
+  reasoningTokens: run.reasoningTokens,
   scheduledAgentJobId: run.scheduledAgentJobId,
+  // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
+  settingsSnapshotJson:
+    run.settingsSnapshot === null ? null : JSON.stringify(run.settingsSnapshot),
   startedAt: run.startedAt,
   status: run.status,
+  totalTokens: run.totalTokens,
   trigger: run.trigger,
 });
