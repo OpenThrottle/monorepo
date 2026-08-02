@@ -78,6 +78,22 @@ The artifact is recorded `unverified`; the git verifier promotes it to `landed`/
 - **Reorder:** use `reorder_plan_tasks` instead of deleting and recreating tasks when fixing order.
 - **Schema detail:** `databases/README.md` § Task sort_order.
 
+## Optional skill-usage outcome enrichment (opt-in)
+
+Harness capture (`PreToolUse` / `UserPromptExpansion` → `skill_usage_events`) is the **primary** observability path for all skills. Manual per-skill instrumentation is explicitly **not** the primary mechanism — it only sees skills we author, misses auto-triggered invocations, and creates blind spots.
+
+For depth on skills we control, you may **optionally** emit an outcome at completion (correlated by `session_id` + skill name):
+
+```bash
+node .claude/hooks/skill-usage-outcome.cjs \
+  --skill ot-plans \
+  --outcome success \
+  --duration-ms 4200 \
+  --session "$CLAUDE_SESSION_ID"
+```
+
+`--outcome` is `success` | `abandoned` | `error`. Missing outcomes are a valid state. Fail-open: never block the skill.
+
 ## Cross-links
 
 - **Conventional commits and staging:** `.agents/skills/git-commit/SKILL.md`

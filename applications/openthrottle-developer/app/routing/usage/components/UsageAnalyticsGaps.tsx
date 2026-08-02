@@ -35,15 +35,20 @@ export const UsageAnalyticsGaps = (
 
       <div className="text-muted-foreground mt-4 text-xs md:mt-8">
         <ul className="list-disc space-y-1 pl-5">
-          <li>No per-prompt, per-skill, or per-command invocation counts.</li>
           <li>
-            No latency metrics. Token and cost usage is captured — see{' '}
+            No per-prompt or per-command invocation counts. Skill invocations
+            are captured at the harness — see{' '}
+            <span className="text-foreground">Skill usage</span> above.
+          </li>
+          <li>
+            No latency or outcome metrics yet (Phase 4 enrichment is optional).
+            Token and cost usage is captured — see{' '}
             <span className="text-foreground">Model token usage</span> above.
           </li>
           <li>
             No visibility into user-local skills under{' '}
             <code className="text-xs">~/.cursor/skills-cursor</code> (not
-            in-repo).
+            in-repo) unless the harness invokes them via the Skill tool.
           </li>
           <li>
             For prompt identity and version drift, open a prompt and expand{' '}

@@ -159,6 +159,13 @@ jobs:
           pnpm exec nx affected --target=lint,typecheck --parallel ${{ env.OUTPUT_DEBUG }}
           pnpm exec nx affected --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
 
+      # The skill-usage capture hooks are plain node:test .cjs suites (not an Nx
+      # project), so `nx affected` never runs them. Run them explicitly to protect
+      # the tool-neutral core (.agents/hooks/skill-usage) and each per-tool adapter
+      # (.claude/hooks). The glob auto-covers future adapters. See OT plan d3759118.
+      - name: '🪝 Skill-usage hook suites (node:test)'
+        run: pnpm run test:hooks
+
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
       # - name: '🧪 NX affected Vitest (phased gate)'

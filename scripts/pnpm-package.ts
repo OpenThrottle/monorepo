@@ -1,8 +1,15 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { writeFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifestOnly } from '@pnpm/read-project-manifest';
+
+/**
+ * pnpm catalogs, keyed by catalog name. The unnamed `catalog:` protocol
+ * resolves against the `default` key; named catalogs (`catalog:<name>`) use
+ * their own key. Shape matches @pnpm/catalogs.types' `Catalogs`.
+ */
+type Catalogs = Record<string, Record<string, string>>;
 
 /**
  * @link https://github.com/pnpm/pnpm/issues/5094#issuecomment-1976893401
@@ -27,8 +34,79 @@ const modulesDir = path.join(__dirname, `../node_modules`); // Our "node_modules
 const projectDir = path.join(__dirname, `../${basePath}/${projectName}`); // folder of "package.json" to be translated
 const distDir = path.join(__dirname, `../${basePath}/${projectName}/dist`); // folder to save the translated one
 
+const workspaceFile = path.join(__dirname, `../pnpm-workspace.yaml`); // catalog source of truth
+
 const _data = { distDir, modulesDir, projectDir, projectName };
 console.log(`📦 Updating "${name}" package.json`);
+
+/**
+ * Read the pnpm catalogs from pnpm-workspace.yaml so `catalog:` specs resolve
+ * to concrete versions when we build the publishable manifest. Without this,
+ * `createExportableManifest` receives no catalogs and throws
+ * CATALOG_ENTRY_NOT_FOUND_FOR_SPEC for any dependency that uses `catalog:`.
+ *
+ * Focused reader (no YAML dependency): parses the top-level `catalog:` (default)
+ * and optional `catalogs:` (named) blocks of KEY: VALUE scalars. The whole
+ * workspace uses `catalogMode: strict`, so this must stay in sync with the file.
+ */
+const readWorkspaceCatalogs = async (): Promise<Catalogs> => {
+  const text = await readFile(workspaceFile, 'utf8');
+  const catalogs: Catalogs = { default: {} };
+
+  // Match `  'name': 'version'` (quotes optional), stripping any inline comment.
+  const entryPattern = /^\s+(['"]?)(.+?)\1\s*:\s*(['"]?)(.+?)\3\s*$/;
+
+  let mode: 'default' | 'named' | null = null;
+  let currentNamed: string | null = null;
+
+  for (const rawLine of text.split('\n')) {
+    // Blank/comment lines never open or close a section.
+    if (/^\s*$/.test(rawLine) || /^\s*#/.test(rawLine)) {
+      continue;
+    }
+    if (/^catalog:\s*$/.test(rawLine)) {
+      mode = 'default';
+      continue;
+    }
+    if (/^catalogs:\s*$/.test(rawLine)) {
+      mode = 'named';
+      currentNamed = null;
+      continue;
+    }
+    // Any other top-level (unindented) key ends the catalog section.
+    if (/^\S/.test(rawLine)) {
+      mode = null;
+      currentNamed = null;
+      continue;
+    }
+    if (mode === null) {
+      continue;
+    }
+
+    if (mode === 'named') {
+      // A 2-space `name:` header opens a named catalog block.
+      const header = rawLine.match(/^ {2}([A-Za-z0-9_-]+):\s*$/);
+      if (header) {
+        currentNamed = header[1];
+        catalogs[currentNamed] ??= {};
+        continue;
+      }
+    }
+
+    const entry = rawLine.match(entryPattern);
+    if (!entry) {
+      continue;
+    }
+    const [, , dependency, , version] = entry;
+    if (mode === 'default') {
+      catalogs.default[dependency] = version;
+    } else if (currentNamed) {
+      catalogs[currentNamed][dependency] = version;
+    }
+  }
+
+  return catalogs;
+};
 
 /**
  * Transform our monorepo -> package -> package.json into something that we
@@ -48,15 +126,17 @@ console.log(`📦 Updating "${name}" package.json`);
  */
 const transformPackageJson = async () => {
   const manifest = await readProjectManifestOnly(projectDir);
+  const catalogs = await readWorkspaceCatalogs();
   const exportable = await createExportableManifest(projectDir, manifest, {
-    catalogs: [],
+    catalogs,
     modulesDir,
   });
 
-  if ('nx' in exportable) {
-    delete (exportable as { nx?: unknown }).nx;
-  }
-  if (exportable.publishConfig) delete exportable.publishConfig;
+  // The `nx` and `publishConfig` keys are workspace-only noise consumers don't
+  // need; strip them via a record view so no `as` assertion is required.
+  const exportableRecord: Record<string, unknown> = exportable;
+  delete exportableRecord.nx;
+  delete exportableRecord.publishConfig;
 
   const jsonFormatted = JSON.stringify(exportable, undefined, 2);
   // console.log('📦 Publishable package.json created', jsonFormatted);

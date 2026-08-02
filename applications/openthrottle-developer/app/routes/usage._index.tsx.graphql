@@ -51,3 +51,61 @@ query getUsageTokenUsage($start: String!, $end: String!, $provider: String) {
     }
   }
 }
+
+fragment UsageSkillUsageBySkill on SkillUsageBySkillObject {
+  skillName
+  scope
+  count
+  outcomeCount
+  successCount
+  abandonedCount
+  errorCount
+  avgDurationMs
+}
+
+fragment UsageSkillUsageByScope on SkillUsageByScopeObject {
+  scope
+  count
+}
+
+fragment UsageSkillUsageByDay on SkillUsageByDayObject {
+  date
+  oursCount
+  thirdPartyCount
+  totalCount
+}
+
+fragment UsageSkillUsageFilterOptions on SkillUsageFilterOptionsObject {
+  gitBranches
+  cwds
+}
+
+query getUsageSkillUsage(
+  $start: String!
+  $end: String!
+  $scope: String
+  $gitBranch: String
+  $cwd: String
+) {
+  skillUsage(
+    start: $start
+    end: $end
+    scope: $scope
+    gitBranch: $gitBranch
+    cwd: $cwd
+  ) {
+    bySkill {
+      ...UsageSkillUsageBySkill
+    }
+    byScope {
+      ...UsageSkillUsageByScope
+    }
+    byDay {
+      ...UsageSkillUsageByDay
+    }
+    filterOptions {
+      ...UsageSkillUsageFilterOptions
+    }
+    totalCount
+  }
+}

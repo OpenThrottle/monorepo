@@ -2,6 +2,7 @@
 # Folders
 #############################################################################
 .cache
+# Phase 1 skill-usage JSONL lives under .cache/skill-usage/ (covered by .cache)
 .langgraph_api
 .nx
 .openthrottle

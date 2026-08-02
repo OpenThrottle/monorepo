@@ -2,6 +2,7 @@ import * as React from 'react';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import {
   GetUsageDailyStatsDocument,
+  GetUsageSkillUsageDocument,
   GetUsageTokenUsageDocument,
 } from '~/__generated__/graphql';
 import {
@@ -16,8 +17,13 @@ import { UsageAnalyticsGaps } from '~/routing/usage/components/UsageAnalyticsGap
 import { UsageDailyActivityOverview } from '~/routing/usage/components/UsageDailyActivityOverview';
 import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';
 import { UsageOverview } from '~/routing/usage/components/UsageOverview';
+import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
+import {
+  SKILL_USAGE_SCOPES,
+  type SkillUsageScopeFilter,
+} from '~/routing/usage/data/skill-usage-copy';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
@@ -28,10 +34,31 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
+const parseSkillScope = (raw: string | null): SkillUsageScopeFilter => {
+  if (
+    raw === SKILL_USAGE_SCOPES.OURS ||
+    raw === SKILL_USAGE_SCOPES.THIRD_PARTY
+  ) {
+    return raw;
+  }
+  return null;
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
-  const providerParam = new URL(args.request.url).searchParams.get('provider');
+  const searchParams = new URL(args.request.url).searchParams;
+  const providerParam = searchParams.get('provider');
   const selectedProvider =
     providerParam !== null && providerParam !== '' ? providerParam : null;
+
+  const selectedSkillScope = parseSkillScope(searchParams.get('skillScope'));
+  const skillBranchParam = searchParams.get('skillBranch');
+  const selectedSkillGitBranch =
+    skillBranchParam !== null && skillBranchParam !== ''
+      ? skillBranchParam
+      : null;
+  const skillCwdParam = searchParams.get('skillCwd');
+  const selectedSkillCwd =
+    skillCwdParam !== null && skillCwdParam !== '' ? skillCwdParam : null;
 
   const end = new Date();
   const endIso = end.toISOString();
@@ -39,11 +66,11 @@ export const loader = async (args: Route.LoaderArgs) => {
   const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
 
-  // tokenUsage filters on YYYY-MM-DD (see the tokenUsage resolver contract).
+  // tokenUsage / skillUsage filter on YYYY-MM-DD (see resolver contracts).
   const startDate = startIso.slice(0, 10);
   const endDate = endIso.slice(0, 10);
 
-  const [dailyResult, tokenUsageResult] = await Promise.all([
+  const [dailyResult, tokenUsageResult, skillUsageResult] = await Promise.all([
     executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
       end: endIso,
       start: startIso,
@@ -51,6 +78,13 @@ export const loader = async (args: Route.LoaderArgs) => {
     executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
       end: endDate,
       provider: selectedProvider,
+      start: startDate,
+    }),
+    executeGraphqlWithAuth(args.request, GetUsageSkillUsageDocument, {
+      cwd: selectedSkillCwd,
+      end: endDate,
+      gitBranch: selectedSkillGitBranch,
+      scope: selectedSkillScope,
       start: startDate,
     }),
   ]);
@@ -64,6 +98,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     rangeEndIso: endIso,
     rangeStartIso: startIso,
     selectedProvider,
+    selectedSkillCwd,
+    selectedSkillGitBranch,
+    selectedSkillScope,
+    skillUsage: skillUsageResult.skillUsage,
     tokenUsageItems: tokenUsageResult.tokenUsage.items,
     tokenUsageTotals: tokenUsageResult.tokenUsage.totals,
   };
@@ -87,6 +125,10 @@ export default function Component(
     rangeEndIso,
     rangeStartIso,
     selectedProvider,
+    selectedSkillCwd,
+    selectedSkillGitBranch,
+    selectedSkillScope,
+    skillUsage,
     tokenUsageItems,
     tokenUsageTotals,
   } = loaderData;
@@ -111,7 +153,22 @@ export default function Component(
         items={tokenUsageItems}
         rangeDays={rangeDays}
         selectedProvider={selectedProvider}
+        skillCwdParam={selectedSkillCwd}
+        skillGitBranchParam={selectedSkillGitBranch}
+        skillScopeParam={selectedSkillScope}
         totals={tokenUsageTotals}
+      />
+      <UsageSkillUsage
+        byDay={skillUsage.byDay}
+        byScope={skillUsage.byScope}
+        bySkill={skillUsage.bySkill}
+        filterOptions={skillUsage.filterOptions}
+        providerParam={selectedProvider}
+        rangeDays={rangeDays}
+        selectedCwd={selectedSkillCwd}
+        selectedGitBranch={selectedSkillGitBranch}
+        selectedScope={selectedSkillScope}
+        totalCount={skillUsage.totalCount}
       />
       <div data-testid="UsageDailyActivity">
         <DashboardDailyStatsCard className="my-4" dailyStats={dailyStats} />
