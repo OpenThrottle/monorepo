@@ -2956,28 +2956,111 @@ type RefreshCheckoutPayloadObject {
   supersededProjectId: String
 }
 
+"""
+Evaluated rollout flag for the current actor (kind + valueJson discriminator).
+"""
 type FeatureFlagObject {
-  """Whether the flag is on for the current actor."""
+  """
+  Boolean flags: resolved variation value. Other kinds: true when reason is fallthrough.
+  """
   enabled: Boolean!
 
   """Flag key."""
   key: String!
+
+  """Flag value kind of the resolved variation."""
+  kind: RolloutFlagKind!
+
+  """Why this variation was chosen."""
+  reason: RolloutEvaluationReason!
+
+  """JSON-serialized resolved variation value (matches kind)."""
+  valueJson: String!
+
+  """Index into the flag's variations array for the resolved value."""
+  variationIndex: Int!
 }
 
+"""
+Typed rollout flag kind: boolean | string | number | json. Variation values must match.
+"""
+enum RolloutFlagKind {
+  boolean
+  json
+  number
+  string
+}
+
+"""
+Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found.
+"""
+enum RolloutEvaluationReason {
+  fallthrough
+  flag_not_found
+  off
+  target_roles
+}
+
+"""
+One weighted bucket in a fallthrough allocation (integer percent 0–100).
+"""
+type RolloutFallthroughBucketObject {
+  """Index into the flag's variations array."""
+  variation: Int!
+
+  """Integer percent weight 0–100. All weights on a flag must sum to 100."""
+  weight: Int!
+}
+
+"""
+Percentage allocation among variations when the flag is on and targeting passes.
+"""
+type RolloutFallthroughObject {
+  """Ordered weighted buckets. Weights must sum to 100."""
+  variations: [RolloutFallthroughBucketObject!]!
+}
+
+"""One variation on a typed rollout flag. valueJson is JSON-serialized."""
+type RolloutFlagVariationObject {
+  """Optional human description of this variation."""
+  description: String
+
+  """Optional display name for this variation."""
+  name: String
+
+  """JSON-serialized variation value (must match the flag kind)."""
+  valueJson: String!
+}
+
+"""
+Admin view of a typed rollout feature flag (kind, variations, allocations).
+"""
 type RolloutFlagObject {
   createdAt: DateTime!
   description: String
 
   """Master switch. When false the flag is off for everyone."""
   enabled: Boolean!
+
+  """Fallthrough percentage allocation when enabled and targeting passes."""
+  fallthrough: RolloutFallthroughObject!
   id: ID!
 
   """Unique flag key (e.g. new-dashboard or billing.invoices)"""
   key: String!
 
+  """Flag value kind: boolean | string | number | json."""
+  kind: RolloutFlagKind!
+
+  """Index into variations returned when disabled or role gate fails."""
+  offVariation: Int!
+
   """RBAC role names the flag targets. Empty => enabled for everyone."""
   targetRoles: [String!]!
   updatedAt: DateTime!
+
+  """Ordered variations. valueJson is JSON-serialized and must match kind."""
+  variations: [RolloutFlagVariationObject!]!
 }
 
 type Query {
@@ -3265,7 +3348,7 @@ type Query {
   """Get a rollout feature flag by id"""
   rolloutFlag(id: ID!): RolloutFlagObject
 
-  """Evaluated feature flags for the current actor"""
+  """Evaluated feature flags for the current actor (kind + valueJson)"""
   myFeatureFlags: [FeatureFlagObject!]!
 
   """All scheduled agent jobs, newest first."""
@@ -5104,11 +5187,54 @@ input CreateRolloutFlagInput {
   """Master switch. Defaults to off."""
   enabled: Boolean! = false
 
+  """
+  Fallthrough allocation. Omit for boolean defaults (100% on true). Required for non-boolean kinds.
+  """
+  fallthrough: RolloutFallthroughInput
+
   """Unique flag key (kebab/dotted string). Must be unique."""
   key: String!
 
+  """Flag kind. Defaults to boolean with LD-like false/true variations."""
+  kind: RolloutFlagKind
+
+  """Off / default variation index. Defaults to 0."""
+  offVariation: Int
+
   """RBAC role names to target. Empty => enabled for everyone."""
   targetRoles: [String!]! = []
+
+  """
+  Variations. Omit for boolean defaults [{false},{true}]. Required (≥2) for non-boolean kinds.
+  """
+  variations: [RolloutFlagVariationInput!]
+}
+
+"""Percentage allocation among variations."""
+input RolloutFallthroughInput {
+  """Ordered weighted buckets. Weights must sum to 100."""
+  variations: [RolloutFallthroughBucketInput!]!
+}
+
+"""One weighted fallthrough bucket (variation index + integer percent)."""
+input RolloutFallthroughBucketInput {
+  """Index into the flag's variations array."""
+  variation: Int!
+
+  """Integer percent weight 0–100. All weights must sum to 100."""
+  weight: Int!
+}
+
+"""One variation input. valueJson is JSON-serialized and must match kind."""
+input RolloutFlagVariationInput {
+  """Optional human description."""
+  description: String
+
+  """Optional display name."""
+  name: String
+
+  """JSON-serialized variation value (must match the flag kind)."""
+  valueJson: String!
 }
 
 input UpdateRolloutFlagInput {
@@ -5118,14 +5244,28 @@ input UpdateRolloutFlagInput {
   """Master switch. Omit to leave unchanged."""
   enabled: Boolean
 
+  """Fallthrough allocation. Omit to leave unchanged."""
+  fallthrough: RolloutFallthroughInput
+
   """Flag id to update"""
   id: ID!
 
   """Flag key. Omit to leave unchanged; must stay unique."""
   key: String
 
+  """
+  Flag kind. Omit to leave unchanged; changing kind requires matching variations.
+  """
+  kind: RolloutFlagKind
+
+  """Off variation index. Omit to leave unchanged."""
+  offVariation: Int
+
   """RBAC role names to target. Omit to leave unchanged."""
   targetRoles: [String!]
+
+  """Variations. Omit to leave unchanged."""
+  variations: [RolloutFlagVariationInput!]
 }
 
 input CreateScheduledAgentJobInputType {

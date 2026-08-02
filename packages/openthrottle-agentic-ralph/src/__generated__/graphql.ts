@@ -636,10 +636,18 @@ export type CreateRolloutFlagInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Master switch. Defaults to off. */
   enabled?: Scalars['Boolean']['input'];
+  /** Fallthrough allocation. Omit for boolean defaults (100% on true). Required for non-boolean kinds. */
+  fallthrough?: InputMaybe<RolloutFallthroughInput>;
   /** Unique flag key (kebab/dotted string). Must be unique. */
   key: Scalars['String']['input'];
+  /** Flag kind. Defaults to boolean with LD-like false/true variations. */
+  kind?: InputMaybe<RolloutFlagKind>;
+  /** Off / default variation index. Defaults to 0. */
+  offVariation?: InputMaybe<Scalars['Int']['input']>;
   /** RBAC role names to target. Empty => enabled for everyone. */
   targetRoles?: Array<Scalars['String']['input']>;
+  /** Variations. Omit for boolean defaults [{false},{true}]. Required (≥2) for non-boolean kinds. */
+  variations?: InputMaybe<Array<RolloutFlagVariationInput>>;
 };
 
 export type CreateScheduledAgentJobInputType = {
@@ -1036,12 +1044,21 @@ export type EvaluatePlanRulesResultObject = {
   triggerKind: Scalars['String']['output'];
 };
 
+/** Evaluated rollout flag for the current actor (kind + valueJson discriminator). */
 export type FeatureFlagObject = {
   __typename?: 'FeatureFlagObject';
-  /** Whether the flag is on for the current actor. */
+  /** Boolean flags: resolved variation value. Other kinds: true when reason is fallthrough. */
   enabled: Scalars['Boolean']['output'];
   /** Flag key. */
   key: Scalars['String']['output'];
+  /** Flag value kind of the resolved variation. */
+  kind: RolloutFlagKind;
+  /** Why this variation was chosen. */
+  reason: RolloutEvaluationReason;
+  /** JSON-serialized resolved variation value (matches kind). */
+  valueJson: Scalars['String']['output'];
+  /** Index into the flag's variations array for the resolved value. */
+  variationIndex: Scalars['Int']['output'];
 };
 
 export type GeneratorDetailObject = {
@@ -2714,7 +2731,7 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
-  /** Evaluated feature flags for the current actor */
+  /** Evaluated feature flags for the current actor (kind + valueJson) */
   myFeatureFlags: Array<FeatureFlagObject>;
   /** Get permission names for the current user */
   myPermissions: Array<Scalars['String']['output']>;
@@ -3691,18 +3708,94 @@ export type RoleObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found. */
+export enum RolloutEvaluationReason {
+  Fallthrough = 'fallthrough',
+  FlagNotFound = 'flag_not_found',
+  Off = 'off',
+  TargetRoles = 'target_roles',
+}
+
+/** One weighted fallthrough bucket (variation index + integer percent). */
+export type RolloutFallthroughBucketInput = {
+  /** Index into the flag's variations array. */
+  variation: Scalars['Int']['input'];
+  /** Integer percent weight 0–100. All weights must sum to 100. */
+  weight: Scalars['Int']['input'];
+};
+
+/** One weighted bucket in a fallthrough allocation (integer percent 0–100). */
+export type RolloutFallthroughBucketObject = {
+  __typename?: 'RolloutFallthroughBucketObject';
+  /** Index into the flag's variations array. */
+  variation: Scalars['Int']['output'];
+  /** Integer percent weight 0–100. All weights on a flag must sum to 100. */
+  weight: Scalars['Int']['output'];
+};
+
+/** Percentage allocation among variations. */
+export type RolloutFallthroughInput = {
+  /** Ordered weighted buckets. Weights must sum to 100. */
+  variations: Array<RolloutFallthroughBucketInput>;
+};
+
+/** Percentage allocation among variations when the flag is on and targeting passes. */
+export type RolloutFallthroughObject = {
+  __typename?: 'RolloutFallthroughObject';
+  /** Ordered weighted buckets. Weights must sum to 100. */
+  variations: Array<RolloutFallthroughBucketObject>;
+};
+
+/** Typed rollout flag kind: boolean | string | number | json. Variation values must match. */
+export enum RolloutFlagKind {
+  Boolean = 'boolean',
+  Json = 'json',
+  Number = 'number',
+  String = 'string',
+}
+
+/** Admin view of a typed rollout feature flag (kind, variations, allocations). */
 export type RolloutFlagObject = {
   __typename?: 'RolloutFlagObject';
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   /** Master switch. When false the flag is off for everyone. */
   enabled: Scalars['Boolean']['output'];
+  /** Fallthrough percentage allocation when enabled and targeting passes. */
+  fallthrough: RolloutFallthroughObject;
   id: Scalars['ID']['output'];
   /** Unique flag key (e.g. new-dashboard or billing.invoices) */
   key: Scalars['String']['output'];
+  /** Flag value kind: boolean | string | number | json. */
+  kind: RolloutFlagKind;
+  /** Index into variations returned when disabled or role gate fails. */
+  offVariation: Scalars['Int']['output'];
   /** RBAC role names the flag targets. Empty => enabled for everyone. */
   targetRoles: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+  /** Ordered variations. valueJson is JSON-serialized and must match kind. */
+  variations: Array<RolloutFlagVariationObject>;
+};
+
+/** One variation input. valueJson is JSON-serialized and must match kind. */
+export type RolloutFlagVariationInput = {
+  /** Optional human description. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Optional display name. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** JSON-serialized variation value (must match the flag kind). */
+  valueJson: Scalars['String']['input'];
+};
+
+/** One variation on a typed rollout flag. valueJson is JSON-serialized. */
+export type RolloutFlagVariationObject = {
+  __typename?: 'RolloutFlagVariationObject';
+  /** Optional human description of this variation. */
+  description?: Maybe<Scalars['String']['output']>;
+  /** Optional display name for this variation. */
+  name?: Maybe<Scalars['String']['output']>;
+  /** JSON-serialized variation value (must match the flag kind). */
+  valueJson: Scalars['String']['output'];
 };
 
 /** One apply-once ledger row for a (rule, plan) pair. States: applied | pre-satisfied | flagged | orphaned. */
@@ -4618,12 +4711,20 @@ export type UpdateRolloutFlagInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Master switch. Omit to leave unchanged. */
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Fallthrough allocation. Omit to leave unchanged. */
+  fallthrough?: InputMaybe<RolloutFallthroughInput>;
   /** Flag id to update */
   id: Scalars['ID']['input'];
   /** Flag key. Omit to leave unchanged; must stay unique. */
   key?: InputMaybe<Scalars['String']['input']>;
+  /** Flag kind. Omit to leave unchanged; changing kind requires matching variations. */
+  kind?: InputMaybe<RolloutFlagKind>;
+  /** Off variation index. Omit to leave unchanged. */
+  offVariation?: InputMaybe<Scalars['Int']['input']>;
   /** RBAC role names to target. Omit to leave unchanged. */
   targetRoles?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Variations. Omit to leave unchanged. */
+  variations?: InputMaybe<Array<RolloutFlagVariationInput>>;
 };
 
 export type UpdateScheduledAgentJobInputType = {

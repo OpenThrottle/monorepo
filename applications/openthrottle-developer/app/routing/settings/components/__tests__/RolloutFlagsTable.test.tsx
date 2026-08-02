@@ -12,19 +12,33 @@ const flags: RolloutFlagFieldsFragment[] = [
     createdAt: '2026-07-24T00:00:00.000Z',
     description: null,
     enabled: true,
+    fallthrough: { variations: [{ variation: 1, weight: 100 }] },
     id: 'flag-1',
     key: 'new-dashboard',
+    kind: 'boolean',
+    offVariation: 0,
     targetRoles: [],
     updatedAt: '2026-07-24T00:00:00.000Z',
+    variations: [
+      { description: null, name: null, valueJson: 'false' },
+      { description: null, name: null, valueJson: 'true' },
+    ],
   },
   {
     createdAt: '2026-07-24T00:00:00.000Z',
     description: 'Admin billing',
     enabled: false,
+    fallthrough: { variations: [{ variation: 1, weight: 100 }] },
     id: 'flag-2',
     key: 'billing',
+    kind: 'boolean',
+    offVariation: 0,
     targetRoles: ['admin'],
     updatedAt: '2026-07-24T00:00:00.000Z',
+    variations: [
+      { description: null, name: null, valueJson: 'false' },
+      { description: null, name: null, valueJson: 'true' },
+    ],
   },
 ];
 

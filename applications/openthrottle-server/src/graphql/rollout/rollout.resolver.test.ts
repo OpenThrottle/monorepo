@@ -1,10 +1,10 @@
 /**
- * @description Unit tests for RolloutResolver: service delegation plus the
- * @Permissions gating metadata (FLAGS_READ for reads/myFeatureFlags, FLAGS_WRITE
- * for mutations) that GqlPermissionsGuard enforces (admin has both; viewer has
- * only flags:read, so mutations are denied to it).
+ * @description Unit tests for RolloutResolver: service delegation, typed
+ * create/update mapping, evaluated response shape, and @Permissions gating
+ * (FLAGS_READ for reads/myFeatureFlags, FLAGS_WRITE for mutations).
  */
 
+import { BadRequestException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import {
@@ -39,6 +39,20 @@ const flag: RolloutFlag = {
   variations: ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
 };
 
+const stringFlag: RolloutFlag = {
+  ...flag,
+  fallthrough: {
+    variations: [
+      { variation: 0, weight: 90 },
+      { variation: 1, weight: 10 },
+    ],
+  },
+  id: 'flag-2',
+  key: 'theme',
+  kind: ROLLOUT_FLAG_KIND.STRING,
+  variations: [{ value: 'light' }, { value: 'dark' }],
+};
+
 const userPrincipal: AuthPrincipal = {
   kind: AUTH_PRINCIPAL_KIND_USER,
   sub: 'user-1',
@@ -60,6 +74,13 @@ describe('RolloutResolver', () => {
         reason: ROLLOUT_EVALUATION_REASON.FALLTHROUGH,
         value: true,
         variationIndex: 1,
+      },
+      {
+        key: 'theme',
+        kind: ROLLOUT_FLAG_KIND.STRING,
+        reason: ROLLOUT_EVALUATION_REASON.TARGET_ROLES,
+        value: 'light',
+        variationIndex: 0,
       },
     ]),
     findAll: vi.fn().mockResolvedValue([flag]),
@@ -83,30 +104,59 @@ describe('RolloutResolver', () => {
   });
 
   describe('delegation', () => {
-    test('rolloutFlags lists all flags', async () => {
+    test('rolloutFlags lists mapped flags', async () => {
       const result = await resolver.rolloutFlags();
       expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: 'flag-1',
+        kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+        variations: [{ valueJson: 'false' }, { valueJson: 'true' }],
+      });
       expect(rolloutService.findAll).toHaveBeenCalled();
     });
 
-    test('rolloutFlag fetches by id', async () => {
+    test('rolloutFlag fetches and maps by id', async () => {
       const result = await resolver.rolloutFlag('flag-1');
       expect(result?.id).toBe('flag-1');
+      expect(result?.fallthrough).toEqual({
+        variations: [{ variation: 1, weight: 100 }],
+      });
       expect(rolloutService.findById).toHaveBeenCalledWith('flag-1');
     });
 
-    test('myFeatureFlags evaluates for the actor', async () => {
+    test('myFeatureFlags returns typed evaluation shape', async () => {
       const result = await resolver.myFeatureFlags(userPrincipal);
-      expect(result).toEqual([{ enabled: true, key: 'new-dashboard' }]);
+      expect(result).toEqual([
+        {
+          enabled: true,
+          key: 'new-dashboard',
+          kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+          reason: ROLLOUT_EVALUATION_REASON.FALLTHROUGH,
+          valueJson: 'true',
+          variationIndex: 1,
+        },
+        {
+          enabled: false,
+          key: 'theme',
+          kind: ROLLOUT_FLAG_KIND.STRING,
+          reason: ROLLOUT_EVALUATION_REASON.TARGET_ROLES,
+          valueJson: '"light"',
+          variationIndex: 0,
+        },
+      ]);
       expect(rolloutService.evaluateAll).toHaveBeenCalledWith(userPrincipal);
     });
 
-    test('createRolloutFlag delegates the mapped input', async () => {
+    test('createRolloutFlag maps typed boolean defaults through', async () => {
       await resolver.createRolloutFlag({
         description: null,
         enabled: true,
+        fallthrough: null,
         key: 'new-dashboard',
+        kind: null,
+        offVariation: null,
         targetRoles: ['admin'],
+        variations: null,
       });
       expect(rolloutService.create).toHaveBeenCalledWith({
         description: null,
@@ -116,20 +166,113 @@ describe('RolloutResolver', () => {
       });
     });
 
-    test('updateRolloutFlag forwards only provided fields', async () => {
+    test('createRolloutFlag maps string kind + allocations', async () => {
+      vi.mocked(rolloutService.create).mockResolvedValueOnce(stringFlag);
+      const result = await resolver.createRolloutFlag({
+        description: null,
+        enabled: true,
+        fallthrough: {
+          variations: [
+            { variation: 0, weight: 90 },
+            { variation: 1, weight: 10 },
+          ],
+        },
+        key: 'theme',
+        kind: ROLLOUT_FLAG_KIND.STRING,
+        offVariation: 0,
+        targetRoles: [],
+        variations: [
+          { description: null, name: null, valueJson: '"light"' },
+          { description: null, name: null, valueJson: '"dark"' },
+        ],
+      });
+      expect(rolloutService.create).toHaveBeenCalledWith({
+        description: null,
+        enabled: true,
+        fallthrough: {
+          variations: [
+            { variation: 0, weight: 90 },
+            { variation: 1, weight: 10 },
+          ],
+        },
+        key: 'theme',
+        kind: ROLLOUT_FLAG_KIND.STRING,
+        offVariation: 0,
+        targetRoles: [],
+        variations: [{ value: 'light' }, { value: 'dark' }],
+      });
+      expect(result.kind).toBe(ROLLOUT_FLAG_KIND.STRING);
+      expect(result.variations.map((v) => v.valueJson)).toEqual([
+        '"light"',
+        '"dark"',
+      ]);
+    });
+
+    test('createRolloutFlag propagates domain validation errors', async () => {
+      vi.mocked(rolloutService.create).mockRejectedValueOnce(
+        new BadRequestException('fallthrough weights must sum to 100'),
+      );
+      await expect(
+        resolver.createRolloutFlag({
+          description: null,
+          enabled: true,
+          fallthrough: {
+            variations: [{ variation: 0, weight: 50 }],
+          },
+          key: 'bad-weights',
+          kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+          offVariation: 0,
+          targetRoles: [],
+          variations: [
+            { description: null, name: null, valueJson: 'false' },
+            { description: null, name: null, valueJson: 'true' },
+          ],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('updateRolloutFlag forwards only provided typed fields', async () => {
       await resolver.updateRolloutFlag({
         description: null,
         enabled: null,
+        fallthrough: {
+          variations: [{ variation: 1, weight: 100 }],
+        },
         id: 'flag-1',
         key: null,
+        kind: null,
+        offVariation: 0,
         targetRoles: ['viewer'],
+        variations: null,
       });
       expect(rolloutService.update).toHaveBeenCalledWith('flag-1', {
         description: null,
+        fallthrough: {
+          variations: [{ variation: 1, weight: 100 }],
+        },
+        offVariation: 0,
         targetRoles: ['viewer'],
       });
     });
 
+    test('updateRolloutFlag propagates invalid config from service', async () => {
+      vi.mocked(rolloutService.update).mockRejectedValueOnce(
+        new BadRequestException('offVariation out of range'),
+      );
+      await expect(
+        resolver.updateRolloutFlag({
+          description: null,
+          enabled: null,
+          fallthrough: null,
+          id: 'flag-1',
+          key: null,
+          kind: null,
+          offVariation: 99,
+          targetRoles: null,
+          variations: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
     test('deleteRolloutFlag removes by id', async () => {
       const result = await resolver.deleteRolloutFlag('flag-1');
       expect(result).toBe(true);

@@ -11,10 +11,17 @@ const flag = {
   createdAt: '2026-07-24T00:00:00.000Z',
   description: 'Gates the redesigned dashboard',
   enabled: false,
+  fallthrough: { variations: [{ variation: 1, weight: 100 }] },
   id: 'flag-1',
   key: 'new-dashboard',
+  kind: 'boolean' as const,
+  offVariation: 0,
   targetRoles: ['admin', 'viewer'],
   updatedAt: '2026-07-24T00:00:00.000Z',
+  variations: [
+    { description: null, name: null, valueJson: 'false' },
+    { description: null, name: null, valueJson: 'true' },
+  ],
 };
 
 describe('RolloutFlagEditForm Component', () => {

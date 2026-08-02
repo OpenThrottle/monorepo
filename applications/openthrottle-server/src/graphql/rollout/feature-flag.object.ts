@@ -1,18 +1,46 @@
 /**
- * @description GraphQL ObjectType for an actor-evaluated feature flag (key + on/off).
- * Backs the myFeatureFlags query. Typed evaluation lives on RolloutService.evaluate /
- * evaluateAll; this object stays boolean-shaped until the GraphQL rollout task evolves it.
+ * @description Actor-evaluated feature flag for myFeatureFlags. Discriminated by
+ * kind with valueJson (JSON-serialized resolved value). `enabled` stays for
+ * boolean convenience and non-boolean fallthrough eligibility.
  */
 
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import type {
+  RolloutEvaluationReason,
+  RolloutFlagKind,
+} from '@openthrottle/nestjs-rollout';
+import { RolloutEvaluationReasonEnum } from './rollout-evaluation-reason.enum';
+import { RolloutFlagKindEnum } from './rollout-flag-kind.enum';
 
-@ObjectType()
+@ObjectType({
+  description: `Evaluated rollout flag for the current actor (kind + valueJson discriminator).`,
+})
 export class FeatureFlagObject {
   @Field(() => Boolean, {
-    description: `Whether the flag is on for the current actor.`,
+    description: `Boolean flags: resolved variation value. Other kinds: true when reason is fallthrough.`,
   })
   enabled!: boolean;
 
   @Field(() => String, { description: `Flag key.` })
   key!: string;
+
+  @Field(() => RolloutFlagKindEnum, {
+    description: `Flag value kind of the resolved variation.`,
+  })
+  kind!: RolloutFlagKind;
+
+  @Field(() => RolloutEvaluationReasonEnum, {
+    description: `Why this variation was chosen.`,
+  })
+  reason!: RolloutEvaluationReason;
+
+  @Field(() => String, {
+    description: `JSON-serialized resolved variation value (matches kind).`,
+  })
+  valueJson!: string;
+
+  @Field(() => Int, {
+    description: `Index into the flag's variations array for the resolved value.`,
+  })
+  variationIndex!: number;
 }
