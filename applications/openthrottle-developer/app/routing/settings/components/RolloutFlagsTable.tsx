@@ -5,6 +5,7 @@ import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import {
+  formatRolloutAllocationSummary,
   formatRolloutTimestamp,
   rolloutFlagDetailPath,
   rolloutFlagEditPath,
@@ -43,6 +44,11 @@ export const RolloutFlagsTable = (
         header: ROLLOUT_COPY.keyLabel,
       },
       {
+        accessorKey: 'kind',
+        cell: ({ row }) => <Badge variant="outline">{row.original.kind}</Badge>,
+        header: ROLLOUT_COPY.kindLabel,
+      },
+      {
         accessorKey: 'enabled',
         cell: ({ row }) => (
           <Badge variant={row.original.enabled ? 'default' : 'secondary'}>
@@ -50,6 +56,15 @@ export const RolloutFlagsTable = (
           </Badge>
         ),
         header: ROLLOUT_COPY.enabledLabel,
+      },
+      {
+        cell: ({ row }) => (
+          <span className="text-muted-foreground font-mono text-xs">
+            {formatRolloutAllocationSummary(row.original)}
+          </span>
+        ),
+        header: ROLLOUT_COPY.allocationLabel,
+        id: 'allocation',
       },
       {
         accessorKey: 'targetRoles',

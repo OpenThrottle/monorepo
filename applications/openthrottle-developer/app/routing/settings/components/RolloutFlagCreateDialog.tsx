@@ -59,7 +59,7 @@ export const RolloutFlagCreateDialog = (
       <DialogTrigger asChild={true}>
         <Button type="button">{ROLLOUT_COPY.createButton}</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{ROLLOUT_COPY.createTitle}</DialogTitle>
           <DialogDescription>
