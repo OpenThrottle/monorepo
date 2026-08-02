@@ -374,6 +374,7 @@
         "executor": "nx:noop"
       },
       "ensure-worktree": {
+        "description": "Self-healing on first use (no-op in the primary checkout and on provisioned worktrees).",
         "executor": "nx:run-commands",
         "cache": false,
         "options": {

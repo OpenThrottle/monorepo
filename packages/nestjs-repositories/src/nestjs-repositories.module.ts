@@ -4,6 +4,7 @@ import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
 import { getTypeOrmOptions } from './database.config';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module';
 import { Module } from '@nestjs/common';
 import { NotesModule } from './modules/notes/notes.module';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module';
@@ -36,6 +37,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     AgentTokenUsageModule,
     CustomPromptsModule,
     DailyStatsModule,
+    McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
     PlanOutputStreamModule,
@@ -73,6 +75,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     CustomPromptsModule,
     DailyStatsModule,
     LoggerModule,
+    McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
     PlanOutputStreamModule,

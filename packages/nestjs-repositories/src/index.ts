@@ -164,6 +164,18 @@ export type {
   CreateServiceAccountCredentialResult,
   VerifiedServiceAccountCredential,
 } from './modules/service-accounts/service-accounts.service';
+export {
+  MCP_CONNECTOR_AUTH_TYPES,
+  McpConnectorConnection,
+} from './modules/mcp-connectors/mcp-connector-connection.entity';
+export type {
+  McpConnectorAuthType,
+  McpConnectorConnectionData,
+} from './modules/mcp-connectors/mcp-connector-connection.entity';
+export { maskCredentialToken } from './modules/mcp-connectors/mcp-connector-credential.util';
+export { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module';
+export { McpConnectorsService } from './modules/mcp-connectors/mcp-connectors.service';
+export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.service';
 export { Project } from './modules/projects/project.entity';
 export { Subscription } from './modules/subscriptions/subscription.entity';
 export { SubscriptionsService } from './modules/subscriptions/subscriptions.service';

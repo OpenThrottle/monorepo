@@ -22,6 +22,7 @@ import {
   CloneRepositoryInput,
   CodeSemanticSearchInput,
   CommitsPerPrInput,
+  ConnectMcpConnectorInput,
   CreateAgentConversationInput,
   CreateCustomPromptInput,
   CreateNoteInput,
@@ -102,6 +103,7 @@ import {
   ReviewCycleTimeInput,
   SearchInput,
   SearchPlansInput,
+  SetMcpConnectorEnabledInput,
   SetPlanStatusInput,
   SetScheduledAgentJobEnabledInputType,
   SetWorkspaceLocalRepositoryProjectInput,
@@ -382,6 +384,16 @@ export function CommitsPerPrInputSchema(): z.ZodObject<
     owner: z.string(),
     period: z.string().nullish(),
     repo: z.string(),
+  });
+}
+
+export function ConnectMcpConnectorInputSchema(): z.ZodObject<
+  Properties<ConnectMcpConnectorInput>
+> {
+  return z.object({
+    apiToken: z.string().nullish(),
+    connectorKey: z.string(),
+    label: z.string().nullish(),
   });
 }
 
@@ -1148,6 +1160,15 @@ export function SearchPlansInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     query: z.string(),
+  });
+}
+
+export function SetMcpConnectorEnabledInputSchema(): z.ZodObject<
+  Properties<SetMcpConnectorEnabledInput>
+> {
+  return z.object({
+    connectorKey: z.string(),
+    enabled: z.boolean(),
   });
 }
 

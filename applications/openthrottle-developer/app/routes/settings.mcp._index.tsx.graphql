@@ -1,0 +1,32 @@
+fragment McpConnectorFields on McpConnectorObject {
+  authType
+  category
+  description
+  docsUrl
+  endpointUrl
+  iconHint
+  key
+  name
+  provider
+  transport
+}
+
+fragment McpConnectorConnectionFields on McpConnectorConnectionObject {
+  authType
+  connectedAt
+  connectorKey
+  credentialLabel
+  credentialPrefix
+  enabled
+  id
+  lastUsedAt
+}
+
+query getSettingsMcp {
+  mcpConnectors {
+    ...McpConnectorFields
+  }
+  mcpConnectorConnections {
+    ...McpConnectorConnectionFields
+  }
+}

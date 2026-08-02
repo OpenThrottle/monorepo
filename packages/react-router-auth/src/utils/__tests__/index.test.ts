@@ -9,7 +9,15 @@ import {
   buildAuthCookie,
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
+  isJwtExpired,
 } from '../index';
+
+/** Build a JWT with the given payload (header + signature are dummies). */
+const makeJwt = (payload: Record<string, unknown>): string => {
+  const seg = (value: unknown): string =>
+    Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+  return `${seg({ alg: 'HS256', typ: 'JWT' })}.${seg(payload)}.sig`;
+};
 
 describe('auth cookie header builders', () => {
   const originalNodeEnv = process.env.NODE_ENV;
@@ -115,5 +123,31 @@ describe('auth cookie header builders', () => {
 
   it('trims surrounding whitespace from the cookie value', () => {
     expect(getAuthTokenFromCookie(`${AUTH_COOKIE_NAME}=  jwt  `)).toBe('jwt');
+  });
+});
+
+describe('isJwtExpired', () => {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  it('returns false for a token whose exp is in the future', () => {
+    expect(isJwtExpired(makeJwt({ exp: nowSeconds + 3600 }))).toBe(false);
+  });
+
+  it('returns true for a token whose exp is in the past', () => {
+    expect(isJwtExpired(makeJwt({ exp: nowSeconds - 60 }))).toBe(true);
+  });
+
+  it('treats exp exactly at now as expired', () => {
+    expect(isJwtExpired(makeJwt({ exp: nowSeconds }))).toBe(true);
+  });
+
+  it('treats a token without an exp claim as non-expiring (defers to API)', () => {
+    expect(isJwtExpired(makeJwt({ sub: 'user-1' }))).toBe(false);
+  });
+
+  it('treats a structurally invalid token as expired', () => {
+    expect(isJwtExpired('not-a-jwt')).toBe(true);
+    expect(isJwtExpired('only.two')).toBe(true);
+    expect(isJwtExpired('a.!!!notbase64json!!!.c')).toBe(true);
   });
 });
