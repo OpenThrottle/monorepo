@@ -1,0 +1,5 @@
+query getRolloutFlag($id: ID!) {
+  rolloutFlag(id: $id) {
+    ...RolloutFlagFields
+  }
+}

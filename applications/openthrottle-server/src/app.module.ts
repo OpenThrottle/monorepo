@@ -95,6 +95,7 @@ import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledg
 import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
+import { RolloutGraphqlModule } from './graphql/rollout/rollout-graphql.module';
 
 type AppModuleImports = NonNullable<DynamicModule['imports']>;
 
@@ -269,6 +270,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           QueuesGraphqlModule,
           RepositoryInspectionModule,
           RolesGraphqlModule,
+          RolloutGraphqlModule,
           ScheduledAgentJobsGraphqlModule,
           ServiceAccountsGraphqlModule,
           SearchGraphqlModule,

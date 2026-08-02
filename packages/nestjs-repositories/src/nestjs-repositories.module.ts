@@ -24,6 +24,7 @@ import { TagsModule } from './modules/tags/tags.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module';
@@ -59,8 +60,12 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
   ],
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory: (): ReturnType<typeof getTypeOrmOptions> => {
-        return getTypeOrmOptions();
+      useFactory: (): TypeOrmModuleOptions => {
+        // autoLoadEntities lets a package that owns its own entity register it via
+        // TypeOrmModule.forFeature (e.g. @openthrottle/nestjs-rollout's RolloutFlag)
+        // without adding it to getTypeOrmOptions()'s explicit list — which it cannot,
+        // since those packages depend on nestjs-repositories, not the reverse.
+        return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
     AgentConversationsModule,

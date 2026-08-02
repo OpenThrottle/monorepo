@@ -31,6 +31,19 @@ describe('roles', () => {
       expect(viewerPerms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
 
+    it('admin has both flags permissions; user and viewer are read-only', () => {
+      expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.FLAGS_READ);
+      expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.FLAGS_WRITE);
+      expect(ROLE_PERMISSIONS[ROLES.USER]).toContain(PERMISSIONS.FLAGS_READ);
+      expect(ROLE_PERMISSIONS[ROLES.USER]).not.toContain(
+        PERMISSIONS.FLAGS_WRITE,
+      );
+      expect(ROLE_PERMISSIONS[ROLES.VIEWER]).toContain(PERMISSIONS.FLAGS_READ);
+      expect(ROLE_PERMISSIONS[ROLES.VIEWER]).not.toContain(
+        PERMISSIONS.FLAGS_WRITE,
+      );
+    });
+
     it('mcp and workflow-ralph have plans read/write only', () => {
       for (const role of [ROLES.MCP, ROLES.WORKFLOW_RALPH] as const) {
         const perms = ROLE_PERMISSIONS[role];
@@ -52,6 +65,12 @@ describe('roles', () => {
       expect(roleHasPermission(ROLES.VIEWER, PERMISSIONS.SETTINGS_READ)).toBe(
         true,
       );
+      expect(roleHasPermission(ROLES.ADMIN, PERMISSIONS.FLAGS_WRITE)).toBe(
+        true,
+      );
+      expect(roleHasPermission(ROLES.VIEWER, PERMISSIONS.FLAGS_READ)).toBe(
+        true,
+      );
     });
 
     it('returns false when role does not have permission', () => {
@@ -64,6 +83,10 @@ describe('roles', () => {
       expect(roleHasPermission(ROLES.VIEWER, PERMISSIONS.SETTINGS_WRITE)).toBe(
         false,
       );
+      expect(roleHasPermission(ROLES.VIEWER, PERMISSIONS.FLAGS_WRITE)).toBe(
+        false,
+      );
+      expect(roleHasPermission(ROLES.MCP, PERMISSIONS.FLAGS_READ)).toBe(false);
     });
 
     it('uses custom mapping when provided', () => {

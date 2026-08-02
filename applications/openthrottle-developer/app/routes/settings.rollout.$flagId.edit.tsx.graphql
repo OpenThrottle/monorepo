@@ -1,0 +1,5 @@
+mutation updateRolloutFlag($input: UpdateRolloutFlagInput!) {
+  updateRolloutFlag(input: $input) {
+    ...RolloutFlagFields
+  }
+}

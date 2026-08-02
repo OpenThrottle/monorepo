@@ -1,0 +1,25 @@
+fragment RolloutFlagFields on RolloutFlagObject {
+  createdAt
+  description
+  enabled
+  id
+  key
+  targetRoles
+  updatedAt
+}
+
+query listRolloutFlags {
+  rolloutFlags {
+    ...RolloutFlagFields
+  }
+}
+
+mutation createRolloutFlag($input: CreateRolloutFlagInput!) {
+  createRolloutFlag(input: $input) {
+    ...RolloutFlagFields
+  }
+}
+
+mutation deleteRolloutFlag($id: ID!) {
+  deleteRolloutFlag(id: $id)
+}

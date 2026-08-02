@@ -210,6 +210,9 @@
     },
     {
       "path": "./packages/agentic-token-usage"
+    },
+    {
+      "path": "./packages/nestjs-rollout"
     }
   ]
 }

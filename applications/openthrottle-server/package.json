@@ -31,6 +31,7 @@
     "@openthrottle/nestjs-profiling": "workspace:^",
     "@openthrottle/nestjs-rbac": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/nestjs-rollout": "workspace:^",
     "@openthrottle/nestjs-stripe": "workspace:^",
     "@openthrottle/nestjs-throttler": "workspace:^",
     "@openthrottle/nestjs-utils": "workspace:^",

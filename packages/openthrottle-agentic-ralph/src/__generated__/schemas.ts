@@ -30,6 +30,7 @@ import {
   CreateProjectInput,
   CreateQueueInput,
   CreateRoleInput,
+  CreateRolloutFlagInput,
   CreateScheduledAgentJobInputType,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
@@ -119,6 +120,7 @@ import {
   UpdateProjectInput,
   UpdateRepositoryInput,
   UpdateRoleInput,
+  UpdateRolloutFlagInput,
   UpdateScheduledAgentJobInputType,
   UpdateServiceAccountInput,
   UpdateTaskInput,
@@ -468,6 +470,17 @@ export function CreateRoleInputSchema(): z.ZodObject<
   return z.object({
     description: z.string().nullish(),
     name: z.string(),
+  });
+}
+
+export function CreateRolloutFlagInputSchema(): z.ZodObject<
+  Properties<CreateRolloutFlagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    enabled: z.boolean().default(false),
+    key: z.string(),
+    targetRoles: z.array(z.string()),
   });
 }
 
@@ -1340,6 +1353,18 @@ export function UpdateRoleInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     id: z.string(),
     name: z.string().nullish(),
+  });
+}
+
+export function UpdateRolloutFlagInputSchema(): z.ZodObject<
+  Properties<UpdateRolloutFlagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    enabled: z.boolean().nullish(),
+    id: z.string(),
+    key: z.string().nullish(),
+    targetRoles: z.array(z.string()).nullish(),
   });
 }
 
