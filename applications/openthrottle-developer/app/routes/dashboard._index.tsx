@@ -14,6 +14,8 @@ import {
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
+import { DashboardContributionsCard } from '~/routing/dashboard/components/DashboardContributionsCard';
+import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
@@ -211,6 +213,28 @@ export default function Component(
                   dailyStats={data.dailyStatsRange.items.slice(
                     -WEEKLY_ACTIVITY_DAYS,
                   )}
+                  onSelectDate={handleSelectDate}
+                />
+              )}
+            </Await>
+          </React.Suspense>
+        </div>
+
+        <div className="col-span-2">
+          {/* Deferred (core): contributions heatmap over the full
+              dailyStatsRange window; day-clicks reuse handleSelectDate. */}
+          <React.Suspense fallback={<DashboardContributionsCardSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load contribution activity.
+                </p>
+              }
+              resolve={core}
+            >
+              {(data) => (
+                <DashboardContributionsCard
+                  dailyStats={data.dailyStatsRange.items}
                   onSelectDate={handleSelectDate}
                 />
               )}
