@@ -7,3 +7,10 @@ echo "  - Lint Staged"
 # https://github.com/okonet/lint-staged#command-line-flags
 #
 pnpm exec lint-staged --allow-empty --relative --verbose --no-stash --concurrent false
+
+# Gate commits on the same strict component primitive-shape audit that pre-push
+# and CI enforce (shared snippet keeps all three in lockstep). Runs AFTER
+# lint-staged so any lint/prettier auto-fixes are already on disk. Its `exit 1`
+# aborts the commit — do not swallow it.
+echo "  - Component primitive-shape audit"
+. "$(dirname "$0")/lib/component-shape-gate.sh"

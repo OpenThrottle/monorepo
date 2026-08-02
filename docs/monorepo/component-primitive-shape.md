@@ -305,6 +305,29 @@ Both share the scope globs and the opt-out pragma above so they can never
 disagree, and a contract test asserts freshly-generated components pass both —
 so the template and the enforcers can never drift.
 
+### Where the strict audit runs (three surfaces, one command)
+
+The strict audit is a **commit gate**, not just a push gate. It runs at three
+lifecycle stages, all on the exact same single command so they can never drift:
+
+- **pre-commit** (`.husky/pre-commit`) — every commit (human or agent) must
+  pass; it runs after `lint-staged`.
+- **pre-push** (`.husky/pre-push`) — every push must pass.
+- **CI** — the `🧱 Component primitive-shape audit` step in
+  `.github/workflows/continuous-integration.yml`.
+
+All three source the same shared snippet (`.husky/lib/component-shape-gate.sh`)
+/ run the same command; keep them in lockstep. Run it yourself with:
+
+```bash
+pnpm run audit:component-shape:strict
+```
+
+When it fails, **fix the R4/R5 violation** it lists — do not bypass the hook
+with `git commit --no-verify` (CLAUDE.md prohibits `--no-verify` and bypassing
+Husky). The autofix/scaffolding notes above and the rule references (R1–R7) tell
+you how to reshape the offending file.
+
 ## Related conventions the generators encode
 
 The generator templates encode a wider house style that the component shape sits
