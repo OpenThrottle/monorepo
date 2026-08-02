@@ -15,7 +15,7 @@ export class QueueJobLogsInput {
       'Opaque cursor from a prior page. Mutually exclusive with `since`.',
     nullable: true,
   })
-  after!: string | null;
+  after?: string | null;
 
   @Field(() => String)
   jobId!: string;
@@ -24,13 +24,13 @@ export class QueueJobLogsInput {
     description: 'Optional severity filter; empty/omitted = all levels.',
     nullable: true,
   })
-  levelIn!: QueueJobLogLevel[] | null;
+  levelIn?: QueueJobLogLevel[] | null;
 
   @Field(() => Int, {
     description: 'Max events; server-capped (default 200, hard max 1000).',
     nullable: true,
   })
-  limit!: number | null;
+  limit?: number | null;
 
   @Field(() => String)
   queueName!: string;
@@ -40,5 +40,5 @@ export class QueueJobLogsInput {
       'ISO-8601 lower bound (inclusive). Mutually exclusive with `after`.',
     nullable: true,
   })
-  since!: Date | null;
+  since?: Date | null;
 }

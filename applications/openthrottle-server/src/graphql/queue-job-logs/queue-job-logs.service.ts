@@ -29,8 +29,8 @@ import type { QueueJobLogsInput } from './queue-job-logs.input';
 const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 1000;
 
-const clampLimit = (limit: number | null): number => {
-  if (limit === null) {
+const clampLimit = (limit: number | null | undefined): number => {
+  if (limit == null) {
     return DEFAULT_LIMIT;
   }
 
@@ -40,7 +40,7 @@ const clampLimit = (limit: number | null): number => {
 @Injectable()
 export class QueueJobLogsService {
   async read(input: QueueJobLogsInput): Promise<QueueJobLogPageObject> {
-    if (input.since !== null && input.after !== null) {
+    if (input.since != null && input.after != null) {
       throw new BadRequestException(
         'queueJobLogs: `since` and `after` are mutually exclusive',
       );
@@ -58,7 +58,7 @@ export class QueueJobLogsService {
     }
 
     let afterLine: number | undefined;
-    if (input.after !== null) {
+    if (input.after != null) {
       afterLine = decodeQueueJobLogCursor(input.after);
       if (afterLine === undefined) {
         throw new BadRequestException('queueJobLogs: malformed `after` cursor');
@@ -77,7 +77,7 @@ export class QueueJobLogsService {
     });
 
     const levelFilter =
-      input.levelIn !== null && input.levelIn.length > 0
+      input.levelIn != null && input.levelIn.length > 0
         ? new Set(input.levelIn)
         : undefined;
 
