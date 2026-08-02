@@ -22,10 +22,12 @@ import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/Das
 import { DashboardPrCardsSkeleton } from '~/routing/dashboard/components/DashboardPrCardsSkeleton';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
+import { DashboardRecentChatsCard } from '~/routing/dashboard/components/DashboardRecentChatsCard';
 // import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 
@@ -72,7 +74,13 @@ export const loader = (args: Route.LoaderArgs) => {
     { owner, repo },
   );
 
-  return { core, githubStats };
+  // Deferred (recentChats): the 3 most-recent agent conversations, streamed in
+  // its own Await boundary (mirroring githubStats) so it never blocks the
+  // activity chart. Resolves to ListAgentConversationsResult; a rejection is
+  // handled downstream by the card's errorElement.
+  const recentChats = callListAgentConversations(args.request, { limit: 3 });
+
+  return { core, githubStats, recentChats };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -87,7 +95,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { core, githubStats } = loaderData;
+  const { core, githubStats, recentChats } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -137,6 +145,29 @@ export default function Component(
               resolve={core}
             >
               {(data) => <DashboardQueueHealthCard queues={data.queues} />}
+            </Await>
+          </React.Suspense>
+        </div>
+        <div className="col-span-2 md:col-span-1">
+          {/*
+              Deferred (recentChats): own boundary so a slow/failed conversation
+              fetch never blocks the other cards. The card self-titles.
+          */}
+          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load recent chats.
+                </p>
+              }
+              resolve={recentChats}
+            >
+              {(data) => (
+                <DashboardRecentChatsCard
+                  className="h-full flex-1"
+                  conversations={data.conversations}
+                />
+              )}
             </Await>
           </React.Suspense>
         </div>

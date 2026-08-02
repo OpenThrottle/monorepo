@@ -38,10 +38,32 @@ const mockDashboardQuery = {
   queues: [],
 };
 
-// Deferred loader shape: `core` (dashboard query) + `githubStats`, each a promise.
+// Raw GraphQL shape returned by the 3rd executeGraphqlWithAuth call (recentChats
+// via callListAgentConversations, which maps `data.listAgentConversations`).
+const mockConversationsQuery = {
+  listAgentConversations: {
+    conversations: [
+      {
+        id: 'c1',
+        status: 'active',
+        title: 'First chat',
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      },
+    ],
+    totalCount: 1,
+  },
+};
+
+// Deferred loader shape: `core` (dashboard query) + `githubStats` + `recentChats`,
+// each a promise. `recentChats` is the mapped ListAgentConversationsResult.
 const mockLoaderData = {
   core: Promise.resolve(mockDashboardQuery),
   githubStats: Promise.resolve(mockGithubStats),
+  recentChats: Promise.resolve({
+    conversations: mockConversationsQuery.listAgentConversations.conversations,
+    errorMessage: null,
+    totalCount: 1,
+  }),
 };
 
 const matches: Route.ComponentProps['matches'] = [
@@ -64,7 +86,8 @@ describe('routes/dashboard._index.tsx', () => {
     test('should parse owner and repo from search params for GitHub stats', async () => {
       mockExecute
         .mockResolvedValueOnce(mockDashboardQuery)
-        .mockResolvedValueOnce(mockGithubStats);
+        .mockResolvedValueOnce(mockGithubStats)
+        .mockResolvedValueOnce(mockConversationsQuery);
 
       const request = new Request(
         'http://localhost/dashboard?owner=openthrottle&repo=openthrottle',
@@ -79,9 +102,10 @@ describe('routes/dashboard._index.tsx', () => {
 
       const result = await loader(args);
 
-      // Both queries fire concurrently (no serial await gate): by the time the
-      // loader returns, both executeGraphqlWithAuth calls have been invoked.
-      expect(mockExecute).toHaveBeenCalledTimes(2);
+      // All three queries fire concurrently (no serial await gate): core,
+      // githubStats, and recentChats are each invoked by the time the loader
+      // returns.
+      expect(mockExecute).toHaveBeenCalledTimes(3);
       // githubStats is now a deferred promise — await it to assert its value.
       expect(await result.githubStats).toEqual(mockGithubStats);
       expect(mockExecute).toHaveBeenNthCalledWith(
@@ -95,7 +119,8 @@ describe('routes/dashboard._index.tsx', () => {
     test('should default owner and repo when search params are missing or invalid', async () => {
       mockExecute
         .mockResolvedValueOnce(mockDashboardQuery)
-        .mockResolvedValueOnce(mockGithubStats);
+        .mockResolvedValueOnce(mockGithubStats)
+        .mockResolvedValueOnce(mockConversationsQuery);
 
       const request = new Request(
         'http://localhost/dashboard?owner=unknown&repo=bad',
