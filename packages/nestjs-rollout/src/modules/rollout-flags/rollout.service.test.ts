@@ -11,6 +11,11 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
+  ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
+  ROLLOUT_FLAG_KIND,
+} from './rollout-flag.constants';
 import { RolloutFlag } from './rollout-flag.entity';
 import { RolloutService } from './rollout.service';
 
@@ -31,10 +36,14 @@ function flag(overrides: Partial<RolloutFlag> = {}): RolloutFlag {
     createdAt: new Date(),
     description: null,
     enabled: true,
+    fallthrough: ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
     id: 'flag-1',
     key: 'new-dashboard',
+    kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+    offVariation: 0,
     targetRoles: [],
     updatedAt: new Date(),
+    variations: ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
     ...overrides,
   });
 }

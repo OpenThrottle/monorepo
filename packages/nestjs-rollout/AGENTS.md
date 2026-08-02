@@ -8,23 +8,27 @@ GraphQL resolver. "Rollout" = feature flags; "clutch" (agentic chat) is unrelate
 ## Layout
 
 - [src/index.ts](src/index.ts) — public entry point (`@public`): `RolloutFlag`,
-  `RolloutFlagData`, `RolloutFlagsModule`, `RolloutService`, and the
-  `CreateRolloutFlagInput` / `UpdateRolloutFlagInput` / `EvaluatedFlag` types.
-- [src/modules/rollout-flags](src/modules/rollout-flags) — entity, module, service,
-  and the service unit tests (evaluation matrix + CRUD).
+  `RolloutFlagData`, kind/variation/fallthrough types + `ROLLOUT_FLAG_KIND`,
+  `RolloutFlagsModule`, `RolloutService`, and the `CreateRolloutFlagInput` /
+  `UpdateRolloutFlagInput` / `EvaluatedFlag` types.
+- [src/modules/rollout-flags](src/modules/rollout-flags) — entity, constants,
+  module, service, and the service unit tests (evaluation matrix + CRUD).
 
 ## Invariants & gotchas
 
 - **Source-first**, no `build` target changes: `main`/`types` → `src/index.ts`.
-- **Evaluation is locked**: `!flag || !enabled ⇒ false`; empty `targetRoles ⇒ true`;
-  else the actor must hold ≥1 targeted role. `isEnabled` and `evaluateAll` resolve
-  roles lazily (only when a targeted, enabled flag needs them) and at most once.
+- **Evaluation is locked (boolean-era today)**: `!flag || !enabled ⇒ false`; empty
+  `targetRoles ⇒ true`; else the actor must hold ≥1 targeted role. `isEnabled`
+  and `evaluateAll` resolve roles lazily (only when a targeted, enabled flag
+  needs them) and at most once. Typed `evaluate` + percentage bucketing land in
+  a follow-on task on the same plan.
 - **Actor branch mirrors `GqlPermissionsGuard`**: service accounts →
   `findRoleNamesByServiceAccountId`, users → `findRoleNamesByUserId`. Keep these in
   sync if the guard's branching changes.
 - **Schema comes from migrations, not the entity.** `rollout_flags` is defined in
-  `databases/migrations/084`; `synchronize` is off. Changing a column means a new
-  migration — the entity only mirrors it.
+  `databases/migrations/084` and extended by `089` (`kind`, `variations`,
+  `off_variation`, `fallthrough` as jsonb on the flag row). `synchronize` is off.
+  Changing a column means a new migration — the entity only mirrors it.
 - **Resolver lives in the app, not here.** The GraphQL resolver is in
   `applications/openthrottle-server/src/graphql/rollout/` because it needs the
   app-local `GqlPermissionsGuard`. Don't move it into this package (would invert the
