@@ -89,11 +89,18 @@ export const action = async (args: Route.ActionArgs) => {
   const planIdEntry = formData.get('planId');
   const planId = typeof planIdEntry === 'string' ? planIdEntry : '';
 
+  const branchEntry = formData.get('branch');
+  const branch =
+    typeof branchEntry === 'string' && branchEntry.trim() !== ''
+      ? branchEntry.trim()
+      : 'main';
+
   const result = await executeGraphqlWithAuth(
     args.request,
     TestWorkflowDocument,
     {
       input: {
+        branch,
         planId,
         ralph: {
           ralphDebugCli: RalphNestedDebugCli.Verbose,

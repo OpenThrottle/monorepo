@@ -9,14 +9,17 @@ import { PlanRunsService } from './plan-runs.service';
 const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
   const run: PlanRun = {
     actorUserId: null,
+    branch: null,
     bullmqJobId: 'job-1',
     cancelRequestedAt: null,
     cancelRequestedBy: null,
+    checkoutId: null,
     createdAt: new Date('2026-07-21T00:00:00Z'),
     executionBackend: 'claude',
     hostname: null,
     id: 'run-1',
     lastHeartbeatAt: null,
+    model: null,
     pid: null,
     planId: 'plan-1',
     queueName: 'plans',
@@ -107,6 +110,39 @@ describe('PlanRunsService', () => {
       );
       expect(repo.save).not.toHaveBeenCalled();
       expect(result.id).toBe('run-existing');
+    });
+
+    it('persists branch, model, and checkoutId provenance at insert', async () => {
+      repo.findOne.mockResolvedValueOnce(null);
+
+      await service.recordQueuedRun({
+        ...enqueueInput,
+        branch: 'ot/run-provenance',
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+        model: 'claude-fable-5',
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          branch: 'ot/run-provenance',
+          checkoutId: '44444444-4444-4444-8444-444444444444',
+          model: 'claude-fable-5',
+        }),
+      );
+    });
+
+    it('defaults provenance fields to null when omitted', async () => {
+      repo.findOne.mockResolvedValueOnce(null);
+
+      await service.recordQueuedRun(enqueueInput);
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          branch: null,
+          checkoutId: null,
+          model: null,
+        }),
+      );
     });
   });
 

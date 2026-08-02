@@ -57,6 +57,8 @@ type ExecutionBackend = PlanRunExecutionBackend;
 interface EnqueueSpawnParams {
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
+  /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
+  readonly branch: string;
   /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
   readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
@@ -73,6 +75,8 @@ interface EnqueueSpawnParams {
 interface EnqueueOrchestratorParams {
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
+  /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
+  readonly branch: string;
   /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
   readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
@@ -138,6 +142,7 @@ export class PlanEnqueueService {
   async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
     const {
       actorUserId,
+      branch,
       checkoutId,
       idempotencyKey,
       jobRunHooksJson,
@@ -150,6 +155,7 @@ export class PlanEnqueueService {
 
     return this.enqueueOrchestrator({
       actorUserId,
+      branch,
       checkoutId,
       idempotencyKey: idempotencyKey ?? null,
       jobRunHooksJson,
@@ -173,6 +179,7 @@ export class PlanEnqueueService {
   ): Promise<EnqueueOutcome> {
     const {
       actorUserId,
+      branch,
       checkoutId,
       idempotencyKey,
       jobRunHooksJson,
@@ -184,6 +191,16 @@ export class PlanEnqueueService {
       taskId,
       workingDirectory,
     } = params;
+
+    // Branch is a REQUIRED kickoff input (locked plan decision): fail fast and
+    // loud rather than infer it late. Rejects a missing or whitespace-only value
+    // so plan_runs.branch is always meaningful for new runs.
+    const resolvedBranch = branch?.trim() ?? '';
+    if (resolvedBranch === '') {
+      throw new BadRequestException(
+        'branch is required to enqueue a plan run (pass the git branch this run operates on)',
+      );
+    }
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -234,8 +251,14 @@ export class PlanEnqueueService {
 
     await this.commitEnqueueTransaction({
       actorUserId,
+      // Provenance projection captured at kickoff: branch from the required
+      // kickoff input, checkoutId (on-disk home for deep-links) from the resolved
+      // workspace, model from the run snapshot's ralph tuning.
+      branch: resolvedBranch,
       bullmqJobId: effectiveJobId,
+      checkoutId: resolvedWorkspace.checkoutId,
       executionBackend: jobData.executionBackend ?? 'cursor',
+      model: runConfigSnapshot.ralph.model ?? null,
       planId,
       runConfigSnapshot,
       runKind: 'orchestrator',
@@ -356,16 +379,22 @@ export class PlanEnqueueService {
    */
   private async commitEnqueueTransaction(params: {
     actorUserId?: string | null;
+    branch?: string | null;
     bullmqJobId: string;
+    checkoutId?: string | null;
     executionBackend: ExecutionBackend;
+    model?: string | null;
     planId: string;
     runConfigSnapshot: ReturnType<typeof buildPlanRunConfigSnapshotFromJobData>;
     runKind: 'orchestrator' | 'spawn';
   }): Promise<void> {
     const {
       actorUserId,
+      branch,
       bullmqJobId,
+      checkoutId,
       executionBackend,
+      model,
       planId,
       runConfigSnapshot,
       runKind,
@@ -376,8 +405,11 @@ export class PlanEnqueueService {
       await this.planRunsService.recordQueuedRun(
         {
           actorUserId: actorUserId ?? null,
+          branch: branch ?? null,
           bullmqJobId,
+          checkoutId: checkoutId ?? null,
           executionBackend,
+          model: model ?? null,
           planId,
           queueName: PLANS_QUEUE_NAME,
           runConfigSnapshot,

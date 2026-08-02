@@ -287,6 +287,51 @@ type PlanRunObject {
   runKind: String!
   status: String!
   updatedAt: DateTime!
+
+  """
+  Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.
+  """
+  branch: String
+
+  """
+  Resolved agent model id for this run (e.g. claude-fable-5), captured at kickoff. Null for legacy rows lacking snapshot data.
+  """
+  model: String
+
+  """
+  The run's on-disk checkout (worktree/primary) joined from checkout_id; its filesystemPath powers editor deep-links. Null when the run has no resolved checkout.
+  """
+  checkout: PlanRunCheckoutObject
+
+  """
+  The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run.
+  """
+  pullRequest: PlanRunPullRequestObject
+}
+
+type PlanRunCheckoutObject {
+  """Human-readable checkout label."""
+  displayName: String!
+
+  """Absolute on-disk path of the checkout/worktree."""
+  filesystemPath: String!
+
+  """Checkout kind: 'primary' or 'worktree'."""
+  kind: String!
+}
+
+type PlanRunPullRequestObject {
+  """Pull request number."""
+  number: Int!
+
+  """owner/repo the PR belongs to."""
+  repo: String!
+
+  """Lifecycle state of the PR: 'open', 'merged', or 'closed'."""
+  state: String
+
+  """Canonical GitHub URL for the PR."""
+  url: String!
 }
 
 type ListPlansByStatusResultObject {
@@ -4758,6 +4803,11 @@ input DeletePlanInput {
 
 input EnqueuePlanRunInput {
   """
+  REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.
+  """
+  branch: String!
+
+  """
   Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.
   """
   idempotencyKey: String
@@ -4845,6 +4895,11 @@ enum RalphNestedDebugCli {
 }
 
 input EnqueuePlanRalphOrchestratorInput {
+  """
+  REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.
+  """
+  branch: String!
+
   """
   Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
   """

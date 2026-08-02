@@ -76,6 +76,14 @@ export const workflowCheckoutIdAtom = atom<string>('');
 export const workflowRepositoryIdAtom = atom<string>('');
 
 /**
+ * @description Git branch this run operates on — a REQUIRED kickoff input passed
+ * explicitly to the enqueue mutation (never inferred server-side). Transient per
+ * run (NOT serialized into `runConfigJson`, unlike the workspace atoms); the
+ * workspace selector pre-fills it from the selected checkout's current branch.
+ */
+export const workflowBranchAtom = atom<string>('');
+
+/**
  * @description Job-run lifecycle hook draft rows (editable form state); serialized
  * into `jobRunHooksJson` for save + enqueue via {@link jobRunHooksJsonAtom}.
  */
@@ -248,6 +256,7 @@ export const resetWorkflowRunToDefaultsAtom = atom(
     set(workflowWorkingDirectoryAtom, '');
     set(workflowCheckoutIdAtom, '');
     set(workflowRepositoryIdAtom, '');
+    set(workflowBranchAtom, '');
   },
 );
 

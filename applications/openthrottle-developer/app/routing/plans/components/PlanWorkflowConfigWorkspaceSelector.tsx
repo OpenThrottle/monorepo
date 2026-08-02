@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  Input,
   Label,
   Select,
   SelectContent,
@@ -23,8 +24,11 @@ import {
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
 
 export interface PlanWorkflowConfigWorkspaceSelectorProps {
+  /** REQUIRED git branch the run operates on; submitted to enqueue. */
+  readonly branch: string;
   readonly checkoutId: string;
   readonly heading: string;
+  readonly onBranchChange: (branch: string) => void;
   readonly onCheckoutIdChange: (checkoutId: string) => void;
   readonly onRepositoryIdChange: (repositoryId: string) => void;
   readonly onWorkingDirectoryChange: (path: string) => void;
@@ -45,8 +49,10 @@ export const PlanWorkflowConfigWorkspaceSelector = (
   props: PlanWorkflowConfigWorkspaceSelectorProps,
 ): React.ReactElement => {
   const {
+    branch,
     checkoutId,
     heading,
+    onBranchChange,
     onCheckoutIdChange,
     onRepositoryIdChange,
     onWorkingDirectoryChange,
@@ -70,12 +76,22 @@ export const PlanWorkflowConfigWorkspaceSelector = (
     });
 
   // Setup
+  const selectedCheckoutBranch =
+    selectedCheckout?.inspection?.git?.currentBranch ?? '';
 
   // Handlers
 
   // Markup
 
   // Life Cycle
+  // Pre-fill the (required) branch from the selected checkout's current branch,
+  // but only when the field is still empty so a user's explicit edit is never
+  // clobbered. The value is always submitted explicitly — never inferred server-side.
+  React.useEffect(() => {
+    if (branch === '' && selectedCheckoutBranch !== '') {
+      onBranchChange(selectedCheckoutBranch);
+    }
+  }, [branch, selectedCheckoutBranch, onBranchChange]);
 
   // 🔌 Short Circuit
 
@@ -142,6 +158,22 @@ export const PlanWorkflowConfigWorkspaceSelector = (
             you have none, or more than one.
           </p>
         ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="workflow-run-branch">Branch</Label>
+        <Input
+          data-testid="workflow-run-branch"
+          id="workflow-run-branch"
+          onChange={(event) => onBranchChange(event.target.value)}
+          placeholder={selectedCheckoutBranch || 'e.g. main'}
+          value={branch}
+        />
+        <p className="text-muted-foreground text-xs">
+          Required. The git branch this run operates on — recorded on the run
+          for branch↔PR mapping. Pre-filled from the selected checkout's current
+          branch; edit to target a different branch.
+        </p>
       </div>
 
       {selectedValue === CUSTOM_VALUE ? (

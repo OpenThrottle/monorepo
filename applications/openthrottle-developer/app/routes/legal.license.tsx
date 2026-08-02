@@ -62,7 +62,7 @@ export default function Component(
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
-            Copyright (c) 2026 Matthew Scholta -{' '}
+            Copyright &copy; 2026 Matthew Scholta -{' '}
             <Link
               className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"

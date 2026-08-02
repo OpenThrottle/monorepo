@@ -12,6 +12,7 @@ import { PlanCreationModule } from '../../services/plan-creation/plan-creation.m
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module';
 import { PlanEnqueueService } from './plan-enqueue.service';
+import { PlanRunObjectResolver } from './plan-run-object.resolver';
 import { PlanStatusService } from './plan-status.service';
 import { PlansLoaders } from './plans-loaders';
 import { PlansResolver } from './plans.resolver';
@@ -29,6 +30,7 @@ import { PlansResolver } from './plans.resolver';
   ],
   providers: [
     PlanEnqueueService,
+    PlanRunObjectResolver,
     PlanStatusService,
     PlansLoaders,
     PlansResolver,

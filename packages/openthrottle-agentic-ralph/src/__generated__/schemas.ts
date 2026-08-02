@@ -691,6 +691,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRalphOrchestratorInput>
 > {
   return z.object({
+    branch: z.string(),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
@@ -708,6 +709,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
+    branch: z.string(),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),

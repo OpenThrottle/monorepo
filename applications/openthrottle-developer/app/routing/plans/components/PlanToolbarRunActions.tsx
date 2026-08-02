@@ -16,6 +16,7 @@ import { getPlanToolbarRunButtonLabel } from '~/routing/plans/utils/plan-toolbar
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanToolbarRunActionsProps {
+  readonly branch?: string;
   readonly checkoutId?: string;
   readonly fetcherEvaluateRules: ReturnType<typeof useFetcher<typeof action>>;
   readonly fetcherRunPlan: ReturnType<typeof useFetcher<typeof action>>;
@@ -42,6 +43,7 @@ export const PlanToolbarRunActions = (
   props: PlanToolbarRunActionsProps,
 ): React.ReactElement => {
   const {
+    branch,
     checkoutId,
     fetcherEvaluateRules,
     fetcherRunPlan,
@@ -58,6 +60,10 @@ export const PlanToolbarRunActions = (
     workflowRunBlockedReason,
     workingDirectory,
   } = props;
+
+  // Branch is a REQUIRED enqueue input; with it blank the run would fail fast at
+  // the server boundary, so gate the Run control and surface the reason.
+  const branchMissing = branch == null || branch.trim() === '';
 
   // Hooks
 
@@ -78,6 +84,9 @@ export const PlanToolbarRunActions = (
           <fetcherRunPlan.Form method="post">
             <Input name="intent" type="hidden" value="runPlan" />
             <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+            {branch != null && branch !== '' && (
+              <Input name="branch" type="hidden" value={branch} />
+            )}
             {jobRunHooksJson !== '' ? (
               <Input
                 name="jobRunHooksJson"
@@ -102,6 +111,7 @@ export const PlanToolbarRunActions = (
               disabled={
                 fetcherRunPlan.state !== 'idle' ||
                 workflowRunBlocked ||
+                branchMissing ||
                 isRunning ||
                 isTerminal
               }
@@ -126,7 +136,9 @@ export const PlanToolbarRunActions = (
                 : workflowRunBlocked
                   ? (workflowRunBlockedReason ??
                     'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
-                  : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+                  : branchMissing
+                    ? 'Set the git branch in Configuration → Workspace before running (branch is required).'
+                    : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
         </TooltipContent>
       </Tooltip>
 

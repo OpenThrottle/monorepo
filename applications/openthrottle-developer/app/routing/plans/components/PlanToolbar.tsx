@@ -13,6 +13,10 @@ import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 
 export interface PlanToolbarProps {
   /**
+   * @description REQUIRED git branch the run operates on, submitted to the enqueuePlanRun mutation.
+   */
+  branch?: string;
+  /**
    * @description Optional registered checkout id, submitted to the enqueuePlanRun mutation.
    */
   checkoutId?: string;
@@ -83,6 +87,7 @@ export interface PlanToolbarProps {
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
+    branch,
     className,
     newestRunIsStale = false,
     onAddTag,
@@ -129,6 +134,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
       dataTestId="PlanToolbar"
       primaryActions={
         <PlanToolbarRunActions
+          branch={branch}
           checkoutId={checkoutId}
           fetcherEvaluateRules={fetcherEvaluateRules}
           fetcherRunPlan={fetcherRunPlan}

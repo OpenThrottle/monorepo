@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -57,6 +57,14 @@ export class PlanRun {
   @Column({ name: 'actor_user_id', nullable: true, type: 'uuid' })
   actorUserId!: string | null;
 
+  /**
+   * Git branch this run operates on, captured at kickoff as a REQUIRED enqueue
+   * input (see migration 087). Powers branch->PR mapping. Null for legacy /
+   * backfilled rows; enforcement is at the enqueue input boundary, not the DB.
+   */
+  @Column({ name: 'branch', nullable: true, type: 'text' })
+  branch!: string | null;
+
   /** BullMQ job id; null for detached-CLI runs that carry no queue job. */
   @Column({ name: 'bullmq_job_id', nullable: true, type: 'text' })
   bullmqJobId!: string | null;
@@ -75,6 +83,15 @@ export class PlanRun {
   /** User (auth sub) who requested cancellation; null for system cancels or none. */
   @Column({ name: 'cancel_requested_by', nullable: true, type: 'uuid' })
   cancelRequestedBy!: string | null;
+
+  /**
+   * repository_checkouts row (kind='worktree' for provisioned runs) giving this
+   * run its durable on-disk home; the filesystem_path there powers editor
+   * deep-links. Captured at kickoff from run_config_snapshot.workspace.checkoutId.
+   * FK is ON DELETE SET NULL (migration 087). Null for legacy rows / no checkout.
+   */
+  @Column({ name: 'checkout_id', nullable: true, type: 'uuid' })
+  checkoutId!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
@@ -102,6 +119,14 @@ export class PlanRun {
     type: 'timestamp with time zone',
   })
   lastHeartbeatAt!: Date | null;
+
+  /**
+   * Resolved agent model id for this run (e.g. 'claude-fable-5'), captured at
+   * kickoff. Queryable projection of run_config_snapshot.ralph.model (the raw
+   * record stays the source). Null for legacy rows lacking snapshot data.
+   */
+  @Column({ name: 'model', nullable: true, type: 'text' })
+  model!: string | null;
 
   /** OS process id of the executing worker; populated at job start, cleared at finish. Null when not actively executing. */
   @Column({ name: 'pid', nullable: true, type: 'integer' })

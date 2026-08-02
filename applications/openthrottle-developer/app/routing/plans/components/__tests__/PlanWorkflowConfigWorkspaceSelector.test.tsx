@@ -37,8 +37,10 @@ const repo = (
 const noop = (): void => undefined;
 
 const baseProps: PlanWorkflowConfigWorkspaceSelectorProps = {
+  branch: '',
   checkoutId: '',
   heading: '02. Workspace',
+  onBranchChange: noop,
   onCheckoutIdChange: noop,
   onRepositoryIdChange: noop,
   onWorkingDirectoryChange: noop,
