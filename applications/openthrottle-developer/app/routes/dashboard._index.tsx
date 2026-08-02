@@ -14,6 +14,8 @@ import {
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
+import { DashboardContributionsCard } from '~/routing/dashboard/components/DashboardContributionsCard';
+import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
@@ -33,6 +35,15 @@ import type { Route } from '@/app/routes/+types/dashboard._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
+// Day windows for the shared `dailyStatsRange` fetch. The loader fetches the
+// wider CONTRIBUTIONS window (feeds the contributions heatmap); the "This
+// Week's Activity" bar chart slices the most-recent days off the same result,
+// so both share one round-trip (items come back date-ascending). Widen the
+// heatmap by bumping CONTRIBUTIONS_DAYS_BACK — no schema/codegen change, the
+// start/end are query variables on the existing dailyStatsRange field.
+const CONTRIBUTIONS_DAYS_BACK = 26 * 7 + 7; // 26-week grid + week-alignment slack
+const WEEKLY_ACTIVITY_DAYS = 14;
+
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Dashboard',
   links: (_match) => [],
@@ -44,7 +55,9 @@ export const loader = (args: Route.LoaderArgs) => {
 
   const { owner, repo } = parseDashboardGithubParams(args.url.searchParams);
 
-  const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const start = new Date(
+    end.getTime() - CONTRIBUTIONS_DAYS_BACK * 24 * 60 * 60 * 1000,
+  );
   const startIso = start.toISOString();
 
   const variables: GetDashboardQueryVariables = {
@@ -197,6 +210,30 @@ export default function Component(
             >
               {(data) => (
                 <DashboardDailyStatsCard
+                  dailyStats={data.dailyStatsRange.items.slice(
+                    -WEEKLY_ACTIVITY_DAYS,
+                  )}
+                  onSelectDate={handleSelectDate}
+                />
+              )}
+            </Await>
+          </React.Suspense>
+        </div>
+
+        <div className="col-span-2">
+          {/* Deferred (core): contributions heatmap over the full
+              dailyStatsRange window; day-clicks reuse handleSelectDate. */}
+          <React.Suspense fallback={<DashboardContributionsCardSkeleton />}>
+            <Await
+              errorElement={
+                <p className="text-muted-foreground text-sm">
+                  Couldn&rsquo;t load contribution activity.
+                </p>
+              }
+              resolve={core}
+            >
+              {(data) => (
+                <DashboardContributionsCard
                   dailyStats={data.dailyStatsRange.items}
                   onSelectDate={handleSelectDate}
                 />

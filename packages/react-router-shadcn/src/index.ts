@@ -14,6 +14,7 @@ export * from './components/Combobox';
 export * from './components/Command/index';
 export * from './components/Collapsible';
 export * from './components/ContextMenu';
+export * from './components/ContributionHeatmap';
 export * from './components/DataTable';
 export * from './components/DatePicker';
 export * from './components/Dialog/index';
