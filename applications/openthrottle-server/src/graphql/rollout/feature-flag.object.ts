@@ -1,13 +1,13 @@
 /**
  * @description GraphQL ObjectType for an actor-evaluated feature flag (key + on/off).
- * Backs the myFeatureFlags query; mirrors {@link EvaluatedFlag} from @openthrottle/nestjs-rollout.
+ * Backs the myFeatureFlags query. Typed evaluation lives on RolloutService.evaluate /
+ * evaluateAll; this object stays boolean-shaped until the GraphQL rollout task evolves it.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { EvaluatedFlag } from '@openthrottle/nestjs-rollout';
 
 @ObjectType()
-export class FeatureFlagObject implements EvaluatedFlag {
+export class FeatureFlagObject {
   @Field(() => Boolean, {
     description: `Whether the flag is on for the current actor.`,
   })

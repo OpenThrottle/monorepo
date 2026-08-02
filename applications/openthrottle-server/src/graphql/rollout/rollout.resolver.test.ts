@@ -13,7 +13,13 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
-import { RolloutService } from '@openthrottle/nestjs-rollout';
+import {
+  ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
+  ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
+  ROLLOUT_EVALUATION_REASON,
+  ROLLOUT_FLAG_KIND,
+  RolloutService,
+} from '@openthrottle/nestjs-rollout';
 import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
@@ -23,10 +29,14 @@ const flag: RolloutFlag = {
   createdAt: new Date(),
   description: null,
   enabled: true,
+  fallthrough: ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   id: 'flag-1',
   key: 'new-dashboard',
+  kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+  offVariation: 0,
   targetRoles: [],
   updatedAt: new Date(),
+  variations: ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
 };
 
 const userPrincipal: AuthPrincipal = {
@@ -43,9 +53,15 @@ describe('RolloutResolver', () => {
 
   const mockRolloutService = createMock<RolloutService>({
     create: vi.fn().mockResolvedValue(flag),
-    evaluateAll: vi
-      .fn()
-      .mockResolvedValue([{ enabled: true, key: 'new-dashboard' }]),
+    evaluateAll: vi.fn().mockResolvedValue([
+      {
+        key: 'new-dashboard',
+        kind: ROLLOUT_FLAG_KIND.BOOLEAN,
+        reason: ROLLOUT_EVALUATION_REASON.FALLTHROUGH,
+        value: true,
+        variationIndex: 1,
+      },
+    ]),
     findAll: vi.fn().mockResolvedValue([flag]),
     findById: vi.fn().mockResolvedValue(flag),
     remove: vi.fn().mockResolvedValue(true),

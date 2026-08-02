@@ -7,11 +7,18 @@
  */
 
 export {
+  pickFallthroughVariation,
+  principalIdToBucket,
+} from './modules/rollout-flags/rollout-flag.bucketing';
+export {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
+  ROLLOUT_EVALUATION_REASON,
   ROLLOUT_FLAG_KIND,
 } from './modules/rollout-flags/rollout-flag.constants';
 export type {
+  RolloutEvaluation,
+  RolloutEvaluationReason,
   RolloutFallthrough,
   RolloutFallthroughBucket,
   RolloutFlagKind,
@@ -25,6 +32,5 @@ export { RolloutFlagsModule } from './modules/rollout-flags/rollout-flags.module
 export { RolloutService } from './modules/rollout-flags/rollout.service';
 export type {
   CreateRolloutFlagInput,
-  EvaluatedFlag,
   UpdateRolloutFlagInput,
 } from './modules/rollout-flags/rollout.service';

@@ -9,8 +9,11 @@ import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { RolloutService } from '@openthrottle/nestjs-rollout';
-import type { EvaluatedFlag, RolloutFlag } from '@openthrottle/nestjs-rollout';
+import {
+  ROLLOUT_FLAG_KIND,
+  RolloutService,
+} from '@openthrottle/nestjs-rollout';
+import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { FeatureFlagObject } from './feature-flag.object';
 import { RolloutFlagObject } from './rollout-flag.object';
@@ -49,8 +52,15 @@ export class RolloutResolver {
   @Permissions(PERMISSIONS.FLAGS_READ)
   async myFeatureFlags(
     @CurrentUser() principal: AuthPrincipal,
-  ): Promise<EvaluatedFlag[]> {
-    return this.rolloutService.evaluateAll(principal);
+  ): Promise<FeatureFlagObject[]> {
+    const evaluations = await this.rolloutService.evaluateAll(principal);
+    return evaluations.map((evaluation) => ({
+      enabled:
+        evaluation.kind === ROLLOUT_FLAG_KIND.BOOLEAN
+          ? evaluation.value === true
+          : evaluation.reason === 'fallthrough',
+      key: evaluation.key,
+    }));
   }
 
   @Mutation(() => RolloutFlagObject, {

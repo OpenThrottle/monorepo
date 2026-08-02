@@ -67,3 +67,29 @@ export const ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS: RolloutFlagVariation[] = [
 export const ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH: RolloutFallthrough = {
   variations: [{ variation: 1, weight: 100 }],
 };
+
+/**
+ * Why a specific variation was chosen. Non-sticky bucketing caveat: `fallthrough`
+ * uses principal-id → mod 100 as a stand-in for sticky hashing (replaced later).
+ */
+export const ROLLOUT_EVALUATION_REASON = {
+  FALLTHROUGH: 'fallthrough',
+  FLAG_NOT_FOUND: 'flag_not_found',
+  OFF: 'off',
+  TARGET_ROLES: 'target_roles',
+} as const;
+
+export type RolloutEvaluationReason =
+  (typeof ROLLOUT_EVALUATION_REASON)[keyof typeof ROLLOUT_EVALUATION_REASON];
+
+/**
+ * Result of typed flag evaluation for one actor.
+ * `isEnabled` returns `value === true` when `kind === boolean`; otherwise false.
+ */
+export interface RolloutEvaluation {
+  key: string;
+  kind: RolloutFlagKind;
+  reason: RolloutEvaluationReason;
+  value: RolloutVariationValue;
+  variationIndex: number;
+}
