@@ -49,4 +49,13 @@ export const RUN_DETAIL_COPY = {
   logsHeading: 'Logs',
   logsPending: 'Logs available once the run is enqueued.',
   notEnqueued: 'Not enqueued yet',
+  settings: {
+    empty: 'No settings snapshot was captured for this run.',
+    heading: 'Settings snapshot',
+  },
+  usage: {
+    cost: 'Cost',
+    empty: 'No token usage was reported for this run.',
+    heading: 'Token usage',
+  },
 } as const;

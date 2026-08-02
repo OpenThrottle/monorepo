@@ -110,22 +110,81 @@ describe('ScheduledAgentJobsService', () => {
 
   it('markRunStarted stamps running + startedAt + bullmq job id', async () => {
     await service.markRunStarted('run-1', 'bull-9');
-    expect(runRepo.update).toHaveBeenCalledWith(
-      { id: 'run-1' },
-      expect.objectContaining({ bullmqJobId: 'bull-9', status: 'running' }),
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bullmqJobId: 'bull-9',
+        id: 'run-1',
+        status: 'running',
+      }),
     );
-    const patch = runRepo.update.mock.calls[0]?.[1];
+    const patch = runRepo.save.mock.calls[0]?.[0];
     expect(patch.startedAt).toBeInstanceOf(Date);
+    // No snapshot supplied → the column is left untouched (not set to null).
+    expect('settingsSnapshot' in patch).toBe(false);
+  });
+
+  it('markRunStarted backfills the settings snapshot when supplied', async () => {
+    await service.markRunStarted('run-1', 'bull-9', {
+      driverId: 'claude',
+      model: 'opus',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settingsSnapshot: { driverId: 'claude', model: 'opus' },
+      }),
+    );
   });
 
   it('markRunFinished maps a terminal status with exit code + finishedAt', async () => {
     await service.markRunFinished('run-1', { exitCode: 1, status: 'failed' });
-    expect(runRepo.update).toHaveBeenCalledWith(
-      { id: 'run-1' },
-      expect.objectContaining({ exitCode: 1, status: 'failed' }),
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ exitCode: 1, id: 'run-1', status: 'failed' }),
     );
-    const patch = runRepo.update.mock.calls[0]?.[1];
+    const patch = runRepo.save.mock.calls[0]?.[0];
     expect(patch.finishedAt).toBeInstanceOf(Date);
+    // Usage fields omitted → not written, so the columns stay null.
+    expect('inputTokens' in patch).toBe(false);
+    expect('rawUsage' in patch).toBe(false);
+  });
+
+  it('markRunFinished persists token counts, cost, and raw usage when supplied', async () => {
+    await service.markRunFinished('run-1', {
+      cacheReadTokens: 20,
+      cacheWriteTokens: 10,
+      costUsd: 0.0123,
+      inputTokens: 100,
+      outputTokens: 50,
+      rawUsage: { inputTokens: 100, outputTokens: 50 },
+      reasoningTokens: null,
+      status: 'succeeded',
+      totalTokens: 150,
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cacheReadTokens: 20,
+        cacheWriteTokens: 10,
+        costUsd: 0.0123,
+        inputTokens: 100,
+        outputTokens: 50,
+        rawUsage: { inputTokens: 100, outputTokens: 50 },
+        reasoningTokens: null,
+        totalTokens: 150,
+      }),
+    );
+  });
+
+  it('createRun persists the settings snapshot on the new run row', async () => {
+    await service.createRun({
+      driverId: 'cursor',
+      scheduledAgentJobId: 'job-1',
+      settingsSnapshot: { driverId: 'cursor', model: null },
+      trigger: 'manual',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settingsSnapshot: { driverId: 'cursor', model: null },
+      }),
+    );
   });
 
   it('deleteJob reports whether a row was removed', async () => {

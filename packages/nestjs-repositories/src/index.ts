@@ -136,6 +136,7 @@ export type {
 export { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
 export type {
   ScheduledAgentJobRunData,
+  ScheduledAgentJobRunSettingsSnapshot,
   ScheduledAgentJobRunStatus,
   ScheduledAgentJobRunTrigger,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';

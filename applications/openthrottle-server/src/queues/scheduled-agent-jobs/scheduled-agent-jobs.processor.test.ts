@@ -12,7 +12,10 @@ import {
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
-import { ScheduledAgentJobsProcessor } from './scheduled-agent-jobs.processor';
+import {
+  foldRunUsage,
+  ScheduledAgentJobsProcessor,
+} from './scheduled-agent-jobs.processor';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
 
@@ -25,6 +28,41 @@ const result = (
   status: RUN_AGENT_STATUS.ok,
   ...overrides,
 });
+
+/** The usage columns a run with no parseable usage persists (all null). */
+const NULL_USAGE_COLUMNS = {
+  cacheReadTokens: null,
+  cacheWriteTokens: null,
+  costUsd: null,
+  inputTokens: null,
+  outputTokens: null,
+  rawUsage: null,
+  reasoningTokens: null,
+  totalTokens: null,
+} as const;
+
+/** A realistic claude stream-json run: an assistant line (usage nested under `message`, ignored by
+ * the normalizer) plus the terminal `result` line carrying top-level usage + total_cost_usd. */
+const CLAUDE_JSONL = [
+  JSON.stringify({
+    message: { id: 'msg_1', usage: { input_tokens: 100, output_tokens: 50 } },
+    type: 'assistant',
+  }),
+  JSON.stringify({
+    is_error: false,
+    modelUsage: { 'claude-opus-4': { costUSD: 0.0123 } },
+    result: 'done',
+    subtype: 'success',
+    total_cost_usd: 0.0123,
+    type: 'result',
+    usage: {
+      cache_creation_input_tokens: 10,
+      cache_read_input_tokens: 20,
+      input_tokens: 100,
+      output_tokens: 50,
+    },
+  }),
+].join('\n');
 
 const makeJob = (
   data: Partial<ScheduledAgentJobBullJob['data']> = {},
@@ -106,6 +144,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       errorMessage: null,
       exitCode: 0,
       status: 'succeeded',
+      ...NULL_USAGE_COLUMNS,
     });
     expect(jobRepoUpdate).toHaveBeenCalledWith(
       { id: 'sched-1' },
@@ -123,9 +162,11 @@ describe('ScheduledAgentJobsProcessor', () => {
 
     expect(jobsService.findRunById).toHaveBeenCalledWith('run-now-9');
     expect(jobsService.createRun).not.toHaveBeenCalled();
+    // Run-now backfills the settings snapshot as the pre-created row starts.
     expect(jobsService.markRunStarted).toHaveBeenCalledWith(
       'run-now-9',
       'bull-1',
+      { driverId: 'claude', model: null, settings: null },
     );
   });
 
@@ -140,6 +181,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       errorMessage: 'Agent exited with code 2',
       exitCode: 2,
       status: 'failed',
+      ...NULL_USAGE_COLUMNS,
     });
   });
 
@@ -152,6 +194,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       errorMessage: 'Run timed out',
       exitCode: null,
       status: 'failed',
+      ...NULL_USAGE_COLUMNS,
     });
 
     vi.mocked(runner.run).mockResolvedValueOnce(
@@ -162,6 +205,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       errorMessage: 'Run cancelled',
       exitCode: null,
       status: 'cancelled',
+      ...NULL_USAGE_COLUMNS,
     });
   });
 
@@ -217,5 +261,93 @@ describe('ScheduledAgentJobsProcessor', () => {
     await processor.onJobStalled('bull-1');
 
     expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+  });
+
+  it('captures the settings snapshot from job.data on the created run row', async () => {
+    await processor.process(
+      makeJob({
+        driverId: 'codex',
+        model: 'gpt-5',
+        settings: { worktree: { worktree: 'wt-1' } },
+      }),
+    );
+
+    expect(jobsService.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settingsSnapshot: {
+          driverId: 'codex',
+          model: 'gpt-5',
+          settings: { worktree: { worktree: 'wt-1' } },
+        },
+      }),
+    );
+  });
+
+  it('parses token usage + cost from the run output and persists it on finish', async () => {
+    vi.mocked(runner.run).mockResolvedValue(
+      result({ output: CLAUDE_JSONL, status: RUN_AGENT_STATUS.ok }),
+    );
+
+    await processor.process(makeJob());
+
+    expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+      cacheReadTokens: 20,
+      cacheWriteTokens: 10,
+      costUsd: 0.0123,
+      errorMessage: null,
+      exitCode: 0,
+      inputTokens: 100,
+      outputTokens: 50,
+      rawUsage: expect.objectContaining({
+        costUsd: 0.0123,
+        inputTokens: 100,
+        outputTokens: 50,
+        totalTokens: 150,
+      }),
+      reasoningTokens: null,
+      status: 'succeeded',
+      totalTokens: 150,
+    });
+  });
+});
+
+describe('foldRunUsage', () => {
+  it('folds token counts + cost out of a claude stream-json run (nested assistant usage ignored)', () => {
+    const folded = foldRunUsage(CLAUDE_JSONL);
+
+    expect(folded).toEqual({
+      cacheReadTokens: 20,
+      cacheWriteTokens: 10,
+      costUsd: 0.0123,
+      inputTokens: 100,
+      model: 'claude-opus-4',
+      outputTokens: 50,
+      totalTokens: 150,
+    });
+  });
+
+  it('sums an opencode-style multi-line mid-stream usage stream', () => {
+    const opencode = [
+      JSON.stringify({ cost: 0.01, tokens: { input: 10, output: 5 } }),
+      JSON.stringify({ cost: 0.02, tokens: { input: 20, output: 7 } }),
+    ].join('\n');
+
+    expect(foldRunUsage(opencode)).toEqual(
+      expect.objectContaining({
+        costUsd: expect.closeTo(0.03, 5),
+        inputTokens: 30,
+        outputTokens: 12,
+      }),
+    );
+  });
+
+  it('returns null for empty, non-JSON, or usage-free output (never throws)', () => {
+    expect(foldRunUsage('')).toBeNull();
+    expect(
+      foldRunUsage('not json at all\n<promise>ERROR</promise>'),
+    ).toBeNull();
+    expect(
+      foldRunUsage(JSON.stringify({ result: 'hi', type: 'result' })),
+    ).toBeNull();
   });
 });

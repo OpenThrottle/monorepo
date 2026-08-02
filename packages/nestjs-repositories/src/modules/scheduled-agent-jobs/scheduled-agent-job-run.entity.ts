@@ -23,23 +23,52 @@ export type ScheduledAgentJobRunStatus =
 /** schedule = cron fire; manual = run-now. */
 export type ScheduledAgentJobRunTrigger = 'manual' | 'schedule';
 
+/**
+ * Effective run settings captured on the run row at execution time, so later edits
+ * to the parent schedule don't rewrite this run's history. A denormalized snapshot
+ * of the driver/model/reasoning-tier/permission-mode/run-config in force at fire time.
+ */
+export interface ScheduledAgentJobRunSettingsSnapshot {
+  readonly [key: string]: unknown;
+}
+
 /** Scalar/column fields of ScheduledAgentJobRun surfaced to the API. */
 export type ScheduledAgentJobRunData = Pick<
   ScheduledAgentJobRun,
   | 'bullmqJobId'
+  | 'cacheReadTokens'
+  | 'cacheWriteTokens'
   | 'cancelRequestedAt'
+  | 'costUsd'
   | 'createdAt'
   | 'driverId'
   | 'errorMessage'
   | 'exitCode'
   | 'finishedAt'
   | 'id'
+  | 'inputTokens'
   | 'model'
+  | 'outputTokens'
+  | 'rawUsage'
+  | 'reasoningTokens'
   | 'scheduledAgentJobId'
+  | 'settingsSnapshot'
   | 'startedAt'
   | 'status'
+  | 'totalTokens'
   | 'trigger'
 >;
+
+/**
+ * Postgres returns bigint/numeric as strings (to avoid precision loss). Token counts
+ * and costs here fit comfortably in JS numbers, so read them back as `number | null`.
+ * Mirrors agent_token_usage's transformer (migration 083 / OT plan a55b76ba).
+ */
+const nullableNumberColumn = {
+  from: (value: string | null): number | null =>
+    value == null ? null : Number(value),
+  to: (value: number | null): number | null => value,
+};
 
 @Entity('scheduled_agent_job_runs')
 export class ScheduledAgentJobRun {
@@ -83,6 +112,77 @@ export class ScheduledAgentJobRun {
   /** Model snapshot at run time; null used the driver default. */
   @Column({ name: 'model', nullable: true, type: 'text' })
   model!: string | null;
+
+  /** Effective run settings snapshot at execution time; null for legacy/pre-snapshot runs. */
+  @Column({ name: 'settings_snapshot', nullable: true, type: 'jsonb' })
+  settingsSnapshot!: ScheduledAgentJobRunSettingsSnapshot | null;
+
+  /** Prompt/input tokens parsed from the CLI output; null when unreported. */
+  @Column({
+    name: 'input_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  inputTokens!: number | null;
+
+  /** Completion/output tokens parsed from the CLI output; null when unreported. */
+  @Column({
+    name: 'output_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  outputTokens!: number | null;
+
+  /** Prompt-cache read tokens; null when unreported. */
+  @Column({
+    name: 'cache_read_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  cacheReadTokens!: number | null;
+
+  /** Prompt-cache write tokens; null when unreported. */
+  @Column({
+    name: 'cache_write_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  cacheWriteTokens!: number | null;
+
+  /** Reasoning/thinking tokens accounted separately; null when unreported. */
+  @Column({
+    name: 'reasoning_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  reasoningTokens!: number | null;
+
+  /** Total tokens (backend explicit total else input+output); null when nothing reported. */
+  @Column({
+    name: 'total_tokens',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'bigint',
+  })
+  totalTokens!: number | null;
+
+  /** Estimated dollar cost of the run when the backend prices it; null when unpriced. */
+  @Column({
+    name: 'cost_usd',
+    nullable: true,
+    transformer: nullableNumberColumn,
+    type: 'numeric',
+  })
+  costUsd!: number | null;
+
+  /** Un-normalized usage payload retained for audit/debug; null when no usage parsed. */
+  @Column({ name: 'raw_usage', nullable: true, type: 'jsonb' })
+  rawUsage!: Record<string, unknown> | null;
 
   @Column({ name: 'scheduled_agent_job_id', type: 'uuid' })
   scheduledAgentJobId!: string;
