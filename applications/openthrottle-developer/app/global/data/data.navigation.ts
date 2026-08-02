@@ -29,7 +29,6 @@ import {
   SwatchBookIcon,
   TerminalSquareIcon,
   ToggleRightIcon,
-  UserCircleIcon,
   WandSparklesIcon,
 } from 'lucide-react';
 
@@ -58,6 +57,13 @@ const linksLegal = [
 export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
   {
     Agents: [
+      {
+        beta: true,
+        children: 'Calendar',
+        disabled: true, // 🔴
+        icon: CalendarDaysIcon,
+        to: '/calendar',
+      },
       {
         children: 'Chats',
         disabled: false, // 🔴 🟠 🟡
@@ -106,6 +112,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/prompts',
       },
       {
+        beta: true,
+        children: 'Pull Requests',
+        disabled: true, // 🔴 🟠
+        icon: GitPullRequest,
+        to: '/pull-requests',
+      },
+      {
         children: 'Queues',
         disabled: false, // 🔴 🟠 🟡
         icon: ListOrderedIcon,
@@ -130,20 +143,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴
         icon: BrainCircuitIcon,
         to: '/skills',
-      },
-      {
-        beta: true,
-        children: 'Pull Requests',
-        disabled: true, // 🔴 🟠
-        icon: GitPullRequest,
-        to: '/pull-requests',
-      },
-      {
-        beta: true,
-        children: 'Schedule',
-        disabled: true, // 🔴
-        icon: CalendarDaysIcon,
-        to: '/schedule',
       },
       {
         beta: true,
@@ -218,13 +217,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: true, // 🔴 🟠 🟡 🟢
         icon: BellIcon,
         to: '/notifications',
-      },
-      {
-        beta: true,
-        children: 'Profile',
-        disabled: true, // 🔴 🟠 🟡 🟢
-        icon: UserCircleIcon,
-        to: '/profile',
       },
       {
         children: 'Usage',

@@ -15,8 +15,8 @@ describe('SettingsStorage Component', () => {
     renderRoutesStub(<SettingsStorage />);
 
     expect(screen.getByText('Storage: local & session')).toBeInTheDocument();
-    expect(screen.getByText('local storage')).toBeInTheDocument();
-    expect(screen.getByText('session storage')).toBeInTheDocument();
+    expect(screen.getByText('Local storage')).toBeInTheDocument();
+    expect(screen.getByText('Session storage')).toBeInTheDocument();
     expect(screen.getAllByText('No keys.')).toHaveLength(2);
   });
 

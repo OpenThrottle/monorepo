@@ -55,11 +55,11 @@ export const SettingsStorage = (
 
       <div className="space-y-4 text-sm">
         <div>
-          <p className="text-foreground mb-2 font-medium">local storage</p>
+          <p className="text-foreground mb-2 font-medium">Local storage</p>
           {localEntries.length === 0 ? (
             <p className="text-muted-foreground">No keys.</p>
           ) : (
-            <div className="max-h-48 overflow-auto rounded-md border">
+            <div className="overflow-auto rounded-md border">
               <table className="w-full text-left text-xs">
                 <thead className="bg-muted/80 sticky top-0">
                   <tr>
@@ -82,11 +82,11 @@ export const SettingsStorage = (
           )}
         </div>
         <div>
-          <p className="text-foreground mb-2 font-medium">session storage</p>
+          <p className="text-foreground mb-2 font-medium">Session storage</p>
           {sessionEntries.length === 0 ? (
             <p className="text-muted-foreground">No keys.</p>
           ) : (
-            <div className="max-h-48 overflow-auto rounded-md border">
+            <div className="overflow-auto rounded-md border">
               <table className="w-full text-left text-xs">
                 <thead className="bg-muted/80 sticky top-0">
                   <tr>

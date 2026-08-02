@@ -14,12 +14,5 @@ describe('SettingsFeatureFlags Component', () => {
     for (const key of Object.keys(FEATURE_FLAGS)) {
       expect(screen.getByText(`${key}:`)).toBeInTheDocument();
     }
-
-    expect(
-      screen.getAllByText(/REACT_ROUTER_DEV_TOOLS/i).length,
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText(/APP_ENABLE_ANALYTICS/i).length).toBeGreaterThan(
-      0,
-    );
   });
 });

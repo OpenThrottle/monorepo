@@ -72,8 +72,7 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
  */
 export const ROLLOUT_COPY = {
   createButton: 'New flag',
-  createDescription:
-    'Feature flags gate functionality by RBAC role. A flag is on when enabled and either untargeted (everyone) or the actor holds a targeted role.',
+  createDescription: `Feature flags gate functionality by RBAC role. A flag is on when enabled and either untargeted (everyone) or the actor holds a targeted role.`,
   createTitle: 'Create a feature flag',
   deleteButton: 'Delete',
   deleteConfirm: 'Delete this feature flag? This cannot be undone.',

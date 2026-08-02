@@ -34,10 +34,10 @@ const parseEnvBoolean = (
  */
 export const FEATURE_BETA_PREVIEW = parseEnvBoolean(
   ENV_SOURCE.FEATURE_BETA_PREVIEW,
-  true,
+  false,
 );
 
 export const FEATURE_CHARLIE_PREVIEW = parseEnvBoolean(
   ENV_SOURCE.FEATURE_CHARLIE_PREVIEW,
-  true,
+  false,
 );
