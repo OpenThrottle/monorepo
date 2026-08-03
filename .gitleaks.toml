@@ -1,0 +1,62 @@
+# gitleaks configuration — OpenThrottle secret-scanning gate.
+#
+# Consumed by .github/workflows/secret-scan.yml and by local runs
+# (`gitleaks git . --config .gitleaks.toml`). Extends the upstream default
+# ruleset and layers on an allowlist for KNOWN false positives only —
+# test fixtures, obvious placeholders, and generated noise. Real secrets are
+# NEVER allowlisted here; they are remediated (revoked + scrubbed) and, where
+# they remain in historical commits, acknowledged by fingerprint in the
+# committed .gitleaksignore.
+#
+# See OT plan dc915a1a (pre-public infra/leak audit & hardening).
+
+title = "OpenThrottle gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known false positives: test fixtures, placeholders, generated dumps."
+
+# Match against the detected secret value, not the whole line.
+regexTarget = "match"
+
+regexes = [
+  # --- Deliberate fake credentials in unit-test fixtures ---
+  # packages/nestjs-repositories + openthrottle-server mcp-connector / stripe tests.
+  '''sk_live_0123456789abcdef''',
+  '''sk_live_9999888877776666''',
+  # queue-job-log redaction test asserts a secret gets redacted from curl output.
+  '''sk-LIVE-secret-123''',
+  # service-accounts test signature fixture.
+  '''validSignature[A-Za-z0-9]*''',
+  # Documented placeholder token style (ot_sa_xxxxxx…) in docs/seed.
+  '''ot_sa_x{4,}''',
+  # `LANGSMITH_TRACING="false"` boolean flag in the tracked .env.default template
+  # — a config toggle, not a credential.
+  '''LANGSMITH_TRACING[^\n]*''',
+  # ASR model identifier in a skill reference doc — a model name, not a key.
+  '''whisper-large-v3''',
+]
+
+# Paths whose secret-shaped strings are fixtures/samples or non-restorable
+# generated output. Scanning these adds noise without protecting anything a
+# reviewer would act on; real config/source files are still fully scanned.
+paths = [
+  # Local, gitignored environment files hold real per-developer secrets by
+  # design and are never committed (so CI's `gitleaks git` never sees them);
+  # this only quiets the working-tree `gitleaks dir` scan. Tracked templates
+  # (.env.default / .env.example) are intentionally NOT excluded.
+  '''(^|/)\.env$''',
+  '''(^|/)\.env\.local$''',
+  # Vitest fixtures embed fake tokens/JWTs by design.
+  '''.*\.test\.ts$''',
+  # Seed dumps are generated from ingested docs; secrets there are scrubbed at
+  # the source doc (see .gitleaksignore for revoked historical values).
+  '''(^|/)seed\.sql$''',
+  # Sample JWT rendered in the metrics demo component.
+  '''app/global/components/GlobalMetrics\.tsx$''',
+  # gitleaks' own config / ignore files.
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)\.gitleaksignore$''',
+]

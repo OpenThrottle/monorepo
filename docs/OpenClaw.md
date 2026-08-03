@@ -96,9 +96,9 @@ Gateway running with host port mapping.
 Access from tailnet devices via the host's tailnet IP.
 Config: /Users/matt/.openclaw
 Workspace: /Users/matt/.openclaw/workspace
-Token: "694b866f8e4f1a02240b4d6a002515ba644f026aa51831221b20f92a0e73e06a"
+Token: "<OPENCLAW_GATEWAY_TOKEN>"
 
 Commands:
   docker compose -f /Users/matt/Development/openthrottle/services/openclaw/docker-compose.yml logs -f openclaw-gateway
-  docker compose -f /Users/matt/Development/openthrottle/services/openclaw/docker-compose.yml exec openclaw-gateway node dist/index.js health --token ""694b866f8e4f1a02240b4d6a002515ba644f026aa51831221b20f92a0e73e06a""
+  docker compose -f /Users/matt/Development/openthrottle/services/openclaw/docker-compose.yml exec openclaw-gateway node dist/index.js health --token ""<OPENCLAW_GATEWAY_TOKEN>""
 ```
