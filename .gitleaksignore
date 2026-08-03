@@ -1,0 +1,45 @@
+# .gitleaksignore — fingerprints of KNOWN, REMEDIATED secrets in git history.
+#
+# Every entry below is a credential that was committed, discovered by the
+# pre-public audit (OT plan dc915a1a), REVOKED/rotated by the owner, and scrubbed
+# from the current tree. The values remain only in historical commits (we chose
+# not to rewrite history — the public mirror never contained them and rotation
+# neutralized them). These fingerprints keep the full-history gitleaks gate green
+# on this known state while still failing on any NEW secret.
+#
+# Format: <commit>:<file>:<rule>:<startline>. Do NOT add live secrets here.
+
+# GitHub PAT ghp_… (opencode.json) — REVOKED
+e6f886dbee0bfa291a9fcb5ad5af902095e35f4a:opencode.json:github-pat:6
+f80c125842078e1395283e922c84ccd19fe14d90:opencode.json:github-pat:6
+
+# OpenThrottle SA token ot_sa_… (opencode.json) — REVOKED
+e6f886dbee0bfa291a9fcb5ad5af902095e35f4a:opencode.json:generic-api-key:26
+f80c125842078e1395283e922c84ccd19fe14d90:opencode.json:generic-api-key:26
+
+# OpenThrottle SA token ot_sa_… (.mcp.json) — REVOKED
+a2e3bfab437c5e737b11827c8da3575e547ed075:.mcp.json:generic-api-key:27
+
+# Anthropic API key (.mcp.json) — REVOKED
+a2e3bfab437c5e737b11827c8da3575e547ed075:.mcp.json:anthropic-api-key:24
+
+# OpenThrottle SA token ot_sa_… (WIP_Onboarding.md, deleted planning doc) — REVOKED
+678fa0c43946645ac8aa80de66fbd04fb4269372:WIP_Onboarding.md:generic-api-key:20
+678fa0c43946645ac8aa80de66fbd04fb4269372:WIP_Onboarding.md:generic-api-key:27
+
+# OpenThrottle SA token ot_sa_… (WIP___Planning.md, deleted planning doc) — REVOKED
+73f3cfe1c7d279f73e9b59bb6a654799371b99c1:WIP___Planning.md:generic-api-key:13
+
+# OpenThrottle SA token ot_sa_… (NEW_Planning.md, deleted planning doc) — REVOKED
+fbea77ece681dd4f9200cb339a1766ff114b8803:NEW_Planning.md:generic-api-key:13
+
+# OpenThrottle SA token ot_sa_… (TEMP.md, deleted planning doc) — REVOKED
+4e8e2d0adf7774131519502de0c0689bf64a3d76:TEMP.md:generic-api-key:5
+
+# OpenClaw gateway token (docs/OpenClaw.md) — REVOKED
+0ef4229aa7f857502f73706c32ccf464b90b3747:docs/OpenClaw.md:generic-api-key:99
+
+# Cloudflare api_key/api_token/origin-CA (infra cloudflare, deleted file) — REVOKED
+8e4af83e4d86c388c87373b3f55bfbb7477bbd4f:infra/modules/cloudflare/main.tf:cloudflare-origin-ca-key:9
+8e4af83e4d86c388c87373b3f55bfbb7477bbd4f:infra/modules/cloudflare/main.tf:generic-api-key:3
+8e4af83e4d86c388c87373b3f55bfbb7477bbd4f:infra/modules/cloudflare/main.tf:generic-api-key:6
