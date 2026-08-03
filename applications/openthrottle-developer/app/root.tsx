@@ -448,7 +448,8 @@ export default function App(): React.ReactElement {
   const isLegalRoute = pathname.startsWith('/legal');
   const isPromptsRoute = pathname.startsWith('/prompts/');
   const isProfileRoute = pathname.startsWith('/profile');
-  const isScheduleRoute = pathname.startsWith('/schedule');
+  const isCalendarRoute = pathname.startsWith('/calendar');
+  const isScheduledJobsRoute = pathname.startsWith('/scheduled-jobs');
   const isSettingsRoute = pathname.startsWith('/settings');
   const isCreateRoute = pathname.endsWith('/create');
 
@@ -460,7 +461,8 @@ export default function App(): React.ReactElement {
     isLegalRoute ||
     isProfileRoute ||
     isPromptsRoute ||
-    isScheduleRoute ||
+    isCalendarRoute ||
+    isScheduledJobsRoute ||
     isSettingsRoute ||
     isCreateRoute;
 
