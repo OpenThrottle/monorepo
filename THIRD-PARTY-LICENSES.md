@@ -13,7 +13,7 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2810** third-party packages.
+**2811** third-party packages.
 
 ## License summary
 
@@ -21,7 +21,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | --- | --- |
 | MIT | 2334 |
 | Apache-2.0 | 163 |
-| ISC | 95 |
+| ISC | 96 |
 | MIT-0 | 65 |
 | BSD-3-Clause | 61 |
 | BSD-2-Clause | 34 |
@@ -829,6 +829,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@sentry/node` | 10.56.0, 9.47.1 | MIT | [Sentry](https://github.com/getsentry/sentry-javascript/tree/master/packages/node) |
 | `@sentry/node-core` | 10.56.0, 9.47.1 | MIT | [Sentry](https://github.com/getsentry/sentry-javascript/tree/master/packages/node-core) |
 | `@sentry/opentelemetry` | 10.56.0, 9.47.1 | MIT | [Sentry](https://github.com/getsentry/sentry-javascript/tree/master/packages/opentelemetry) |
+| `@shaderfrog/glsl-parser` | 7.0.1 | ISC | [Andrew Ray](https://github.com/ShaderFrog/glsl-parser#readme) |
 | `@simple-libs/child-process-utils` | 1.0.2 | MIT | [Dan Onoshko](https://github.com/TrigenSoftware/simple-libs/tree/main/packages/child-process-utils#readme) |
 | `@simple-libs/stream-utils` | 1.2.0 | MIT | [Dan Onoshko](https://github.com/TrigenSoftware/simple-libs/tree/main/packages/stream-utils#readme) |
 | `@sinclair/typebox` | 0.34.49 | MIT | [sinclairzx81](https://github.com/sinclairzx81/sinclair-typebox#readme) |
@@ -1423,7 +1424,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 1.1.2, 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
-| `deslop-js` | 0.9.1 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `deslop-js` | 0.9.2 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
@@ -2146,7 +2147,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `oxc-parser` | 0.141.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
 | `oxlint` | 1.74.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
-| `oxlint-plugin-react-doctor` | 0.9.1 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `oxlint-plugin-react-doctor` | 0.9.2 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `p-cancelable` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
@@ -2351,7 +2352,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-diff-viewer-continued` | 3.4.0 | MIT | [source](https://github.com/aeolun/react-diff-viewer-continued#readme) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-doctor` | 0.9.1 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
+| `react-doctor` | 0.9.2 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
 | `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
