@@ -4,8 +4,8 @@
 - [Terraform on GCP](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started)
 
 ```bash
-monorepo-production
-monorepo-staging
+openthrottle-production
+openthrottle-staging
 ```
 
 ```bash
