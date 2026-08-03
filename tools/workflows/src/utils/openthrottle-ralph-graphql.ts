@@ -319,6 +319,7 @@ export async function registerCliPlanRunGraphql(
   const result = unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(RegisterCliPlanRunDocument, {
       input: {
+        branch: input.branch ?? null,
         executionBackend: input.executionBackend,
         hostname: input.location.hostname,
         pid: input.location.pid,

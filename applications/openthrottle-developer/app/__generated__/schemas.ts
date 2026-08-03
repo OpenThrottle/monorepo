@@ -1064,6 +1064,7 @@ export function RegisterCliPlanRunInputSchema(): z.ZodObject<
   Properties<RegisterCliPlanRunInput>
 > {
   return z.object({
+    branch: z.string().nullish(),
     executionBackend: z.string(),
     hostname: z.string().nullish(),
     pid: z.number().nullish(),

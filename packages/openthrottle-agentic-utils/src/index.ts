@@ -8,6 +8,7 @@ export * from './utils/chat-completions/index.ts';
 export * from './utils/conversation-backend/index.ts';
 export * from './utils/configuration.ts';
 export * from './utils/foreign-workspace-context.ts';
+export * from './utils/git.ts';
 export * from './utils/model-discovery/index.ts';
 export * from './utils/postgres.ts';
 export * from './utils/metrics.ts';

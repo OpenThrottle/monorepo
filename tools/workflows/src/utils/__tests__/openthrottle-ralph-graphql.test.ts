@@ -221,11 +221,74 @@ describe('openthrottle-ralph-graphql', () => {
     expect(document).toBe(RegisterCliPlanRunDocument);
     expect(vars).toEqual({
       input: {
+        branch: null,
         executionBackend: 'claude',
         hostname: 'laptop-1',
         pid: 4242,
         planId: 'plan-1',
         workerId: 'cli-abc',
+      },
+    });
+  });
+
+  it('registerCliPlanRunGraphql sends branch when provided', async () => {
+    executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
+      if (document === RegisterCliPlanRunDocument) {
+        return ok({ registerCliPlanRun: { id: 'cli-run-branch' } });
+      }
+      return ok({});
+    });
+
+    const { registerCliPlanRunGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await registerCliPlanRunGraphql({
+      branch: 'capture-branch-name',
+      executionBackend: 'cursor',
+      location: { hostname: 'laptop-1', pid: 4242, workerId: 'cli-abc' },
+      planId: 'plan-1',
+    });
+
+    const [, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(vars).toEqual({
+      input: {
+        branch: 'capture-branch-name',
+        executionBackend: 'cursor',
+        hostname: 'laptop-1',
+        pid: 4242,
+        planId: 'plan-1',
+        workerId: 'cli-abc',
+      },
+    });
+  });
+
+  it('registerCliPlanRunGraphql sends null when branch is explicitly null', async () => {
+    executeWorkflowGraphqlV2Mock.mockImplementation(async (document) => {
+      if (document === RegisterCliPlanRunDocument) {
+        return ok({ registerCliPlanRun: { id: 'cli-run-null-branch' } });
+      }
+      return ok({});
+    });
+
+    const { registerCliPlanRunGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await registerCliPlanRunGraphql({
+      branch: null,
+      executionBackend: 'claude',
+      location: { hostname: null, pid: null, workerId: null },
+      planId: 'plan-1',
+    });
+
+    const [, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(vars).toEqual({
+      input: {
+        branch: null,
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
       },
     });
   });
