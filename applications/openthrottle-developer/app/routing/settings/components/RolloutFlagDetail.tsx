@@ -11,7 +11,11 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { formatRolloutTimestamp } from '~/routing/settings/utils/rollout-flag-format';
+import {
+  formatRolloutAllocationSummary,
+  formatRolloutOffVariationLabel,
+  formatRolloutTimestamp,
+} from '~/routing/settings/utils/rollout-flag-format';
 
 export interface RolloutFlagDetailProps {
   editTo: string;
@@ -19,7 +23,7 @@ export interface RolloutFlagDetailProps {
 }
 
 /**
- * @description Read-only detail card for a single rollout feature flag.
+ * @description Read-only detail card for a single typed rollout feature flag.
  */
 export const RolloutFlagDetail = (
   props: RolloutFlagDetailProps,
@@ -56,11 +60,36 @@ export const RolloutFlagDetail = (
       <CardContent className="space-y-4">
         <div className="space-y-1">
           <p className="text-muted-foreground text-xs">
+            {ROLLOUT_COPY.kindLabel}
+          </p>
+          <Badge variant="outline">{flag.kind}</Badge>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs">
             {ROLLOUT_COPY.enabledLabel}
           </p>
           <Badge variant={flag.enabled ? 'default' : 'secondary'}>
             {flag.enabled ? 'Enabled' : 'Disabled'}
           </Badge>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs">
+            {ROLLOUT_COPY.offVariationLabel}
+          </p>
+          <p className="font-mono text-sm">
+            {formatRolloutOffVariationLabel(flag)}
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs">
+            {ROLLOUT_COPY.fallthroughLabel}
+          </p>
+          <p className="font-mono text-sm">
+            {formatRolloutAllocationSummary(flag)}
+          </p>
         </div>
 
         <div className="space-y-1">

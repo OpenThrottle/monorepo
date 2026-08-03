@@ -20,6 +20,10 @@ import {
   parseRolloutEnabled,
   parseRolloutTargetRoles,
 } from '~/routing/settings/utils/rollout-action';
+import {
+  parseRolloutTypedConfig,
+  toRolloutGraphqlTypedInput,
+} from '~/routing/settings/utils/rollout-typed-config';
 import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -86,6 +90,11 @@ export const action = async (args: Route.ActionArgs) => {
       return { error: 'A flag key is required.' };
     }
 
+    const typed = parseRolloutTypedConfig(formData);
+    if (!typed.ok) {
+      return { error: typed.error };
+    }
+
     try {
       await executeGraphqlWithAuth(args.request, UpdateRolloutFlagDocument, {
         input: {
@@ -94,6 +103,7 @@ export const action = async (args: Route.ActionArgs) => {
           id: args.params.flagId,
           key,
           targetRoles: parseRolloutTargetRoles(formData.get('targetRoles')),
+          ...toRolloutGraphqlTypedInput(typed.config),
         },
       });
       return redirect(detailPath(args.params.flagId));

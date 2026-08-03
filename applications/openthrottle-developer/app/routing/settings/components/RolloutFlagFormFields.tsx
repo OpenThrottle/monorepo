@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Input, Label } from '@openthrottle/react-router-shadcn';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagTypedFields } from '~/routing/settings/components/RolloutFlagTypedFields';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { formatRolloutTargetRoles } from '~/routing/settings/utils/rollout-action';
 
@@ -93,6 +94,8 @@ export const RolloutFlagFormFields = (
           </p>
         </div>
       </div>
+
+      <RolloutFlagTypedFields flag={flag} idPrefix={idPrefix} />
     </div>
   );
 };

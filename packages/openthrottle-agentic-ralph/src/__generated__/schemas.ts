@@ -103,6 +103,11 @@ import {
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
+  RolloutEvaluationReason,
+  RolloutFallthroughBucketInput,
+  RolloutFallthroughInput,
+  RolloutFlagKind,
+  RolloutFlagVariationInput,
   SearchInput,
   SearchPlansInput,
   SetMcpConnectorEnabledInput,
@@ -163,6 +168,12 @@ export const PressureLevelSchema = z.nativeEnum(PressureLevel);
 export const QueueJobLogLevelSchema = z.nativeEnum(QueueJobLogLevel);
 
 export const RalphNestedDebugCliSchema = z.nativeEnum(RalphNestedDebugCli);
+
+export const RolloutEvaluationReasonSchema = z.nativeEnum(
+  RolloutEvaluationReason,
+);
+
+export const RolloutFlagKindSchema = z.nativeEnum(RolloutFlagKind);
 
 export const WallClockInterpretationSchema = z.nativeEnum(
   WallClockInterpretation,
@@ -493,8 +504,14 @@ export function CreateRolloutFlagInputSchema(): z.ZodObject<
   return z.object({
     description: z.string().nullish(),
     enabled: z.boolean().default(false),
+    fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
     key: z.string(),
+    kind: RolloutFlagKindSchema.nullish(),
+    offVariation: z.number().nullish(),
     targetRoles: z.array(z.string()),
+    variations: z
+      .array(z.lazy(() => RolloutFlagVariationInputSchema()))
+      .nullish(),
   });
 }
 
@@ -1189,6 +1206,33 @@ export function ReviewCycleTimeInputSchema(): z.ZodObject<
   });
 }
 
+export function RolloutFallthroughBucketInputSchema(): z.ZodObject<
+  Properties<RolloutFallthroughBucketInput>
+> {
+  return z.object({
+    variation: z.number(),
+    weight: z.number(),
+  });
+}
+
+export function RolloutFallthroughInputSchema(): z.ZodObject<
+  Properties<RolloutFallthroughInput>
+> {
+  return z.object({
+    variations: z.array(z.lazy(() => RolloutFallthroughBucketInputSchema())),
+  });
+}
+
+export function RolloutFlagVariationInputSchema(): z.ZodObject<
+  Properties<RolloutFlagVariationInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().nullish(),
+    valueJson: z.string(),
+  });
+}
+
 export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
@@ -1425,9 +1469,15 @@ export function UpdateRolloutFlagInputSchema(): z.ZodObject<
   return z.object({
     description: z.string().nullish(),
     enabled: z.boolean().nullish(),
+    fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
     id: z.string(),
     key: z.string().nullish(),
+    kind: RolloutFlagKindSchema.nullish(),
+    offVariation: z.number().nullish(),
     targetRoles: z.array(z.string()).nullish(),
+    variations: z
+      .array(z.lazy(() => RolloutFlagVariationInputSchema()))
+      .nullish(),
   });
 }
 

@@ -2,10 +2,23 @@ fragment RolloutFlagFields on RolloutFlagObject {
   createdAt
   description
   enabled
+  fallthrough {
+    variations {
+      variation
+      weight
+    }
+  }
   id
   key
+  kind
+  offVariation
   targetRoles
   updatedAt
+  variations {
+    description
+    name
+    valueJson
+  }
 }
 
 query listRolloutFlags {
