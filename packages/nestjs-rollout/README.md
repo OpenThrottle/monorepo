@@ -2,28 +2,66 @@
 
 **Rollout** is OpenThrottle's feature-flagging system. This package owns the rollout
 domain: the TypeORM entity, the NestJS module, and `RolloutService` (CRUD plus
-RBAC-aware, role-targeted evaluation).
+RBAC-aware typed evaluation with percentage fallthrough).
 
 > Terminology: **rollout** = feature flags (this package). **clutch** = the Agentic
 > Chat & harness (a separate, unrelated system — named only to avoid collisions).
 
 ## Flag model
 
-A flag is a `key` (unique, kebab/dotted string), a `description`, an `enabled`
-boolean, and `targetRoles` (RBAC role names).
+A flag has:
 
-Evaluation is locked:
+- `key` — unique kebab/dotted string
+- `description`, master `enabled` switch
+- `targetRoles` — RBAC role names (empty ⇒ everyone eligible; else actor must hold ≥1)
+- `kind` — `boolean` | `string` | `number` | `json`
+- `variations` — ordered array of `{ name?, description?, value }` (≥2; value matches kind)
+- `offVariation` — index returned when disabled or role gate fails
+- `fallthrough` — `{ variations: [{ variation, weight }, ...] }` with integer weights
+  0–100 that **must sum to 100** (validated on write)
 
-> A flag is **on** for an actor when `enabled === true` **and** (`targetRoles` is
-> empty ⇒ everyone, else the actor holds ≥1 of `targetRoles`).
+Boolean flags default to LaunchDarkly-like variations `[{value:false},{value:true}]`,
+`offVariation=0`, and 100% fallthrough on variation 1 (`true`).
 
-Role targeting resolves the actor's roles via `RolesService`
-(`@openthrottle/nestjs-repositories`), branching on `principal.kind` (user vs
-service account) exactly like the app's `GqlPermissionsGuard`.
+## Evaluation
+
+```text
+disabled            → offVariation   (reason: off)
+role gate miss      → offVariation   (reason: target_roles)
+eligible            → fallthrough    (reason: fallthrough)
+missing key         → false stand-in (reason: flag_not_found)
+```
+
+`evaluate(key, principal)` / `evaluateAll(principal)` return:
+
+```ts
+{
+  key: string;
+  kind: 'boolean' | 'string' | 'number' | 'json';
+  value: /* typed variation value */ ;
+  variationIndex: number;
+  reason: 'off' | 'target_roles' | 'fallthrough' | 'flag_not_found';
+}
+```
+
+### Non-sticky percentage bucketing
+
+Fallthrough picks a variation by mapping the actor id into a 0–99 bucket:
+
+1. Strip dashes from the principal UUID
+2. Parse the last 8 hex digits as an integer
+3. `bucket = idInt % 100`
+4. Walk cumulative weight ranges `[0, w1)`, `[w1, w1+w2)`, …
+
+This is a **stand-in for sticky hashing / assignment persistence** and will be
+replaced later. A 50/50 even/odd split is just weights `[50, 50]` on the same math.
+
+### `isEnabled`
+
+For **boolean** flags, `isEnabled` returns the **resolved variation boolean**
+(not merely “enabled ∧ roles”). Non-boolean flags return `false`.
 
 ## Consuming `RolloutService`
-
-Server-side code checks a single flag:
 
 ```ts
 import { RolloutService } from '@openthrottle/nestjs-rollout';
@@ -35,17 +73,16 @@ class BillingService {
 
   async run(principal: AuthPrincipal): Promise<void> {
     if (await this.rollout.isEnabled('billing.invoices', principal)) {
-      // gated behaviour
+      // boolean convenience
     }
+    const evaluation = await this.rollout.evaluate('theme', principal);
+    // evaluation.value is the typed variation
   }
 }
 ```
 
-`evaluateAll(principal)` returns every flag with its evaluated boolean — it backs
-the `myFeatureFlags` GraphQL query.
-
-To use the service, import `RolloutFlagsModule` (it registers the repository and
-imports `NestjsRepositoriesModule` for `RolesService`):
+Import `RolloutFlagsModule` (registers the repository and imports
+`NestjsRepositoriesModule` for `RolesService`):
 
 ```ts
 import { RolloutFlagsModule } from '@openthrottle/nestjs-rollout';
@@ -56,21 +93,18 @@ export class SomeModule {}
 
 ## RBAC integration
 
-The admin surface is gated by the `flags:read` / `flags:write` permissions defined
-in `@openthrottle/nestjs-rbac` (seeded into the DB by migration `085`). Reads and
-the actor-scoped `myFeatureFlags` require `flags:read`; create/update/delete require
-`flags:write`. admin holds both; user and viewer are read-only.
+Admin surface permissions `flags:read` / `flags:write` live in
+`@openthrottle/nestjs-rbac` (seeded by migration `085`). Reads and
+`myFeatureFlags` require `flags:read`; create/update/delete require `flags:write`.
 
 ## Architecture boundary
 
 The **package owns the domain** (entity, module, service). The **GraphQL resolver
 lives in the app** (`applications/openthrottle-server/src/graphql/rollout/`) because
-it depends on the app-local `GqlPermissionsGuard` — the app depends on packages, not
-the reverse. This mirrors how `RolesService` (in `nestjs-repositories`) pairs with
-`RolesResolver` (in the app).
+it depends on the app-local `GqlPermissionsGuard`.
 
-The `rollout_flags` table comes from `databases/migrations/084`; `synchronize` is
-off, so the entity mirrors the migration rather than driving it.
+Schema: `databases/migrations/084` (table) + `089` (typed variations / fallthrough).
+`synchronize` is off — the entity mirrors migrations.
 
 ## Installation
 
