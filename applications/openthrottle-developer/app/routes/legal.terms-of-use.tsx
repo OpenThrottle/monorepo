@@ -12,7 +12,7 @@ import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
-  OPENTHROTTLE_SITE_LEGAL_POSTURE,
+  OPENTHROTTLE_LEGAL_NOTICE,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -71,7 +71,7 @@ export default function Component(
           </p>
 
           <h2 className="text-foreground font-medium">About this site</h2>
-          <p>{OPENTHROTTLE_SITE_LEGAL_POSTURE}</p>
+          <p>{OPENTHROTTLE_LEGAL_NOTICE}</p>
 
           <h2 className="text-foreground font-medium">Acceptable use</h2>
           <p>

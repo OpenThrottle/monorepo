@@ -9,7 +9,7 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal._index';
 import { Link } from 'react-router';
-import { OPENTHROTTLE_SITE_LEGAL_POSTURE } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_LEGAL_NOTICE } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -58,7 +58,7 @@ export default function Component(
         />
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
-          <p>{OPENTHROTTLE_SITE_LEGAL_POSTURE}</p>
+          <p>{OPENTHROTTLE_LEGAL_NOTICE}</p>
 
           <ul className="list-inside list-disc space-y-1">
             <li>

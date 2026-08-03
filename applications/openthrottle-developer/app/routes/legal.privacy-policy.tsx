@@ -12,7 +12,7 @@ import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
-  OPENTHROTTLE_SITE_LEGAL_POSTURE,
+  OPENTHROTTLE_LEGAL_NOTICE,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -63,8 +63,8 @@ export default function Component(
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
-            {OPENTHROTTLE_SITE_LEGAL_POSTURE} This policy describes, in plain
-            terms, what is and is not collected when you visit, and how that
+            {OPENTHROTTLE_LEGAL_NOTICE} This policy describes, in plain terms,
+            what is and is not collected when you visit, and how that
             information is used. This policy may evolve as the project evolves.
           </p>
 
