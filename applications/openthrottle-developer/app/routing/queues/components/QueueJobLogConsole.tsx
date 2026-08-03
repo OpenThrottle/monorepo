@@ -26,7 +26,7 @@ export interface QueueJobLogConsoleProps {
 /**
  * @description Reusable live job console: backfills history (queueJobLogs) and streams live deltas
  * (queueJobLogTail) with level filtering, message search, copy, autoscroll, and pause-on-scroll.
- * The scheduled-jobs UI can consume it as-is.
+ * The schedule UI can consume it as-is.
  */
 export const QueueJobLogConsole = (
   props: QueueJobLogConsoleProps,

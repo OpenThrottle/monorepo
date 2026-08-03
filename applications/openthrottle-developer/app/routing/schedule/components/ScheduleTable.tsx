@@ -10,15 +10,15 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
-import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
+import { formatWhen } from '~/routing/schedule/utils/format-when';
 
-export interface ScheduledJobsTableProps {
+export interface ScheduleTableProps {
   className?: string;
   jobs: ScheduledJobCardFragment[];
 }
 
-export const ScheduledJobsTable = (
-  props: ScheduledJobsTableProps,
+export const ScheduleTable = (
+  props: ScheduleTableProps,
 ): React.ReactElement => {
   const { className, jobs } = props;
 
@@ -35,7 +35,7 @@ export const ScheduledJobsTable = (
   // 🔌 Short Circuit
 
   return (
-    <Table className={className} data-testid="ScheduledJobsTable">
+    <Table className={className} data-testid="ScheduleTable">
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -51,7 +51,7 @@ export const ScheduledJobsTable = (
             <TableCell>
               <Link
                 className="font-medium underline-offset-4 hover:underline"
-                to={`/scheduled-jobs/${job.id}`}
+                to={`/schedule/${job.id}`}
               >
                 {job.name}
               </Link>

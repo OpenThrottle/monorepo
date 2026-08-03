@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ScheduledJobRunsTable } from '../ScheduledJobRunsTable';
+import { ScheduleRunsTable } from '../ScheduleRunsTable';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 
@@ -29,10 +29,10 @@ const run = (
   ...overrides,
 });
 
-describe('ScheduledJobRunsTable', () => {
+describe('ScheduleRunsTable', () => {
   test('links each row to its run detail and renders duration', () => {
     const component = renderRoutesStub(
-      <ScheduledJobRunsTable
+      <ScheduleRunsTable
         jobId="job-1"
         runs={[
           run(),
@@ -42,21 +42,15 @@ describe('ScheduledJobRunsTable', () => {
     );
 
     const viewLinks = component.getAllByRole('link', { name: /view/i });
-    expect(viewLinks[0]).toHaveAttribute(
-      'href',
-      '/scheduled-jobs/job-1/runs/run-1',
-    );
-    expect(viewLinks[1]).toHaveAttribute(
-      'href',
-      '/scheduled-jobs/job-1/runs/run-2',
-    );
+    expect(viewLinks[0]).toHaveAttribute('href', '/schedule/job-1/runs/run-1');
+    expect(viewLinks[1]).toHaveAttribute('href', '/schedule/job-1/runs/run-2');
     // finished run -> computed duration; unfinished -> em dash
     expect(component.getByText('1m 23s')).toBeInTheDocument();
   });
 
   test('exposes the error message as a tooltip on the failed status', () => {
     const component = renderRoutesStub(
-      <ScheduledJobRunsTable
+      <ScheduleRunsTable
         jobId="job-1"
         runs={[run({ errorMessage: 'kaboom', status: 'failed' })]}
       />,
@@ -67,7 +61,7 @@ describe('ScheduledJobRunsTable', () => {
 
   test('renders model, formatted total tokens (with breakdown tooltip), and cost', () => {
     const component = renderRoutesStub(
-      <ScheduledJobRunsTable jobId="job-1" runs={[run()]} />,
+      <ScheduleRunsTable jobId="job-1" runs={[run()]} />,
     );
 
     expect(component.getByText('opus')).toBeInTheDocument();
@@ -79,7 +73,7 @@ describe('ScheduledJobRunsTable', () => {
 
   test('shows em dashes for a run with no usage or model', () => {
     const component = renderRoutesStub(
-      <ScheduledJobRunsTable
+      <ScheduleRunsTable
         jobId="job-1"
         runs={[
           run({

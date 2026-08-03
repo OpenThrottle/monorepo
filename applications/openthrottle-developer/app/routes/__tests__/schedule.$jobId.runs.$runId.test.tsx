@@ -2,11 +2,11 @@ import * as React from 'react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import ScheduledJobRunDetail from '../scheduled-jobs.$jobId.runs.$runId';
+import ScheduleRunDetail from '../schedule.$jobId.runs.$runId';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness } from '~/testing/route-fixtures';
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.runs.$runId';
+import type { Route } from '@/app/routes/+types/schedule.$jobId.runs.$runId';
 
 const job = { id: 'job-1', name: 'Nightly audit' };
 
@@ -42,14 +42,14 @@ const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
   {
     handle: undefined,
-    id: 'routes/scheduled-jobs.$jobId.runs.$runId',
+    id: 'routes/schedule.$jobId.runs.$runId',
     loaderData: {
       job,
       queueName: 'Scheduled Agent Jobs',
       run: run(),
     },
     params: { jobId: 'job-1', runId: 'run-1' },
-    pathname: '/scheduled-jobs/job-1/runs/run-1',
+    pathname: '/schedule/job-1/runs/run-1',
   },
 ];
 
@@ -63,7 +63,7 @@ const renderRun = (
   renderRouteHarness([
     {
       Component: (): React.ReactElement => (
-        <ScheduledJobRunDetail
+        <ScheduleRunDetail
           actionData={undefined}
           loaderData={{ job, queueName: 'Scheduled Agent Jobs', run: value }}
           matches={matches}
@@ -79,7 +79,7 @@ const renderRun = (
     },
   ]);
 
-describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
+describe('routes/schedule.$jobId.runs.$runId.tsx', () => {
   test('renders a succeeded run with metadata, duration, and back link', () => {
     const component = renderRun(run());
 
@@ -90,7 +90,7 @@ describe('routes/scheduled-jobs.$jobId.runs.$runId.tsx', () => {
     expect(component.getByText('1m 23s')).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: /back to job/i }),
-    ).toHaveAttribute('href', '/scheduled-jobs/job-1');
+    ).toHaveAttribute('href', '/schedule/job-1');
   });
 
   test('renders the token-usage breakdown, cost, and settings snapshot', () => {

@@ -11,16 +11,16 @@ import {
   CreateScheduledAgentJobDocument,
   type CreateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
-import { ScheduledJobForm } from '~/routing/scheduled-jobs/components/ScheduledJobForm';
-import { parseScheduledJobForm } from '~/routing/scheduled-jobs/data/parse-form';
+import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
+import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.create';
+import type { Route } from '@/app/routes/+types/schedule.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
-  links: (_match) => [{ children: 'Scheduled Jobs', to: '/scheduled-jobs' }],
+  links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
@@ -57,14 +57,14 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">New scheduled job</h1>
-      <ScheduledJobForm action="create" error={actionError} />
+      <ScheduleForm action="create" error={actionError} />
     </GlobalScreen>
   );
 }
 
 export const action = async (args: Route.ActionArgs) => {
   const form = await args.request.formData();
-  const parsed = parseScheduledJobForm(form);
+  const parsed = parseScheduleForm(form);
 
   if (
     !parsed.name ||
@@ -94,7 +94,7 @@ export const action = async (args: Route.ActionArgs) => {
       CreateScheduledAgentJobDocument,
       { input },
     );
-    return redirect(`/scheduled-jobs/${result.createScheduledAgentJob.id}`);
+    return redirect(`/schedule/${result.createScheduledAgentJob.id}`);
   } catch (error) {
     return {
       error:

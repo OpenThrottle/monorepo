@@ -12,20 +12,20 @@ import {
   UpdateScheduledAgentJobDocument,
   type UpdateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
-import { ScheduledJobForm } from '~/routing/scheduled-jobs/components/ScheduledJobForm';
-import { parseScheduledJobForm } from '~/routing/scheduled-jobs/data/parse-form';
+import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
+import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.edit';
+import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Edit',
   links: (match) => [
-    { children: 'Scheduled Jobs', to: '/scheduled-jobs' },
+    { children: 'Schedule', to: '/schedule' },
     {
       children: match.loaderData?.job?.name,
-      to: `/scheduled-jobs/${match.loaderData?.job?.id}`,
+      to: `/schedule/${match.loaderData?.job?.id}`,
     },
   ],
 };
@@ -77,7 +77,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">Edit scheduled job</h1>
-      <ScheduledJobForm action="update" error={actionError} job={job} />
+      <ScheduleForm action="update" error={actionError} job={job} />
     </GlobalScreen>
   );
 }
@@ -85,7 +85,7 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const { jobId } = args.params;
   const form = await args.request.formData();
-  const { enabled: _enabled, ...patch } = parseScheduledJobForm(form);
+  const { enabled: _enabled, ...patch } = parseScheduleForm(form);
 
   if (!patch.name || !patch.prompt || !patch.driverId || !patch.cronPattern) {
     return { error: 'Name, prompt, provider, and schedule are required.' };
@@ -99,7 +99,7 @@ export const action = async (args: Route.ActionArgs) => {
       UpdateScheduledAgentJobDocument,
       { input },
     );
-    return redirect(`/scheduled-jobs/${jobId}`);
+    return redirect(`/schedule/${jobId}`);
   } catch (error) {
     return {
       error:

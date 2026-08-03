@@ -2,17 +2,17 @@ import * as React from 'react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import EditScheduledJob from '../scheduled-jobs.$jobId.edit';
+import EditSchedule from '../schedule.$jobId.edit';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.edit';
+import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 
-type ScheduledJob = NonNullable<
+type ScheduleJob = NonNullable<
   ScheduledAgentJobDetailQuery['scheduledAgentJob']
 >;
 
-const job: ScheduledJob = {
+const job: ScheduleJob = {
   __typename: 'ScheduledAgentJobObject',
   createdAt: '2026-07-31T00:00:00.000Z',
   cronPattern: '0 9 * * *',
@@ -35,17 +35,17 @@ const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
   {
     handle: undefined,
-    id: 'routes/scheduled-jobs.$jobId.edit',
+    id: 'routes/schedule.$jobId.edit',
     loaderData: { job },
     params: { jobId: 'job-1' },
-    pathname: '/scheduled-jobs/job-1/edit',
+    pathname: '/schedule/job-1/edit',
   },
 ];
 
-describe('routes/scheduled-jobs.$jobId.edit.tsx', () => {
+describe('routes/schedule.$jobId.edit.tsx', () => {
   test('pre-populates the form from the job', () => {
     const component = renderRoutesStub(
-      <EditScheduledJob
+      <EditSchedule
         actionData={undefined}
         loaderData={{ job }}
         matches={matches}
@@ -64,7 +64,7 @@ describe('routes/scheduled-jobs.$jobId.edit.tsx', () => {
 
   test('surfaces an action error inline', () => {
     const component = renderRoutesStub(
-      <EditScheduledJob
+      <EditSchedule
         actionData={{ error: 'settings.endpoint.apiKey is not allowed' }}
         loaderData={{ job }}
         matches={matches}
@@ -82,7 +82,7 @@ describe('routes/scheduled-jobs.$jobId.edit.tsx', () => {
     const component = renderRouteHarness([
       {
         Component: (): React.ReactElement => (
-          <EditScheduledJob
+          <EditSchedule
             actionData={undefined}
             loaderData={{ job }}
             matches={matches}

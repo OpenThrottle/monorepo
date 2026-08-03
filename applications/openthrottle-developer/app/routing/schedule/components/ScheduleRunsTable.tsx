@@ -10,23 +10,23 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
-import { RUN_STATUS_VARIANT } from '~/routing/scheduled-jobs/data/data.run-status';
-import { formatDuration } from '~/routing/scheduled-jobs/utils/format-duration';
+import { RUN_STATUS_VARIANT } from '~/routing/schedule/data/data.run-status';
+import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
   formatRunTotalTokens,
   runUsageTooltip,
-} from '~/routing/scheduled-jobs/utils/format-usage';
-import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
+} from '~/routing/schedule/utils/format-usage';
+import { formatWhen } from '~/routing/schedule/utils/format-when';
 
-export interface ScheduledJobRunsTableProps {
+export interface ScheduleRunsTableProps {
   className?: string;
   jobId: string;
   runs: ScheduledJobRunRowFragment[];
 }
 
-export const ScheduledJobRunsTable = (
-  props: ScheduledJobRunsTableProps,
+export const ScheduleRunsTable = (
+  props: ScheduleRunsTableProps,
 ): React.ReactElement => {
   const { className, jobId, runs } = props;
 
@@ -43,7 +43,7 @@ export const ScheduledJobRunsTable = (
   // 🔌 Short Circuit
 
   return (
-    <Table className={className} data-testid="ScheduledJobRunsTable">
+    <Table className={className} data-testid="ScheduleRunsTable">
       <TableHeader>
         <TableRow>
           <TableHead>Status</TableHead>
@@ -93,7 +93,7 @@ export const ScheduledJobRunsTable = (
             <TableCell className="text-right">
               <Link
                 className="text-primary text-sm underline-offset-4 hover:underline"
-                to={`/scheduled-jobs/${jobId}/runs/${run.id}`}
+                to={`/schedule/${jobId}/runs/${run.id}`}
               >
                 View
               </Link>

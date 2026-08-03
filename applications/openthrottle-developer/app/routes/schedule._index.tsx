@@ -9,14 +9,14 @@ import {
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { ScheduledAgentJobsDocument } from '~/__generated__/graphql';
-import { ScheduledJobsTable } from '~/routing/scheduled-jobs/components/ScheduledJobsTable';
+import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs._index';
+import type { Route } from '@/app/routes/+types/schedule._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Scheduled Jobs',
+  breadcrumb: (_match) => 'Schedule',
   links: (_match) => [{ children: 'Agents', to: '/queues' }],
 };
 
@@ -34,7 +34,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Scheduled Jobs | ${SITE_TITLE}` }];
+  return [{ title: `Schedule | ${SITE_TITLE}` }];
 });
 
 export default function Component(
@@ -60,25 +60,25 @@ export default function Component(
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Scheduled jobs</h1>
+            <h1 className="text-xl font-semibold">Schedule</h1>
             <p className="text-muted-foreground text-sm">
               Run an agent prompt on a cron schedule.
             </p>
           </div>
           <Button asChild={true}>
-            <Link to="/scheduled-jobs/create">New schedule</Link>
+            <Link to="/schedule/create">New schedule</Link>
           </Button>
         </div>
 
         {jobs.length === 0 ? (
           <p
             className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm"
-            data-testid="ScheduledJobsEmpty"
+            data-testid="ScheduleEmpty"
           >
             No scheduled jobs yet. Create one to run a prompt on a schedule.
           </p>
         ) : (
-          <ScheduledJobsTable className="bg-card" jobs={jobs} />
+          <ScheduleTable className="bg-card" jobs={jobs} />
         )}
       </div>
     </GlobalScreen>
