@@ -1,7 +1,8 @@
 /**
- * @description Actor-evaluated feature flag for myFeatureFlags. Discriminated by
- * kind with valueJson (JSON-serialized resolved value). `enabled` stays for
- * boolean convenience and non-boolean fallthrough eligibility.
+ * @description Actor-evaluated feature flag for evaluateFeatureFlags (and the
+ * deprecated myFeatureFlags). Discriminated by kind with valueJson
+ * (JSON-serialized resolved value). `enabled` stays for boolean convenience and
+ * non-boolean fallthrough eligibility.
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';

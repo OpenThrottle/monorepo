@@ -54,6 +54,46 @@ describe('JwtAuthGuard', () => {
     });
   });
 
+  describe('tryAuthenticate', () => {
+    it('returns true when Passport accepts the token', async () => {
+      const guard = new JwtAuthGuard(new Reflector());
+      vi.spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+        'canActivate',
+      ).mockReturnValue(true);
+      const context = createContext();
+
+      await expect(guard.tryAuthenticate(context)).resolves.toBe(true);
+    });
+
+    it('returns false when Passport rejects (does not throw)', async () => {
+      const guard = new JwtAuthGuard(new Reflector());
+      vi.spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+        'canActivate',
+      ).mockRejectedValue(new UnauthorizedException('Unauthorized'));
+      const context = createContext();
+
+      await expect(guard.tryAuthenticate(context)).resolves.toBe(false);
+    });
+
+    it('bypasses @Public short-circuit (always delegates to Passport)', async () => {
+      const reflector = new Reflector();
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+      const guard = new JwtAuthGuard(reflector);
+      const superCanActivate = vi
+        .spyOn(
+          Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+          'canActivate',
+        )
+        .mockReturnValue(true);
+      const context = createContext();
+
+      await expect(guard.tryAuthenticate(context)).resolves.toBe(true);
+      expect(superCanActivate).toHaveBeenCalledWith(context);
+    });
+  });
+
   describe('handleRequest (fail-closed)', () => {
     const guard = new JwtAuthGuard(new Reflector());
     const context = createContext();

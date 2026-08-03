@@ -23,9 +23,9 @@ import {
   Scripts,
   ScrollRestoration,
   useFetcher,
+  useLoaderData,
   useLocation,
   useRevalidator,
-  useRouteLoaderData,
 } from 'react-router';
 import type {
   MiddlewareFunction,
@@ -54,6 +54,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
+import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
 import { useAtom } from 'jotai';
 import {
@@ -224,11 +225,12 @@ export const loader = async (args: Route.LoaderArgs) => {
 
       user = queryMyUser.me ?? null;
       userLoadOk = true;
+      console.error('🟢 root loader: user', user);
 
       return null;
     } catch (error) {
       diagnostics.userLatencyMs = Date.now() - t0;
-      console.error('root loader: GetMyUser failed', error);
+      console.error('🚨 root loader: GetMyUser failed', error);
 
       user = null;
       userLoadOk = false;
@@ -266,6 +268,8 @@ export const loader = async (args: Route.LoaderArgs) => {
       return redirect('/auth');
     }
   }
+
+  console.error('🟢 2 root loader: user', user);
 
   return {
     canonical,
@@ -314,10 +318,12 @@ const THEME_PREHYDRATION_SCRIPT =
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
-  const data = useRouteLoaderData<typeof loader>('root');
+  // const data = useRouteLoaderData<typeof loader>('root');
+  const data = useLoaderData();
   const [_user, setUser] = useAtom(userAtom);
   const [config] = useAtom(configAtom);
   const nonce = useNonce();
+
   // Resolve light/dark/system → a concrete mode, applying the `.dark` class and
   // subscribing to OS changes while in system mode (shared across RR apps).
   const isDarkTheme = useResolvedThemeMode(config.theme) === 'dark';
@@ -329,7 +335,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const manifest = `/manifest.json`;
 
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
-
   const _health = data?.serverHealth ?? {};
 
   // Handlers
@@ -429,7 +434,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
  */
 export default function App(): React.ReactElement {
   // Hooks
-  const data = useRouteLoaderData<typeof loader>('root');
+  // const data = useRouteLoaderData<typeof loader>('root');
+  const data = useLoaderData();
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
   const groups = useCommanderOptions();
@@ -536,89 +542,91 @@ export default function App(): React.ReactElement {
   return (
     <>
       <NotificationsStoreProvider>
-        <NotificationsSubscriptionBridge>
-          <GlobalProviders
-            chat={headerChatSurface}
-            chatPersist={data?.user != null}
-          >
-            <GlobalLayout
-              authenticated={data?.user !== null}
-              data={data?.user ? dataNavigationV2 : dataNavigationGuest}
-              health={data?.serverHealth}
-              overrides={{
-                footer: isFooterHidden,
-                header: isHeaderHidden,
-              }}
+        <DeveloperRolloutProvider identityKey={data?.user?.id ?? null}>
+          <NotificationsSubscriptionBridge>
+            <GlobalProviders
+              chat={headerChatSurface}
+              chatPersist={data?.user != null}
             >
-              <GlobalRootLoaderFailureBanner
-                diagnostics={data?.rootLoaderDiagnostics}
-                failure={data?.rootLoaderFailure ?? null}
-                isRevalidating={revalidator.state === 'loading'}
-                onRetry={handleRootLoaderRetry}
-                userLoadOk={data?.userLoadOk !== false}
-              />
-
-              <GlobalServerHealthBanner
+              <GlobalLayout
+                authenticated={data?.user !== null}
+                data={data?.user ? dataNavigationV2 : dataNavigationGuest}
                 health={data?.serverHealth}
-                suppress={data?.rootLoaderFailure?.step === 'health'}
-              />
-
-              {!isHeaderHidden ? (
-                <GlobalLayoutHeader
-                  onSearchChromeEvent={handleSearchChromeEvent}
+                overrides={{
+                  footer: isFooterHidden,
+                  header: isHeaderHidden,
+                }}
+              >
+                <GlobalRootLoaderFailureBanner
+                  diagnostics={data?.rootLoaderDiagnostics}
+                  failure={data?.rootLoaderFailure ?? null}
+                  isRevalidating={revalidator.state === 'loading'}
+                  onRetry={handleRootLoaderRetry}
+                  userLoadOk={data?.userLoadOk !== false}
                 />
-              ) : null}
 
-              <Outlet />
-
-              {!isMetricsHidden ? (
-                <GlobalMetrics
-                  defaultOpen={false}
-                  definitionsHref="/settings/debug#server-metrics-definitions"
-                  diagnosticsHref="/settings/debug#graphql-endpoint-health"
+                <GlobalServerHealthBanner
+                  health={data?.serverHealth}
+                  suppress={data?.rootLoaderFailure?.step === 'health'}
                 />
-              ) : null}
 
-              <OpenThrottleCommander
-                className="m-0! p-0!"
-                emptyStateExtras={commanderEmptyExtras}
-                emptyStateMessage={
-                  <span className="block px-2 text-center text-sm leading-relaxed">
-                    <span className="block font-medium">
-                      Nothing matched that filter
-                    </span>
-                    <span className="text-muted-foreground mt-2 block text-xs">
-                      <span className="block">
-                        1) Keep typing to narrow the list, or 2) paste one
-                        OpenThrottle UUID for plan/queue/generator/search rows,
-                        or 3) paste two UUIDs with{' '}
-                        <code className="text-[10px]">/</code> or a space to
-                        jump to a queue job or a plan task.
+                {!isHeaderHidden ? (
+                  <GlobalLayoutHeader
+                    onSearchChromeEvent={handleSearchChromeEvent}
+                  />
+                ) : null}
+
+                <Outlet />
+
+                {!isMetricsHidden ? (
+                  <GlobalMetrics
+                    defaultOpen={false}
+                    definitionsHref="/settings/debug#server-metrics-definitions"
+                    diagnosticsHref="/settings/debug#graphql-endpoint-health"
+                  />
+                ) : null}
+
+                <OpenThrottleCommander
+                  className="m-0! p-0!"
+                  emptyStateExtras={commanderEmptyExtras}
+                  emptyStateMessage={
+                    <span className="block px-2 text-center text-sm leading-relaxed">
+                      <span className="block font-medium">
+                        Nothing matched that filter
+                      </span>
+                      <span className="text-muted-foreground mt-2 block text-xs">
+                        <span className="block">
+                          1) Keep typing to narrow the list, or 2) paste one
+                          OpenThrottle UUID for plan/queue/generator/search
+                          rows, or 3) paste two UUIDs with{' '}
+                          <code className="text-[10px]">/</code> or a space to
+                          jump to a queue job or a plan task.
+                        </span>
+                      </span>
+                      <span className="text-muted-foreground mt-2 block text-xs">
+                        When you have typed text (even if it is not a UUID), the
+                        list below offers browse shortcuts and a full-text
+                        search action.
+                      </span>
+                      <span className="text-muted-foreground mt-2 block text-[10px]">
+                        Server metrics (when visible) use{' '}
+                        <code className="text-[10px]">serverMetrics</code> from
+                        openthrottle-server; definitions and GraphQL health:
+                        Settings → Debug.
                       </span>
                     </span>
-                    <span className="text-muted-foreground mt-2 block text-xs">
-                      When you have typed text (even if it is not a UUID), the
-                      list below offers browse shortcuts and a full-text search
-                      action.
-                    </span>
-                    <span className="text-muted-foreground mt-2 block text-[10px]">
-                      Server metrics (when visible) use{' '}
-                      <code className="text-[10px]">serverMetrics</code> from
-                      openthrottle-server; definitions and GraphQL health:
-                      Settings → Debug.
-                    </span>
-                  </span>
-                }
-                footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
-                groups={groups}
-                onEmptyStateSearch={handleSearch}
-                onOpenChange={setCommanderOpen}
-                open={commanderOpen}
-                placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
-              />
-            </GlobalLayout>
-          </GlobalProviders>
-        </NotificationsSubscriptionBridge>
+                  }
+                  footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
+                  groups={groups}
+                  onEmptyStateSearch={handleSearch}
+                  onOpenChange={setCommanderOpen}
+                  open={commanderOpen}
+                  placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
+                />
+              </GlobalLayout>
+            </GlobalProviders>
+          </NotificationsSubscriptionBridge>
+        </DeveloperRolloutProvider>
       </NotificationsStoreProvider>
     </>
   );

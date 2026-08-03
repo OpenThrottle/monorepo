@@ -20,22 +20,16 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
-      "path": "../../packages/react-router-testing"
-    },
-    {
       "path": "../../tools/dotfiles"
     },
     {
       "path": "../../packages/graphql-codegen"
     },
     {
-      "path": "../../packages/react-router-scheduling"
+      "path": "../../packages/openthrottle-notifications"
     },
     {
       "path": "../../packages/openthrottle-plan-config"
-    },
-    {
-      "path": "../../packages/react-router-markdown"
     },
     {
       "path": "../../packages/openthrottle-agentic-utils"
@@ -44,10 +38,16 @@
       "path": "../../packages/openthrottle-ide"
     },
     {
+      "path": "../../packages/react-router-scheduling"
+    },
+    {
       "path": "../../packages/openthrottle-skills"
     },
     {
       "path": "../../packages/react-router-editor"
+    },
+    {
+      "path": "../../packages/react-router-markdown"
     },
     {
       "path": "../../packages/react-router-docs"
@@ -56,28 +56,28 @@
       "path": "../../packages/react-router-ide"
     },
     {
+      "path": "../../packages/react-router-testing"
+    },
+    {
+      "path": "../../packages/react-router-chat-state"
+    },
+    {
       "path": "../../packages/react-router-auth"
     },
     {
       "path": "../../packages/react-router-chat"
     },
     {
-      "path": "../../packages/react-router-chat-state"
+      "path": "../../packages/openthrottle-developer-codegen"
     },
     {
-      "path": "../../packages/openthrottle-developer-codegen"
+      "path": "../../packages/react-router-graphql"
     },
     {
       "path": "../../packages/react-router-ui"
     },
     {
       "path": "../../packages/react-router-ui-global"
-    },
-    {
-      "path": "../../packages/react-router-graphql"
-    },
-    {
-      "path": "../../packages/openthrottle-notifications"
     },
     {
       "path": "../../packages/react-router-notifications"

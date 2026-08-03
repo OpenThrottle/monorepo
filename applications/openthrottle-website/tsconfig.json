@@ -14,7 +14,7 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
-      "path": "../../packages/react-router-testing"
+      "path": "../../packages/react-router-docs"
     },
     {
       "path": "../../tools/dotfiles"
@@ -23,7 +23,7 @@
       "path": "../../packages/graphql-codegen"
     },
     {
-      "path": "../../packages/react-router-docs"
+      "path": "../../packages/react-router-testing"
     },
     {
       "path": "../../packages/react-router-ui-global"

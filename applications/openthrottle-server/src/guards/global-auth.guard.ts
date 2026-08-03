@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import {
   getAuthPrincipalFromRequest,
   IS_PUBLIC_KEY,
+  type AuthenticatedRequest,
 } from '@openthrottle/nestjs-auth';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
@@ -36,6 +37,10 @@ const readAuthorizationHeader = (req: object): string | undefined => {
  * @description Global auth guard: service-account bearer (`ot_sa_`) first, then JWT.
  * Use as APP_GUARD; mark login and health with @Public().
  * After successful auth, populates {@link GlobalClsService} via {@link GlobalClsAuthHook}.
+ *
+ * `@Public()` never 401s. When `Authorization` is present, soft-auth tries SA then JWT
+ * and attaches a principal on success so public handlers (e.g. evaluateFeatureFlags) can
+ * enrich targeting; invalid/missing credentials stay anonymous.
  */
 @Injectable()
 export class GlobalAuthGuard implements CanActivate {
@@ -53,6 +58,12 @@ export class GlobalAuthGuard implements CanActivate {
     ]);
 
     if (isPublic) {
+      const req = getRequestFromExecutionContext(context);
+
+      if (req != null) {
+        await this.softAuthenticate(context, req);
+      }
+
       return true;
     }
 
@@ -96,5 +107,51 @@ export class GlobalAuthGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  /**
+   * @description Optional auth for `@Public()` handlers. Never throws: missing or
+   * invalid credentials leave the request anonymous.
+   */
+  private async softAuthenticate(
+    context: ExecutionContext,
+    req: AuthenticatedRequest,
+  ): Promise<void> {
+    const authorization = readAuthorizationHeader(req);
+
+    if (authorization == null) {
+      return;
+    }
+
+    if (
+      this.serviceAccountAuthService.isServiceAccountAuthorization(
+        authorization,
+      )
+    ) {
+      const principal =
+        await this.serviceAccountAuthService.tryAuthenticateAuthorizationHeader(
+          authorization,
+        );
+
+      if (principal == null) {
+        return;
+      }
+
+      req.user = principal;
+      await this.globalClsAuthHook.populateFromPrincipal(principal);
+      return;
+    }
+
+    const allowed = await this.jwtAuthGuard.tryAuthenticate(context);
+
+    if (!allowed) {
+      return;
+    }
+
+    const principal = getAuthPrincipalFromRequest(req);
+
+    if (principal != null) {
+      await this.globalClsAuthHook.populateFromPrincipal(principal);
+    }
   }
 }

@@ -15,6 +15,7 @@ import {
 } from '~/__generated__/graphql';
 import { RolloutFlagCreateDialog } from '~/routing/settings/components/RolloutFlagCreateDialog';
 import { RolloutFlagsTable } from '~/routing/settings/components/RolloutFlagsTable';
+import { RolloutSdkHydrationStatus } from '~/routing/settings/components/RolloutSdkHydrationStatus';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import {
   optionalRolloutString,
@@ -70,6 +71,7 @@ export default function Component(
           </p>
           <RolloutFlagCreateDialog actionError={actionError} />
         </div>
+        <RolloutSdkHydrationStatus />
       </div>
 
       <RolloutFlagsTable flags={flags} />

@@ -13,6 +13,8 @@ by human-JWT and service-account auth.
   normalizers and type guards; the identity shape RBAC/CLS code depends on.
 - `src/strategies/jwt.strategy.ts` — HS256 strategy, `JwtPayload`, secret-length enforcement.
 - `src/guards/jwt-auth.guard.ts` — honors `IS_PUBLIC_KEY` from `src/decorators/public.decorator.ts`.
+  `tryAuthenticate` always runs Passport (ignores `@Public`) and returns `false` on failure — used by
+  the server's `GlobalAuthGuard` soft-auth path on public handlers.
 - `src/utils/` — `getAuthPrincipalFromRequest` + `getRequestFromExecutionContext` (HTTP and
   GraphQL execution contexts).
 

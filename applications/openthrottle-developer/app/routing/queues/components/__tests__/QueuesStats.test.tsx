@@ -85,27 +85,27 @@ describe('QueuesStats Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('should describe operational default view and tooltip parity', () => {
+    test('should describe completed-on default view and tooltip parity', () => {
       expect(
-        component.getByText(/backlog and active work/i),
+        component.getByText(/including completed history/i),
       ).toBeInTheDocument();
       expect(
-        component.getByText(/Hover for all five table counts/i),
+        component.getByText(/Hover a bar for exact counts/i),
       ).toBeInTheDocument();
     });
 
-    test('should render show completed toggle defaulting off', () => {
+    test('should render show completed toggle defaulting on', () => {
       const toggle = component.getByTestId('queues-stats-show-completed');
       expect(toggle).toBeInTheDocument();
-      expect(toggle).not.toBeChecked();
+      expect(toggle).toBeChecked();
     });
 
-    test('should update description when show completed is enabled', async () => {
+    test('should update description when show completed is disabled', async () => {
       const user = userEvent.setup();
       await user.click(component.getByTestId('queues-stats-show-completed'));
 
       expect(
-        component.getByText(/including completed history/i),
+        component.getByText(/backlog and active work/i),
       ).toBeInTheDocument();
     });
   });
@@ -136,13 +136,13 @@ describe('QueuesStats Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('should default to operational view without completed in copy', () => {
+    test('should default to completed view with completed toggle on', () => {
       expect(
-        component.getByText(/backlog and active work/i),
+        component.getByText(/including completed history/i),
       ).toBeInTheDocument();
       expect(
         component.getByTestId('queues-stats-show-completed'),
-      ).not.toBeChecked();
+      ).toBeChecked();
     });
 
     test('should sort chart rows with plans first by total jobs', () => {

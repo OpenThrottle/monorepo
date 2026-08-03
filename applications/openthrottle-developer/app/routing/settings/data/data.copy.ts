@@ -114,6 +114,11 @@ export const ROLLOUT_COPY = {
   offVariationLabel: 'Off / default variation',
   removeVariationButton: 'Remove',
   saveButton: 'Save changes',
+  sdkHydrationError: 'error (using catalog defaults)',
+  sdkHydrationIdle: 'idle',
+  sdkHydrationLoading: 'loading…',
+  sdkHydrationPrefix: 'Client SDK hydration:',
+  sdkHydrationReady: 'ready',
   targetRolesHelp:
     'Comma-separated RBAC role names (e.g. admin, viewer). Leave blank to enable for everyone.',
   targetRolesLabel: 'Target roles',
