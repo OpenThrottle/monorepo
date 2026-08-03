@@ -4,6 +4,7 @@
  * Ralph: agentic plan/task runner. Single flow (OpenThrottle required); see main() for steps.
  */
 
+import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
 import {
@@ -208,7 +209,9 @@ export const main = async (): Promise<void> => {
 
   if (isDetached) {
     try {
+      const branch = resolveGitBranchFromCwd();
       planRunId = await registerCliPlanRun(openthrottleConfig, {
+        ...(branch != null ? { branch } : {}),
         executionBackend: parsedArgs.backend,
         location: captureRunLocation(),
         planId: effectivePlanId,

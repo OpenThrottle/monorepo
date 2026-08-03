@@ -58,6 +58,7 @@ const {
   getOpenThrottleConfigOrExitMock,
   readPlanRunCancelMarkerMock,
   registerCliPlanRunMock,
+  resolveGitBranchFromCwdMock,
   runIterationAsyncMock,
   settleCliPlanRunMock,
   updatePlanStatusMock,
@@ -72,6 +73,7 @@ const {
   getOpenThrottleConfigOrExitMock: vi.fn(),
   readPlanRunCancelMarkerMock: vi.fn().mockResolvedValue(null),
   registerCliPlanRunMock: vi.fn().mockResolvedValue('cli-run-1'),
+  resolveGitBranchFromCwdMock: vi.fn((): string | null => null),
   runIterationAsyncMock: vi.fn().mockResolvedValue('agent output'),
   settleCliPlanRunMock: vi.fn().mockResolvedValue(undefined),
   updatePlanStatusMock: vi.fn().mockResolvedValue(undefined),
@@ -79,6 +81,17 @@ const {
     .fn()
     .mockResolvedValue({ id: '9e4453e3-8b98-4df2-8cc5-d06afed67222' }),
 }));
+
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/openthrottle-agentic-utils')
+    >();
+  return {
+    ...actual,
+    resolveGitBranchFromCwd: resolveGitBranchFromCwdMock,
+  };
+});
 
 vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
   const actual =
@@ -156,6 +169,8 @@ describe('Ralph detached-CLI cancelable run', () => {
     updatePlanStatusMock.mockClear();
     updateTaskStatusMock.mockClear();
     registerCliPlanRunMock.mockClear();
+    resolveGitBranchFromCwdMock.mockClear();
+    resolveGitBranchFromCwdMock.mockReturnValue(null);
     bumpCliPlanRunHeartbeatMock.mockClear();
     bumpCliPlanRunHeartbeatMock.mockResolvedValue(undefined);
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(throwingExit);
@@ -195,6 +210,39 @@ describe('Ralph detached-CLI cancelable run', () => {
       'COMPLETED',
     );
     expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('passes branch into registerCliPlanRun when resolveGitBranchFromCwd returns a name', async () => {
+    resolveGitBranchFromCwdMock.mockReturnValue('feature/cli-branch');
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(registerCliPlanRunMock).toHaveBeenCalledWith(graphqlConfig, {
+      branch: 'feature/cli-branch',
+      executionBackend: 'claude',
+      location: { hostname: 'laptop-1', pid: 4242, workerId: null },
+      planId: PLAN_ID,
+    });
+  });
+
+  it('omits branch when resolveGitBranchFromCwd returns null (silent)', async () => {
+    resolveGitBranchFromCwdMock.mockReturnValue(null);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(registerCliPlanRunMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      expect.not.objectContaining({ branch: expect.anything() }),
+    );
+    expect(
+      warnSpy.mock.calls.some((c) =>
+        String(c[0]).toLowerCase().includes('branch'),
+      ),
+    ).toBe(false);
+    warnSpy.mockRestore();
   });
 
   it('continues UN-TRACKED when register fails (no settle, real work not aborted)', async () => {

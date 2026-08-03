@@ -3447,6 +3447,8 @@ export type RefreshCheckoutPayloadObject = {
 };
 
 export type RegisterCliPlanRunInput = {
+  /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
+  branch?: InputMaybe<Scalars['String']['input']>;
   /** Execution backend for this detached-CLI run: claude, cursor, or opencode. */
   executionBackend: Scalars['String']['input'];
   /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */

@@ -78,6 +78,8 @@ export interface RunLocation {
 
 /** @description Input for registering a detached CLI run as a first-class plan_runs row. */
 export interface RegisterCliRunInput {
+  /** Optional git branch; omit/null → store null. Caller supplies; transports pass through. */
+  readonly branch?: string | null;
   readonly executionBackend: string;
   readonly location: RunLocation;
   readonly planId: string;
