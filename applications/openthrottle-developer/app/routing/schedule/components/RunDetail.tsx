@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
-import { RUN_DETAIL_COPY } from '~/routing/scheduled-jobs/data/data.run-detail';
-import { RUN_STATUS_VARIANT } from '~/routing/scheduled-jobs/data/data.run-status';
-import { formatDuration } from '~/routing/scheduled-jobs/utils/format-duration';
+import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+import { RUN_STATUS_VARIANT } from '~/routing/schedule/data/data.run-status';
+import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
   formatSettingsSnapshot,
   hasRunUsage,
   runUsageRows,
-} from '~/routing/scheduled-jobs/utils/format-usage';
-import { formatWhen } from '~/routing/scheduled-jobs/utils/format-when';
+} from '~/routing/schedule/utils/format-usage';
+import { formatWhen } from '~/routing/schedule/utils/format-when';
 
 export interface RunDetailProps {
   run: ScheduledJobRunDetailFragment;

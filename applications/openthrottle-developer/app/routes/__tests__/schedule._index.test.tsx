@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import ScheduledJobsIndex from '../scheduled-jobs._index';
+import ScheduleIndex from '../schedule._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/scheduled-jobs._index';
+import type { Route } from '@/app/routes/+types/schedule._index';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
   {
     handle: undefined,
-    id: 'routes/scheduled-jobs._index',
+    id: 'routes/schedule._index',
     loaderData: { jobs: [] },
     params: {},
     pathname: '/',
@@ -35,10 +35,10 @@ const job = (
   ...overrides,
 });
 
-describe('routes/scheduled-jobs._index.tsx', () => {
+describe('routes/schedule._index.tsx', () => {
   test('renders the table when schedules exist', () => {
     renderRoutesStub(
-      <ScheduledJobsIndex
+      <ScheduleIndex
         actionData={undefined}
         loaderData={{ jobs: [job()] }}
         matches={matches}
@@ -46,7 +46,7 @@ describe('routes/scheduled-jobs._index.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ScheduledJobsTable')).toBeInTheDocument();
+    expect(screen.getByTestId('ScheduleTable')).toBeInTheDocument();
     expect(screen.getByText('Nightly audit')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: /new schedule/i }),
@@ -55,7 +55,7 @@ describe('routes/scheduled-jobs._index.tsx', () => {
 
   test('renders the empty state when there are no schedules', () => {
     renderRoutesStub(
-      <ScheduledJobsIndex
+      <ScheduleIndex
         actionData={undefined}
         loaderData={{ jobs: [] }}
         matches={matches}
@@ -63,6 +63,6 @@ describe('routes/scheduled-jobs._index.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ScheduledJobsEmpty')).toBeInTheDocument();
+    expect(screen.getByTestId('ScheduleEmpty')).toBeInTheDocument();
   });
 });

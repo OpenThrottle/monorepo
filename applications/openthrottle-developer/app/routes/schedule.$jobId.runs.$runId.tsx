@@ -13,25 +13,25 @@ import {
   ScheduledAgentJobRunDetailDocument,
 } from '~/__generated__/graphql';
 import { QueueJobLogConsole } from '~/routing/queues/components/QueueJobLogConsole';
-import { RunDetail } from '~/routing/scheduled-jobs/components/RunDetail';
+import { RunDetail } from '~/routing/schedule/components/RunDetail';
 import {
   CANCELABLE_RUN_STATUSES,
   RUN_DETAIL_COPY,
   RUN_STATUS_TO_JOB_STATE,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from '~/routing/scheduled-jobs/data/data.run-detail';
+} from '~/routing/schedule/data/data.run-detail';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId.runs.$runId';
+import type { Route } from '@/app/routes/+types/schedule.$jobId.runs.$runId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Run',
   links: (match) => [
-    { children: 'Scheduled Jobs', to: '/scheduled-jobs' },
+    { children: 'Schedule', to: '/schedule' },
     {
       children: match.loaderData?.job?.name,
-      to: `/scheduled-jobs/${match.loaderData?.job?.id}`,
+      to: `/schedule/${match.loaderData?.job?.id}`,
     },
   ],
 };
@@ -89,7 +89,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-col gap-6" data-testid="ScheduledJobRunDetail">
+      <div className="flex flex-col gap-6" data-testid="ScheduleRunDetail">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold">Run</h1>
@@ -113,7 +113,7 @@ export default function Component(
               </Button>
             ) : null}
             <Button asChild={true} variant="outline">
-              <Link to={`/scheduled-jobs/${params.jobId}`}>Back to job</Link>
+              <Link to={`/schedule/${params.jobId}`}>Back to job</Link>
             </Button>
           </div>
         </div>

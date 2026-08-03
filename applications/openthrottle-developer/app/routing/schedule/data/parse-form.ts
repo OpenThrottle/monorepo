@@ -1,10 +1,10 @@
 /**
- * @description Parses the ScheduledJobForm's FormData into the fields shared by create + update. The
+ * @description Parses the ScheduleForm's FormData into the fields shared by create + update. The
  * server re-validates everything (cron, driver, capabilities, settings); this only shapes strings
  * into the GraphQL input. `undefined` fields are omitted so update can be a partial patch.
  */
 
-export interface ParsedScheduledJobForm {
+export interface ParsedScheduleForm {
   cronPattern?: string;
   cwd?: string;
   driverId?: string;
@@ -24,9 +24,7 @@ const str = (form: FormData, key: string): string | undefined => {
   return trimmed === '' ? undefined : trimmed;
 };
 
-export const parseScheduledJobForm = (
-  form: FormData,
-): ParsedScheduledJobForm => {
+export const parseScheduleForm = (form: FormData): ParsedScheduleForm => {
   const timeoutRaw = str(form, 'timeoutMs');
   const timeoutMs = timeoutRaw === undefined ? undefined : Number(timeoutRaw);
 
