@@ -12,6 +12,7 @@ import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
+  OPENTHROTTLE_SITE_LEGAL_POSTURE,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -70,13 +71,7 @@ export default function Component(
           </p>
 
           <h2 className="text-foreground font-medium">About this site</h2>
-          <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It is provided free of charge, on an as-is
-            basis, primarily to showcase open source work and experiments. It is
-            not a commercial product, and there is no service-level agreement,
-            uptime guarantee, or commitment to maintain any particular feature.
-          </p>
+          <p>{OPENTHROTTLE_SITE_LEGAL_POSTURE}</p>
 
           <h2 className="text-foreground font-medium">Acceptable use</h2>
           <p>
