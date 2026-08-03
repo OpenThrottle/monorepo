@@ -73,7 +73,7 @@ const {
   getOpenThrottleConfigOrExitMock: vi.fn(),
   readPlanRunCancelMarkerMock: vi.fn().mockResolvedValue(null),
   registerCliPlanRunMock: vi.fn().mockResolvedValue('cli-run-1'),
-  resolveGitBranchFromCwdMock: vi.fn(() => null),
+  resolveGitBranchFromCwdMock: vi.fn((): string | null => null),
   runIterationAsyncMock: vi.fn().mockResolvedValue('agent output'),
   settleCliPlanRunMock: vi.fn().mockResolvedValue(undefined),
   updatePlanStatusMock: vi.fn().mockResolvedValue(undefined),
