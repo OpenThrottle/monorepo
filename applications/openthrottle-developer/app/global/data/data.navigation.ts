@@ -132,10 +132,10 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/rules',
       },
       {
-        children: 'Scheduled Jobs',
+        children: 'Schedule',
         disabled: false,
         icon: CalendarClockIcon,
-        to: '/scheduled-jobs',
+        to: '/schedule',
       },
       {
         beta: false,

@@ -1,26 +1,26 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import CreateScheduledJob from '../scheduled-jobs.create';
+import CreateSchedule from '../schedule.create';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.create';
+import type { Route } from '@/app/routes/+types/schedule.create';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
   {
     handle: undefined,
-    id: 'routes/scheduled-jobs.create',
+    id: 'routes/schedule.create',
     loaderData: {},
     params: {},
     pathname: '/',
   },
 ];
 
-describe('routes/scheduled-jobs.create.tsx', () => {
+describe('routes/schedule.create.tsx', () => {
   test('renders the schedule form in create mode', () => {
     renderRoutesStub(
-      <CreateScheduledJob
+      <CreateSchedule
         actionData={undefined}
         loaderData={{}}
         matches={matches}
@@ -28,7 +28,7 @@ describe('routes/scheduled-jobs.create.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ScheduledJobForm')).toBeInTheDocument();
+    expect(screen.getByTestId('ScheduleForm')).toBeInTheDocument();
     expect(screen.getByLabelText('Prompt')).toBeRequired();
     expect(screen.getByLabelText('Schedule (cron)')).toBeRequired();
     expect(
@@ -38,7 +38,7 @@ describe('routes/scheduled-jobs.create.tsx', () => {
 
   test('surfaces an action error inline', () => {
     renderRoutesStub(
-      <CreateScheduledJob
+      <CreateSchedule
         actionData={{
           error: 'Name, prompt, provider, and schedule are required.',
         }}

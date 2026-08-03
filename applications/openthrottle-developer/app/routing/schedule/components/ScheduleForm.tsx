@@ -7,24 +7,22 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/scheduled-jobs/data/data.drivers';
+import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
 import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
 
-type ScheduledJob = NonNullable<
+type ScheduleDetail = NonNullable<
   ScheduledAgentJobDetailQuery['scheduledAgentJob']
 >;
 
-export interface ScheduledJobFormProps {
+export interface ScheduleFormProps {
   action: 'create' | 'update';
   className?: string;
   /** Action-level error to surface inline (validation / not-found). */
   error?: string;
-  job?: ScheduledJob;
+  job?: ScheduleDetail;
 }
 
-export const ScheduledJobForm = (
-  props: ScheduledJobFormProps,
-): React.ReactElement => {
+export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
   const { action, className, error, job } = props;
 
   // Hooks
@@ -43,7 +41,7 @@ export const ScheduledJobForm = (
   return (
     <Form
       className={clsx('w-full max-w-2xl space-y-4', className)}
-      data-testid="ScheduledJobForm"
+      data-testid="ScheduleForm"
       method="post"
     >
       <div>
@@ -189,7 +187,7 @@ export const ScheduledJobForm = (
           {isCreate ? 'Create schedule' : 'Save changes'}
         </Button>
         <Button asChild={true} variant="outline">
-          <Link to="/scheduled-jobs">Cancel</Link>
+          <Link to="/schedule">Cancel</Link>
         </Button>
       </div>
     </Form>

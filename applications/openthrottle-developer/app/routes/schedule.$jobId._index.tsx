@@ -14,15 +14,15 @@ import {
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
-import { ScheduledJobRunsTable } from '~/routing/scheduled-jobs/components/ScheduledJobRunsTable';
+import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/scheduled-jobs.$jobId._index';
+import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.loaderData?.job?.name ?? 'Scheduled Job',
-  links: (_match) => [{ children: 'Scheduled Jobs', to: '/scheduled-jobs' }],
+  breadcrumb: (match) => match.loaderData?.job?.name ?? 'Schedule',
+  links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -74,7 +74,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-col gap-6" data-testid="ScheduledJobDetail">
+      <div className="flex flex-col gap-6" data-testid="ScheduleDetail">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -145,11 +145,7 @@ export default function Component(
               No runs yet. Use “Run now” to trigger one.
             </p>
           ) : (
-            <ScheduledJobRunsTable
-              className="bg-card"
-              jobId={job.id}
-              runs={runs}
-            />
+            <ScheduleRunsTable className="bg-card" jobId={job.id} runs={runs} />
           )}
         </section>
       </div>
@@ -192,7 +188,7 @@ export const action = async (args: Route.ActionArgs) => {
           id: jobId,
         },
       );
-      return redirect('/scheduled-jobs');
+      return redirect('/schedule');
     }
 
     return { error: 'Unknown action.' };
