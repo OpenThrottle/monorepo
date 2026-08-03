@@ -2695,6 +2695,8 @@ export type Query = {
   discoverLocalModels: DiscoverLocalModelsResult;
   /** Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset. */
   discoveredFolders: Array<DiscoveredFolderObject>;
+  /** Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today). */
+  evaluateFeatureFlags: Array<FeatureFlagObject>;
   /** Get a generator by name (includes schema JSON) */
   generator?: Maybe<GeneratorDetailObject>;
   /** List available NX generators from @tools/generators */
@@ -2731,7 +2733,10 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
-  /** Evaluated feature flags for the current actor (kind + valueJson) */
+  /**
+   * Deprecated: evaluated feature flags for the current actor (kind + valueJson). Prefer evaluateFeatureFlags.
+   * @deprecated Use evaluateFeatureFlags (public hydration; no flags:read). Auth remains enrichment for targeting.
+   */
   myFeatureFlags: Array<FeatureFlagObject>;
   /** Get permission names for the current user */
   myPermissions: Array<Scalars['String']['output']>;
@@ -2918,6 +2923,11 @@ export type QueryDailyStatsArgs = {
 export type QueryDailyStatsRangeArgs = {
   end: Scalars['String']['input'];
   start: Scalars['String']['input'];
+};
+
+export type QueryEvaluateFeatureFlagsArgs = {
+  anonymousId?: InputMaybe<Scalars['String']['input']>;
+  applicationKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryGeneratorArgs = {
@@ -5140,6 +5150,24 @@ export type GetMyUserQuery = {
     id: string;
     updatedAt: any;
   } | null;
+};
+
+export type EvaluateFeatureFlagsQueryVariables = Exact<{
+  anonymousId?: InputMaybe<Scalars['String']['input']>;
+  applicationKey?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type EvaluateFeatureFlagsQuery = {
+  __typename?: 'Query';
+  evaluateFeatureFlags: Array<{
+    __typename?: 'FeatureFlagObject';
+    enabled: boolean;
+    key: string;
+    kind: RolloutFlagKind;
+    reason: RolloutEvaluationReason;
+    valueJson: string;
+    variationIndex: number;
+  }>;
 };
 
 export type GetRootHealthQueryVariables = Exact<{ [key: string]: never }>;
@@ -11575,6 +11603,78 @@ export const GetMyUserDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+export const EvaluateFeatureFlagsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'evaluateFeatureFlags' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'anonymousId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'applicationKey' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'evaluateFeatureFlags' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'anonymousId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'anonymousId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'applicationKey' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'applicationKey' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'valueJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'variationIndex' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  EvaluateFeatureFlagsQuery,
+  EvaluateFeatureFlagsQueryVariables
+>;
 export const GetRootHealthDocument = {
   kind: 'Document',
   definitions: [

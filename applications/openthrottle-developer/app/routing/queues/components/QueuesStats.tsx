@@ -28,7 +28,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
   const { className, queues } = props;
 
   // Hooks
-  const [showCompleted, setShowCompleted] = React.useState(false);
+  const [showCompleted, setShowCompleted] = React.useState(true);
 
   // Setup
   const chartData = React.useMemo(

@@ -213,6 +213,9 @@
     },
     {
       "path": "./packages/nestjs-rollout"
+    },
+    {
+      "path": "./packages/react-router-rollout"
     }
   ]
 }

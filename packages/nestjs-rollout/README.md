@@ -94,14 +94,24 @@ export class SomeModule {}
 ## RBAC integration
 
 Admin surface permissions `flags:read` / `flags:write` live in
-`@openthrottle/nestjs-rbac` (seeded by migration `085`). Reads and
-`myFeatureFlags` require `flags:read`; create/update/delete require `flags:write`.
+`@openthrottle/nestjs-rbac` (seeded by migration `085`). Admin list/get
+require `flags:read`; create/update/delete require `flags:write`. Client
+hydration uses the public GraphQL query `evaluateFeatureFlags` (no
+`flags:read`; soft-auth enriches targeting when a JWT/SA is present). The
+legacy `myFeatureFlags` query stays behind `flags:read` and is deprecated.
 
 ## Architecture boundary
 
 The **package owns the domain** (entity, module, service). The **GraphQL resolver
 lives in the app** (`applications/openthrottle-server/src/graphql/rollout/`) because
 it depends on the app-local `GqlPermissionsGuard`.
+
+**React Router clients** hydrate via
+[`@openthrottle/react-router-rollout`](../react-router-rollout/): typed catalog +
+`RolloutProvider` / hooks against public `evaluateFeatureFlags`. That package is
+SSOT for client types and UI hydration; this package remains SSOT for evaluation
+math and persistence. See that README for `applicationKey` (`APP_NAME` today,
+UUID-ready prop name) and anon/auth adopt steps.
 
 Schema: `databases/migrations/084` (table) + `089` (typed variations / fallthrough).
 `synchronize` is off — the entity mirrors migrations.

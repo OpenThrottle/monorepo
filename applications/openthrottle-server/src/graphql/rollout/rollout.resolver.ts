@@ -1,17 +1,20 @@
 /**
  * @description GraphQL resolver for rollout feature flags. Admin CRUD (rolloutFlags /
- * rolloutFlag / create / update / delete) is gated by RBAC flags permissions; myFeatureFlags
- * returns typed evaluations (kind + valueJson) for the current actor.
+ * rolloutFlag / create / update / delete) is gated by RBAC flags permissions.
+ * Public client hydration uses evaluateFeatureFlags (no flags:read); myFeatureFlags
+ * remains as a deprecated flags:read alias.
  */
 
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { CurrentUser, Public } from '@openthrottle/nestjs-auth';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { RolloutService } from '@openthrottle/nestjs-rollout';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { FeatureFlagObject } from './feature-flag.object';
+import { resolveEvaluationPrincipal } from './resolve-evaluation-principal';
 import { RolloutFlagObject } from './rollout-flag.object';
 import {
   CreateRolloutFlagInput,
@@ -27,7 +30,10 @@ import {
 @Resolver(() => RolloutFlagObject)
 @UseGuards(GqlPermissionsGuard)
 export class RolloutResolver {
-  constructor(private readonly rolloutService: RolloutService) {}
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly rolloutService: RolloutService,
+  ) {}
 
   @Query(() => [RolloutFlagObject], {
     description: `List all rollout feature flags`,
@@ -50,8 +56,36 @@ export class RolloutResolver {
     return flag == null ? null : toRolloutFlagObject(flag);
   }
 
+  @Public()
   @Query(() => [FeatureFlagObject], {
-    description: `Evaluated feature flags for the current actor (kind + valueJson)`,
+    description: `Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today).`,
+  })
+  async evaluateFeatureFlags(
+    @Args('anonymousId', { nullable: true, type: () => String })
+    anonymousId: string | null,
+    @Args('applicationKey', { nullable: true, type: () => String })
+    applicationKey: string | null,
+    @CurrentUser() principal: AuthPrincipal | undefined,
+  ): Promise<FeatureFlagObject[]> {
+    if (applicationKey != null && applicationKey.trim() !== '') {
+      this.logger.debug(
+        `evaluateFeatureFlags applicationKey=${applicationKey.trim()} (scoping stub until app UUID mapping)`,
+        RolloutResolver.name,
+      );
+    }
+
+    const evaluationPrincipal = resolveEvaluationPrincipal(
+      principal,
+      anonymousId,
+    );
+    const evaluations =
+      await this.rolloutService.evaluateAll(evaluationPrincipal);
+    return evaluations.map(toFeatureFlagObject);
+  }
+
+  @Query(() => [FeatureFlagObject], {
+    deprecationReason: `Use evaluateFeatureFlags (public hydration; no flags:read). Auth remains enrichment for targeting.`,
+    description: `Deprecated: evaluated feature flags for the current actor (kind + valueJson). Prefer evaluateFeatureFlags.`,
   })
   @Permissions(PERMISSIONS.FLAGS_READ)
   async myFeatureFlags(
