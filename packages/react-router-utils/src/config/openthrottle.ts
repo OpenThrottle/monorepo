@@ -10,3 +10,9 @@ export const OPENTHROTTLE_GITHUB_URL_DISCUSSIONS = `https://github.com/orgs/Open
 export const OPENTHROTTLE_GITHUB_URL_TEAM = `https://github.com/orgs/OpenThrottle/people`;
 
 export const OPENTHROTTLE_META_DESCRIPTION = `OpenThrottle is an open-source, AI-backed toolkit for planning and shipping software — plans, tasks, agentic workflows, and semantic search, right in your IDE.`;
+
+/**
+ * @description Shared Legal / Privacy / Terms site-posture paragraph (commercial product; as-is / no SLA).
+ * @public
+ */
+export const OPENTHROTTLE_SITE_LEGAL_POSTURE = `OpenThrottle is a commercial product and related online services operated by Matthew Scholta. Except where a separate written agreement says otherwise, it is provided as-is, without a service-level agreement, uptime guarantee, or commitment to maintain any particular feature.`;
