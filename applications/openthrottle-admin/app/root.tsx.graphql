@@ -73,9 +73,3 @@ mutation login($input: LoginInput!) {
     accessToken
   }
 }
-
-mutation signout {
-  signout {
-    success
-  }
-}

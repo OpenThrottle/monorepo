@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
@@ -20,6 +20,7 @@ describe('RulesTable Component', () => {
   };
 
   beforeEach(() => {
+    cleanup();
     props = {
       onDelete: vi.fn(),
       onToggleEnabled: vi.fn(),
@@ -27,12 +28,15 @@ describe('RulesTable Component', () => {
         {
           actionPayloadJson: '{"placement":"first","skillSlug":"grilling"}',
           actionType: 'inject-task',
+          createdAt: '2026-01-01T00:00:00.000Z',
           enabled: true,
           environment: null,
           id: 'rule-1',
           status: 'PENDING',
           tagAll: ['breakdown'],
           title: 'Grill breakdowns',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+          userId: 'user-1',
         },
       ],
     };
@@ -40,7 +44,23 @@ describe('RulesTable Component', () => {
     component = renderTable();
   });
 
-  test('leads with the title and expresses the action summary', () => {
+  test('renders table headers and leads with title plus action summary', () => {
+    expect(component.getByTestId('RulesTable')).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', {
+        name: RULES_COPY.tableRuleHeader,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', {
+        name: RULES_COPY.tableMatchHeader,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', {
+        name: RULES_COPY.tableActionsHeader,
+      }),
+    ).toBeInTheDocument();
     expect(component.getByText('Grill breakdowns')).toBeInTheDocument();
     expect(component.getByText('inject-task')).toBeInTheDocument();
     expect(component.getByText('grilling · first')).toBeInTheDocument();
@@ -50,7 +70,12 @@ describe('RulesTable Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('edit links to the dedicated edit route', () => {
+  test('title and edit link to the dedicated edit route', () => {
+    expect(
+      component.getByRole('link', {
+        name: `${RULES_COPY.editAction}: Grill breakdowns`,
+      }),
+    ).toHaveAttribute('href', '/rules/rule-1/edit');
     expect(
       component.getByRole('link', { name: RULES_COPY.editAction }),
     ).toHaveAttribute('href', '/rules/rule-1/edit');
@@ -70,10 +95,71 @@ describe('RulesTable Component', () => {
     expect(props.onToggleEnabled).toHaveBeenCalledWith(props.rules[0]);
   });
 
-  test('shows the designed empty state when there are no rules', () => {
+  test('shows RulesEmpty when there are no rules', () => {
     const empty = renderTable({ rules: [] });
 
+    expect(empty.getByTestId('RulesEmpty')).toBeInTheDocument();
     expect(empty.getByText(RULES_COPY.emptyTitle)).toBeInTheDocument();
     expect(empty.getByText(RULES_COPY.emptyBody)).toBeInTheDocument();
+    expect(
+      empty.getByRole('link', { name: RULES_COPY.newRuleAction }),
+    ).toHaveAttribute('href', '/rules/new');
+  });
+
+  test('shows filtered-empty via RulesEmpty when isFiltered and no rules', () => {
+    const filtered = renderTable({ isFiltered: true, rules: [] });
+
+    expect(filtered.getByTestId('RulesEmpty')).toBeInTheDocument();
+    expect(
+      filtered.getByText(RULES_COPY.filteredEmptyTitle),
+    ).toBeInTheDocument();
+    expect(
+      filtered.getByText(RULES_COPY.filteredEmptyBody),
+    ).toBeInTheDocument();
+    expect(
+      filtered.getByRole('link', { name: RULES_COPY.clearFiltersAction }),
+    ).toHaveAttribute('href', '/rules');
+  });
+
+  describe('when a rule is disabled', () => {
+    beforeEach(() => {
+      cleanup();
+      props = {
+        onDelete: vi.fn(),
+        onToggleEnabled: vi.fn(),
+        rules: [
+          {
+            actionPayloadJson: '{}',
+            actionType: 'inject-task',
+            createdAt: '2026-01-02T00:00:00.000Z',
+            enabled: false,
+            environment: null,
+            id: 'rule-2',
+            status: null,
+            tagAll: [],
+            title: 'Disabled rule',
+            updatedAt: '2026-01-02T00:00:00.000Z',
+            userId: 'user-1',
+          },
+        ],
+      };
+      component = renderTable();
+    });
+
+    test('shows disabled badge, enable action, and matches-every-plan hint', async () => {
+      const user = userEvent.setup();
+
+      expect(
+        component.getByText(RULES_COPY.filterDisabledLabel),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(RULES_COPY.matchesEveryPlan),
+      ).toBeInTheDocument();
+
+      await user.click(
+        component.getByRole('button', { name: RULES_COPY.enableAction }),
+      );
+      expect(props.onToggleEnabled).toHaveBeenCalledWith(props.rules[0]);
+    });
   });
 });
