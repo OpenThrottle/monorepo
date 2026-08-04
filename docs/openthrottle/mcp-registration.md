@@ -39,7 +39,7 @@ Inventory of MCP config **as actually committed** (audited 2026-06-16). This is 
 - No launcher — `scripts/run-docs-mcp.sh` was removed (PR #6); it does not exist on disk.
 - No package — there is no `docs-mcp` package under `packages/`.
 - No committed config references it as active (`.cursor/mcp.json.example`, `.mcp.json`, `.vscode/mcp.json`, `opencode.json` are all docs-mcp-free).
-- It lingers only in (a) the gitignored local `.cursor/mcp.json` on individual machines and (b) stale doc prose — being purged under this plan (see [task tracking in mcp-worktrees.md, first-time-onboarding.md, etc.](#related-documentation)). Historical/seed data (e.g. `databases/seed.sql`) is left intact.
+- It may still linger in a developer's gitignored local `.cursor/mcp.json`; remove it there. Historical/seed data (e.g. `databases/seed.sql`) is left intact.
 
 Its former role — semantic search over ingested `docs/` — is now served by **`openthrottle-mcp`** (`semantic_search`, `list_sources`, `get_document`).
 

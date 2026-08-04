@@ -33,6 +33,6 @@ PubSub. Also declared as an optional `peerDependency` of `@openthrottle/nestjs-l
 
 ## Pointers
 
-- [docs/openthrottle/notifications-websockets-plan.md](../../docs/openthrottle/notifications-websockets-plan.md)
-  — the platform contract: event names, payload types, resolver usage.
+— the platform contract: event names, payload types, resolver usage.
+
 - [README.md](./README.md).

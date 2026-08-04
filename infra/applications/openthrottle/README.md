@@ -50,4 +50,4 @@ module "openthrottle" {
 }
 ```
 
-Templates: `templates/startup.sh.tpl`, `templates/docker-compose.yml.tpl`, `templates/Caddyfile.tpl`. See [single-box-run-design.md](../../../docs/openthrottle/single-box-run-design.md).
+Templates: `templates/startup.sh.tpl`, `templates/docker-compose.yml.tpl`, `templates/Caddyfile.tpl`.

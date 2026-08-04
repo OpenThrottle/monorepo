@@ -4,7 +4,7 @@ The developer apps use a GitHub/Primer-inspired gray scale and a dedicated **bra
 
 ## Grays (GitHub/Primer-style)
 
-- **Light mode:** Neutral scale from [Primer Primitives](https://github.com/primer/primitives) light (`neutral.0` → `neutral.13`). See [gray-mapping.md](./gray-mapping.md) for hex values and mapping to `gray-50` … `gray-950`.
+- **Light mode:** Neutral scale from [Primer Primitives](https://github.com/primer/primitives) light (`neutral.0` → `neutral.13`).
 - **Dark mode:** Same Tailwind step names; hex values switch to Primer dark neutrals when `prefers-color-scheme: dark` (e.g. `dark:bg-gray-100`, `dark:text-gray-500`).
 
 ## Brand color
@@ -27,4 +27,3 @@ The developer apps use a GitHub/Primer-inspired gray scale and a dedicated **bra
 
 - [Primer Primitives](https://github.com/primer/primitives) — base color tokens.
 - [primer.style/foundations/color](https://primer.style/foundations/color) — Primer color system.
-- [gray-mapping.md](./gray-mapping.md) — Gray scale mapping (light/dark) for the developer UI.

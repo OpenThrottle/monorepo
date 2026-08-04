@@ -30,8 +30,7 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
 - Built package (real `build`/`build-package` targets, `exports` → `dist/`) — see
   [../AGENTS.md](../AGENTS.md) for the pattern.
 - `src/graphql/ralph/*.graphql` is also consumed by `openthrottle-mcp`'s codegen (its `codegen.ts`
-  globs this directory). Editing these documents means regenerating **both** packages' `__generated__`
-  — see [docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md](../../docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md).
+  globs this directory). Editing these documents means regenerating **both** packages' `__generated__`.
 - Keep the orchestrator GraphQL-pure: the single non-plan call allowed is the `getServerHealth`
   preflight. Never open a Postgres connection or spawn the CLI from here.
 - Config precedence is enqueue/GraphQL tuning → env → `.workflow-ralph.json` → built-ins; GraphQL

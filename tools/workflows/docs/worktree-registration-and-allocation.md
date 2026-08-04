@@ -85,7 +85,7 @@ This document defines how N worktree targets (or separate repos) are registered 
 - **Lock:** When a target is acquired, the tracker marks it **locked** with `lockedBy` (e.g. BullMQ job id). No process id (PID) or handle is stored in the tracker.
 - **Handoff:** After acquire and create-branch, the workflow has a `ParentJobHandoff`: `{ branchName, targetId, worktreePath }`. This is the **binding**: the child job and ensure-commit step use `worktreePath` as the working directory for all git and pnpm commands.
 - **Spawn:** `runChildJob(handoff, ...)` runs `pnpm exec workflow-ralph ...` with `cwd: handoff.worktreePath`. So the **only** binding of the Ralph process to the repo/worktree is **process cwd**.
-- **Agent CLI worktree (separate layer):** Nested Ralph may forward `-w` / `--worktree` to **cursor-agent** or **claude** per iteration. By default, when job tuning omits `ralph.worktree`, `runChildJob` passes `--worktree <targetId>` on nested argv so the agent name aligns with the acquired target id. This does **not** change git cwd or tracker binding. See [ralph-worktree-flag.md](../../../docs/workflows/ralph-worktree-flag.md).
+- **Agent CLI worktree (separate layer):** Nested Ralph may forward `-w` / `--worktree` to **cursor-agent** or **claude** per iteration. By default, when job tuning omits `ralph.worktree`, `runChildJob` passes `--worktree <targetId>` on nested argv so the agent name aligns with the acquired target id. This does **not** change git cwd or tracker binding.
 - **Release:** When the workflow finishes (success or failure), it calls `tracker.release({ id: handoff.targetId, lockedBy })`. The target becomes available again. The coordinator (e.g. BullMQ) knows “job J held target T” via the job’s lifecycle and the fact that `lockedBy === jobId`; it does **not** need to know the PID of the Ralph process.
 
 **Implications:**
@@ -113,6 +113,5 @@ This document defines how N worktree targets (or separate repos) are registered 
 - **Nest module:** [`packages/nestjs-worktrees/README.md`](../../../packages/nestjs-worktrees/README.md).
 - **Workflow:** `tools/workflows/src/utils/workflow.ts` (`runWorktreeWorkflow`); `parent-job.ts` (`parentJobAcquireAndCreateBranch`); `child-job.ts` (`runChildJob` with `cwd: worktreePath`).
 - **Process model:** [process-model.md](./process-model.md).
-- **Agent CLI `--worktree`:** [ralph-worktree-flag.md](../../../docs/workflows/ralph-worktree-flag.md).
 - **Process management (spawn, timeout, cancel, streaming):** [process-management-proposal.md](./process-management-proposal.md).
 - **Local API (trigger, worktreeId in job):** [local-api-design.md](./local-api-design.md).

@@ -4,9 +4,7 @@
 > `a1c55a0a-735c-4f60-965a-7f122acbdc8f`, task `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
 > Specifies that **every** workflow request goes through GraphQL
 > (`executeGraphqlV2` / `executeWorkflowGraphqlV2`) with **exactly one documented exception**: a
-> health check used as a read-before-write preflight. Builds on the Phase 1 map
-> ([`ralph-execution-paths-and-package-layering.md`](./ralph-execution-paths-and-package-layering.md))
-> and the canonical decision table in
+> health check used as a read-before-write preflight. Builds on the canonical decision table in
 > [`tools/workflows/README.md`](../../tools/workflows/README.md).
 
 ## The rule (one sentence)
@@ -148,18 +146,13 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 
 ## Cross-links
 
-- Phase 1 map (surfaces, layers, today's transport):
-  [`ralph-execution-paths-and-package-layering.md`](./ralph-execution-paths-and-package-layering.md).
 - Canonical decision table + Target architecture:
   [`tools/workflows/README.md`](../../tools/workflows/README.md#target-architecture-phase-2) and
   [`getServerHealth` vs workflow GraphQL transport errors](../../tools/workflows/README.md#getserverhealth-vs-workflow-graphql-transport-errors-ralph-startup).
-- Jest-style hooks as BullMQ child jobs (consumes this boundary):
-  [`jest-style-lifecycle-hooks-as-bullmq-child-jobs.md`](./jest-style-lifecycle-hooks-as-bullmq-child-jobs.md).
 - Health resolver: `applications/openthrottle-server/src/graphql/health/health.resolver.ts`
   (`@Public()`), object: `server-health.object.ts`.
 - Codegen documents: `packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql` →
   `src/__generated__/graphql.js`.
 - Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; this task: `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
 - Migration spin-out: task `978a661f` (creates the `@tools/workflows` → `nestjs-agentic-workflow`
-  cutover plan); multi-project design: task `2bdf0145`
-  ([`multi-project-cross-org-abstraction.md`](./multi-project-cross-org-abstraction.md)).
+  cutover plan); multi-project design: task `2bdf0145`.

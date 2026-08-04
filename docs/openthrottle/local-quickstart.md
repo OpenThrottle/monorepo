@@ -28,11 +28,11 @@ Copy defaults into local env files (gitignored):
 | `applications/openthrottle-server/.env`                  | `[applications/openthrottle-server/.env.default](../../applications/openthrottle-server/.env.default)`       |
 | `applications/openthrottle-developer/.env` (optional UI) | `[applications/openthrottle-developer/.env.default](../../applications/openthrottle-developer/.env.default)` |
 
-**Host processes + Docker DB:** In `applications/openthrottle-server/.env`, set `**POSTGRES_HOST=localhost`** and `**REDIS_HOST=localhost\*\*`when the API runs on your machine and only Postgres/Redis are in Compose. Root`.env.default`uses`host.docker.internal`for tools inside Docker; override on the server`.env` for native dev.
+**Host processes + Docker DB:** In `applications/openthrottle-server/.env`, set `POSTGRES_HOST=localhost` and `REDIS_HOST=localhost` when the API runs on your machine and only Postgres/Redis are in Compose. Root `.env.default` uses `host.docker.internal` for tools inside Docker; override on the server `.env` for native dev.
 
-**Auth (default):** MCP and workers need long-lived \*\*service account\*\* tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
+**Auth (default):** MCP and workers need long-lived **service account** tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
-**Embeddings:** Configure `**OPENAI_API_KEY`** or `**OLLAMA_BASE_URL**`on`**applications/openthrottle-server/.env\*\*`(not required in root`.env`for the MCP launcher).`[scripts/run-openthrottle-mcp.sh](../../scripts/run-openthrottle-mcp.sh)` starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-openthrottle-mcpsh).
+**Embeddings:** Configure `OPENAI_API_KEY` or `OLLAMA_BASE_URL` on `applications/openthrottle-server/.env` (not required in root `.env` for the MCP launcher). [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-openthrottle-mcpsh).
 
 ---
 
@@ -43,10 +43,10 @@ pnpm run database:start
 pnpm run database:migrate
 ```
 
-- `**database:start**` — brings up `**openthrottle-postgres**` (port **6010**) and `**openthrottle-redis`** (port **6011\*\*) via root `docker-compose.yml`.
-- `**database:migrate`** — applies OpenThrottle schema (includes service-account seed migration **045\*\*; no secrets yet).
+- `database:start` — brings up the `postgres` (port **6010**) and `redis` (port **6011**) Compose services via root `docker-compose.yml`.
+- `database:migrate` — applies the OpenThrottle schema (includes service-account seed migration **045**; no secrets yet).
 
-Stop the stack when finished: `**pnpm run database:stop`\*\*.
+Stop the stack when finished: `pnpm run database:stop`.
 
 Schema and imports: `[databases/README.md](../../databases/README.md)`.
 
@@ -115,7 +115,7 @@ pnpm nx run openthrottle-server:start
 pnpm nx run openthrottle-developer:dev
 ```
 
-Open `**http://localhost:6020**`. MCP verification does not require the UI.
+Open `http://localhost:6020`. MCP verification does not require the UI.
 
 ---
 
@@ -123,7 +123,7 @@ Open `**http://localhost:6020**`. MCP verification does not require the UI.
 
 ### Cursor MCP config
 
-Register `**openthrottle-mcp**` in `**.cursor/mcp.json**` (this repo as workspace) or `**~/.cursor/mcp.json**` (secondary workspace). Align URLs with server `**PORT**`:
+Register `openthrottle-mcp` in `.cursor/mcp.json` (this repo as workspace) or `~/.cursor/mcp.json` (secondary workspace). Align URLs with server `PORT`:
 
 ```json
 {
@@ -152,13 +152,13 @@ export OPENTHROTTLE_MCP_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
 API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 ```
 
-Expect `**OK: GET …/health**`, `**OK: embedding provider configured**` (or a WARN with link to run-locally-oss), and with the token set `**OK: authenticated GraphQL listSources**`.
+Expect `OK: GET …/health`, `OK: embedding provider configured` (or a WARN with link to run-locally-oss), and with the token set `OK: authenticated GraphQL listSources`.
 
 ### In Cursor
 
-1. Confirm `**openthrottle-mcp**` is connected.
-2. Call tool `**health**` (no auth) — `serverHealth` from GraphQL.
-3. Call `**list_sources**` or `**list_plans_by_status**` — confirms `**OPENTHROTTLE_MCP_AUTH_TOKEN**` and RBAC with auth enabled.
+1. Confirm `openthrottle-mcp` is connected.
+2. Call tool `health` (no auth) — `serverHealth` from GraphQL.
+3. Call `list_sources` or `list_plans_by_status` — confirms `OPENTHROTTLE_MCP_AUTH_TOKEN` and RBAC with auth enabled.
 
 ---
 
@@ -177,14 +177,14 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 
 ## Troubleshooting
 
-| Symptom                            | What to check                                                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                          |
-| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                           |
-| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                               |
-| `semantic_search` empty or errors  | Set `**OLLAMA_BASE_URL`** or `**OPENAI_API_KEY\*\*`on server`.env` — [run-locally-oss.md](./run-locally-oss.md) |
-| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)               |
-| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                                  |
+| Symptom                            | What to check                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                  |
+| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                   |
+| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                       |
+| `semantic_search` empty or errors  | Set `OLLAMA_BASE_URL` or `OPENAI_API_KEY` on server `.env` — [run-locally-oss.md](./run-locally-oss.md) |
+| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)       |
+| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                          |
 
 ---
 

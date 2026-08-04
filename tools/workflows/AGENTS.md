@@ -11,7 +11,7 @@ Legacy Ralph workflow package — deprecated (status, replacement packages, and 
 
 ## Which path runs when
 
-README § [Which path runs when](./README.md#which-path-runs-when-canonical-decision-table) is the canonical decision table for the three Ralph surfaces (local CLI, queued spawn, in-process orchestrator) — always start there, never infer from code. Deep map: [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md). Key switches:
+README § [Which path runs when](./README.md#which-path-runs-when-canonical-decision-table) is the canonical decision table for the three Ralph surfaces (local CLI, queued spawn, in-process orchestrator) — always start there, never infer from code. Key switches:
 
 - `OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` — flips queued `enqueuePlanRun` back to the legacy nested-CLI spawn path (default is the in-process orchestrator).
 - `WORKFLOW_RALPH_TRANSPORT=postgres-direct` — rolls the CLI/spawn transport back from GraphQL to direct `pg` (see [docs/workflows/graphql-only-transport-boundary.md](../../docs/workflows/graphql-only-transport-boundary.md)).

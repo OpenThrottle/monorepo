@@ -31,8 +31,6 @@ deactivate
 
 ## ☁️ GCP Auth | gcloud CLI
 
-- Good stuff in our [doc here](./docs/infra/gcloud-two-profiles.md)
-
 ```bash
 # List configurations and see which is active
 gcloud config configurations list

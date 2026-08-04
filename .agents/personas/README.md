@@ -11,7 +11,7 @@
 | Invocation | `--prompt-file` (see below)                               | Cursor skill attach or discovery in developer app | `--prompt /agents-ralph` (default)                                |
 | Authority  | Steers _how_ to think; `.cursor/rules/` wins on conflicts | Instructs _what_ to do for a workflow             | Owns OT status, task picking, `<ralph:task-complete>` signals     |
 
-**Layer model** (see [ralph-workflow-runtime-config.md](../../docs/workflows/ralph-workflow-runtime-config.md)):
+**Layer model**:
 
 1. **Prompt (layer 1)** — Persona or Ralph skill file (`--prompt` / `--prompt-file`).
 2. **Execution backend (layer 2)** — `cursor` or `claude` (`--backend`); unchanged by personas.
@@ -37,7 +37,7 @@ pnpm exec workflow-ralph --plan <plan-uuid> \
 - Env: `WORKFLOW_RALPH_PROMPT_FILE=.agents/personas/qa.md`
 - Defaults file: `"promptFile": ".agents/personas/product.md"` in `.workflow-ralph.json`
 
-Precedence: **CLI → env → `.workflow-ralph.json` → built-ins**. See [tools/workflows/README.md](../../tools/workflows/README.md) and [ralph-config-migration.md](../../docs/workflows/ralph-config-migration.md).
+Precedence: **CLI → env → `.workflow-ralph.json` → built-ins**. See [tools/workflows/README.md](../../tools/workflows/README.md).
 
 ### Cursor (interactive)
 
@@ -76,7 +76,6 @@ Copy [`_template.md`](./_template.md) when adding a persona. Fill every section;
 
 ## Related docs
 
-- [Ralph workflow runtime config](../../docs/workflows/ralph-workflow-runtime-config.md) — three-layer mental model
 - [Ralph design](../../docs/workflows/ralph-design.md) — OT-injected plan context
 - [`.cursor/skills/agents-ralph/SKILL.md`](../../.cursor/skills/agents-ralph/SKILL.md) — default Ralph loop
 - [`.agents/skills/workflow-ralph/SKILL.md`](../skills/workflow-ralph/SKILL.md) — CLI and queue summary

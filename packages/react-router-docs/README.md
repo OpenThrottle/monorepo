@@ -4,8 +4,6 @@ Source-first docs/FAQ rendering layer for OpenThrottle React Router apps. Drop
 Markdown files into a conventional folder and get `/docs` and `/faq` routes with
 consistent nav and styling — no bespoke page code per app.
 
-- **Convention:** [docs/openthrottle/docs-faq-convention.md](../../docs/openthrottle/docs-faq-convention.md)
-- **Decision record:** [docs/openthrottle/docs-faq-delivery-adr.md](../../docs/openthrottle/docs-faq-delivery-adr.md)
 - Source-first: no `build` target; consuming apps' Vite transpiles `src/`. Rendering is delegated to `@openthrottle/react-router-markdown` (SSR-capable).
 
 ## The app owns the glob
@@ -154,6 +152,6 @@ dropped.
 ## Authoring
 
 Content is Markdown (CommonMark + GFM), **not MDX** — see the
-[convention](../../docs/openthrottle/docs-faq-convention.md) for the frontmatter
+convention for the frontmatter
 schema (`title`, `description`, `slug`, `group`, `order`, `draft`), route
 mapping, and nav ordering rules.
