@@ -12,6 +12,7 @@ import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
+  OPENTHROTTLE_LEGAL_NOTICE,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -62,12 +63,9 @@ export default function Component(
 
         <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It exists to showcase open source work and
-            experiments, not to run a commercial service. This policy describes,
-            in plain terms, what is and is not collected when you visit, and how
-            that information is used. The site is provided as is; this policy
-            may evolve as the project evolves.
+            {OPENTHROTTLE_LEGAL_NOTICE} This policy describes, in plain terms,
+            what is and is not collected when you visit, and how that
+            information is used. This policy may evolve as the project evolves.
           </p>
 
           <h2 className="text-foreground font-medium">Information collected</h2>

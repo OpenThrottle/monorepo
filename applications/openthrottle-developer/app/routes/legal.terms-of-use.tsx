@@ -12,6 +12,7 @@ import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
+  OPENTHROTTLE_LEGAL_NOTICE,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -70,25 +71,18 @@ export default function Component(
           </p>
 
           <h2 className="text-foreground font-medium">About this site</h2>
-          <p>
-            This site is a personal portfolio and developer playground operated
-            by Matthew Scholta. It is provided free of charge, on an as-is
-            basis, primarily to showcase open source work and experiments. It is
-            not a commercial product, and there is no service-level agreement,
-            uptime guarantee, or commitment to maintain any particular feature.
-          </p>
+          <p>{OPENTHROTTLE_LEGAL_NOTICE}</p>
 
           <h2 className="text-foreground font-medium">Acceptable use</h2>
           <p>
-            You agree to use the site only for lawful, personal, and
-            non-disruptive purposes. You agree not to: scrape or harvest content
-            at a volume or rate that interferes with normal operation, attempt
-            to reverse engineer, probe, or exploit non-public endpoints, run
-            automated attacks of any kind (including denial of service,
-            credential stuffing, or vulnerability scanning without permission),
-            upload or transmit malicious code, or otherwise attempt to gain
-            unauthorized access to the site, its infrastructure, or related
-            systems.
+            You agree to use the site only for lawful and non-disruptive
+            purposes. You agree not to: scrape or harvest content at a volume or
+            rate that interferes with normal operation, attempt to reverse
+            engineer, probe, or exploit non-public endpoints, run automated
+            attacks of any kind (including denial of service, credential
+            stuffing, or vulnerability scanning without permission), upload or
+            transmit malicious code, or otherwise attempt to gain unauthorized
+            access to the site, its infrastructure, or related systems.
           </p>
 
           <h2 className="text-foreground font-medium">
