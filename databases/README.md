@@ -383,6 +383,25 @@ LIMIT 5;
 - For a fresh ingest (e.g. after dumping test data or changing source fsiles), run `pnpm run database:reset` then `pnpm run database:import`. Re-running ingest without reset is additive; duplicate plans may be inserted.
 - After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/openthrottle/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
 
+## Local Postgres data volumes & seeding
+
+The local Postgres runs in Docker (compose service `postgres`) on a named volume. For the public repo we keep two interchangeable volumes and seed a fresh/public database from scripts rather than a committed dump.
+
+### Seeding a fresh / public database
+
+There is **no committed SQL seed**. A developer's `databases/seed.sql` is a full `pg_dump` of their own database (personal plans/tasks/notes plus password and service-account credential hashes), so it is gitignored and never enters the repo. A locally-generated `databases/seed.sql` is still baked into that developer's own postgres image (via the `.dockerignore` re-include) for fast personal restores — it just stays local.
+
+A fresh/empty volume is populated by scripts, in order:
+
+```bash
+pnpm run database:start                       # bring postgres up (fresh volume → empty)
+pnpm run database:migrate                     # apply SQL migrations (schema + ledger)
+pnpm run database:bootstrap-default-user      # developer@openthrottle.com / FullThrottle2026!
+pnpm run database:bootstrap-service-accounts  # mint the service-account token (printed once)
+```
+
+`bootstrap-service-accounts` prints a new token exactly once; put it in your root `.env` (and `applications/openthrottle-server/.env`) as `OPENTHROTTLE_MCP_AUTH_TOKEN` so the MCP server and CLIs authenticate against the fresh database.
+
 ## Migrations
 
 SQL migrations live in `databases/migrations/` and are applied in filename order by `pnpm run database:migrate`.
