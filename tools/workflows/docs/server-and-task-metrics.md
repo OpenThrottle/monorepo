@@ -122,7 +122,6 @@ Per-job CPU and memory are captured at job start and end. They are exposed in th
 
 ## 7. Advanced profiling: child process and system metrics
 
-
 That guide covers:
 
 - **Child process metrics** — CPU and memory of spawned Ralph/cursor-agent processes (via `pidusage`)

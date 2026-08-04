@@ -177,14 +177,14 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 
 ## Troubleshooting
 
-| Symptom                            | What to check                                                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                          |
-| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                           |
-| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                               |
+| Symptom                            | What to check                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                  |
+| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                   |
+| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                       |
 | `semantic_search` empty or errors  | Set `OLLAMA_BASE_URL` or `OPENAI_API_KEY` on server `.env` — [run-locally-oss.md](./run-locally-oss.md) |
-| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)               |
-| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                                  |
+| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)       |
+| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                          |
 
 ---
 

@@ -8,7 +8,6 @@
 > facts an adapter needs. Run this against any candidate binary, fill in the
 > [§12 template](#12-per-cli-findings-template), and produce a go/no-go verdict.
 
-
 ## 0. How to use this guide
 
 1. Confirm the candidate binary is installed and authenticated.
