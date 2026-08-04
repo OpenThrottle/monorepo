@@ -12,7 +12,7 @@
 OpenThrottle project and its official distributions and services.
 
 This policy governs use of the Marks. It is **separate from the software
-license**: the code is open source under the [Apache License, Version 2.0](./LICENSE),
+license**: the code is open source under the [Apache License, Version 2.0](./LICENSE.md),
 but — as Apache-2.0 **§6** makes explicit — an open-source code license does
 **not** grant any right to use the licensor's trademarks. You can fork the code
 freely; you cannot freely use the name or branding.
@@ -70,5 +70,5 @@ repository governs.
 
 ---
 
-_See also: [LICENSE](./LICENSE) (Apache-2.0, incl. §6), [LICENSING.md](./LICENSING.md)
+_See also: [LICENSE](./LICENSE.md) (Apache-2.0, incl. §6), [LICENSING.md](./LICENSING.md)
 (open-core boundary)._

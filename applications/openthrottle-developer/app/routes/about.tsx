@@ -111,7 +111,7 @@ export default function Component(
       </div>
 
       <div className="relative flex flex-col gap-8 py-8">
-        <Avatar className="m-4 mx-auto size-24 md:size-32">
+        <Avatar className="m-4 size-24 md:size-32">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback className="text-3xl">MS</AvatarFallback>
         </Avatar>
