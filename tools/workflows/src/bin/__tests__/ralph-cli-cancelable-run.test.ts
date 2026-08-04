@@ -56,6 +56,7 @@ const {
   bumpCliPlanRunHeartbeatMock,
   captureRunLocationMock,
   getOpenThrottleConfigOrExitMock,
+  maybeRegisterPlanRunWorktreeCheckoutMock,
   readPlanRunCancelMarkerMock,
   registerCliPlanRunMock,
   resolveGitBranchFromCwdMock,
@@ -71,6 +72,9 @@ const {
     workerId: null,
   })),
   getOpenThrottleConfigOrExitMock: vi.fn(),
+  maybeRegisterPlanRunWorktreeCheckoutMock: vi
+    .fn()
+    .mockResolvedValue(undefined),
   readPlanRunCancelMarkerMock: vi.fn().mockResolvedValue(null),
   registerCliPlanRunMock: vi.fn().mockResolvedValue('cli-run-1'),
   resolveGitBranchFromCwdMock: vi.fn((): string | null => null),
@@ -104,6 +108,8 @@ vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
     getOpenThrottleConfigOrExit: getOpenThrottleConfigOrExitMock,
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue([pendingTask]),
+    maybeRegisterPlanRunWorktreeCheckout:
+      maybeRegisterPlanRunWorktreeCheckoutMock,
     readPlanRunCancelMarker: readPlanRunCancelMarkerMock,
     reconcilePlanCompletionIfAllTasksTerminal: vi.fn().mockResolvedValue(false),
     registerCliPlanRun: registerCliPlanRunMock,
@@ -173,6 +179,8 @@ describe('Ralph detached-CLI cancelable run', () => {
     resolveGitBranchFromCwdMock.mockReturnValue(null);
     bumpCliPlanRunHeartbeatMock.mockClear();
     bumpCliPlanRunHeartbeatMock.mockResolvedValue(undefined);
+    maybeRegisterPlanRunWorktreeCheckoutMock.mockClear();
+    maybeRegisterPlanRunWorktreeCheckoutMock.mockResolvedValue(undefined);
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(throwingExit);
   });
 
@@ -204,6 +212,14 @@ describe('Ralph detached-CLI cancelable run', () => {
       location: { hostname: 'laptop-1', pid: 4242, workerId: null },
       planId: PLAN_ID,
     });
+    expect(maybeRegisterPlanRunWorktreeCheckoutMock).toHaveBeenCalledTimes(1);
+    expect(maybeRegisterPlanRunWorktreeCheckoutMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      {
+        filesystemPath: process.cwd(),
+        planRunId: RUN_ID,
+      },
+    );
     expect(settleCliPlanRunMock).toHaveBeenCalledWith(
       graphqlConfig,
       RUN_ID,
@@ -243,6 +259,29 @@ describe('Ralph detached-CLI cancelable run', () => {
       ),
     ).toBe(false);
     warnSpy.mockRestore();
+  });
+
+  it('skips worktree checkout registration when register fails (no planRunId)', async () => {
+    registerCliPlanRunMock.mockRejectedValueOnce(new Error('server down'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(maybeRegisterPlanRunWorktreeCheckoutMock).not.toHaveBeenCalled();
+    expect(runIterationAsyncMock).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('skips worktree checkout registration for TTY (untracked) runs', async () => {
+    process.stdin.isTTY = true;
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(registerCliPlanRunMock).not.toHaveBeenCalled();
+    expect(maybeRegisterPlanRunWorktreeCheckoutMock).not.toHaveBeenCalled();
+    expect(runIterationAsyncMock).toHaveBeenCalled();
   });
 
   it('continues UN-TRACKED when register fails (no settle, real work not aborted)', async () => {

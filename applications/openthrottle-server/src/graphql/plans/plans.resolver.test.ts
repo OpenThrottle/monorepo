@@ -7,18 +7,20 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
 import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
 import { PlanStatusService } from './plan-status.service';
 import {
@@ -195,6 +197,12 @@ describe('PlansResolver', () => {
     settleCliRun: mockSettleCliRun,
   });
 
+  const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
+  const mockPlanRunWorktreeCheckoutService =
+    createMock<PlanRunWorktreeCheckoutService>({
+      register: mockRegisterWorktreeCheckout,
+    });
+
   // Enqueue mechanics now live in PlanEnqueueService (covered by plan-enqueue.service.test.ts);
   // the resolver only validates input, delegates, and maps the outcome — so mock the service here.
   const sampleEnqueueOutcome = {
@@ -257,6 +265,10 @@ describe('PlansResolver', () => {
         // unit coverage lives in plan-status.service.test.ts.
         PlanStatusService,
         { provide: PlanRunsService, useValue: mockPlanRunsService },
+        {
+          provide: PlanRunWorktreeCheckoutService,
+          useValue: mockPlanRunWorktreeCheckoutService,
+        },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
         { provide: TasksService, useValue: mockTasksService },
@@ -1116,6 +1128,75 @@ describe('PlansResolver', () => {
       const result = await resolver.recordPlanRunHeartbeat({
         planRunId: 'missing',
       });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('registerPlanRunWorktreeCheckout', () => {
+    const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const filesystemPath =
+      '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
+
+    test('delegates to the service with the actor user id and maps the run', async () => {
+      mockRegisterWorktreeCheckout.mockResolvedValueOnce({
+        bullmqJobId: null,
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+        createdAt: new Date('2026-08-02T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'IN_PROGRESS',
+        updatedAt: new Date('2026-08-02T00:00:00.000Z'),
+        workerId: null,
+      });
+
+      const result = await resolver.registerPlanRunWorktreeCheckout(
+        { filesystemPath, planRunId: 'cli-run-1' },
+        userId,
+        AUTH_PRINCIPAL_KIND_USER,
+      );
+
+      expect(mockRegisterWorktreeCheckout).toHaveBeenCalledWith({
+        filesystemPath,
+        planRunId: 'cli-run-1',
+        userId,
+      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          checkoutId: '44444444-4444-4444-8444-444444444444',
+          id: 'cli-run-1',
+        }),
+      );
+    });
+
+    test('rejects service-account principals without calling the service', async () => {
+      mockRegisterWorktreeCheckout.mockClear();
+
+      await expect(
+        resolver.registerPlanRunWorktreeCheckout(
+          { filesystemPath, planRunId: 'cli-run-1' },
+          'sa-1',
+          'service_account',
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(mockRegisterWorktreeCheckout).not.toHaveBeenCalled();
+    });
+
+    test('returns null when the service soft-fails with a missing run', async () => {
+      mockRegisterWorktreeCheckout.mockResolvedValueOnce(null);
+
+      const result = await resolver.registerPlanRunWorktreeCheckout(
+        { filesystemPath, planRunId: 'missing' },
+        userId,
+        AUTH_PRINCIPAL_KIND_USER,
+      );
 
       expect(result).toBeNull();
     });

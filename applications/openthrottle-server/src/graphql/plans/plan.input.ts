@@ -463,6 +463,20 @@ export class RecordPlanRunHeartbeatInput {
   planRunId!: string;
 }
 
+/** Input for {@link PlansResolver.registerPlanRunWorktreeCheckout}. */
+@InputType()
+export class RegisterPlanRunWorktreeCheckoutInput {
+  @Field(() => String, {
+    description: `Absolute filesystem path of the resolved worktree for this run.`,
+  })
+  filesystemPath!: string;
+
+  @Field(() => ID, {
+    description: `Plan-run row id whose checkout_id should be back-filled when still NULL.`,
+  })
+  planRunId!: string;
+}
+
 @InputType()
 export class SetPlanStatusInput {
   @Field(() => ID, { description: `Plan id to update status for` })

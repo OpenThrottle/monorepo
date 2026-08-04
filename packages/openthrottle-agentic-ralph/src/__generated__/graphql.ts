@@ -1601,6 +1601,8 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
   registerCliPlanRun: PlanRunObject;
+  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist. */
+  registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
@@ -2002,6 +2004,10 @@ export type MutationRegisterArgs = {
 
 export type MutationRegisterCliPlanRunArgs = {
   input: RegisterCliPlanRunInput;
+};
+
+export type MutationRegisterPlanRunWorktreeCheckoutArgs = {
+  input: RegisterPlanRunWorktreeCheckoutInput;
 };
 
 export type MutationRemovePermissionFromRoleArgs = {
@@ -3468,6 +3474,13 @@ export type RegisterInput = {
   githubUsername?: InputMaybe<Scalars['String']['input']>;
   /** User password (stored hashed with bcrypt) */
   password: Scalars['String']['input'];
+};
+
+export type RegisterPlanRunWorktreeCheckoutInput = {
+  /** Absolute filesystem path of the resolved worktree for this run. */
+  filesystemPath: Scalars['String']['input'];
+  /** Plan-run row id whose checkout_id should be back-filled when still NULL. */
+  planRunId: Scalars['ID']['input'];
 };
 
 export type RegisterResultObject = {
@@ -5457,6 +5470,26 @@ export type RecordPlanRunHeartbeatMutation = {
     id: string;
     lastHeartbeatAt?: any | null;
     status: string;
+  } | null;
+};
+
+export type RegisterPlanRunWorktreeCheckoutMutationVariables = Exact<{
+  input: RegisterPlanRunWorktreeCheckoutInput;
+}>;
+
+export type RegisterPlanRunWorktreeCheckoutMutation = {
+  __typename?: 'Mutation';
+  registerPlanRunWorktreeCheckout?: {
+    __typename?: 'PlanRunObject';
+    id: string;
+    planId: string;
+    status: string;
+    checkout?: {
+      __typename?: 'PlanRunCheckoutObject';
+      displayName: string;
+      filesystemPath: string;
+      kind: string;
+    } | null;
   } | null;
 };
 
@@ -7523,6 +7556,83 @@ export const RecordPlanRunHeartbeatDocument = {
 } as unknown as DocumentNode<
   RecordPlanRunHeartbeatMutation,
   RecordPlanRunHeartbeatMutationVariables
+>;
+export const RegisterPlanRunWorktreeCheckoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'registerPlanRunWorktreeCheckout' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'RegisterPlanRunWorktreeCheckoutInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'registerPlanRunWorktreeCheckout' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'checkout' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'displayName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesystemPath' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RegisterPlanRunWorktreeCheckoutMutation,
+  RegisterPlanRunWorktreeCheckoutMutationVariables
 >;
 export const CreateProjectDocument = {
   kind: 'Document',

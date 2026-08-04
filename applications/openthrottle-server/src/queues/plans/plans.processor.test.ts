@@ -80,9 +80,14 @@ function getBuildEnhancedMetrics(
   return instance.buildEnhancedMetrics.bind(instance);
 }
 
-vi.mock('child_process', () => ({
-  spawn: vi.fn(),
-}));
+vi.mock('child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('child_process')>();
+
+  return {
+    ...actual,
+    spawn: vi.fn(),
+  };
+});
 
 const mockRunBeforeRunHooksAndHandleBlock = vi.fn().mockResolvedValue(false);
 const mockRunBeforeAllHooksWithDispatcher = vi.fn().mockResolvedValue(false);

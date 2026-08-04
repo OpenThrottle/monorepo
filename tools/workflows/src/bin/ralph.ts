@@ -17,6 +17,7 @@ import {
   getTaskById,
   getTasksByPlanId,
   HEARTBEAT_INTERVAL_MS,
+  maybeRegisterPlanRunWorktreeCheckout,
   RALPH_WORKFLOW_FATAL_PREFIX,
   readPlanRunCancelMarker,
   reconcilePlanCompletionIfAllTasksTerminal,
@@ -227,6 +228,15 @@ export const main = async (): Promise<void> => {
         `⚠️ Could not register a cancelable CLI run for plan ${effectivePlanId}; continuing UN-TRACKED (UI Kill will report NO_ACTIVE_RUN). ${msg}`,
       );
     }
+  }
+
+  // Soft-fail worktree checkout registration at run-start path resolve (before first agent turn).
+  // Only when we have a plan_runs row; skips ot_sa_ / missing actor JWT; never aborts the run.
+  if (planRunId !== null) {
+    await maybeRegisterPlanRunWorktreeCheckout(openthrottleConfig, {
+      filesystemPath: process.cwd(),
+      planRunId,
+    });
   }
 
   /** Finalize a UI Kill: settle CANCELLED, reset the in-flight task + plan to PENDING, exit. */

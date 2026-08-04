@@ -157,6 +157,21 @@ mutation recordPlanRunHeartbeat($input: RecordPlanRunHeartbeatInput!) {
   }
 }
 
+mutation registerPlanRunWorktreeCheckout(
+  $input: RegisterPlanRunWorktreeCheckoutInput!
+) {
+  registerPlanRunWorktreeCheckout(input: $input) {
+    checkout {
+      displayName
+      filesystemPath
+      kind
+    }
+    id
+    planId
+    status
+  }
+}
+
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     ...Project

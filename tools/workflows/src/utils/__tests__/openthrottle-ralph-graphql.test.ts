@@ -12,6 +12,7 @@ import {
   ReadPlanRunCancelMarkerDocument,
   RecordPlanRunHeartbeatDocument,
   RegisterCliPlanRunDocument,
+  RegisterPlanRunWorktreeCheckoutDocument,
   SettleCliPlanRunDocument,
   WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
@@ -371,5 +372,39 @@ describe('openthrottle-ralph-graphql', () => {
     const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
     expect(document).toBe(RecordPlanRunHeartbeatDocument);
     expect(vars).toEqual({ input: { planRunId: 'cli-run-1' } });
+  });
+
+  it('registerPlanRunWorktreeCheckoutGraphql calls the mutation with path + run id', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({
+        registerPlanRunWorktreeCheckout: {
+          checkout: {
+            displayName: 'auto-register-worktree',
+            filesystemPath: '/tmp/worktrees/auto-register-worktree',
+            kind: 'worktree',
+          },
+          id: 'cli-run-1',
+          planId: 'plan-1',
+          status: 'IN_PROGRESS',
+        },
+      }),
+    );
+
+    const { registerPlanRunWorktreeCheckoutGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await registerPlanRunWorktreeCheckoutGraphql({
+      filesystemPath: '/tmp/worktrees/auto-register-worktree',
+      planRunId: 'cli-run-1',
+    });
+
+    const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(document).toBe(RegisterPlanRunWorktreeCheckoutDocument);
+    expect(vars).toEqual({
+      input: {
+        filesystemPath: '/tmp/worktrees/auto-register-worktree',
+        planRunId: 'cli-run-1',
+      },
+    });
   });
 });
