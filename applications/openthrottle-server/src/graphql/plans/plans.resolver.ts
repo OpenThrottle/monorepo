@@ -7,7 +7,11 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/node-client';
 import type { PlanStatusCount } from '@openthrottle/node-client';
-import { BadRequestException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   Args,
   ID,
@@ -48,6 +52,7 @@ import type {
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project, Task } from '@openthrottle/nestjs-repositories';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { ProjectObject } from '../projects/project.object';
 import { TaskObject } from '../tasks/task.object';
 import {
@@ -77,6 +82,7 @@ import {
   PlanRunsByPlanIdInput,
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
+  RegisterPlanRunWorktreeCheckoutInput,
   SearchPlansInput,
   SetPlanStatusInput,
   SettleCliPlanRunInput,
@@ -201,6 +207,7 @@ export class PlansResolver {
     private readonly planEnqueueService: PlanEnqueueService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
     private readonly planRunsService: PlanRunsService,
+    private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planStatusService: PlanStatusService,
     private readonly plansService: PlansService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
@@ -399,6 +406,32 @@ export class PlansResolver {
     await this.planRunsService.recordHeartbeatById(input.planRunId);
 
     const run = await this.planRunsService.findById(input.planRunId);
+
+    return run ? this.mapPlanRunObject(run) : null;
+  }
+
+  @Mutation(() => PlanRunObject, {
+    description: `Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist.`,
+    nullable: true,
+  })
+  async registerPlanRunWorktreeCheckout(
+    @Args('input', { type: () => RegisterPlanRunWorktreeCheckoutInput })
+    input: RegisterPlanRunWorktreeCheckoutInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
+  ): Promise<PlanRunObject | null> {
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    if (actorUserId === null) {
+      throw new ForbiddenException(
+        'registerPlanRunWorktreeCheckout requires a user JWT (service-account tokens are not allowed)',
+      );
+    }
+
+    const run = await this.planRunWorktreeCheckoutService.register({
+      filesystemPath: input.filesystemPath,
+      planRunId: input.planRunId,
+      userId: actorUserId,
+    });
 
     return run ? this.mapPlanRunObject(run) : null;
   }

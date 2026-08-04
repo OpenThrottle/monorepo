@@ -6,10 +6,12 @@ import {
   AgenticWorkflowRalph,
   NestjsAgenticWorkflowModule,
 } from '@openthrottle/nestjs-agentic-workflow';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import { buildWorkflowExecuteGraphqlV2Options } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
+import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module';
 import { createAgenticRalphOrchestratorDeps } from './agentic-ralph-orchestrator-deps.factory';
 import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth';
@@ -26,7 +28,7 @@ import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic
 @Module({
   exports: [AgenticRalphOrchestratorService],
   imports: [
-    NestjsRepositoriesModule,
+    LoggerModule,
     NestjsAgenticWorkflowModule.registerWorkflow({
       executeGraphqlV2,
       providers: [
@@ -50,6 +52,8 @@ import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic
         },
       ],
     }),
+    NestjsRepositoriesModule,
+    PlanRunWorktreeCheckoutModule,
   ],
   providers: [AgenticRalphOrchestratorService],
 })

@@ -4,6 +4,7 @@ import {
   AGENTIC_WORKFLOW_RALPH_ID,
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PlanRunsService } from '@openthrottle/nestjs-repositories';
 import type {
   WorkflowCorrelation,
@@ -22,6 +23,7 @@ import type {
   WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 
 type PlanRunTuningInput = NonNullable<
@@ -33,14 +35,18 @@ type PlanRunTuningInput = NonNullable<
  * {@link AGENTIC_WORKFLOW_REGISTRY} by id ({@link AGENTIC_WORKFLOW_RALPH_ID}, `'ralph'`) and builds its
  * orchestrator via {@link AgenticWorkflowBase.createOrchestrator}. The registry indirection is
  * behavior-neutral: id `'ralph'` yields exactly today's `createWorkflowRalphOrchestrator(deps)` wiring
- * from `@openthrottle/openthrottle-agentic-ralph`.
+ * from `@openthrottle/openthrottle-agentic-ralph`. After the concrete worktree path is resolved and
+ * before the first agent turn, soft-registers a linked worktree checkout when
+ * `plan_runs.checkout_id` is still NULL (see {@link PlanRunWorktreeCheckoutService}).
  */
 @Injectable()
 export class AgenticRalphOrchestratorService {
   constructor(
     @Inject(AGENTIC_WORKFLOW_REGISTRY)
     private readonly workflowRegistry: AgenticWorkflowRegistry,
+    private readonly logger: LoggerService,
     private readonly planRunsService: PlanRunsService,
+    private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
   ) {}
 
   /**
@@ -69,6 +75,13 @@ export class AgenticRalphOrchestratorService {
       jobData.workingDirectory,
       process.env,
     );
+
+    // Soft-fail registration: must not abort the agent run when checkout lookup/upsert fails.
+    await this.maybeRegisterWorktreeCheckout({
+      correlation,
+      filesystemPath: configCwd,
+    });
+
     const config = loadWorkflowRalphConfig(configCwd, process.env);
     applyWorkflowRalphOtRootFromConfig(configCwd, process.env);
 
@@ -111,5 +124,69 @@ export class AgenticRalphOrchestratorService {
     };
 
     return orchestrator.execute({ context });
+  }
+
+  /**
+   * @description Once at run-start path resolve: when the plan run still has a NULL
+   * `checkout_id` and an actor user, register the resolved filesystem path as a
+   * linked worktree checkout. Soft-fails (log + continue) so registration never
+   * aborts the orchestrator.
+   */
+  private async maybeRegisterWorktreeCheckout(params: {
+    readonly correlation?: WorkflowCorrelation;
+    readonly filesystemPath: string;
+  }): Promise<void> {
+    const { correlation, filesystemPath } = params;
+    const queueJobId = correlation?.queueJobId?.trim();
+    const queueName = correlation?.queueName?.trim();
+
+    if (
+      queueJobId === undefined ||
+      queueJobId === '' ||
+      queueName === undefined ||
+      queueName === ''
+    ) {
+      return;
+    }
+
+    try {
+      const run = await this.planRunsService.findByQueueNameAndBullmqJobId(
+        queueName,
+        queueJobId,
+      );
+      if (run === null) {
+        this.logger.debug(
+          `Skipping worktree checkout registration: no plan_runs row for ${queueName}/${queueJobId}`,
+          AgenticRalphOrchestratorService.name,
+        );
+        return;
+      }
+
+      if (run.checkoutId !== null) {
+        return;
+      }
+
+      const actorUserId = run.actorUserId?.trim();
+      if (actorUserId === undefined || actorUserId === '') {
+        this.logger.debug(
+          `Skipping worktree checkout registration for run ${run.id}: actor_user_id is null`,
+          AgenticRalphOrchestratorService.name,
+        );
+        return;
+      }
+
+      await this.planRunWorktreeCheckoutService.register({
+        filesystemPath,
+        planRunId: run.id,
+        userId: actorUserId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail worktree checkout registration at ${filesystemPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        AgenticRalphOrchestratorService.name,
+      );
+    }
   }
 }

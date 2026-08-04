@@ -89,6 +89,7 @@ import {
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
   RegisterInput,
+  RegisterPlanRunWorktreeCheckoutInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
   RemovePlanTagInput,
@@ -1078,6 +1079,15 @@ export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
     email: z.string(),
     githubUsername: z.string().nullish(),
     password: z.string(),
+  });
+}
+
+export function RegisterPlanRunWorktreeCheckoutInputSchema(): z.ZodObject<
+  Properties<RegisterPlanRunWorktreeCheckoutInput>
+> {
+  return z.object({
+    filesystemPath: z.string(),
+    planRunId: z.string(),
   });
 }
 

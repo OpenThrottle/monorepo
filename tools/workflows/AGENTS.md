@@ -37,6 +37,15 @@ New workflow, queue, orchestrator, or worktree behavior belongs in the `@openthr
 - Config precedence: built-in defaults < `.workflow-ralph.json` **in the cwd** < `WORKFLOW_RALPH_*` env vars < CLI/enqueue overrides (`src/config/load-workflow-ralph-config.ts`; filename constant `WORKFLOW_RALPH_DEFAULTS_FILENAME`).
 - `WORKFLOW_RALPH_DEBUG=1` enables debug logging (legacy alias `RALPH_DEBUG`); `WORKFLOW_RALPH_DEBUG=verbose` or `WORKFLOW_RALPH_VERBOSE` adds verbose lines. Debug output goes to stderr prefixed `[workflow-ralph:debug]`.
 
+## Worktree checkout registration (run-start only)
+
+At CLI / orchestrator **run-start** (once the concrete worktree path is known, before
+the first agent turn), Ralph soft-calls `registerPlanRunWorktreeCheckout` as the run
+actor so a linked worktree can land in `repository_checkouts` and back-fill
+`plan_runs.checkout_id` when still NULL. **Not** done from `pnpm worktree:new` /
+`setup_worktree.sh` (service-account shell callback is deferred); orphan worktrees do
+not show in Workspace Settings until a run touches them.
+
 ## Pointers
 
 - [README.md](./README.md) — decision table, target architecture (Phase 2), building, executables.

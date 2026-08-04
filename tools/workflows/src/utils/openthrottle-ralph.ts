@@ -21,6 +21,7 @@ import {
   listProjectsGraphql,
   readPlanRunCancelMarkerGraphql,
   registerCliPlanRunGraphql,
+  registerPlanRunWorktreeCheckoutGraphql,
   settleCliPlanRunGraphql,
   updatePlanProjectIdGraphql,
   updatePlanStatusGraphql,
@@ -53,6 +54,7 @@ import type {
   PlanRow,
   ProjectRow,
   RegisterCliRunInput,
+  RegisterPlanRunWorktreeCheckoutInput,
   RunLocation,
   TaskRow,
   WorkflowRalphConfig,
@@ -65,6 +67,7 @@ import {
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import os from 'node:os';
+import { ralphDebugLogger } from './ralph-debug-logger';
 
 export type {
   CliPlanRunCancelMarker,
@@ -74,6 +77,7 @@ export type {
   PlanRow,
   ProjectRow,
   RegisterCliRunInput,
+  RegisterPlanRunWorktreeCheckoutInput,
   RunLocation,
   TaskRow,
   WorkflowRalphConfig,
@@ -375,3 +379,66 @@ export const bumpCliPlanRunHeartbeat = async (
   isPostgresTransport(config)
     ? bumpCliPlanRunHeartbeatPostgres(config, planRunId)
     : bumpCliPlanRunHeartbeatGraphql(planRunId);
+
+/** Service-account bearer prefix (see GlobalAuthGuard: `ot_sa_` first, then JWT). */
+const SERVICE_ACCOUNT_TOKEN_PREFIX = 'ot_sa_';
+
+/**
+ * @description True when `token` looks like a user JWT suitable for
+ * `registerPlanRunWorktreeCheckout` (three segments, not an `ot_sa_` service-account credential).
+ * Does not verify the signature — only gates the CLI from intentionally sending a service-account
+ * token to a user-JWT-only mutation.
+ */
+export const isWorkflowActorUserJwt = (token: string | undefined): boolean => {
+  if (token === undefined) {
+    return false;
+  }
+
+  const trimmed = token.trim();
+  if (trimmed === '' || trimmed.startsWith(SERVICE_ACCOUNT_TOKEN_PREFIX)) {
+    return false;
+  }
+
+  const parts = trimmed.split('.');
+  return parts.length === 3 && parts.every((part) => part.length > 0);
+};
+
+/**
+ * @description Once at CLI run-start path resolve: best-effort call
+ * `registerPlanRunWorktreeCheckout` as the run actor so a linked worktree can back-fill
+ * `plan_runs.checkout_id`. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
+ * actor auth is unavailable / is a service-account token, or the GraphQL call fails — never aborts
+ * the agent run. Does not pass `ot_sa_` tokens to this mutation. Does not cover provision-time
+ * registration from `worktree:new` / `setup_worktree.sh` (deferred follow-up; orphan worktrees
+ * stay out of Workspace Settings until a run starts against them).
+ */
+export const maybeRegisterPlanRunWorktreeCheckout = async (
+  config: WorkflowRalphConfig,
+  input: RegisterPlanRunWorktreeCheckoutInput,
+): Promise<void> => {
+  if (isPostgresTransport(config)) {
+    ralphDebugLogger.debug(
+      'Skipping worktree checkout registration: postgres-direct transport has no actor JWT for registerPlanRunWorktreeCheckout',
+      { planRunId: input.planRunId },
+    );
+    return;
+  }
+
+  const token = resolveWorkflowAuthTokenFromEnv();
+  if (!isWorkflowActorUserJwt(token)) {
+    ralphDebugLogger.debug(
+      'Skipping worktree checkout registration: actor user JWT unavailable (missing token or ot_sa_ service-account credential)',
+      { planRunId: input.planRunId },
+    );
+    return;
+  }
+
+  try {
+    await registerPlanRunWorktreeCheckoutGraphql(input);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `⚠️ Soft-fail worktree checkout registration for run ${input.planRunId} at ${input.filesystemPath}: ${msg}`,
+    );
+  }
+};
