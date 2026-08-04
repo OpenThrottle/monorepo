@@ -402,6 +402,37 @@ pnpm run database:bootstrap-service-accounts  # mint the service-account token (
 
 `bootstrap-service-accounts` prints a new token exactly once; put it in your root `.env` (and `applications/openthrottle-server/.env`) as `OPENTHROTTLE_MCP_AUTH_TOKEN` so the MCP server and CLIs authenticate against the fresh database.
 
+### Swapping the data volume (personal ↔ public)
+
+Two named Docker volumes hold interchangeable databases:
+
+- `openthrottle_postgres_data` — the **fresh/public demo** DB (active by default).
+- `openthrottle_postgres_data_dev_personal` — an **archive of your pre-public personal** DB.
+
+Both are declared in `docker-compose.yml`; the `postgres` service mounts exactly one, chosen by a one-line comment toggle in its `volumes:` block. The mount path (`/var/lib/postgresql`, PG18), credentials, and ports are identical for both, so nothing else changes. To switch:
+
+```bash
+docker compose stop postgres   # quiesce (NOT `down -v`, which destroys BOTH volumes)
+# In docker-compose.yml → postgres.volumes, comment the active line and
+# uncomment the other:
+#   - postgres_data_dev_personal:/var/lib/postgresql   # 🔒 personal archive
+#   - postgres_data:/var/lib/postgresql                # 🌱 fresh/public
+docker compose up -d postgres   # start on the newly-selected volume
+```
+
+> ⚠️ **Never run `docker compose down -v`.** The `-v` deletes **both** named volumes, wiping the personal archive. Use `docker compose stop postgres` to swap safely.
+
+To (re)create the personal archive from a running personal DB, stop postgres and copy the volume (Postgres must be stopped so the data directory is quiescent):
+
+```bash
+docker compose stop postgres
+docker volume create openthrottle_postgres_data_dev_personal
+docker run --rm \
+  -v openthrottle_postgres_data:/from:ro \
+  -v openthrottle_postgres_data_dev_personal:/to \
+  alpine sh -c 'cd /from && cp -a . /to'
+```
+
 ## Migrations
 
 SQL migrations live in `databases/migrations/` and are applied in filename order by `pnpm run database:migrate`.
