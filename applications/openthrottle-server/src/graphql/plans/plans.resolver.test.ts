@@ -944,6 +944,7 @@ describe('PlansResolver', () => {
 
       expect(mockRegisterCliRun).toHaveBeenCalledWith(
         expect.objectContaining({
+          branch: null,
           executionBackend: 'claude',
           hostname: 'laptop-1',
           pid: 9999,
@@ -958,6 +959,56 @@ describe('PlansResolver', () => {
           runKind: 'orchestrator',
           status: 'IN_PROGRESS',
         }),
+      );
+    });
+
+    test('forwards a present branch verbatim (no trim/reject)', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+
+      await resolver.registerCliPlanRun({
+        branch: '  capture-branch-name  ',
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 9999,
+        planId: mockPlan.id,
+        workerId: 'cli-abc',
+      });
+
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: '  capture-branch-name  ' }),
+      );
+    });
+
+    test('forwards null when branch is omitted', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+
+      await resolver.registerCliPlanRun({
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: null }),
+      );
+    });
+
+    test('forwards null when branch is explicitly null', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+
+      await resolver.registerCliPlanRun({
+        branch: null,
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: null }),
       );
     });
 

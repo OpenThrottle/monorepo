@@ -353,6 +353,7 @@ export class PlansResolver {
 
     const run = await this.planRunsService.registerCliRun({
       actorUserId: resolveActorUserId(actorSub, actorKind),
+      branch: input.branch ?? null,
       executionBackend: input.executionBackend,
       hostname: input.hostname ?? null,
       pid: input.pid ?? null,

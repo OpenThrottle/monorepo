@@ -435,12 +435,13 @@ export async function registerCliPlanRunPostgres(
   try {
     const res = await client.query<{ id: string }>(
       `INSERT INTO plan_runs
-         (plan_id, bullmq_job_id, execution_backend, run_kind, status, hostname, pid, worker_id)
-       VALUES ($1, NULL, $2, 'orchestrator', 'IN_PROGRESS', $3, $4, $5)
+         (plan_id, bullmq_job_id, execution_backend, run_kind, status, branch, hostname, pid, worker_id)
+       VALUES ($1, NULL, $2, 'orchestrator', 'IN_PROGRESS', $3, $4, $5, $6)
        RETURNING id`,
       [
         input.planId,
         input.executionBackend,
+        input.branch ?? null,
         input.location.hostname,
         input.location.pid,
         input.location.workerId,

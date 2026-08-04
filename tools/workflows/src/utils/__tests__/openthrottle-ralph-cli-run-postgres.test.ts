@@ -76,12 +76,68 @@ describe('CLI-run postgres helpers', () => {
     expect(insert?.sql).toContain('NULL');
     expect(insert?.sql).toContain("'orchestrator'");
     expect(insert?.sql).toContain("'IN_PROGRESS'");
+    expect(insert?.sql).toContain('branch');
     expect(insert?.params).toEqual([
       'plan-1',
       'claude',
+      null,
       'laptop-1',
       4242,
       'cli-abc',
+    ]);
+  });
+
+  it('registerCliPlanRunPostgres inserts branch when provided', async () => {
+    mockState.rowsFor = (sql) =>
+      sql.includes('INTO plan_runs') ? [{ id: 'cli-run-branch' }] : [];
+
+    const { registerCliPlanRunPostgres } =
+      await import('../openthrottle-ralph-postgres.js');
+
+    await registerCliPlanRunPostgres(mockConfig, {
+      branch: 'capture-branch-name',
+      executionBackend: 'cursor',
+      location: { hostname: 'laptop-1', pid: 4242, workerId: 'cli-abc' },
+      planId: 'plan-1',
+    });
+
+    const insert = mockState.calls.find((c) =>
+      c.sql.includes('INTO plan_runs'),
+    );
+    expect(insert?.params).toEqual([
+      'plan-1',
+      'cursor',
+      'capture-branch-name',
+      'laptop-1',
+      4242,
+      'cli-abc',
+    ]);
+  });
+
+  it('registerCliPlanRunPostgres inserts null when branch is explicitly null', async () => {
+    mockState.rowsFor = (sql) =>
+      sql.includes('INTO plan_runs') ? [{ id: 'cli-run-null-branch' }] : [];
+
+    const { registerCliPlanRunPostgres } =
+      await import('../openthrottle-ralph-postgres.js');
+
+    await registerCliPlanRunPostgres(mockConfig, {
+      branch: null,
+      executionBackend: 'claude',
+      location: { hostname: null, pid: null, workerId: null },
+      planId: 'plan-1',
+    });
+
+    const insert = mockState.calls.find((c) =>
+      c.sql.includes('INTO plan_runs'),
+    );
+    expect(insert?.params).toEqual([
+      'plan-1',
+      'claude',
+      null,
+      null,
+      null,
+      null,
     ]);
   });
 

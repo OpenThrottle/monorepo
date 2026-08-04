@@ -34,6 +34,11 @@ interface RecordQueuedPlanRunInput {
 interface RegisterCliPlanRunInput {
   /** User who started the CLI run (auth sub for a user principal); null for service-account/system. */
   readonly actorUserId?: string | null;
+  /**
+   * OPTIONAL git branch the CLI run operates on. Omit/null → store null; non-empty
+   * strings are stored verbatim (no trim/reject — enqueue remains the REQUIRED boundary).
+   */
+  readonly branch?: string | null;
   readonly executionBackend: PlanRunExecutionBackend;
   readonly hostname: string | null;
   readonly pid: number | null;
@@ -138,6 +143,7 @@ export class PlanRunsService {
     return repo.save(
       repo.create({
         actorUserId: input.actorUserId ?? null,
+        branch: input.branch ?? null,
         bullmqJobId: null,
         executionBackend: input.executionBackend,
         hostname: input.hostname,

@@ -408,6 +408,12 @@ export class PlanRunsByPlanIdInput {
 @InputType()
 export class RegisterCliPlanRunInput {
   @Field(() => String, {
+    description: `OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary).`,
+    nullable: true,
+  })
+  branch?: string | null;
+
+  @Field(() => String, {
     description: `Execution backend for this detached-CLI run: claude, cursor, or opencode.`,
   })
   executionBackend!: string;

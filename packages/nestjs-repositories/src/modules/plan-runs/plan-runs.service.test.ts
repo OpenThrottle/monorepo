@@ -159,6 +159,7 @@ describe('PlanRunsService', () => {
       expect(repo.save).toHaveBeenCalledTimes(1);
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({
+          branch: null,
           bullmqJobId: null,
           executionBackend: 'claude',
           hostname: 'laptop-1',
@@ -171,6 +172,50 @@ describe('PlanRunsService', () => {
       );
       expect(result.runKind).toBe('orchestrator');
       expect(result.status).toBe('IN_PROGRESS');
+    });
+
+    it('registerCliRun persists a present branch verbatim', async () => {
+      await service.registerCliRun({
+        branch: '  capture-branch-name  ',
+        executionBackend: 'claude',
+        hostname: 'laptop-1',
+        pid: 9999,
+        planId: 'plan-1',
+        workerId: 'cli-abc',
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: '  capture-branch-name  ' }),
+      );
+    });
+
+    it('registerCliRun stores null when branch is omitted', async () => {
+      await service.registerCliRun({
+        executionBackend: 'cursor',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: null }),
+      );
+    });
+
+    it('registerCliRun stores null when branch is explicitly null', async () => {
+      await service.registerCliRun({
+        branch: null,
+        executionBackend: 'cursor',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: null }),
+      );
     });
 
     it('registerCliRun defaults actorUserId to null when omitted', async () => {
