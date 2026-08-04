@@ -3,11 +3,13 @@ import { Form, Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import { CalendarClockIcon } from 'lucide-react';
 import {
   DeleteScheduledAgentJobDocument,
   RunScheduledAgentJobNowDocument,
@@ -32,9 +34,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     await executeGraphqlWithAuth(
       args.request,
       ScheduledAgentJobDetailDocument,
-      {
-        id: jobId,
-      },
+      { id: jobId },
     );
 
   if (scheduledAgentJob == null) {
@@ -74,52 +74,55 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-col gap-6" data-testid="ScheduleDetail">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">{job.name}</h1>
-              <Badge variant={job.enabled ? 'default' : 'secondary'}>
-                {job.enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
+      <div>
+        <GlobalHeading
+          children={
+            <div className="flex gap-2">
+              <Button asChild={true} size="xs" variant="outline">
+                <Link to="./edit">Edit</Link>
+              </Button>
+              <Form method="post">
+                <input name="intent" type="hidden" value="run-now" />
+                <Button size="xs" type="submit" variant="outline">
+                  Run now
+                </Button>
+              </Form>
+              <Form method="post">
+                <input name="intent" type="hidden" value="toggle-enabled" />
+                <input
+                  name="enabled"
+                  type="hidden"
+                  value={job.enabled ? 'false' : 'true'}
+                />
+                <Button size="xs" type="submit" variant="outline">
+                  {job.enabled ? 'Disable' : 'Enable'}
+                </Button>
+              </Form>
+              <Form method="post">
+                <input name="intent" type="hidden" value="delete" />
+                <Button size="xs" type="submit" variant="destructive">
+                  Delete
+                </Button>
+              </Form>
             </div>
-            <p className="text-muted-foreground mt-1 font-mono text-xs">
-              {job.driverId}
-              {job.model ? ` · ${job.model}` : ''} · {job.cronPattern}
-              {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
-            </p>
-          </div>
+          }
+          className="mb-4"
+          heading="h1"
+          icon={CalendarClockIcon}
+          title={job.name}
+        />
 
-          <div className="flex gap-2">
-            <Button asChild={true} variant="outline">
-              <Link to="./edit">Edit</Link>
-            </Button>
-            <Form method="post">
-              <input name="intent" type="hidden" value="run-now" />
-              <Button type="submit" variant="outline">
-                Run now
-              </Button>
-            </Form>
-            <Form method="post">
-              <input name="intent" type="hidden" value="toggle-enabled" />
-              <input
-                name="enabled"
-                type="hidden"
-                value={job.enabled ? 'false' : 'true'}
-              />
-              <Button type="submit" variant="outline">
-                {job.enabled ? 'Disable' : 'Enable'}
-              </Button>
-            </Form>
-            <Form method="post">
-              <input name="intent" type="hidden" value="delete" />
-              <Button type="submit" variant="destructive">
-                Delete
-              </Button>
-            </Form>
-          </div>
+        <div className="flex items-center gap-4">
+          <Badge>
+            {job.driverId} {job.model ? ` · ${job.model}` : ''}
+          </Badge>
+          <p className="text-muted-foreground text-sm">
+            {job.cronPattern} {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
+          </p>
         </div>
+      </div>
 
+      <div className="flex flex-col gap-6" data-testid="ScheduleDetail">
         {actionError ? (
           <p className="text-destructive text-sm" role="alert">
             {actionError}

@@ -30,7 +30,7 @@ export const GlobalHeading = (
   // 🔌 Short Circuit
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Heading
         className={clsx(
           // 'text-5xl text-center my-20 sm:text-xl lg:text-3xl font-bold',

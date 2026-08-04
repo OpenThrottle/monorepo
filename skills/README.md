@@ -1,13 +1,20 @@
 # 🤹 Skills
 
 ```bash
+# https://github.com/nrwl/nx-ai-agents-config
 pnpm dlx skills add https://github.com/nrwl/nx-ai-agents-config --skill link-workspace-packages monitor-ci nx-generate nx-import nx-plugins nx-run-tasks nx-workspace --agent universal
 
+# https://github.com/steipete/agent-scripts#agent-scripts
 pnpm dlx skills add https://github.com/steipete/agent-scripts --skill create-cli frontend-design skill-cleaner --agent universal
 
+# https://github.com/shadcn/improve#improve
 pnpm dlx skills add https://github.com/shadcn/improve --skill improve --agent universal
 
+# https://github.com/mattpocock/skills?tab=readme-ov-file
 pnpm dlx skills add https://github.com/mattpocock/skills --skill improve grilling grill-me grill-with-docs handoff teach writing-great-skills --agent universal
+
+# https://microsoft.github.io/SkillOpt
+pnpm dlx skills add https://github.com/microsoft/SkillOpt --agent universal
 
 - secret-scanning
 - visual-plan

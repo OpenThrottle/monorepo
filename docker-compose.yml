@@ -262,17 +262,12 @@ services:
   redis:
     command: redis-server
     container_name: ${OT_CONTAINER_PREFIX:-}redis
-    build:
-      args:
-        REDIS_VERSION: ${REDIS_VERSION}
-      context: ./
-      dockerfile: applications/openthrottle/Dockerfile.Redis
     healthcheck:
       interval: 10s
       retries: 3
       test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
-    image: openthrottle/redis:latest
+    image: redis:${REDIS_VERSION}-alpine
     ports:
       - ${REDIS_PORT}:6379
     restart: always
