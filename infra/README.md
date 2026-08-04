@@ -23,7 +23,7 @@ This directory contains Infrastructure as Code (IaC) configurations for managing
 ## Links
 
 - https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started
-- https://console.cloud.google.com/compute/instances?project=monorepo-staging-473406&supportedpurview=project
+- https://console.cloud.google.com/compute/instances?project=openthrottle-staging&supportedpurview=project
 
 ## Setup
 

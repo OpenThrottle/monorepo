@@ -1,9 +1,9 @@
 # Environments
 
-| Project Name                             | Project Number |
-| ---------------------------------------- | -------------- |
-| [openthrottle-production][ot-production] | 11318907976    |
-| [openthrottle-staging][ot-staging]       | 605061926112   |
+| Project Name                             |
+| ---------------------------------------- |
+| [openthrottle-production][ot-production] |
+| [openthrottle-staging][ot-staging]       |
 
 ---
 

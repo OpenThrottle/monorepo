@@ -21,10 +21,10 @@
       "command": "bash",
       "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
       "env": {
-        "ANTHROPIC_API_KEY": "***REMOVED-ANTHROPIC-KEY***",
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "***REMOVED-OT-TOKEN***"
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${OPENTHROTTLE_MCP_AUTH_TOKEN}"
       }
     },
     "shadcn": {

@@ -3,7 +3,7 @@
   "mcp": {
     "github-mcp": {
       "headers": {
-        "Authorization": "Bearer ***REMOVED-GITHUB-PAT***"
+        "Authorization": "Bearer {env:GITHUB_TOKEN}"
       },
       "enabled": true,
       "url": "https://api.githubcopilot.com/mcp/"
@@ -23,7 +23,7 @@
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "***REMOVED-OT-TOKEN***"
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "{env:OPENTHROTTLE_MCP_AUTH_TOKEN}"
       },
       "enabled": true,
       "type": "local"
