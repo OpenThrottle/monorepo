@@ -34,7 +34,7 @@ export const QueueStateChart = (
   const { className, queues } = props;
 
   // Hooks
-  const [view, setView] = React.useState<QueueStateChartView>('aggregate');
+  const [view, setView] = React.useState<QueueStateChartView>('byQueue');
 
   // Setup
   const chartData = React.useMemo(

@@ -3348,8 +3348,15 @@ type Query {
   """Get a rollout feature flag by id"""
   rolloutFlag(id: ID!): RolloutFlagObject
 
-  """Evaluated feature flags for the current actor (kind + valueJson)"""
-  myFeatureFlags: [FeatureFlagObject!]!
+  """
+  Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today).
+  """
+  evaluateFeatureFlags(anonymousId: String, applicationKey: String): [FeatureFlagObject!]!
+
+  """
+  Deprecated: evaluated feature flags for the current actor (kind + valueJson). Prefer evaluateFeatureFlags.
+  """
+  myFeatureFlags: [FeatureFlagObject!]! @deprecated(reason: "Use evaluateFeatureFlags (public hydration; no flags:read). Auth remains enrichment for targeting.")
 
   """All scheduled agent jobs, newest first."""
   scheduledAgentJobs: [ScheduledAgentJobObject!]!

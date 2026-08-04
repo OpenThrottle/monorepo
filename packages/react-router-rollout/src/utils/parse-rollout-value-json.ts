@@ -1,0 +1,32 @@
+import {
+  isRolloutFlagKind,
+  isRolloutFlagValueForKind,
+  type RolloutFlagKind,
+  type RolloutFlagValueByKind,
+} from '../catalog';
+
+/**
+ * Parse a server `valueJson` string into a typed value for the given kind.
+ * Returns `undefined` when JSON parse fails or the value does not match kind.
+ *
+ * @public
+ */
+export const parseRolloutValueJson = <K extends RolloutFlagKind>(
+  kind: K,
+  valueJson: string,
+): RolloutFlagValueByKind[K] | undefined => {
+  if (!isRolloutFlagKind(kind)) {
+    return undefined;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(valueJson);
+    if (!isRolloutFlagValueForKind(kind, parsed)) {
+      return undefined;
+    }
+
+    return parsed;
+  } catch {
+    return undefined;
+  }
+};

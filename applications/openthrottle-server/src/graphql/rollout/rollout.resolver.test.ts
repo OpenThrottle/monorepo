@@ -1,7 +1,9 @@
 /**
  * @description Unit tests for RolloutResolver: service delegation, typed
- * create/update mapping, evaluated response shape, and @Permissions gating
- * (FLAGS_READ for reads/myFeatureFlags, FLAGS_WRITE for mutations).
+ * create/update mapping, evaluated response shape, public evaluateFeatureFlags
+ * (anon + auth), and @Permissions gating (FLAGS_READ for admin reads /
+ * deprecated myFeatureFlags, FLAGS_WRITE for mutations; evaluateFeatureFlags
+ * has no FLAGS_READ).
  */
 
 import { BadRequestException } from '@nestjs/common';
@@ -11,6 +13,7 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 import {
@@ -23,6 +26,7 @@ import {
 import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './resolve-evaluation-principal';
 import { RolloutResolver } from './rollout.resolver';
 
 const flag: RolloutFlag = {
@@ -64,6 +68,7 @@ const permissionsFor = (method: keyof RolloutResolver): unknown =>
 describe('RolloutResolver', () => {
   let resolver: RolloutResolver;
   let rolloutService: RolloutService;
+  let logger: LoggerService;
 
   const mockRolloutService = createMock<RolloutService>({
     create: vi.fn().mockResolvedValue(flag),
@@ -94,6 +99,7 @@ describe('RolloutResolver', () => {
       providers: [
         RolloutResolver,
         GqlPermissionsGuard,
+        { provide: LoggerService, useValue: createMock<LoggerService>() },
         { provide: RolloutService, useValue: mockRolloutService },
         { provide: RolesService, useValue: createMock<RolesService>() },
       ],
@@ -101,6 +107,7 @@ describe('RolloutResolver', () => {
 
     resolver = app.get<RolloutResolver>(RolloutResolver);
     rolloutService = app.get<RolloutService>(RolloutService);
+    logger = app.get<LoggerService>(LoggerService);
   });
 
   describe('delegation', () => {
@@ -280,13 +287,58 @@ describe('RolloutResolver', () => {
     });
   });
 
+  describe('evaluateFeatureFlags', () => {
+    test('anonymous call evaluates with anonymousId principal', async () => {
+      vi.mocked(rolloutService.evaluateAll).mockClear();
+      const result = await resolver.evaluateFeatureFlags(
+        'anon-uuid',
+        'openthrottle-developer',
+        undefined,
+      );
+
+      expect(result).toHaveLength(2);
+      expect(rolloutService.evaluateAll).toHaveBeenCalledWith({
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        sub: 'anon-uuid',
+      });
+      expect(logger.debug).toHaveBeenCalled();
+    });
+
+    test('authenticated call prefers principal over anonymousId', async () => {
+      vi.mocked(rolloutService.evaluateAll).mockClear();
+      await resolver.evaluateFeatureFlags('anon-uuid', null, userPrincipal);
+
+      expect(rolloutService.evaluateAll).toHaveBeenCalledWith(userPrincipal);
+    });
+
+    test('missing anonymousId uses degraded shared subject', async () => {
+      vi.mocked(rolloutService.evaluateAll).mockClear();
+      await resolver.evaluateFeatureFlags(null, null, undefined);
+
+      expect(rolloutService.evaluateAll).toHaveBeenCalledWith({
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        sub: ROLLOUT_DEGRADED_ANONYMOUS_SUB,
+      });
+    });
+
+    test('skips applicationKey stub log when blank', async () => {
+      vi.mocked(logger.debug).mockClear();
+      await resolver.evaluateFeatureFlags('anon-uuid', '  ', undefined);
+      expect(logger.debug).not.toHaveBeenCalled();
+    });
+  });
+
   describe('permission gating metadata', () => {
-    test('reads and myFeatureFlags require flags:read', () => {
+    test('admin reads and deprecated myFeatureFlags require flags:read', () => {
       expect(permissionsFor('rolloutFlags')).toEqual([PERMISSIONS.FLAGS_READ]);
       expect(permissionsFor('rolloutFlag')).toEqual([PERMISSIONS.FLAGS_READ]);
       expect(permissionsFor('myFeatureFlags')).toEqual([
         PERMISSIONS.FLAGS_READ,
       ]);
+    });
+
+    test('evaluateFeatureFlags does not require flags:read', () => {
+      expect(permissionsFor('evaluateFeatureFlags')).toBeUndefined();
     });
 
     test('mutations require flags:write (denied to viewer)', () => {

@@ -80,7 +80,18 @@ describe('QueueStateChart Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('should default to the aggregate (single) view', () => {
+    test('should default to the by-queue view', () => {
+      expect(component.getByText(/One bar per queue/i)).toBeInTheDocument();
+      expect(
+        component.queryByText(/All queues combined into one bar/i),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should switch to the aggregate view on toggle click', async () => {
+      const user = userEvent.setup();
+
+      await user.click(component.getByText('Single'));
+
       expect(
         component.getByText(/All queues combined into one bar/i),
       ).toBeInTheDocument();
@@ -89,26 +100,13 @@ describe('QueueStateChart Component', () => {
       ).not.toBeInTheDocument();
     });
 
-    test('should switch to the by-queue view on toggle click', async () => {
-      const user = userEvent.setup();
-
-      await user.click(component.getByText('By queue'));
-
-      expect(component.getByText(/One bar per queue/i)).toBeInTheDocument();
-      expect(
-        component.queryByText(/All queues combined into one bar/i),
-      ).not.toBeInTheDocument();
-    });
-
     test('should keep a view active when the active toggle is re-clicked', async () => {
       const user = userEvent.setup();
 
-      // Radix single-select emits '' on re-click; the guard keeps aggregate.
-      await user.click(component.getByText('Single'));
+      // Radix single-select emits '' on re-click; the guard keeps byQueue.
+      await user.click(component.getByText('By queue'));
 
-      expect(
-        component.getByText(/All queues combined into one bar/i),
-      ).toBeInTheDocument();
+      expect(component.getByText(/One bar per queue/i)).toBeInTheDocument();
     });
   });
 });

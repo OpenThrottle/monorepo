@@ -78,6 +78,20 @@ query getMyUser {
   }
 }
 
+query evaluateFeatureFlags($anonymousId: String, $applicationKey: String) {
+  evaluateFeatureFlags(
+    anonymousId: $anonymousId
+    applicationKey: $applicationKey
+  ) {
+    enabled
+    key
+    kind
+    reason
+    valueJson
+    variationIndex
+  }
+}
+
 query getRootHealth {
   serverHealth {
     ...HealthCard

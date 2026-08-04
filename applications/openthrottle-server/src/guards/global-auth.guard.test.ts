@@ -36,6 +36,7 @@ describe('GlobalAuthGuard', () => {
     });
     jwtAuthGuard = createMock<GqlJwtAuthGuard>({
       canActivate: vi.fn(),
+      tryAuthenticate: vi.fn(),
     });
     globalClsAuthHook = createMock<GlobalClsAuthHook>({
       populateFromPrincipal: vi.fn(),
@@ -57,16 +58,96 @@ describe('GlobalAuthGuard', () => {
     vi.unstubAllEnvs();
   });
 
-  it('allows @Public routes without running auth or CLS hook', async () => {
+  it('allows @Public routes with no Authorization without running auth or CLS', async () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue(true);
     const ctx = createHttpExecutionContext({});
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
     expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
+    expect(jwtAuthGuard.tryAuthenticate).not.toHaveBeenCalled();
     expect(
       serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
     ).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
+  });
+
+  it('soft-auths JWT on @Public when Authorization is present', async () => {
+    vi.mocked(reflector.getAllAndOverride).mockReturnValue(true);
+    vi.mocked(
+      serviceAccountAuthService.isServiceAccountAuthorization,
+    ).mockReturnValue(false);
+    vi.mocked(jwtAuthGuard.tryAuthenticate).mockResolvedValue(true);
+    const payload = { email: 'u@example.com', sub: 'uuid-1' };
+    const ctx = createHttpExecutionContext({
+      headers: { authorization: 'Bearer eyJ.test' },
+      user: payload,
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+
+    expect(jwtAuthGuard.tryAuthenticate).toHaveBeenCalled();
+    expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).toHaveBeenCalledWith(
+      authPrincipalFromJwtPayload(payload),
+    );
+  });
+
+  it('stays anonymous on @Public when JWT soft-auth fails (no 401)', async () => {
+    vi.mocked(reflector.getAllAndOverride).mockReturnValue(true);
+    vi.mocked(
+      serviceAccountAuthService.isServiceAccountAuthorization,
+    ).mockReturnValue(false);
+    vi.mocked(jwtAuthGuard.tryAuthenticate).mockResolvedValue(false);
+    const ctx = createHttpExecutionContext({
+      headers: { authorization: 'Bearer eyJ.bad' },
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
+  });
+
+  it('soft-auths service account on @Public when bearer is valid', async () => {
+    vi.mocked(reflector.getAllAndOverride).mockReturnValue(true);
+    const saPrincipal = authPrincipalFromServiceAccountId(
+      '11111111-1111-4111-8111-111111111111',
+    );
+    const req: { headers: { authorization: string }; user?: unknown } = {
+      headers: { authorization: 'Bearer ***REMOVED-OT-TOKEN***' },
+    };
+    vi.mocked(
+      serviceAccountAuthService.isServiceAccountAuthorization,
+    ).mockReturnValue(true);
+    vi.mocked(
+      serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
+    ).mockResolvedValue(saPrincipal);
+    const ctx = createHttpExecutionContext(req);
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+
+    expect(req.user).toEqual(saPrincipal);
+    expect(jwtAuthGuard.tryAuthenticate).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).toHaveBeenCalledWith(
+      saPrincipal,
+    );
+  });
+
+  it('stays anonymous on @Public when service account bearer is invalid (no 401)', async () => {
+    vi.mocked(reflector.getAllAndOverride).mockReturnValue(true);
+    vi.mocked(
+      serviceAccountAuthService.isServiceAccountAuthorization,
+    ).mockReturnValue(true);
+    vi.mocked(
+      serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
+    ).mockResolvedValue(null);
+    const ctx = createHttpExecutionContext({
+      headers: { authorization: 'Bearer ot_sa_bad_bad' },
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+
+    expect(jwtAuthGuard.tryAuthenticate).not.toHaveBeenCalled();
     expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 
