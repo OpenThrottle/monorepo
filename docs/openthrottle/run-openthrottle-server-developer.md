@@ -43,7 +43,7 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 2. **Create env files** (see table above): root `.env`, `applications/openthrottle-server/.env`, `applications/openthrottle-developer/.env`.
 3. **Start Postgres + Redis only:**
    **`pnpm run database:start`**
-   This runs `docker compose up -d openthrottle-postgres openthrottle-redis` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Service names: **`openthrottle-postgres`**, **`openthrottle-redis`**.
+   This runs `docker compose up -d redis postgres` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Compose service names: **`postgres`**, **`redis`**.
 4. **Apply migrations:** **`pnpm run database:migrate`** (requires Postgres up). Details: [`databases/README.md`](../../databases/README.md).
 5. **GraphQL codegen (developer app):** After schema changes or on a fresh clone if generated artifacts are missing:
    **`pnpm nx run openthrottle-developer:codegen-graphql`**
