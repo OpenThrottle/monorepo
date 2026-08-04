@@ -14,11 +14,6 @@ Shared **CSS variables and Shadcn-compatible tokens** live in **`packages/react-
 
 ## Design reference (typography and borders)
 
-Primer-inspired scales and border semantics are documented for copy and UX alignment:
-
-- [primer-typography-borders.md](./primer-typography-borders.md) — typography and border token research
-- [gray-mapping.md](./gray-mapping.md) — gray scale mapping
-
 Implement using **Tailwind utilities** and variables from **`react-router-shadcn`** rather than legacy path `applications/openthrottle/app/styles/` (removed in consolidation).
 
 ## Shadcn UI

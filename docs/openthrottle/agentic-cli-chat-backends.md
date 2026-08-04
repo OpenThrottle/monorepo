@@ -4,13 +4,7 @@
 >
 > The developer-app chat can stream from a locally-installed **agentic CLI**
 > (`cursor-agent`, `claude`, or `opencode`) as well as from local
-> OpenAI-compatible model servers. This is the user + operator guide; the design
-> rationale and v1 limitations are in
-> [agentic-cli-backend-adr.md](./agentic-cli-backend-adr.md). The empirical CLI
-> schemas live in
-> [cursor-agent-stream-json-schema.md](./cursor-agent-stream-json-schema.md),
-> [claude-stream-json-schema.md](./claude-stream-json-schema.md), and
-> [opencode-stream-json-schema.md](./opencode-stream-json-schema.md); the
+> OpenAI-compatible model servers. This is the user + operator guide. The
 > playbook for vetting a new CLI is
 > [agentic-cli-backend-compatibility-guide.md](./agentic-cli-backend-compatibility-guide.md).
 
@@ -62,8 +56,7 @@ otherwise points you at Settings.
 `startConversationStream` returns, so the client subscribes after the server
 may already be publishing. `ConversationStreamService` keeps a per-conversation
 replay buffer and replays on subscribe; the client dedupes by
-`messageId:sortOrder`. Details:
-[cursor-agent-stream-json-schema.md §8](./cursor-agent-stream-json-schema.md).
+`messageId:sortOrder`.
 
 **Persona prompts:** skill-style personas often start with YAML frontmatter
 (`---`). Every CLI adapter passes `--` before the prompt so that frontmatter is

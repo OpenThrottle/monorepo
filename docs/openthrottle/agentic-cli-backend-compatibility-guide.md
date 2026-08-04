@@ -7,10 +7,7 @@
 > backend** for the OpenThrottle developer chat, and for capturing the concrete
 > facts an adapter needs. Run this against any candidate binary, fill in the
 > [§12 template](#12-per-cli-findings-template), and produce a go/no-go verdict.
->
-> Worked example: [cursor-agent-stream-json-schema.md](./cursor-agent-stream-json-schema.md)
-> is the filled-in output of this guide for `cursor-agent`. Read it alongside
-> this guide — every "cursor-agent ref" below points back to it.
+
 
 ## 0. How to use this guide
 

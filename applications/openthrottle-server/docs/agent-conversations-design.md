@@ -111,7 +111,6 @@ terminates the turn instead of hanging the loop and leaving the client stuck.
   (a client stall watchdog covers a silently-dead subscription), then exposes a
   manual **Retry** affordance. Private-mode turns emit the terminal chunk and
   recover identically (the publish path is independent of `persist`).
-- Full design + constants: [docs/reliability/chat-idle-timeout-retry.md](../../../docs/reliability/chat-idle-timeout-retry.md).
 
 ## Frontend v1 (openthrottle-developer)
 

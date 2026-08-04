@@ -45,4 +45,3 @@ stale; the package lives at `packages/vscode-openthrottle/`.
 
 - [README.md](./README.md) — sideload / `.vsix` install steps.
 - [docs/INTEGRATION.md](./docs/INTEGRATION.md), [docs/UI-DESIGN.md](./docs/UI-DESIGN.md).
-- [VS Code/Cursor compatibility](../../docs/openthrottle/vscode-cursor-extension-compatibility.md).

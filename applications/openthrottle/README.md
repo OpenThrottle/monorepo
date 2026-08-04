@@ -30,7 +30,7 @@ Details and copy for website or docs: `docs/openthrottle/work-as-history.md`.
 
 ## Docker Compose
 
-You can run the full OpenThrottle stack (Postgres, Redis, openthrottle-server, openthrottle-developer) with Docker Compose. Images for the server and developer app are **built from the monorepo root** so Nx and pnpm can resolve workspace dependencies; see [docker-image-build-strategy.md](../../docs/openthrottle/docker-image-build-strategy.md).
+You can run the full OpenThrottle stack (Postgres, Redis, openthrottle-server, openthrottle-developer) with Docker Compose. Images for the server and developer app are **built from the monorepo root** so Nx and pnpm can resolve workspace dependencies.
 
 ### Run from monorepo root
 
@@ -56,7 +56,7 @@ Compose reads **`applications/openthrottle/.env`** (path is relative to the comp
 - **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/README.md`).
 - **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_EXTERNAL`, `PORT` (default 5173 in container).
 
-Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (default 3000) and **`OPENTHROTTLE_DEVELOPER_PORT`** (default 5173). Build args **`OPENTHROTTLE_SERVER_VERSION`**, **`OPENTHROTTLE_DEVELOPER_VERSION`**, and **`NX_VERSION`** are optional (see compose file and [docker-image-build-strategy.md](../../docs/openthrottle/docker-image-build-strategy.md)).
+Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (default 3000) and **`OPENTHROTTLE_DEVELOPER_PORT`** (default 5173). Build args **`OPENTHROTTLE_SERVER_VERSION`**, **`OPENTHROTTLE_DEVELOPER_VERSION`**, and **`NX_VERSION`** are optional (see compose file).
 
 ## Applications
 

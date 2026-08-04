@@ -11,7 +11,6 @@ Specific Reads:
 
 - [Quickstart](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify
 - [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
-- [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
 
 ## 🏠 Architecture
 

@@ -25,5 +25,3 @@ Docs/FAQ rendering layer: turns a per-app Markdown content folder (`app/docs-con
 ## Pointers
 
 - [README.md](README.md) — step-by-step wiring for a new app, public API table.
-- [docs/openthrottle/docs-faq-convention.md](../../docs/openthrottle/docs-faq-convention.md) — content folder + frontmatter convention.
-- [docs/openthrottle/docs-faq-delivery-adr.md](../../docs/openthrottle/docs-faq-delivery-adr.md) — why the app owns the glob.

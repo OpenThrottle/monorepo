@@ -70,8 +70,6 @@ Keep prose conservative and actionable; prefer bullets over legal essays.
 - [LICENSE-EULA.md](../../LICENSE-EULA.md) — retained EULA template for future commercial/enterprise packages (proprietary, evaluation-only grant; commercial use requires a separate agreement)
 - [packages/openthrottle-mcp/docs/AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md) — service account tokens, rotation, MCP env
 - [docs/openthrottle/openthrottle-server-auth.md](../../docs/openthrottle/openthrottle-server-auth.md) — global auth guard, Bearer token order
-- [docs/openthrottle/license-key-docker-machine-identification.md](../../docs/openthrottle/license-key-docker-machine-identification.md) — machine fingerprinting, privacy, binding policy
-- [docs/workflows/ralph-loop-step-context-brainstorm.md](../../docs/workflows/ralph-loop-step-context-brainstorm.md) — PII/secrets in plan output and step summaries
 - [`.agents/skills/secret-scanning/SKILL.md`](../skills/secret-scanning/SKILL.md) — when and how to run secret scans
 - [`.cursor/rules/no-cursor-attribution.mdc`](../../.cursor/rules/no-cursor-attribution.mdc) — no Cursor attribution in any output
 - [`.cursor/rules/commands/github.mdc`](../../.cursor/rules/commands/github.mdc) — no co-author footers; conventional commit footers only

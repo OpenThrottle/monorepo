@@ -112,9 +112,7 @@ pnpm validate:notices   # what CI runs; fails if the committed file is stale
 ```
 
 Every `notice: true` waiver has its full license text embedded at the end of the
-manifest. Background and the per-package waiver rationale live in
-[`docs/monorepo/dependency-license-audit.md`](./docs/monorepo/dependency-license-audit.md)
-and [`LICENSING.md`](./LICENSING.md).
+manifest. Background and the per-package waiver rationale live in [`LICENSING.md`](./LICENSING.md).
 
 ## Contributor License Agreement (CLA)
 

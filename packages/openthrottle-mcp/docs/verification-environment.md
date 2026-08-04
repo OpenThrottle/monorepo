@@ -118,7 +118,7 @@ These three read-only tools query persisted **web chat** threads (`agent_convers
 
 ### Containerized API — MCP on the host (Docker Compose)
 
-When **openthrottle-server** runs in Docker and publishes **`OPENTHROTTLE_SERVER_PORT`** to the host (see [compose-topology-phase-1.md](../../../docs/openthrottle/compose-topology-phase-1.md)), **Cursor and openthrottle-mcp on the host** should target **`http://localhost:<port>/graphql`** (same host/port as **`GET /health`**). **`host.docker.internal`** is for processes **inside** a container to reach the host (or host-published ports); it is **not** the right URL for host-side MCP talking **into** a container that listens on `localhost:<published-port>`.
+When **openthrottle-server** runs in Docker and publishes **`OPENTHROTTLE_SERVER_PORT`** to the host, **Cursor and openthrottle-mcp on the host** should target **`http://localhost:<port>/graphql`** (same host/port as **`GET /health`**). **`host.docker.internal`** is for processes **inside** a container to reach the host (or host-published ports); it is **not** the right URL for host-side MCP talking **into** a container that listens on `localhost:<published-port>`.
 
 **Validated:** With Postgres and Redis reachable from the API container (for example **`POSTGRES_HOST=host.docker.internal`** / **`REDIS_HOST=host.docker.internal`** when compose publishes **6010**/**6011** on the host), **`curl`** from macOS to **`http://localhost:<published-port>/graphql`** successfully exercised **`createPlan`** and **`createTask`** against the containerized API (investigation plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`**, smoke task).
 

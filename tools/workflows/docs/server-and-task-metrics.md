@@ -122,7 +122,6 @@ Per-job CPU and memory are captured at job start and end. They are exposed in th
 
 ## 7. Advanced profiling: child process and system metrics
 
-For deeper analysis of whether workflows are CPU-bound, I/O-bound, or contending for system resources, see the **[Profiling interpretation guide](../../../docs/workflows/profiling-interpretation-guide.md)**.
 
 That guide covers:
 

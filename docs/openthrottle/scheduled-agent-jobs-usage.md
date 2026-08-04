@@ -3,7 +3,7 @@
 Run any agent prompt on a cron schedule. Unlike the five code-defined cron services (doc-ingestion,
 work-ledger-sweep, database-backup, …), scheduled agent jobs are **user-defined at runtime**: pick a
 prompt + provider/model/settings + cron, and it runs on one shared BullMQ queue — no new queue per
-job. Design: [docs/monorepo/scheduled-agent-jobs-design.md](../monorepo/scheduled-agent-jobs-design.md).
+job.
 
 ## Developer UI
 

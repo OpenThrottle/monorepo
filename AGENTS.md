@@ -39,7 +39,7 @@ For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `
 
 ### Git worktrees (tool-agnostic)
 
-Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scripts/create_worktree.sh`). The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same script, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook), but self-heals on first `pnpm nx run <app>:dev` via `scripts/ensure_worktree.sh` (or `pnpm worktree:heal`). Details: [docs/monorepo/git-worktree-setup-timing.md](docs/monorepo/git-worktree-setup-timing.md) and [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scripts/create_worktree.sh`). The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same script, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook), but self-heals on first `pnpm nx run <app>:dev` via `scripts/ensure_worktree.sh` (or `pnpm worktree:heal`). Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills & rules)
 

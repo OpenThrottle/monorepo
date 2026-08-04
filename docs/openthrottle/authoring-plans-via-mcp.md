@@ -111,7 +111,7 @@ create_plan({
 // → { "plan": { "id": "…uuid…", "status": "PENDING", … } }
 ```
 
-> **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [plans-tasks-without-project-scope.md](./plans-tasks-without-project-scope.md) and [databases/README.md § Project association](../../databases/README.md).
+> **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [databases/README.md § Project association](../../databases/README.md).
 
 ### Create many plans atomically — `create_plans`
 
@@ -316,7 +316,7 @@ Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-0000000
 | **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                                       |
 | **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                                      |
 | **Service-account tokens & rotation**              | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                              |
-| **Project association** (when to set `projectId`)  | [plans-tasks-without-project-scope.md](./plans-tasks-without-project-scope.md)                                                       |
+| **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                                            |
 | **Run loop / queue** (Ralph)                       | [`workflow-ralph` skill](../../.agents/skills/workflow-ralph/SKILL.md), [tools/workflows/README.md](../../tools/workflows/README.md) |
 | **Conventional commits & staging**                 | [`git-commit` skill](../../.agents/skills/git-commit/SKILL.md)                                                                       |
 | **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                                     |

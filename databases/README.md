@@ -48,7 +48,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
    Copy the printed values into `OPENTHROTTLE_MCP_AUTH_TOKEN` (Cursor MCP / openthrottle-mcp) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/openthrottle-mcp/docs/AUTH.md](../packages/openthrottle-mcp/docs/AUTH.md).
 
-   **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
+   **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON`.
 
 4. **Reset the database (optional, before a fresh ingest)**
 

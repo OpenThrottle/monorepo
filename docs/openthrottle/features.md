@@ -61,7 +61,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Background jobs (optional)
 
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Doc ingestion** (diff-based re-index of `docs/` on main). **Daily stats** for dashboard/analytics.
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables), [docs/openthrottle/doc-ingestion-job-spec.md](doc-ingestion-job-spec.md).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables).
 
 ---
 
