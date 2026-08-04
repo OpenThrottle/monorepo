@@ -240,8 +240,17 @@ services:
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
+      # 🔀 Local DB volume toggle — exactly ONE mount below is active.
+      # Default = the fresh/public demo DB. To restore your pre-public personal
+      # data, comment the `postgres_data` line and uncomment the
+      # `postgres_data_dev_personal` line, then restart postgres. Both volumes
+      # are declared under the top-level `volumes:` block. See
+      # databases/README.md § "Local Postgres volumes (personal ↔ public)".
+      # ⚠️ Never `docker compose down -v` — it destroys BOTH volumes, wiping the
+      # personal archive. Use `docker compose stop postgres` to swap safely.
+      # - postgres_data_dev_personal:/var/lib/postgresql # 🔒 pre-public personal archive (PG18 path)
+      - postgres_data:/var/lib/postgresql # 🌱 fresh/public demo DB (active; PG18 path)
       # - postgres_data:/var/lib/postgresql/data # use with Postgres 17
-      - postgres_data:/var/lib/postgresql # use with Postgres 18
 
   #############################################################################
   #
@@ -474,6 +483,10 @@ secrets:
 #     🎧 Volumes | Persistent "named" volumes
 #
 volumes:
-  postgres_data: # Persistent storage for our Postgres database
+  # 🔀 Two interchangeable Postgres data volumes — the postgres service mounts
+  # exactly one (see the toggle in its `volumes:` block above). Same credentials,
+  # ports, image, and PG18 mount path either way; only the volume name changes.
+  postgres_data: # 🌱 fresh/public demo DB (active by default)
+  postgres_data_dev_personal: # 🔒 archived pre-public personal DB (flip the mount to restore)
   pnpm_store: # pnpm content-addressable store for in-container installs
   whisper_model_cache: # faster-whisper model downloads (first `voice` boot populates it)
