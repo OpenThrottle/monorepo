@@ -89,30 +89,17 @@ MCP config is read per **workspace** and (for Cursor) optionally per **user**. W
 
 ## Template structure
 
-The committed template is [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example). It has **one active entry — `openthrottle-mcp`** — and nothing else:
+The committed template is [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — the **single source of truth (SSOT)** for the Cursor `openthrottle-mcp` block. It has **one active entry — `openthrottle-mcp`**, invoked through [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) — and nothing else.
 
-```json
-{
-  "mcpServers": {
-    "openthrottle-mcp": {
-      "command": "bash",
-      "args": [
-        "-c",
-        "set -a && source ./.env && set +a && export API_URL=\"$OPENTHROTTLE_SERVER_APP_URL\" API_URL_INTERNAL=\"$OPENTHROTTLE_SERVER_APP_URL\" && ./scripts/run-openthrottle-mcp.sh"
-      ],
-      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."
-    }
-  }
-}
-```
+> **Don't re-inline the block.** This guide and every other doc link to [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) instead of pasting the JSON, so the registration shape lives in exactly one place and cannot drift. Open the example file to read or copy the contents.
 
 **Launcher invocation:**
 
-- The `bash -c` wrapper `source`s the repo `./.env`, then exports `API_URL` / `API_URL_INTERNAL` from `OPENTHROTTLE_SERVER_APP_URL` before running [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh).
-- `local-quickstart.md` shows an equivalent form that sets `API_URL` / `API_URL_INTERNAL` (and `OPENTHROTTLE_MCP_AUTH_TOKEN`) explicitly in an `env` block instead of deriving them from `.env` — either works; pick one. Keep the URLs aligned with the server `PORT` (default `6021`).
-- **Auth:** put `OPENTHROTTLE_MCP_AUTH_TOKEN` (an `ot_sa_…` service-account token) in `applications/openthrottle-server/.env` and, for Cursor, in the MCP `env` block. Mint it with `pnpm run database:bootstrap-service-accounts`. Never commit a real token — see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
+- The launcher is self-contained: [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) **resolves a live server URL at launch** (probing `/health`, preferring the stable main-checkout server) and **self-loads `OPENTHROTTLE_MCP_AUTH_TOKEN` from `.env`** (this worktree's, then the root checkout's) when the launching environment doesn't already provide it. You do **not** need to export `API_URL` / `API_URL_INTERNAL` yourself.
+- The example wraps the launcher in `bash -c "set -a && source ./.env && … && ./scripts/run-openthrottle-mcp.sh"`. That `source`/`export` prelude predates the launcher's own resolution and is now a harmless compatibility shim for editors that don't populate the process environment from `.env`; the launcher behaves the same with or without it. `local-quickstart.md` shows an equivalent `env`-block form that sets the vars explicitly instead — either works; keep the URLs aligned with the server `PORT` (default `6021`).
+- **Auth:** `OPENTHROTTLE_MCP_AUTH_TOKEN` is an `ot_sa_…` service-account token. Mint it with `pnpm run database:bootstrap-service-accounts` and put it in the repo `.env` (root and/or `applications/openthrottle-server/.env`); for Cursor you may also set it in the MCP `env` block. Never commit a real token — see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 - **Embeddings** are configured on the server (`OPENAI_API_KEY` or `OLLAMA_*` in `applications/openthrottle-server/.env`), **not** in this launcher.
-- **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree and resolves a _live_ server URL at launch (probing `/health`) rather than trusting a per-worktree `.env` port — full detail in [mcp-worktrees.md](./mcp-worktrees.md).
+- **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree so each advertises a distinct server name, and resolves the live server URL at launch rather than trusting a per-worktree `.env` port — full detail in [mcp-worktrees.md](./mcp-worktrees.md).
 
 **Optional user-provided servers** (github, shadcn, nx-mcp, maestro, fetch) are **not** active entries in the template. Register them at user level (`~/.cursor/mcp.json`) or as commented placeholders — see [User-provided servers](#user-provided-servers). Do **not** add `docs-mcp` (retired) or `git` (not committed) as active entries.
 
