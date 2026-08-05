@@ -11,7 +11,7 @@
 # Targets: `production` (default — distroless, pruned), `production-debian` (shell-capable
 # production), and `development` (builder-based, shell + full workspace, runs
 # `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose `dev` profile
-# with `develop.watch`). See docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+# with `develop.watch`).
 #
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual

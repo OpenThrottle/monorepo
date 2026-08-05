@@ -21,8 +21,7 @@
 #
 #     Host execution bridge: point OPENTHROTTLE_WORKSPACES_DIR at the directory
 #     holding your local checkouts; it is mounted at /workspaces so registered
-#     repositories resolve inside the containers (see
-#     docs/openthrottle/docker-dev-workflow-and-host-bridge.md).
+#     repositories resolve inside the containers.
 #
 #     Networking: services talk to each other over the compose network by name
 #     (postgres:5432, redis:6379, http://server:<port>); only the browser-facing

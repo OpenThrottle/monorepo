@@ -19,7 +19,7 @@
 #   - Reads ports from the repo-root .env (falls back to the 60xx defaults).
 #   - dev mode starts `watch` in the background and tears it down on exit.
 #   - This is a thin orchestration wrapper around docker compose; it does not
-#     build/publish images. See docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#     build/publish images.
 set -euo pipefail
 
 MODE="${1:-prod}"

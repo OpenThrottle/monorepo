@@ -40,8 +40,7 @@
 #     the `prod` profile (enabled by default via COMPOSE_PROFILES="prod" in
 #     .env), server-dev/developer-dev in `dev`; postgres/redis/migrations are
 #     shared (no profile). Dev services talk to postgres/redis via compose
-#     service names; the server's Node inspector is published on 9229. See
-#     docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#     service names; the server's Node inspector is published on 9229.
 #
 #############################################################################
 
