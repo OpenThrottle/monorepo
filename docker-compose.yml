@@ -286,6 +286,53 @@ services:
 
   #############################################################################
   #
+  #     🔐 bootstrap | one-shot MANUAL: default user + service-account creds
+  #
+  #     NEVER runs on `docker compose up` — it lives in its own `bootstrap`
+  #     profile and NO service depends_on it (up must never silently provision a
+  #     possibly-shared DB). Provision a fresh (or shared) database ONCE with:
+  #
+  #         docker compose run --rm bootstrap
+  #
+  #     Runs the Dockerfile.NestJS `bootstrap` stage entrypoint
+  #     (scripts/docker-bootstrap.sh): seed the default login user, then upsert
+  #     the service-account credentials. Idempotent — safe to re-run. Target a
+  #     shared DB by pointing POSTGRES_HOST/PORT at it. The bearer tokens and the
+  #     optional OPENTHROTTLE_BOOTSTRAP_USER_EMAIL/_PASSWORD overrides flow in
+  #     from `.env` via env_file.
+  #
+  bootstrap:
+    build:
+      args:
+        <<: *server
+      context: ./
+      dockerfile: Dockerfile.NestJS
+      secrets: *build-secrets
+      target: bootstrap
+    container_name: ${OT_CONTAINER_PREFIX:-}bootstrap
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Compose-network hostname + container port (not host.docker.internal /
+      # published POSTGRES_PORT — those are for host-side clients). Same shape as
+      # the migrations runner. Everything else (tokens, user overrides) arrives
+      # via env_file above.
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+    image: openthrottle/bootstrap:latest
+    profiles: [bootstrap]
+    restart: 'no'
+
+  #############################################################################
+  #
   #     🤖 Redis | https://hub.docker.com/_/redis
   #
   #     Redis is the world’s fastest data platform for caching, vector search,
