@@ -128,6 +128,22 @@ CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
 ################################################################################
 #
+#   BOOTSTRAP - one-shot: seed default user + provision service-account creds
+#
+################################################################################
+# Reuses the `development` tree (full workspace, tsx, scripts/, built packages)
+# because the two bootstrap scripts import @openthrottle/nestjs-repositories —
+# the tiny `pg`-only migrations image cannot run them. Not a long-running
+# service: the manually invoked `bootstrap` compose service runs this to
+# completion and exits. `production` remains the last (default) stage.
+FROM development AS bootstrap
+
+ENV NODE_ENV="production"
+
+CMD ["sh", "./scripts/docker-bootstrap.sh"]
+
+################################################################################
+#
 #   BUILD - Nx build + pnpm deploy pruned runtime tree
 #
 ################################################################################
