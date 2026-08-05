@@ -20,14 +20,14 @@ import { DataSource } from 'typeorm';
 
 // Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
 // / _PASSWORD (see .env.default); defaults to the known local dev account.
+const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.com' // prettier-ignore
+const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() || 'FullThrottle2026!' // prettier-ignore
+const USER_GITHUB: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_GITHUB?.trim() || 'openthrottle-developer' // prettier-ignore
+
 const DEFAULT_USER = {
-  email:
-    process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() ||
-    'developer@openthrottle.com',
-  githubUsername: 'openthrottle-developer',
-  password:
-    process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() ||
-    'FullThrottle2026!',
+  email: USER_EMAIL,
+  githubUsername: USER_GITHUB,
+  password: USER_PASSWORD,
 } as const;
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
@@ -41,7 +41,9 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
       githubUsername: DEFAULT_USER.githubUsername,
       passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
     });
+
     console.log(`Created user ${DEFAULT_USER.email} (${created.id}).`);
+
     return created;
   }
 
@@ -49,15 +51,18 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
     const updated = await usersService.update(existing.id, {
       passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
     });
+
     console.log(
       `Set default password for existing user ${DEFAULT_USER.email}.`,
     );
+
     return updated ?? existing;
   }
 
   console.log(
     `Skip create: ${DEFAULT_USER.email} already exists (password unchanged).`,
   );
+
   return existing;
 }
 
@@ -73,10 +78,12 @@ async function ensureAllRoles(
       console.error(
         `Missing role "${roleName}". Run: pnpm run database:migrate`,
       );
+
       process.exit(1);
     }
 
     await rolesService.assignRoleToUser(userId, role.id);
+
     console.log(`Role ${roleName}: assigned.`);
   }
   /* eslint-enable no-await-in-loop */
