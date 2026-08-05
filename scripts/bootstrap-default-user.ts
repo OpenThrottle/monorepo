@@ -18,10 +18,16 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
+// Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
+// / _PASSWORD (see .env.default); defaults to the known local dev account.
 const DEFAULT_USER = {
-  email: 'developer@openthrottle.com',
+  email:
+    process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() ||
+    'developer@openthrottle.com',
   githubUsername: 'openthrottle-developer',
-  password: 'FullThrottle2026!',
+  password:
+    process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() ||
+    'FullThrottle2026!',
 } as const;
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
