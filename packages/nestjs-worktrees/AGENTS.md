@@ -41,4 +41,3 @@ reference is `plans.processor.backup.ts`.
 
 - [README.md](./README.md) — full processor example, env formats, import-split table, and
   links to the live/backup server consumers.
-- [docs/workflows/bullmq-processor-worktree.md](../../docs/workflows/bullmq-processor-worktree.md).

@@ -7,13 +7,12 @@ otherwise fight the ports the main checkout already binds (`server` on `6021`,
 main checkout.
 
 This is wired into the **tool-agnostic worktree entrypoint**
-([setup timing](git-worktree-setup-timing.md)): `scripts/create_worktree.sh`
+`scripts/create_worktree.sh`
 allocates the block, and `scripts/setup_worktree.sh` rewrites the worktree's
 `.env` files onto it. Creating a worktree any of the three ways —
 `pnpm worktree:new <name>`, the Claude `WorktreeCreate` hook, or Cursor — runs
 the same path, and a plain `git worktree add` self-heals on first `pnpm nx run …:dev`
-via `scripts/ensure_worktree.sh`. See
-[git-worktree-setup-timing.md](git-worktree-setup-timing.md) for the full flow.
+via `scripts/ensure_worktree.sh`.
 
 ## What gets offset (and what doesn't)
 
@@ -145,5 +144,4 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 
 ## See also
 
-- [git-worktree-setup-timing.md](git-worktree-setup-timing.md) — the single entrypoint, self-heal guard, and setup ordering.
 - [local-services-and-ports.md](local-services-and-ports.md) — the canonical `6010`–`6025` port map.

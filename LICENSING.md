@@ -107,8 +107,7 @@ exceptions (e.g. Microsoft build-only tooling; a source-available decorative UI
 dependency) rather than part of the Apache-2.0 core.
 
 The full audit — including the resolution of every package `pnpm licenses list`
-reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — lives in
-[`docs/monorepo/dependency-license-audit.md`](./docs/monorepo/dependency-license-audit.md).
+reported as `Unknown`, confirmed SPDX ids, and the waiver rationale — was completed before the public release.
 
 This is enforced automatically: [`license-policy.json`](./license-policy.json)
 declares the allowed licenses and waivers, and a CI gate

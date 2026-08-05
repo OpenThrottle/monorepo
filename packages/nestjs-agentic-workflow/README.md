@@ -7,9 +7,7 @@ NestJS wiring for OpenThrottle agentic workflows: DI tokens for **worker-scoped 
 > hooks). For the single canonical decision table on **which path runs when** (Local CLI vs Plans
 > queue spawn vs Plans queue orchestrator), see
 > [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table)
-> and the [target architecture](../../tools/workflows/README.md#target-architecture-phase-2); the
-> full map is in
-> [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md).
+> and the [target architecture](../../tools/workflows/README.md#target-architecture-phase-2).
 
 ## Dependency direction
 

@@ -12,7 +12,6 @@ This is the contracts layer of the Ralph stack. To see **which path runs when** 
 queue spawn vs Plans queue orchestrator), read the single canonical decision table:
 
 - **Canonical decision table:** [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table)
-- **Full map + package layering:** [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md)
 - **Target architecture (Phase 2):** [tools/workflows/README.md → Target architecture](../../tools/workflows/README.md#target-architecture-phase-2)
 
 Dependency direction: `openthrottle-agentic-ralph` (GraphQL orchestrator) and

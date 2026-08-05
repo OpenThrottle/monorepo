@@ -124,6 +124,5 @@ You can also call `getWorktreeTargetsFromEnv()` directly when building a custom 
 - **Live plans processor:** [`plans.processor.ts`](../../applications/openthrottle-server/src/queues/plans/plans.processor.ts) — orchestrator-only; does not use the worktree workflow.
 - **Module wiring:** [`plans-queue.module.ts`](../../applications/openthrottle-server/src/queues/plans/plans-queue.module.ts) imports `NestjsWorktreesModule`.
 - **Metrics consumer:** [`system-metrics.service.ts`](../../applications/openthrottle-server/src/metrics/system-metrics.service.ts) injects `WORKTREE_TRACKER_TOKEN` for active lock reporting.
-- **Workflow doc:** [docs/workflows/bullmq-processor-worktree.md](../../docs/workflows/bullmq-processor-worktree.md) — BullMQ processor guide aligned with this README.
 - **Registration / allocation:** [tools/workflows/docs/worktree-registration-and-allocation.md](../../tools/workflows/docs/worktree-registration-and-allocation.md).
 - **Which path runs when:** [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).

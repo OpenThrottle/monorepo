@@ -66,8 +66,6 @@ Keep prose tight; prefer outlines and snippets over essays.
 - [docs/openthrottle/run-openthrottle-server-developer.md](../../docs/openthrottle/run-openthrottle-server-developer.md) — server + developer app flow
 - [packages/openthrottle-mcp/docs/verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) — MCP env and smoke checks
 - [tools/workflows/README.md](../../tools/workflows/README.md) — workflow bins, Ralph flags, queue mental model
-- [docs/workflows/ralph-config-migration.md](../../docs/workflows/ralph-config-migration.md) — `.workflow-ralph.json` and prompt profiles
-- [docs/workflows/ralph-workflow-runtime-config.md](../../docs/workflows/ralph-workflow-runtime-config.md) — three-layer Ralph config (personas = layer 1)
 - [`.agents/personas/README.md`](./README.md) — persona invocation via `--prompt-file`
 - [`.agents/skills/workflow-ralph/SKILL.md`](../skills/workflow-ralph/SKILL.md) — Ralph CLI and queue summary
 - [`.agents/skills/ot-plans/SKILL.md`](../skills/ot-plans/SKILL.md) — plan/task lifecycle (docs must not become plans)

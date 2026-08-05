@@ -3,15 +3,11 @@
 [![Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 
-After years of development, I've refined my tech stack to focus on a core set of battle-tested tools, with TypeScript as the foundation. This monorepo represents the culmination of those learnings - a streamlined, production-ready setup that balances flexibility with maintainability.
+**OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
-**See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
+**New here?** Start with the [documentation index](./docs/README.md), or jump straight to the [Quickstart](./docs/openthrottle/local-quickstart.md) (clone → running server → verified MCP) and [first-time onboarding](./docs/openthrottle/first-time-onboarding.md).
 
-Specific Reads:
-
-- [Quickstart](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify
-- [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
-- [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
+**See also:** [docs/](./docs/README.md) for guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
 ## 🏠 Architecture
 
@@ -119,7 +115,7 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 
 **4. Other issues?**
 
-Let me know and we'll get to the bottom of things 🤷
+Open a [GitHub issue](https://github.com/OpenThrottle/monorepo/issues) with what you tried and the error output, and we'll help you get unstuck.
 
 ## 📄 License
 

@@ -43,7 +43,7 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 2. **Create env files** (see table above): root `.env`, `applications/openthrottle-server/.env`, `applications/openthrottle-developer/.env`.
 3. **Start Postgres + Redis only:**
    **`pnpm run database:start`**
-   This runs `docker compose up -d openthrottle-postgres openthrottle-redis` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Service names: **`openthrottle-postgres`**, **`openthrottle-redis`**.
+   This runs `docker compose up -d redis postgres` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Compose service names: **`postgres`**, **`redis`**.
 4. **Apply migrations:** **`pnpm run database:migrate`** (requires Postgres up). Details: [`databases/README.md`](../../databases/README.md).
 5. **GraphQL codegen (developer app):** After schema changes or on a fresh clone if generated artifacts are missing:
    **`pnpm nx run openthrottle-developer:codegen-graphql`**
@@ -122,4 +122,4 @@ For implementation details, validation rules, and GraphQL examples, see [Multi-w
 | **DB / Redis**                 | **`pnpm run database:start`** (Compose **only** for Postgres + Redis) | Same Compose file; often all services together                                                      |
 | **POSTGRES_HOST / REDIS_HOST** | **`localhost`** when apps run on host                                 | **`openthrottle-postgres`** / **`openthrottle-redis`** or bridge networking docs in app README      |
 
-**Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps. The **phase-1 compose topology** (API + Postgres + Redis only, with explicit non-goals and host MCP env contract) is documented in [compose-topology-phase-1.md](./compose-topology-phase-1.md).
+**Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps.

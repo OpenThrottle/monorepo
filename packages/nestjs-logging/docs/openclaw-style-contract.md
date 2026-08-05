@@ -8,7 +8,7 @@ OpenClaw documents gateway file logs as **one JSON object per line**, optional r
 
 - [Gateway logging — OpenClaw](https://docs.openclaw.ai/gateway/logging)
 
-Official project entry points (naming, repo, docs hub) are summarized in this monorepo at [`docs/OpenClaw.md`](../../../docs/OpenClaw.md).
+Official project entry points (naming, repo, docs hub) live with the upstream OpenClaw project.
 
 **What we borrow conceptually:** durable JSONL on disk + tail/replay over a live channel + clear separation between **file log level** and **console / debug verbosity** (OpenClaw stresses that file logs follow `logging.level`, while extra console noise can be orthogonal).
 

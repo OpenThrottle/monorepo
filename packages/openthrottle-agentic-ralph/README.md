@@ -14,7 +14,6 @@ This is the GraphQL-first orchestrator layer of the Ralph stack and the basis fo
 path runs when** (Local CLI vs Plans queue spawn vs Plans queue orchestrator):
 
 - **Canonical decision table:** [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table)
-- **Full map + package layering:** [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md)
 - **Target architecture (Phase 2):** [tools/workflows/README.md → Target architecture](../../tools/workflows/README.md#target-architecture-phase-2)
 
 This surface is reached via the GraphQL mutation **`enqueuePlanRalphOrchestrator`** (BullMQ job
