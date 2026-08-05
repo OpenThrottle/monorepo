@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
 import { PLAN_RUN_STATUS } from './plan-runs.constants';
@@ -199,6 +199,23 @@ export class PlanRunsService {
    */
   async findById(planRunId: string): Promise<PlanRun | null> {
     return this.getRepository().findOne({ where: { id: planRunId } });
+  }
+
+  /**
+   * @description Back-fills `checkout_id` only when still NULL (never overwrites
+   * an existing id). Race-safe via the WHERE clause. Returns the updated run,
+   * or null when the row no longer exists.
+   */
+  async setCheckoutIdIfNull(
+    planRunId: string,
+    checkoutId: string,
+  ): Promise<PlanRun | null> {
+    await this.getRepository().update(
+      { checkoutId: IsNull(), id: planRunId },
+      { checkoutId },
+    );
+
+    return this.findById(planRunId);
   }
 
   /**

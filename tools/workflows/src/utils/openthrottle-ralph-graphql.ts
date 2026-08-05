@@ -23,6 +23,7 @@ import {
   ReadPlanRunCancelMarkerDocument,
   RecordPlanRunHeartbeatDocument,
   RegisterCliPlanRunDocument,
+  RegisterPlanRunWorktreeCheckoutDocument,
   SettleCliPlanRunDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
@@ -387,6 +388,26 @@ export async function bumpCliPlanRunHeartbeatGraphql(
   unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(RecordPlanRunHeartbeatDocument, {
       input: { planRunId },
+    }),
+  );
+}
+
+/**
+ * @description Best-effort register of a linked git worktree checkout for a plan run via
+ * {@link RegisterPlanRunWorktreeCheckoutDocument}. Requires a user JWT (not `ot_sa_`); callers must
+ * gate on actor auth before invoking. Soft-failures (non-worktree, missing repository, upsert error)
+ * are handled server-side — this helper only throws on transport/auth GraphQL failures.
+ */
+export async function registerPlanRunWorktreeCheckoutGraphql(input: {
+  readonly filesystemPath: string;
+  readonly planRunId: string;
+}): Promise<void> {
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(RegisterPlanRunWorktreeCheckoutDocument, {
+      input: {
+        filesystemPath: input.filesystemPath,
+        planRunId: input.planRunId,
+      },
     }),
   );
 }

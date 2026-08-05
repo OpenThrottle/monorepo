@@ -4145,6 +4145,13 @@ type Mutation {
   """
   recordPlanRunHeartbeat(input: RecordPlanRunHeartbeatInput!): PlanRunObject
 
+  """
+  Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist.
+  """
+  registerPlanRunWorktreeCheckout(
+    input: RegisterPlanRunWorktreeCheckoutInput!
+  ): PlanRunObject
+
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
 
@@ -4820,6 +4827,16 @@ input SettleCliPlanRunInput {
 input RecordPlanRunHeartbeatInput {
   """
   Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun).
+  """
+  planRunId: ID!
+}
+
+input RegisterPlanRunWorktreeCheckoutInput {
+  """Absolute filesystem path of the resolved worktree for this run."""
+  filesystemPath: String!
+
+  """
+  Plan-run row id whose checkout_id should be back-filled when still NULL.
   """
   planRunId: ID!
 }

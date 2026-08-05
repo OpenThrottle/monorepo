@@ -441,4 +441,24 @@ describe('PlanRunsService', () => {
       expect(result?.status).toBe('COMPLETED');
     });
   });
+
+  describe('setCheckoutIdIfNull', () => {
+    it('updates only when checkout_id is still NULL and returns the refreshed row', async () => {
+      const updated = buildRun({
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+      });
+      repo.findOne.mockResolvedValueOnce(updated);
+
+      const result = await service.setCheckoutIdIfNull(
+        'run-1',
+        '44444444-4444-4444-8444-444444444444',
+      );
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { checkoutId: expect.anything(), id: 'run-1' },
+        { checkoutId: '44444444-4444-4444-8444-444444444444' },
+      );
+      expect(result?.checkoutId).toBe('44444444-4444-4444-8444-444444444444');
+    });
+  });
 });

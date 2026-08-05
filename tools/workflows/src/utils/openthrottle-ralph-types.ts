@@ -86,6 +86,14 @@ export interface RegisterCliRunInput {
 }
 
 /**
+ * @description Input for soft-fail worktree checkout registration at CLI run-start.
+ */
+export interface RegisterPlanRunWorktreeCheckoutInput {
+  readonly filesystemPath: string;
+  readonly planRunId: string;
+}
+
+/**
  * @description The newest plan_runs row's durable cancel marker for a plan — what the
  * server's stampCancelRequested stamps and the CLI loop polls each iteration boundary.
  */
