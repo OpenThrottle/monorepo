@@ -4,12 +4,13 @@
 #
 #         docker compose up --build
 #
-#     Brings up postgres + redis + server + developer.
+#     Brings up postgres + redis + migrations + server + developer.
 #     Config is interpolated from the repo-root `.env` (see `.env.default`).
 #
 #     Canonical images: server → Dockerfile.NestJS, developer →
 #     Dockerfile.ReactRouter, postgres → Dockerfile.Postgres (the Postgres
-#     build COPYs ./databases/seed.sql, so generate it first if missing).
+#     build COPYs ./databases/seed.sql, so generate it first if missing),
+#     migrations → Dockerfile.Migrations (one-shot; server waits for it).
 #
 #     Networking (Docker Desktop): the server reaches postgres/redis via
 #     host.docker.internal:${POSTGRES_PORT}/${REDIS_PORT} (the published host
@@ -28,9 +29,9 @@
 #     (pnpm nx run <app>:dev) on the same published ports as the prod
 #     services. Profiles keep the modes exclusive: server/developer are in
 #     the `prod` profile (enabled by default via COMPOSE_PROFILES="prod" in
-#     .env), server-dev/developer-dev in `dev`; postgres/redis are shared
-#     (no profile). Dev services talk to postgres/redis via compose service
-#     names; the server's Node inspector is published on 9229. See
+#     .env), server-dev/developer-dev in `dev`; postgres/redis/migrations are
+#     shared (no profile). Dev services talk to postgres/redis via compose
+#     service names; the server's Node inspector is published on 9229. See
 #     docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
 #
 #############################################################################
@@ -254,6 +255,37 @@ services:
 
   #############################################################################
   #
+  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #
+  #     Shared (no profile) so both prod and dev servers wait for schema
+  #     upgrades before starting. On a clean volume the seeded postgres image
+  #     already applies seed.sql; this runner covers UPGRADES (idempotent).
+  #
+  migrations:
+    build:
+      args:
+        NODE_VERSION: ${NODE_VERSION}
+      context: ./
+      dockerfile: Dockerfile.Migrations
+    container_name: ${OT_CONTAINER_PREFIX:-}migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      # Compose-network hostname + container port (not host.docker.internal /
+      # published POSTGRES_PORT — those are for host-side clients).
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+    image: openthrottle/migrations:latest
+    restart: 'no'
+
+  #############################################################################
+  #
   #     🤖 Redis | https://hub.docker.com/_/redis
   #
   #     Redis is the world’s fastest data platform for caching, vector search,
@@ -285,6 +317,8 @@ services:
       secrets: *build-secrets
     container_name: ${OT_CONTAINER_PREFIX:-}server
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -335,6 +369,8 @@ services:
     command: ['sh', '-c', 'pnpm nx run openthrottle-server:dev-debug']
     container_name: ${OT_CONTAINER_PREFIX:-}server-dev
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
