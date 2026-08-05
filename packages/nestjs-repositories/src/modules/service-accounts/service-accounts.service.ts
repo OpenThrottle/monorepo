@@ -32,6 +32,16 @@ export type CreateServiceAccountCredentialResult = {
   readonly token: string;
 };
 
+/**
+ * Outcome of {@link ServiceAccountsService.upsertCredentialForToken}. `action`
+ * distinguishes an idempotent no-op (the token already verifies) from a write
+ * (a new credential row, or an in-place rehash/un-revoke of an existing one).
+ */
+export type UpsertServiceAccountCredentialResult = {
+  readonly action: 'created' | 'noop' | 'updated';
+  readonly credential: ServiceAccountCredential;
+};
+
 @Injectable()
 export class ServiceAccountsService {
   private static readonly DEFAULT_BCRYPT_ROUNDS = 10;
@@ -183,6 +193,73 @@ export class ServiceAccountsService {
       credential,
       token: formatServiceAccountToken(prefix, secret),
     };
+  }
+
+  /**
+   * @description Deterministically provisions the credential for a KNOWN
+   * `ot_sa_<prefix>_<secret>` token (e.g. one supplied via `.env` for a fully
+   * Dockerized bootstrap) so that bearer verifies end-to-end. Idempotent:
+   * `noop` when a non-revoked credential with that prefix already verifies the
+   * secret; otherwise the row is rehashed and un-revoked in place (`updated`),
+   * or created (`created`). Returns null when the service account is missing or
+   * disabled. Throws when `token` is malformed or its prefix belongs to a
+   * different service account.
+   */
+  async upsertCredentialForToken(input: {
+    label?: string | null;
+    serviceAccountId: string;
+    token: string;
+  }): Promise<UpsertServiceAccountCredentialResult | null> {
+    const account = await this.serviceAccountRepository.findOne({
+      where: { id: input.serviceAccountId },
+    });
+    if (!account || account.disabledAt != null) {
+      return null;
+    }
+
+    const parsed = parseServiceAccountToken(input.token);
+    if (parsed == null) {
+      throw new Error(
+        'Invalid service account token: expected format ot_sa_<prefix>_<secret>.',
+      );
+    }
+
+    const existing = await this.credentialRepository.findOne({
+      where: { prefix: parsed.prefix },
+    });
+
+    if (existing != null) {
+      if (existing.serviceAccountId !== input.serviceAccountId) {
+        throw new Error(
+          `Service account token prefix "${parsed.prefix}" is already in use by a different service account.`,
+        );
+      }
+      const alreadyMatches =
+        existing.revokedAt == null &&
+        (await bcrypt.compare(parsed.secret, existing.secretHash));
+      if (alreadyMatches) {
+        return { action: 'noop', credential: existing };
+      }
+      existing.secretHash = await this.hashSecret(parsed.secret);
+      existing.revokedAt = null;
+      if (input.label !== undefined) {
+        existing.label = input.label;
+      }
+      const updated = await this.credentialRepository.save(existing);
+      return { action: 'updated', credential: updated };
+    }
+
+    const secretHash = await this.hashSecret(parsed.secret);
+    const created = await this.credentialRepository.save(
+      this.credentialRepository.create({
+        expiresAt: null,
+        label: input.label ?? null,
+        prefix: parsed.prefix,
+        secretHash,
+        serviceAccountId: input.serviceAccountId,
+      }),
+    );
+    return { action: 'created', credential: created };
   }
 
   /**

@@ -163,6 +163,7 @@ export { ServiceAccountsModule } from './modules/service-accounts/service-accoun
 export { ServiceAccountsService } from './modules/service-accounts/service-accounts.service';
 export type {
   CreateServiceAccountCredentialResult,
+  UpsertServiceAccountCredentialResult,
   VerifiedServiceAccountCredential,
 } from './modules/service-accounts/service-accounts.service';
 export {

@@ -8,7 +8,7 @@
  * database stays host-truthful; translation happens only where paths are used.
  *
  * Both functions are identity when the env pair is unset (host-run server — all
- * existing flows). See docs/openthrottle/docker-dev-workflow-and-host-bridge.md §6.
+ * existing flows).
  */
 
 /**

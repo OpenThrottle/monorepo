@@ -402,6 +402,69 @@ pnpm run database:bootstrap-service-accounts  # mint the service-account token (
 
 `bootstrap-service-accounts` prints a new token exactly once; put it in your root `.env` (and `applications/openthrottle-server/.env`) as `OPENTHROTTLE_MCP_AUTH_TOKEN` so the MCP server and CLIs authenticate against the fresh database.
 
+### Bootstrapping a fully-Dockerized install (default user + service accounts)
+
+The host flow above assumes a local pnpm/node toolchain. A **fully-Dockerized** install (`docker compose up --build`) has none, and `docker compose up` deliberately runs **no** bootstrap — provisioning a (possibly shared) database is always an explicit, manual step. On `up`, the `migrations` service applies the schema; the login user and the service-account bearer credentials are provisioned once by the manually-invoked `bootstrap` service (`docker compose run --rm bootstrap`). There is **no** `server depends_on bootstrap`.
+
+The token variable names are identical in both worlds: `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`.
+
+#### A. Fully in Docker (local, fresh volume)
+
+1. Generate a service-account token. It must be a valid `ot_sa_<prefix>_<secret>` token — **not** `openssl rand -hex 32`, which is not a valid service-account token and fails auth:
+
+   ```bash
+   node -e "const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))"
+   ```
+
+2. Paste it into `.env` as `OPENTHROTTLE_MCP_AUTH_TOKEN=`, and repeat (a **separate** token) for `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=`.
+
+3. Bring the stack up (postgres → migrations → server → developer). `bootstrap` does **not** run here:
+
+   ```bash
+   docker compose up --build
+   ```
+
+4. Provision the login user + service-account credentials (one-shot):
+
+   ```bash
+   docker compose run --rm bootstrap
+   ```
+
+5. Log into the developer app (`${OPENTHROTTLE_DEVELOPER_APP_URL}`) with `developer@openthrottle.com` / `FullThrottle2026!`.
+
+6. Verify the MCP token authenticates — expect HTTP `200`, not `401`:
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' \
+     -H "authorization: Bearer ${OPENTHROTTLE_MCP_AUTH_TOKEN}" \
+     -H 'content-type: application/json' \
+     -d '{"query":"{ plans { id } }"}' \
+     "${OPENTHROTTLE_SERVER_APP_URL}/graphql"
+   ```
+
+Re-running `docker compose run --rm bootstrap` is a safe idempotent no-op: the user keeps its password, and a token that already verifies is left unchanged.
+
+#### B. Shared / real Postgres + Redis instance
+
+Use the same token-generation step (A.1), stored in your team secret store and pasted into each developer's `.env`. Then, **once per shared database**:
+
+1. Point `.env` at the shared DB (`POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB`).
+
+2. Seed a **real admin** instead of the demo default by setting these in `.env` before running bootstrap:
+
+   ```bash
+   OPENTHROTTLE_BOOTSTRAP_USER_EMAIL=admin@yourco.com
+   OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD=<a strong password>
+   ```
+
+3. Run the one-time provisioning:
+
+   ```bash
+   docker compose run --rm bootstrap
+   ```
+
+This is a one-time provisioning step per shared DB; re-running is a safe idempotent no-op. The host `setup.sh` / `pnpm database:bootstrap-*` path (above) stays intact for non-Docker installs.
+
 ### Swapping the data volume (personal ↔ public)
 
 Two named Docker volumes hold interchangeable databases:

@@ -98,18 +98,19 @@ export const ChatConversationRow = (
           type="button"
         >
           <div className="line-clamp-1 text-sm">{label}</div>
-          <div className="text-xs">
+          <div className="text-muted-foreground text-xs">
             {formatRelativeChatTimestamp(conversation.updatedAt)}
           </div>
         </button>
       </div>
+
       <div>
         <Button
           aria-label={`Rename ${label}`}
-          // className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+          className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
           data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
           onClick={onStartRename}
-          size="icon"
+          size="xs"
           type="button"
           variant="ghost"
         >
@@ -117,10 +118,10 @@ export const ChatConversationRow = (
         </Button>
         <Button
           aria-label={`Delete ${label}`}
-          // className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+          className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
           data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
           onClick={onRequestDelete}
-          size="icon"
+          size="xs"
           type="button"
           variant="ghost"
         >

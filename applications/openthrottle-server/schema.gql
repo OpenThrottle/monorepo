@@ -4148,9 +4148,7 @@ type Mutation {
   """
   Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist.
   """
-  registerPlanRunWorktreeCheckout(
-    input: RegisterPlanRunWorktreeCheckoutInput!
-  ): PlanRunObject
+  registerPlanRunWorktreeCheckout(input: RegisterPlanRunWorktreeCheckoutInput!): PlanRunObject
 
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!

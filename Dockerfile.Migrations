@@ -2,8 +2,9 @@
 #
 # Tiny image (node + pg + databases/migrations) that applies incremental SQL
 # migrations against the compose Postgres on the network, then exits. Wired into
-# applications/openthrottle/docker-compose.yml as the `migrations` init service
-# (server depends_on it with service_completed_successfully). On a clean volume the
+# the root docker-compose.yml and applications/openthrottle/docker-compose.yml as
+# the `migrations` init service (server depends_on it with
+# service_completed_successfully). On a clean volume the
 # seeded openthrottle/postgres image already applies seed.sql; this runner covers
 # UPGRADES of an existing volume (migrations are written idempotent).
 #

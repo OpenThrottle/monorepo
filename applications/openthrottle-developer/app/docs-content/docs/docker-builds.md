@@ -68,7 +68,7 @@ This document records the chosen **image build strategy** and **registry** for *
 - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless production), `APP_NAME=openthrottle-server`, in-image `/health` probe, `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
 - **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production plus an optional `production-debian` target (debian-slim + shell for curl healthchecks). `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
 
-Both Dockerfiles also expose a **`development` target** (based on the `builder` stage: node:22-bookworm-slim with a shell, full workspace install, no pruning/distroless) whose `CMD` runs the app's Nx dev target (`pnpm nx run ${APP_NAME}:dev`, `NX_DAEMON=false`). It exists for the compose `dev` profile / `docker compose watch` hot-reload workflow and is never published; `production` (the last stage) remains the default target. See [docker-dev-workflow-and-host-bridge.md](./docker-dev-workflow-and-host-bridge.md).
+Both Dockerfiles also expose a **`development` target** (based on the `builder` stage: node:22-bookworm-slim with a shell, full workspace install, no pruning/distroless) whose `CMD` runs the app's Nx dev target (`pnpm nx run ${APP_NAME}:dev`, `NX_DAEMON=false`). It exists for the compose `dev` profile / `docker compose watch` hot-reload workflow and is never published; `production` (the last stage) remains the default target.
 
 The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and both `.v2` variants have been deleted.
 
@@ -126,7 +126,7 @@ Both apps define a `start:docker` script used outside the distroless images (the
 - **Compose file:** the repo-root **`docker-compose.yml`** defines `openthrottle-postgres`, `openthrottle-redis`, `openthrottle-server` (built from `Dockerfile.NestJS.v3`), and `openthrottle-developer` (built from `Dockerfile.ReactRouter.v3`), all with `context: ./`.
 - **Run from repo root:**
   `docker compose up --build`
-- **Dev / consumer workflows:** the root compose also carries a `dev` profile (`docker compose --profile dev watch` — hot reload from source) and `applications/openthrottle/docker-compose.yml` is the published-image consumer install. Both, plus the containerized host-execution bridge, are designed in **[docker-dev-workflow-and-host-bridge.md](./docker-dev-workflow-and-host-bridge.md)**; smoke them with `scripts/docker-smoke-test.sh [prod|dev|consumer]`.
+- **Dev / consumer workflows:** the root compose also carries a `dev` profile (`docker compose --profile dev watch` — hot reload from source) and `applications/openthrottle/docker-compose.yml` is the published-image consumer install. Smoke them with `scripts/docker-smoke-test.sh [prod|dev|consumer]`.
 - **Required env:** populate the repo-root `.env`. For container-to-container access set `POSTGRES_HOST=openthrottle-postgres` and `REDIS_HOST=openthrottle-redis`; the server also needs `POSTGRES_PORT`/`REDIS_PORT`, `OPENTHROTTLE_SERVER_PORT`, `CORS_ORIGINS`/`CORS_CREDENTIALS`, `JWT_SECRET`; the developer needs `API_URL_INTERNAL`/`API_URL_EXTERNAL` (the URL the browser uses to reach the server, e.g. `http://localhost:3000`), the `APP_URL*` family, and `OPENTHROTTLE_DEVELOPER_PORT`.
 
 ### 8.1. Verification

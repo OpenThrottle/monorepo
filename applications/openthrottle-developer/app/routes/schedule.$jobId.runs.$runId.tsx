@@ -95,7 +95,6 @@ export default function Component(
         <div className="flex items-start justify-between gap-4">
           <div>
             <GlobalHeading heading="h1" icon={CalendarDaysIcon} title="Run" />
-            {/* <h1 className="text-xl font-semibold">Run</h1> */}
             <p className="text-muted-foreground mt-1 text-sm">
               {job?.name ?? 'Scheduled job'}
             </p>

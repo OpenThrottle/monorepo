@@ -11,8 +11,7 @@
 # Targets: `production` (default — distroless, pruned), `production-debian` (shell + git
 # for the host execution bridge), and `development` (builder-based, shell + full
 # workspace, runs `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose
-# `dev` profile with `develop.watch`). See
-# docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+# `dev` profile with `develop.watch`).
 #
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual
@@ -125,6 +124,22 @@ RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
   pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool --parallel=1
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
+
+################################################################################
+#
+#   BOOTSTRAP - one-shot: seed default user + provision service-account creds
+#
+################################################################################
+# Reuses the `development` tree (full workspace, tsx, scripts/, built packages)
+# because the two bootstrap scripts import @openthrottle/nestjs-repositories —
+# the tiny `pg`-only migrations image cannot run them. Not a long-running
+# service: the manually invoked `bootstrap` compose service runs this to
+# completion and exits. `production` remains the last (default) stage.
+FROM development AS bootstrap
+
+ENV NODE_ENV="production"
+
+CMD ["sh", "./scripts/docker-bootstrap.sh"]
 
 ################################################################################
 #
