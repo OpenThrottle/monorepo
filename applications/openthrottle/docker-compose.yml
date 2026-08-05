@@ -104,7 +104,7 @@ services:
 
   developer:
     image: openthrottle/developer:${APP_VERSION:-latest}
-    container_name: developer
+    # container_name: developer
     depends_on:
       server:
         condition: service_healthy
@@ -128,7 +128,7 @@ services:
         POSTGRES_VERSION: ${POSTGRES_VERSION}
       context: ./
       dockerfile: Dockerfile.Postgres
-    container_name: postgres
+    # container_name: postgres
     env_file:
       - .env
     environment:
@@ -151,7 +151,7 @@ services:
       - ot_docker_postgres_data:/var/lib/postgresql
 
   redis:
-    container_name: redis
+    # container_name: redis
     healthcheck:
       interval: 10s
       retries: 3
@@ -164,7 +164,7 @@ services:
 
   server:
     image: openthrottle/server:${APP_VERSION:-latest}
-    container_name: server
+    # container_name: server
     depends_on:
       migrations:
         condition: service_completed_successfully

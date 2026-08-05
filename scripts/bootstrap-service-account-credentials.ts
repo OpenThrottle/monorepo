@@ -67,17 +67,21 @@ async function upsertBootstrapCredentialFromEnv(
       serviceAccountId,
       token,
     });
+
     if (result == null) {
       console.error(
         `Failed to provision ${account.name}: service account missing or disabled.`,
       );
       process.exit(1);
     }
+
     const detail =
       result.action === 'noop'
         ? 'credential already matches (no change)'
         : `${result.action} credential`;
+
     console.log(`${account.name}: ${detail} from ${account.envVar}.`);
+
     return result.action;
   } catch (error) {
     console.error(
@@ -85,10 +89,13 @@ async function upsertBootstrapCredentialFromEnv(
         error instanceof Error ? error.message : String(error)
       }`,
     );
+
     console.error(
       `  ${account.envVar} must be a valid service account token (ot_sa_<prefix>_<secret>). Generate one with:`,
     );
+
     console.error(`    ${TOKEN_GENERATION_HINT}`);
+
     process.exit(1);
   }
 }
@@ -103,13 +110,16 @@ async function mintBootstrapCredential(
     dataSource,
     serviceAccountId,
   );
+
   if (activeCount > 0) {
     console.log(
       `Skip ${account.name}: ${activeCount} active credential(s) already exist.`,
     );
+
     console.log(
       `  Revoke old credentials via admin GraphQL, then re-run this script to mint a new token.`,
     );
+
     return 'skipped';
   }
 
@@ -127,6 +137,7 @@ async function mintBootstrapCredential(
   console.log(`=== ${account.name} ===`);
   console.log(`${account.envVar}=${created.token}`);
   console.log('');
+
   return 'minted';
 }
 
@@ -175,6 +186,7 @@ async function main(): Promise<void> {
       log: () => undefined,
       warn: () => undefined,
     };
+
     const serviceAccountsService = new ServiceAccountsService(
       logger,
       dataSource.getRepository(ServiceAccount),
@@ -193,6 +205,7 @@ async function main(): Promise<void> {
       console.log(
         '  - Cursor ~/.cursor/mcp.json env for openthrottle-mcp (OPENTHROTTLE_MCP_AUTH_TOKEN only)',
       );
+
       console.log(
         'Tokens are shown once; store them securely and rotate via admin GraphQL when needed.',
       );
