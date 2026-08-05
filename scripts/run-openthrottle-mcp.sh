@@ -115,6 +115,13 @@ export API_URL_INTERNAL="$API_URL"
 # `set -a && source ./.env`; the targeted-read rewrite dropped it, leaving the MCP server
 # unauthenticated ("Auth token required for OpenThrottle (OT) GraphQL"). Don't fail if it
 # is absent — the server may inject it another way.
+#
+# Also self-load when the value is an UNEXPANDED "${...}" placeholder: MCP clients that
+# don't (or can't) expand `${OPENTHROTTLE_MCP_AUTH_TOKEN}` from .mcp.json's env block pass
+# the literal string through when the var is unset in their launching shell. That literal
+# is non-empty, so a bare `-z` guard would skip the fallback and send the placeholder as a
+# bearer token → server 401. Treat any value containing "${" as unset.
+case "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" in *'${'*) unset -v OPENTHROTTLE_MCP_AUTH_TOKEN ;; esac
 if [ -z "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
   if tok=$(read_env_var "./.env" OPENTHROTTLE_MCP_AUTH_TOKEN) && [ -n "$tok" ]; then
     export OPENTHROTTLE_MCP_AUTH_TOKEN="$tok"

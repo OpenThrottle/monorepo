@@ -1,11 +1,9 @@
 {
   "mcpServers": {
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "command": "bash",
+      "args": ["./scripts/run-github-mcp.sh"],
+      "description": "GitHub MCP server. Launcher self-loads GITHUB_TOKEN from root .env when the shell that launched the client didn't export it (no direnv here), mirroring run-openthrottle-mcp.sh. No env block: an unexpanded ${GITHUB_TOKEN} placeholder is what triggers the client's 'Failed to replace env in config' warning, and the launcher handles both exported and .env token sources."
     },
     "fetch": {
       "command": "uvx",
@@ -22,8 +20,8 @@
       "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
       "env": {
         "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
-        "API_URL": "http://localhost:6021",
-        "API_URL_INTERNAL": "http://localhost:6021",
+        "API_URL": "${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}",
+        "API_URL_INTERNAL": "${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}",
         "OPENTHROTTLE_MCP_AUTH_TOKEN": "${OPENTHROTTLE_MCP_AUTH_TOKEN}"
       }
     },
