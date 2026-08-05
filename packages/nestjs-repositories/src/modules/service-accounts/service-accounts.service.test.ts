@@ -122,6 +122,151 @@ describe('ServiceAccountsService', () => {
     });
   });
 
+  describe('upsertCredentialForToken', () => {
+    const prefix = 'knownprefix1';
+    const secret = 'validSecret12';
+    const token = `${SERVICE_ACCOUNT_BEARER_PREFIX}${prefix}_${secret}`;
+
+    it('returns null when the service account is missing', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.upsertCredentialForToken({
+        serviceAccountId,
+        token,
+      });
+
+      expect(result).toBeNull();
+      expect(credentialRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('returns null when the service account is disabled', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          disabledAt: new Date(),
+          id: serviceAccountId,
+        }),
+      );
+
+      const result = await service.upsertCredentialForToken({
+        serviceAccountId,
+        token,
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it('throws when the token is not an ot_sa_<prefix>_<secret> token', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({ disabledAt: null, id: serviceAccountId }),
+      );
+
+      await expect(
+        service.upsertCredentialForToken({
+          serviceAccountId,
+          token: 'deadbeefdeadbeefdeadbeefdeadbeef',
+        }),
+      ).rejects.toThrow(/ot_sa_<prefix>_<secret>/);
+    });
+
+    it('creates a credential whose stored hash verifies the token', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({ disabledAt: null, id: serviceAccountId }),
+      );
+      credentialRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.upsertCredentialForToken({
+        label: 'mcp',
+        serviceAccountId,
+        token,
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.action).toBe('created');
+      const savedArg = credentialRepository.save.mock.calls[0]![0];
+      expect(savedArg).toEqual(
+        expect.objectContaining({
+          label: 'mcp',
+          prefix,
+          secretHash: expect.stringMatching(/^\$2[aby]\$/),
+          serviceAccountId,
+        }),
+      );
+      expect(await service.validateSecret(secret, savedArg.secretHash)).toBe(
+        true,
+      );
+    });
+
+    it('is a no-op when a non-revoked credential already matches the token', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({ disabledAt: null, id: serviceAccountId }),
+      );
+      const secretHash = await service.hashSecret(secret);
+      credentialRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccountCredential>({
+          id: credentialId,
+          prefix,
+          revokedAt: null,
+          secretHash,
+          serviceAccountId,
+        }),
+      );
+
+      const result = await service.upsertCredentialForToken({
+        serviceAccountId,
+        token,
+      });
+
+      expect(result!.action).toBe('noop');
+      expect(credentialRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('rehashes and un-revokes in place when an existing credential is stale', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({ disabledAt: null, id: serviceAccountId }),
+      );
+      const staleHash = await service.hashSecret('a-different-secret');
+      const existing = asMock<ServiceAccountCredential>({
+        id: credentialId,
+        prefix,
+        revokedAt: new Date(),
+        secretHash: staleHash,
+        serviceAccountId,
+      });
+      credentialRepository.findOne.mockResolvedValue(existing);
+
+      const result = await service.upsertCredentialForToken({
+        serviceAccountId,
+        token,
+      });
+
+      expect(result!.action).toBe('updated');
+      expect(existing.revokedAt).toBeNull();
+      expect(await service.validateSecret(secret, existing.secretHash)).toBe(
+        true,
+      );
+      expect(credentialRepository.save).toHaveBeenCalledWith(existing);
+    });
+
+    it('throws when the prefix belongs to a different service account', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({ disabledAt: null, id: serviceAccountId }),
+      );
+      credentialRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccountCredential>({
+          id: credentialId,
+          prefix,
+          revokedAt: null,
+          secretHash: await service.hashSecret(secret),
+          serviceAccountId: '99999999-9999-4999-8999-999999999999',
+        }),
+      );
+
+      await expect(
+        service.upsertCredentialForToken({ serviceAccountId, token }),
+      ).rejects.toThrow(/different service account/);
+    });
+  });
+
   describe('verifyBearerToken', () => {
     it('returns null for JWT-shaped bearer', async () => {
       const result = await service.verifyBearerToken(
