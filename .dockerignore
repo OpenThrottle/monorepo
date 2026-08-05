@@ -51,6 +51,10 @@ tools/**/node_modules/
 #############################################################################
 # Includes
 #############################################################################
+# Optional local seed dump: if a dev generates databases/seed.sql (e.g. from a
+# backup), re-include it so the postgres image bakes it into
+# /docker-entrypoint-initdb.d. It is gitignored, so it stays local — the
+# public/fresh DB has no seed and is populated by migrate + bootstrap scripts.
 !databases/seed.sql
 # Migrations runner image (Dockerfile.Migrations) needs these from the context.
 !databases/migrations

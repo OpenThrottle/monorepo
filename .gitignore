@@ -35,6 +35,13 @@ docker-compose.worktree.yml
 **/__generated__/**/*
 databases/backups/**/*.sql
 databases/backups/**/*.zip
+# Local Postgres seed dump — a full pg_dump of a dev's own database. Kept out of
+# the repo so personal plans/tasks/notes and credential hashes never leak into a
+# public checkout. The fresh/public DB is seeded by scripts instead: migrate +
+# bootstrap-default-user + bootstrap-service-accounts (see databases/README.md).
+# A locally-generated databases/seed.sql is still baked into your own postgres
+# image (see .dockerignore) — it just never gets committed.
+databases/seed.sql
 vite.config.*.timestamp*
 vite.config.ts.timestamp*
 vitest.config.*.timestamp*

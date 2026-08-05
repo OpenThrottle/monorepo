@@ -383,6 +383,56 @@ LIMIT 5;
 - For a fresh ingest (e.g. after dumping test data or changing source fsiles), run `pnpm run database:reset` then `pnpm run database:import`. Re-running ingest without reset is additive; duplicate plans may be inserted.
 - After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/openthrottle/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
 
+## Local Postgres data volumes & seeding
+
+The local Postgres runs in Docker (compose service `postgres`) on a named volume. For the public repo we keep two interchangeable volumes and seed a fresh/public database from scripts rather than a committed dump.
+
+### Seeding a fresh / public database
+
+There is **no committed SQL seed**. A developer's `databases/seed.sql` is a full `pg_dump` of their own database (personal plans/tasks/notes plus password and service-account credential hashes), so it is gitignored and never enters the repo. A locally-generated `databases/seed.sql` is still baked into that developer's own postgres image (via the `.dockerignore` re-include) for fast personal restores — it just stays local.
+
+A fresh/empty volume is populated by scripts, in order:
+
+```bash
+pnpm run database:start                       # bring postgres up (fresh volume → empty)
+pnpm run database:migrate                     # apply SQL migrations (schema + ledger)
+pnpm run database:bootstrap-default-user      # developer@openthrottle.com / FullThrottle2026!
+pnpm run database:bootstrap-service-accounts  # mint the service-account token (printed once)
+```
+
+`bootstrap-service-accounts` prints a new token exactly once; put it in your root `.env` (and `applications/openthrottle-server/.env`) as `OPENTHROTTLE_MCP_AUTH_TOKEN` so the MCP server and CLIs authenticate against the fresh database.
+
+### Swapping the data volume (personal ↔ public)
+
+Two named Docker volumes hold interchangeable databases:
+
+- `openthrottle_postgres_data` — the **fresh/public demo** DB (active by default).
+- `openthrottle_postgres_data_dev_personal` — an **archive of your pre-public personal** DB.
+
+Both are declared in `docker-compose.yml`; the `postgres` service mounts exactly one, chosen by a one-line comment toggle in its `volumes:` block. The mount path (`/var/lib/postgresql`, PG18), credentials, and ports are identical for both, so nothing else changes. To switch:
+
+```bash
+docker compose stop postgres   # quiesce (NOT `down -v`, which destroys BOTH volumes)
+# In docker-compose.yml → postgres.volumes, comment the active line and
+# uncomment the other:
+#   - postgres_data_dev_personal:/var/lib/postgresql   # 🔒 personal archive
+#   - postgres_data:/var/lib/postgresql                # 🌱 fresh/public
+docker compose up -d postgres   # start on the newly-selected volume
+```
+
+> ⚠️ **Never run `docker compose down -v`.** The `-v` deletes **both** named volumes, wiping the personal archive. Use `docker compose stop postgres` to swap safely.
+
+To (re)create the personal archive from a running personal DB, stop postgres and copy the volume (Postgres must be stopped so the data directory is quiescent):
+
+```bash
+docker compose stop postgres
+docker volume create openthrottle_postgres_data_dev_personal
+docker run --rm \
+  -v openthrottle_postgres_data:/from:ro \
+  -v openthrottle_postgres_data_dev_personal:/to \
+  alpine sh -c 'cd /from && cp -a . /to'
+```
+
 ## Migrations
 
 SQL migrations live in `databases/migrations/` and are applied in filename order by `pnpm run database:migrate`.
