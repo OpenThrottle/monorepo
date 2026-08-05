@@ -123,3 +123,7 @@ For implementation details, validation rules, and GraphQL examples, see [Multi-w
 | **POSTGRES_HOST / REDIS_HOST** | **`localhost`** when apps run on host                                 | **`openthrottle-postgres`** / **`openthrottle-redis`** or bridge networking docs in app README      |
 
 **Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps.
+
+### First-time provisioning (fully in Compose)
+
+`docker compose up` applies the schema (the `migrations` service) but never seeds the login user or the service-account bearer tokens — that is a deliberate, manual one-shot: `docker compose run --rm bootstrap`. Without a host pnpm/node toolchain there is no other way to create the `developer@openthrottle.com` account or provision `OPENTHROTTLE_MCP_AUTH_TOKEN` / `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. The exact copy-pasteable procedure for both a local Docker volume and a shared/real database is in [`databases/README.md` § "Bootstrapping a fully-Dockerized install"](../../databases/README.md#bootstrapping-a-fully-dockerized-install-default-user--service-accounts).

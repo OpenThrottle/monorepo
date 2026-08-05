@@ -20,6 +20,15 @@
 #     Verified healthy: server GET /health → 200
 #     {api,database,redis,websocket:ok}; developer GET / → 200.
 #
+#     🔐 First-time provisioning (fully-Dockerized) | `up` never provisions a
+#     database. After the stack is up, seed the login user + service-account
+#     bearer credentials ONCE with the manually-invoked `bootstrap` service:
+#
+#         docker compose run --rm bootstrap
+#
+#     Idempotent. Exact copy-pasteable steps (local + shared DB) live in
+#     databases/README.md § "Bootstrapping a fully-Dockerized install".
+#
 #     🔧 Dev mode (contributors) | hot reload from source, no distroless rebuilds:
 #
 #         docker compose --profile dev watch       # build dev images, start, sync on save
