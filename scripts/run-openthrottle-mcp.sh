@@ -136,6 +136,71 @@ if [ -n "${OT_MCP_RESOLVE_ONLY:-}" ]; then
   exit 0
 fi
 
+# --- Preflight auth check (fail loudly; never present a silently-broken MCP) ----------
+# The MCP client connects over stdio and lists tools regardless of whether the bearer
+# token is valid, so a missing/revoked/rotated token surfaces only as a 401 on EVERY
+# authenticated tool call mid-session — a "stale MCP" that looks connected but is dead.
+# Validate the resolved token against the chosen server BEFORE exec so a bad token makes
+# the server fail to start (loud + visible in the MCP client) instead of connecting broken.
+# Opt out with OT_MCP_SKIP_PREFLIGHT=1 (e.g. setups where the server injects the token).
+if [ -z "${OT_MCP_SKIP_PREFLIGHT:-}" ]; then
+  auth_fail_banner() {
+    log ""
+    log "❌ openthrottle-mcp: refusing to start — $1"
+    log "   Server: $API_URL"
+    log "   Fix:"
+    log "     1. Provision/verify the token:  pnpm run database:bootstrap-service-accounts"
+    log "     2. Set it in the root .env:      OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_<prefix>_<secret>"
+    log "     3. Reconnect the MCP:            /mcp reconnect   (or restart the client)"
+    log "   Details: packages/openthrottle-mcp/docs/AUTH.md"
+    log ""
+  }
+
+  if [ -z "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
+    auth_fail_banner "OPENTHROTTLE_MCP_AUTH_TOKEN is unset (not in the launching env, this worktree's .env, or the root .env)."
+    exit 1
+  fi
+
+  preflight_out=$(mktemp -t ot-mcp-preflight.XXXXXX)
+  http_code=$(curl -s -o "$preflight_out" -w '%{http_code}' -m 10 \
+    -X POST "$API_URL/graphql" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer ${OPENTHROTTLE_MCP_AUTH_TOKEN}" \
+    -d '{"query":"query { listSources { sources { name } } }"}' 2>/dev/null || true)
+
+  # NOTE: the GraphQL server answers auth failures with HTTP 200 and an "errors" array
+  # ({"errors":[{"message":"Unauthorized",...,"path":["listSources"]}],"data":null}), so
+  # HTTP status alone does NOT distinguish success from a bad token, and a naive
+  # grep for "listSources" false-passes (it appears in the error's "path"). Decide on the
+  # body: any "errors" key ⇒ rejected; otherwise a real "sources" payload ⇒ OK.
+  if grep -q '"errors"' "$preflight_out" 2>/dev/null; then
+    auth_fail_banner "server rejected the token: $(head -c 200 "$preflight_out" 2>/dev/null)"
+    rm -f "$preflight_out"
+    exit 1
+  fi
+  case "$http_code" in
+    200)
+      if grep -q '"sources"' "$preflight_out" 2>/dev/null; then
+        log "🔓 openthrottle-mcp: auth OK (token verified against $API_URL)"
+      else
+        auth_fail_banner "unexpected HTTP 200 body (no sources payload): $(head -c 200 "$preflight_out" 2>/dev/null)"
+        rm -f "$preflight_out"
+        exit 1
+      fi
+      ;;
+    401 | 403)
+      auth_fail_banner "server returned HTTP $http_code — token invalid/revoked, wrong server, or missing plans:* role."
+      rm -f "$preflight_out"
+      exit 1
+      ;;
+    *)
+      # Transient/ambiguous (timeout, 5xx). Don't block tooling on a server hiccup, but say so.
+      log "⚠️  openthrottle-mcp: auth preflight inconclusive (HTTP ${http_code:-none}); starting anyway. If tools 401, run scripts/verify-openthrottle-mcp-env.sh"
+      ;;
+  esac
+  rm -f "$preflight_out"
+fi
+
 # Semantic search embeddings are configured on openthrottle-server (OPENAI_API_KEY or
 # OLLAMA_* in applications/openthrottle-server/.env), not in this launcher. See
 # docs/openthrottle/run-locally-oss.md and packages/openthrottle-mcp/docs/verification-environment.md.
