@@ -3,6 +3,7 @@ import { Form, Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -22,6 +23,7 @@ import {
 } from '~/routing/schedule/data/data.run-detail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/schedule.$jobId.runs.$runId';
+import { CalendarDaysIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -92,7 +94,8 @@ export default function Component(
       <div className="flex flex-col gap-6" data-testid="ScheduleRunDetail">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold">Run</h1>
+            <GlobalHeading heading="h1" icon={CalendarDaysIcon} title="Run" />
+            {/* <h1 className="text-xl font-semibold">Run</h1> */}
             <p className="text-muted-foreground mt-1 text-sm">
               {job?.name ?? 'Scheduled job'}
             </p>

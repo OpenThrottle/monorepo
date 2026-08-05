@@ -151,11 +151,6 @@ services:
       - ot_docker_postgres_data:/var/lib/postgresql
 
   redis:
-    build:
-      args:
-        REDIS_VERSION: ${REDIS_VERSION}
-      context: ./
-      dockerfile: Dockerfile.Redis
     container_name: redis
     healthcheck:
       interval: 10s

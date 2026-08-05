@@ -3,7 +3,7 @@
 Not an Nx project (no `package.json`). Two jobs: (1) the **consumer-install**
 `docker-compose.yml` — runs published `openthrottle/*` images (server, developer, one-shot
 `migrations`) on a clean machine with no repo build; (2) base-image Dockerfiles
-(`Dockerfile.Postgres` with seeded schema, `Dockerfile.Redis`, `Dockerfile.Whisper`) that the
+(`Dockerfile.Postgres` with seeded schema, `Dockerfile.Whisper`) that the
 **root** dev `docker-compose.yml` also builds from by path.
 
 - **Local dev never uses this compose file.** Dev Postgres/Redis come from the root

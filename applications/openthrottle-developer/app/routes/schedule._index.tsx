@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -12,12 +13,13 @@ import { ScheduledAgentJobsDocument } from '~/__generated__/graphql';
 import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/schedule._index';
+import { CalendarClockIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Schedule',
-  links: (_match) => [{ children: 'Agents', to: '/queues' }],
+  links: (_match) => [],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -57,17 +59,21 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">Schedule</h1>
-            <p className="text-muted-foreground text-sm">
-              Run an agent prompt on a cron schedule.
-            </p>
-          </div>
-          <Button asChild={true}>
-            <Link to="/schedule/create">New schedule</Link>
-          </Button>
+      <>
+        <div>
+          <GlobalHeading
+            className="mb-4"
+            heading="h1"
+            icon={CalendarClockIcon}
+            title="Schedule"
+          >
+            <Button asChild={true} size="xs">
+              <Link to="/schedule/create">New schedule</Link>
+            </Button>
+          </GlobalHeading>
+          <p className="text-muted-foreground text-sm">
+            Run an agent prompt on a cron schedule.
+          </p>
         </div>
 
         {jobs.length === 0 ? (
@@ -80,7 +86,7 @@ export default function Component(
         ) : (
           <ScheduleTable className="bg-card" jobs={jobs} />
         )}
-      </div>
+      </>
     </GlobalScreen>
   );
 }

@@ -124,6 +124,9 @@
     "skill-sync": {
       "tags": ["openthrottle"]
     },
+    "skillopt-sleep": {
+      "tags": []
+    },
     "teach": {
       "tags": ["docs"]
     },
