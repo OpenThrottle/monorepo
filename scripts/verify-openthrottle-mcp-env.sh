@@ -47,7 +47,14 @@ if [ -n "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${OPENTHROTTLE_MCP_AUTH_TOKEN}" \
     -d "${AUTH_BODY}" || true)"
-  if [ "${HTTP_CODE}" = "200" ] && grep -q '"listSources"' /tmp/ot-mcp-auth-smoke.json 2>/dev/null; then
+  # The server answers auth failures with HTTP 200 + an "errors" array (data:null), and the
+  # error's "path":["listSources"] makes a naive grep for "listSources" false-pass. Decide
+  # on the body: any "errors" ⇒ rejected; otherwise a real "sources" payload ⇒ OK.
+  if grep -q '"errors"' /tmp/ot-mcp-auth-smoke.json 2>/dev/null; then
+    echo "FAIL: authenticated GraphQL rejected the token — revoked, wrong server, or missing plans:* role"
+    echo "      Response: $(head -c 200 /tmp/ot-mcp-auth-smoke.json 2>/dev/null || echo '(empty)')"
+    exit 1
+  elif [ "${HTTP_CODE}" = "200" ] && grep -q '"sources"' /tmp/ot-mcp-auth-smoke.json 2>/dev/null; then
     echo "OK: authenticated GraphQL listSources (with ot_sa token)"
   elif [ "${HTTP_CODE}" = "401" ] || [ "${HTTP_CODE}" = "403" ]; then
     echo "FAIL: authenticated GraphQL returned HTTP ${HTTP_CODE} — token revoked, wrong server, or missing plans:* role"

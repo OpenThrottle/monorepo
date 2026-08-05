@@ -36,19 +36,19 @@ installPythonSoftware () {
 installSoftware () {
   # 📦 First we'll need our package manager PNPM
   corepack enable pnpm
-  corepack prepare "pnpm@${PNPM_VERSION}" --activate
+  corepack prepare --activate
 
   # 🧠 Install the correct NX version
-  pnpm add --global "nx@${NX_VERSION}"
+  # pnpm add --global "nx@${NX_VERSION}"
 
   # 🌏 Install the following tools via pnpm
-  pnpm add --global nest
-  pnpm add --global schematics
-  pnpm add --global vercel
+  # pnpm add --global nest
+  # pnpm add --global schematics
+  # pnpm add --global vercel
 
   # 🎒 Install the following tools via brew
-  installBrewPackage "1password-cli" "op"
-  installBrewPackage "langgraph-cli" "langgraph"
+  # installBrewPackage "1password-cli" "op"
+  # installBrewPackage "langgraph-cli" "langgraph"
   installBrewPackage "openjdk@17"
   installBrewPackage "terraform"
 

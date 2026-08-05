@@ -225,7 +225,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
       user = queryMyUser.me ?? null;
       userLoadOk = true;
-      console.error('🟢 root loader: user', user);
 
       return null;
     } catch (error) {
@@ -268,8 +267,6 @@ export const loader = async (args: Route.LoaderArgs) => {
       return redirect('/auth');
     }
   }
-
-  console.error('🟢 2 root loader: user', user);
 
   return {
     canonical,
