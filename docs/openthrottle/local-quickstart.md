@@ -123,23 +123,12 @@ Open `http://localhost:6020`. MCP verification does not require the UI.
 
 ### Cursor MCP config
 
-Register `openthrottle-mcp` in `.cursor/mcp.json` (this repo as workspace) or `~/.cursor/mcp.json` (secondary workspace). Align URLs with server `PORT`:
+Register `openthrottle-mcp` by copying the committed template — don't hand-write the block:
 
-```json
-{
-  "mcpServers": {
-    "openthrottle-mcp": {
-      "command": "bash",
-      "args": ["./scripts/run-openthrottle-mcp.sh"],
-      "env": {
-        "API_URL": "http://localhost:6021",
-        "API_URL_INTERNAL": "http://localhost:6021",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
-      }
-    }
-  }
-}
-```
+1. Copy [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) → `.cursor/mcp.json` (this repo as workspace), or merge its `openthrottle-mcp` entry into `~/.cursor/mcp.json` (secondary workspace).
+2. Set the `env` keys that matter for local dev: `OPENTHROTTLE_MCP_AUTH_TOKEN` (the `ot_sa_…` from step 3) and — if your editor doesn't populate them from `.env` — `API_URL` / `API_URL_INTERNAL` pointed at the running server (default `http://localhost:6021`; keep them aligned with server `PORT`).
+
+The full block, launcher behavior, and editor parity live in [mcp-registration.md § Template structure](./mcp-registration.md#template-structure) — the SSOT for the entry.
 
 When OpenThrottle is **not** the Cursor workspace root, use an **absolute path** to `scripts/run-openthrottle-mcp.sh` in the `args` array. See [verification-environment.md § Secondary workspace](../../packages/openthrottle-mcp/docs/verification-environment.md#secondary-workspace-another-repo-open-in-cursor).
 
