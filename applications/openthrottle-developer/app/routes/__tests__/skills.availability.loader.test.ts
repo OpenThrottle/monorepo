@@ -28,7 +28,11 @@ function asMock(value: unknown): unknown {
 const PROJECTS_RESULT = {
   projects: [
     { id: 'other-1', name: 'Other', nxProjectName: 'other' },
-    { id: 'dogfood-1', name: 'monorepo', nxProjectName: 'monorepo' },
+    {
+      id: 'dogfood-1',
+      name: 'OpenThrottle/monorepo',
+      nxProjectName: 'OpenThrottle/monorepo',
+    },
   ],
 };
 
