@@ -45,12 +45,14 @@ All of the above are Open Source and can run on your machine or your own infrast
 
 The launcher starts **@openthrottle/openthrottle-mcp** on stdio for Cursor. It does **not** require **`OPENAI_API_KEY`** in the monorepo root `.env`.
 
+> **Running the stack fully in Docker (no host Node)?** Use the streamable-HTTP `mcp` container instead of this stdio launcher — `docker compose --profile prod up mcp`, registered by URL. See [mcp-registration.md § HTTP transport (Docker-native)](./mcp-registration.md#http-transport-docker-native).
+
 | What you need                   | Where                                                                                                                                                                                      |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **API + auth**                  | `API_URL` / **`API_URL_INTERNAL`** and **`OPENTHROTTLE_MCP_AUTH_TOKEN`** in Cursor MCP `env` (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md))                                 |
 | **Embeddings (optional tools)** | **`OLLAMA_BASE_URL`** (and optional **`OLLAMA_EMBEDDING_MODEL`**) or **`OPENAI_API_KEY`** in **`applications/openthrottle-server/.env`** so `semantic_search` and ingest can embed queries |
 
-**Ollama-only:** set Ollama vars on the server `.env`, run Ollama locally, then use `./scripts/run-openthrottle-mcp.sh` or the committed [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — no OpenAI key in root `.env`.
+**Ollama-only:** set Ollama vars on the server `.env`, run Ollama locally, then use `./scripts/run-openthrottle-mcp.sh` or the committed [`.cursor/mcp.json`](../../.cursor/mcp.json) — no OpenAI key in root `.env`.
 
 **OpenAI embeddings:** set **`OPENAI_API_KEY`** on the server `.env` instead (or in addition); the launcher still does not read it.
 

@@ -17,10 +17,10 @@
 # Exports on success: OT_PORT_BASE and
 #   OT_PORT_{DEVELOPER,SERVER,ADMIN,CMS,EMAIL,WEBSITE}.
 
-# 6020..6025 in the canonical .env, in app order. The block preserves these
+# 6020..6026 in the canonical .env, in app order. The block preserves these
 # relative offsets: developer=base+0, server=base+1, admin=+2, cms=+3, email=+4,
-# website=+5. Keep this list aligned with the rewrite map in setup_worktree.sh.
-OT_PORT_CANONICAL="6020 6021 6022 6023 6024 6025"
+# website=+5, mcp=+6. Keep this list aligned with the rewrite map in setup_worktree.sh.
+OT_PORT_CANONICAL="6020 6021 6022 6023 6024 6025 6026"
 
 OT_PORT_BASE_MIN=7000   # first worktree block
 OT_PORT_BLOCKS=50       # deterministic blocks 7000, 7010, ... 7490 (50 slots
@@ -33,11 +33,11 @@ _ot_port_in_use() {
   lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
 }
 
-# True (0) when every port in the 6-wide app block starting at $1 is free.
+# True (0) when every port in the 7-wide app block starting at $1 is free.
 _ot_block_free() {
   _base=$1
   _p=$_base
-  while [ "$_p" -le $((_base + 5)) ]; do
+  while [ "$_p" -le $((_base + 6)) ]; do
     if _ot_port_in_use "$_p"; then
       return 1
     fi
@@ -83,11 +83,12 @@ resolve_worktree_ports() {
   OT_PORT_CMS=$((_base + 3))
   OT_PORT_EMAIL=$((_base + 4))
   OT_PORT_WEBSITE=$((_base + 5))
+  OT_PORT_MCP=$((_base + 6))
 
   if [ -n "$_cache" ]; then
     printf 'OT_PORT_BASE=%s\n' "$_base" >"$_cache" 2>/dev/null || true
   fi
 
   export OT_PORT_BASE OT_PORT_DEVELOPER OT_PORT_SERVER OT_PORT_ADMIN \
-    OT_PORT_CMS OT_PORT_EMAIL OT_PORT_WEBSITE
+    OT_PORT_CMS OT_PORT_EMAIL OT_PORT_WEBSITE OT_PORT_MCP
 }

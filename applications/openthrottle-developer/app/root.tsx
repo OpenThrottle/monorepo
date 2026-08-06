@@ -225,7 +225,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
       user = queryMyUser.me ?? null;
       userLoadOk = true;
-      console.error('🟢 root loader: user', user);
 
       return null;
     } catch (error) {
@@ -268,8 +267,6 @@ export const loader = async (args: Route.LoaderArgs) => {
       return redirect('/auth');
     }
   }
-
-  console.error('🟢 2 root loader: user', user);
 
   return {
     canonical,
@@ -330,7 +327,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Setup
   const env = data?.env ?? {};
-  const html = `window.env = ${JSON.stringify(env)}`;
+  const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
 
@@ -366,24 +363,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
 
+        {/*
+          CSP is shipped per-request as a (report-only) response header with a
+          nonce — see app/entry.server.tsx and the shared buildCsp in
+          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
+          — not a <meta> tag and no longer via vercel.json. The nonce below
+          authorizes the inline bootstrap scripts.
+        */}
+        <Meta />
+
         {/* Theme palettes (all registered themes) + pre-hydration application. */}
         <style
           dangerouslySetInnerHTML={{ __html: THEME_STYLESHEET }}
           id="ot-theme-registry"
           nonce={nonce}
+          suppressHydrationWarning={true}
         />
         <script
+          crossOrigin="use-credentials"
           dangerouslySetInnerHTML={{ __html: THEME_PREHYDRATION_SCRIPT }}
+          id="ot-theme-hydration"
           nonce={nonce}
         />
-        {/*
-          CSP is shipped per-request as a (report-only) response header with a
-          nonce — see app/entry.server.tsx and the shared buildCsp in
-          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
-          — not a <meta> tag. The nonce below authorizes the inline bootstrap
-          scripts.
-        */}
-        <Meta />
 
         <link href={APP_URL} rel="canonical" />
         <link href="https://fonts.googleapis.com" rel="preconnect" />
@@ -395,7 +396,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={favicon} rel="icon" type="image/svg+xml" />
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
         <link href={manifest} rel="manifest" />
-        <Links />
+
+        {/* crossOrigin is set to use-credentials to make use of the nonce. */}
+        <Links crossOrigin="use-credentials" nonce={nonce} />
 
         {appearanceRootCss ? (
           <style type="text/css">{`
@@ -405,21 +408,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
           `}</style>
         ) : null}
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: artwork }}
+          id="ot-artwork"
+          nonce={nonce}
+        />
       </head>
       <body className="relative flex h-screen flex-col">
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
         <ScrollRestoration nonce={nonce} />
-        <Analytics />
+        {/*
+          Vercel Analytics is meaningful only when deployed on Vercel. In a
+          self-hosted (Docker) install it injects an un-nonced inline script
+          that trips the CSP and 404s on /_vercel/insights/script.js, so gate it
+          on the VERCEL marker (serialized into window.env, so server and client
+          agree — no hydration mismatch).
+        */}
+        {env.VERCEL === '1' ? <Analytics /> : null}
 
         {/*
           🚨 Any env added here is 100% visible to the world 🚨
           `data.env` is the public tier only (loader returns getPublicEnv()), so
           server-only keys such as API_URL_INTERNAL never reach window.env.
         */}
-        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: envHtml }}
+          id="ot-env"
+          nonce={nonce}
+        />
 
         {/* Now we add our scripts as they may use the env */}
         <Scripts nonce={nonce} />

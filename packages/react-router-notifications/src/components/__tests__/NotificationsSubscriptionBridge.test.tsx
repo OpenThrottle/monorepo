@@ -46,11 +46,16 @@ function StoreProbe(): React.ReactElement {
   );
 }
 
-const renderBridge = (): void => {
+const renderBridge = (options: { enabled?: boolean } = {}): void => {
+  const { enabled } = options;
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = (): React.ReactElement => (
     <NotificationsStoreProvider persist={false}>
-      <NotificationsSubscriptionBridge client={null} document={testDocument}>
+      <NotificationsSubscriptionBridge
+        client={null}
+        document={testDocument}
+        enabled={enabled}
+      >
         <StoreProbe />
       </NotificationsSubscriptionBridge>
     </NotificationsStoreProvider>
@@ -65,7 +70,7 @@ describe('NotificationsSubscriptionBridge', () => {
     vi.mocked(useSubscription).mockClear();
   });
 
-  test('subscribes with the injected client and document', () => {
+  test('subscribes with the injected client and document (enabled by default)', () => {
     renderBridge();
 
     expect(useSubscription).toHaveBeenCalledWith(
@@ -73,6 +78,19 @@ describe('NotificationsSubscriptionBridge', () => {
       testDocument,
       {},
       expect.objectContaining({ onData: expect.any(Function) }),
+      true,
+    );
+  });
+
+  test('forwards enabled=false to gate the subscription while signed out', () => {
+    renderBridge({ enabled: false });
+
+    expect(useSubscription).toHaveBeenCalledWith(
+      null,
+      testDocument,
+      {},
+      expect.objectContaining({ onData: expect.any(Function) }),
+      false,
     );
   });
 

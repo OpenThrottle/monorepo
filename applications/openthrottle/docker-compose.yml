@@ -8,12 +8,18 @@
 #     From a clean machine you need only THIS file + a `.env` (copy
 #     `.env.default`). No repo checkout, no build, no GITHUB_TOKEN/NX_KEY:
 #
-#         cp .env.default .env      # then edit OPENTHROTTLE_WORKSPACES_DIR etc.
-#         docker compose up -d
+#         cp .env.default .env                 # then edit OPENTHROTTLE_WORKSPACES_DIR etc.
+#         docker compose up -d                 # postgres, redis, migrations, server, developer
+#         docker compose run --rm bootstrap    # FIRST BOOT ONLY — create the login user
 #
-#     First boot: the seeded `openthrottle/postgres` image applies the schema +
-#     seed on a clean volume; the one-shot `migrations` service then applies any
-#     incremental migrations and exits before the server starts.
+#     The bootstrap step is REQUIRED on a clean volume: the published postgres
+#     image ships the schema but NO login user, and migrations don't create one.
+#     The one-shot `bootstrap` seeds the default user (developer@openthrottle.ai /
+#     FullThrottle2026!, override via OPENTHROTTLE_BOOTSTRAP_USER_*) and provisions
+#     the MCP service-account credential. Idempotent — safe to re-run.
+#
+#     First boot: the `migrations` service applies the schema + incremental
+#     migrations and exits before the server starts; then run `bootstrap`.
 #
 #     Upgrade: bump APP_VERSION (or keep `latest`) then
 #         docker compose pull && docker compose up -d
@@ -26,6 +32,13 @@
 #     Networking: services talk to each other over the compose network by name
 #     (postgres:5432, redis:6379, http://server:<port>); only the browser-facing
 #     URLs use localhost:<published port>.
+#
+#     MCP (optional, for AI agents): the `mcp` service exposes openthrottle-mcp
+#     over streamable HTTP. It's opt-in (profile `mcp`) and needs a one-time
+#     token provisioning:
+#         docker compose run --rm bootstrap        # provision the ot_sa token
+#         # paste the printed token into OPENTHROTTLE_MCP_AUTH_TOKEN in .env
+#         docker compose --profile mcp up -d mcp   # then register {type:http,url}
 #
 #############################################################################
 x-common: &common
@@ -84,31 +97,16 @@ name: 'OpenThrottle'
 services:
   #############################################################################
   #
-  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #     👨‍💻 developer | OpenThrottle Developer Platform
   #
-  migrations:
-    image: openthrottle/migrations:${APP_VERSION:-latest}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER}
-    restart: 'no'
-
   developer:
     image: openthrottle/developer:${APP_VERSION:-latest}
     # container_name: developer
     depends_on:
       server:
         condition: service_healthy
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     environment:
       <<: *developer
     ports:
@@ -117,6 +115,32 @@ services:
     volumes:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
 
+  #############################################################################
+  #
+  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #
+  migrations:
+    image: openthrottle/migrations:${APP_VERSION:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # env_file:
+    #   - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      # Compose-network hostname + CONTAINER port (5432) — not the published host
+      # port ${POSTGRES_PORT}, which only exists for host-side clients. Matches the
+      # server/bootstrap services (was ${POSTGRES_PORT} → ECONNREFUSED in-network).
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+    restart: 'no'
+
+  #############################################################################
+  #
+  #     🗄️ postgres | PostgreSQL database
+  #
   postgres:
     build:
       args:
@@ -128,8 +152,8 @@ services:
       context: ./
       dockerfile: Dockerfile.Postgres
     # container_name: postgres
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -149,6 +173,10 @@ services:
     volumes:
       - ot_docker_postgres_data:/var/lib/postgresql
 
+  #############################################################################
+  #
+  #     🗄️ redis | Redis database
+  #
   redis:
     # container_name: redis
     healthcheck:
@@ -161,6 +189,10 @@ services:
       - ${REDIS_PORT}:6379
     restart: always
 
+  #############################################################################
+  #
+  #     👨‍💻 server | OpenThrottle Server
+  #
   server:
     image: openthrottle/server:${APP_VERSION:-latest}
     # container_name: server
@@ -171,8 +203,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     environment:
       <<: *server
       POSTGRES_DB: ${POSTGRES_DB}
@@ -185,6 +217,76 @@ services:
     restart: always
     volumes:
       - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/workspaces}:/workspaces'
+
+  #############################################################################
+  #
+  #     🔐 bootstrap | one-shot MANUAL: default login user + MCP credential
+  #
+  #     NEVER runs on `docker compose up` (own profile; nothing depends on it) —
+  #     but REQUIRED once on a clean volume: there is no baked login user, and
+  #     migrations don't create one. Seeds the default user
+  #     (developer@openthrottle.ai / FullThrottle2026!, override via
+  #     OPENTHROTTLE_BOOTSTRAP_USER_*) and, when OPENTHROTTLE_MCP_AUTH_TOKEN is set,
+  #     upserts the matching `ot_sa` credential the mcp service needs. Idempotent:
+  #
+  #         docker compose run --rm bootstrap
+  #
+  bootstrap:
+    # Reuses the published `server` image (no separate bootstrap image); ENTRYPOINT
+    # is node (distroless), so override CMD to the compiled bootstrap entry.
+    image: openthrottle/server:${APP_VERSION:-latest}
+    command: ['-r', 'dotenv/config', 'build/src/bootstrap.js']
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *common
+      OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+    profiles: [bootstrap]
+    restart: 'no'
+
+  #############################################################################
+  #
+  #     🧠 mcp | openthrottle-mcp over streamable HTTP (opt-in; profile: mcp)
+  #
+  #     Docker-native MCP transport — no host Node needed. Register in your MCP
+  #     client as { "type": "http", "url": "http://localhost:${OPENTHROTTLE_MCP_PORT}/mcp" }.
+  #     Opt-in so `up` core stack works before you provision:
+  #
+  #         docker compose run --rm bootstrap          # once: provision the token
+  #         # paste the printed token into OPENTHROTTLE_MCP_AUTH_TOKEN in .env
+  #         docker compose --profile mcp up -d mcp
+  #
+  #     Machine tools use OPENTHROTTLE_MCP_AUTH_TOKEN (ot_sa); clients may send
+  #     Authorization: Bearer <human JWT> for agent_conversation_* tools. Fails
+  #     loudly at startup if the token is missing/invalid.
+  #
+  mcp:
+    image: openthrottle/mcp:${APP_VERSION:-latest}
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      server:
+        condition: service_healthy
+    environment:
+      <<: *common
+      # Reach the server over the compose network by default; override only to
+      # target a server outside this compose project.
+      API_URL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server:${OPENTHROTTLE_SERVER_PORT}}
+      API_URL_INTERNAL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server:${OPENTHROTTLE_SERVER_PORT}}
+      OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
+      OT_MCP_HTTP_PORT: ${OPENTHROTTLE_MCP_PORT}
+    ports:
+      - '${OPENTHROTTLE_MCP_PORT}:${OPENTHROTTLE_MCP_PORT}'
+    profiles: [mcp]
+    restart: always
 
 volumes:
   ot_docker_postgres_data:

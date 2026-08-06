@@ -98,7 +98,7 @@ jobs:
         uses: ./.github/actions/docker-build-push
         with:
           app: openthrottle-server
-          dockerfile-path: Dockerfile.NestJS.v3
+          dockerfile-path: Dockerfile.NestJS
           github-token: ${{ env.GITHUB_TOKEN }}
           nx-version: ${{ env.NX_VERSION }}
           push: ${{ github.ref == 'refs/heads/main' }}
@@ -110,7 +110,7 @@ jobs:
         uses: ./.github/actions/docker-build-push
         with:
           app: openthrottle-developer
-          dockerfile-path: Dockerfile.ReactRouter.v3
+          dockerfile-path: Dockerfile.ReactRouter
           github-token: ${{ env.GITHUB_TOKEN }}
           nx-version: ${{ env.NX_VERSION }}
           push: ${{ github.ref == 'refs/heads/main' }}
@@ -129,6 +129,33 @@ jobs:
         run: |
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/migrations:sha-${GITHUB_SHA}"
           docker build -f Dockerfile.Migrations -t "${IMAGE}" .
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            docker push "${IMAGE}"
+          fi
+
+      # openthrottle/mcp builds from the Dockerfile.NestJS `mcp` stage (--target mcp),
+      # NOT via the app composite action: it is a workspace package with no
+      # applications/<app>/package.json. Built directly with the shared base/builder
+      # ARGs (PNPM_VERSION derived like the composite), pushed only on main, matching
+      # the sha-<GITHUB_SHA> tag scheme. No bootstrap image: one-shot provisioning
+      # runs from the server image (build/src/bootstrap.js) via a compose command
+      # override. Remote Nx cache is not wired here (no gcs secret) — local BuildKit
+      # cache only; adding it is a follow-up optimization.
+      - name: '🐳 Build (and push on main) openthrottle/mcp'
+        shell: bash
+        run: |
+          PNPM_VERSION="$(node -p "(require('./package.json').packageManager||'').replace(/^pnpm@/,'').split('+')[0]")"
+          IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/mcp:sha-${GITHUB_SHA}"
+          # APP_NAME is nominal here: the builder stage COPYs applications/<APP_NAME>/package.json,
+          # so it must be a real app, but mcp-build ignores it (bundles the openthrottle-mcp
+          # package via esbuild). It does not leak into the distroless mcp image.
+          docker build -f Dockerfile.NestJS --target mcp \
+            --build-arg APP_NAME=openthrottle-server \
+            --build-arg APP_VERSION="sha-${GITHUB_SHA}" \
+            --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
+            --build-arg NX_VERSION="${NX_VERSION}" \
+            --build-arg PNPM_VERSION="${PNPM_VERSION}" \
+            -t "${IMAGE}" .
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             docker push "${IMAGE}"
           fi

@@ -31,6 +31,7 @@ rewrite_worktree_ports() {
   _prog="${_prog}s/\\b6023\\b/${OT_PORT_CMS}/g;"
   _prog="${_prog}s/\\b6024\\b/${OT_PORT_EMAIL}/g;"
   _prog="${_prog}s/\\b6025\\b/${OT_PORT_WEBSITE}/g;"
+  _prog="${_prog}s/\\b6026\\b/${OT_PORT_MCP}/g;"
   for _f in .env applications/*/.env; do
     [ -f "$_f" ] || continue
     perl -i -pe "$_prog" "$_f"
@@ -89,7 +90,7 @@ YAML
 if [ -n "${OT_PORT_BASE:-}" ] && [ "$OT_PORT_BASE" != "6020" ]; then
   rewrite_worktree_ports
   generate_worktree_compose
-  echo "🔌 worktree app ports → block ${OT_PORT_BASE}-$((OT_PORT_BASE + 5))"
+  echo "🔌 worktree app ports → block ${OT_PORT_BASE}-$((OT_PORT_BASE + 6))"
 fi
 
 # 1c. setup_environment.sh reset every .env back to .env.default, which ships
@@ -147,5 +148,6 @@ echo "   - path: $PWD"
 if [ -n "${OT_PORT_BASE:-}" ] && [ "$OT_PORT_BASE" != "6020" ]; then
   echo "   - developer: http://localhost:${OT_PORT_DEVELOPER}"
   echo "   - server:    http://localhost:${OT_PORT_SERVER}"
+  echo "   - mcp (HTTP): http://localhost:${OT_PORT_MCP}/mcp  (docker: --profile prod up mcp)"
 fi
 echo ""

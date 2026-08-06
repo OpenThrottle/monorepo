@@ -67,7 +67,7 @@ Any MCP-capable client can drive OT by registering **one** server: `openthrottle
 
 | Editor             | Where its MCP config lives                                   |
 | ------------------ | ------------------------------------------------------------ |
-| **Cursor**         | `.cursor/mcp.json` (copy from `.cursor/mcp.json.example`)    |
+| **Cursor**         | `.cursor/mcp.json` (copy from `.cursor/mcp.json`)            |
 | **Claude Code**    | `.mcp.json` (committed; already includes `openthrottle-mcp`) |
 | **VS Code**        | `.vscode/mcp.json` (register it yourself)                    |
 | **Any MCP client** | point it at `bash scripts/run-openthrottle-mcp.sh`           |

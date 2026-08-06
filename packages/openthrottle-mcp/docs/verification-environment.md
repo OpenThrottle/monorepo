@@ -1,6 +1,6 @@
 # OT MCP verification — environment and fixtures
 
-> **Registering MCP servers?** The canonical guide is **[docs/openthrottle/mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)** — tiers, config locations, the `.cursor/mcp.json.example` template, editor parity, and user-provided servers. This page covers the **environment, fixtures, and smoke checks** for verifying `openthrottle-mcp` against a local server; it does not re-document registration.
+> **Registering MCP servers?** The canonical guide is **[docs/openthrottle/mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)** — tiers, config locations, the `.cursor/mcp.json` template, editor parity, and user-provided servers. This page covers the **environment, fixtures, and smoke checks** for verifying `openthrottle-mcp` against a local server; it does not re-document registration.
 
 Use this when exercising **@openthrottle/openthrottle-mcp** against a local **openthrottle-server** (GraphQL only; no direct Postgres from the MCP).
 
@@ -33,7 +33,7 @@ Verified daily path for **Postgres, Redis, migrations, API, and optional develop
 
 Cursor MCP config lives in `.cursor/mcp.json` under **`openthrottle-mcp`** — keep **`API_URL` / `API_URL_INTERNAL`** aligned with the running server port.
 
-**Committed template & registration:** the `.cursor/mcp.json.example` template, config locations, and editor parity are documented in **[mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)**. In short: copy/merge the `openthrottle-mcp` entry into `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (secondary workspace) and set **`OPENTHROTTLE_MCP_AUTH_TOKEN`** from **`pnpm run database:bootstrap-service-accounts`**. Do not commit real tokens. Token setup: [AUTH.md](./AUTH.md).
+**Committed template & registration:** the `.cursor/mcp.json` template, config locations, and editor parity are documented in **[mcp-registration.md](../../../docs/openthrottle/mcp-registration.md)**. In short: copy/merge the `openthrottle-mcp` entry into `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (secondary workspace) and set **`OPENTHROTTLE_MCP_AUTH_TOKEN`** from **`pnpm run database:bootstrap-service-accounts`**. Do not commit real tokens. Token setup: [AUTH.md](./AUTH.md).
 
 ## Quick prerequisite check
 
@@ -86,7 +86,7 @@ The consolidated gate for **[mcp-registration.md](../../../docs/openthrottle/mcp
 
 **A. Monorepo root**
 
-1. Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`, set `OPENTHROTTLE_MCP_AUTH_TOKEN` (`ot_sa_…` from `pnpm run database:bootstrap-service-accounts`), restart the MCP host (Cursor).
+1. Copy `.cursor/mcp.json` → `.cursor/mcp.json`, set `OPENTHROTTLE_MCP_AUTH_TOKEN` (`ot_sa_…` from `pnpm run database:bootstrap-service-accounts`), restart the MCP host (Cursor).
 2. Launcher resolves a live server: `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` → prints `✅ … live server at http://localhost:<port>`.
 3. **`health`** → `{api, database, redis, websocket}` all `ok`.
 4. **One OT tool** (e.g. `list_sources` or `semantic_search`) succeeds with authenticated data (e.g. `list_sources` returns `plan` / `task` / `documentation` sources).

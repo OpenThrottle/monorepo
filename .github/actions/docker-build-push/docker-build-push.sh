@@ -34,7 +34,7 @@ REGISTRY="${INPUT_REGISTRY%%/}"
 APP_VERSION="$(node -p "require('./${PACKAGE_JSON}').version")"
 IMAGE="${REGISTRY}/${INPUT_APP}:${INPUT_TAG}"
 
-# The canonical root Dockerfiles (Dockerfile.NestJS.v3, Dockerfile.ReactRouter.v3) are
+# The canonical root Dockerfiles (Dockerfile.NestJS, Dockerfile.ReactRouter) are
 # parameterized: APP_NAME selects which app to build, PNPM_VERSION pins the pnpm used in
 # every stage, and the build stage runs `pnpm dlx nx@${NX_VERSION}`. Derive PNPM_VERSION from
 # the root package.json `packageManager` field so CI and local builds stay in lockstep.

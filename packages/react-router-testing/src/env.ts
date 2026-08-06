@@ -50,6 +50,8 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
 
   NODE_ENV: 'test',
   ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',
+  // Empty = not running on Vercel (the self-hosted default); Vercel sets '1'.
+  VERCEL: '',
 };
 
 /**

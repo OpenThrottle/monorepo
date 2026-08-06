@@ -36,6 +36,13 @@ export interface NotificationsSubscriptionBridgeProps<
    * artifacts stay app-side and this package needs no codegen target.
    */
   readonly document: TypedDocumentNode<TData, Record<string, never>>;
+  /**
+   * Gate the subscription on auth. Defaults to `true`; pass `false` while the
+   * user is signed out so the bridge never opens the socket (which would mint a
+   * ws token against a missing session). Prevents the unauthenticated
+   * `/auth/ws-token` request that would otherwise fire on the login page.
+   */
+  readonly enabled?: boolean;
 }
 
 /**
@@ -51,7 +58,7 @@ export const NotificationsSubscriptionBridge = <
 >(
   props: NotificationsSubscriptionBridgeProps<TData>,
 ): React.ReactElement => {
-  const { children, client, document } = props;
+  const { children, client, document, enabled = true } = props;
 
   // Hooks
   const { addNotification } = useNotificationsStore();
@@ -82,7 +89,7 @@ export const NotificationsSubscriptionBridge = <
     // 🪝 Parse system-notification prefs once before the first event (mirrors the retired socket bridge).
   }, []);
 
-  useSubscription(client, document, {}, { onData });
+  useSubscription(client, document, {}, { onData }, enabled);
 
   // 🔌 Short Circuit
 

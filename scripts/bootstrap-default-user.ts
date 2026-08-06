@@ -20,7 +20,7 @@ import { DataSource } from 'typeorm';
 
 // Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
 // / _PASSWORD (see .env.default); defaults to the known local dev account.
-const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.com' // prettier-ignore
+const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai' // prettier-ignore
 const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() || 'FullThrottle2026!' // prettier-ignore
 const USER_GITHUB: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_GITHUB?.trim() || 'openthrottle-developer' // prettier-ignore
 

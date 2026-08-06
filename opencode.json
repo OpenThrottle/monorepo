@@ -1,12 +1,20 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "github-mcp": {
-      "headers": {
-        "Authorization": "Bearer {env:GITHUB_TOKEN}"
-      },
+    "fetch": {
+      "command": ["uvx", "mcp-server-fetch"],
       "enabled": true,
-      "url": "https://api.githubcopilot.com/mcp/"
+      "type": "local"
+    },
+    "github": {
+      "command": ["bash", "./scripts/run-github-mcp.sh"],
+      "enabled": true,
+      "type": "local"
+    },
+    "maestro": {
+      "command": ["maestro", "mcp"],
+      "enabled": true,
+      "type": "local"
     },
     "nx-mcp": {
       "command": ["npx", "nx", "mcp"],
@@ -14,19 +22,23 @@
       "type": "local"
     },
     "openthrottle-mcp": {
-      "args": ["./scripts/run-openthrottle-mcp.sh"],
-      "command": "bash",
-      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
-      "env": {
-        "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}",
-        "API_URL": "${env:OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}",
-        "API_URL_INTERNAL": "${env:OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${env:OPENTHROTTLE_MCP_AUTH_TOKEN}"
-      }
+      "command": ["bash", "./scripts/run-openthrottle-mcp.sh"],
+      "enabled": true,
+      "environment": {
+        "ANTHROPIC_API_KEY": "{env:ANTHROPIC_API_KEY}",
+        "API_URL": "{env:OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}",
+        "API_URL_INTERNAL": "{env:OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}",
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "{env:OPENTHROTTLE_MCP_AUTH_TOKEN}"
+      },
+      "type": "local"
     },
-    "shadcn-mcp": {
-      "args": ["shadcn@latest", "mcp"],
-      "command": "npx",
+    "openthrottle-mcp-docker": {
+      "enabled": true,
+      "type": "remote",
+      "url": "http://localhost:6026/mcp"
+    },
+    "shadcn": {
+      "command": ["npx", "shadcn@latest", "mcp"],
       "enabled": true,
       "type": "local"
     }

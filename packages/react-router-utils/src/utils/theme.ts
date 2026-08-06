@@ -215,9 +215,19 @@ export const buildAppearanceRootCssBlock = (
  * mode is applied correctly on the very first paint (the server cannot know the
  * OS preference).
  *
+ * When no config is stored the script still resolves the DEFAULT `'system'`
+ * theme (matching `DEFAULT_APPEARANCE_CONFIG`) rather than bailing out. This is
+ * load-bearing for hydration: `useResolvedThemeMode` eagerly resolves `system`
+ * to the OS preference on the first client render, so a fresh OS-dark user's
+ * React tree renders `<html class="dark">`. If the script left the DOM classless
+ * (the old `if(!raw)return`), React's render would not match the DOM and
+ * `hydrateRoot(document, …)` would report a recoverable hydration error (React
+ * #418). Applying the default here keeps the pre-paint DOM in sync with that
+ * eager render — no #418, and still no flash.
+ *
  * @param storageKey localStorage key holding the serialized appearance config.
  */
 export const buildThemePrehydrationScript = (storageKey: string): string =>
-  `(function(){try{var raw=window.localStorage.getItem(${JSON.stringify(
+  `(function(){try{var d=document.documentElement;var raw=window.localStorage.getItem(${JSON.stringify(
     storageKey,
-  )});if(!raw)return;var c=JSON.parse(raw);var d=document.documentElement;if(c&&typeof c.themeId==='string'){d.setAttribute('data-theme',c.themeId);}var t=c&&c.theme;var dark=t==='dark'||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(dark){d.classList.add('dark');}else{d.classList.remove('dark');}}catch(e){}})();`;
+  )});var c=raw?JSON.parse(raw):null;if(c&&typeof c.themeId==='string'){d.setAttribute('data-theme',c.themeId);}var t=(c&&c.theme)||'system';var dark=t==='dark'||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(dark){d.classList.add('dark');}else{d.classList.remove('dark');}}catch(e){}})();`;

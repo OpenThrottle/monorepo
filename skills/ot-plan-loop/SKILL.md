@@ -26,19 +26,21 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING`/`QUEUED`.
 
-1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`.
+> **Invariant — at most ONE task `IN_PROGRESS` at a time.** Steps 1→5 are one atomic unit: never run step 1 (`IN_PROGRESS`) for a task while another task is still `IN_PROGRESS`. Even when you power through several tasks in a single turn, fully close the current one — through **step 4 (`COMPLETED`)** — _before_ you start the next. Dropping the step-4 flip strands the task `IN_PROGRESS` even though its work shipped and was committed; there is no server-side reconcile, so it just sits there. **This is the single most common failure of this loop** — if you ever have two tasks `IN_PROGRESS`, you skipped a step 4.
+
+1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.)
 2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.).
 3. **Validate** before completing — at minimum `pnpm nx affected --target=lint,typecheck,test` for the touched projects (run targets **sequentially**, not in parallel — they share the Nx cache). Don't mark a task done on red.
-4. **Complete:** `update_task(taskId, { status: 'COMPLETED' })`.
+4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip.
 5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability.
 6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted).
-7. **Repeat** until every task is `COMPLETED`.
+7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`). Continue until every task is `COMPLETED`.
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
 
 ## Finishing
 
-1. **When all tasks are `COMPLETED`, set the plan `COMPLETED`** — `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile; if the loop exits without this call the plan is stranded IN_PROGRESS with all tasks done.
+1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
 2. **Open a PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do). **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
 3. **Stop the loop** once the PR is open. Do **not** merge.
 
@@ -68,4 +70,5 @@ Only **after the PR is merged**, record the squash on the work ledger — `attac
 - Plans/tasks live in **OT only** — if the openthrottle-mcp MCP is unavailable, fail loudly; never fall back to Markdown plan files.
 - Author/assignee fields expect the **GitHub username**, not a display name.
 - Never push to `main`, never `--no-verify`; require confirmation before rebase/force-push.
+- **One task `IN_PROGRESS` at a time.** Flip it to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before starting the next, and re-fetch tasks to confirm zero `IN_PROGRESS`/`PENDING`/`QUEUED` before marking the plan `COMPLETED`. Committing the work is not the same as flipping the status.
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`.

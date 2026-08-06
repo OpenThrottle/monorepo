@@ -58,6 +58,15 @@ export type OpenThrottlePublicEnv = {
    */
   NODE_ENV: 'development' | 'production' | 'staging' | 'test';
   ROLLBAR_TOKEN: string;
+
+  /**
+   * Vercel platform marker. Vercel's build/runtime sets `VERCEL=1`; it is absent
+   * in self-hosted (Docker) installs. Gate Vercel-only widgets such as
+   * `<Analytics/>` on this so a self-hosted build never injects the insights
+   * script — off-Vercel that script 404s and its un-nonced inline injection
+   * trips the app's CSP. Optional; empty string when not running on Vercel.
+   */
+  VERCEL?: string;
 };
 
 /**

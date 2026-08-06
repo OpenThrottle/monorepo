@@ -137,7 +137,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Setup
   const env = data?.env ?? {};
-  const html = `window.env = ${JSON.stringify(env)}`;
+  const envHtml = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;
   const manifest = '/manifest.json';
@@ -167,7 +167,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={favicon} rel="icon" type="image/svg+xml" />
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
         <link href={manifest} rel="manifest" />
-        <Links />
+
+        {/* crossOrigin is set to use-credentials to make use of the nonce. */}
+        <Links crossOrigin="use-credentials" nonce={nonce} />
 
         {/*
           CSP is shipped per-request as a (report-only) response header with a
@@ -176,7 +178,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           — not a <meta> tag. The nonce below authorizes the inline bootstrap
           scripts.
         */}
-        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: artwork }}
+          id="ot-artwork"
+          nonce={nonce}
+        />
       </head>
       <body className="relative flex min-h-screen flex-col">
         <div className="flex flex-1 flex-col">{children}</div>
@@ -188,7 +195,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: envHtml }}
+          id="ot-env"
+          nonce={nonce}
+        />
 
         {/* Now we add our scripts as they may use the env */}
         <Scripts nonce={nonce} />

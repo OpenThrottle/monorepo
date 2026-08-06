@@ -12,12 +12,12 @@
 # reliably clear a controlled React input). Keep these in sync with that prefill.
 #
 # Override credentials/endpoint via env:
-#   E2E_USER_EMAIL      default: developer@openthrottle.com
+#   E2E_USER_EMAIL      default: developer@openthrottle.ai
 #   E2E_USER_PASSWORD   default: FullThrottle2026!
 #   E2E_GRAPHQL_URL     default: http://localhost:6021/graphql  (API_URL_INTERNAL + /graphql)
 set -eu
 
-EMAIL="${E2E_USER_EMAIL:-developer@openthrottle.com}"
+EMAIL="${E2E_USER_EMAIL:-developer@openthrottle.ai}"
 PASSWORD="${E2E_USER_PASSWORD:-FullThrottle2026!}"
 GRAPHQL_URL="${E2E_GRAPHQL_URL:-http://localhost:6021/graphql}"
 

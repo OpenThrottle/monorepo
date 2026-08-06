@@ -61,6 +61,15 @@ describe('buildThemePrehydrationScript', () => {
   test('applies the palette via data-theme', () => {
     expect(script).toContain("setAttribute('data-theme'");
   });
+
+  test('resolves the default system theme when no config is stored', () => {
+    // Must NOT bail out on a missing config: a fresh user's React tree eagerly
+    // renders the resolved `system` theme, so the pre-hydration DOM has to match
+    // it (or hydrateRoot(document) reports React #418). The script defaults the
+    // theme to `system` instead of returning early.
+    expect(script).not.toContain('if(!raw)return');
+    expect(script).toContain("||'system'");
+  });
 });
 
 describe('cssColorToHex / getBrandColorInputValue', () => {

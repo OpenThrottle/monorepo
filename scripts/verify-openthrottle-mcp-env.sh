@@ -64,9 +64,43 @@ if [ -n "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
     echo "WARN: authenticated GraphQL smoke inconclusive (HTTP ${HTTP_CODE}) — check server logs and AUTH.md"
   fi
 else
-  echo "WARN: OPENTHROTTLE_MCP_AUTH_TOKEN unset — authenticated MCP tools will fail until set."
-  echo "      See packages/openthrottle-mcp/docs/AUTH.md"
+  echo "FAIL: OPENTHROTTLE_MCP_AUTH_TOKEN is unset — every authenticated MCP tool will 401."
+  echo "      This is the silent-401 trap. Fix it, then reconnect the MCP:"
+  echo "        1. Provision/verify the token:  pnpm run database:bootstrap-service-accounts"
+  echo "                                        (Docker: docker compose run --rm bootstrap)"
+  echo "        2. Set it in the root .env:      OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_<prefix>_<secret>"
+  echo "        3. Reconnect the MCP:            /mcp reconnect  (or restart the client)"
+  echo "      HTTP-transport, per-request-JWT-only deployments can skip this with"
+  echo "      OT_MCP_ALLOW_NO_TOKEN=1. See packages/openthrottle-mcp/docs/AUTH.md."
+  [ "${OT_MCP_ALLOW_NO_TOKEN:-}" = "1" ] || exit 1
 fi
+
+#############################################################################
+# HTTP transport (Docker-native) — probe the streamable-HTTP `mcp` endpoint.
+# Opt-in path: the mcp container may not be running (stdio/hybrid setups), so a
+# missing endpoint is INFO, not FAIL. Honors a worktree's OPENTHROTTLE_MCP_PORT.
+#############################################################################
+MCP_HTTP_URL="${OT_MCP_HTTP_URL:-http://localhost:${OPENTHROTTLE_MCP_PORT:-6026}/mcp}"
+echo ""
+echo "HTTP transport probe → ${MCP_HTTP_URL}"
+MCP_TOOLS_BODY='{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+MCP_CODE="$(curl -s -o /tmp/ot-mcp-http-smoke.json -w "%{http_code}" --max-time 5 \
+  -X POST "${MCP_HTTP_URL}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d "${MCP_TOOLS_BODY}" 2>/dev/null || true)"
+if [ "${MCP_CODE}" = "200" ] && grep -q '"tools"' /tmp/ot-mcp-http-smoke.json 2>/dev/null; then
+  TOOL_COUNT="$(grep -o '"name"' /tmp/ot-mcp-http-smoke.json 2>/dev/null | wc -l | tr -d ' ')"
+  echo "OK: streamable-HTTP MCP reachable (tools/list → ~${TOOL_COUNT} tools)"
+  echo "    Register: { \"type\": \"http\", \"url\": \"${MCP_HTTP_URL}\" }"
+  echo "    agent_conversation_* tools additionally need a per-request Authorization: Bearer <human JWT>."
+else
+  echo "INFO: no streamable-HTTP MCP at ${MCP_HTTP_URL} (HTTP ${MCP_CODE:-none})."
+  echo "      Fully-Dockerized: bring it up with 'docker compose --profile prod up mcp'."
+  echo "      Hybrid/stdio: expected — you're using scripts/run-openthrottle-mcp.sh instead."
+  echo "      Worktree: set OPENTHROTTLE_MCP_PORT to this worktree's base+6 (see 'pnpm run worktree:new')."
+fi
+rm -f /tmp/ot-mcp-http-smoke.json 2>/dev/null || true
 
 echo ""
 echo "Done."

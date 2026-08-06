@@ -100,6 +100,7 @@ function handleBotRequest(
         />
       </NonceContext.Provider>,
       {
+        nonce,
         onAllReady() {
           shellRendered = true;
           const body = new PassThrough();
@@ -153,6 +154,7 @@ function handleBrowserRequest(
         />
       </NonceContext.Provider>,
       {
+        nonce,
         onError(error: unknown) {
           responseStatusCode = 500;
           // Log streaming rendering errors from inside the shell.  Don't log

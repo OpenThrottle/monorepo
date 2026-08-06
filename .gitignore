@@ -48,7 +48,7 @@ vitest.config.*.timestamp*
 vitest.config.ts.timestamp*
 
 #############################################################################
-# Claude Code
+# Agent Specifics (Claude, Cursor, etc...)
 #############################################################################
 .claude.json
 .claude/backups/
@@ -56,10 +56,13 @@ vitest.config.ts.timestamp*
 .claude/projects/
 .claude/sessions/
 .claude/settings.local.json
+.claude/worktrees
 CLAUDE.local.md
 
-# Cursor CLI
 .cursor/cli-config.json
+# Per-developer Cursor MCP config (may hold absolute paths / tokens). The
+# committed SSOT is .cursor/mcp.json — see docs/openthrottle/mcp-registration.md.
+# .cursor/mcp.json
 
 #############################################################################
 # Includes
@@ -72,10 +75,6 @@ CLAUDE.local.md
 # Tracking these in here as we flush the workflows out
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-
-.claude/worktrees
-.claude/settings.local.json
-
 
 # Start 🔄 Managed by OpenThrottle skill-sync
 .agents/skills/*

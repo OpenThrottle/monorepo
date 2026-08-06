@@ -125,7 +125,7 @@ Open `http://localhost:6020`. MCP verification does not require the UI.
 
 Register `openthrottle-mcp` by copying the committed template — don't hand-write the block:
 
-1. Copy [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) → `.cursor/mcp.json` (this repo as workspace), or merge its `openthrottle-mcp` entry into `~/.cursor/mcp.json` (secondary workspace).
+1. Copy [`.cursor/mcp.json`](../../.cursor/mcp.json) → `.cursor/mcp.json` (this repo as workspace), or merge its `openthrottle-mcp` entry into `~/.cursor/mcp.json` (secondary workspace).
 2. Set the `env` keys that matter for local dev: `OPENTHROTTLE_MCP_AUTH_TOKEN` (the `ot_sa_…` from step 3) and — if your editor doesn't populate them from `.env` — `API_URL` / `API_URL_INTERNAL` pointed at the running server (default `http://localhost:6021`; keep them aligned with server `PORT`).
 
 The full block, launcher behavior, and editor parity live in [mcp-registration.md § Template structure](./mcp-registration.md#template-structure) — the SSOT for the entry.

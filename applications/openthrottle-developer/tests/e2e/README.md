@@ -175,7 +175,7 @@ typing (see the Maestro Web notes below):
 
 | Env var             | Default                                                           |
 | ------------------- | ----------------------------------------------------------------- |
-| `E2E_USER_EMAIL`    | `developer@openthrottle.com`                                      |
+| `E2E_USER_EMAIL`    | `developer@openthrottle.ai`                                       |
 | `E2E_USER_PASSWORD` | `FullThrottle2026!`                                               |
 | `E2E_GRAPHQL_URL`   | `http://localhost:6021/graphql` (`API_URL_INTERNAL` + `/graphql`) |
 

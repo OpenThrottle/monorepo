@@ -63,7 +63,7 @@ export const authMiddleware: MiddlewareFunction = (args) => {
     throw redirect('/dashboard');
   }
 
-  if (!isProd) {
-    console.log('🔒 authMiddleware', { pathname, token });
-  }
+  // if (!isProd) {
+  //   console.log('🔒 authMiddleware', { pathname, token });
+  // }
 };

@@ -302,12 +302,12 @@ services:
   #
   #         docker compose run --rm bootstrap
   #
-  #     Runs the Dockerfile.NestJS `bootstrap` stage entrypoint
-  #     (scripts/docker-bootstrap.sh): seed the default login user, then upsert
-  #     the service-account credentials. Idempotent — safe to re-run. Target a
-  #     shared DB by pointing POSTGRES_HOST/PORT at it. The bearer tokens and the
-  #     optional OPENTHROTTLE_BOOTSTRAP_USER_EMAIL/_PASSWORD overrides flow in
-  #     from `.env` via env_file.
+  #     Reuses the `server` image (no separate bootstrap image): overrides its
+  #     command to run the compiled build/src/bootstrap.js — seed the default login
+  #     user, then upsert the service-account credentials. Idempotent — safe to
+  #     re-run. Target a shared DB by pointing POSTGRES_HOST/PORT at it. The bearer
+  #     tokens and the optional OPENTHROTTLE_BOOTSTRAP_USER_EMAIL/_PASSWORD overrides
+  #     flow in from `.env` via env_file.
   #
   bootstrap:
     build:
@@ -316,7 +316,9 @@ services:
       context: ./
       dockerfile: Dockerfile.NestJS
       secrets: *build-secrets
-      target: bootstrap
+      target: production
+    # ENTRYPOINT is node (distroless); override CMD to the bootstrap entry.
+    command: ['-r', 'dotenv/config', 'build/src/bootstrap.js']
     container_name: ${OT_CONTAINER_PREFIX:-}bootstrap
     depends_on:
       migrations:
@@ -335,7 +337,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER}
-    image: openthrottle/bootstrap:latest
+    image: openthrottle/server:latest
     profiles: [bootstrap]
     restart: 'no'
 
@@ -503,6 +505,88 @@ services:
       # SSH-based git remotes (optional, Docker Desktop): uncomment to forward the
       # host SSH agent; HTTPS remotes already work via the GITHUB_TOKEN env.
       # - '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock'
+
+  #############################################################################
+  #
+  #     🧠 mcp | openthrottle-mcp over streamable HTTP (prod profile)
+  #
+  #     Docker-native MCP transport (plan 72f80df6). A long-running HTTP server
+  #     so a fully-Dockerized install needs NO host Node/dist. Register in the
+  #     client as: { "type": "http", "url": "http://localhost:${OPENTHROTTLE_MCP_PORT}/mcp" }.
+  #     Auth: OPENTHROTTLE_MCP_AUTH_TOKEN (ot_sa) from .env is the machine
+  #     identity; clients may send a per-request Authorization: Bearer <human JWT>
+  #     for agent_conversation_* tools. Provision the token first with
+  #     `docker compose run --rm bootstrap` (fails loudly otherwise).
+  #
+  mcp:
+    build:
+      args:
+        <<: *server
+      context: ./
+      dockerfile: Dockerfile.NestJS
+      secrets: *build-secrets
+      target: mcp
+    container_name: ${OT_CONTAINER_PREFIX:-}mcp
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      server:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      <<: *common
+      # Reach the server over the compose network by default (service name
+      # resolves in-network). HYBRID (server on the host via Nx, not in Docker):
+      # set OPENTHROTTLE_MCP_UPSTREAM_URL=http://host.docker.internal:${OPENTHROTTLE_SERVER_PORT}
+      # in .env to point this container at the host server instead.
+      API_URL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server:${OPENTHROTTLE_SERVER_PORT}}
+      API_URL_INTERNAL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server:${OPENTHROTTLE_SERVER_PORT}}
+      # Listen port MUST equal the published port so the HEALTHCHECK + client URL align.
+      OT_MCP_HTTP_PORT: ${OPENTHROTTLE_MCP_PORT}
+    image: openthrottle/mcp:latest
+    ports:
+      - '${OPENTHROTTLE_MCP_PORT}:${OPENTHROTTLE_MCP_PORT}'
+    profiles: [prod]
+    restart: always
+
+  #############################################################################
+  #
+  #     🔧 mcp-dev | openthrottle-mcp streamable HTTP (hot reload; profile: dev)
+  #
+  mcp-dev:
+    build:
+      args:
+        <<: *server
+      context: ./
+      dockerfile: Dockerfile.NestJS
+      secrets: *build-secrets
+      target: mcp-development
+    container_name: ${OT_CONTAINER_PREFIX:-}mcp-dev
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      server-dev:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./packages/openthrottle-mcp
+          target: /app/packages/openthrottle-mcp
+    env_file:
+      - .env
+    environment:
+      <<: *common
+      # Default: the dev server over the compose network. HYBRID override: set
+      # OPENTHROTTLE_MCP_UPSTREAM_URL to the host server (host.docker.internal).
+      API_URL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server-dev:${OPENTHROTTLE_SERVER_PORT}}
+      API_URL_INTERNAL: ${OPENTHROTTLE_MCP_UPSTREAM_URL:-http://server-dev:${OPENTHROTTLE_SERVER_PORT}}
+      OT_MCP_HTTP_PORT: ${OPENTHROTTLE_MCP_PORT}
+    image: openthrottle/mcp:dev
+    ports:
+      - '${OPENTHROTTLE_MCP_PORT}:${OPENTHROTTLE_MCP_PORT}'
+    profiles: [dev]
+    restart: 'no'
 
   #############################################################################
   #
