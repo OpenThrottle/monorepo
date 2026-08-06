@@ -22,12 +22,10 @@ proposeBetterCommitType () {
   if [[ $THE_COMMIT_MESSAGE = chore* ]];
   then
     echo "
-  ⚠️  The \"chore\" type of commit is not allowed.
+  ⚠️  The \"chore\" type is generally used for maintenance and housekeeping tasks.
 
-  Please use one of the following types:
+  Try using one of the following more descriptive types:
     build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
-
-  Feel free to cancel and update the type of commit, or wait 5 seconds and the script will pass.
     "
 
     # proposeBetterCommitTypeDelay;
