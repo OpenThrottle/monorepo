@@ -58,6 +58,7 @@ x-common: &common
   NODE_VERSION: ${NODE_VERSION}
   NX_KEY: ${NX_KEY}
   NX_VERSION: ${NX_VERSION}
+  OT_CONTAINER_PREFIX: 'OpenThrottle-'
   PNPM_VERSION: ${PNPM_VERSION}
 
 x-developer: &developer
