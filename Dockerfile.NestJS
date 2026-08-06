@@ -4,7 +4,7 @@
 # baseline `Dockerfile.NestJS` (fat Alpine image that copied the whole monorepo node_modules)
 # and `Dockerfile.NestJS.v2` (distroless + pruned deploy, but with fragile hand-pruning).
 #
-# Build: docker build -f Dockerfile.NestJS.v3 --target production --build-arg APP_NAME=openthrottle-server [...] .
+# Build: docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server [...] .
 # Or via Nx: pnpm nx run openthrottle-server:docker-build
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
@@ -79,6 +79,9 @@ COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.
 COPY ./packages ./packages
 COPY ./tools ./tools
 
+COPY ./.agents ./.agents
+COPY ./skills ./skills
+
 # pnpm 11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
 # GitHub Packages credential to the trusted user-level config. Confined to the
 # build stages (builder and the development/build stages that derive from it) —
@@ -127,19 +130,67 @@ CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
 ################################################################################
 #
-#   BOOTSTRAP - one-shot: seed default user + provision service-account creds
+#   BOOTSTRAP - no dedicated stage/image.
 #
 ################################################################################
-# Reuses the `development` tree (full workspace, tsx, scripts/, built packages)
-# because the two bootstrap scripts import @openthrottle/nestjs-repositories —
-# the tiny `pg`-only migrations image cannot run them. Not a long-running
-# service: the manually invoked `bootstrap` compose service runs this to
-# completion and exits. `production` remains the last (default) stage.
-FROM development AS bootstrap
+# One-shot provisioning (default user + service-account credentials) runs from
+# the `production` server image via a command override on build/src/bootstrap.js
+# (see the `bootstrap` service in docker-compose.yml). No separate bootstrap image
+# is built or published. The host path still uses scripts/bootstrap-*.ts directly.
+
+################################################################################
+#
+#   MCP-DEVELOPMENT - openthrottle-mcp HTTP from source via tsx (compose dev)
+#
+################################################################################
+# Source + tsx + full workspace, for the compose `mcp-dev` service (develop.watch
+# hot reload). Never published — the distroless `mcp` stage below is the shippable
+# image. A long-running service: clients register { "type": "http", "url": ".../mcp" }.
+FROM development AS mcp-development
 
 ENV NODE_ENV="production"
 
-CMD ["sh", "./scripts/docker-bootstrap.sh"]
+HEALTHCHECK --interval=10s --timeout=10s --retries=3 --start-period=120s \
+  CMD ["node", "-e", "require('http').request({host:'127.0.0.1',port:Number(process.env.OT_MCP_HTTP_PORT||6026),path:'/mcp',method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'}},function(r){process.exit(r.statusCode>0?0:1)}).on('error',function(){process.exit(1)}).end('{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"0\"}}}')"]
+
+CMD ["sh", "-c", "node_modules/.bin/tsx packages/openthrottle-mcp/src/bin-http.ts"]
+
+################################################################################
+#
+#   MCP-BUILD - esbuild the HTTP entry into ONE self-contained bundle
+#
+################################################################################
+# The `builder` stage already has the full packages/ source + installed deps
+# (incl. the mcp package's esbuild devDep), so this stage only runs the bundler —
+# no Nx, no extra COPY/install. esbuild.http.mjs resolves @openthrottle/* from
+# src and inlines every reachable dep into dist-bundle/bin-http.mjs (~10MB). No
+# pnpm --prod deploy, no --legacy whole-workspace store: the final image ships a
+# single file and needs zero node_modules.
+FROM builder AS mcp-build
+
+RUN node packages/openthrottle-mcp/esbuild.http.mjs
+
+################################################################################
+#
+#   MCP - openthrottle-mcp over streamable HTTP (distroless; the shippable image)
+#
+################################################################################
+# Distroless + ONE bundled file — no source, node_modules, tsx, Nx, pnpm, or shell.
+# Clients register { "type": "http", "url": "http://<host>:<port>/mcp" }.
+FROM gcr.io/distroless/nodejs24-debian12:nonroot AS mcp
+
+WORKDIR /app
+
+ENV NODE_ENV="production"
+
+COPY --from=mcp-build --chown=65532:65532 /app/packages/openthrottle-mcp/dist/bundle/bin-http.mjs /app/bin-http.mjs
+
+# In-image probe (distroless: node only, no curl). POST tools/list to the endpoint.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD ["/nodejs/bin/node", "-e", "require('http').request({host:'127.0.0.1',port:Number(process.env.OT_MCP_HTTP_PORT||6026),path:'/mcp',method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'}},function(r){process.exit(r.statusCode>0?0:1)}).on('error',function(){process.exit(1)}).end('{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"0\"}}}')"]
+
+# ENTRYPOINT is Node; CMD is argv only (distroless/nodejs).
+CMD ["bin-http.mjs"]
 
 ################################################################################
 #
@@ -172,12 +223,12 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
   if [ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ] || [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
-  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool && \
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool --parallel=1 && \
   pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build && \
   mkdir -p /app/applications/${APP_NAME}/i18n
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules
-# (same pattern as Dockerfile.ReactRouter.v3 — avoids copying the full monorepo node_modules,
+# (same pattern as Dockerfile.ReactRouter — avoids copying the full monorepo node_modules,
 # packages/, tools/). The production node_modules is resolved from the app's declared deps.
 RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 

@@ -1,1 +1,40 @@
-{}
+{
+  "servers": {
+    "fetch": {
+      "args": ["mcp-server-fetch"],
+      "command": "uvx",
+      "type": "stdio"
+    },
+    "github": {
+      "args": ["./scripts/run-github-mcp.sh"],
+      "command": "bash",
+      "type": "stdio"
+    },
+    "maestro": {
+      "args": ["mcp"],
+      "command": "maestro",
+      "type": "stdio"
+    },
+    "openthrottle-mcp": {
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
+      "command": "bash",
+      "env": {
+        "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}",
+        "API_URL": "${env:OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}",
+        "API_URL_INTERNAL": "${env:OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}",
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${env:OPENTHROTTLE_MCP_AUTH_TOKEN}"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "type": "stdio"
+    },
+    "openthrottle-mcp-docker": {
+      "type": "http",
+      "url": "http://localhost:6026/mcp"
+    },
+    "shadcn": {
+      "args": ["shadcn@latest", "mcp"],
+      "command": "npx",
+      "type": "stdio"
+    }
+  }
+}

@@ -52,7 +52,7 @@ Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scrip
 | **Validate locally**         | `pnpm nx run monorepo:check-agent-assets-ssot` | Wraps skill-sync `sync.sh --check` (skill layout) + `.cursor/rules` symlink integrity + skill-tag vocabulary. Run `bash skills/skill-sync/scripts/sync.sh` first to fix skill drift.                                                                                                     |
 | **DB index (read-only)**     | `custom_prompts` via GraphQL                   | Git is write authority; ingest from disk → DB is plan 1.5 — do not edit prompts in the DB.                                                                                                                                                                                               |
 
-**Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets.
+**Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets.
 
 ## OpenThrottle Agent Skills
 
@@ -83,7 +83,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 ## OpenThrottle (OT) — plans knowledge base
 
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/openthrottle-mcp** (GraphQL only; see `.cursor/mcp.json`). Use the **openthrottle-mcp** MCP server for all OT tools.
-- **Registering MCP servers:** canonical guide — [docs/openthrottle/mcp-registration.md](docs/openthrottle/mcp-registration.md) (tiers, config locations, the openthrottle-mcp-only `.cursor/mcp.json.example` template, editor parity, user-provided servers).
+- **Registering MCP servers:** canonical guide — [docs/openthrottle/mcp-registration.md](docs/openthrottle/mcp-registration.md) (tiers, config locations, the openthrottle-mcp-only `.cursor/mcp.json` template, editor parity, user-provided servers).
 - **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/openthrottle-mcp/docs/verification-environment.md](packages/openthrottle-mcp/docs/verification-environment.md).
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Authoring plans & tasks from your editor/agent:** The mental model (plans/tasks as DB rows, `sortOrder`, status lifecycle) plus a copy-pasteable authoring loop — create → order → queue → commit with `Plan-Id`/`Task-Id` → record the squash on the work ledger on merge — with a full worked example: [docs/openthrottle/authoring-plans-via-mcp.md](docs/openthrottle/authoring-plans-via-mcp.md).

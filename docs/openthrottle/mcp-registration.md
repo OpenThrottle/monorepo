@@ -11,8 +11,9 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [Current state](#current-state) — what is actually committed today
 - [MCP tiers](#mcp-tiers) — required OT-native vs user-provided/optional
 - [Config locations](#config-locations) — project vs user-level, per editor
-- [Template structure](#template-structure) — `.cursor/mcp.json.example` and the launcher
-- [Editor parity](#editor-parity) — Cursor / VS Code / Claude Code actual contents
+- [Template structure](#template-structure) — shared server set and the launcher
+- [HTTP transport (Docker-native)](#http-transport-docker-native) — the `mcp` container / `openthrottle-mcp-docker`
+- [Editor parity](#editor-parity) — Cursor / VS Code / Claude Code / OpenCode
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
 - [Secondary workspace](#secondary-workspace) — using OT MCP from another repo
 - [Worktrees](#worktrees) — worktree-aware launcher (see mcp-worktrees.md)
@@ -20,17 +21,17 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 
 ## Current state
 
-Inventory of MCP config **as actually committed** (audited 2026-06-16). This is the ground truth the rest of this guide builds on — not the original (superseded) plan.
+Inventory of MCP config **as actually committed**. This is the ground truth the rest of this guide builds on.
 
-| Config source                 | Scope                | Servers actually present                                       | Notes                                                                                                                      |
-| ----------------------------- | -------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `.cursor/mcp.json.example`    | Project (committed)  | **`openthrottle-mcp`** only                                    | Narrowed to a single active entry on 2026-06-12 (was openthrottle-mcp + docs-mcp + git). The template.                     |
-| `.cursor/mcp.json`            | Project (gitignored) | user's machine                                                 | Local, per-developer; may still contain stale `docs-mcp`. **Not** committed; leave alone.                                  |
-| `~/.cursor/mcp.json`          | User-level           | user's machine                                                 | Canonical home for the **secondary-workspace** setup (absolute paths to the OT checkout).                                  |
-| `.mcp.json` (Claude Code)     | Project (committed)  | `github`, `fetch`, `maestro`, **`openthrottle-mcp`**, `shadcn` | Wider surface than Cursor's template; `openthrottle-mcp` invoked as `bash scripts/run-openthrottle-mcp.sh`.                |
-| `.vscode/mcp.json`            | Project (committed)  | _none_ — empty `{}`                                            | Present but unconfigured; VS Code users register servers themselves.                                                       |
-| `opencode.json`               | Project (committed)  | `nx-mcp` (`npx nx mcp`)                                        | OpenCode editor config; nx-mcp only.                                                                                       |
-| `~/.cursor/mcp.json` patterns | User-level           | optional user-provided servers                                 | github / shadcn / nx-mcp / maestro / fetch as the developer chooses (see [User-provided servers](#user-provided-servers)). |
+| Config source             | Scope               | Servers present                                                                       | Notes                                                                                     |
+| ------------------------- | ------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `.cursor/mcp.json`        | Project (committed) | `fetch`, `github`, `maestro`, `openthrottle-mcp`, `openthrottle-mcp-docker`, `shadcn` | Cursor `mcpServers` map. Same server set as Claude Code.                                  |
+| `~/.cursor/mcp.json`      | User-level          | developer's choice                                                                    | Canonical home for the **secondary-workspace** setup (absolute paths to the OT checkout). |
+| `.mcp.json` (Claude Code) | Project (committed) | `fetch`, `github`, `maestro`, `openthrottle-mcp`, `openthrottle-mcp-docker`, `shadcn` | Claude Code `mcpServers` map. Shared definitions with Cursor.                             |
+| `.vscode/mcp.json`        | Project (committed) | same six under `servers`                                                              | VS Code schema (`servers` + `type: stdio` / `http`).                                      |
+| `opencode.json`           | Project (committed) | same six under `mcp`, plus `nx-mcp`                                                   | OpenCode schema (`type: local` / `remote`).                                               |
+
+**Shared working set (all editors):** `github`, `fetch`, `maestro`, `openthrottle-mcp`, `openthrottle-mcp-docker`, `shadcn`.
 
 ### `docs-mcp` is retired
 
@@ -38,36 +39,39 @@ Inventory of MCP config **as actually committed** (audited 2026-06-16). This is 
 
 - No launcher — `scripts/run-docs-mcp.sh` was removed (PR #6); it does not exist on disk.
 - No package — there is no `docs-mcp` package under `packages/`.
-- No committed config references it as active (`.cursor/mcp.json.example`, `.mcp.json`, `.vscode/mcp.json`, `opencode.json` are all docs-mcp-free).
-- It may still linger in a developer's gitignored local `.cursor/mcp.json`; remove it there. Historical/seed data (e.g. `databases/seed.sql`) is left intact.
+- No committed config references it as active (`.cursor/mcp.json`, `.mcp.json`, `.vscode/mcp.json`, `opencode.json` are all docs-mcp-free).
+- It may still linger in a developer's user-level `~/.cursor/mcp.json`; remove it there. Historical/seed data (e.g. `databases/seed.sql`) is left intact.
 
-Its former role — semantic search over ingested `docs/` — is now served by **`openthrottle-mcp`** (`semantic_search`, `list_sources`, `get_document`).
+Its former role — semantic search over ingested `docs/` — is now served by `openthrottle-mcp` (`semantic_search`, `list_sources`, `get_document`).
 
 See [mcp-worktrees.md](./mcp-worktrees.md) for worktree identity and [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) for env alignment.
 
 ## MCP tiers
 
-OpenThrottle distinguishes two tiers of MCP server. **Only one is OT-native and required**; everything else is user-provided and optional.
+OpenThrottle distinguishes two tiers of MCP server. **Only one is OT-native and required**; everything else is useful but optional for OT plans/tasks.
 
 ### Tier 1 — Required, OT-native
 
-| Server               | Why                                                                                                                                                                                                                                                   | Registration                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **openthrottle-mcp** | The single OT-native server. Plans, tasks, notes, commit links, activity, plan output stream, semantic search over the OT knowledge base (plans + tasks + ingested `docs/`), and `health`. Plans/tasks live in OT **only** — never as Markdown files. | `bash scripts/run-openthrottle-mcp.sh` — see [Template structure](#template-structure). |
+| Server                      | Why                                                                                                                                                                                                                                                   | Registration                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **openthrottle-mcp**        | The single OT-native server. Plans, tasks, notes, commit links, activity, plan output stream, semantic search over the OT knowledge base (plans + tasks + ingested `docs/`), and `health`. Plans/tasks live in OT **only** — never as Markdown files. | `bash scripts/run-openthrottle-mcp.sh` — see [Template structure](#template-structure).         |
+| **openthrottle-mcp-docker** | Same tools over **streamable HTTP** when the `mcp` container is running (no host Node / stdio child).                                                                                                                                                 | `{ "url": "http://localhost:6026/mcp" }` — see [HTTP transport](#http-transport-docker-native). |
 
-This is the only server this repo expects you to register to work with OpenThrottle. It absorbed the former `docs-mcp` documentation-search role (see [Current state](#current-state)).
+Register **one** of these for day-to-day OT work (stdio launcher _or_ Docker HTTP). Both appear in committed configs so you can switch without re-authoring entries. Prefer the stdio launcher for hybrid host-server setups; prefer Docker HTTP for a fully-Dockerized install.
+
+This is the only OT-native surface this repo expects you to register to work with OpenThrottle. It absorbed the former `docs-mcp` documentation-search role (see [Current state](#current-state)).
 
 ### Tier 2 — User-provided / optional
 
-These are general-purpose servers a developer may register to taste. They are **not** OT-native and **not** required for OT plans/tasks. They appear in `.mcp.json` / `opencode.json` because they are useful in this repo, but you register and authenticate them yourself.
+These are general-purpose servers useful in this repo. They are **not** OT-native and **not** required for OT plans/tasks. They ship in the committed editor configs; you still authenticate them yourself (tokens, CLIs on `PATH`).
 
-| Server      | Purpose                                  | Appears in      |
-| ----------- | ---------------------------------------- | --------------- |
-| **github**  | GitHub PRs, issues, code search          | `.mcp.json`     |
-| **shadcn**  | shadcn/ui component registry             | `.mcp.json`     |
-| **nx-mcp**  | Nx workspace graph, generators, docs     | `opencode.json` |
-| **maestro** | Maestro E2E driving of the developer app | `.mcp.json`     |
-| **fetch**   | Generic URL fetch                        | `.mcp.json`     |
+| Server      | Purpose                                  | Appears in                                      |
+| ----------- | ---------------------------------------- | ----------------------------------------------- |
+| **github**  | GitHub PRs, issues, code search          | all committed MCP configs                       |
+| **shadcn**  | shadcn/ui component registry             | all committed MCP configs                       |
+| **maestro** | Maestro E2E driving of the developer app | all committed MCP configs                       |
+| **fetch**   | Generic URL fetch                        | all committed MCP configs                       |
+| **nx-mcp**  | Nx workspace graph, generators, docs     | `opencode.json` only (OpenCode-native addition) |
 
 Detail and registration for these: [User-provided servers](#user-provided-servers).
 
@@ -79,60 +83,80 @@ MCP config is read per **workspace** and (for Cursor) optionally per **user**. W
 
 | Location             | Scope                 | When to use                                                                                                                                                                                             |
 | -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.cursor/mcp.json`   | Project (this repo)   | The monorepo is your open Cursor workspace. Copy/merge from [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example). Gitignored — your local copy with real tokens.                                |
+| `.cursor/mcp.json`   | Project (this repo)   | The monorepo is your open Cursor workspace. Committed; Cursor loads it automatically.                                                                                                                   |
 | `~/.cursor/mcp.json` | User-level (Cursor)   | **Secondary workspace** — a _different_ repo is open in Cursor but you still want OT tools. Canonical home; use **absolute paths** to the OT checkout. See [Secondary workspace](#secondary-workspace). |
-| `.mcp.json`          | Project (Claude Code) | Claude Code in the monorepo. Committed; already includes `openthrottle-mcp` + user-provided servers.                                                                                                    |
-| `.vscode/mcp.json`   | Project (VS Code)     | VS Code's MCP support. Currently empty `{}` — register servers yourself.                                                                                                                                |
-| `opencode.json`      | Project (OpenCode)    | OpenCode editor. Committed; includes `nx-mcp`.                                                                                                                                                          |
+| `.mcp.json`          | Project (Claude Code) | Claude Code in the monorepo. Committed; same six-server set as Cursor.                                                                                                                                  |
+| `.vscode/mcp.json`   | Project (VS Code)     | VS Code MCP. Committed; same six servers under the `servers` key.                                                                                                                                       |
+| `opencode.json`      | Project (OpenCode)    | OpenCode editor. Committed; same six under `mcp`, plus `nx-mcp`.                                                                                                                                        |
 
 **Project vs user-level (Cursor):** a project-level `.cursor/mcp.json` is only loaded when that folder is the workspace root. When OpenThrottle is _not_ the open workspace, the project file is ignored — use `~/.cursor/mcp.json` instead. If both define `openthrottle-mcp`, see [Cursor merge behavior](#user-provided-servers).
 
 ## Template structure
 
-The committed template is [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — the **single source of truth (SSOT)** for the Cursor `openthrottle-mcp` block. It has **one active entry — `openthrottle-mcp`**, invoked through [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) — and nothing else.
+The committed Cursor / Claude configs are [`.cursor/mcp.json`](../../.cursor/mcp.json) and [`.mcp.json`](../../.mcp.json) — the same six-server `mcpServers` map. VS Code and OpenCode adapt the same definitions to their schemas (see [Editor parity](#editor-parity)).
 
-> **Don't re-inline the block.** This guide and every other doc link to [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) instead of pasting the JSON, so the registration shape lives in exactly one place and cannot drift. Open the example file to read or copy the contents.
+> **Don't re-inline the blocks.** This guide and every other doc link to the committed JSON files instead of pasting the full map, so the registration shape lives in the config files and cannot drift. Open those files to read or copy the contents.
 
-**Launcher invocation:**
+**Launcher invocation (`openthrottle-mcp`):**
 
-- The launcher is self-contained: [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) **resolves a live server URL at launch** (probing `/health`, preferring the stable main-checkout server) and **self-loads `OPENTHROTTLE_MCP_AUTH_TOKEN` from `.env`** (this worktree's, then the root checkout's) when the launching environment doesn't already provide it. You do **not** need to export `API_URL` / `API_URL_INTERNAL` yourself.
-- The example wraps the launcher in `bash -c "set -a && source ./.env && … && ./scripts/run-openthrottle-mcp.sh"`. That `source`/`export` prelude predates the launcher's own resolution and is now a harmless compatibility shim for editors that don't populate the process environment from `.env`; the launcher behaves the same with or without it. `local-quickstart.md` shows an equivalent `env`-block form that sets the vars explicitly instead — either works; keep the URLs aligned with the server `PORT` (default `6021`).
+- The launcher is self-contained: [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) **resolves a live server URL at launch** (probing `/health`, preferring the stable main-checkout server) and **self-loads** `OPENTHROTTLE_MCP_AUTH_TOKEN` **from** `.env` (this worktree's, then the root checkout's) when the launching environment doesn't already provide it. You do **not** need to export `API_URL` / `API_URL_INTERNAL` yourself.
+- The env block on `openthrottle-mcp` passes through `${…}` placeholders for editors that expand them; the launcher also self-loads from `.env`, so either path works. Keep URLs aligned with the server `PORT` (default `6021`).
 - **Auth:** `OPENTHROTTLE_MCP_AUTH_TOKEN` is an `ot_sa_…` service-account token. Mint it with `pnpm run database:bootstrap-service-accounts` and put it in the repo `.env` (root and/or `applications/openthrottle-server/.env`); for Cursor you may also set it in the MCP `env` block. Never commit a real token — see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 - **Embeddings** are configured on the server (`OPENAI_API_KEY` or `OLLAMA_*` in `applications/openthrottle-server/.env`), **not** in this launcher.
 - **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree so each advertises a distinct server name, and resolves the live server URL at launch rather than trusting a per-worktree `.env` port — full detail in [mcp-worktrees.md](./mcp-worktrees.md).
 
-**Optional user-provided servers** (github, shadcn, nx-mcp, maestro, fetch) are **not** active entries in the template. Register them at user level (`~/.cursor/mcp.json`) or as commented placeholders — see [User-provided servers](#user-provided-servers). Do **not** add `docs-mcp` (retired) or `git` (not committed) as active entries.
+**Docker HTTP (`openthrottle-mcp-docker`):** committed as `http://localhost:6026/mcp` (root `.env.default` `OPENTHROTTLE_MCP_PORT`). In a worktree use the block's `base+6`; for the consumer-install stack under `applications/openthrottle/` the default is `9026` — update the `url` to match. See [HTTP transport](#http-transport-docker-native).
+
+Do **not** add `docs-mcp` (retired) or `git` (not committed) as active entries.
+
+## HTTP transport (Docker-native)
+
+The stdio launcher needs host Node + a built `dist/`. A **fully-Dockerized** install (Docker only) instead runs the `mcp` service from [`docker-compose.yml`](../../docker-compose.yml) — a long-running **streamable-HTTP** MCP server — and registers it by **URL** (the committed `openthrottle-mcp-docker` entry):
+
+```json
+{
+  "mcpServers": {
+    "openthrottle-mcp-docker": {
+      "url": "http://localhost:6026/mcp"
+    }
+  }
+}
+```
+
+- **Bring it up:** `docker compose --profile prod up mcp` (or `--profile dev up mcp-dev` for hot reload). It `depends_on` migrations + a healthy server.
+- **Provision the token first:** `docker compose run --rm bootstrap` upserts the `ot_sa_` credential matching `OPENTHROTTLE_MCP_AUTH_TOKEN`. If the token is missing/invalid the `mcp` container **fails loudly at startup** (it won't silently serve 401s) — see [bootstrap docs](../../databases/README.md#bootstrapping-a-fully-dockerized-install).
+- **Auth (both identities, per request):** the container holds the `ot_sa_` token for machine tools; a client that sends `Authorization: Bearer <human JWT>` gets that user's identity — required by the `agent_conversation_*` tools (they reject `ot_sa_`). One server, switched per request.
+- **Port:** `${OPENTHROTTLE_MCP_PORT}` (default `6026` at the monorepo root). In a **worktree** it is the block's `base+6` (e.g. `7126`) — `setup_worktree.sh` rewrites it, so use the port printed by `pnpm run worktree:new`. Consumer-install (`applications/openthrottle/`) defaults to `9026`. Update the `url` to match.
+- **Hybrid** (server on the host via Nx, infra in Docker): either keep using the **stdio launcher** (`openthrottle-mcp`) — zero-config, it probes the host `/health` — or run the `mcp` container with `OPENTHROTTLE_MCP_UPSTREAM_URL=http://host.docker.internal:${OPENTHROTTLE_SERVER_PORT}` in `.env` so it targets the host server.
+- **Reconnect** the MCP in your client after changing the URL/token (the HTTP server picks up a new env token only on container restart).
 
 ## Editor parity
 
-Each editor reads its own MCP config file; their committed contents differ. This table is the real current state (audited 2026-06-16), not an aspiration.
+Each editor reads its own MCP config file; schemas differ, but the **server set is the same**.
 
-| Editor          | Config file                                                      | Committed contents today                                   | openthrottle-mcp present? |
-| --------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------- |
-| **Cursor**      | `.cursor/mcp.json.example` (template; copy → `.cursor/mcp.json`) | `openthrottle-mcp` only                                    | Yes (the only entry)      |
-| **Claude Code** | `.mcp.json`                                                      | `github`, `fetch`, `maestro`, `openthrottle-mcp`, `shadcn` | Yes (+ user-provided)     |
-| **VS Code**     | `.vscode/mcp.json`                                               | empty `{}`                                                 | No — register yourself    |
-| **OpenCode**    | `opencode.json`                                                  | `nx-mcp`                                                   | No — nx-mcp only          |
+| Editor          | Config file        | Schema key   | Committed servers                                                                     | openthrottle-mcp? |
+| --------------- | ------------------ | ------------ | ------------------------------------------------------------------------------------- | ----------------- |
+| **Cursor**      | `.cursor/mcp.json` | `mcpServers` | `fetch`, `github`, `maestro`, `openthrottle-mcp`, `openthrottle-mcp-docker`, `shadcn` | Yes               |
+| **Claude Code** | `.mcp.json`        | `mcpServers` | same six                                                                              | Yes               |
+| **VS Code**     | `.vscode/mcp.json` | `servers`    | same six (`type: stdio` / `http`)                                                     | Yes               |
+| **OpenCode**    | `opencode.json`    | `mcp`        | same six (`type: local` / `remote`) plus `nx-mcp`                                     | Yes               |
 
-**Why they differ:** Cursor's template is intentionally minimal (just the OT-native server); Claude Code's `.mcp.json` is committed with the fuller working set the team uses day-to-day; VS Code's file is a placeholder; OpenCode carries only `nx-mcp`. The one invariant: **`openthrottle-mcp` is the OT-native server** wherever OT plans/tasks are needed.
+**Why schemas differ, not the set:** Cursor and Claude Code share the `mcpServers` shape; VS Code requires `servers` + explicit `type`; OpenCode requires `type: local|remote` and packs command+args into one array. The one invariant: the six named servers above are present wherever OT plans/tasks (and the shared tooling set) are needed.
 
 ## User-provided servers
 
-These are Tier 2 servers — useful in this repo but **not** OT-native and **not** required for OT plans/tasks. Register the ones you want; authenticate them yourself. The entries below are exactly as they appear in the committed `.mcp.json` (Claude Code) and `opencode.json` (OpenCode).
+These are Tier 2 servers — useful in this repo but **not** OT-native and **not** required for OT plans/tasks. They ship in the committed configs; authenticate them yourself. Definitions below match [`.mcp.json`](../../.mcp.json) / [`.cursor/mcp.json`](../../.cursor/mcp.json).
 
 ### GitHub MCP
 
 ```json
 "github": {
-  "command": "npx",
-  "args": ["-y", "@modelcontextprotocol/server-github"],
-  "env": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-  }
+  "command": "bash",
+  "args": ["./scripts/run-github-mcp.sh"]
 }
 ```
 
-- **Token:** the server reads `GITHUB_PERSONAL_ACCESS_TOKEN`; the committed config maps it from your `GITHUB_TOKEN` environment variable (`${GITHUB_TOKEN}`), so export `GITHUB_TOKEN` in your shell/editor environment rather than committing a PAT.
+- **Token:** [`scripts/run-github-mcp.sh`](../../scripts/run-github-mcp.sh) self-loads `GITHUB_TOKEN` from the repo `.env` (then the main checkout's `.env`) when the launching shell did not export it. Prefer that over an `env` block with `${GITHUB_TOKEN}` — unexpanded placeholders are what trigger client "Failed to replace env in config" warnings.
 - **Scopes:** a classic PAT with `repo` (read/write to PRs, issues, contents) covers normal use; add `read:org` for org-scoped queries and `workflow` only if you drive Actions. Fine-grained tokens work if granted the equivalent repo permissions.
 - **Optional:** GitHub MCP is **not** a plan gate. It is covered as an optional appendix in the [smoke-test checklist](#smoke-test-checklist), not a required registration step.
 
@@ -140,16 +164,16 @@ These are Tier 2 servers — useful in this repo but **not** OT-native and **not
 
 | Server      | Config (as committed)                                          | Notes                                                                                                |
 | ----------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **shadcn**  | `.mcp.json`: `npx shadcn@latest mcp`                           | shadcn/ui component registry browsing/adding. No token.                                              |
-| **nx-mcp**  | `opencode.json`: `npx nx mcp` (`type: local`, `enabled: true`) | Nx workspace graph, generators, docs, task running. No token.                                        |
-| **maestro** | `.mcp.json`: `maestro mcp`                                     | Maestro E2E driving of the developer app. Requires the Maestro CLI on `PATH` + a running app/device. |
-| **fetch**   | `.mcp.json`: `uvx mcp-server-fetch`                            | Generic URL fetch. Requires `uvx` (uv) on `PATH`. No token.                                          |
+| **shadcn**  | `npx shadcn@latest mcp`                                        | shadcn/ui component registry browsing/adding. No token.                                              |
+| **nx-mcp**  | `opencode.json`: `npx nx mcp` (`type: local`, `enabled: true`) | Nx workspace graph, generators, docs, task running. No token. OpenCode only.                         |
+| **maestro** | `maestro mcp`                                                  | Maestro E2E driving of the developer app. Requires the Maestro CLI on `PATH` + a running app/device. |
+| **fetch**   | `uvx mcp-server-fetch`                                         | Generic URL fetch. Requires `uvx` (uv) on `PATH`. No token.                                          |
 
 ### Cursor merge behavior (project + user config)
 
 When you run Cursor inside OpenThrottle, **both** `~/.cursor/mcp.json` (user-level) and `.cursor/mcp.json` (project) apply; Cursor unions their `mcpServers` by key. Practical rules:
 
-- **Distinct keys union.** Put `openthrottle-mcp` in the project file (from the template) and your personal servers (github, shadcn, …) in `~/.cursor/mcp.json`; you get both.
+- **Distinct keys union.** Put project servers in `.cursor/mcp.json` and extra personal servers in `~/.cursor/mcp.json`; you get both.
 - **Same key → project wins.** If both files define `openthrottle-mcp`, the project-level entry takes precedence for this workspace. Keep the OT-native entry in one place (the project file when the monorepo is open; `~/.cursor/mcp.json` for a [secondary workspace](#secondary-workspace)) to avoid a stale duplicate shadowing the live one.
 - **Restart Cursor** after editing either file.
 
@@ -157,7 +181,7 @@ When you run Cursor inside OpenThrottle, **both** `~/.cursor/mcp.json` (user-lev
 
 Use `openthrottle-mcp` while your **active Cursor workspace is a different repo** (not the OpenThrottle monorepo root). The project-level `.cursor/mcp.json` inside OpenThrottle is not loaded then, so register at user level.
 
-1. **Register in `~/.cursor/mcp.json`** (user-level), not the project file.
+1. **Register in** `~/.cursor/mcp.json` (user-level), not the project file.
 2. **Use an absolute path** to the launcher — `bash` + `<path-to-openthrottle-checkout>/scripts/run-openthrottle-mcp.sh`. A relative `./scripts/...` resolves against the _open_ workspace and won't exist outside the OT repo.
 3. **Same env as local OT** — `API_URL` / `API_URL_INTERNAL` pointed at the running server (e.g. `http://localhost:6021`) and `OPENTHROTTLE_MCP_AUTH_TOKEN` for authenticated tools. These are independent of which folder is open.
 
@@ -167,13 +191,15 @@ The launcher `cd`s into the monorepo and starts Node from that checkout; GraphQL
 
 Cursor keys MCP servers by the `mcpServers` key and the server's advertised name; across git worktrees `scripts/run-openthrottle-mcp.sh` sets `WORKTREE_ID` so each worktree advertises a distinct server name, and resolves a **live** server URL at launch rather than trusting a per-worktree `.env` port. Full detail: [mcp-worktrees.md](./mcp-worktrees.md).
 
+For `openthrottle-mcp-docker`, update the committed `url` port to this worktree's `OPENTHROTTLE_MCP_PORT` (base+6) after `pnpm run worktree:new`.
+
 ## Smoke-test checklist
 
 After registering or changing MCP config, confirm `openthrottle-mcp` works. There is **no docs-mcp gate** (retired). The full, maintained checklist lives in **[verification-environment.md § Registration smoke-test](../../packages/openthrottle-mcp/docs/verification-environment.md#registration-smoke-test-root--secondary-workspace)**; the gates in brief:
 
 **Root (monorepo open):**
 
-1. Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`, set `OPENTHROTTLE_MCP_AUTH_TOKEN`, restart Cursor.
+1. Ensure `.cursor/mcp.json` (or your editor's equivalent) is loaded, `OPENTHROTTLE_MCP_AUTH_TOKEN` is in `.env`, restart the client.
 2. `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` resolves a live server.
 3. `health` → all `ok`.
 4. One OT tool (e.g. `list_sources` / `semantic_search`) succeeds.
@@ -195,4 +221,7 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 | First agent workflow after MCP works   | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
 | Author OT plans & tasks via MCP        | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
 | Fresh clone → server + MCP             | [local-quickstart.md](./local-quickstart.md)                                                    |
-| Committed config template              | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                    |
+| Committed Cursor config                | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
+| Committed Claude Code config           | [`.mcp.json`](../../.mcp.json)                                                                  |
+| Committed VS Code config               | [`.vscode/mcp.json`](../../.vscode/mcp.json)                                                    |
+| Committed OpenCode config              | [`opencode.json`](../../opencode.json)                                                          |

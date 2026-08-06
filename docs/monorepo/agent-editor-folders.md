@@ -36,7 +36,7 @@ repo root
 │   ├── rules/                        # Symlinks → .agents/rules/ (Cursor activation)
 │   ├── agents/                       # Cursor subagent definitions
 │   ├── hooks/ + hooks.json           # afterFileEdit → format.sh
-│   ├── mcp.json.example              # openthrottle-mcp template
+│   ├── mcp.json              # openthrottle-mcp template
 │   ├── settings.json, worktrees.json
 ├── .claude/
 │   ├── settings.json                 # Permissions, MCP enablement
@@ -68,7 +68,7 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 | Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                       |
 | Skill tags         | `skill-tag-overlays.json` (repo root)                                                                                     | —                                                          |
 
-**Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored).
+**Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored).
 
 **Customizing an external skill:** never edit the vendored copy — it stays 1:1 with upstream and a re-sync would overwrite it. Author a companion skill or rule in `skills/` / `.agents/rules/` that references it. Exemplar: [`.agents/rules/coding/frontend-design-openthrottle.mdc`](../../.agents/rules/coding/frontend-design-openthrottle.mdc) overlays the vendored `frontend-design` skill. See [docs/Skills.md](../Skills.md).
 
@@ -76,18 +76,18 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 
 ## 3. Where to edit (common tasks)
 
-| I want to…                             | Do this                                                                                                                       |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, add its `skill-tag-overlays.json` entry, run `sync.sh`                                       |
-| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, add an overlay entry, run `sync.sh` (keep it 1:1)           |
-| **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                                      |
-| Change **TypeScript / JS style**       | `.agents/rules/coding/*.mdc` (not the `.cursor/rules/` symlink)                                                               |
-| Change **OT / GitHub / Ralph rules**   | `.agents/rules/commands/*.mdc`                                                                                                |
-| Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                                |
-| Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                                  |
-| Add a **persona**                      | `.agents/personas/<id>.md` from `_template.md`                                                                                |
-| Configure **openthrottle-mcp** locally | Copy `.cursor/mcp.json.example` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md)) |
-| Recreate generated links after clone   | `bash skills/skill-sync/scripts/sync.sh`                                                                                      |
+| I want to…                             | Do this                                                                                                               |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, add its `skill-tag-overlays.json` entry, run `sync.sh`                               |
+| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, add an overlay entry, run `sync.sh` (keep it 1:1)   |
+| **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                              |
+| Change **TypeScript / JS style**       | `.agents/rules/coding/*.mdc` (not the `.cursor/rules/` symlink)                                                       |
+| Change **OT / GitHub / Ralph rules**   | `.agents/rules/commands/*.mdc`                                                                                        |
+| Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                        |
+| Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                          |
+| Add a **persona**                      | `.agents/personas/<id>.md` from `_template.md`                                                                        |
+| Configure **openthrottle-mcp** locally | Copy `.cursor/mcp.json` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md)) |
+| Recreate generated links after clone   | `bash skills/skill-sync/scripts/sync.sh`                                                                              |
 
 ---
 
@@ -99,7 +99,7 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 | `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                    |
 | `.agents/rules/**/*.mdc`, `.agents/personas/`, `.agents/prompts/`                        | —                                                                                               |
 | `.cursor/rules/**/*.mdc` (symlinks; except generated `nx-rules.mdc`)                     | `nx-rules.mdc`, `.cursor/mcp.json`, `.cursor/cli-config.json`                                   |
-| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json.example`      | `.claude/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json` |
+| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json`              | `.claude/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json` |
 | `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                      |
 
 > The `.gitignore` "Managed by OpenThrottle skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.

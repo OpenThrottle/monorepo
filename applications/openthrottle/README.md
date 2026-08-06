@@ -8,6 +8,46 @@
 
 OpenThrottle is context-driven AI for developers: plans, tasks, and knowledge stay in sync with your code. Use the developer app, MCP, and APIs to keep commits, PRs, and docs in one loop-so you ship faster without leaving your flow.
 
+## 🏁 Quick start (smoke test)
+
+Bring the full stack up from published images — you need only Docker and this folder's `.env`. Run all three from `applications/openthrottle/`:
+
+1. **Configure** — `cp .env.default .env`, then edit the ✏️-marked values (Postgres creds, `JWT_SECRET`, `OPENTHROTTLE_WORKSPACES_DIR`).
+2. **Start** — `docker compose up -d` (brings up postgres, redis, migrations, server, developer).
+3. **Provision + log in** — `docker compose run --rm bootstrap` (creates the default user on a clean volume), then open **http://localhost:9020** and sign in with `developer@openthrottle.ai` / `FullThrottle2026!`.
+
+Verify the API: `curl http://localhost:9021/health` → `{"api":"ok","database":"ok","redis":"ok","websocket":"ok"}`.
+
+**Optional — MCP for AI agents.** Bring the server up, then point your AI client at it:
+
+1. Set `OPENTHROTTLE_MCP_AUTH_TOKEN` in `.env`, re-run `docker compose run --rm bootstrap` (provisions the matching credential), then `docker compose --profile mcp up -d mcp`.
+2. Register it in your **MCP client** — the AI coding tool you use (Claude Code, Cursor, VS Code…), **not** an OpenThrottle app. The entry nests under that client's own servers map:
+   - **Claude Code** — `.mcp.json` (project) or your user config:
+     ```json
+     {
+       "mcpServers": {
+         "openthrottle-mcp": {
+           "type": "http",
+           "url": "http://localhost:9026/mcp"
+         }
+       }
+     }
+     ```
+   - **Cursor** — `~/.cursor/mcp.json`:
+     ```json
+     {
+       "mcpServers": {
+         "openthrottle-mcp": { "url": "http://localhost:9026/mcp" }
+       }
+     }
+     ```
+
+Machine tools use the container's `ot_sa` token automatically; the `agent_conversation_*` tools additionally need a per-request `Authorization: Bearer <human JWT>` (clients that support per-server headers add a `"headers"` field). Full per-client detail: [`docs/openthrottle/mcp-registration.md` § HTTP transport](../../docs/openthrottle/mcp-registration.md#http-transport-docker-native).
+
+**Tear down:** `docker compose --profile mcp --profile bootstrap down -v` (the `-v` drops the DB volume for a clean next run).
+
+> Testing an unreleased branch (images not published yet)? Build `openthrottle/{server,developer,migrations,mcp}:latest` from the monorepo root first (`docker build -f Dockerfile.NestJS --target production …` / `--target mcp`, `Dockerfile.ReactRouter`, `Dockerfile.Migrations`), then run the three steps above.
+
 ## Run entirely locally on OSS
 
 OpenThrottle can run **entirely locally** with Open Source models and software—no required SaaS or proprietary APIs for core flows.
@@ -58,21 +98,21 @@ Compose reads **`applications/openthrottle/.env`** (path is relative to the comp
 
 Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (default 3000) and **`OPENTHROTTLE_DEVELOPER_PORT`** (default 5173). Build args **`OPENTHROTTLE_SERVER_VERSION`**, **`OPENTHROTTLE_DEVELOPER_VERSION`**, and **`NX_VERSION`** are optional (see compose file).
 
-## Applications
+## Ports (consumer install)
 
-- `6011` | OpenThrottle - Redis
-- `6010` | OpenThrottle - Postgres
+Published host ports for this compose (configurable in `.env`):
 
-- `6022` | OpenThrottle Admin
-- `6023` | OpenThrottle CMS
-- `6020` | OpenThrottle Developer
-- `6024` | OpenThrottle Email
-- `6021` | OpenThrottle Server (API)
-- `6025` | OpenThrottle Website
+- `9020` | OpenThrottle Developer — open this to log in
+- `9021` | OpenThrottle Server (API) — `/health`, `/graphql`
+- `9010` | Postgres
+- `9011` | Redis
+- `9026` | openthrottle-mcp — streamable HTTP, opt-in (`--profile mcp`)
+
+The admin / CMS / email / website apps are not part of this consumer install.
 
 ## Installation
 
-- **Prerequisites:** Node.js ≥22, pnpm, and (for full stack) Postgres with pgvector and Redis. The monorepo uses pnpm and Nx; run all commands from the **monorepo root** unless noted.
+- **Prerequisites:** Node.js ≥24, pnpm, and (for full stack) Postgres with pgvector and Redis. The monorepo uses pnpm and Nx; run all commands from the **monorepo root** unless noted.
 - **Clone and install:** From the monorepo root run `pnpm install` to install workspace dependencies.
 - **Environment:** Copy `applications/openthrottle/.env.default` to `applications/openthrottle/.env` and set Postgres/Redis (and optional JWT, CORS, Ollama/OpenAI) as needed. For Docker Compose, use the same `.env`; see [Required `.env`](#required-env) above.
 - **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. OpenThrottle schema and migrations: `databases/README.md`.

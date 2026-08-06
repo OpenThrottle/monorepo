@@ -4,7 +4,7 @@
 # It supersedes the baseline `Dockerfile.ReactRouter` and `Dockerfile.ReactRouter.v2` (which used
 # fragile hand-pruning of the server stack).
 #
-# Build: docker build -f Dockerfile.ReactRouter.v3 --target production --build-arg APP_NAME=openthrottle-developer [...] .
+# Build: docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer [...] .
 # Or via Nx: pnpm nx run openthrottle-developer:docker-build
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
@@ -153,7 +153,7 @@ RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 #
 ################################################################################
 # Use when you need a shell or optional curl for healthchecks:
-#   docker build -f Dockerfile.ReactRouter.v3 --target production-debian ...
+#   docker build -f Dockerfile.ReactRouter --target production-debian ...
 FROM base AS production-debian
 
 ENV NODE_ENV="production"

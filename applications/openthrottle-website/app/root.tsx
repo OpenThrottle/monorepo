@@ -92,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Setup
   const env = data?.env ?? {};
-  const html = `window.env = ${JSON.stringify(env)}`;
+  const envHtml = `window.env = ${JSON.stringify(env)}`;
 
   // Favicons are served from the app's own static `public/` assets (a single
   // source of truth) rather than the GCS bucket, so they match the committed
@@ -133,6 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
+
         {/*
           CSP is shipped per-request as a (report-only) response header with a
           nonce — see app/entry.server.tsx and the shared buildCsp in
@@ -161,15 +162,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={faviconIco} rel="icon" type="image/x-icon" />
         <link href={faviconPng} rel="icon" type="image/png" />
         <link href={manifest} rel="manifest" />
-        <Links />
+
+        {/* crossOrigin is set to use-credentials to make use of the nonce. */}
+        <Links crossOrigin="use-credentials" nonce={nonce} />
 
         <script
+          crossOrigin="use-credentials"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
+          id="ot-json-ld"
           nonce={nonce}
           type="application/ld+json"
         />
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: artwork }}
+          id="ot-artwork"
+          nonce={nonce}
+        />
       </head>
       <body className="flex min-h-screen flex-col">
         {/* <GlobalHeader /> */}
@@ -180,7 +190,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} nonce={nonce} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: envHtml }}
+          id="ot-env"
+          nonce={nonce}
+        />
 
         {/* Now we add our scripts as they may use the env */}
         <Scripts nonce={nonce} />

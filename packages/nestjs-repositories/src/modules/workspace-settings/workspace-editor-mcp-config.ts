@@ -29,7 +29,7 @@ export const mergeManagedMcpServers = (
  * spawn path, so it is package-public API.
  *
  * This is the RUNTIME equivalent of the human-facing Cursor template
- * `.cursor/mcp.json.example` — the documented single source of truth for the
+ * `.cursor/mcp.json` — the documented single source of truth for the
  * `openthrottle-mcp` entry (see docs/openthrottle/mcp-registration.md
  * § Template structure). The two are deliberately NOT unified through a shared
  * constant: this builder is dynamic (per-repository `apiBaseUrl` /

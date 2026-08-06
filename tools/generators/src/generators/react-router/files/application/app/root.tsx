@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 // import { Analytics } from '@vercel/analytics/react';
-import { APP_URL } from '@openthrottle/react-router-utils';
+import { APP_URL, useNonce } from '@openthrottle/react-router-utils';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, } from 'react-router';
 import { artwork } from '~/global/config/artwork';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -57,6 +57,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
+  const nonce = useNonce();
 
   // Setup
   const env = data?.env ?? {};
@@ -85,7 +86,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
-        {/* <meta content={_valueCSP} httpEquiv="Content-Security-Policy" /> */}
+
+        {/*
+          CSP is shipped per-request as a (report-only) response header with a
+          nonce — see app/entry.server.tsx and the shared buildCsp in
+          @openthrottle/react-router-utils (config in app/global/config/csp.ts)
+          — not a <meta> tag and no longer via vercel.json. The nonce below
+          authorizes the inline bootstrap scripts.
+        */}
         <Meta />
 
         <link href={APP_URL} rel="canonical" />
@@ -98,21 +106,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={favicon} rel="icon" type="image/svg+xml" />
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
         <link href={manifest} rel="manifest" />
-        <Links />
 
-        <script dangerouslySetInnerHTML={{ __html: artwork }} />
+        {/* crossOrigin is set to use-credentials to make use of the nonce. */}
+        <Links crossOrigin="use-credentials" nonce={nonce} />
+
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: artwork }}
+          nonce={nonce}
+        />
       </head>
       <body>
         <main>{children}</main>
-        <ScrollRestoration />
+        <ScrollRestoration nonce={nonce} />
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
-        <script dangerouslySetInnerHTML={{ __html: html }} />
+        <script
+          crossOrigin="use-credentials"
+          dangerouslySetInnerHTML={{ __html: html }}
+          nonce={nonce}
+        />
 
         {/* Now we add our scripts as they may use the env */}
-        <Scripts />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

@@ -15,7 +15,8 @@
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@nestjs/platform-express": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "exports": {
@@ -121,5 +122,8 @@
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
 }

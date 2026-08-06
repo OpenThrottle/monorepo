@@ -40,7 +40,7 @@ export const OpenThrottleAuthForm = (
   const {
     action = '/',
     className,
-    defaultEmail = IS_DEVELOPMENT ? 'developer@openthrottle.com' : '',
+    defaultEmail = IS_DEVELOPMENT ? 'developer@openthrottle.ai' : '',
     defaultPassword = IS_DEVELOPMENT ? 'FullThrottle2026!' : '',
     error,
     isLoading = false,

@@ -45,7 +45,7 @@ Resolution order: per-request store → `OPENTHROTTLE_MCP_AUTH_TOKEN`. If none i
 
 ## Cursor MCP config
 
-Register `openthrottle-mcp` by copying the committed template — [`.cursor/mcp.json.example`](../../../.cursor/mcp.json.example) → `.cursor/mcp.json` (project) or merged into `~/.cursor/mcp.json` (global / secondary workspace) — rather than pasting the block here. The only **auth-relevant** key is `env.OPENTHROTTLE_MCP_AUTH_TOKEN` (an `ot_sa_…` service-account token); for the full entry shape and launcher behavior see [mcp-registration.md § Template structure](../../../docs/openthrottle/mcp-registration.md#template-structure), the SSOT for the block.
+Register `openthrottle-mcp` by copying the committed template — [`.cursor/mcp.json`](../../../.cursor/mcp.json) → `.cursor/mcp.json` (project) or merged into `~/.cursor/mcp.json` (global / secondary workspace) — rather than pasting the block here. The only **auth-relevant** key is `env.OPENTHROTTLE_MCP_AUTH_TOKEN` (an `ot_sa_…` service-account token); for the full entry shape and launcher behavior see [mcp-registration.md § Template structure](../../../docs/openthrottle/mcp-registration.md#template-structure), the SSOT for the block.
 
 Use an **absolute path** to `run-openthrottle-mcp.sh` when the OpenThrottle repo is not the Cursor workspace root (see [verification-environment.md](./verification-environment.md)).
 

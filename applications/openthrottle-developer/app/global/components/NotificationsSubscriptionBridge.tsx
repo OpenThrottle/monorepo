@@ -7,8 +7,10 @@
  */
 
 import * as React from 'react';
+import { useAtomValue } from 'jotai';
 import { NotificationsSubscriptionBridge as NotificationsSubscriptionBridgeBase } from '@openthrottle/react-router-notifications';
 import { NotificationsDocument } from '~/__generated__/graphql';
+import { userAtom } from '~/global/data/atom.user';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 export interface NotificationsSubscriptionBridgeProps {
@@ -22,8 +24,10 @@ export const NotificationsSubscriptionBridge = (
 
   // Hooks
   const client = React.useMemo(() => getGraphqlWsClient(), []);
+  const user = useAtomValue(userAtom);
 
   // Setup
+  const isWebsocketEnabled = user !== null;
 
   // Handlers
 
@@ -37,6 +41,7 @@ export const NotificationsSubscriptionBridge = (
     <NotificationsSubscriptionBridgeBase
       client={client}
       document={NotificationsDocument}
+      enabled={isWebsocketEnabled}
     >
       {children}
     </NotificationsSubscriptionBridgeBase>

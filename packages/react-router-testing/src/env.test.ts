@@ -26,7 +26,13 @@ const EXPECTED_ENV_KEYS = {
   FEATURE_CHARLIE_PREVIEW: true,
   NODE_ENV: true,
   ROLLBAR_TOKEN: true,
+  VERCEL: true,
 } satisfies Record<keyof Required<OpenThrottleEnv>, true>;
+
+// Keys allowed to be empty in a realistic env. VERCEL is a platform marker that
+// getPublicEnv() defaults to '' off-Vercel (it never throws on absence), so —
+// unlike every other key — an empty value is the correct self-hosted default.
+const MAY_BE_EMPTY_KEYS = new Set<string>(['VERCEL']);
 
 describe('createTestEnv', () => {
   test('returns the full env with realistic localhost defaults', () => {
@@ -47,7 +53,10 @@ describe('createTestEnv', () => {
     // before this runtime assertion can drift.
     const expectedKeys = Object.keys(EXPECTED_ENV_KEYS).sort();
     expect(Object.keys(env).sort()).toEqual(expectedKeys);
-    for (const value of Object.values(env)) {
+    for (const [key, value] of Object.entries(env)) {
+      if (MAY_BE_EMPTY_KEYS.has(key)) {
+        continue;
+      }
       expect(value).toBeTruthy();
     }
   });

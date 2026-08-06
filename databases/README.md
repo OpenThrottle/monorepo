@@ -396,7 +396,7 @@ A fresh/empty volume is populated by scripts, in order:
 ```bash
 pnpm run database:start                       # bring postgres up (fresh volume → empty)
 pnpm run database:migrate                     # apply SQL migrations (schema + ledger)
-pnpm run database:bootstrap-default-user      # developer@openthrottle.com / FullThrottle2026!
+pnpm run database:bootstrap-default-user      # developer@openthrottle.ai / FullThrottle2026!
 pnpm run database:bootstrap-service-accounts  # mint the service-account token (printed once)
 ```
 
@@ -430,7 +430,7 @@ The token variable names are identical in both worlds: `OPENTHROTTLE_MCP_AUTH_TO
    docker compose run --rm bootstrap
    ```
 
-5. Log into the developer app (`${OPENTHROTTLE_DEVELOPER_APP_URL}`) with `developer@openthrottle.com` / `FullThrottle2026!`.
+5. Log into the developer app (`${OPENTHROTTLE_DEVELOPER_APP_URL}`) with `developer@openthrottle.ai` / `FullThrottle2026!`.
 
 6. Verify the MCP token authenticates — expect HTTP `200`, not `401`:
 
@@ -443,6 +443,8 @@ The token variable names are identical in both worlds: `OPENTHROTTLE_MCP_AUTH_TO
    ```
 
 Re-running `docker compose run --rm bootstrap` is a safe idempotent no-op: the user keeps its password, and a token that already verifies is left unchanged.
+
+**Reaching openthrottle-mcp in a fully-Dockerized install:** there is no host Node to run the stdio launcher, so bring up the `mcp` container instead — `docker compose --profile prod up mcp` — a streamable-HTTP MCP server you register by URL (`{ "type": "http", "url": "http://localhost:${OPENTHROTTLE_MCP_PORT}/mcp" }`). It requires the `ot_sa_` token provisioned above and **fails loudly at startup** if it is missing/invalid. Full registration (auth, worktree ports, hybrid) is in [docs/openthrottle/mcp-registration.md § HTTP transport](../docs/openthrottle/mcp-registration.md#http-transport-docker-native).
 
 #### B. Shared / real Postgres + Redis instance
 

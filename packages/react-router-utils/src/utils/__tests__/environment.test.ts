@@ -93,7 +93,16 @@ describe('getEnvironment', () => {
       FEATURE_CHARLIE_PREVIEW: 'false',
       NODE_ENV: 'development',
       ROLLBAR_TOKEN: '1234567890',
+      VERCEL: '',
     });
+  });
+
+  test('defaults VERCEL to empty off-Vercel and passes it through when set', async () => {
+    const off = await loadGetPublicEnv(VALID_ENV);
+    expect(off().VERCEL).toBe('');
+
+    const on = await loadGetPublicEnv({ ...VALID_ENV, VERCEL: '1' });
+    expect(on().VERCEL).toBe('1');
   });
 
   test.each(REQUIRED_KEYS)('throws when %s is not set', async (key) => {

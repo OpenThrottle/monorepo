@@ -59,6 +59,7 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
     FEATURE_CHARLIE_PREVIEW: ENV_SOURCE['FEATURE_CHARLIE_PREVIEW'] ?? 'false',
     NODE_ENV: nodeEnv,
     ROLLBAR_TOKEN: rollbarToken.toString(),
+    VERCEL: ENV_SOURCE['VERCEL'] ?? '',
   };
 };
 
