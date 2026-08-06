@@ -50,11 +50,12 @@ ENV CI="true"
 ENV HUSKY="0"
 ENV NX_DAEMON="false"
 
-# Enable pnpm via npm
-RUN npm install --global pnpm@${PNPM_VERSION}
-
 # Only copy what's needed to install our dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+
+# Enable pnpm via corepack
+RUN corepack enable
+RUN corepack prepare pnpm --activate
 
 # Non-root identity for intermediate stages (final image uses distroless `nonroot`).
 RUN groupadd --system --gid 1001 appuser \
@@ -89,7 +90,7 @@ COPY ./skills ./skills
 RUN pnpm config set "//npm.pkg.github.com/:_authToken" "${GITHUB_TOKEN}"
 
 # Install "all" dependencies from NPM + Github Packages
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
 ################################################################################
 #
