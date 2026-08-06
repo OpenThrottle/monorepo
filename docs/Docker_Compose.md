@@ -12,3 +12,11 @@ docker images | grep openthrottle
 ```bash
 OPENTHROTTLE_DRY_RUN=1 ./scripts/gcs-docker-upload.sh
 ```
+
+**Docker Hub:**
+
+```bash
+docker push openthrottle/developer:latest
+docker push openthrottle/server:latest
+docker push openthrottle/migrations:latest
+```
