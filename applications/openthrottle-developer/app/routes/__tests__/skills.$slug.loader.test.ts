@@ -57,10 +57,14 @@ describe('routes/skills.$slug loader', () => {
     const result = await loader(loaderArgsForSlug('ot-plans'));
 
     expect(mockReadSkillFileBySlug).toHaveBeenCalledWith('ot-plans');
-    expect(result).toEqual({
-      content: '---\nname: ot-plans\n---\n\n# OT plans\n',
-      editable: true,
-      entry: SAMPLE_ENTRY,
+    expect(result.content).toBe('---\nname: ot-plans\n---\n\n# OT plans\n');
+    expect(result.editable).toBe(true);
+    expect(result.entry).toEqual(SAMPLE_ENTRY);
+    // The Run-skill modal's deferred discovery bundle: model + repository
+    // discovery degrade to [] here (no authed GraphQL in the node test env).
+    await expect(result.runOptions).resolves.toEqual({
+      models: [],
+      repositories: [],
     });
   });
 

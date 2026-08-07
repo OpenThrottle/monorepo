@@ -22,6 +22,7 @@ const loaderDataFor = (content: string) => ({
   content,
   editable: true,
   entry,
+  runOptions: Promise.resolve({ models: [], repositories: [] }),
 });
 
 const matchesFor = (content: string): Route.ComponentProps['matches'] => [
