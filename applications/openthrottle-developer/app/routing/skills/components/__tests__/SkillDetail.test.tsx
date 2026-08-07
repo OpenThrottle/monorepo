@@ -105,6 +105,24 @@ describe('SkillDetail Component', () => {
     ).toBeInTheDocument();
   });
 
+  describe('run control', () => {
+    test('renders an enabled Run-now button by default', () => {
+      const component = renderDetail();
+
+      const run = component.getByTestId('skill-run-now');
+      expect(run).toBeInTheDocument();
+      expect(run).toBeEnabled();
+    });
+
+    test('disables Run-now when model invocation is effectively disabled', () => {
+      const component = renderDetail({
+        entry: { ...baseEntry, effectiveDisableModelInvocation: true },
+      });
+
+      expect(component.getByTestId('skill-run-now')).toBeDisabled();
+    });
+  });
+
   describe('edit mode', () => {
     test('toggles into edit mode with the editor seeded from the file', async () => {
       const user = userEvent.setup();

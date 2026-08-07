@@ -13,6 +13,9 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
+import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
+import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
+import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import {
   SKILL_DETAIL_COPY,
   SKILLS_SOURCE_COPY,
@@ -26,8 +29,12 @@ export interface SkillDetailProps {
   /** Local checkout with a resolved monorepo root — edit mode available. */
   editable: boolean;
   entry: RepoSkillEntry;
+  /** Composed run payload from the Run-skill modal; wired to the run mechanism. */
+  onRun?: (payload: RunSkillPayload) => void;
   /** Invoked with the full draft on Save; wired to the route action. */
   onSave?: (draft: string) => void;
+  /** Deferred agent+model+repository options for the Run-skill modal. */
+  runOptions?: Promise<RunSkillRunOptions>;
   /** Action-side rejection message, shown inline next to Save. */
   saveError?: string;
   /** True while a save is submitting; disables Save/Cancel. */
@@ -40,7 +47,9 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
     content,
     editable,
     entry,
+    onRun,
     onSave,
+    runOptions,
     saveError,
     saving = false,
   } = props;
@@ -127,6 +136,12 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
           ))}
 
           <div className="flex-1" />
+
+          <SkillRunControl
+            entry={entry}
+            onRun={onRun}
+            runOptions={runOptions}
+          />
 
           <SkillDetailEditControls
             editable={editable}

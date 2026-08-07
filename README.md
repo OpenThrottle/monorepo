@@ -24,22 +24,6 @@
 └── tools                  # Nx plugins, templates, workflows (see tools/)
 ```
 
-## 🚦 Project status
-
-OpenThrottle is open core and built in the open. The table below sets expectations before you dive into any one app — everything here is Apache-2.0, but not everything is finished.
-
-| Application              | Status          | What it is                                                          |
-| ------------------------ | --------------- | ------------------------------------------------------------------- |
-| `openthrottle`           | ✅ Stable       | Quick-start / product landing (the `docker compose up` entrypoint). |
-| `openthrottle-server`    | ✅ Stable       | NestJS code-first GraphQL API — the backbone of the platform.       |
-| `openthrottle-developer` | ✅ Stable       | The flagship developer portal: plans, projects, notes, generators.  |
-| `openthrottle-website`   | ✅ Stable       | Marketing site.                                                     |
-| `openthrottle-admin`     | 🧭 Planned      | Corporate management layer. On the roadmap; not production-ready.   |
-| `openthrottle-email`     | 🚧 Experimental | A web mail client we're prototyping. Expect rough edges.            |
-
-> [!NOTE]
-> 🧭 **Planned** and 🚧 **Experimental** apps ship as previews so you can see where OpenThrottle is headed. They build and pass CI, but aren't feature-complete — don't depend on them yet.
-
 ## ⚙️ Installation
 
 > [!IMPORTANT]
@@ -52,7 +36,7 @@ OpenThrottle is open core and built in the open. The table below sets expectatio
 ./scripts/setup.sh
 ```
 
-## 🤗 Usage
+## 🚀 Get Started
 
 OpenThrottle at its core is an AI Harness built within an NX monorepo. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
 
@@ -103,6 +87,21 @@ pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
 pnpm nx run @tools/generators:test --changed --watch
 ```
 
+## 🚦 Project status
+
+OpenThrottle is open core and built in the open. The table below sets expectations before you dive into any one app — everything here is Apache-2.0, but not everything is finished.
+
+| Application              | Status          | What it is                                                          |
+| ------------------------ | --------------- | ------------------------------------------------------------------- |
+| `openthrottle`           | ✅ Stable       | Quick-start / product landing (the `docker compose up` entrypoint). |
+| `openthrottle-server`    | ✅ Stable       | NestJS code-first GraphQL API — the backbone of the platform.       |
+| `openthrottle-developer` | ✅ Stable       | The flagship developer portal: plans, projects, notes, generators.  |
+| `openthrottle-website`   | ✅ Stable       | Marketing site.                                                     |
+| `openthrottle-admin`     | 🧭 Planned      | Corporate management layer. On the roadmap; not production-ready.   |
+| `openthrottle-email`     | 🚧 Experimental | A web mail client we're prototyping. Expect rough edges.            |
+
+> [!NOTE] 🧭 **Planned** and 🚧 **Experimental** apps ship as previews so you can see where OpenThrottle is headed. They build and pass CI, but aren't feature-complete — don't depend on them yet.
+
 ## 🛟 Troubleshooting
 
 When issues arise, our goal is to provide straightforward solutions that allow you to quickly reset and restore your development environment to a working state.
@@ -136,13 +135,8 @@ Open a [GitHub issue](https://github.com/OpenThrottle/monorepo/issues) with what
 
 ## 📄 License
 
-OpenThrottle is **open core**: the core is licensed under the **Apache License,
-Version 2.0** (see `[LICENSE.md](./LICENSE.md)`), with commercial/enterprise modules
-reserved under a separate EULA. All current first-party code is Apache-2.0.
+OpenThrottle is **open core**: the core is licensed under the **Apache License, Version 2.0** (see `[LICENSE.md](./LICENSE.md)`), with commercial/enterprise modules reserved under a separate EULA. All current first-party code is Apache-2.0.
 
-See [LICENSING.md](./LICENSING.md) for the open-core boundary — which
-directories are Apache-2.0 vs EULA, and how to tell.
+See [LICENSING.md](./LICENSING.md) for the open-core boundary — which directories are Apache-2.0 vs EULA, and how to tell.
 
-The code is open source, but the **OpenThrottle name and logo are trademarks** —
-Apache-2.0 §6 grants no trademark rights. See [TRADEMARK.md](./TRADEMARK.md) for
-what you may and may not do with the marks.
+The code is open source, but the **OpenThrottle name and logo are trademarks** — Apache-2.0 §6 grants no trademark rights. See [TRADEMARK.md](./TRADEMARK.md) for what you may and may not do with the marks.

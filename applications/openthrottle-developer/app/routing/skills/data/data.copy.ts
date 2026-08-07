@@ -40,6 +40,30 @@ export const SKILL_DETAIL_COPY = {
 } as const;
 
 /**
+ * Copy for the /skills/:slug "Run skill" modal (interactive stream v1). The run
+ * button mirrors the schedule detail Run-now affordance; the modal composes a
+ * `/<slug> <args>` invocation and streams the result via the shared chat path.
+ */
+export const SKILL_RUN_COPY = {
+  argumentsHint: `Passed after the slash command as \`/<slug> <arguments>\`. Leave blank to run the skill with no arguments.`,
+  argumentsLabel: `Arguments`,
+  argumentsPlaceholder: `Optional arguments`,
+  cancelLabel: `Cancel`,
+  conversationTitle: `Skill run`,
+  dialogDescription: `Pick an agent and model, add optional arguments, then run. The result streams live in a conversation.`,
+  dialogTitle: `Run skill`,
+  followUpPlaceholder: `Send a follow-up…`,
+  modelLabel: `Agent & model`,
+  noModelsNotice: `No agents or models discovered. Start a local model server or configure an agent CLI, then reopen.`,
+  repositoryHint: `Agent CLIs run inside a local checkout. Select the repository to run in.`,
+  repositoryLabel: `Repository`,
+  runButtonLabel: `Run now`,
+  runFailedPrefix: `Couldn't start the skill run:`,
+  runLabel: `Run`,
+  triggerDisabledTooltip: `This skill is flagged non-invocable, so it can't be run from here.`,
+} as const;
+
+/**
  * Copy for the skill write-back action. Every refusal names why the save was
  * rejected without writing; the ingest note reminds that server-side rows
  * (`projectSkills`) refresh on the next agent-asset ingest run, not on save.
