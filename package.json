@@ -487,6 +487,7 @@
     "ollama-proxy": "nx run @tools/ollama-proxy:serve",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky",
+    "setup:mcp-instructions": "tsx ./scripts/setup_mcp-instructions.ts",
     "start": "pnpm run start:docker && pnpm run start:openthrottle",
     "start:docker": "pnpm run database:start",
     "start:openthrottle": "nx run-many -t start -p openthrottle-developer openthrottle-server",
