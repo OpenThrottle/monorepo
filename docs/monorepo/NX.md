@@ -44,6 +44,86 @@ Recorded from the Nx implementation audit:
 - [ ] https://nx.dev/concepts/types-of-configuration
 - [ ] https://nx.dev/concepts/executors-and-configurations
 
+## 🧯 Runbook: poisoned remote cache (truncated `tsc --build` dist)
+
+### Symptom
+
+A build/test fails with `Cannot find module '.../dist/src/**/*.js'` for a module
+whose source clearly exists — most tellingly, a sibling in the same `dist/`
+imports the missing file (e.g. `foreign-workspace-context.js` importing
+`./workflow.js` while `workflow.js` is absent). It reproduces on a clean checkout
+because the incomplete `dist/` is served from the Nx remote cache.
+
+### Incidents
+
+- **2026-07-24** (agentic-ralph, commit `4c8062b7`): stale/unhashed
+  `src/__generated__` output cached under a fresh hash. Fixed by per-package
+  `.gitignore` `!src/__generated__/**/*` + narrowing `codegen-graphql` outputs.
+- **2026-07-29** (PR #254, `@openthrottle/openthrottle-agentic-utils`): CI
+  restored a truncated `build` artifact from
+  `gs://openthrottle-staging-nx-cache/nx-cache/<hash>` — dist had
+  `foreign-workspace-context.js` but was missing `workflow.js`, so `monorepo:test`
+  failed with `Cannot find module .../dist/src/utils/workflow.js`. Two objects
+  (hashes `12318852324888656449`, `14094666500388666538`) were confirmed
+  incomplete and purged; a fresh build was healthy.
+
+### Mechanism (confirmed, plan 935ea415)
+
+The buildable packages (those with a `tsconfig.lib.json`) get an inferred
+`build` target of `tsc --build tsconfig.lib.json`, whose Nx `outputs` include both
+the `dist/**` emit AND `dist/tsconfig.lib.tsbuildinfo`. `tsc --build` is
+**incremental**: it trusts the tsbuildinfo and does **not** verify that the
+on-disk `.js` outputs actually exist. So once any event leaves `dist/` truncated
+while the tsbuildinfo is intact — a partial GCS restore, an interrupted write, or
+a previously-poisoned cache entry — the next `tsc --build` **no-ops** instead of
+re-emitting the missing `.js`, and Nx re-caches the incomplete `dist/` under a
+fresh hash. The key is permanently poisoned. (`__generated__`/codegen is a
+separate, earlier vector; the 2026-07-29 case had no codegen inputs.)
+
+> **Do NOT** "fix" this by dropping `tsbuildinfo` from the cache — that
+> reintroduces the stale-`.d.ts` bug fixed in PR #212.
+
+### Durable fix (in place)
+
+`scripts/verify-dist-complete.ts` asserts every emitting source module has a
+non-empty compiled `.js` in `dist/`. It is wired two ways on every `tsc --build`
+package (agentic-utils, agentic-workflow, agentic-ralph, plan-config, drivers,
+agentic-token-usage, skills, ide, node-client):
+
+1. **Self-healing build** — the `build` command runs the guard and, on an
+   incomplete dist, does `rm -rf dist && tsc --build …` (a `--force`-equivalent
+   that also drops the stale tsbuildinfo) then re-verifies. A cache **write** can
+   never store a truncated dist; a real compile gap fails the build fast.
+2. **Consume-time gate** — a `verify-dist-complete` target (`cache: false`,
+   `dependsOn: [build]`) always runs even on a build cache **hit**, so a
+   pre-existing poisoned entry fails loudly with a clear message instead of a
+   cryptic downstream `Cannot find module`. Run in `check:local` via
+   `check:local:verify` (`nx run-many --target=verify-dist-complete --all`).
+
+Not affected (audited): source-first packages with no build target
+(`openthrottle-vscode`, `openthrottle-developer-codegen`, `openthrottle-mcp`) and
+the React Router apps (`admin`/`email`/`website`/`developer`), which build via
+`react-router build` (Vite) with no tsbuildinfo.
+
+### Purge a poisoned key (manual recovery)
+
+```bash
+# 1. Identify the poisoned hash(es) from the failing task's cache metadata,
+#    then remove the remote objects (staging bucket):
+gcloud storage rm "gs://openthrottle-staging-nx-cache/nx-cache/<hash>" \
+  "gs://openthrottle-staging-nx-cache/nx-cache/<hash>.commit"
+
+# 2. Drop any local copies so a fresh build reseeds the key:
+rm -rf .nx/cache && pnpm clean:tsbuildinfo
+rm -rf packages/<name>/dist
+
+# 3. Rebuild from clean; the self-healing build reseeds a complete artifact:
+NX_ISOLATE_PLUGINS=false pnpm nx run @openthrottle/<name>:build --skip-nx-cache
+```
+
+Re-running the failed CI job after the purge self-heals (the guard now blocks a
+re-poison).
+
 ## 🏋️‍♂️ Updating
 
 NX ships a constant stream of updates and the more current we can stay, the faster we can move over time.

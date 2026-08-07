@@ -442,7 +442,7 @@
     "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:validate-tags": "pnpm nx:validate-tags",
-    "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
+    "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp && pnpm nx run-many --target=verify-dist-complete --all",
     "clean": "pnpm run \"/^clean:.*/\"",
     "format": "pnpm nx run monorepo:format-write",
     "format:check": "pnpm nx run monorepo:format-check",

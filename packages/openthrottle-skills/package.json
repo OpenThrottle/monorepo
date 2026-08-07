@@ -43,7 +43,24 @@
       "build-package": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "build": {
+        "options": {
+          "command": "tsc --build tsconfig.lib.json && (node --experimental-strip-types ../../scripts/verify-dist-complete.ts . || (echo 'verify-dist-complete: incomplete dist — forcing a clean rebuild' && rm -rf dist && tsc --build tsconfig.lib.json && node --experimental-strip-types ../../scripts/verify-dist-complete.ts .))"
+        }
+      },
+      "verify-dist-complete": {
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "description": "Fail if dist/ is missing any compiled source module — guards the poisoned-Nx-cache truncated-dist class (tsc --build no-op against stale output). See plan 935ea415 and the poisoned-gcs-nx-remote-cache runbook.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node --experimental-strip-types scripts/verify-dist-complete.ts packages/openthrottle-skills",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "private": true,
