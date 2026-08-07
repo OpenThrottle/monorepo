@@ -9,6 +9,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlansService } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
+import { getQueueRedisClient } from '../../queues/bullmq-redis-client';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import type { ServerHealthStatus } from './server-health.object';
 
@@ -61,7 +62,7 @@ export class HealthService {
     }
 
     try {
-      const client = await this.plansQueue.client;
+      const client = await getQueueRedisClient(this.plansQueue);
       await client.ping();
 
       return 'ok';

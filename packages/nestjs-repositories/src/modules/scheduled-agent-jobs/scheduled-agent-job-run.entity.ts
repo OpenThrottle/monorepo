@@ -14,11 +14,7 @@ import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity';
 
 /** queued (pre-created by run-now) -> running (claimed) -> succeeded | failed | cancelled. */
 export type ScheduledAgentJobRunStatus =
-  | 'cancelled'
-  | 'failed'
-  | 'queued'
-  | 'running'
-  | 'succeeded';
+  'cancelled' | 'failed' | 'queued' | 'running' | 'succeeded';
 
 /** schedule = cron fire; manual = run-now. */
 export type ScheduledAgentJobRunTrigger = 'manual' | 'schedule';

@@ -25,10 +25,7 @@ export type RolloutJsonValue =
 
 /** Typed variation value; must match the flag's kind at write time. */
 export type RolloutVariationValue =
-  | boolean
-  | number
-  | string
-  | RolloutJsonValue;
+  boolean | number | string | RolloutJsonValue;
 
 /**
  * One entry in `rollout_flags.variations` jsonb.

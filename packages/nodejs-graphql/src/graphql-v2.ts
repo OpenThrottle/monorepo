@@ -217,8 +217,7 @@ export interface GraphqlV2ExecuteOptions<
    * `method`, and `signal` (those are owned by the executor).
    */
   readonly requestInit?:
-    | Omit<RequestInit, 'body' | 'headers' | 'method' | 'signal'>
-    | undefined;
+    Omit<RequestInit, 'body' | 'headers' | 'method' | 'signal'> | undefined;
   /**
    * @description Opt-in retry policy for transient transport failures. Off by default. Not safe
    * for non-idempotent mutations — see {@link GraphqlV2RetryOptions} and module docs.

@@ -134,10 +134,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = 'Card';
 
 export interface CardHeaderProps extends React.ComponentPropsWithoutRef<'div'> {}
-export const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  CardHeaderProps
->(/* … */);
+export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
+  /* … */
+);
 CardHeader.displayName = 'CardHeader';
 // … CardTitle, CardDescription, CardContent, CardFooter …
 ```

@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-
 import {
   findCatalogViolations,
   isAllowedSpec,
-} from './check-catalog-coverage.ts';
+} from '../check-catalog-coverage.ts';
 
 describe('isAllowedSpec', () => {
   it('allows catalog protocol specs', () => {
@@ -96,10 +95,7 @@ describe('findCatalogViolations', () => {
     const violations = findCatalogViolations([
       {
         file: 'packages/empty/package.json',
-        manifest: { name: 'empty' } as unknown as Record<
-          string,
-          Record<string, string> | undefined
-        >,
+        manifest: { name: 'empty' },
       },
     ]);
 

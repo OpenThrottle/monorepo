@@ -7,8 +7,7 @@ import { toast } from '@openthrottle/react-router-shadcn';
  * suppress the toast).
  */
 type ToastMessage<TResult> =
-  | string
-  | ((result: TResult) => string | null | undefined);
+  string | ((result: TResult) => string | null | undefined);
 
 export interface UseActionToastOptions<TResult> {
   /**

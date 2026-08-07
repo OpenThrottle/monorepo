@@ -36,7 +36,7 @@ IMAGE="${REGISTRY}/${INPUT_APP}:${INPUT_TAG}"
 
 # The canonical root Dockerfiles (Dockerfile.NestJS, Dockerfile.ReactRouter) are
 # parameterized: APP_NAME selects which app to build, PNPM_VERSION pins the pnpm used in
-# every stage, and the build stage runs `pnpm dlx nx@${NX_VERSION}`. Derive PNPM_VERSION from
+# every stage, and the build stage runs `pnpm nx`. Derive PNPM_VERSION from
 # the root package.json `packageManager` field so CI and local builds stay in lockstep.
 PNPM_VERSION="$(node -p "(require('./package.json').packageManager || '').replace(/^pnpm@/, '').split('+')[0]")"
 if [[ -z "${PNPM_VERSION}" ]]; then
@@ -51,7 +51,6 @@ docker build \
   --build-arg APP_VERSION="${APP_VERSION}" \
   --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
   --build-arg NX_KEY="${INPUT_NX_KEY:-}" \
-  --build-arg NX_VERSION="${INPUT_NX_VERSION:-}" \
   --build-arg PNPM_VERSION="${PNPM_VERSION}" \
   -t "${IMAGE}" \
   .

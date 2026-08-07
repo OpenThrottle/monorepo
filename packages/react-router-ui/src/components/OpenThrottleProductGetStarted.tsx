@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  Button,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { getRandomIntroduction } from '../data/data.introductions';
@@ -23,7 +17,7 @@ export interface OpenThrottleProductGetStartedProps {
 export const OpenThrottleProductGetStarted = (
   props: OpenThrottleProductGetStartedProps,
 ): React.ReactElement => {
-  const { introduction: introductionProp, repo, stars } = props;
+  const { introduction: introductionProp, repo, stars: _stars } = props;
 
   // Hooks
   const [introduction] = React.useState(
@@ -44,10 +38,8 @@ export const OpenThrottleProductGetStarted = (
   return (
     <>
       <div className="mb-4 flex w-auto items-center justify-start gap-2">
-        <OpenThrottleLogo className="text-xl" />
-        <span className="text-muted-foreground/50 font-extralight">
-          |&nbsp;
-        </span>
+        <OpenThrottleLogo className="!pr-0 text-xl" />
+        <span className="text-muted-foreground/50 font-extralight">|</span>
         <span className="text-highlight text-lg font-extralight">AI</span>
       </div>
 
@@ -71,6 +63,17 @@ export const OpenThrottleProductGetStarted = (
               />
             </div>
 
+            <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
+              <Button
+                className="flex items-center gap-2 text-xs"
+                variant="brand"
+              >
+                <span>View on GitHub</span>
+                <GithubLogoIcon weight="fill" />
+              </Button>
+            </Link>
+
+            {/*
             <TooltipProvider>
               <Tooltip delayDuration={1_000}>
                 <TooltipContent>
@@ -89,6 +92,7 @@ export const OpenThrottleProductGetStarted = (
                 </TooltipTrigger>
               </Tooltip>
             </TooltipProvider>
+            */}
           </div>
         </div>
       </div>

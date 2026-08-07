@@ -159,8 +159,7 @@ describe('TasksService', () => {
       vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
         (
           isolationOrRun:
-            | IsolationLevel
-            | ((manager: EntityManager) => Promise<unknown>),
+            IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
         ) =>
           typeof isolationOrRun === 'function'
             ? isolationOrRun(txManager)
@@ -429,8 +428,7 @@ describe('TasksService', () => {
       vi.mocked(mockTaskRepo.manager.transaction).mockImplementation(
         (
           isolationOrRun:
-            | IsolationLevel
-            | ((manager: EntityManager) => Promise<unknown>),
+            IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
         ) =>
           typeof isolationOrRun === 'function'
             ? isolationOrRun(txManager)

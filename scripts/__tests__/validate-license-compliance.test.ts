@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import {
   evaluateCompliance,
   formatReport,
@@ -9,7 +8,7 @@ import {
   type PnpmLicensesOutput,
   resolveEffectiveLicense,
   tokenizeSpdx,
-} from './validate-license-compliance.ts';
+} from '../validate-license-compliance.ts';
 
 const ALLOW = new Set([
   '0BSD',

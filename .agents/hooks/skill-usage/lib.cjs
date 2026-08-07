@@ -218,13 +218,9 @@ const buildUsageEvent = ({
   const resolvedSource = source ?? normalized.source ?? null;
 
   return {
-    timestamp,
-    skill_name: normalized.skill_name,
     args,
-    session_id: normalized.session_id ?? null,
     cwd,
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
-    scope,
     invocation_path: normalized.invocation_path ?? null,
     privacy_level: privacyLevel,
     ...(resolvedSource ? { source: resolvedSource } : {}),
@@ -235,6 +231,10 @@ const buildUsageEvent = ({
     ...(normalized.hook_event_name
       ? { hook_event_name: normalized.hook_event_name }
       : {}),
+    scope,
+    session_id: normalized.session_id ?? null,
+    skill_name: normalized.skill_name,
+    timestamp,
   };
 };
 
@@ -307,16 +307,16 @@ const buildOutcomeEvent = ({
       : Math.max(0, Math.round(Number(durationMs)));
 
   return {
-    timestamp,
-    skill_name: name,
-    session_id: sessionId,
-    tool_use_id: toolUseId,
-    outcome,
-    duration_ms: resolvedDuration,
     cwd: resolvedCwd,
-    git_branch: gitBranch ?? resolveGitBranch(repoRoot),
-    scope,
+    duration_ms: resolvedDuration,
     event_kind: 'outcome',
+    git_branch: gitBranch ?? resolveGitBranch(repoRoot),
+    outcome,
+    scope,
+    session_id: sessionId,
+    skill_name: name,
+    timestamp,
+    tool_use_id: toolUseId,
   };
 };
 
@@ -651,7 +651,7 @@ const postSkillUsageEvent = async ({
     return { ok: false, reason: 'missing recordSkillUsage.id' };
   }
 
-  return { ok: true, id: String(id) };
+  return { id: String(id), ok: true };
 };
 
 /**
@@ -685,7 +685,7 @@ const persistUsageEvent = async ({
     } catch (err) {
       logHookError('jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: 'SKILL_USAGE_DISABLE_SERVER=1' };
+    return { detail: 'SKILL_USAGE_DISABLE_SERVER=1', sink: 'jsonl' };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
@@ -697,7 +697,7 @@ const persistUsageEvent = async ({
     } catch (err) {
       logHookError('jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: 'missing graphql url' };
+    return { detail: 'missing graphql url', sink: 'jsonl' };
   }
 
   const resolvedTimeout =
@@ -715,16 +715,18 @@ const persistUsageEvent = async ({
     });
 
     if (result.ok) {
-      return { sink: 'server', id: result.id };
+      return { id: result.id, sink: 'server' };
     }
 
-    logHookError(`server post failed; falling back to jsonl (${result.reason})`);
+    logHookError(
+      `server post failed; falling back to jsonl (${result.reason})`,
+    );
     try {
       appendJsonl(outPath, event);
     } catch (err) {
       logHookError('jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: result.reason };
+    return { detail: result.reason, sink: 'jsonl' };
   } catch (err) {
     logHookError('persistUsageEvent failed', err);
     try {
@@ -733,8 +735,8 @@ const persistUsageEvent = async ({
       logHookError('jsonl append failed', appendErr);
     }
     return {
-      sink: 'jsonl',
       detail: err instanceof Error ? err.message : String(err),
+      sink: 'jsonl',
     };
   }
 };
@@ -823,7 +825,7 @@ const postSkillUsageOutcome = async ({
     return { ok: false, reason: 'missing recordSkillUsageOutcome.id' };
   }
 
-  return { ok: true, id: String(id) };
+  return { id: String(id), ok: true };
 };
 
 /**
@@ -857,7 +859,7 @@ const persistOutcomeEvent = async ({
     } catch (err) {
       logHookError('outcome jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: 'SKILL_USAGE_DISABLE_SERVER=1' };
+    return { detail: 'SKILL_USAGE_DISABLE_SERVER=1', sink: 'jsonl' };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
@@ -869,7 +871,7 @@ const persistOutcomeEvent = async ({
     } catch (err) {
       logHookError('outcome jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: 'missing graphql url' };
+    return { detail: 'missing graphql url', sink: 'jsonl' };
   }
 
   const resolvedTimeout =
@@ -887,18 +889,20 @@ const persistOutcomeEvent = async ({
     });
 
     if (result.ok) {
-      return { sink: 'server', id: result.id };
+      return { id: result.id, sink: 'server' };
     }
 
     logHookError(
       `outcome server post failed; falling back to jsonl (${result.reason})`,
     );
+
     try {
       appendJsonl(outPath, event);
     } catch (err) {
       logHookError('outcome jsonl append failed', err);
     }
-    return { sink: 'jsonl', detail: result.reason };
+
+    return { detail: result.reason, sink: 'jsonl' };
   } catch (err) {
     logHookError('persistOutcomeEvent failed', err);
     try {
@@ -906,9 +910,10 @@ const persistOutcomeEvent = async ({
     } catch (appendErr) {
       logHookError('outcome jsonl append failed', appendErr);
     }
+
     return {
-      sink: 'jsonl',
       detail: err instanceof Error ? err.message : String(err),
+      sink: 'jsonl',
     };
   }
 };
@@ -930,13 +935,13 @@ module.exports = {
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
   detectScope,
+  graphqlUrlFromEnvMap,
   loadRepoEnv,
   logHookError,
   persistOutcomeEvent,
   persistUsageEvent,
   postSkillUsageEvent,
   postSkillUsageOutcome,
-  graphqlUrlFromEnvMap,
   readRepoEnvFile,
   redactSecrets,
   resolveAuthToken,

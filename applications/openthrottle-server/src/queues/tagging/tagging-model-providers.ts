@@ -189,13 +189,11 @@ export class StubTaggingModelProvider implements TaggingModelProvider {
           haystack.includes(needle.toLowerCase())
         );
       })
-      .map(
-        (entry): TaggingPrediction => ({
-          confidence: 0.5,
-          dimension: entry.dimension,
-          tag: entry.tag,
-        }),
-      );
+      .map((entry): TaggingPrediction => ({
+        confidence: 0.5,
+        dimension: entry.dimension,
+        tag: entry.tag,
+      }));
     return Promise.resolve(predictions);
   }
 }

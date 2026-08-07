@@ -1,7 +1,7 @@
 # 🤖 OpenThrottle | AI
 
-[![Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
-[![NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
+[Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
+[NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 
 **OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
@@ -10,8 +10,6 @@
 **See also:** [docs/](./docs/README.md) for guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
 ## 🏠 Architecture
-
-While many [NX](https://nx.dev/) monorepo implementations specialize in either `task running` or `package publishing`, our setup leverages both capabilities. This dual approach enables external applications to seamlessly integrate with and utilize the packages we develop, manage, and publish from this monorepo.
 
 ```bash
 ├── .env.default           # Default environment variables (in VC)
@@ -47,11 +45,30 @@ OpenThrottle is open core and built in the open. The table below sets expectatio
 > [!IMPORTANT]
 > The setup process is automated through an initialization script.
 >
-> You can run this script **`ANYTIME`** you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
+> You can run this script `ANYTIME` you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
 
 ```bash
 # ⚙️ Run our setup script
 ./scripts/setup.sh
+```
+
+## 🤗 Usage
+
+OpenThrottle at its core is an AI Harness built within an NX monorepo. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
+
+```bash
+# OpenThrottle
+pnpm run database:start
+pnpm run database:migrate
+
+# NestJS + GraphQL Server (API)
+pnpm nx run openthrottle-server:start
+
+# Server + Developer (UI)
+pnpm nx run openthrottle-developer:start
+
+# Import our skills into our DB
+pnpm run database:import-agent-assets
 ```
 
 ## 🧑‍💻 Development
@@ -120,7 +137,7 @@ Open a [GitHub issue](https://github.com/OpenThrottle/monorepo/issues) with what
 ## 📄 License
 
 OpenThrottle is **open core**: the core is licensed under the **Apache License,
-Version 2.0** (see [`LICENSE.md`](./LICENSE.md)), with commercial/enterprise modules
+Version 2.0** (see `[LICENSE.md](./LICENSE.md)`), with commercial/enterprise modules
 reserved under a separate EULA. All current first-party code is Apache-2.0.
 
 See [LICENSING.md](./LICENSING.md) for the open-core boundary — which

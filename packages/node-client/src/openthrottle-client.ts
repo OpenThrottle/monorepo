@@ -631,22 +631,20 @@ export async function listPlansByStatus(
   const planRaw = await ds.query<PlanRawRow>(dataQuery, dataParams);
   const { rows: planRowsList } = normalizeQueryResult<PlanRawRow>(planRaw);
   return {
-    plans: planRowsList.map(
-      (r): ListPlansByStatusPlan => ({
-        assignee: r.assignee,
-        author: r.author,
-        category: r.category,
-        completedAt: r.completed_at,
-        createdAt: r.created_at,
-        id: r.id,
-        project: r.project,
-        projectId: r.project_id,
-        status: r.status,
-        summary: r.summary,
-        title: r.title,
-        updatedAt: r.updated_at,
-      }),
-    ),
+    plans: planRowsList.map((r): ListPlansByStatusPlan => ({
+      assignee: r.assignee,
+      author: r.author,
+      category: r.category,
+      completedAt: r.completed_at,
+      createdAt: r.created_at,
+      id: r.id,
+      project: r.project,
+      projectId: r.project_id,
+      status: r.status,
+      summary: r.summary,
+      title: r.title,
+      updatedAt: r.updated_at,
+    })),
     totalCount,
   };
 }

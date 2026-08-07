@@ -220,9 +220,7 @@ export const QUEUE_STATS_CHART_OPERATIONAL_SERIES = [
 ] as const satisfies ReadonlyArray<(typeof QUEUE_STATS_CHART_SERIES)[number]>;
 
 export type QueueStatsChartViewVerdict =
-  | 'finalist'
-  | 'alternative'
-  | 'rejected';
+  'finalist' | 'alternative' | 'rejected';
 
 export interface QueueStatsChartViewOption {
   readonly cons: readonly string[];

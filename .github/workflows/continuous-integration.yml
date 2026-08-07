@@ -44,7 +44,6 @@ env:
 
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
-  NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
@@ -216,9 +215,9 @@ jobs:
       # - name: "🧠 NX ${{ matrix.target }} affected"
       #   run: |
       #     # # 🚧 IMPORTANT 🚧 we pass the "matrix.target" as a string to also handle the "test --coverage" case
-      #     # NX_VERSION=${{ env.NX_VERSION }} node --experimental-strip-types ./scripts/parallelize-tasks.ts "${{ matrix.target }}" ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
-
-      #     NX_VERSION=${{ env.NX_VERSION }} node --experimental-strip-types ./scripts/parallelize-tasks.ts ${{ matrix.target }} ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
+      #     # node --experimental-strip-types ./scripts/parallelize-tasks.ts "${{ matrix.target }}" ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
+      #
+      #     node --experimental-strip-types ./scripts/parallelize-tasks.ts ${{ matrix.target }} ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
       #       do
       #         read -r tags target <<< `echo $line`;
       #         echo "🧠 Running for $tags | $target";

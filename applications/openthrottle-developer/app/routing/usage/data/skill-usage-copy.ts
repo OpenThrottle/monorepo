@@ -9,8 +9,7 @@ export const SKILL_USAGE_SCOPES = {
 } as const;
 
 export type SkillUsageScopeFilter =
-  | (typeof SKILL_USAGE_SCOPES)[keyof typeof SKILL_USAGE_SCOPES]
-  | null;
+  (typeof SKILL_USAGE_SCOPES)[keyof typeof SKILL_USAGE_SCOPES] | null;
 
 /** Human label for a scope id. */
 export const skillUsageScopeLabel = (scope: string): string => {

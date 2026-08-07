@@ -11,12 +11,14 @@ import {
   PLAN_CANCEL_TOPIC_PATTERN,
 } from '@openthrottle/nestjs-graphql';
 import type { Queue } from 'bullmq';
+import {
+  duplicateQueueRedisClient,
+  getQueueRedisClient,
+  type QueueRedisClient,
+} from '../bullmq-redis-client';
 import { PLANS_QUEUE_NAME } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import type { RunPlanJobData } from './plans.types';
-
-/** ioredis client type as exposed by the BullMQ queue connection. */
-type RedisClient = Awaited<Queue['client']>;
 
 /**
  * @description Channel 2 (the low-latency fast path) of the plan-run cancellation design
@@ -33,7 +35,7 @@ type RedisClient = Awaited<Queue['client']>;
 export class PlanCancelChannelService
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
-  private subscriber: RedisClient | null = null;
+  private subscriber: QueueRedisClient | null = null;
 
   constructor(
     private readonly logger: LoggerService,
@@ -44,8 +46,8 @@ export class PlanCancelChannelService
 
   async onApplicationBootstrap(): Promise<void> {
     try {
-      const base = await this.plansQueue.client;
-      const subscriber = base.duplicate();
+      const base = await getQueueRedisClient(this.plansQueue);
+      const subscriber = duplicateQueueRedisClient(base);
 
       subscriber.on('error', (error: Error) => {
         this.logger.warn(
@@ -92,7 +94,7 @@ export class PlanCancelChannelService
    */
   async publishCancel(planId: string): Promise<void> {
     try {
-      const client = await this.plansQueue.client;
+      const client = await getQueueRedisClient(this.plansQueue);
       await client.publish(planCancelTopic(planId), '1');
     } catch (error) {
       this.logger.warn(

@@ -12,6 +12,10 @@ promptInstalled () {
   echo "💿 \"$1\" is installed."
 }
 
+promptSkipped () {
+  echo "⏭️  Skipping \"$1\"."
+}
+
 promptUpdated () {
   echo "💿 \"$1\" is up to date."
 }
@@ -19,6 +23,30 @@ promptUpdated () {
 installBrewPackage () {
   NAME="${2:-$1}"
   which $NAME > /dev/null 2>&1 && (brew upgrade --quiet $1 && promptUpdated $1) || (brew install $1 --quiet && promptInstalled $1)
+}
+
+# Install a curl|shell CLI when missing. Args: display name, binary, shell (bash|sh), install URL.
+installCliIfNeeded () {
+  NAME="$1"
+  BINARY="$2"
+  INSTALLER_SHELL="$3"
+  URL="$4"
+
+  if command -v "$BINARY" > /dev/null 2>&1; then
+    promptInstalled "$NAME"
+    return 0
+  fi
+
+  printf '%s' "- \"$NAME\" is not installed. Install it? (Y/n): "
+  read confirm_install
+  confirm_install=${confirm_install:-Y}
+
+  if [ "$confirm_install" = "y" ] || [ "$confirm_install" = "Y" ]; then
+    curl -fsSL "$URL" | "$INSTALLER_SHELL"
+    promptInstalled "$NAME"
+  else
+    promptSkipped "$NAME"
+  fi
 }
 
 installMaestro () {
@@ -38,28 +66,20 @@ installSoftware () {
   corepack enable pnpm
   corepack prepare --activate
 
-  # 🧠 Install the correct NX version
-  # pnpm add --global "nx@${NX_VERSION}"
-
-  # 🌏 Install the following tools via pnpm
-  # pnpm add --global nest
-  # pnpm add --global schematics
-  # pnpm add --global vercel
-
   # 🎒 Install the following tools via brew
   # installBrewPackage "1password-cli" "op"
   # installBrewPackage "langgraph-cli" "langgraph"
   installBrewPackage "openjdk@17"
   installBrewPackage "terraform"
 
-  # 👨‍💻 IDE's
-  curl -fsSL https://claude.ai/install.sh | bash # CLAUDE CLI
-  curl -fsSL https://chatgpt.com/codex/install.sh | sh # CODEX CLI
-  curl -fsSL https://x.ai/cli/install.sh | bash # GROK CLI
-  curl -fsSL https://opencode.ai/install | bash # OPENCODE CLI
+  # 👨‍💻 Agent CLIs (skip if present; otherwise prompt)
+  installCliIfNeeded "Claude" "claude" "bash" "https://claude.ai/install.sh"
+  installCliIfNeeded "Cursor" "cursor-agent" "bash" "https://cursor.com/install"
+  installCliIfNeeded "Codex" "codex" "sh" "https://chatgpt.com/codex/install.sh"
+  installCliIfNeeded "Grok" "grok" "bash" "https://x.ai/cli/install.sh"
+  installCliIfNeeded "Opencode" "opencode" "bash" "https://opencode.ai/install"
 
   # Install the dependencies
-  # pnpm install --stream=false --silent
   pnpm install
 }
 

@@ -58,8 +58,7 @@ interface ResolvePersistedConversationFailure {
 }
 
 export type ResolvePersistedConversationResult =
-  | ResolvePersistedConversationFailure
-  | ResolvePersistedConversationSuccess;
+  ResolvePersistedConversationFailure | ResolvePersistedConversationSuccess;
 
 /**
  * @description Validates an owned conversation id or mints a new conversation row.

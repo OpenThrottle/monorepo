@@ -20,8 +20,7 @@ export interface EmitNotificationMetadata {
 
 /** Metadata may be a single entry or array for multiple emissions from one method. */
 export type EmitNotificationMetadataValue =
-  | EmitNotificationMetadata
-  | readonly EmitNotificationMetadata[];
+  EmitNotificationMetadata | readonly EmitNotificationMetadata[];
 
 function isMetadataEntryArray(
   value:

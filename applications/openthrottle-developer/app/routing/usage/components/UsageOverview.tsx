@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { Link } from 'react-router';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 
 export interface UsageOverviewProps {
   className?: string;
@@ -54,19 +55,21 @@ export const UsageOverview = (
         </p> */}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 md:mt-8">
-        <Badge color="yellow" size="xs">
-          <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
-        </Badge>
-        {' · '}
-        <Badge color="orange" size="xs">
-          <Link to="/prompts?type=SKILLS">Skills-type prompts</Link>
-        </Badge>
-        {' · '}
-        <Badge color="red" size="xs">
-          <Link to="/skills">Repo skill paths</Link>
-        </Badge>
-      </div>
+      {FEATURE_BETA_PREVIEW ? (
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 md:mt-8">
+          <Badge color="yellow" size="xs">
+            <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
+          </Badge>
+          {' · '}
+          <Badge color="orange" size="xs">
+            <Link to="/prompts?type=SKILLS">Skills-type prompts</Link>
+          </Badge>
+          {' · '}
+          <Badge color="red" size="xs">
+            <Link to="/skills">Repo skill paths</Link>
+          </Badge>
+        </div>
+      ) : null}
     </div>
   );
 };

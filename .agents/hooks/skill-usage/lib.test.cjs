@@ -91,7 +91,10 @@ describe('detectScope', () => {
 
   it('labels plugin-namespaced names as third-party', () => {
     assert.equal(detectScope('vercel:deploy', tmpRoot), 'third-party');
-    assert.equal(detectScope('engineering:code-review', tmpRoot), 'third-party');
+    assert.equal(
+      detectScope('engineering:code-review', tmpRoot),
+      'third-party',
+    );
   });
 
   it('labels skills-lock installs as third-party', () => {
@@ -143,7 +146,12 @@ describe('buildUsageEvent + appendJsonl', () => {
     assert.ok(!event.args.includes('secret-token-value'));
     assert.ok(event.args.length <= 257);
 
-    const jsonlPath = path.join(tmpRoot, '.cache', 'skill-usage', 'events.jsonl');
+    const jsonlPath = path.join(
+      tmpRoot,
+      '.cache',
+      'skill-usage',
+      'events.jsonl',
+    );
     appendJsonl(jsonlPath, event);
     appendJsonl(jsonlPath, { ...event, skill_name: 'second' });
 

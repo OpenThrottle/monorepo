@@ -88,10 +88,12 @@ export interface DefaultTagVocabularyEntry {
  */
 export const DEFAULT_TAG_VOCABULARY_SEED: readonly DefaultTagVocabularyEntry[] =
   [
-    ...DEFAULT_DOMAIN_TAG_VOCABULARY.map(
-      (tag): DefaultTagVocabularyEntry => ({ dimension: 'domain', tag }),
-    ),
-    ...DEFAULT_PHASE_TAG_VOCABULARY.map(
-      (tag): DefaultTagVocabularyEntry => ({ dimension: 'phase', tag }),
-    ),
+    ...DEFAULT_DOMAIN_TAG_VOCABULARY.map((tag): DefaultTagVocabularyEntry => ({
+      dimension: 'domain',
+      tag,
+    })),
+    ...DEFAULT_PHASE_TAG_VOCABULARY.map((tag): DefaultTagVocabularyEntry => ({
+      dimension: 'phase',
+      tag,
+    })),
   ];

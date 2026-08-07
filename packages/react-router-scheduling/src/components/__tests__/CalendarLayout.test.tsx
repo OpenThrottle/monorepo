@@ -53,7 +53,11 @@ describe('CalendarLayout', () => {
       toolbar.getByRole('button', { name: 'Previous period' }),
     ).toBeDefined();
     expect(toolbar.getByRole('button', { name: 'Next period' })).toBeDefined();
-    expect(toolbar.getByRole('group', { name: 'Calendar view' })).toBeDefined();
+    // A single-select ToggleGroup exposes `role="radiogroup"` (Radix maps
+    // `type="single"` to radio semantics).
+    expect(
+      toolbar.getByRole('radiogroup', { name: 'Calendar view' }),
+    ).toBeDefined();
     expect(
       within(component.container).getByRole('group', { name: 'Calendar' }),
     ).toBeDefined();

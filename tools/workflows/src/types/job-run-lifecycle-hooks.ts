@@ -12,10 +12,7 @@ import { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
  * Canonical Jest-style lifecycle phases (normalized after parse).
  */
 export type JobRunHookPhase =
-  | 'afterAll'
-  | 'afterEach'
-  | 'beforeAll'
-  | 'beforeEach';
+  'afterAll' | 'afterEach' | 'beforeAll' | 'beforeEach';
 
 /**
  * Legacy wire values accepted on read; mapped to canonical phases in parse.
@@ -134,9 +131,7 @@ export interface JobRunHookSkill extends JobRunHookEntryBase {
  * Discriminated hook entry: phase + kind + delivery-specific target fields.
  */
 export type JobRunHookEntry =
-  | JobRunHookPromptProfileFile
-  | JobRunHookPromptProfileNamed
-  | JobRunHookSkill;
+  JobRunHookPromptProfileFile | JobRunHookPromptProfileNamed | JobRunHookSkill;
 
 /**
  * Plan-scoped hook list (versioned with plan; copied onto enqueue payload).

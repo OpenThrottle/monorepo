@@ -19,7 +19,6 @@ permissions:
   actions: read
 
 env:
-  NX_VERSION: ${{ vars.NX_VERSION }}
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
 

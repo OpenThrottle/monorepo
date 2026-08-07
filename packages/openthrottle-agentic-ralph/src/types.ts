@@ -16,9 +16,7 @@ export type WorkflowFinishedReason =
   | 'workflow_tasks_exhausted';
 
 export type WorkflowFailedReason =
-  | 'workflow_agent_error'
-  | 'workflow_input_required'
-  | 'workflow_unhandled';
+  'workflow_agent_error' | 'workflow_input_required' | 'workflow_unhandled';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).

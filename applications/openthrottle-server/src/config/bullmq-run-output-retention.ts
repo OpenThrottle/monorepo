@@ -40,8 +40,7 @@ export interface BullMqRunOutputRetentionConfig {
  * post-job throttled pruning may run (see {@link BullMqRunOutputRetentionService}).
  */
 export const getBullMqRunOutputRetentionConfig = ():
-  | BullMqRunOutputRetentionConfig
-  | undefined => {
+  BullMqRunOutputRetentionConfig | undefined => {
   const baseDirectory = getBullMqRunOutputBaseDirectory();
 
   if (baseDirectory === undefined) {

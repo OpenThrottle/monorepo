@@ -7,15 +7,18 @@ const TRIGGER_LABEL = 'Accordion section';
 const PANEL_TEXT = 'Panel body content';
 
 /**
- * @description Resolves the Radix **Content** root (`role="region"`) from the trigger’s
- * `aria-controls` id.
+ * @description Resolves the Radix **Content** root (`role="region"`) from the trigger.
+ * The panel is linked back to its trigger via `aria-labelledby` in *both* the open and
+ * collapsed states, whereas the trigger only exposes `aria-controls` while open — so we
+ * match on `aria-labelledby` to find the panel regardless of state.
  */
 const getPanelRoot = (trigger: HTMLElement): HTMLElement | null => {
-  const id = trigger.getAttribute('aria-controls');
-  if (!id) {
+  if (!trigger.id) {
     return null;
   }
-  return document.getElementById(id);
+  return document.querySelector<HTMLElement>(
+    `[role="region"][aria-labelledby="${trigger.id}"]`,
+  );
 };
 
 describe('AccordionContent', () => {
@@ -35,7 +38,9 @@ describe('AccordionContent', () => {
     const labelledBy = panel?.getAttribute('aria-labelledby');
     expect(labelledBy).toBeTruthy();
     expect(document.getElementById(labelledBy ?? '')).toBe(trigger);
-    expect(trigger.getAttribute('aria-controls')).toBe(panel?.id);
+    // Radix links the trigger to the panel via `aria-controls` only while the
+    // section is open; collapsed, the trigger exposes no `aria-controls`.
+    expect(trigger.getAttribute('aria-controls')).toBeNull();
   });
 
   it('shows children in the panel when open and hides them from view when closed', async () => {

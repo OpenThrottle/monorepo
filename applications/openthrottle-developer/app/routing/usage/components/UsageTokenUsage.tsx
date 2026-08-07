@@ -69,7 +69,6 @@ export const UsageTokenUsage = (
   );
 
   const breakdownLabel = selectedProvider === null ? 'Provider' : 'Model';
-
   const emptyMessage =
     selectedProvider === null
       ? TOKEN_USAGE_COPY.emptyAllProviders
@@ -95,14 +94,6 @@ export const UsageTokenUsage = (
       <p className="text-muted-foreground mb-4 text-sm md:mb-6">
         {TOKEN_USAGE_COPY.intro(rangeDays)}
       </p>
-
-      <UsageTokenUsageFilters
-        selectedProvider={selectedProvider}
-        skillCwdParam={skillCwdParam}
-        skillGitBranchParam={skillGitBranchParam}
-        skillScopeParam={skillScopeParam}
-      />
-
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TOKEN_USAGE_STATS.map((stat) => {
           const value = totals[stat.field];
@@ -130,6 +121,14 @@ export const UsageTokenUsage = (
           );
         })}
       </div>
+
+      <UsageTokenUsageFilters
+        className="mt-6"
+        selectedProvider={selectedProvider}
+        skillCwdParam={skillCwdParam}
+        skillGitBranchParam={skillGitBranchParam}
+        skillScopeParam={skillScopeParam}
+      />
 
       <p className="text-muted-foreground mt-3 text-xs">
         {formatTokenCount(totals.totalTokens)} tokens across {totals.turnCount}{' '}

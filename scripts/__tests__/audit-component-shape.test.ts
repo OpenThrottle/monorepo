@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
-import { analyzePrimitiveSource } from './audit-component-shape.ts';
+import { analyzePrimitiveSource } from '../audit-component-shape.ts';
 
 const forwardRefPart = (
   name: string,

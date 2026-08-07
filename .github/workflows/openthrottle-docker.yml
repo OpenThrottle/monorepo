@@ -50,7 +50,6 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GOOGLE_CREDENTIALS: ${{ (github.ref_name == 'main') && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
   GOOGLE_PROJECT_ID: ${{ (github.ref_name == 'main') && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
-  NX_VERSION: ${{ vars.NX_VERSION }}
 
 permissions:
   contents: read
@@ -91,7 +90,6 @@ jobs:
         uses: ./.github/actions/nx-affected-docker-apps
         with:
           apps: openthrottle-developer,openthrottle-server
-          nx-version: ${{ env.NX_VERSION }}
 
       - name: '🐳 Build (and push on main) openthrottle-server'
         if: steps.affected.outputs.build-openthrottle-server == 'true'
@@ -100,7 +98,6 @@ jobs:
           app: openthrottle-server
           dockerfile-path: Dockerfile.NestJS
           github-token: ${{ env.GITHUB_TOKEN }}
-          nx-version: ${{ env.NX_VERSION }}
           push: ${{ github.ref == 'refs/heads/main' }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
@@ -112,7 +109,6 @@ jobs:
           app: openthrottle-developer
           dockerfile-path: Dockerfile.ReactRouter
           github-token: ${{ env.GITHUB_TOKEN }}
-          nx-version: ${{ env.NX_VERSION }}
           push: ${{ github.ref == 'refs/heads/main' }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
@@ -146,6 +142,7 @@ jobs:
         run: |
           PNPM_VERSION="$(node -p "(require('./package.json').packageManager||'').replace(/^pnpm@/,'').split('+')[0]")"
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/mcp:sha-${GITHUB_SHA}"
+
           # APP_NAME is nominal here: the builder stage COPYs applications/<APP_NAME>/package.json,
           # so it must be a real app, but mcp-build ignores it (bundles the openthrottle-mcp
           # package via esbuild). It does not leak into the distroless mcp image.
@@ -153,9 +150,9 @@ jobs:
             --build-arg APP_NAME=openthrottle-server \
             --build-arg APP_VERSION="sha-${GITHUB_SHA}" \
             --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
-            --build-arg NX_VERSION="${NX_VERSION}" \
             --build-arg PNPM_VERSION="${PNPM_VERSION}" \
             -t "${IMAGE}" .
+
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             docker push "${IMAGE}"
           fi

@@ -254,14 +254,12 @@ export class TasksResolver {
         repo.count({ where }),
       ]);
       return {
-        tasks: entities.map(
-          (t): TaskObject => ({
-            ...t,
-            plan: null,
-            projectRelation: null,
-            requirementsJson: JSON.stringify(t.requirements ?? []),
-          }),
-        ),
+        tasks: entities.map((t): TaskObject => ({
+          ...t,
+          plan: null,
+          projectRelation: null,
+          requirementsJson: JSON.stringify(t.requirements ?? []),
+        })),
         totalCount,
       };
     }
@@ -271,14 +269,12 @@ export class TasksResolver {
       where,
     });
     return {
-      tasks: entities.map(
-        (t): TaskObject => ({
-          ...t,
-          plan: null,
-          projectRelation: null,
-          requirementsJson: JSON.stringify(t.requirements ?? []),
-        }),
-      ),
+      tasks: entities.map((t): TaskObject => ({
+        ...t,
+        plan: null,
+        projectRelation: null,
+        requirementsJson: JSON.stringify(t.requirements ?? []),
+      })),
       totalCount: entities.length,
     };
   }
@@ -430,14 +426,12 @@ export class TasksResolver {
     );
 
     return {
-      tasks: saved.map(
-        (task): TaskObject => ({
-          ...task,
-          plan: null,
-          projectRelation: null,
-          requirementsJson: JSON.stringify(task.requirements ?? []),
-        }),
-      ),
+      tasks: saved.map((task): TaskObject => ({
+        ...task,
+        plan: null,
+        projectRelation: null,
+        requirementsJson: JSON.stringify(task.requirements ?? []),
+      })),
       totalCount: saved.length,
     };
   }
