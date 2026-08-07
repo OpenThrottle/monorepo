@@ -10,10 +10,7 @@ export type ClientErrorKind = 'http' | 'javascript' | 'unknown';
  * @description Finer JavaScript error buckets for support triage and Rollbar custom tags.
  */
 export type JavascriptErrorSubtype =
-  | 'chunk_load'
-  | 'generic'
-  | 'network'
-  | 'user_abort';
+  'chunk_load' | 'generic' | 'network' | 'user_abort';
 
 const JAVASCRIPT_SUBTYPE = {
   chunk_load: 'chunk_load',

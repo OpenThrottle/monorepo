@@ -20,10 +20,21 @@ interface RenderHarnessResult {
   readonly user: ReturnType<typeof userEvent.setup>;
 }
 
+interface RenderHarnessOptions {
+  /**
+   * @description When false, the {@link GlobalMetricsInfoModal} is not mounted —
+   * useful for exercising the trigger's URL handler in isolation, without the
+   * dialog's dismiss-on-outside behavior interfering.
+   */
+  readonly renderModal?: boolean;
+}
+
 const renderHarness = (
   modalProps: GlobalMetricsInfoModalProps = {},
   initialEntries: readonly string[] = ['/'],
+  options: RenderHarnessOptions = {},
 ): RenderHarnessResult => {
+  const { renderModal = true } = options;
   const Component = (): React.ReactElement => {
     const [searchParams] = useSearchParams();
 
@@ -31,7 +42,7 @@ const renderHarness = (
       <div>
         <span data-testid="current-search">{searchParams.toString()}</span>
         <GlobalMetricsInfoTrigger />
-        <GlobalMetricsInfoModal {...modalProps} />
+        {renderModal ? <GlobalMetricsInfoModal {...modalProps} /> : null}
       </div>
     );
   };
@@ -302,25 +313,26 @@ describe('GlobalMetricsInfoTrigger Component', () => {
 
   describe('when the trigger is clicked while modal=ServerMetricsInfo is already set', () => {
     /**
-     * @description When the dialog is open, Radix masks the outside trigger
-     * with `pointer-events: none`, so disable the pointer-events guard for
-     * this case in order to exercise the click handler directly and verify
-     * the underlying URL update is itself a no-op.
+     * @description The trigger's own click handler (`setOpen(true)`) must be a
+     * URL no-op when the modal is already open. This renders the trigger in
+     * isolation (without {@link GlobalMetricsInfoModal}); with the dialog
+     * mounted, clicking the outside trigger fires Radix's dismiss-on-outside
+     * behavior, which closes the dialog and is a separate concern from the
+     * trigger handler under test here.
      */
     test('the URL params are unchanged (no-op)', async () => {
-      const { component } = renderHarness({}, [
-        '/?modal=ServerMetricsInfo&keep=v',
-      ]);
-      const noPointerCheckUser = userEvent.setup({ pointerEventsCheck: 0 });
+      const { component, user } = renderHarness(
+        {},
+        ['/?modal=ServerMetricsInfo&keep=v'],
+        { renderModal: false },
+      );
 
       const currentSearch = component.getByTestId('current-search');
       const beforeParams = new URLSearchParams(currentSearch.textContent ?? '');
       expect(beforeParams.get('modal')).toBe('ServerMetricsInfo');
       expect(beforeParams.get('keep')).toBe('v');
 
-      await noPointerCheckUser.click(
-        component.getByTestId('GlobalMetrics-info-trigger'),
-      );
+      await user.click(component.getByTestId('GlobalMetrics-info-trigger'));
 
       const afterParams = new URLSearchParams(currentSearch.textContent ?? '');
       expect(afterParams.get('modal')).toBe('ServerMetricsInfo');

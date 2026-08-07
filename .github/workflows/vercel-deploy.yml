@@ -21,7 +21,7 @@
 #              VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER,
 #              VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE
 #              (+ GOOGLE_CREDENTIALS_STAGING for the Nx GCS cache)
-#     vars:    NX_KEY, NX_VERSION, GOOGLE_PROJECT_ID_STAGING
+#     vars:    NX_KEY, GOOGLE_PROJECT_ID_STAGING
 #
 ################################################################################
 name: '🔼 Vercel Deploy'
@@ -57,7 +57,6 @@ permissions:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NX_SWC: 'true'
-  NX_VERSION: ${{ vars.NX_VERSION }}
 
 jobs:
   # Which Vercel apps are affected by this change? Emits a job matrix; empty
@@ -91,7 +90,6 @@ jobs:
         with:
           apps: 'openthrottle-website'
           # apps: 'openthrottle-developer,openthrottle-website'
-          nx-version: ${{ env.NX_VERSION }}
 
   deploy:
     needs: compute-affected
@@ -108,7 +106,6 @@ jobs:
       GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID_STAGING }}
       NX_GCS_BUCKET: 'openthrottle-staging-nx-cache'
       NX_KEY: ${{ vars.NX_KEY }}
-      NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
       OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -162,8 +159,8 @@ jobs:
 
       - name: '🧩 Codegen Tasks'
         run: |
-          # pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          # pnpm nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
       # `react-router build` + @vercel/react-router only emits a manifest

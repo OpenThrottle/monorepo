@@ -14,7 +14,9 @@ const skillName = process.argv[2];
 const repoRoot = process.argv[3] || process.cwd();
 
 if (!skillName) {
-  process.stderr.write('usage: skill-usage-scope.cjs <skill_name> [repo_root]\n');
+  process.stderr.write(
+    'usage: skill-usage-scope.cjs <skill_name> [repo_root]\n',
+  );
   process.exit(2);
 }
 

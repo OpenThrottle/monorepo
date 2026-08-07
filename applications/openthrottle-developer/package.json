@@ -75,17 +75,28 @@
       "docker-build": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-developer:local .",
+          "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-developer:local .",
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.0.0",
-            "NX_VERSION": "22.7.4",
             "PNPM_VERSION": "11.6.0"
           }
         },
         "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
       },
       "lint": {},
+      "start": {
+        "dependsOn": [
+          "build",
+          {
+            "projects": [
+              "openthrottle-server"
+            ],
+            "target": "start"
+          }
+        ],
+        "description": "Serve the production build via react-router-serve after build; also starts openthrottle-server:start so the GraphQL API is up."
+      },
       "test": {},
       "test-e2e": {}
     }

@@ -53,10 +53,7 @@ interface TargetRecord {
 type NxTargetConfig = { description?: unknown; executor?: unknown } | undefined;
 
 const readJson = async (file: string): Promise<Record<string, unknown>> =>
-  JSON.parse(await readFile(join(process.cwd(), file), 'utf8')) as Record<
-    string,
-    unknown
-  >;
+  JSON.parse(await readFile(join(process.cwd(), file), 'utf8'));
 
 const hasDescription = (config: NxTargetConfig): boolean => {
   const value = config?.description;
@@ -71,13 +68,11 @@ interface Defaults {
 
 async function collectTargetDefaults(): Promise<Defaults> {
   const nxJson = await readJson('nx.json');
-  const targetDefaults = (nxJson.targetDefaults ?? {}) as Record<
-    string,
-    NxTargetConfig
-  >;
+  const targetDefaults = nxJson.targetDefaults ?? {};
   const byName = new Map<string, boolean>();
   const byExecutor = new Map<string, boolean>();
   const records: TargetRecord[] = [];
+
   for (const [key, config] of Object.entries(targetDefaults)) {
     const described = hasDescription(config);
     if (isExecutorKey(key)) {
@@ -85,6 +80,7 @@ async function collectTargetDefaults(): Promise<Defaults> {
     } else {
       byName.set(key, described);
     }
+
     records.push({
       covered: described,
       ownDescription: described,
@@ -110,13 +106,16 @@ async function collectPackageTargets(
   const perFile = await Promise.all(
     files.map(async (file: string): Promise<TargetRecord[]> => {
       const manifest = await readJson(file);
-      const nx = manifest.nx as
-        | { targets?: Record<string, NxTargetConfig> }
-        | undefined;
+
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const nx = manifest.nx as unknown as
+        { targets?: Record<string, NxTargetConfig> } | undefined;
+
       const targets = nx?.targets;
       if (!targets) {
         return [];
       }
+
       const project = typeof manifest.name === 'string' ? manifest.name : file;
       return Object.entries(targets).map(([target, config]) => {
         const ownDescription = hasDescription(config);
@@ -144,6 +143,7 @@ const partition = (records: TargetRecord[]) => {
   const active = records.filter((r) => !isDisabledMarker(r.target));
   const disabled = records.filter((r) => isDisabledMarker(r.target));
   const uncovered = active.filter((r) => !r.covered);
+
   return { active, disabled, uncovered };
 };
 
@@ -162,26 +162,32 @@ async function main(): Promise<void> {
     console.log(
       `  active: ${defaultsPart.active.length}, undescribed: ${defaultsPart.uncovered.length}; disabled markers: ${defaultsPart.disabled.length}`,
     );
+
     for (const r of defaultsPart.uncovered) {
       console.log(`  ✗ ${r.target}`);
     }
+
     console.log('\n## package.json nx.targets (cascade-aware)');
     console.log(
       `  active: ${packagePart.active.length}, uncovered: ${packagePart.uncovered.length}; disabled markers: ${packagePart.disabled.length}`,
     );
+
     const byProject = new Map<string, string[]>();
     for (const r of packagePart.uncovered) {
       const list = byProject.get(r.project) ?? [];
       list.push(r.target);
       byProject.set(r.project, list);
     }
+
     for (const [project, targets] of [...byProject.entries()].sort()) {
       console.log(`  ✗ ${project}: ${targets.sort().join(', ')}`);
     }
+
     console.log('\n## Totals');
     console.log(
       `  config-declared active targets: ${defaultsPart.active.length + packagePart.active.length}; uncovered: ${uncovered.length}; disabled markers (skipped): ${defaultsPart.disabled.length + packagePart.disabled.length}`,
     );
+
     return;
   }
 
@@ -189,16 +195,20 @@ async function main(): Promise<void> {
     console.error(
       '❌ Nx targets missing a `description` (own or inherited from targetDefaults):\n',
     );
+
     for (const r of uncovered) {
       const where =
         r.source === 'targetDefaults' ? 'nx.json targetDefaults' : r.project;
       console.error(`  ${where} → ${r.target}`);
     }
+
     console.error(
       `\n${uncovered.length} undescribed target(s). Add a description to the target in its package.json, or to the matching nx.json targetDefaults entry so it cascades (see CONTRIBUTING.md § Nx target descriptions).`,
     );
+
     process.exit(1);
   }
+
   console.log('✅ Every config-declared Nx target has a description.');
 }
 

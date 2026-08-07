@@ -23,13 +23,6 @@ inputs:
       (e.g. ["openthrottle-server","openthrottle-developer"]). Whitespace around
       comma-separated names is trimmed.
     required: true
-  nx-version:
-    description: >-
-      Nx CLI version for `pnpm dlx nx@<version>` (e.g. from vars.NX_VERSION).
-      If empty, callers should set NX in the environment or extend this action
-      to use a default.
-    required: false
-    default: ''
 
 outputs:
   affected-apps-json:
@@ -64,14 +57,11 @@ runs:
         INPUT_APPS: ${{ inputs.apps }}
       run: |
         set -euo pipefail
-        NX_VERSION="${{ inputs.nx-version }}"
+
         # No `2>/dev/null || echo '[]'`: a failed affected calc must fail the
         # step, not masquerade as "nothing affected" (which silently skips
         # downstream deploy/build jobs). set -e propagates the non-zero exit.
-        if [[ -n "$NX_VERSION" ]]; then
-          AFFECTED_JSON=$(pnpm dlx "nx@${NX_VERSION}" show projects --affected --json)
-        else
-          AFFECTED_JSON=$(pnpm exec nx show projects --affected --json)
-        fi
+        AFFECTED_JSON=$(pnpm nx show projects --affected --json)
+
         echo "Affected projects: ${AFFECTED_JSON}"
         echo "$AFFECTED_JSON" | node "${{ github.action_path }}/compute-outputs.mjs"

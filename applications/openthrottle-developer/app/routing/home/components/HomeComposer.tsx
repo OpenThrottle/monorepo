@@ -8,6 +8,7 @@ import {
 } from '@openthrottle/react-router-chat';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '~/routing/home/data/chat-toolbar';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
@@ -84,26 +85,30 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
       <ChatComposerToolbar
         capabilities={capabilities}
         checkouts={checkouts}
-        contextSources={CHAT_TOOLBAR_CONTEXT_SOURCES}
-        micState={voice.micState}
+        contextSources={
+          FEATURE_BETA_PREVIEW ? CHAT_TOOLBAR_CONTEXT_SOURCES : undefined
+        }
+        micState={FEATURE_BETA_PREVIEW ? voice.micState : undefined}
         mode={mode}
         modelGroups={modelGroups}
         modelId={modelId}
         models={models}
-        onAddContext={() => {}}
+        onAddContext={FEATURE_BETA_PREVIEW ? () => {} : undefined}
         onCheckoutChange={setRepositoryId}
-        onMicToggle={() => void voice.toggle()}
+        onMicToggle={
+          FEATURE_BETA_PREVIEW ? () => void voice.toggle() : undefined
+        }
         onModeChange={setMode}
         onModelChange={setModelId}
         onPermissionModeChange={setPermissionMode}
         onPersistChange={setPersist}
-        onPersonaChange={setPersonaId}
+        onPersonaChange={FEATURE_BETA_PREVIEW ? setPersonaId : undefined}
         onReasoningChange={setReasoning}
         onServiceTierChange={setServiceTier}
         permissionMode={permissionMode}
         persist={persist}
-        personaId={personaId}
-        personas={effectivePersonas}
+        personaId={FEATURE_BETA_PREVIEW ? personaId : undefined}
+        personas={FEATURE_BETA_PREVIEW ? effectivePersonas : undefined}
         reasoning={reasoning}
         selectedCheckoutId={repositoryId}
         serviceTier={serviceTier}

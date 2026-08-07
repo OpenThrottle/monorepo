@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import {
   extractProductionTags,
   extractPublishTags,
@@ -13,7 +12,7 @@ import {
   isValidTypeTag,
   resultHasErrors,
   validateProjectTags,
-} from './nx-validate-tags.ts';
+} from '../nx-validate-tags.ts';
 
 describe('extractTechnologyTags', () => {
   it('extracts and strips the technology: prefix', () => {

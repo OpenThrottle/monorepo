@@ -36,8 +36,7 @@ export interface EnqueuePromotionParams {
 }
 
 export type EnqueuePromotionResult =
-  | { readonly jobId: string }
-  | { readonly error: string };
+  { readonly jobId: string } | { readonly error: string };
 
 @Injectable()
 export class TaskPromotionEnqueueService {

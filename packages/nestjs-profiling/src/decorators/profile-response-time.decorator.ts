@@ -58,13 +58,21 @@ function copyMethodMetadata(
     return;
   }
 
-  for (const key of reflect.getMetadataKeys(source)) {
+  const functionKeys = reflect.getMetadataKeys(source);
+  for (const key of functionKeys) {
     reflect.defineMetadata(key, reflect.getMetadata(key, source), target);
   }
 
+  // Function-object metadata takes precedence on the wrapper: a key present on
+  // the original method value must not be clobbered by a same-named key mirrored
+  // from the prototype (e.g. a compiler-emitted `design:paramtypes` on the
+  // prototype that differs from the one seeded on the function value).
+  const copiedFunctionKeys = new Set<string | symbol>(functionKeys);
   for (const key of reflect.getMetadataKeys(prototype, propertyKey)) {
     const value = reflect.getMetadata(key, prototype, propertyKey);
-    reflect.defineMetadata(key, value, target);
+    if (!copiedFunctionKeys.has(key)) {
+      reflect.defineMetadata(key, value, target);
+    }
     reflect.defineMetadata(key, value, prototype, propertyKey);
   }
 }

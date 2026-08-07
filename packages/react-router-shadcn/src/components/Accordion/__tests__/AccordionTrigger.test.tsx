@@ -19,9 +19,13 @@ describe('AccordionTrigger', () => {
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger.querySelector('svg')).toBeInTheDocument();
 
-    const controlsId = trigger.getAttribute('aria-controls');
-    expect(controlsId).toBeTruthy();
-    expect(document.getElementById(controlsId ?? '')).toBeInTheDocument();
+    // Collapsed, Radix exposes no `aria-controls` on the trigger; the panel is
+    // still in the DOM and is linked back to the trigger via `aria-labelledby`.
+    expect(trigger.getAttribute('aria-controls')).toBeNull();
+    const panel = document.querySelector(
+      `[role="region"][aria-labelledby="${trigger.id}"]`,
+    );
+    expect(panel).toBeInTheDocument();
   });
 
   it('starts expanded when the accordion defaultValue includes the item', () => {

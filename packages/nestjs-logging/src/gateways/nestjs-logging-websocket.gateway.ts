@@ -119,8 +119,7 @@ const parseStringArrayField = (
 };
 
 type ParsePositiveIntResult =
-  | { error: string; ok: false }
-  | { ok: true; value: number };
+  { error: string; ok: false } | { ok: true; value: number };
 
 const parsePositiveInt = (
   raw: unknown,

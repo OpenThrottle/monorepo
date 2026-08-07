@@ -26,13 +26,12 @@ const workspaceSourceResolver = {
 };
 
 await build({
-  entryPoints: [resolve(here, 'src/bin-http.ts')],
+  // ESM needs createRequire for any bundled CJS that calls require().
+  banner: {
+    js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);",
+  },
   bundle: true,
-  platform: 'node',
-  format: 'esm',
-  target: 'node24',
-  outfile: resolve(here, 'dist/bundle/bin-http.mjs'),
-  plugins: [workspaceSourceResolver],
+  entryPoints: [resolve(here, 'src/bin-http.ts')],
   // These NestJS optional integrations are NOT installed and are reached only via
   // guarded dynamic require for features this GraphQL-only MCP never uses. Mark them
   // external: they stay as bare require()s that throw MODULE_NOT_FOUND at runtime,
@@ -48,9 +47,10 @@ await build({
     'class-validator',
     'cache-manager',
   ],
-  // ESM needs createRequire for any bundled CJS that calls require().
-  banner: {
-    js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);",
-  },
+  format: 'esm',
   logLevel: 'info',
+  outfile: resolve(here, 'dist/bundle/bin-http.mjs'),
+  platform: 'node',
+  plugins: [workspaceSourceResolver],
+  target: 'node24',
 });

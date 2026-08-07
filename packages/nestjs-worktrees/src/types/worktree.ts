@@ -243,8 +243,7 @@ export type ParentJobEnsureCommitResult =
  * Result of attempting to push a branch to the remote.
  */
 export type PushBranchResult =
-  | { readonly ok: true }
-  | { readonly ok: false; readonly stderr: string };
+  { readonly ok: true } | { readonly ok: false; readonly stderr: string };
 
 /**
  * Minimal result from a workflow loop (e.g. Ralph child job or custom runner).

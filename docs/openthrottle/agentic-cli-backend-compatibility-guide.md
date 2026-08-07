@@ -247,16 +247,16 @@ These are **invariant** regardless of CLI — verify the adapter honors them:
 
 Map the findings to the chunk contract before declaring a verdict:
 
-| CLI event/condition  | → chunk          | Fill in per CLI                               |
-| -------------------- | ---------------- | --------------------------------------------- |
-| assistant text delta | `text` (`delta`) | path: **_ ; delta-vs-final discriminator: _** |
-| reasoning/thinking   | `thinking`       | path: \_\_\_                                  |
-| tool invocation      | `tool_call`      | correlation id: \_\_\_                        |
-| tool result          | `tool_result`    | inline or separate event: \_\_\_              |
-| token accounting     | `usage`          | path: \_\_\_                                  |
-| session id surfaced  | `session`        | source (create cmd vs event): \_\_\_          |
-| completion           | `done:true`      | terminal signal: \_\_\_                       |
-| failure              | `error`          | stderr vs JSON; exit codes: \_\_\_            |
+| CLI event/condition  | → chunk          | Fill in per CLI                                |
+| -------------------- | ---------------- | ---------------------------------------------- |
+| assistant text delta | `text` (`delta`) | path: **\_ ; delta-vs-final discriminator: _** |
+| reasoning/thinking   | `thinking`       | path: \_\_\_                                   |
+| tool invocation      | `tool_call`      | correlation id: \_\_\_                         |
+| tool result          | `tool_result`    | inline or separate event: \_\_\_               |
+| token accounting     | `usage`          | path: \_\_\_                                   |
+| session id surfaced  | `session`        | source (create cmd vs event): \_\_\_           |
+| completion           | `done:true`      | terminal signal: \_\_\_                        |
+| failure              | `error`          | stderr vs JSON; exit codes: \_\_\_             |
 
 ## 12. Per-CLI findings template
 

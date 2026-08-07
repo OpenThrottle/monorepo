@@ -45,9 +45,7 @@ export interface JobRunHookSkill extends JobRunHookEntryBase {
 }
 
 export type JobRunHookEntry =
-  | JobRunHookPromptProfileFile
-  | JobRunHookPromptProfileNamed
-  | JobRunHookSkill;
+  JobRunHookPromptProfileFile | JobRunHookPromptProfileNamed | JobRunHookSkill;
 
 export interface JobRunHooksConfig {
   readonly hooks: readonly JobRunHookEntry[];

@@ -22,8 +22,7 @@ import { getMonorepoRoot } from '~/routing/agents/data/resolve-monorepo-root.ser
 import { SKILL_WRITE_COPY } from '~/routing/skills/data/data.copy';
 
 export type WriteSkillFileResult =
-  | { readonly error: string; readonly ok: false }
-  | { readonly ok: true };
+  { readonly error: string; readonly ok: false } | { readonly ok: true };
 
 const isPathInsideRoot = (root: string, candidate: string): boolean => {
   try {

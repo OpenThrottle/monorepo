@@ -54,7 +54,7 @@ const jobCount = Number(process.argv[4]); // TODO: Set this value for testing lo
 /**
  * First we want to figure out which projects are affected by the changes in the PR.
  */
-const affectedCMD = `pnpm dlx nx@${process.env.NX_VERSION} show projects --affected --json --silent`;
+const affectedCMD = `pnpm nx show projects --affected --json --silent`;
 const affectedResult = execSync(affectedCMD, { env: process.env });
 const affectedStr = affectedResult.toString('utf-8');
 

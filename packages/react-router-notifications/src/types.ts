@@ -20,7 +20,4 @@ export interface NotificationInstance {
  * @public
  */
 export type NotificationPermissionState =
-  | 'default'
-  | 'denied'
-  | 'granted'
-  | 'unsupported';
+  'default' | 'denied' | 'granted' | 'unsupported';

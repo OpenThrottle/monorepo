@@ -19,11 +19,7 @@ export type PlanRunKind = 'orchestrator' | 'spawn';
  * repositories layer stays decoupled from the CLI-invocation package.
  */
 export type PlanRunExecutionBackend =
-  | 'claude'
-  | 'codex'
-  | 'cursor'
-  | 'grok'
-  | 'opencode';
+  'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
 
 /** Scalar/column fields of PlanRun (no relations) surfaced to the API. */
 export type PlanRunData = Pick<

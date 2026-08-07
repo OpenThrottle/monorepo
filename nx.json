@@ -319,7 +319,7 @@
       "description": "Format the workspace in place with Prettier (css/html/js/json/md/ts/yaml and more).",
       "executor": "nx:run-commands",
       "options": {
-        "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
+        "command": "prettier --write \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
       }
     },

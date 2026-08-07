@@ -21,8 +21,7 @@ const readTrimmedEnv = (key: string): string | undefined => {
  * 3. `OPENTHROTTLE_MCP_AUTH_TOKEN` — local parity with openthrottle-mcp.
  */
 function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
-  | string
-  | undefined {
+  string | undefined {
   const primary =
     readTrimmedEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN') ??
     readTrimmedEnv('OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN') ??
@@ -39,8 +38,7 @@ function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
  * @description GraphQL HTTP endpoint override for the agentic Ralph worker. `OPENTHROTTLE_WORKER_GRAPHQL_URL` wins over `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`; otherwise callers use internal URL resolution (`API_URL_INTERNAL` + `/graphql`).
  */
 function resolveAgenticRalphWorkerGraphqlUrlOverrideFromEnv():
-  | string
-  | undefined {
+  string | undefined {
   return (
     readTrimmedEnv('OPENTHROTTLE_WORKER_GRAPHQL_URL') ??
     resolveWorkflowGraphqlUrlOverrideFromEnv()

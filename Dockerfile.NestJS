@@ -39,7 +39,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG NX_VERSION="__REQUIRED_ARG__"
 ARG NX_KEY="__REQUIRED_ARG__"
 ARG PNPM_VERSION="__REQUIRED_ARG__"
 
@@ -125,7 +124,7 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 # daemon off each nested invocation recomputes the project graph; run in parallel
 # they race on tmp/**/tsconfig.generated.*.json (ENOENT) and readCachedProjectGraph.
 RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
-  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool --parallel=1
+  pnpm nx run-many --target build --projects tag:type:package,tag:type:tool --parallel=1
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
@@ -224,8 +223,8 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
   if [ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ] || [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
-  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool --parallel=1 && \
-  pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build && \
+  pnpm nx run-many --target build --projects tag:type:package,tag:type:tool --parallel=1 && \
+  pnpm nx run ${APP_NAME}:build && \
   mkdir -p /app/applications/${APP_NAME}/i18n
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules

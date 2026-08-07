@@ -23,5 +23,4 @@ export interface DocumentDecomposeActionFailure {
 }
 
 export type DocumentDecomposeActionData =
-  | DocumentDecomposeActionFailure
-  | DocumentDecomposeActionSuccess;
+  DocumentDecomposeActionFailure | DocumentDecomposeActionSuccess;

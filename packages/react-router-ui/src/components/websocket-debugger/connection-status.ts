@@ -2,11 +2,7 @@
  * @description Connection status for the debugger header chip (aligned with notifications socket).
  */
 export type WebsocketDebuggerConnectionStatus =
-  | 'connected'
-  | 'connecting'
-  | 'disconnected'
-  | 'error'
-  | 'reconnecting';
+  'connected' | 'connecting' | 'disconnected' | 'error' | 'reconnecting';
 
 export const formatWebsocketDebuggerStatusColor = (
   status: WebsocketDebuggerConnectionStatus,

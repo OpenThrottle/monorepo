@@ -98,7 +98,9 @@ const DEFAULT_LIFECYCLE_HOOKS_CHILD_JOBS = true;
 
 /** @internal Mutable builder for v1 file JSON. */
 type WorkflowRalphDefaultsFileV1Draft = Partial<{
-  -readonly [K in keyof WorkflowRalphDefaultsFileV1Json]: WorkflowRalphDefaultsFileV1Json[K];
+  -readonly [
+    K in keyof WorkflowRalphDefaultsFileV1Json
+  ]: WorkflowRalphDefaultsFileV1Json[K];
 }>;
 
 const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>

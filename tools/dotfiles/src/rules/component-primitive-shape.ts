@@ -96,9 +96,7 @@ const isPascalCase = (name: string): boolean => /^[A-Z]/.test(name);
 interface ComponentPart {
   readonly exportNode: TSESTree.ExportNamedDeclaration;
   readonly fn:
-    | TSESTree.ArrowFunctionExpression
-    | TSESTree.FunctionExpression
-    | null;
+    TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression | null;
   readonly isForwardRef: boolean;
   readonly name: string;
 }
@@ -128,8 +126,7 @@ export const componentPrimitiveShape = createRule<
     // R2 (VR2) — explicit `React.ReactElement` return type on a render function.
     const checkReturnType = (
       componentFn:
-        | TSESTree.ArrowFunctionExpression
-        | TSESTree.FunctionExpression,
+        TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
       partName: string,
     ): void => {
       if (componentFn.returnType === undefined) {
@@ -158,8 +155,7 @@ export const componentPrimitiveShape = createRule<
     // inserting into one part of a multi-export family risks the wrong body.
     const checkMarkers = (
       componentFn:
-        | TSESTree.ArrowFunctionExpression
-        | TSESTree.FunctionExpression,
+        TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
       allowScaffold: boolean,
     ): void => {
       if (componentFn.body.type !== 'BlockStatement') return;

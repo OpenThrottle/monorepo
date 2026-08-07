@@ -50,8 +50,7 @@ const normalizeMyToolPayload = (raw) => {
   const payload = /** @type {Record<string, unknown>} */ (raw);
 
   // EXAMPLE — replace with your tool's real field names.
-  const skillName =
-    typeof payload.skill === 'string' ? payload.skill : null;
+  const skillName = typeof payload.skill === 'string' ? payload.skill : null;
   if (!skillName) {
     return null;
   }

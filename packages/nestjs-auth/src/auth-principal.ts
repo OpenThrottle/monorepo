@@ -7,8 +7,7 @@ export const AUTH_PRINCIPAL_KIND_USER = 'user' as const;
 export const AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT = 'service_account' as const;
 
 export type AuthPrincipalKind =
-  | typeof AUTH_PRINCIPAL_KIND_USER
-  | typeof AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT;
+  typeof AUTH_PRINCIPAL_KIND_USER | typeof AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT;
 
 /**
  * @description Human identity after JWT validation (or explicit user principal).

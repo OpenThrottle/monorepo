@@ -6,16 +6,7 @@ import type { Document } from '@langchain/core/documents';
 import { getFilesByExtension } from '../utils/files';
 
 export type Extension =
-  | 'js'
-  | 'json'
-  | 'jsx'
-  | 'md'
-  | 'pdf'
-  | 'ts'
-  | 'tsx'
-  | 'txt'
-  | 'yaml'
-  | 'yml';
+  'js' | 'json' | 'jsx' | 'md' | 'pdf' | 'ts' | 'tsx' | 'txt' | 'yaml' | 'yml';
 
 /**
  * @description Derive the file extension (without the leading dot) from a path,

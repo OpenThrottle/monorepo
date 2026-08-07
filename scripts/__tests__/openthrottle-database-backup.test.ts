@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   resolveBackupRetentionCount,
   selectBackupsToPrune,
-} from './openthrottle-database-backup';
+} from '../openthrottle-database-backup';
 
 const ARCHIVES = [
   'openthrottle-20260101-000000.zip',

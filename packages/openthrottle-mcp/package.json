@@ -19,6 +19,9 @@
     "@nestjs/platform-express": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
+  "devDependencies": {
+    "esbuild": "catalog:"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -122,8 +125,5 @@
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.0.0",
-  "devDependencies": {
-    "esbuild": "^0.24.0"
-  }
+  "version": "1.0.0"
 }

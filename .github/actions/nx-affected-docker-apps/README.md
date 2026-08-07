@@ -9,14 +9,12 @@ Composite action that intersects `nx show projects --affected` with a **caller-d
 
 - **Checkout** with `fetch-depth: 0` so Nx can compute the affected graph against the base revision.
 - **`nrwl/nx-set-shas`** (or equivalent) so `nx show projects --affected` uses the correct base/head SHAs in CI.
-- **Dependencies installed** (e.g. `./.github/actions/node-setup`) so `pnpm exec nx` works when `nx-version` is empty.
 
 ## Inputs
 
-| Input        | Required | Description                                                                                                                                                          |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps`       | **Yes**  | Comma-separated Nx project names or a one-line JSON array, e.g. `openthrottle-server,openthrottle-developer` or `["openthrottle-server","openthrottle-developer"]`.  |
-| `nx-version` | No       | If set (e.g. `${{ vars.NX_VERSION }}`), runs `pnpm dlx nx@<version> show projects --affected --json`. If empty, runs `pnpm exec nx show projects --affected --json`. |
+| Input  | Required | Description                                                                                                                                                         |
+| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps` | **Yes**  | Comma-separated Nx project names or a one-line JSON array, e.g. `openthrottle-server,openthrottle-developer` or `["openthrottle-server","openthrottle-developer"]`. |
 
 ## Outputs
 
@@ -41,7 +39,6 @@ The compute step writes `build-<nx-project-name>=true|false` for every name in `
   uses: ./.github/actions/nx-affected-docker-apps
   with:
     apps: openthrottle-server,openthrottle-developer
-    nx-version: ${{ vars.NX_VERSION }}
 
 - name: Build server image
   if: steps.affected.outputs.build-openthrottle-server == 'true'
@@ -71,7 +68,6 @@ jobs:
         uses: ./.github/actions/nx-affected-docker-apps
         with:
           apps: openthrottle-server,openthrottle-developer
-          nx-version: ${{ vars.NX_VERSION }}
 
   build:
     needs: discover

@@ -93,12 +93,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Setup
   const env = data?.env ?? {};
   const envHtml = `window.env = ${JSON.stringify(env)}`;
-
-  // Favicons are served from the app's own static `public/` assets (a single
-  // source of truth) rather than the GCS bucket, so they match the committed
-  // `public/favicon.{ico,png}` files and don't depend on bucket availability.
-  const faviconIco = `/favicon.ico`;
-  const faviconPng = `/favicon.png`;
+  const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
+  const faviconPng = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.png`;
   const manifest = `/manifest.json`;
 
   const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
@@ -159,7 +155,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" /> */}
         {/* <link href="https://www.googletagmanager.com" rel="preconnect" /> */}
         <link href={faviconPng} rel="apple-touch-icon" sizes="48x48" />
-        <link href={faviconIco} rel="icon" type="image/x-icon" />
+        <link href={favicon} rel="icon" type="image/x-icon" />
         <link href={faviconPng} rel="icon" type="image/png" />
         <link href={manifest} rel="manifest" />
 

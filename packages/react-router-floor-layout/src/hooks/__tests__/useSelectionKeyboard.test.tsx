@@ -5,10 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { useSelectionKeyboard } from '../useSelectionKeyboard';
 
 type Call =
-  | ['delete']
-  | ['deselect']
-  | ['nudge', number, number]
-  | ['rotate', number];
+  ['delete'] | ['deselect'] | ['nudge', number, number] | ['rotate', number];
 
 interface HarnessProps {
   readonly calls: Call[];

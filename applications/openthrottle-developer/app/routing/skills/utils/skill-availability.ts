@@ -28,8 +28,7 @@ export type SkillAvailabilityEnvironment =
 export const SKILL_AVAILABILITY_ENVIRONMENT_ALL = 'all' as const;
 
 export type SkillAvailabilityEnvironmentChoice =
-  | typeof SKILL_AVAILABILITY_ENVIRONMENT_ALL
-  | SkillAvailabilityEnvironment;
+  typeof SKILL_AVAILABILITY_ENVIRONMENT_ALL | SkillAvailabilityEnvironment;
 
 /** A single per-project rule as edited/rendered in the UI. `id` absent ⇒ an unsaved add form. */
 export interface SkillAvailabilityRuleValue {

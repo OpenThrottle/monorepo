@@ -31,8 +31,7 @@ export interface RolloutFormTypedConfig {
 }
 
 export type RolloutTypedConfigParseResult =
-  | { config: RolloutFormTypedConfig; ok: true }
-  | { error: string; ok: false };
+  { config: RolloutFormTypedConfig; ok: true } | { error: string; ok: false };
 
 const equalSplitWeights = (count: number): RolloutFormFallthroughBucket[] => {
   if (count <= 0) return [];

@@ -37,7 +37,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG NX_VERSION="__REQUIRED_ARG__"
 ARG NX_KEY="__REQUIRED_ARG__"
 ARG PNPM_VERSION="__REQUIRED_ARG__"
 
@@ -117,7 +116,7 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 # for this command only — the codegen-graphql configs read the committed schema.gql
 # but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
 RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
-  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool
+  pnpm nx run-many --target build --projects tag:type:package,tag:type:tool
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
@@ -148,7 +147,7 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
   if [ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ] || [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
-  pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
+  pnpm nx run ${APP_NAME}:build
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules.
 RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy

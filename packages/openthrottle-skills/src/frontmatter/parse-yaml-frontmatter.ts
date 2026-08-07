@@ -9,10 +9,7 @@ import { extractFrontmatterBody } from './extract-frontmatter-body.ts';
  * sequence of scalars becomes a `readonly string[]`.
  */
 export type FrontmatterScalar =
-  | string
-  | boolean
-  | readonly string[]
-  | undefined;
+  string | boolean | readonly string[] | undefined;
 
 export interface ParsedYamlFrontmatter {
   readonly fields: Readonly<Record<string, FrontmatterScalar>>;

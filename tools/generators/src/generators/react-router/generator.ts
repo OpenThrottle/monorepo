@@ -23,13 +23,7 @@ export interface ReactRouterGeneratorSchema {
   readonly list?: string;
   readonly name?: string;
   readonly subGenerator?:
-    | 'application'
-    | 'component'
-    | 'form'
-    | 'hook'
-    | 'modal'
-    | 'route'
-    | 'table';
+    'application' | 'component' | 'form' | 'hook' | 'modal' | 'route' | 'table';
   readonly withPrompts?: boolean;
 }
 

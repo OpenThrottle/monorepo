@@ -9,7 +9,7 @@ import {
   runMigrations,
   selectPendingMigrations,
   shouldBootstrapLedger,
-} from './openthrottle-database-migrations';
+} from '../openthrottle-database-migrations';
 
 /** In-memory {@link MigrationStore} recording applies; can simulate a failing migration. */
 class FakeStore implements MigrationStore {

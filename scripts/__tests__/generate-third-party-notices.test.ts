@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-
 import type {
   LicensePolicy,
   PnpmLicensesOutput,
-} from './validate-license-compliance.ts';
+} from '../validate-license-compliance.ts';
 import {
   type Attribution,
   collectAttributions,
@@ -13,7 +12,7 @@ import {
   normalizeAuthor,
   packageNamesFromLines,
   renderThirdPartyNotices,
-} from './generate-third-party-notices.ts';
+} from '../generate-third-party-notices.ts';
 
 const policy: LicensePolicy = {
   allow: ['Apache-2.0', 'MIT'],

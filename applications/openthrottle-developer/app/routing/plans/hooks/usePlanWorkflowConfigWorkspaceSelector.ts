@@ -28,8 +28,7 @@ export interface PlanWorkflowConfigWorkspaceSelectorOptions {
 export interface UsePlanWorkflowConfigWorkspaceSelectorResult {
   readonly handleValueChange: (value: string) => void;
   readonly selectedCheckout:
-    | PlanRunConfigRepositoryFieldsFragment['checkouts'][number]
-    | undefined;
+    PlanRunConfigRepositoryFieldsFragment['checkouts'][number] | undefined;
   readonly selectedValue: string;
 }
 

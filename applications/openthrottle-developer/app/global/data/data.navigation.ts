@@ -154,6 +154,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
     ],
     Settings: [
       {
+        beta: true,
         children: 'Application',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: BinaryIcon,
@@ -166,6 +167,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/appearance',
       },
       {
+        beta: true,
         children: 'Debug',
         disabled: false, // 🔴 🟠 🟡 🟢
         icon: BugIcon,
@@ -178,6 +180,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/keys',
       },
       {
+        beta: true,
         children: 'Logs',
         disabled: false, // 🔴 🟠 🟡
         icon: TerminalSquareIcon,

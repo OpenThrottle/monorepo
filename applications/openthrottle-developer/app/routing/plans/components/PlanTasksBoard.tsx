@@ -24,9 +24,7 @@ export interface PlanTasksBoardProps {
 }
 
 type PlanDetailActionData =
-  | { ok: true }
-  | { updateTaskError: string }
-  | undefined;
+  { ok: true } | { updateTaskError: string } | undefined;
 
 /**
  * @description Inner board: grouping, optimistic status updates, and react-dnd (must sit under {@link DndProvider}).
