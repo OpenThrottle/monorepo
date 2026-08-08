@@ -9,15 +9,18 @@ describe('routes/_index.tsx', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    // The home Component reads the `root` route loader via
-    // `useRouteLoaderData('root')`, so it must render under a parent route whose
-    // id is `root`. The loader only needs to supply `repo`, which seeds the
-    // clone command shown on the page.
+    // The home Component reads its own route loader via `props.loaderData`, so
+    // the loader lives on the index route itself. It supplies `introduction`
+    // (the random landing-page intro copy) and `repo`, which seeds the clone
+    // command shown on the page.
     const RoutesStub = createRoutesStub([
       {
-        children: [{ Component, index: true }],
-        id: 'root',
-        loader: () => ({ repo: 'openthrottle/openthrottle' }),
+        Component,
+        index: true,
+        loader: () => ({
+          introduction: 'This is a test intro',
+          repo: 'openthrottle/openthrottle',
+        }),
         path: '/',
       },
     ]);
