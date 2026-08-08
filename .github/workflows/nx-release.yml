@@ -15,6 +15,9 @@ env:
   GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
   GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
+  # Only trusted `main` writes the shared GCS cache; everything else is read-only.
+  # CREEP-safe single-bucket model (CVE-2025-36852) — see continuous-integration.yml.
+  NX_GCS_LOCAL_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
   NX_KEY: ${{ vars.NX_KEY }}
   RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
   RELEASE_PUBLISH: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--yes' || '--skip-publish' }}
@@ -34,11 +37,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Inject the dynamic bucket name directly into nx.json
-      # Security: By using Strategy 2, you maintain the "Two-Bucket" security model which is the only way to protect your production cache from CREEP (CVE-2025-36852) when using bucket-based remote caching.
+      # Inject the dynamic bucket name and cache mode into nx.json. Only `main`
+      # runs read-write; everything else stays read-only (CREEP-safe single
+      # bucket, CVE-2025-36852 — see continuous-integration.yml).
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+          sed -i 's/"localMode": ".*"/"localMode": "${{ env.NX_GCS_LOCAL_MODE }}"/' nx.json
 
       - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
