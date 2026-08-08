@@ -8,14 +8,16 @@ import {
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
 import { OpenThrottleProductGetStarted } from '@openthrottle/react-router-ui';
+import { getRandomIntroduction } from '@openthrottle/react-router-ui';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
-import { loader } from '~/root';
-import { useRouteLoaderData } from 'react-router';
 import type { Route } from '@/app/routes/+types/_index';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  const introduction = getRandomIntroduction();
+  const repo = 'openthrottle/openthrottle';
+
+  return { introduction, repo };
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [
@@ -35,10 +37,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
-  const data = useRouteLoaderData<typeof loader>('root');
+  const { introduction, repo } = loaderData;
 
   // Setup
 
@@ -61,7 +63,8 @@ export default function Component(
             AbortController timeout + graceful fallback, then thread it through.
           */}
           <OpenThrottleProductGetStarted
-            repo={data?.repo ?? 'openthrottle/openthrottle'}
+            introduction={introduction}
+            repo={repo}
             stars="0"
           />
         </div>
