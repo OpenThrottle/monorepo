@@ -36,6 +36,8 @@ pnpm nx run monorepo:knip                           # dead-code report ONLY — 
 
 `typecheck` and `test` are not interchangeable: `typecheck` type-checks source and test files (`tsc`, no execution); only `test` executes Vitest assertions.
 
+**Never run `nx sync`.** The `@nx/js:typescript-sync` generator is disabled workspace-wide in `nx.json` (`sync.disabledTaskSyncGenerators`) so it no longer gates `typecheck`/`test`/`lint` in non-TTY worktrees. tsconfig `references` are maintained by hand: when a project starts importing a sibling `@openthrottle/*` package, add `{ "path": "../../packages/<pkg>" }` to its `tsconfig.json`. To surface genuine drift non-destructively, run the opt-in `pnpm run check:tsconfig-refs` (never blocking, not in `check:local`). Bare `nx sync` emits phantom RR app→app refs (Nx #36297) — see [docs/monorepo/NX.md](docs/monorepo/NX.md#tsconfig-references--the-disabled-sync-generator).
+
 ## Picking the right models for workflows and subagents
 
 Rankings, higher = better. Cost reflects what I actually pay (OpenAI has really generous limits), not list price. Intelligence is how hard a problem you can hand the model unsupervised. Taste covers UI/UX, code quality, API design, and copy.
