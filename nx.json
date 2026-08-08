@@ -4,6 +4,7 @@
   "defaultBase": "main",
   "gcs": {
     "bucket": "openthrottle-staging-nx-cache",
+    "ciMode": "read-only",
     "localMode": "read-only"
   },
   "generators": {

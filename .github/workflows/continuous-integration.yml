@@ -46,7 +46,12 @@ env:
   # merge_group build stays read-only. This is the CREEP-safe (CVE-2025-36852)
   # model for a single bucket — no untrusted writer can poison entries that main
   # later reads, while PRs still get warm cache hits from main's last build.
-  NX_GCS_LOCAL_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
+  #
+  # `NX_POWERPACK_CACHE_MODE` is @nx/gcs-cache's env override: it wins over BOTH
+  # nx.json `localMode` and `ciMode` with no file mutation. It MUST be an env var
+  # (not a `sed` into nx.json) because (a) in CI the plugin reads `ciMode`, not
+  # `localMode`, and (b) mutating nx.json trips the codegen `git diff --exit-code`.
+  NX_POWERPACK_CACHE_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
 
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
@@ -111,14 +116,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Inject the dynamic bucket name and cache mode into nx.json. Only `main`
-      # runs read-write; PRs / merge_group stay read-only (see NX_GCS_LOCAL_MODE
-      # above). This keeps the single shared bucket CREEP-safe (CVE-2025-36852):
-      # untrusted builds can never write, so they can't poison what main reads.
+      # Inject only the bucket name into nx.json (same value today, so a no-op
+      # that leaves the tree clean). The read/write mode is set via the
+      # NX_POWERPACK_CACHE_MODE env var above — NOT a sed — so nx.json is never
+      # mutated and the codegen `git diff --exit-code` stays green.
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
-          sed -i 's/"localMode": ".*"/"localMode": "${{ env.NX_GCS_LOCAL_MODE }}"/' nx.json
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
