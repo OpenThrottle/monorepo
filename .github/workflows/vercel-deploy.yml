@@ -62,13 +62,14 @@ jobs:
   # Which Vercel apps are affected by this change? Emits a job matrix; empty
   # include => the deploy job is skipped (nothing to deploy).
   compute-affected:
-    # Dependabot-triggered runs receive no repository secrets, so the deploy
-    # job can never authenticate — skip at the root instead of failing (and
-    # save the runner minutes). Scoped to pull_request events so a push to
-    # main whose merger happens to be dependabot still attempts to deploy.
-    if: >-
-      github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
+    if: false
+    # # Dependabot-triggered runs receive no repository secrets, so the deploy
+    # # job can never authenticate — skip at the root instead of failing (and
+    # # save the runner minutes). Scoped to pull_request events so a push to
+    # # main whose merger happens to be dependabot still attempts to deploy.
+    # if: >-
+    #   github.event_name != 'pull_request' ||
+    #   (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
     runs-on: blacksmith-4vcpu-ubuntu-2204
     outputs:
       matrix-json: ${{ steps.affected.outputs.matrix-json }}
