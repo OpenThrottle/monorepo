@@ -39,8 +39,8 @@
       "type:package"
     ],
     "targets": {
-      "__build": {},
-      "__build-package": {},
+      "build": {},
+      "build-package": {},
       "lint": {},
       "test": {},
       "typecheck": {}
