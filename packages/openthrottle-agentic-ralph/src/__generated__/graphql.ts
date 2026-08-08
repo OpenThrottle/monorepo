@@ -2342,6 +2342,14 @@ export enum PlanRalphWorkflowMode {
   Task = 'task',
 }
 
+export type PlanRefObject = {
+  __typename?: 'PlanRefObject';
+  /** Full plan UUID the prefix resolved to. */
+  id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type PlanRunCheckoutObject = {
   __typename?: 'PlanRunCheckoutObject';
   /** Human-readable checkout label. */
@@ -2802,6 +2810,8 @@ export type Query = {
   remainingTasksByPlanId: Array<TaskObject>;
   /** List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject. */
   repeatableJobs: Array<RepeatableJobObject>;
+  /** Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than 6 hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to 6) are listed for disambiguation. */
+  resolvePlanRef: Array<PlanRefObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Lists merged PRs across pages up to 1000 (10 pages) and paginates reviews; maxPrs caps the per-PR review requests. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
   /** Get a role by ID */
@@ -3063,6 +3073,10 @@ export type QueryRemainingTasksByPlanIdArgs = {
 
 export type QueryRepeatableJobsArgs = {
   input: RepeatableJobsInput;
+};
+
+export type QueryResolvePlanRefArgs = {
+  prefix: Scalars['String']['input'];
 };
 
 export type QueryReviewCycleTimeArgs = {

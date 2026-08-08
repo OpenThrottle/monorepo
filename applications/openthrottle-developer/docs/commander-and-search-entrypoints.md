@@ -136,3 +136,47 @@ This is the **single server-side switch** for “commander drove navigation or f
 ---
 
 _Last updated for plan “Trigger commander from GlobalLayoutHeader search” (documentation + API design tasks)._
+
+---
+
+## Short-UUID plan detection (⌘K quick redirect)
+
+Typing a short leading hex fragment of a plan id (e.g. `f5e40886`) into the
+palette resolves it to the real plan and offers a confident one-keystroke
+redirect to `/plans/<full-id>`. Full UUIDs, `queueId/jobId` pairs, and
+plan-task pairs keep their existing behavior.
+
+**How it is wired in `openthrottle-developer`**
+
+1. Server: `resolvePlanRef(prefix: String!): [PlanRefObject!]!` (openthrottle-server
+   `PlansResolver`) normalizes the prefix (trim/lowercase/strip hyphens),
+   short-circuits to `[]` below 6 hex chars or on non-hex input, and matches
+   `REPLACE(id::text,'-','') ILIKE :pattern` (bounded, `updatedAt DESC`, top 6).
+2. Client transport: `/resources/resolve-plan-ref?prefix=<hex>` — a loader-only
+   resource route that calls `resolvePlanRef` via `executeGraphqlWithAuth`
+   (client GraphQL is server-only) and echoes the normalized prefix.
+3. `root.tsx` observes the palette query via `OpenThrottleCommander`'s
+   `onSearchChange`, feeds it to the debounced `usePlanRefResolver`
+   (`@openthrottle/react-router-ui`), and passes matches to
+   `buildCommanderEmptyStateExtras`.
+
+**Reusing in another app (e.g. `openthrottle-admin`)**
+
+The recognition + resolution logic is factored into shared packages so any app
+that hosts `OpenThrottleCommander` can adopt it without re-implementing a
+full-UUID gate:
+
+- `@openthrottle/react-router-utils` — `classifyIdInput` / `isShortIdFragment` /
+  `normalizeIdFragment` / `REGEX_UUID` / `MIN_ID_FRAGMENT_LENGTH`.
+- `@openthrottle/react-router-ui` — `usePlanRefResolver` hook +
+  `PlanRefMatch` / `PlanRefResolverData` types, and the `onSearchChange` prop.
+
+To adopt: author a `resolvePlanRef` GraphQL document + a
+`/resources/resolve-plan-ref` loader in that app (copy the developer app's
+route), then wire `onSearchChange` → `usePlanRefResolver` → the app's commander
+empty-state builder. As of this plan, **`openthrottle-developer` is the only
+app that renders `OpenThrottleCommander`**; `openthrottle-admin` has no command
+palette yet, so there is nothing to wire there until it gains one — the shared
+pieces above are the entire adoption surface when it does.
+
+_Short-UUID detection added by plan “Commander: short-UUID plan detection + quick redirect”._

@@ -242,6 +242,37 @@ describe('root action: commander-search', () => {
     );
   });
 
+  test('jumps to the resolved plan when the commander submits a full id resolved from a short fragment', async () => {
+    // The ⌘K commander resolves a short fragment (e.g. "80864bba") to the full
+    // plan id client-side via resolvePlanRef, then POSTs the FULL id here.
+    const result = await action(
+      actionArgs({
+        id: UUID_A,
+        intent: 'commander-search',
+        jump: 'plan-detail',
+      }),
+    );
+
+    assertResponse(result);
+    expect(result.headers.get('location')).toBe(`/plans/${UUID_A}`);
+  });
+
+  test('does not treat a short id fragment as a plan id (guard requires the resolved full id)', async () => {
+    // A bare short fragment must be resolved to a full id before the POST; the
+    // REGEX_UUID guard rejects it and falls through to /search.
+    const result = await action(
+      actionArgs({
+        id: '80864bba',
+        intent: 'commander-search',
+        jump: 'plan-detail',
+        q: '80864bba',
+      }),
+    );
+
+    assertResponse(result);
+    expect(result.headers.get('location')).toBe('/search?q=80864bba');
+  });
+
   test('falls back to /search when a jump id is not a UUID', async () => {
     const result = await action(
       actionArgs({

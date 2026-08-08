@@ -86,6 +86,9 @@
       "path": "../../packages/react-router-shadcn"
     },
     {
+      "path": "../../packages/react-router-rollout"
+    },
+    {
       "path": "../../packages/react-router-utils"
     }
   ]

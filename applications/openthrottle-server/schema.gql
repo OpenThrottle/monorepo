@@ -235,6 +235,13 @@ type PlanStatusCountObject {
   status: String!
 }
 
+type PlanRefObject {
+  """Full plan UUID the prefix resolved to."""
+  id: String!
+  status: String!
+  title: String!
+}
+
 type PlanRunObject {
   """
   BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.
@@ -3270,6 +3277,11 @@ type Query {
 
   """Get a plan by ID"""
   plan(id: ID!): PlanObject
+
+  """
+  Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than 6 hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to 6) are listed for disambiguation.
+  """
+  resolvePlanRef(prefix: String!): [PlanRefObject!]!
 
   """
   List plans, newest first. Capped at 100 by default (max 500); pass limit to override. Use listPlansByStatus for full pagination/filtering.

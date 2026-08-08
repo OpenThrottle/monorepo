@@ -31,7 +31,11 @@ import type {
   MiddlewareFunction,
   ShouldRevalidateFunction,
 } from 'react-router';
-import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleCommander,
+  usePlanRefResolver,
+} from '@openthrottle/react-router-ui';
+import type { PlanRefResolverData } from '@openthrottle/react-router-ui';
 import {
   buildThemeStylesheet,
   THEMES,
@@ -85,6 +89,7 @@ import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   REGEX_UUID,
+  buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
@@ -458,9 +463,11 @@ export default function App(): React.ReactElement {
   const data = useLoaderData();
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
+  const planRefFetcher = useFetcher<PlanRefResolverData>();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
+  const [commanderQuery, setCommanderQuery] = React.useState('');
 
   // Streaming chat surface for the global header ChatDialog. Runs unconditionally
   // (hook rules); only injected into GlobalProviders when authenticated, else the
@@ -541,17 +548,42 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * When the palette query matches no static commands, offer POST-backed jumps
-   * (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
+   * Debounced short-id-prefix resolver: when the palette query is a short hex
+   * fragment (e.g. `f5e40886`), resolve it to matching plan(s) via the
+   * `/resources/resolve-plan-ref` loader (server-side `resolvePlanRef`). Full
+   * UUIDs and non-id text never trigger a lookup.
    */
-  // const commanderEmptyExtras = React.useCallback(
-  //   (query: string) =>
-  //     buildCommanderEmptyStateExtras(query, {
-  //       submitCommanderSearch,
-  //     }),
-  //   [submitCommanderSearch],
-  // );
-  const commanderEmptyExtras = React.useCallback(() => [], []);
+  const loadPlanRef = React.useCallback(
+    (prefix: string) => {
+      planRefFetcher.load(
+        `/resources/resolve-plan-ref?prefix=${encodeURIComponent(prefix)}`,
+      );
+    },
+    [planRefFetcher],
+  );
+
+  const { loading: planRefLoading, matches: planRefMatches } =
+    usePlanRefResolver({
+      data: planRefFetcher.data,
+      load: loadPlanRef,
+      query: commanderQuery,
+      state: planRefFetcher.state,
+    });
+
+  /**
+   * When the palette query matches no static commands, offer POST-backed jumps
+   * (plan, queue, generator, queue/job, plan/task, indexes, workspace search)
+   * plus confident `Open plan` rows for a resolved short id fragment.
+   */
+  const commanderEmptyExtras = React.useCallback(
+    (query: string) =>
+      buildCommanderEmptyStateExtras(query, {
+        planRefLoading,
+        planRefMatches,
+        submitCommanderSearch,
+      }),
+    [planRefLoading, planRefMatches, submitCommanderSearch],
+  );
 
   // Markup
 
@@ -640,6 +672,7 @@ export default function App(): React.ReactElement {
                   groups={groups}
                   onEmptyStateSearch={handleSearch}
                   onOpenChange={setCommanderOpen}
+                  onSearchChange={setCommanderQuery}
                   open={commanderOpen}
                   placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
                 />
