@@ -16,8 +16,9 @@ env:
   GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
   # Only trusted `main` writes the shared GCS cache; everything else is read-only.
-  # CREEP-safe single-bucket model (CVE-2025-36852) — see continuous-integration.yml.
-  NX_GCS_LOCAL_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
+  # Env override (wins over nx.json localMode/ciMode, no file mutation) — see
+  # continuous-integration.yml. CREEP-safe single-bucket model (CVE-2025-36852).
+  NX_POWERPACK_CACHE_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
   NX_KEY: ${{ vars.NX_KEY }}
   RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
   RELEASE_PUBLISH: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--yes' || '--skip-publish' }}
@@ -37,13 +38,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Inject the dynamic bucket name and cache mode into nx.json. Only `main`
-      # runs read-write; everything else stays read-only (CREEP-safe single
-      # bucket, CVE-2025-36852 — see continuous-integration.yml).
+      # Inject only the bucket name into nx.json (no-op today). Cache read/write
+      # mode is the NX_POWERPACK_CACHE_MODE env var above — not a sed — so nx.json
+      # stays unmodified (CREEP-safe single bucket, CVE-2025-36852).
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
-          sed -i 's/"localMode": ".*"/"localMode": "${{ env.NX_GCS_LOCAL_MODE }}"/' nx.json
 
       - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud

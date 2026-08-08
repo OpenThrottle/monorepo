@@ -136,8 +136,9 @@ jobs:
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      # Deploy builds never write the cache — they inherit nx.json's committed
-      # `localMode: read-only`, so only the main CI build populates entries
+      # Deploy builds never write the cache — they set no NX_POWERPACK_CACHE_MODE
+      # override, so they fall back to nx.json's committed `ciMode: read-only` in
+      # CI. Only the main CI build (which sets read-write) populates entries
       # (CREEP-safe single bucket, CVE-2025-36852). Bucket name only here.
       - name: '🪣 Point Nx at the cache bucket'
         run: |
