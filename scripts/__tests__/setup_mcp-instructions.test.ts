@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildPayloads, renderInstructions } from '../print-mcp-install.ts';
+import {
+  buildPayloads,
+  renderInstructions,
+} from '../setup_mcp-instructions.ts';
 
 const ROOT = '/tmp/checkout';
 const LAUNCHER = `${ROOT}/scripts/run-openthrottle-mcp.sh`;
