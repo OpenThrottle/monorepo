@@ -106,7 +106,36 @@ const normalizeClaudePayload = (raw) => {
   return null;
 };
 
+/**
+ * Parse a Claude Code `Stop` (or `SubagentStop`) hook payload into the fields
+ * the completion emitter needs. These events carry `session_id` but no
+ * `tool_use_id`/`skill_name` — correlation is session-scoped, resolved against
+ * the start store. Returns null when there is no usable session id.
+ *
+ * @param {unknown} raw
+ * @returns {{ session_id: string, hook_event_name: string } | null}
+ */
+const normalizeClaudeStopPayload = (raw) => {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const payload = /** @type {Record<string, unknown>} */ (raw);
+  const sessionId =
+    typeof payload.session_id === 'string' ? payload.session_id.trim() : '';
+  if (!sessionId) {
+    return null;
+  }
+  return {
+    hook_event_name:
+      typeof payload.hook_event_name === 'string'
+        ? payload.hook_event_name
+        : 'Stop',
+    session_id: sessionId,
+  };
+};
+
 module.exports = {
   CLAUDE_SOURCE,
   normalizeClaudePayload,
+  normalizeClaudeStopPayload,
 };

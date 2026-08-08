@@ -344,6 +344,84 @@ describe('SkillUsageEventsService', () => {
       ]);
     });
 
+    it('merges a mixed automatic + opt-in feed and averages only non-null durations', async () => {
+      // One skill, one aggregated outcome row that blends the automatic feed
+      // (success + abandoned, abandoned having null duration) with an opt-in
+      // `error`. Postgres AVG(duration_ms) ignores the null-duration abandoned
+      // row, so avgDurationMs reflects only the timed outcomes.
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            count: '20',
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+          },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            abandonedCount: '3',
+            avgDurationMs: '2000', // AVG over the 6 success + 1 error timed rows
+            errorCount: '1',
+            outcomeCount: '10',
+            skillName: 'ot-plans',
+            successCount: '6',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listBySkill({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      // The outcome aggregation asks Postgres for a null-excluding average.
+      expect(outcomesQb.addSelect).toHaveBeenCalledWith(
+        'AVG(o.duration_ms)',
+        'avgDurationMs',
+      );
+      expect(rows).toEqual([
+        {
+          abandonedCount: 3,
+          avgDurationMs: 2000,
+          count: 20,
+          errorCount: 1,
+          outcomeCount: 10,
+          scope: SKILL_USAGE_SCOPES.OURS,
+          skillName: 'ot-plans',
+          successCount: 6,
+        },
+      ]);
+    });
+
+    describe('when the scope filter is set', () => {
+      it('applies o.scope on the outcome query so the new feed is filtered', async () => {
+        const eventsQb = createQueryBuilderMock();
+        const outcomesQb = createQueryBuilderMock();
+        const service = await buildService({
+          events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+          outcomes: {
+            createQueryBuilder: vi.fn().mockReturnValue(outcomesQb),
+          },
+        });
+
+        await service.listBySkill({
+          end: '2026-07-31',
+          scope: SKILL_USAGE_SCOPES.OURS,
+          start: '2026-07-01',
+        });
+
+        expect(outcomesQb.andWhere).toHaveBeenCalledWith('o.scope = :scope', {
+          scope: SKILL_USAGE_SCOPES.OURS,
+        });
+      });
+    });
+
     describe('when gitBranch and cwd filters are set', () => {
       it('adds equality predicates on both start and outcome queries', async () => {
         const eventsQb = createQueryBuilderMock();

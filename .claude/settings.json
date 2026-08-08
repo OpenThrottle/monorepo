@@ -13,6 +13,17 @@
         "matcher": "Skill"
       }
     ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/skill-usage-complete.cjs",
+            "statusMessage": "Skill usage complete (Stop)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "UserPromptExpansion": [
       {
         "hooks": [

@@ -27,7 +27,9 @@
  *
  * Phase 2b sink: POST recordSkillUsage to OT GraphQL (system of record).
  * On post failure/timeout → append local JSONL. Never throw; never block.
- * Future (not built): drain buffered JSONL to the server when it returns.
+ * Buffered JSONL is drained back to the server by drainBufferedUsage /
+ * drainJsonlFile (triggered opportunistically from the Stop hook and via the
+ * skill-usage-drain.cjs CLI).
  */
 'use strict';
 
@@ -49,8 +51,20 @@ const DEFAULT_OUTCOMES_JSONL_REL = path.join(
   'skill-usage',
   'outcomes.jsonl',
 );
+/**
+ * Session-scoped start-correlation store. One file per session; each line is an
+ * identifiers-only start entry (NO args) the completion hook reads to compute
+ * duration and to mark unresolved starts as abandoned.
+ */
+const DEFAULT_STARTS_DIR_REL = path.join('.cache', 'skill-usage', 'starts');
 /** Short enough that a dead server never stalls Skill tool use. */
 const DEFAULT_POST_TIMEOUT_MS = 750;
+/**
+ * A start-correlation file older than this whose session is not the current one
+ * is considered abandoned (its session ended without a Stop, e.g. a killed run).
+ * Default 6h; override via SKILL_USAGE_ABANDONED_MS.
+ */
+const DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1000;
 
 const SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: 'abandoned',
@@ -259,6 +273,207 @@ const defaultJsonlPath = (repoRoot) => path.join(repoRoot, DEFAULT_JSONL_REL);
  */
 const defaultOutcomesJsonlPath = (repoRoot) =>
   path.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
+
+/**
+ * @param {string} repoRoot
+ * @returns {string}
+ */
+const defaultStartsDir = (repoRoot) =>
+  path.join(repoRoot, DEFAULT_STARTS_DIR_REL);
+
+/**
+ * A session id is used as a filename; keep it filesystem-safe.
+ * @param {unknown} sessionId
+ * @returns {string}
+ */
+const sanitizeSessionId = (sessionId) =>
+  String(sessionId).replace(/[^A-Za-z0-9._-]/g, '-');
+
+/**
+ * @param {string} startsDir
+ * @param {string} sessionId
+ * @returns {string}
+ */
+const startsFilePathForSession = (startsDir, sessionId) =>
+  path.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+
+/**
+ * Stable key for a start entry — the dedupe / drain unit. Prefers tool_use_id
+ * (unique per Skill-tool invocation) and falls back to started_at so repeated
+ * invocations of the same slash skill in one session stay distinct.
+ * @param {{ session_id?: string, skill_name?: string, tool_use_id?: string | null, started_at?: string } | null | undefined} entry
+ * @returns {string}
+ */
+const startCorrelationKey = (entry) => {
+  const sid = entry?.session_id ?? '';
+  const skill = entry?.skill_name ?? '';
+  const disc = entry?.tool_use_id || entry?.started_at || '';
+  return `${sid}::${skill}::${disc}`;
+};
+
+/**
+ * Record a start-correlation entry so a later completion hook can compute
+ * duration and correlate precisely. Persists identifiers + timestamp ONLY (no
+ * args) under `.cache/skill-usage/starts/<session_id>.jsonl`. Fail-open; skips
+ * (does not error) when session_id or skill_name is missing — a start with no
+ * session can never be correlated by the session-scoped completion hook.
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string | null | undefined} params.sessionId
+ * @param {string | null | undefined} params.skillName
+ * @param {string | null} [params.toolUseId]
+ * @param {string | null} [params.scope]
+ * @param {string} [params.startedAt]
+ * @param {string} [params.startsDir] — override (tests)
+ * @returns {{ ok: true, path: string } | { ok: false, reason: string }}
+ */
+const recordSkillStart = ({
+  repoRoot,
+  sessionId,
+  skillName,
+  toolUseId = null,
+  scope = null,
+  startedAt = new Date().toISOString(),
+  startsDir,
+}) => {
+  try {
+    const sid = typeof sessionId === 'string' ? sessionId.trim() : '';
+    const name = typeof skillName === 'string' ? skillName.trim() : '';
+    if (!sid || !name) {
+      return { ok: false, reason: 'missing session_id or skill_name' };
+    }
+    const dir = startsDir || defaultStartsDir(repoRoot);
+    const filePath = startsFilePathForSession(dir, sid);
+    appendJsonl(filePath, {
+      scope: scope ?? null,
+      session_id: sid,
+      skill_name: name,
+      started_at: startedAt,
+      tool_use_id: toolUseId ?? null,
+    });
+    return { ok: true, path: filePath };
+  } catch (err) {
+    logHookError('recordSkillStart failed', err);
+    return {
+      ok: false,
+      reason: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
+
+/**
+ * List open start-correlation entries for a session. Missing file → []; malformed
+ * lines are skipped. Fail-open (never throws).
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string | null | undefined} params.sessionId
+ * @param {string} [params.startsDir]
+ * @returns {Array<Record<string, unknown>>}
+ */
+const listStartsForSession = ({ repoRoot, sessionId, startsDir }) => {
+  try {
+    const sid = typeof sessionId === 'string' ? sessionId.trim() : '';
+    if (!sid) {
+      return [];
+    }
+    const dir = startsDir || defaultStartsDir(repoRoot);
+    const filePath = startsFilePathForSession(dir, sid);
+    if (!fs.existsSync(filePath)) {
+      return [];
+    }
+    const text = fs.readFileSync(filePath, 'utf8');
+    /** @type {Array<Record<string, unknown>>} */
+    const out = [];
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object') {
+          out.push(parsed);
+        }
+      } catch {
+        // skip malformed correlation line
+      }
+    }
+    return out;
+  } catch (err) {
+    logHookError('listStartsForSession failed', err);
+    return [];
+  }
+};
+
+/**
+ * Drain resolved starts for a session. When `resolvedKeys` (a Set of
+ * startCorrelationKey values) is provided, only matching entries are removed and
+ * the rest are retained; when omitted, every entry is drained. The session file
+ * is unlinked once no entries remain. Fail-open; returns the count drained.
+ *
+ * NOTE: the retain path is a read-modify-write; a start appended concurrently
+ * between read and rewrite could be lost. Acceptable here — Stop fires at most
+ * once per turn, so concurrent writers to a single session file are unlikely.
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string | null | undefined} params.sessionId
+ * @param {Set<string>} [params.resolvedKeys]
+ * @param {string} [params.startsDir]
+ * @returns {number}
+ */
+const drainStartsForSession = ({
+  repoRoot,
+  sessionId,
+  resolvedKeys,
+  startsDir,
+}) => {
+  try {
+    const sid = typeof sessionId === 'string' ? sessionId.trim() : '';
+    if (!sid) {
+      return 0;
+    }
+    const dir = startsDir || defaultStartsDir(repoRoot);
+    const filePath = startsFilePathForSession(dir, sid);
+    if (!fs.existsSync(filePath)) {
+      return 0;
+    }
+    const entries = listStartsForSession({
+      repoRoot,
+      sessionId: sid,
+      startsDir: dir,
+    });
+    if (!resolvedKeys) {
+      fs.rmSync(filePath, { force: true });
+      return entries.length;
+    }
+    /** @type {Array<Record<string, unknown>>} */
+    const keep = [];
+    let drained = 0;
+    for (const entry of entries) {
+      if (resolvedKeys.has(startCorrelationKey(entry))) {
+        drained += 1;
+      } else {
+        keep.push(entry);
+      }
+    }
+    if (keep.length === 0) {
+      fs.rmSync(filePath, { force: true });
+    } else {
+      fs.writeFileSync(
+        filePath,
+        `${keep.map((e) => JSON.stringify(e)).join('\n')}\n`,
+        'utf8',
+      );
+    }
+    return drained;
+  } catch (err) {
+    logHookError('drainStartsForSession failed', err);
+    return 0;
+  }
+};
 
 /**
  * Build an outcome enrichment event for our skills (Phase 4).
@@ -918,12 +1133,411 @@ const persistOutcomeEvent = async ({
   }
 };
 
+/**
+ * Automatic completion: resolve the open starts for a session (recorded by the
+ * capture path) into outcome events. For each open start compute
+ * `duration_ms = finishedAt − started_at`, build a `success` outcome, persist it
+ * (server → OT, else outcomes.jsonl), and drain the resolved starts so a repeated
+ * Stop fire never double-emits. Deduped by startCorrelationKey. Fail-open —
+ * always resolves; individual persist failures fall back to JSONL.
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string | null | undefined} params.sessionId
+ * @param {'success' | 'abandoned' | 'error'} [params.outcome] — classifier (default success)
+ * @param {string} [params.finishedAt] — ISO completion time (default now)
+ * @param {string} [params.startsDir]
+ * @param {string} [params.jsonlPath] — outcomes JSONL override (tests)
+ * @param {typeof fetch} [params.fetchImpl]
+ * @param {string} [params.graphqlUrl]
+ * @param {string} [params.authToken]
+ * @param {number} [params.timeoutMs]
+ * @returns {Promise<{ resolved: number, results: Array<{ key: string, sink: string, skillName: string, durationMs: number | null }> }>}
+ */
+const completeOpenStartsForSession = async ({
+  repoRoot,
+  sessionId,
+  outcome = SKILL_USAGE_OUTCOMES.SUCCESS,
+  finishedAt = new Date().toISOString(),
+  startsDir,
+  jsonlPath,
+  fetchImpl,
+  graphqlUrl,
+  authToken,
+  timeoutMs,
+}) => {
+  const starts = listStartsForSession({ repoRoot, sessionId, startsDir });
+  if (!starts.length) {
+    return { resolved: 0, results: [] };
+  }
+
+  const finishMs = Date.parse(finishedAt);
+  /** @type {Set<string>} */
+  const resolvedKeys = new Set();
+  /** @type {Array<{ key: string, sink: string, skillName: string, durationMs: number | null }>} */
+  const results = [];
+
+  for (const start of starts) {
+    const key = startCorrelationKey(start);
+    if (resolvedKeys.has(key)) {
+      // duplicate correlation line — count once
+      continue;
+    }
+
+    const startedMs = Date.parse(String(start.started_at));
+    const durationMs =
+      Number.isFinite(startedMs) && Number.isFinite(finishMs)
+        ? Math.max(0, finishMs - startedMs)
+        : null;
+
+    const event = buildOutcomeEvent({
+      durationMs,
+      outcome,
+      repoRoot,
+      sessionId:
+        typeof start.session_id === 'string' ? start.session_id : sessionId,
+      skillName: typeof start.skill_name === 'string' ? start.skill_name : '',
+      timestamp: finishedAt,
+      toolUseId:
+        typeof start.tool_use_id === 'string' ? start.tool_use_id : null,
+    });
+    if (!event) {
+      continue;
+    }
+
+    let sink = 'error';
+    try {
+      const res = await persistOutcomeEvent({
+        authToken,
+        event,
+        fetchImpl,
+        graphqlUrl,
+        jsonlPath,
+        repoRoot,
+        timeoutMs,
+      });
+      sink = res.sink;
+    } catch (err) {
+      logHookError('completeOpenStartsForSession persist failed', err);
+    }
+
+    resolvedKeys.add(key);
+    results.push({
+      durationMs,
+      key,
+      sink,
+      skillName: event.skill_name,
+    });
+  }
+
+  drainStartsForSession({ repoRoot, resolvedKeys, sessionId, startsDir });
+  return { resolved: resolvedKeys.size, results };
+};
+
+/**
+ * Sweep abandoned starts: start-correlation files whose session is NOT the
+ * current one and whose file mtime is older than `maxAgeMs` (their session
+ * ended without a Stop). Emit one `abandoned` outcome (duration null) per open
+ * start, then remove the file. Fail-open; returns the count swept.
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string | null | undefined} [params.currentSessionId]
+ * @param {number} [params.maxAgeMs]
+ * @param {number} [params.now] — epoch ms (tests)
+ * @param {string} [params.startsDir]
+ * @param {typeof fetch} [params.fetchImpl]
+ * @param {string} [params.graphqlUrl]
+ * @param {string} [params.authToken]
+ * @param {number} [params.timeoutMs]
+ * @param {string} [params.jsonlPath]
+ * @returns {Promise<{ swept: number }>}
+ */
+const sweepAbandonedStarts = async ({
+  repoRoot,
+  currentSessionId,
+  maxAgeMs = DEFAULT_ABANDONED_MS,
+  now = Date.now(),
+  startsDir,
+  fetchImpl,
+  graphqlUrl,
+  authToken,
+  timeoutMs,
+  jsonlPath,
+}) => {
+  const dir = startsDir || defaultStartsDir(repoRoot);
+  let files;
+  try {
+    files = fs.readdirSync(dir);
+  } catch {
+    return { swept: 0 };
+  }
+
+  const currentFile =
+    typeof currentSessionId === 'string' && currentSessionId.trim()
+      ? `${sanitizeSessionId(currentSessionId.trim())}.jsonl`
+      : null;
+
+  let swept = 0;
+  for (const file of files) {
+    if (!file.endsWith('.jsonl') || file === currentFile) {
+      continue;
+    }
+    const filePath = path.join(dir, file);
+    let mtimeMs;
+    try {
+      mtimeMs = fs.statSync(filePath).mtimeMs;
+    } catch {
+      continue;
+    }
+    if (now - mtimeMs < maxAgeMs) {
+      continue;
+    }
+
+    const sessionId = file.replace(/\.jsonl$/, '');
+    const starts = listStartsForSession({
+      repoRoot,
+      sessionId,
+      startsDir: dir,
+    });
+    const abandonedAt = new Date(mtimeMs).toISOString();
+    /** @type {Set<string>} */
+    const seen = new Set();
+    for (const start of starts) {
+      const key = startCorrelationKey(start);
+      if (seen.has(key)) {
+        continue;
+      }
+      const event = buildOutcomeEvent({
+        durationMs: null,
+        outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
+        repoRoot,
+        sessionId:
+          typeof start.session_id === 'string' ? start.session_id : sessionId,
+        skillName: typeof start.skill_name === 'string' ? start.skill_name : '',
+        timestamp: abandonedAt,
+        toolUseId:
+          typeof start.tool_use_id === 'string' ? start.tool_use_id : null,
+      });
+      if (!event) {
+        continue;
+      }
+      try {
+        await persistOutcomeEvent({
+          authToken,
+          event,
+          fetchImpl,
+          graphqlUrl,
+          jsonlPath,
+          repoRoot,
+          timeoutMs,
+        });
+      } catch (err) {
+        logHookError('sweepAbandonedStarts persist failed', err);
+      }
+      seen.add(key);
+      swept += 1;
+    }
+    // Remove the stale file whether or not any outcome persisted — its session
+    // is over; leaving it would re-sweep forever.
+    drainStartsForSession({ repoRoot, sessionId, startsDir: dir });
+  }
+
+  return { swept };
+};
+
+/**
+ * Drain one buffered JSONL file to the server. Concurrent-writer safe via an
+ * atomic rename: the live file is renamed to a private `.draining.<pid>`
+ * snapshot (so writers immediately start a fresh file), the snapshot is posted
+ * line-by-line, and any unsent/deadline-deferred lines are appended BACK to the
+ * live file for the next attempt. Malformed lines are logged and dropped.
+ * Nothing is lost on server-down (everything retained) and the operation is
+ * idempotent — safe to re-run.
+ *
+ * @param {object} params
+ * @param {string} params.filePath
+ * @param {(event: object) => Promise<{ ok: boolean, reason?: string }>} params.post
+ * @param {number} [params.deadlineMs] — absolute epoch ms; stop posting past it
+ * @param {() => number} [params.nowFn]
+ * @returns {Promise<{ sent: number, retained: number, skipped: number }>}
+ */
+const drainJsonlFile = async ({
+  filePath,
+  post,
+  deadlineMs,
+  nowFn = Date.now,
+}) => {
+  const result = { retained: 0, sent: 0, skipped: 0 };
+  if (!fs.existsSync(filePath)) {
+    return result;
+  }
+
+  const snapshotPath = `${filePath}.draining.${process.pid}`;
+  try {
+    fs.renameSync(filePath, snapshotPath);
+  } catch {
+    // File vanished or was claimed by a concurrent drainer — nothing to do.
+    return result;
+  }
+
+  /** @type {string[]} */
+  const retain = [];
+  try {
+    const lines = fs.readFileSync(snapshotPath, 'utf8').split('\n');
+    let stopped = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      if (stopped) {
+        retain.push(trimmed);
+        continue;
+      }
+      if (deadlineMs != null && nowFn() > deadlineMs) {
+        stopped = true;
+        retain.push(trimmed);
+        continue;
+      }
+      let event;
+      try {
+        event = JSON.parse(trimmed);
+      } catch {
+        result.skipped += 1;
+        logHookError('drain: skipping malformed jsonl line');
+        continue;
+      }
+      let ok = false;
+      try {
+        const res = await post(event);
+        ok = Boolean(res && res.ok);
+      } catch (err) {
+        logHookError('drain: post threw', err);
+      }
+      if (ok) {
+        result.sent += 1;
+      } else {
+        retain.push(trimmed);
+      }
+    }
+  } catch (err) {
+    // Read/parse of the snapshot failed before any post — fold it all back so
+    // nothing is lost, then bail.
+    logHookError('drainJsonlFile read failed', err);
+    try {
+      const leftover = fs.readFileSync(snapshotPath, 'utf8');
+      if (leftover.trim()) {
+        fs.appendFileSync(
+          filePath,
+          leftover.endsWith('\n') ? leftover : `${leftover}\n`,
+          'utf8',
+        );
+      }
+      fs.rmSync(snapshotPath, { force: true });
+    } catch (foldErr) {
+      logHookError('drain: fold-back failed', foldErr);
+    }
+    return result;
+  }
+
+  try {
+    if (retain.length) {
+      fs.appendFileSync(filePath, `${retain.join('\n')}\n`, 'utf8');
+      result.retained = retain.length;
+    }
+    fs.rmSync(snapshotPath, { force: true });
+  } catch (err) {
+    logHookError('drain: finalize failed', err);
+  }
+  return result;
+};
+
+/**
+ * Opportunistic/scheduled drain of both buffered files (events + outcomes) to
+ * OT. Time-boxed across both files via `budgetMs` so a hook trigger never stalls
+ * a turn. Respects SKILL_USAGE_DISABLE_SERVER and a missing GraphQL URL (both →
+ * no-op, buffer left intact). Fail-open.
+ *
+ * @param {object} params
+ * @param {string} params.repoRoot
+ * @param {string} [params.eventsPath]
+ * @param {string} [params.outcomesPath]
+ * @param {number | null} [params.budgetMs] — total wall-clock budget (default 500; null = unbounded)
+ * @param {typeof fetch} [params.fetchImpl]
+ * @param {string} [params.graphqlUrl]
+ * @param {string} [params.authToken]
+ * @param {number} [params.timeoutMs]
+ * @param {() => number} [params.nowFn]
+ * @returns {Promise<{ events: { sent: number, retained: number, skipped: number }, outcomes: { sent: number, retained: number, skipped: number } }>}
+ */
+const drainBufferedUsage = async ({
+  repoRoot,
+  eventsPath,
+  outcomesPath,
+  budgetMs = 500,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride,
+  timeoutMs,
+  nowFn = Date.now,
+}) => {
+  const empty = () => ({ retained: 0, sent: 0, skipped: 0 });
+
+  if (process.env.SKILL_USAGE_DISABLE_SERVER === '1') {
+    return { events: empty(), outcomes: empty() };
+  }
+
+  const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+  if (!graphqlUrl) {
+    return { events: empty(), outcomes: empty() };
+  }
+  const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+  const resolvedTimeout =
+    timeoutMs ??
+    (Number(process.env.SKILL_USAGE_POST_TIMEOUT_MS) ||
+      DEFAULT_POST_TIMEOUT_MS);
+  const deadlineMs = budgetMs == null ? undefined : nowFn() + budgetMs;
+
+  const events = await drainJsonlFile({
+    deadlineMs,
+    filePath: eventsPath || defaultJsonlPath(repoRoot),
+    nowFn,
+    post: (event) =>
+      postSkillUsageEvent({
+        authToken,
+        event,
+        fetchImpl,
+        graphqlUrl,
+        timeoutMs: resolvedTimeout,
+      }),
+  });
+
+  const outcomes = await drainJsonlFile({
+    deadlineMs,
+    filePath: outcomesPath || defaultOutcomesJsonlPath(repoRoot),
+    nowFn,
+    post: (event) =>
+      postSkillUsageOutcome({
+        authToken,
+        event,
+        fetchImpl,
+        graphqlUrl,
+        timeoutMs: resolvedTimeout,
+      }),
+  });
+
+  return { events, outcomes };
+};
+
 module.exports = {
+  DEFAULT_ABANDONED_MS,
   DEFAULT_ARGS_MAX_LEN,
   DEFAULT_JSONL_REL,
   DEFAULT_OUTCOMES_JSONL_REL,
   DEFAULT_POST_TIMEOUT_MS,
   DEFAULT_PRIVACY_LEVEL,
+  DEFAULT_STARTS_DIR_REL,
   PRIVACY_LEVELS,
   RECORD_SKILL_USAGE_MUTATION,
   RECORD_SKILL_USAGE_OUTCOME_MUTATION,
@@ -932,10 +1546,16 @@ module.exports = {
   applyPrivacy,
   buildOutcomeEvent,
   buildUsageEvent,
+  completeOpenStartsForSession,
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
+  defaultStartsDir,
   detectScope,
+  drainBufferedUsage,
+  drainJsonlFile,
+  drainStartsForSession,
   graphqlUrlFromEnvMap,
+  listStartsForSession,
   loadRepoEnv,
   logHookError,
   persistOutcomeEvent,
@@ -943,11 +1563,16 @@ module.exports = {
   postSkillUsageEvent,
   postSkillUsageOutcome,
   readRepoEnvFile,
+  recordSkillStart,
   redactSecrets,
   resolveAuthToken,
   resolveGitBranch,
   resolveGraphqlUrl,
   resolveOtEnv,
+  sanitizeSessionId,
+  startCorrelationKey,
+  startsFilePathForSession,
+  sweepAbandonedStarts,
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
 };
