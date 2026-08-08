@@ -42,6 +42,12 @@ env:
   GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_STAGING || vars.GOOGLE_PROJECT_ID_STAGING }}
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
 
+  # Only the trusted `main` branch writes to the shared GCS cache; every PR /
+  # merge_group build stays read-only. This is the CREEP-safe (CVE-2025-36852)
+  # model for a single bucket — no untrusted writer can poison entries that main
+  # later reads, while PRs still get warm cache hits from main's last build.
+  NX_GCS_LOCAL_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
+
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
@@ -105,11 +111,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Inject the dynamic bucket name directly into nx.json
-      # Security: By using Strategy 2, you maintain the "Two-Bucket" security model which is the only way to protect your production cache from CREEP (CVE-2025-36852) when using bucket-based remote caching.
+      # Inject the dynamic bucket name and cache mode into nx.json. Only `main`
+      # runs read-write; PRs / merge_group stay read-only (see NX_GCS_LOCAL_MODE
+      # above). This keeps the single shared bucket CREEP-safe (CVE-2025-36852):
+      # untrusted builds can never write, so they can't poison what main reads.
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+          sed -i 's/"localMode": ".*"/"localMode": "${{ env.NX_GCS_LOCAL_MODE }}"/' nx.json
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup

@@ -93,8 +93,10 @@ jobs:
 
   deploy:
     needs: compute-affected
-    # Skip cleanly when nothing is affected (empty matrix include).
-    if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
+    # FIXME: running through Vercel for now
+    if: false
+    # # Skip cleanly when nothing is affected (empty matrix include).
+    # if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
     runs-on: blacksmith-4vcpu-ubuntu-2204
     strategy:
       fail-fast: false
@@ -134,7 +136,10 @@ jobs:
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      - name: '🪣 Point Nx at the cache bucket (two-bucket CREEP-safe model)'
+      # Deploy builds never write the cache — they inherit nx.json's committed
+      # `localMode: read-only`, so only the main CI build populates entries
+      # (CREEP-safe single bucket, CVE-2025-36852). Bucket name only here.
+      - name: '🪣 Point Nx at the cache bucket'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
 
