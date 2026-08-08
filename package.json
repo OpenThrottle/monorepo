@@ -449,6 +449,7 @@
     "check:local:package-entrypoints": "pnpm nx run monorepo:check-package-entrypoints",
     "check:local:validate-tags": "pnpm nx:validate-tags",
     "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
+    "check:tsconfig-refs": "tsx ./scripts/check-tsconfig-refs.ts",
     "clean": "pnpm run \"/^clean:.*/\"",
     "clean:artifacts": "pnpm dlx rimraf --glob {applications,packages}/**/{.cache,build,dist}",
     "clean:buildInfo": "pnpm dlx rimraf --glob **/.tsbuildinfo && pnpm dlx rimraf --glob **/*.tsbuildinfo",

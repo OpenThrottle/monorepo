@@ -35,9 +35,16 @@ import {
  *   tsc --build tsconfig.json --emitDeclarationOnly   (source; emits dist .d.ts)
  *   && tsc --noEmit -p tsconfig.test.json             (tests; only when present)
  *
- * `syncGenerators: ['@nx/js:typescript-sync']` is re-attached so tsconfig
- * project-reference sync keeps running (it was previously attached by
- * `@nx/js`).
+ * `syncGenerators: ['@nx/js:typescript-sync']` is re-attached to mirror the
+ * target shape `@nx/js` would otherwise produce. It is INERT in this workspace:
+ * `nx.json` sets `sync.disabledTaskSyncGenerators: ['@nx/js:typescript-sync']`,
+ * so the sync gate never fires. We deliberately disable it because on Nx 22.7.4
+ * the generator emits phantom cross-references between the React Router apps
+ * (Nx #36297) and, being run in a non-TTY worktree shell, it hard-fails targets
+ * with "workspace is out of sync" before they run. tsconfig `references` are
+ * maintained manually instead — NEVER run `nx sync`. Keeping the attachment (vs
+ * deleting it) means removing the `disabledTaskSyncGenerators` entry cleanly
+ * restores the documented `@nx/js` baseline rather than silently diverging.
  *
  * NOTE: `nx.json` targetDefaults.typecheck still layers `cache`/`dependsOn` on
  * top of what is inferred here (target defaults override inferred fields) — keep
@@ -123,6 +130,8 @@ export const createNodesV2: CreateNodesV2 = [
                     '{projectRoot}/dist/**/*.tsbuildinfo',
                     '{projectRoot}/tsconfig.test.tsbuildinfo',
                   ],
+                  // Inert: disabled workspace-wide via nx.json
+                  // sync.disabledTaskSyncGenerators. See the file header.
                   syncGenerators: ['@nx/js:typescript-sync'],
                 },
               },
