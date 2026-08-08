@@ -17,12 +17,21 @@ const {
   applyPrivacy,
   buildOutcomeEvent,
   buildUsageEvent,
+  completeOpenStartsForSession,
   detectScope,
+  drainBufferedUsage,
+  drainJsonlFile,
+  drainStartsForSession,
+  listStartsForSession,
   persistOutcomeEvent,
   persistUsageEvent,
   postSkillUsageEvent,
   postSkillUsageOutcome,
+  recordSkillStart,
   resolveGraphqlUrl,
+  startCorrelationKey,
+  startsFilePathForSession,
+  sweepAbandonedStarts,
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
 } = require('./lib.cjs');
@@ -535,5 +544,574 @@ describe('toRecordSkillUsageOutcomeInput / persistOutcomeEvent', () => {
     const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
     assert.equal(line.event_kind, 'outcome');
     assert.equal(line.skill_name, 'ot-plans');
+  });
+});
+
+describe('start-correlation store', () => {
+  let startsDir;
+  before(() => {
+    startsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-starts-'));
+  });
+  after(() => {
+    fs.rmSync(startsDir, { force: true, recursive: true });
+  });
+
+  it('records a start (identifiers + timestamp only, no args)', () => {
+    const res = recordSkillStart({
+      repoRoot: startsDir,
+      scope: 'ours',
+      sessionId: 'sess-A',
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'toolu_1',
+    });
+    assert.equal(res.ok, true);
+
+    const entries = listStartsForSession({
+      repoRoot: startsDir,
+      sessionId: 'sess-A',
+      startsDir,
+    });
+    assert.equal(entries.length, 1);
+    assert.deepEqual(entries[0], {
+      scope: 'ours',
+      session_id: 'sess-A',
+      skill_name: 'ot-plans',
+      started_at: '2026-08-01T00:00:00.000Z',
+      tool_use_id: 'toolu_1',
+    });
+    // Privacy: no args key ever persisted here.
+    assert.equal('args' in entries[0], false);
+  });
+
+  it('skips (does not error) when session_id is missing', () => {
+    const res = recordSkillStart({
+      repoRoot: startsDir,
+      sessionId: null,
+      skillName: 'ot-plans',
+      startsDir,
+    });
+    assert.equal(res.ok, false);
+    assert.match(res.reason, /missing session_id/);
+  });
+
+  it('lists [] for an unknown session and skips malformed lines', () => {
+    assert.deepEqual(
+      listStartsForSession({
+        repoRoot: startsDir,
+        sessionId: 'nope',
+        startsDir,
+      }),
+      [],
+    );
+
+    const filePath = startsFilePathForSession(startsDir, 'sess-malformed');
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(
+      filePath,
+      `{"session_id":"sess-malformed","skill_name":"a","started_at":"t","tool_use_id":null}\nnot-json\n`,
+      'utf8',
+    );
+    const entries = listStartsForSession({
+      repoRoot: startsDir,
+      sessionId: 'sess-malformed',
+      startsDir,
+    });
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].skill_name, 'a');
+  });
+
+  it('startCorrelationKey prefers tool_use_id, falls back to started_at', () => {
+    assert.equal(
+      startCorrelationKey({
+        session_id: 's',
+        skill_name: 'k',
+        started_at: 't',
+        tool_use_id: 'tid',
+      }),
+      's::k::tid',
+    );
+    assert.equal(
+      startCorrelationKey({
+        session_id: 's',
+        skill_name: 'k',
+        started_at: 't',
+        tool_use_id: null,
+      }),
+      's::k::t',
+    );
+  });
+
+  it('drains only resolved keys, retaining the rest, then unlinks when empty', () => {
+    const sessionId = 'sess-drain';
+    recordSkillStart({
+      repoRoot: startsDir,
+      sessionId,
+      skillName: 'alpha',
+      startedAt: 't1',
+      startsDir,
+      toolUseId: 'tu-1',
+    });
+    recordSkillStart({
+      repoRoot: startsDir,
+      sessionId,
+      skillName: 'beta',
+      startedAt: 't2',
+      startsDir,
+      toolUseId: 'tu-2',
+    });
+
+    const drained = drainStartsForSession({
+      repoRoot: startsDir,
+      resolvedKeys: new Set([`${sessionId}::alpha::tu-1`]),
+      sessionId,
+      startsDir,
+    });
+    assert.equal(drained, 1);
+
+    const remaining = listStartsForSession({
+      repoRoot: startsDir,
+      sessionId,
+      startsDir,
+    });
+    assert.equal(remaining.length, 1);
+    assert.equal(remaining[0].skill_name, 'beta');
+
+    // Draining all (no resolvedKeys) removes the file entirely.
+    const drainedAll = drainStartsForSession({
+      repoRoot: startsDir,
+      sessionId,
+      startsDir,
+    });
+    assert.equal(drainedAll, 1);
+    assert.equal(fs.existsSync(startsFilePathForSession(startsDir, sessionId)), false);
+    assert.equal(
+      drainStartsForSession({ repoRoot: startsDir, sessionId, startsDir }),
+      0,
+    );
+  });
+});
+
+describe('completeOpenStartsForSession', () => {
+  let tmpRoot;
+  let startsDir;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-complete-'));
+    fs.mkdirSync(path.join(tmpRoot, 'skills', 'ot-plans'), { recursive: true });
+    startsDir = path.join(tmpRoot, 'starts');
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  /** A fetchImpl that records posted outcome inputs and returns a server id. */
+  const recordingFetch = (sink) => async (_url, init) => {
+    const body = JSON.parse(init.body);
+    sink.push(body.variables.input);
+    return {
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          data: { recordSkillUsageOutcome: { id: `out-${sink.length}` } },
+        };
+      },
+    };
+  };
+
+  it('emits one success outcome per open start with computed duration, then drains', async () => {
+    const sessionId = 'sess-complete';
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      scope: 'ours',
+      sessionId,
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'tu-a',
+    });
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      scope: 'ours',
+      sessionId,
+      skillName: 'create-readme',
+      startedAt: '2026-08-01T00:00:03.000Z',
+      startsDir,
+      toolUseId: 'tu-b',
+    });
+
+    const posted = [];
+    const res = await completeOpenStartsForSession({
+      fetchImpl: recordingFetch(posted),
+      finishedAt: '2026-08-01T00:00:05.000Z',
+      graphqlUrl: 'http://example.test/graphql',
+      repoRoot: tmpRoot,
+      sessionId,
+      startsDir,
+    });
+
+    assert.equal(res.resolved, 2);
+    assert.equal(posted.length, 2);
+    const bySkill = Object.fromEntries(posted.map((p) => [p.skillName, p]));
+    assert.equal(bySkill['ot-plans'].outcome, 'success');
+    assert.equal(bySkill['ot-plans'].durationMs, 5000);
+    assert.equal(bySkill['ot-plans'].sessionId, sessionId);
+    assert.equal(bySkill['ot-plans'].toolUseId, 'tu-a');
+    assert.equal(bySkill['create-readme'].durationMs, 2000);
+
+    // Drained → a repeated Stop fire is a no-op (no double emit).
+    assert.deepEqual(
+      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
+      [],
+    );
+    const posted2 = [];
+    const res2 = await completeOpenStartsForSession({
+      fetchImpl: recordingFetch(posted2),
+      graphqlUrl: 'http://example.test/graphql',
+      repoRoot: tmpRoot,
+      sessionId,
+      startsDir,
+    });
+    assert.equal(res2.resolved, 0);
+    assert.equal(posted2.length, 0);
+  });
+
+  it('dedupes duplicate correlation lines (same key emits once)', async () => {
+    const sessionId = 'sess-dupe';
+    for (let i = 0; i < 3; i += 1) {
+      recordSkillStart({
+        repoRoot: tmpRoot,
+        sessionId,
+        skillName: 'ot-plans',
+        startedAt: '2026-08-01T00:00:00.000Z',
+        startsDir,
+        toolUseId: 'tu-dupe',
+      });
+    }
+    const posted = [];
+    const res = await completeOpenStartsForSession({
+      fetchImpl: recordingFetch(posted),
+      finishedAt: '2026-08-01T00:00:01.000Z',
+      graphqlUrl: 'http://example.test/graphql',
+      repoRoot: tmpRoot,
+      sessionId,
+      startsDir,
+    });
+    assert.equal(res.resolved, 1);
+    assert.equal(posted.length, 1);
+  });
+
+  it('falls back to outcomes JSONL when the server is down, still draining starts', async () => {
+    const sessionId = 'sess-offline';
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      sessionId,
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'tu-off',
+    });
+    const jsonlPath = path.join(tmpRoot, 'offline-outcomes.jsonl');
+    const res = await completeOpenStartsForSession({
+      fetchImpl: async () => {
+        throw new Error('ECONNREFUSED');
+      },
+      finishedAt: '2026-08-01T00:00:02.000Z',
+      graphqlUrl: 'http://127.0.0.1:1/graphql',
+      jsonlPath,
+      repoRoot: tmpRoot,
+      sessionId,
+      startsDir,
+      timeoutMs: 50,
+    });
+    assert.equal(res.resolved, 1);
+    assert.equal(res.results[0].sink, 'jsonl');
+    const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
+    assert.equal(line.outcome, 'success');
+    assert.equal(line.duration_ms, 2000);
+    assert.deepEqual(
+      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
+      [],
+    );
+  });
+});
+
+describe('sweepAbandonedStarts', () => {
+  let tmpRoot;
+  let startsDir;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-abandoned-'));
+    fs.mkdirSync(path.join(tmpRoot, 'skills', 'ot-plans'), { recursive: true });
+    startsDir = path.join(tmpRoot, 'starts');
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  it('emits abandoned for stale foreign sessions, skips current + fresh files', async () => {
+    const now = Date.parse('2026-08-02T00:00:00.000Z');
+    const maxAgeMs = 6 * 60 * 60 * 1000;
+
+    // Stale foreign session (mtime 1 day old) → should be swept.
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      sessionId: 'sess-stale',
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'tu-stale',
+    });
+    const stalePath = startsFilePathForSession(startsDir, 'sess-stale');
+    const oldMs = now - 24 * 60 * 60 * 1000;
+    fs.utimesSync(stalePath, new Date(oldMs), new Date(oldMs));
+
+    // Current session → must NOT be swept even if old.
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      sessionId: 'sess-current',
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'tu-cur',
+    });
+    fs.utimesSync(
+      startsFilePathForSession(startsDir, 'sess-current'),
+      new Date(oldMs),
+      new Date(oldMs),
+    );
+
+    // Fresh foreign session → within window, must NOT be swept.
+    recordSkillStart({
+      repoRoot: tmpRoot,
+      sessionId: 'sess-fresh',
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T23:59:00.000Z',
+      startsDir,
+      toolUseId: 'tu-fresh',
+    });
+    const freshMs = now - 60 * 1000;
+    fs.utimesSync(
+      startsFilePathForSession(startsDir, 'sess-fresh'),
+      new Date(freshMs),
+      new Date(freshMs),
+    );
+
+    const posted = [];
+    const fetchImpl = async (_url, init) => {
+      posted.push(JSON.parse(init.body).variables.input);
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { data: { recordSkillUsageOutcome: { id: 'a-1' } } };
+        },
+      };
+    };
+
+    const res = await sweepAbandonedStarts({
+      currentSessionId: 'sess-current',
+      fetchImpl,
+      graphqlUrl: 'http://example.test/graphql',
+      maxAgeMs,
+      now,
+      repoRoot: tmpRoot,
+      startsDir,
+    });
+
+    assert.equal(res.swept, 1);
+    assert.equal(posted.length, 1);
+    assert.equal(posted[0].outcome, 'abandoned');
+    assert.equal(posted[0].skillName, 'ot-plans');
+    assert.equal(posted[0].durationMs, undefined); // null duration → omitted
+
+    // Stale file removed; current + fresh retained.
+    assert.equal(fs.existsSync(stalePath), false);
+    assert.equal(
+      fs.existsSync(startsFilePathForSession(startsDir, 'sess-current')),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(startsFilePathForSession(startsDir, 'sess-fresh')),
+      true,
+    );
+  });
+});
+
+describe('drainJsonlFile', () => {
+  let tmpRoot;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-drain-'));
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  const seed = (name, lines) => {
+    const p = path.join(tmpRoot, name);
+    fs.writeFileSync(p, lines.map((l) => `${l}\n`).join(''), 'utf8');
+    return p;
+  };
+  const readLines = (p) =>
+    fs.existsSync(p)
+      ? fs
+          .readFileSync(p, 'utf8')
+          .split('\n')
+          .filter((l) => l.trim())
+      : [];
+
+  it('sends every line and removes the file on full success', async () => {
+    const filePath = seed('ok.jsonl', ['{"a":1}', '{"a":2}']);
+    const res = await drainJsonlFile({
+      filePath,
+      post: async () => ({ ok: true }),
+    });
+    assert.deepEqual(res, { retained: 0, sent: 2, skipped: 0 });
+    assert.equal(fs.existsSync(filePath), false);
+  });
+
+  it('retains everything when the server is down (nothing lost)', async () => {
+    const filePath = seed('down.jsonl', ['{"a":1}', '{"a":2}']);
+    const res = await drainJsonlFile({
+      filePath,
+      post: async () => ({ ok: false, reason: 'timeout' }),
+    });
+    assert.deepEqual(res, { retained: 2, sent: 0, skipped: 0 });
+    assert.deepEqual(readLines(filePath), ['{"a":1}', '{"a":2}']);
+  });
+
+  it('retains only the failed lines on partial success', async () => {
+    const filePath = seed('partial.jsonl', ['{"a":1}', '{"a":2}', '{"a":3}']);
+    const res = await drainJsonlFile({
+      filePath,
+      // Succeed for a===1, fail otherwise.
+      post: async (event) => ({ ok: event.a === 1 }),
+    });
+    assert.equal(res.sent, 1);
+    assert.equal(res.retained, 2);
+    assert.deepEqual(readLines(filePath).map((l) => JSON.parse(l).a).sort(), [
+      2, 3,
+    ]);
+  });
+
+  it('skips (drops) malformed lines, logs, and is not fatal', async () => {
+    const filePath = seed('malformed.jsonl', ['{"a":1}', 'not-json', '{"a":2}']);
+    const res = await drainJsonlFile({
+      filePath,
+      post: async () => ({ ok: true }),
+    });
+    assert.equal(res.sent, 2);
+    assert.equal(res.skipped, 1);
+    assert.equal(res.retained, 0);
+    assert.equal(fs.existsSync(filePath), false);
+  });
+
+  it('honors the deadline, retaining not-yet-posted lines', async () => {
+    const filePath = seed('deadline.jsonl', ['{"a":1}', '{"a":2}']);
+    let posted = 0;
+    const res = await drainJsonlFile({
+      // Deadline already passed → post is never called.
+      deadlineMs: 1000,
+      filePath,
+      nowFn: () => 2000,
+      post: async () => {
+        posted += 1;
+        return { ok: true };
+      },
+    });
+    assert.equal(posted, 0);
+    assert.equal(res.sent, 0);
+    assert.equal(res.retained, 2);
+    assert.deepEqual(readLines(filePath), ['{"a":1}', '{"a":2}']);
+  });
+
+  it('returns zeros when the file does not exist', async () => {
+    const res = await drainJsonlFile({
+      filePath: path.join(tmpRoot, 'missing.jsonl'),
+      post: async () => ({ ok: true }),
+    });
+    assert.deepEqual(res, { retained: 0, sent: 0, skipped: 0 });
+  });
+});
+
+describe('drainBufferedUsage', () => {
+  let tmpRoot;
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-drainall-'));
+  });
+  after(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+  });
+
+  it('drains both events + outcomes via the right mutations', async () => {
+    const eventsPath = path.join(tmpRoot, 'events.jsonl');
+    const outcomesPath = path.join(tmpRoot, 'outcomes.jsonl');
+    fs.writeFileSync(
+      eventsPath,
+      `${JSON.stringify({ occurredAt: 't', scope: 'ours', skill_name: 'ot-plans', timestamp: 't' })}\n`,
+      'utf8',
+    );
+    fs.writeFileSync(
+      outcomesPath,
+      `${JSON.stringify({ outcome: 'success', skill_name: 'ot-plans', timestamp: 't' })}\n`,
+      'utf8',
+    );
+
+    const seenMutations = [];
+    const fetchImpl = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      const isOutcome = body.query.includes('recordSkillUsageOutcome');
+      seenMutations.push(isOutcome ? 'outcome' : 'usage');
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            data: isOutcome
+              ? { recordSkillUsageOutcome: { id: 'o1' } }
+              : { recordSkillUsage: { id: 'e1' } },
+          };
+        },
+      };
+    };
+
+    const res = await drainBufferedUsage({
+      eventsPath,
+      fetchImpl,
+      graphqlUrl: 'http://example.test/graphql',
+      outcomesPath,
+      repoRoot: tmpRoot,
+    });
+
+    assert.equal(res.events.sent, 1);
+    assert.equal(res.outcomes.sent, 1);
+    assert.deepEqual(seenMutations.sort(), ['outcome', 'usage']);
+    assert.equal(fs.existsSync(eventsPath), false);
+    assert.equal(fs.existsSync(outcomesPath), false);
+  });
+
+  it('is a no-op when SKILL_USAGE_DISABLE_SERVER=1 (buffer left intact)', async () => {
+    const eventsPath = path.join(tmpRoot, 'events-disabled.jsonl');
+    fs.writeFileSync(eventsPath, `${JSON.stringify({ a: 1 })}\n`, 'utf8');
+    const prev = process.env.SKILL_USAGE_DISABLE_SERVER;
+    process.env.SKILL_USAGE_DISABLE_SERVER = '1';
+    try {
+      const res = await drainBufferedUsage({
+        eventsPath,
+        fetchImpl: async () => {
+          throw new Error('should not be called');
+        },
+        graphqlUrl: 'http://example.test/graphql',
+        repoRoot: tmpRoot,
+      });
+      assert.equal(res.events.sent, 0);
+      assert.equal(fs.existsSync(eventsPath), true);
+    } finally {
+      if (prev === undefined) {
+        delete process.env.SKILL_USAGE_DISABLE_SERVER;
+      } else {
+        process.env.SKILL_USAGE_DISABLE_SERVER = prev;
+      }
+    }
   });
 });

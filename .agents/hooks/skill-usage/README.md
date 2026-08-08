@@ -25,10 +25,10 @@ producer hook payload → <tool adapter> → NormalizedInvocation
 
 Wired producers live under each tool's own hook folder (editor-native config):
 
-| Producer    | Adapter                                                                      | Config                                                       |
-| ----------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Claude Code | `.claude/hooks/skill-usage-capture.cjs` (+ `skill-usage-claude-adapter.cjs`) | `.claude/settings.json` → `PreToolUse`/`UserPromptExpansion` |
-| _your tool_ | copy `adapter.template.cjs` into your tool's hooks dir                       | your tool's hook config                                      |
+| Producer    | Adapter                                                                                                                               | Config                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Claude Code | `.claude/hooks/skill-usage-capture.cjs` (+ `skill-usage-claude-adapter.cjs`) start; `.claude/hooks/skill-usage-complete.cjs` outcomes | `.claude/settings.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete) |
+| _your tool_ | copy `adapter.template.cjs` into your tool's hooks dir                                                                                | your tool's hook config                                                                  |
 
 ## The producer contract
 
@@ -60,6 +60,39 @@ attributable per tool. Pick a short, stable kebab-case id and keep it constant.
   leave the machine. The server stores them as-sent and never re-expands.
 - **Fail-open**: capture never blocks or throws into the host tool. On any
   server error it appends a local JSONL line instead of losing the event.
+
+## Outcomes & duration (automatic)
+
+The **Outcomes** and **Avg duration** columns on `/usage` are populated
+**automatically — zero manual steps**:
+
+1. On each start, the capture hook also records an identifiers-only correlation
+   entry (`session_id, skill_name, tool_use_id, started_at, scope` — **no args**)
+   under `.cache/skill-usage/starts/<session_id>.jsonl`.
+2. At turn end, the Claude Code `Stop` hook (`skill-usage-complete.cjs`) resolves
+   the open starts for the session, emits one `success` outcome each with
+   `duration_ms = Stop − started_at` via `recordSkillUsageOutcome`, and drains
+   them (deduped — a repeated `Stop` never double-emits). Starts stranded by a
+   session that ended without a `Stop` are later swept as `abandoned`.
+
+`Stop` carries no `tool_use_id`/`skill_name`/error signal, so correlation is
+session-scoped and the automatic classifier emits `success` (or `abandoned`).
+For a specific outcome the automatic path can't infer — notably `error` — call
+the **opt-in precision** helper `.claude/hooks/skill-usage-outcome.cjs`
+(`--skill … --outcome error [--duration-ms …] --session …`). It is additive, not
+a replacement.
+
+**Absent outcomes are expected and valid** for third-party / uninstrumented
+skills (namespaced `a:b` or `skills-lock.json` installs) — those legitimately
+render `—`.
+
+### Draining the JSONL fallback
+
+When the server is down, starts/outcomes buffer to
+`.cache/skill-usage/{events,outcomes}.jsonl`. The `Stop` hook runs a small
+time-boxed drain opportunistically, and `.claude/hooks/skill-usage-drain.cjs`
+does an unbounded catch-up flush for manual / scheduled runs (idempotent,
+concurrent-writer safe via an atomic rename; unsent lines are retained).
 
 ## Adding a new producer
 

@@ -33,6 +33,7 @@ const {
   defaultJsonlPath,
   logHookError,
   persistUsageEvent,
+  recordSkillStart,
 } = require('../../.agents/hooks/skill-usage/lib.cjs');
 const {
   CLAUDE_SOURCE,
@@ -73,6 +74,18 @@ const main = async () => {
     if (!event) {
       return;
     }
+
+    // Additive: remember this start (identifiers + timestamp only, no args) so
+    // the completion hook can compute duration and correlate. Never blocks or
+    // changes the start-event ingest below; fail-open inside recordSkillStart.
+    recordSkillStart({
+      repoRoot,
+      scope: event.scope,
+      sessionId: event.session_id,
+      skillName: event.skill_name,
+      startedAt: event.timestamp,
+      toolUseId: event.tool_use_id ?? null,
+    });
 
     const outPath =
       process.env.SKILL_USAGE_JSONL_PATH || defaultJsonlPath(repoRoot);

@@ -16,6 +16,7 @@ const { describe, it, before, after } = require('node:test');
 const {
   CLAUDE_SOURCE,
   normalizeClaudePayload,
+  normalizeClaudeStopPayload,
 } = require('./skill-usage-claude-adapter.cjs');
 const { buildUsageEvent } = require('../../.agents/hooks/skill-usage/lib.cjs');
 
@@ -58,6 +59,34 @@ describe('normalizeClaudePayload', () => {
 
   it('returns null for unrelated payloads', () => {
     assert.equal(normalizeClaudePayload({ hook_event_name: 'Stop' }), null);
+  });
+});
+
+describe('normalizeClaudeStopPayload', () => {
+  it('extracts session id from a Stop payload', () => {
+    assert.deepEqual(
+      normalizeClaudeStopPayload({
+        hook_event_name: 'Stop',
+        session_id: 'sess-stop',
+        stop_hook_active: false,
+      }),
+      { hook_event_name: 'Stop', session_id: 'sess-stop' },
+    );
+  });
+
+  it('preserves SubagentStop event name', () => {
+    assert.equal(
+      normalizeClaudeStopPayload({
+        hook_event_name: 'SubagentStop',
+        session_id: 'sess-sub',
+      })?.hook_event_name,
+      'SubagentStop',
+    );
+  });
+
+  it('returns null when session id is missing', () => {
+    assert.equal(normalizeClaudeStopPayload({ hook_event_name: 'Stop' }), null);
+    assert.equal(normalizeClaudeStopPayload(null), null);
   });
 });
 

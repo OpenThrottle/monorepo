@@ -79,21 +79,30 @@ The artifact is recorded `unverified`; the git verifier promotes it to `landed`/
 - **Reorder:** use `reorder_plan_tasks` instead of deleting and recreating tasks when fixing order.
 - **Schema detail:** `databases/README.md` § Task sort_order.
 
-## Optional skill-usage outcome enrichment (opt-in)
+## Skill-usage outcome enrichment (automatic)
 
-Harness capture (`PreToolUse` / `UserPromptExpansion` → `skill_usage_events`) is the **primary** observability path for all skills. Manual per-skill instrumentation is explicitly **not** the primary mechanism — it only sees skills we author, misses auto-triggered invocations, and creates blind spots.
+Outcomes + duration are now captured **automatically, with zero manual steps**. The
+`PreToolUse` / `UserPromptExpansion` hook records each start (→ `skill_usage_events`, the
+Invocations column) and remembers it in a session-scoped correlation store; the `Stop` hook
+(`.claude/hooks/skill-usage-complete.cjs`) then emits one `success` outcome per open start with
+`duration_ms = Stop − start` (→ `skill_usage_outcomes`, powering the **Outcomes** + **Avg
+duration** columns on `/usage`). You do **not** need to run anything at skill completion.
 
-For depth on skills we control, you may **optionally** emit an outcome at completion (correlated by `session_id` + skill name):
+Missing outcomes remain a valid state: third-party / uninstrumented skills legitimately show `—`.
+
+**Optional precision (opt-in):** to record a specific outcome the automatic path can't infer —
+notably `error` (the `Stop` payload carries no error signal) — call the manual helper:
 
 ```bash
 node .claude/hooks/skill-usage-outcome.cjs \
   --skill ot-plans \
-  --outcome success \
+  --outcome error \
   --duration-ms 4200 \
   --session "$CLAUDE_SESSION_ID"
 ```
 
-`--outcome` is `success` | `abandoned` | `error`. Missing outcomes are a valid state. Fail-open: never block the skill.
+`--outcome` is `success` | `abandoned` | `error`. Fail-open throughout: outcome capture never
+blocks the skill.
 
 ## Cross-links
 
