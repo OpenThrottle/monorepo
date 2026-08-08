@@ -8,7 +8,7 @@
  *
  *     pnpm run setup:mcp-instructions
  *     # or directly:
- *     tsx scripts/print-mcp-install.ts
+ *     tsx scripts/setup_mcp-instructions.ts
  *
  * It emits two blocks:
  *   - Claude Code: a `claude mcp add-json ... --scope user` command.
