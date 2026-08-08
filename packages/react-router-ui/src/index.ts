@@ -40,6 +40,7 @@ export * from './hooks/fetchServerMetrics';
 export * from './hooks/useAudio';
 export * from './hooks/useAudioCapture';
 export * from './hooks/useDebouncedSearchParam';
+export * from './hooks/usePlanRefResolver';
 export * from './hooks/useShare';
 export * from './hooks/useUrlSyncedTabValue';
 export * from './hooks/usePollServerMetrics';

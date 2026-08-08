@@ -95,6 +95,7 @@ import {
   EvaluatePlanRulesResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
+  PlanRefObject,
   PlanRunObject,
   PlanStatusCountObject,
 } from './plan.object';
@@ -115,6 +116,36 @@ const MAX_PLANS_LIMIT = 500;
  * result back to the client.
  */
 const MAX_FILTER_FACET_ROWS = 1000;
+
+/**
+ * Minimum length of a normalized (hyphen-stripped) hex prefix before
+ * `resolvePlanRef` will run a lookup. Below this we short-circuit to an empty
+ * result so tiny fragments (e.g. a single "f") never trigger a scan.
+ */
+const MIN_PLAN_REF_PREFIX_LEN = 6;
+/** Hard cap on rows returned by resolvePlanRef (ambiguous prefixes list top N). */
+const MAX_PLAN_REF_MATCHES = 6;
+/** A normalized plan-id prefix is hex only (hyphens already stripped). */
+const REGEX_HEX_ONLY = /^[0-9a-f]+$/;
+
+/**
+ * @description Normalize a user-supplied id fragment for prefix matching:
+ * trim, lowercase, strip hyphens. Returns null when the result is too short or
+ * contains non-hex characters (so we never build a LIKE scan from junk input).
+ */
+function normalizePlanRefPrefix(prefix: string): string | null {
+  const normalized = prefix.trim().toLowerCase().replace(/-/g, '');
+
+  if (normalized.length < MIN_PLAN_REF_PREFIX_LEN) {
+    return null;
+  }
+
+  if (!REGEX_HEX_ONLY.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
 
 /**
  * @description Resolve the actor user id to persist on a run record. Only a user
@@ -449,6 +480,45 @@ export class PlansResolver {
       .findOne({ where: { id } });
 
     return entity;
+  }
+
+  // @ProfileResponseTime('PlansResolver.resolvePlanRef')
+  @Query(() => [PlanRefObject], {
+    description: `Resolve a short plan-id fragment (leading hex of a full UUID, e.g. "f5e40886") to matching plan refs. Normalizes the prefix (trim/lowercase/strip hyphens); prefixes shorter than ${MIN_PLAN_REF_PREFIX_LEN} hex chars or containing non-hex characters return []. A unique match powers a confident ⌘K redirect; multiple matches (up to ${MAX_PLAN_REF_MATCHES}) are listed for disambiguation.`,
+  })
+  async resolvePlanRef(
+    @Args('prefix', { type: () => String }) prefix: string,
+  ): Promise<PlanRefObject[]> {
+    const normalized = normalizePlanRefPrefix(prefix);
+
+    if (!normalized) {
+      return [];
+    }
+
+    // Compare against the hyphen-stripped id so a fragment that spans a UUID
+    // hyphen boundary (e.g. "f5e4088636d3") still matches. `normalized` is
+    // validated hex-only, so the LIKE pattern carries no wildcard metacharacters;
+    // the value is still passed as a bound param.
+    const rows = await this.plansService
+      .getRepository()
+      .createQueryBuilder('plan')
+      .select(['plan.id', 'plan.status', 'plan.title'])
+      .where(`REPLACE(plan.id::text, '-', '') ILIKE :pattern`, {
+        pattern: `${normalized}%`,
+      })
+      .orderBy('plan.updatedAt', 'DESC')
+      .take(MAX_PLAN_REF_MATCHES)
+      .getMany();
+
+    return rows.map((row) => {
+      const ref = new PlanRefObject();
+
+      ref.id = row.id;
+      ref.status = row.status;
+      ref.title = row.title;
+
+      return ref;
+    });
   }
 
   // @ProfileResponseTime('PlansResolver.plans')

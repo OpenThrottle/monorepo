@@ -57,6 +57,8 @@ export interface OpenThrottleCommanderProps {
   readonly onEmptyStateSearch?: (query: string) => void;
   /** Controlled: called when dialog open state changes. */
   readonly onOpenChange?: (open: boolean) => void;
+  /** Notified with the live palette query on every keystroke (e.g. to drive a debounced id-prefix resolver). */
+  readonly onSearchChange?: (query: string) => void;
   /** Controlled: when set, open state is controlled by parent. */
   readonly open?: boolean;
   readonly placeholder?: string;
@@ -72,6 +74,7 @@ export const OpenThrottleCommander = (
     groups,
     onEmptyStateSearch,
     onOpenChange: onOpenChangeProp,
+    onSearchChange,
     open: openProp,
     placeholder = 'Type a command or search...',
     footerHint,
@@ -118,7 +121,10 @@ export const OpenThrottleCommander = (
     >
       <CommandInput
         className="border-border! flex-1 border-b! p-4 pb-4 text-sm! leading-none"
-        onValueChange={setSearch}
+        onValueChange={(value) => {
+          setSearch(value);
+          onSearchChange?.(value);
+        }}
         placeholder={placeholder}
         value={search}
       />

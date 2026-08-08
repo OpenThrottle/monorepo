@@ -13,6 +13,7 @@ export * from './hooks/useKeyboardShortcut';
 export * from './hooks/useResolvedThemeMode';
 export * from './utils/csp';
 export * from './utils/environment';
+export * from './utils/id-fragment';
 export * from './utils/logger';
 export * from './utils/metadata';
 export * from './utils/parsers';

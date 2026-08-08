@@ -1,0 +1,7 @@
+query resolvePlanRef($prefix: String!) {
+  resolvePlanRef(prefix: $prefix) {
+    id
+    status
+    title
+  }
+}

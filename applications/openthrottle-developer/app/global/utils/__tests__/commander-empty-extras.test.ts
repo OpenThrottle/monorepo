@@ -111,4 +111,95 @@ describe('buildCommanderEmptyStateExtras', () => {
   test('REGEX_UUID accepts lowercase hex uuid', () => {
     expect(REGEX_UUID.test('c65fb0f7-56ae-43bb-b516-dfd41fda7985')).toBe(true);
   });
+
+  describe('short id fragment', () => {
+    const FRAGMENT = 'c65fb0f7';
+    const FULL_ID = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';
+
+    test('unique match renders a confident Open plan row + search escape', () => {
+      const submit = vi.fn();
+      const items = buildCommanderEmptyStateExtras(FRAGMENT, {
+        planRefMatches: [
+          { id: FULL_ID, status: 'in_progress', title: 'My Plan' },
+        ],
+        submitCommanderSearch: submit,
+      });
+
+      expect(items).toHaveLength(2);
+      expect(items[0]?.label).toBe('Open plan: My Plan (c65fb0f7…)');
+      items[0]?.onSelect?.();
+      expect(submit).toHaveBeenNthCalledWith(1, {
+        id: FULL_ID,
+        jump: 'plan-detail',
+      } satisfies CommanderSearchFields);
+
+      // Last row is always the workspace-search escape.
+      items[1]?.onSelect?.();
+      expect(submit).toHaveBeenNthCalledWith(2, {
+        q: FRAGMENT,
+      } satisfies CommanderSearchFields);
+    });
+
+    test('multiple matches list every plan (top N) + search escape', () => {
+      const submit = vi.fn();
+      const second = 'c65fb0f7-0000-4000-8000-000000000000';
+      const items = buildCommanderEmptyStateExtras(FRAGMENT, {
+        planRefMatches: [
+          { id: FULL_ID, status: 'in_progress', title: 'First' },
+          { id: second, status: 'completed', title: 'Second' },
+        ],
+        submitCommanderSearch: submit,
+      });
+
+      expect(items).toHaveLength(3);
+      items[0]?.onSelect?.();
+      items[1]?.onSelect?.();
+      expect(submit).toHaveBeenNthCalledWith(1, {
+        id: FULL_ID,
+        jump: 'plan-detail',
+      } satisfies CommanderSearchFields);
+      expect(submit).toHaveBeenNthCalledWith(2, {
+        id: second,
+        jump: 'plan-detail',
+      } satisfies CommanderSearchFields);
+    });
+
+    test('in-flight lookup shows a Resolving row + search escape', () => {
+      const submit = vi.fn();
+      const items = buildCommanderEmptyStateExtras(FRAGMENT, {
+        planRefLoading: true,
+        planRefMatches: [],
+        submitCommanderSearch: submit,
+      });
+
+      expect(items).toHaveLength(2);
+      expect(items[0]?.label).toBe('Resolving plan “c65fb0f7…”');
+      // The resolving row is informational (no action).
+      expect(items[0]?.onSelect).toBeUndefined();
+    });
+
+    test('no match while idle falls through to browse shortcuts', () => {
+      const submit = vi.fn();
+      const items = buildCommanderEmptyStateExtras(FRAGMENT, {
+        planRefLoading: false,
+        planRefMatches: [],
+        submitCommanderSearch: submit,
+      });
+
+      expect(items).toHaveLength(3);
+      items[0]?.onSelect?.();
+      expect(submit).toHaveBeenNthCalledWith(1, {
+        jump: 'plans-index',
+      } satisfies CommanderSearchFields);
+    });
+
+    test('falls through to browse shortcuts when no resolver data is supplied', () => {
+      const submit = vi.fn();
+      const items = buildCommanderEmptyStateExtras(FRAGMENT, {
+        submitCommanderSearch: submit,
+      });
+
+      expect(items).toHaveLength(3);
+    });
+  });
 });

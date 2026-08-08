@@ -1,19 +1,28 @@
 import * as React from 'react';
-import type { CommanderItem } from '@openthrottle/react-router-ui';
+import type {
+  CommanderItem,
+  PlanRefMatch,
+} from '@openthrottle/react-router-ui';
+import {
+  isShortIdFragment,
+  REGEX_UUID,
+} from '@openthrottle/react-router-utils';
 import {
   BotIcon,
   ChartLineIcon,
   ClipboardListIcon,
   LayersIcon,
+  Loader2Icon,
   MapIcon,
   SearchIcon,
 } from 'lucide-react';
 
 /**
- * @description Matches typical OpenThrottle / RFC UUID strings pasted into the command palette.
+ * @description Full OpenThrottle / RFC UUID matcher, re-exported from the shared
+ * recognition util for the full-UUID commander paths (and the root action's
+ * REGEX_UUID guard, which still validates the resolved full id before redirect).
  */
-export const REGEX_UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export { REGEX_UUID };
 
 const UUID_GROUP =
   '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})';
@@ -34,6 +43,14 @@ export type CommanderSearchFields = {
  * @description Handlers for rows built when the palette filter matches no static commands.
  */
 interface CommanderEmptyStateExtrasHandlers {
+  /**
+   * @description True while a short-fragment plan lookup is in flight (drives the "Resolving…" row).
+   */
+  readonly planRefLoading?: boolean;
+  /**
+   * @description Resolved plan matches for a typed short id fragment (from {@link usePlanRefResolver}). Empty until a fragment resolves.
+   */
+  readonly planRefMatches?: readonly PlanRefMatch[];
   /**
    * @description Submit debug navigation via root action — same redirect rules as the loader-tested action map.
    */
@@ -104,13 +121,81 @@ const buildNonUuidDebugIndexItems = (
 };
 
 /**
+ * @description Workspace full-text search escape, always offered alongside the
+ * short-fragment plan rows so there is an action even when nothing resolves.
+ */
+const buildWorkspaceSearchItem = (
+  q: string,
+  submit: CommanderEmptyStateExtrasHandlers['submitCommanderSearch'],
+): CommanderItem => ({
+  icon: <SearchIcon aria-hidden={true} className={ICON_SM} />,
+  id: `jump-search-fragment-${q}`,
+  label: `Search workspace for “${q}” (tasks, plans, chunks)`,
+  onSelect: () => {
+    submit({ q });
+  },
+  value: `${q} search workspace fragment`,
+});
+
+/**
+ * @description Rows for a typed short id fragment: a confident `Open plan` row
+ * per resolved match (redirecting to the resolved FULL id via the existing
+ * commander-search POST), a "Resolving…" indicator while the lookup is in
+ * flight, plus a workspace-search escape. Returns `null` when the fragment has
+ * resolved to nothing and is idle, so the caller falls through to the generic
+ * browse shortcuts.
+ */
+const buildPlanRefFragmentItems = (
+  q: string,
+  matches: readonly PlanRefMatch[],
+  loading: boolean,
+  submit: CommanderEmptyStateExtrasHandlers['submitCommanderSearch'],
+): readonly CommanderItem[] | null => {
+  if (matches.length > 0) {
+    const planRows = matches.map((match) => {
+      const preview = match.id.slice(0, 8);
+
+      return {
+        icon: <MapIcon aria-hidden={true} className={ICON_SM} />,
+        id: `jump-plan-ref-${match.id}`,
+        label: `Open plan: ${match.title} (${preview}…)`,
+        onSelect: () => {
+          submit({ id: match.id, jump: 'plan-detail' });
+        },
+        value: `${q} open plan ${match.title} ${match.id}`,
+      };
+    });
+
+    return [...planRows, buildWorkspaceSearchItem(q, submit)];
+  }
+
+  if (loading) {
+    return [
+      {
+        icon: <Loader2Icon aria-hidden={true} className={ICON_SM} />,
+        id: `resolving-plan-ref-${q}`,
+        label: `Resolving plan “${q}…”`,
+        value: `${q} resolving plan`,
+      },
+      buildWorkspaceSearchItem(q, submit),
+    ];
+  }
+
+  return null;
+};
+
+/**
  * @description Extra commander rows when the palette filter matches no static commands: POST-backed debug jumps and search escape.
  */
 export const buildCommanderEmptyStateExtras = (
   query: string,
   handlers: CommanderEmptyStateExtrasHandlers,
 ): readonly CommanderItem[] => {
-  const { submitCommanderSearch: submit } = handlers;
+  const {
+    planRefLoading = false,
+    planRefMatches = [],
+    submitCommanderSearch: submit,
+  } = handlers;
 
   const q = query.trim();
   if (q.length === 0) {
@@ -183,6 +268,19 @@ export const buildCommanderEmptyStateExtras = (
         value: `${q} search workspace uuid`,
       },
     ];
+  }
+
+  if (isShortIdFragment(q)) {
+    const fragmentItems = buildPlanRefFragmentItems(
+      q,
+      planRefMatches,
+      planRefLoading,
+      submit,
+    );
+
+    if (fragmentItems) {
+      return fragmentItems;
+    }
   }
 
   return buildNonUuidDebugIndexItems(q, submit);

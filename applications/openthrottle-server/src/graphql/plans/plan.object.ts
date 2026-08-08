@@ -84,6 +84,25 @@ export class PlanStatusCountObject {
   status!: string;
 }
 
+/**
+ * Minimal plan reference returned by `resolvePlanRef` for short-id-prefix
+ * lookups (⌘K commander). Just enough to render a confident redirect row
+ * (`Open plan: <title> (f5e40886…)`) and resolve the short fragment to a full id.
+ */
+@ObjectType()
+export class PlanRefObject {
+  @Field(() => String, {
+    description: 'Full plan UUID the prefix resolved to.',
+  })
+  id!: string;
+
+  @Field(() => String)
+  status!: string;
+
+  @Field(() => String)
+  title!: string;
+}
+
 @ObjectType()
 export class PlanRunObject implements PlanRunData {
   @Field(() => String, {

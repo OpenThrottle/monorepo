@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "analytics": true,
   "defaultBase": "main",
   "gcs": {
     "bucket": "openthrottle-staging-nx-cache",
@@ -250,7 +251,10 @@
     },
     "dev": {
       "dependsOn": [
-        { "target": "ensure-worktree", "projects": "monorepo" },
+        {
+          "target": "ensure-worktree",
+          "projects": "monorepo"
+        },
         "^dev",
         "^generate",
         "^codegen-graphql-watch",

@@ -330,6 +330,101 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('resolvePlanRef', () => {
+    function createResolvePlanRefQbMock(rows: Plan[]) {
+      const getMany = vi.fn().mockResolvedValue(rows);
+      const orderBy = vi.fn().mockReturnThis();
+      const select = vi.fn().mockReturnThis();
+      const take = vi.fn().mockReturnThis();
+      const where = vi.fn().mockReturnThis();
+      const chain = createMock<SelectQueryBuilder<Plan>>({
+        getMany,
+        orderBy,
+        select,
+        take,
+        where,
+      });
+      return { chain, getMany, orderBy, select, take, where };
+    }
+
+    test('returns [] and never queries when the prefix is too short', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.createQueryBuilder).mockClear();
+
+      const result = await resolver.resolvePlanRef('f5e4');
+
+      expect(result).toEqual([]);
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    test('returns [] and never queries when the prefix is non-hex', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.createQueryBuilder).mockClear();
+
+      const result = await resolver.resolvePlanRef('zzzzzzzz');
+
+      expect(result).toEqual([]);
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    test('resolves a unique short prefix to a single PlanRefObject', async () => {
+      const repo = plansService.getRepository();
+      const qb = createResolvePlanRefQbMock([mockPlan]);
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+
+      const result = await resolver.resolvePlanRef('80864bba');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.id).toBe(mockPlan.id);
+      expect(result[0]?.title).toBe(mockPlan.title);
+      expect(result[0]?.status).toBe(mockPlan.status);
+      // LIKE pattern is the normalized prefix + '%', passed as a bound param.
+      expect(qb.where).toHaveBeenCalledWith(expect.any(String), {
+        pattern: '80864bba%',
+      });
+      // Ambiguous prefixes are capped, so a bounded take is always applied.
+      expect(qb.take).toHaveBeenCalledWith(6);
+    });
+
+    test('lists multiple matches for an ambiguous prefix', async () => {
+      const repo = plansService.getRepository();
+      const other: Plan = createMock<Plan>({
+        id: '80864bba-0000-0000-0000-000000000000',
+        status: 'completed',
+        title: 'Second match',
+      });
+      const qb = createResolvePlanRefQbMock([mockPlan, other]);
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+
+      const result = await resolver.resolvePlanRef('80864b');
+
+      expect(result).toHaveLength(2);
+      expect(result.map((r) => r.id)).toEqual([mockPlan.id, other.id]);
+    });
+
+    test('returns [] when the prefix matches nothing', async () => {
+      const repo = plansService.getRepository();
+      const qb = createResolvePlanRefQbMock([]);
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+
+      const result = await resolver.resolvePlanRef('deadbeef');
+
+      expect(result).toEqual([]);
+    });
+
+    test('strips hyphens so a fragment spanning a UUID boundary still matches', async () => {
+      const repo = plansService.getRepository();
+      const qb = createResolvePlanRefQbMock([mockPlan]);
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qb.chain);
+
+      await resolver.resolvePlanRef('80864bba-630a');
+
+      expect(qb.where).toHaveBeenCalledWith(expect.any(String), {
+        pattern: '80864bba630a%',
+      });
+    });
+  });
+
   describe('plans', () => {
     test('returns array of PlanObjects', async () => {
       const repo = plansService.getRepository();
