@@ -216,6 +216,9 @@
     },
     {
       "path": "./packages/react-router-rollout"
+    },
+    {
+      "path": "./packages/agentic-hooks"
     }
   ]
 }

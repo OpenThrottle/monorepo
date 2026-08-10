@@ -75,7 +75,15 @@ export const eslintConfig = tslint.config([
    * @link https://nx.dev/nx-api/eslint-plugin/documents/enforce-module-boundaries
    */
   {
-    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    files: [
+      '**/*.cjs',
+      '**/*.js',
+      '**/*.jsx',
+      '**/*.mjs',
+      '**/*.ts',
+      '**/*.tsx',
+    ],
+
     // Module boundaries are a production-code concern. Test files legitimately
     // import their own package's public entry (e.g. *PackageExports* tests that
     // assert the barrel resolves), which the same-project relative-import check

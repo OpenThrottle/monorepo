@@ -23,6 +23,12 @@ NOTICE
 # Prettier must not reformat it (would fight the generator and break the guard).
 THIRD-PARTY-LICENSES.md
 
+# Skill-usage hook bundles are esbuild output from @openthrottle/agentic-hooks,
+# committed and drift-checked via bundle-hooks-check; Prettier must not reformat
+# them (would fight esbuild and break the drift gate).
+.claude/hooks/skill-usage-*.cjs
+.cursor/hooks/skill-usage-*.cjs
+
 #############################################################################
 # Folders
 #############################################################################

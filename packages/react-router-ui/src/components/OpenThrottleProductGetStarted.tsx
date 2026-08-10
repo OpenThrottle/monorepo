@@ -44,10 +44,10 @@ export const OpenThrottleProductGetStarted = (
       </div>
 
       <div className="shimmer-border mx-auto max-w-3xl">
-        <div className="bg-card flex flex-col gap-4 p-4 md:p-8 lg:gap-8">
+        <div className="bg-card flex w-full flex-col gap-4 p-4 md:p-8 lg:gap-8">
           <p className="text-muted-foreground text-sm">{introduction}</p>
-          <div className="flex items-center justify-center gap-4">
-            <div className="bg-primary-foreground relative flex flex-1 items-center rounded-xl border">
+          <div className="flex w-full flex-col items-center items-stretch justify-center gap-2 md:flex-row md:items-center md:gap-4">
+            <div className="bg-primary-foreground relative flex flex-1 items-center overflow-hidden rounded-xl border">
               <DollarSignIcon
                 className="text-accent pointer-events-none absolute left-3"
                 size={12}
@@ -65,7 +65,7 @@ export const OpenThrottleProductGetStarted = (
 
             <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
               <Button
-                className="flex items-center gap-2 text-xs"
+                className="dark:text-unset flex w-full items-center gap-2 text-xs text-white md:w-auto"
                 variant="brand"
               >
                 <span>View on GitHub</span>
