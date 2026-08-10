@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+
 /**
- * GENERATED — DO NOT EDIT.
+ * -------- GENERATED — DO NOT EDIT ------------------------------------
  * Source: packages/agentic-hooks/src/adapters/claude/capture.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
+ * ----------------------------------------------------------------------
  */
 
 "use strict";
