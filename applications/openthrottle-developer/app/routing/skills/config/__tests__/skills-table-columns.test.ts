@@ -14,6 +14,7 @@ describe('routing/skills config skills-table-columns', () => {
   describe('getSkillsTableRowId', () => {
     test('prefers slug over path and index', () => {
       const entry: RepoSkillEntry = {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/foo/SKILL.md',
@@ -27,6 +28,7 @@ describe('routing/skills config skills-table-columns', () => {
 
     test('falls back to repoRelativePath when slug is empty', () => {
       const entry: RepoSkillEntry = {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/bar/SKILL.md',
@@ -40,6 +42,7 @@ describe('routing/skills config skills-table-columns', () => {
 
     test('falls back to index-based id when slug and path are empty', () => {
       const entry: RepoSkillEntry = {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '',

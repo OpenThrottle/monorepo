@@ -10,6 +10,7 @@ import type { Route } from '@/app/routes/+types/skills._index';
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',

@@ -46,6 +46,7 @@ description: Edited description.
 `;
 
 const entryFor = (repoRelativePath: string): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath,

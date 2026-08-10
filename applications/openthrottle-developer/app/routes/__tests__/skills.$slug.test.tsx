@@ -9,6 +9,7 @@ import Component from '../skills.$slug';
 import type { Route } from '@/app/routes/+types/skills.$slug';
 
 const entry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: true,
   layout: 'agents',
   repoRelativePath: '.agents/skills/ot-plans/SKILL.md',

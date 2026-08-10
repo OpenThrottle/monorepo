@@ -9,6 +9,7 @@ const diskEntry = (
   slug: string,
   overrides: Partial<RepoSkillEntry> = {},
 ): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: `.agents/skills/${slug}/SKILL.md`,

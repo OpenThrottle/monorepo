@@ -7,7 +7,10 @@
  * `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
-import type { SkillSource } from '@openthrottle/openthrottle-skills';
+import type {
+  SkillArgument,
+  SkillSource,
+} from '@openthrottle/openthrottle-skills';
 
 export type SkillRegistryLayout = 'agents' | 'claude' | 'opencode';
 
@@ -29,6 +32,12 @@ export const REQUIRED_AGENTS_SKILL_SLUGS = [
 ] as const;
 
 export interface RepoSkillEntry {
+  /**
+   * Typed argument declarations parsed from the skill's
+   * `metadata.openthrottle-arguments` (JSON string). `undefined` when the skill
+   * declares none — the Run-skill modal then falls back to the free-text field.
+   */
+  readonly arguments: readonly SkillArgument[] | undefined;
   /**
    * Tri-state static frontmatter `disable-model-invocation`: `true` = auto
    * (model-initiated) invocation suppressed, `false` = explicitly enabled,
