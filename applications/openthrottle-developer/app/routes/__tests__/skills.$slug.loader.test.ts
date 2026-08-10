@@ -22,6 +22,7 @@ const mockReadSkillFileBySlug = vi.mocked(readSkillFileBySlug);
 const mockWriteSkillFileBySlug = vi.mocked(writeSkillFileBySlug);
 
 const SAMPLE_ENTRY: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/ot-plans/SKILL.md',

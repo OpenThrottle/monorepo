@@ -10,6 +10,8 @@ description: >-
   services. When docs say remix but Nx fails, use react-router generator
   instead. Defer graph/target exploration to nx-workspace; generic non-OT
   generator flow to nx-generate; run targets after codegen to nx-run-tasks.
+metadata:
+  openthrottle-arguments: '[{"name":"generator","type":"enum","enum":["react-router","nestjs","react","package","folders"],"description":"Registered generator to run","required":true},{"name":"name","type":"text","description":"PascalCase name(s); comma-separated for batch scaffolding"}]'
 ---
 
 # OpenThrottle generators and Nx conventions

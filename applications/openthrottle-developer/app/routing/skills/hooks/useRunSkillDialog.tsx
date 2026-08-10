@@ -11,8 +11,15 @@ import {
   decodeChatOption,
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
+import type { SkillArgument } from '@openthrottle/openthrottle-skills';
 import { useAtom } from 'jotai';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
+import {
+  composeSkillInvocationArgs,
+  hasMissingRequiredSkillArgs,
+  seedSkillArgumentDefaults,
+  type SkillArgumentValue,
+} from '~/routing/skills/utils/compose-skill-invocation-args';
 
 /**
  * The composed invocation the parent submits through the streamed-conversation
@@ -25,6 +32,12 @@ export interface RunSkillPayload {
 }
 
 export interface UseRunSkillDialogOptions {
+  /**
+   * Typed argument declarations parsed from the skill's frontmatter. When
+   * present, the modal renders one control per argument; when absent/empty it
+   * falls back to the v1 free-text field.
+   */
+  readonly argumentDeclarations?: readonly SkillArgument[];
   /** Discovered agent+model options (local endpoints + agent CLIs + driver×endpoint). */
   readonly models: ChatModelOption[];
   /** Whether the dialog is open — drives the args reset. */
@@ -37,10 +50,16 @@ export interface UseRunSkillDialogOptions {
 
 export interface UseRunSkillDialogResult {
   readonly args: string;
+  /** Declared arguments to render as typed controls (empty for free-text mode). */
+  readonly argumentDeclarations: readonly SkillArgument[];
+  /** Current per-argument field values, keyed by argument name. */
+  readonly argumentValues: Readonly<Record<string, SkillArgumentValue>>;
   /** Compose the invocation payload; null when nothing runnable is selected. */
   readonly buildPayload: () => RunSkillPayload | null;
   /** Repository/checkout options for the CLI-backend picker. */
   readonly checkouts: ChatCheckoutOption[];
+  /** True when the skill declares typed arguments (render dynamic fields). */
+  readonly hasArgumentDeclarations: boolean;
   readonly hasModels: boolean;
   /** True when the effective backend is a CLI (shows the repository picker). */
   readonly isCliBackend: boolean;
@@ -51,6 +70,8 @@ export interface UseRunSkillDialogResult {
   /** Effective selected repository id (reconciled), or undefined. */
   readonly repositoryId: string | undefined;
   readonly setArgs: (args: string) => void;
+  /** Update a single typed argument's field value. */
+  readonly setArgumentValue: (name: string, value: SkillArgumentValue) => void;
   readonly setModelId: (modelId: string) => void;
   readonly setRepositoryId: (repositoryId: string) => void;
   readonly submitDisabled: boolean;
@@ -70,8 +91,19 @@ export const useRunSkillDialog = (
 ): UseRunSkillDialogResult => {
   const { models, open, repositories, slug } = options;
 
+  // Setup — stable declaration list (loader data), so the reset effect and
+  // memoized handlers key off a referentially-stable value.
+  const argumentDeclarations = React.useMemo(
+    () => options.argumentDeclarations ?? [],
+    [options.argumentDeclarations],
+  );
+  const hasArgumentDeclarations = argumentDeclarations.length > 0;
+
   // Hooks
   const [args, setArgs] = React.useState('');
+  const [argumentValues, setArgumentValues] = React.useState<
+    Record<string, SkillArgumentValue>
+  >(() => seedSkillArgumentDefaults(argumentDeclarations));
   // Shared with the composer: picking a model/repo here writes the same atom, so
   // the selection persists and stays in sync across surfaces.
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
@@ -113,12 +145,18 @@ export const useRunSkillDialog = (
   const decoded = modelId ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decoded);
   const isCliBackend = decoded !== null && decoded.backend !== 'openai';
+  const missingRequiredArgs =
+    hasArgumentDeclarations &&
+    hasMissingRequiredSkillArgs(argumentDeclarations, argumentValues);
   const submitDisabled =
     decoded === null ||
     (capabilities.requiresRepository &&
-      (repositoryId == null || repositoryId === ''));
+      (repositoryId == null || repositoryId === '')) ||
+    missingRequiredArgs;
 
   // Handlers
+  const setArgumentValue = (name: string, value: SkillArgumentValue): void =>
+    setArgumentValues((previous) => ({ ...previous, [name]: value }));
   const setModelId = (nextModelId: string): void =>
     setToolbarState((previous) => ({ ...previous, modelId: nextModelId }));
   const setRepositoryId = (nextRepositoryId: string): void =>
@@ -139,8 +177,20 @@ export const useRunSkillDialog = (
       return null;
     }
 
-    const trimmedArgs = args.trim();
-    const message = trimmedArgs === '' ? `/${slug}` : `/${slug} ${trimmedArgs}`;
+    if (
+      hasArgumentDeclarations &&
+      hasMissingRequiredSkillArgs(argumentDeclarations, argumentValues)
+    ) {
+      return null;
+    }
+
+    // Declared args compose named flags from the structured values; otherwise
+    // the v1 free-text field flows through unchanged.
+    const composedArgs = hasArgumentDeclarations
+      ? composeSkillInvocationArgs(argumentDeclarations, argumentValues)
+      : args.trim();
+    const message =
+      composedArgs === '' ? `/${slug}` : `/${slug} ${composedArgs}`;
 
     // Two shapes, mirroring the home composer's onSubmit: the plain openai HTTP
     // backend (baseUrl + model, no repo) and a CLI backend (its own or a
@@ -168,8 +218,11 @@ export const useRunSkillDialog = (
     return { fields, message };
   }, [
     args,
+    argumentDeclarations,
+    argumentValues,
     capabilities.requiresRepository,
     decoded,
+    hasArgumentDeclarations,
     permissionMode,
     persist,
     reasoning,
@@ -179,26 +232,31 @@ export const useRunSkillDialog = (
   ]);
 
   // Life Cycle
-  // Reset only the local arguments each time the dialog opens; the model/repo
+  // Reset the local field state each time the dialog opens; the model/repo
   // selection lives in the shared atom and must persist across opens.
   React.useEffect(() => {
     if (open) {
       setArgs('');
+      setArgumentValues(seedSkillArgumentDefaults(argumentDeclarations));
     }
-  }, [open]);
+  }, [argumentDeclarations, open]);
 
   // 🔌 Short Circuit
 
   return {
     args,
+    argumentDeclarations,
+    argumentValues,
     buildPayload,
     checkouts,
+    hasArgumentDeclarations,
     hasModels,
     isCliBackend,
     modelGroups,
     modelId,
     repositoryId,
     setArgs,
+    setArgumentValue,
     setModelId,
     setRepositoryId,
     submitDisabled,
