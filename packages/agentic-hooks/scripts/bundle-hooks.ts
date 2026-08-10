@@ -75,11 +75,13 @@ const BUNDLES: readonly BundleSpec[] = [
 const bannerFor = (spec: BundleSpec): string =>
   [
     '#!/usr/bin/env node',
+    '',
     '/**',
-    ' * GENERATED — DO NOT EDIT.',
+    ' * -------- GENERATED — DO NOT EDIT ------------------------------------',
     ` * Source: packages/agentic-hooks/src/${spec.entry}`,
     ' * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks',
     ' * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.',
+    ' * ----------------------------------------------------------------------',
     ' */',
     '',
   ].join('\n');
