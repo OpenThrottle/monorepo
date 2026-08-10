@@ -1,6 +1,9 @@
 {
   "version": 1,
   "hooks": {
-    "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }]
+    "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }],
+    "beforeSubmitPrompt": [
+      { "command": ".cursor/hooks/skill-usage-capture.cjs" }
+    ]
   }
 }

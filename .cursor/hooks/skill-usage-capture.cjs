@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * GENERATED — DO NOT EDIT.
- * Source: packages/agentic-hooks/src/adapters/claude/capture.ts
+ * Source: packages/agentic-hooks/src/adapters/cursor/capture.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  */
@@ -30,7 +30,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/capture.ts
+// packages/agentic-hooks/src/adapters/cursor/capture.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
@@ -505,68 +505,52 @@ var persistUsageEvent = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
 var isRecord2 = (value) => value != null && typeof value === "object";
-var normalizeClaudePayload = (raw) => {
-  if (!isRecord2(raw)) {
-    return null;
-  }
-  const payload = raw;
-  const hookEvent = typeof payload.hook_event_name === "string" ? payload.hook_event_name : "";
-  if (hookEvent === "PreToolUse" || payload.tool_name === "Skill") {
-    const toolInput = isRecord2(payload.tool_input) ? payload.tool_input : {};
-    const skillName = typeof toolInput.skill === "string" ? toolInput.skill : typeof toolInput.name === "string" ? toolInput.name : null;
-    if (!skillName) {
-      return null;
+var firstString = (...values) => {
+  for (const value of values) {
+    if (typeof value === "string" && value) {
+      return value;
     }
-    const normalized = {
-      args: toolInput.args ?? "",
-      cwd: typeof payload.cwd === "string" ? payload.cwd : null,
-      hook_event_name: hookEvent || "PreToolUse",
-      invocation_path: "skill_tool",
-      session_id: typeof payload.session_id === "string" ? payload.session_id : null,
-      skill_name: skillName
-    };
-    if (typeof payload.agent_id === "string") {
-      normalized.agent_id = payload.agent_id;
-    }
-    if (typeof payload.agent_type === "string") {
-      normalized.agent_type = payload.agent_type;
-    }
-    if (typeof payload.tool_use_id === "string") {
-      normalized.tool_use_id = payload.tool_use_id;
-    }
-    if (typeof payload.prompt_id === "string") {
-      normalized.prompt_id = payload.prompt_id;
-    }
-    return normalized;
-  }
-  if (hookEvent === "UserPromptExpansion" || payload.expansion_type === "slash_command") {
-    const skillName = typeof payload.command_name === "string" ? payload.command_name : null;
-    if (!skillName) {
-      return null;
-    }
-    const normalized = {
-      args: typeof payload.command_args === "string" ? payload.command_args : "",
-      cwd: typeof payload.cwd === "string" ? payload.cwd : null,
-      hook_event_name: hookEvent || "UserPromptExpansion",
-      invocation_path: "slash",
-      session_id: typeof payload.session_id === "string" ? payload.session_id : null,
-      skill_name: skillName
-    };
-    if (typeof payload.prompt_id === "string") {
-      normalized.prompt_id = payload.prompt_id;
-    }
-    return normalized;
   }
   return null;
 };
+var resolveCwd = (payload) => {
+  if (typeof payload.cwd === "string") {
+    return payload.cwd;
+  }
+  if (Array.isArray(payload.workspaceRoots) && typeof payload.workspaceRoots[0] === "string") {
+    return payload.workspaceRoots[0];
+  }
+  return null;
+};
+var normalizeCursorPayload = (raw) => {
+  if (!isRecord2(raw)) {
+    return null;
+  }
+  const skillFromTool = firstString(raw.skill, raw.skill_name);
+  const commandName = firstString(raw.command, raw.command_name);
+  const skillName = skillFromTool ?? commandName;
+  if (!skillName) {
+    return null;
+  }
+  const sessionId = firstString(raw.conversationId, raw.session_id);
+  const normalized = {
+    args: raw.args ?? raw.command_args ?? "",
+    cwd: resolveCwd(raw),
+    hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "cursor",
+    invocation_path: skillFromTool ? "skill_tool" : "slash",
+    session_id: sessionId,
+    skill_name: skillName
+  };
+  return normalized;
+};
 
-// packages/agentic-hooks/src/adapters/claude/capture.ts
+// packages/agentic-hooks/src/adapters/cursor/capture.ts
 var main = async () => {
   try {
-    const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    const repoRoot = process.env.CURSOR_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     const stdinBuf = import_node_fs4.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
@@ -578,7 +562,7 @@ var main = async () => {
       logHookError("invalid JSON stdin", err);
       return;
     }
-    const normalized = normalizeClaudePayload(raw);
+    const normalized = normalizeCursorPayload(raw);
     if (!normalized) {
       return;
     }
@@ -586,7 +570,7 @@ var main = async () => {
       normalized,
       privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot,
-      source: CLAUDE_SOURCE
+      source: CURSOR_SOURCE
     });
     if (!event) {
       return;

@@ -2,11 +2,15 @@
 
 Tool-neutral capture of **skill invocations** (ours vs third-party) that any AI
 agent/editor can feed, persisted in OpenThrottle as the system of record and
-surfaced on the Developer **Usage** route. See OT plan `d3759118`.
+surfaced on the Developer **Usage** route. See OT plans `d3759118` (base),
+`f5e40886` (outcomes & duration), `21f150c6` (this package extraction).
 
-The point of this folder: the capture logic is **not** owned by any one tool.
-Each producer (Claude Code, Cursor, a git hook, …) ships a ~30-line adapter that
-translates its native hook payload into one shared shape and delegates the rest.
+> **Source of truth moved.** The capture core and every per-tool adapter now
+> live in the workspace package **`@openthrottle/agentic-hooks`**
+> (`packages/agentic-hooks`), authored in **TypeScript**. The `.cjs` files under
+> each tool's hook folder are **generated bundles** — self-contained, committed,
+> and **must not be hand-edited**. This folder no longer holds a hand-written
+> `lib.cjs`/`adapter.template.cjs`.
 
 ```
 producer hook payload → <tool adapter> → NormalizedInvocation
@@ -14,27 +18,29 @@ producer hook payload → <tool adapter> → NormalizedInvocation
                           → OT GraphQL (recordSkillUsage)  |  JSONL fallback
 ```
 
-## Files
+## Where things live now
 
-| File                   | Owns                                                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib.cjs`              | The tool-neutral core: scope detection, privacy seam, `buildUsageEvent`, GraphQL/JSONL persistence, env resolution. **No tool-specific code.** |
-| `lib.test.cjs`         | Tests for the neutral core. Run: `node --test .agents/hooks/skill-usage/lib.test.cjs`                                                          |
-| `adapter.template.cjs` | Copy-me reference adapter for a new producer.                                                                                                  |
-| `README.md`            | This contract.                                                                                                                                 |
+| Concern                                                                                                                    | Location                                                                                         |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Tool-neutral core (scope, privacy seam, `buildUsageEvent`, GraphQL/JSONL persistence, outcome/duration correlation, drain) | `packages/agentic-hooks/src/` (barrel `index.ts`)                                                |
+| Per-tool adapters (TS esbuild entrypoints)                                                                                 | `packages/agentic-hooks/src/adapters/<tool>/`                                                    |
+| Bundler + drift check                                                                                                      | `packages/agentic-hooks/scripts/bundle-hooks.ts` → targets `bundle-hooks` / `bundle-hooks-check` |
+| Generated Claude bundles                                                                                                   | `.claude/hooks/skill-usage-{capture,complete,drain,outcome,scope}.cjs`                           |
+| Generated Cursor bundle                                                                                                    | `.cursor/hooks/skill-usage-capture.cjs`                                                          |
+| Unit tests                                                                                                                 | `packages/agentic-hooks/src/**/__tests__/*.test.ts` (Vitest)                                     |
 
-Wired producers live under each tool's own hook folder (editor-native config):
+Wired producers (editor-native config):
 
-| Producer    | Adapter                                                                                                                               | Config                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Claude Code | `.claude/hooks/skill-usage-capture.cjs` (+ `skill-usage-claude-adapter.cjs`) start; `.claude/hooks/skill-usage-complete.cjs` outcomes | `.claude/settings.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete) |
-| _your tool_ | copy `adapter.template.cjs` into your tool's hooks dir                                                                                | your tool's hook config                                                                  |
+| Producer    | Bundle(s)                                                                           | Config                                                                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Claude Code | `.claude/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (Stop → outcomes) | `.claude/settings.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete)                                                                           |
+| Cursor      | `.cursor/hooks/skill-usage-capture.cjs`                                             | `.cursor/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
 
 ## The producer contract
 
 ### 1. NormalizedInvocation — what an adapter must produce
 
-```js
+```ts
 {
   skill_name: string,              // required — e.g. "ot-plans", "vercel:deploy"
   args: unknown,                   // raw args; the core applies the privacy seam
@@ -54,12 +60,15 @@ attributable per tool. Pick a short, stable kebab-case id and keep it constant.
 
 ### 3. Guarantees the core gives you
 
-- **Scope**: `ours` when the skill is authored under `skills/<name>/`;
-  `third-party` when plugin-namespaced (`a:b`) or a `skills-lock.json` install.
+- **Scope**: `ours` when authored under `skills/<name>/`; `third-party` when
+  plugin-namespaced (`a:b`) or a `skills-lock.json` install.
 - **Privacy**: args are truncated + secret-redacted by default before they ever
-  leave the machine. The server stores them as-sent and never re-expands.
-- **Fail-open**: capture never blocks or throws into the host tool. On any
-  server error it appends a local JSONL line instead of losing the event.
+  leave the machine (`src/privacy.ts` — the seam plan `91679bbf` extends).
+- **Fail-open**: capture never blocks or throws into the host tool. On any server
+  error it appends a local JSONL line instead of losing the event.
+- **Zero runtime deps**: bundled `.cjs` `require` nothing outside node builtins,
+  so hooks run as bare `node x.cjs` in fresh checkouts / worktrees with no
+  `node_modules`.
 
 ## Outcomes & duration (automatic)
 
@@ -70,38 +79,35 @@ The **Outcomes** and **Avg duration** columns on `/usage` are populated
    entry (`session_id, skill_name, tool_use_id, started_at, scope` — **no args**)
    under `.cache/skill-usage/starts/<session_id>.jsonl`.
 2. At turn end, the Claude Code `Stop` hook (`skill-usage-complete.cjs`) resolves
-   the open starts for the session, emits one `success` outcome each with
-   `duration_ms = Stop − started_at` via `recordSkillUsageOutcome`, and drains
-   them (deduped — a repeated `Stop` never double-emits). Starts stranded by a
-   session that ended without a `Stop` are later swept as `abandoned`.
+   the open starts, emits one `success` outcome each with
+   `duration_ms = Stop − started_at`, and drains them (deduped). Starts stranded
+   by a session that ended without a `Stop` are later swept as `abandoned`.
 
-`Stop` carries no `tool_use_id`/`skill_name`/error signal, so correlation is
-session-scoped and the automatic classifier emits `success` (or `abandoned`).
 For a specific outcome the automatic path can't infer — notably `error` — call
-the **opt-in precision** helper `.claude/hooks/skill-usage-outcome.cjs`
-(`--skill … --outcome error [--duration-ms …] --session …`). It is additive, not
-a replacement.
-
-**Absent outcomes are expected and valid** for third-party / uninstrumented
-skills (namespaced `a:b` or `skills-lock.json` installs) — those legitimately
-render `—`.
+the opt-in helper `.claude/hooks/skill-usage-outcome.cjs`
+(`--skill … --outcome error [--duration-ms …] --session …`). Additive, not a
+replacement. Absent outcomes are expected for third-party / uninstrumented skills.
 
 ### Draining the JSONL fallback
 
 When the server is down, starts/outcomes buffer to
 `.cache/skill-usage/{events,outcomes}.jsonl`. The `Stop` hook runs a small
 time-boxed drain opportunistically, and `.claude/hooks/skill-usage-drain.cjs`
-does an unbounded catch-up flush for manual / scheduled runs (idempotent,
-concurrent-writer safe via an atomic rename; unsent lines are retained).
+does an unbounded catch-up flush (idempotent, concurrent-writer safe).
 
-## Adding a new producer
+## Adding / changing a producer
 
-1. Copy `adapter.template.cjs` into your tool's hooks folder (keep neutral logic here).
-2. Implement `normalize<Tool>Payload(raw)` for your payload shape.
-3. Pick a `source` id and pass it to `buildUsageEvent`.
-4. Wire your tool's hook config to run the adapter on skill invocation.
-5. Add a `node --test` for your `normalize<Tool>Payload`, mirroring
-   `.claude/hooks/skill-usage-claude-adapter.test.cjs`.
+1. Add an entrypoint under `packages/agentic-hooks/src/adapters/<tool>/`
+   (implement `normalize<Tool>Payload(raw)` and delegate to the core) and a
+   Vitest for the normalizer.
+2. Add a row to the `BUNDLES` manifest in
+   `packages/agentic-hooks/scripts/bundle-hooks.ts` mapping the entrypoint to its
+   output `.cjs` path.
+3. Run `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks` and commit the
+   generated `.cjs` (tracked, **not** gitignored).
+4. Wire your tool's hook config to run the bundle.
 
-Do **not** fork `lib.cjs`. If the core is missing something your tool needs,
-extend the core generically so every producer benefits.
+**Never** hand-edit a generated `.cjs`, and **never** fork the core — extend it
+generically in the package so every producer benefits. The
+`bundle-hooks-check` drift gate (in `check:local` and CI) fails if a committed
+bundle doesn't match its source.

@@ -1,0 +1,111 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {},
+  "description": "Tool-neutral skill-usage hook core (scope, privacy, buildUsageEvent, GraphQL/JSONL persistence, outcome/duration correlation, drain) authored in TS. Per-tool adapters are esbuild entrypoints bundled to self-contained committed .cjs under each tool's hook folder (.claude/hooks, .cursor/hooks, ...) — zero runtime node_modules dependency, fail-open. A drift check keeps committed bundles from rotting.",
+  "devDependencies": {
+    "esbuild": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "name": "@openthrottle/agentic-hooks",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/agentic-hooks",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "bundle-hooks": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "description": "esbuild-bundle each per-tool hook adapter into a self-contained committed .cjs under its tool hook folder (.claude/hooks, .cursor/hooks).",
+        "inputs": [
+          "{projectRoot}/src/**/*",
+          "{projectRoot}/scripts/bundle-hooks.ts"
+        ],
+        "outputs": [
+          "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
+          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs"
+        ],
+        "options": {
+          "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "bundle-hooks-check": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "description": "Drift gate: regenerate the hook bundles in-memory and diff against the committed .cjs, failing on drift (codegen-style).",
+        "inputs": [
+          "{projectRoot}/src/**/*",
+          "{projectRoot}/scripts/bundle-hooks.ts",
+          "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
+          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs"
+        ],
+        "options": {
+          "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts --check",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}
