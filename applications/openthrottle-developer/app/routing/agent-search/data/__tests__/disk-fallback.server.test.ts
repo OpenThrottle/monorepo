@@ -47,6 +47,7 @@ describe('diskFallbackSearch', () => {
   test('keyword-ranks matching skills and tags them source:disk', () => {
     mockSkills.mockReturnValue([
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/git-commit/SKILL.md',
@@ -56,6 +57,7 @@ describe('diskFallbackSearch', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
@@ -80,6 +82,7 @@ describe('diskFallbackSearch', () => {
   test('only scans the requested prompt types', () => {
     mockSkills.mockReturnValue([
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/git-commit/SKILL.md',

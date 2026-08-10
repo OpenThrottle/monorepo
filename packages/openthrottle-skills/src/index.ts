@@ -112,6 +112,14 @@ export type { ParsedSkillFrontmatter } from './parse-skill-frontmatter.ts';
 
 /** @public */
 export {
+  parseSkillArguments,
+  SKILL_ARGUMENT_TYPES,
+  SKILL_ARGUMENTS_METADATA_KEY,
+} from './skill-arguments.ts';
+export type { SkillArgument, SkillArgumentType } from './skill-arguments.ts';
+
+/** @public */
+export {
   parseRuleFrontmatter,
   parseRuleFrontmatterForValidation,
 } from './parse-rule-frontmatter.ts';

@@ -14,6 +14,7 @@ import { SkillIntroduction } from '../SkillIntroduction';
 import type { SkillIntroductionProps } from '../SkillIntroduction';
 
 const baseEntry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',

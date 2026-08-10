@@ -10,6 +10,7 @@ import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
 
 const mockEntries: readonly RepoSkillEntry[] = [
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/grilling/SKILL.md',
@@ -19,6 +20,7 @@ const mockEntries: readonly RepoSkillEntry[] = [
     tags: undefined,
   },
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
@@ -33,6 +35,7 @@ const mockEntries: readonly RepoSkillEntry[] = [
 // "Model invocation" column badge.
 const triStateEntries: readonly RepoSkillEntry[] = [
   {
+    arguments: undefined,
     disableModelInvocation: true,
     layout: 'agents',
     repoRelativePath: '.agents/skills/github-commit/SKILL.md',
@@ -42,6 +45,7 @@ const triStateEntries: readonly RepoSkillEntry[] = [
     tags: ['git', 'github'],
   },
   {
+    arguments: undefined,
     disableModelInvocation: false,
     layout: 'agents',
     repoRelativePath: '.agents/skills/agents-ralph/SKILL.md',
@@ -51,6 +55,7 @@ const triStateEntries: readonly RepoSkillEntry[] = [
     tags: ['planning'],
   },
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
@@ -107,6 +112,7 @@ describe('SkillsTable Component', () => {
         <SkillsTable
           entries={[
             {
+              arguments: undefined,
               disableModelInvocation: undefined,
               layout: 'agents',
               orphanedAt: '2026-08-14T00:00:00.000Z',
@@ -147,6 +153,7 @@ describe('SkillsTable Component', () => {
   describe('Source column (provenance badge)', () => {
     const sourceEntries: readonly RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/ot-plans/SKILL.md',
@@ -156,6 +163,7 @@ describe('SkillsTable Component', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/grilling/SKILL.md',
@@ -166,6 +174,7 @@ describe('SkillsTable Component', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/create-cli/SKILL.md',
@@ -252,6 +261,7 @@ describe('SkillsTable Component', () => {
         <SkillsTable
           entries={[
             {
+              arguments: undefined,
               disableModelInvocation: true,
               effectiveDisableModelInvocation: false,
               layout: 'agents',
@@ -279,6 +289,7 @@ describe('SkillsTable Component', () => {
         <SkillsTable
           entries={[
             {
+              arguments: undefined,
               disableModelInvocation: undefined,
               effectiveDisableModelInvocation: false,
               layout: 'agents',
@@ -305,6 +316,7 @@ describe('SkillsTable Component', () => {
         <SkillsTable
           entries={[
             {
+              arguments: undefined,
               disableModelInvocation: true,
               effectiveDisableModelInvocation: true,
               layout: 'agents',
@@ -331,6 +343,7 @@ describe('SkillsTable Component', () => {
         <SkillsTable
           entries={[
             {
+              arguments: undefined,
               disableModelInvocation: true,
               layout: 'agents',
               repoRelativePath: '.agents/skills/legacy/SKILL.md',

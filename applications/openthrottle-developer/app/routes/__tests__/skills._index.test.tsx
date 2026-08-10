@@ -18,6 +18,7 @@ const buildEntry = (
   index: number,
   source: RepoSkillEntry['source'],
 ): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: `.agents/skills/skill-${String(index).padStart(3, '0')}/SKILL.md`,

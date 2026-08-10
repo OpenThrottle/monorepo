@@ -10,6 +10,7 @@ import { useSkillDetail, type SkillDetailOptions } from '../useSkillDetail';
 const baseEntry = (
   overrides: Partial<RepoSkillEntry> = {},
 ): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: 'skills/my-skill/SKILL.md',

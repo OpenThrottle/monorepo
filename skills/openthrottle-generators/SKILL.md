@@ -6,6 +6,8 @@ description: >-
   hand-writing one — or when hitting "Unable to resolve @tools/generators" or
   "Cannot find generator". Every command needs NX_ISOLATE_PLUGINS=false. Defer
   graph, targets and task running to nx-workspace.
+metadata:
+  arguments: '[{"name":"generator","type":"enum","enum":["react-router","nestjs","react","package","folders"],"description":"Registered generator to run","required":true},{"name":"name","type":"text","description":"PascalCase name(s); comma-separated for batch scaffolding"}]'
 ---
 
 # OpenThrottle generators and Nx conventions

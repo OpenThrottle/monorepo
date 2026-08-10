@@ -25,6 +25,7 @@ const request = (): Request => new Request('http://localhost/');
 const diskEntry = (
   overrides: Partial<RepoSkillEntryType> = {},
 ): RepoSkillEntryType => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/example/SKILL.md',

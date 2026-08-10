@@ -1,6 +1,7 @@
 ---
 description: Manage the OpenThrottle agent-skills architecture in any repo — install skills consistently, fan them out to every AI tool, and validate the layout. Use when installing or adding agent skills, syncing skills into agent folders, setting up skills in a new repo, checking skill layout drift, or when .agents/skills, .claude/skills, or skills-lock.json are involved.
 metadata:
+  arguments: '[{"name":"mode","type":"enum","enum":["install","sync","validate"],"description":"Which skill-sync operation to run","required":true},{"name":"skill","type":"text","description":"Optional skill slug to target"}]'
   author: openthrottle
   version: '1.0.0'
 name: skill-sync

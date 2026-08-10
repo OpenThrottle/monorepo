@@ -27,6 +27,7 @@ vi.mock('@openthrottle/react-router-editor', () => ({
 }));
 
 const baseEntry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',

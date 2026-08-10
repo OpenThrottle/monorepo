@@ -26,6 +26,7 @@ const mockLoadComposerModels = vi.mocked(modelsServer.loadComposerModels);
 const mockLoadRepositories = vi.mocked(modelsServer.loadRepositories);
 
 const entry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/ot-plans/SKILL.md',

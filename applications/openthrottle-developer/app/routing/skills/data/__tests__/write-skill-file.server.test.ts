@@ -50,6 +50,7 @@ const entryFor = (
   repoRelativePath: string,
   source: RepoSkillEntry['source'] = 'openthrottle',
 ): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath,

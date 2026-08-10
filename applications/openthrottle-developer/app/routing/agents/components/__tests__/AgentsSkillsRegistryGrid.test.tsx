@@ -8,6 +8,7 @@ import type { AgentsSkillsRegistryGridProps } from '../AgentsSkillsRegistryGrid'
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 const entry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: 'skills/ot-plans/SKILL.md',

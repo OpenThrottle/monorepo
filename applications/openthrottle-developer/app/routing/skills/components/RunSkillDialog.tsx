@@ -15,8 +15,10 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import type { SkillArgument } from '@openthrottle/openthrottle-skills';
 import { useNavigate } from 'react-router';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
+import { RunSkillArgumentField } from '~/routing/skills/components/RunSkillArgumentField';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
 import {
   useRunSkillDialog,
@@ -26,6 +28,11 @@ import {
 export type { RunSkillPayload };
 
 export interface RunSkillDialogProps {
+  /**
+   * Typed argument declarations from the skill frontmatter. When present, the
+   * modal renders one control per argument; when absent, the free-text field.
+   */
+  readonly argumentDeclarations?: readonly SkillArgument[];
   /** Discovered agent+model options (local endpoints + agent CLIs + driver×endpoint). */
   readonly models: ChatModelOption[];
   readonly onOpenChange: (open: boolean) => void;
@@ -49,24 +56,42 @@ export interface RunSkillDialogProps {
 export const RunSkillDialog = (
   props: RunSkillDialogProps,
 ): React.ReactElement => {
-  const { models, onOpenChange, onRun, open, repositories, slug } = props;
+  const {
+    argumentDeclarations: argumentDeclarationsProp,
+    models,
+    onOpenChange,
+    onRun,
+    open,
+    repositories,
+    slug,
+  } = props;
 
   // Hooks
   const navigate = useNavigate();
   const {
     args,
+    argumentDeclarations,
+    argumentValues,
     buildPayload,
     checkouts,
+    hasArgumentDeclarations,
     hasModels,
     isCliBackend,
     modelGroups,
     modelId,
     repositoryId,
     setArgs,
+    setArgumentValue,
     setModelId,
     setRepositoryId,
     submitDisabled,
-  } = useRunSkillDialog({ models, open, repositories, slug });
+  } = useRunSkillDialog({
+    argumentDeclarations: argumentDeclarationsProp,
+    models,
+    open,
+    repositories,
+    slug,
+  });
 
   // Setup
   const copy = SKILL_RUN_COPY;
@@ -136,18 +161,33 @@ export const RunSkillDialog = (
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="run-skill-arguments">{copy.argumentsLabel}</Label>
-            <TextArea
-              id="run-skill-arguments"
-              onChange={(event) => setArgs(event.target.value)}
-              placeholder={copy.argumentsPlaceholder}
-              value={args}
-            />
-            <p className="text-muted-foreground text-xs">
-              {copy.argumentsHint}
-            </p>
-          </div>
+          {hasArgumentDeclarations ? (
+            <div className="flex flex-col gap-4">
+              {argumentDeclarations.map((declaration) => (
+                <RunSkillArgumentField
+                  declaration={declaration}
+                  key={declaration.name}
+                  onChange={(value) =>
+                    setArgumentValue(declaration.name, value)
+                  }
+                  value={argumentValues[declaration.name] ?? ''}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="run-skill-arguments">{copy.argumentsLabel}</Label>
+              <TextArea
+                id="run-skill-arguments"
+                onChange={(event) => setArgs(event.target.value)}
+                placeholder={copy.argumentsPlaceholder}
+                value={args}
+              />
+              <p className="text-muted-foreground text-xs">
+                {copy.argumentsHint}
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
