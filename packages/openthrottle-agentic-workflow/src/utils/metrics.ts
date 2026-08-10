@@ -12,11 +12,15 @@ import {
 } from '../types/metrics.ts';
 
 /**
- * @description Creates a LoadAverageMetrics snapshot from os.loadavg().
+ * @description Rounds raw `os.loadavg()` values into a {@link LoadAverageMetrics}
+ * snapshot. Per-core load is derived from the *raw* 1m load (then rounded), not
+ * from the already-rounded `load1m` field.
  */
-export function captureLoadAverage(): LoadAverageMetrics {
-  const [load1m, load5m, load15m] = os.loadavg();
-  const cpuCount = os.cpus().length;
+export function toLoadAverageMetrics(
+  loadavg: readonly [number, number, number],
+  cpuCount: number,
+): LoadAverageMetrics {
+  const [load1m, load5m, load15m] = loadavg;
   const perCoreLoad1m =
     cpuCount > 0 ? Math.round((load1m / cpuCount) * 100) / 100 : load1m;
 
@@ -27,6 +31,14 @@ export function captureLoadAverage(): LoadAverageMetrics {
     load5m: Math.round(load5m * 100) / 100,
     perCoreLoad1m,
   };
+}
+
+/**
+ * @description Creates a LoadAverageMetrics snapshot from os.loadavg().
+ */
+export function captureLoadAverage(): LoadAverageMetrics {
+  const [load1m = 0, load5m = 0, load15m = 0] = os.loadavg();
+  return toLoadAverageMetrics([load1m, load5m, load15m], os.cpus().length);
 }
 
 /**

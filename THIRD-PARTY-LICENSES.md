@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2635** third-party packages.
+**2636** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2211 |
+| MIT | 2212 |
 | Apache-2.0 | 118 |
 | ISC | 92 |
 | MIT-0 | 67 |
@@ -96,6 +96,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@asamuzakjp/dom-selector` | 6.8.1 | MIT | [asamuzaK](https://github.com/asamuzaK/domSelector#readme) |
 | `@asamuzakjp/generational-cache` | 1.0.1 | MIT | [asamuzaK](https://github.com/asamuzaK/generationalCache) |
 | `@asamuzakjp/nwsapi` | 2.3.9 | MIT | [Diego Perini](http://javascript.nwbox.com/nwsapi/) |
+| `@astrojs/compiler` | 4.0.0 | MIT | [withastro](https://astro.build) |
 | `@azu/format-text` | 1.0.2 | BSD-3-Clause | [azu](https://github.com/azu/format-text#readme) |
 | `@azu/style-format` | 1.0.1 | WTFPL | [azu](https://github.com/azu/style-format#readme) |
 | `@azure/abort-controller` | 2.2.0 | MIT | [Microsoft Corporation](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/core/abort-controller/README.md) |
@@ -600,7 +601,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@opentelemetry/sdk-trace` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/sdk-trace) |
 | `@opentelemetry/sdk-trace-base` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base) |
 | `@opentelemetry/semantic-conventions` | 1.43.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions) |
-| `@oxc-project/types` | 0.141.0, 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
+| `@oxc-project/types` | 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
 | `@paper-design/shaders` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@paper-design/shaders-react` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@parcel/watcher` | 2.6.0 | MIT | [source](https://github.com/parcel-bundler/watcher#readme) |
@@ -1341,7 +1342,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
-| `deslop-js` | 0.9.2 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `deslop-js` | 0.9.3 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
@@ -2014,10 +2015,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `optionator` | 0.9.4 | MIT | [George Zahariev](https://github.com/gkz/optionator) |
 | `ora` | 5.3.0, 5.4.1, 8.2.0, 9.4.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/ora#readme) |
 | `own-keys` | 1.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/own-keys#readme) |
-| `oxc-parser` | 0.141.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
+| `oxc-parser` | 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
-| `oxlint` | 1.74.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
-| `oxlint-plugin-react-doctor` | 0.9.2 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `oxlint` | 1.76.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
+| `oxlint-plugin-react-doctor` | 0.9.3 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `p-cancelable` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
@@ -2212,7 +2213,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-diff-viewer-continued` | 3.4.0 | MIT | [source](https://github.com/aeolun/react-diff-viewer-continued#readme) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-doctor` | 0.9.2 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
+| `react-doctor` | 0.9.3 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
 | `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
