@@ -35,10 +35,14 @@ runs:
     - name: '🔧 GCP Configuration'
       # if: ${{ (inputs.branch != "main") }}
       shell: bash
+      # Pass the input through `env:` instead of interpolating `${{ inputs.* }}`
+      # directly into the script body — that avoids the shell-injection pattern
+      # (a `${{ }}` value is spliced into the script text before bash runs) and
+      # lets the value be safely quoted below.
+      env:
+        CLOUDSDK_CORE_PROJECT: ${{ inputs.google_cloud_project }}
       run: |
-
-        export CLOUDSDK_CORE_PROJECT="${{ inputs.google_cloud_project }}"
-        gcloud config set project ${CLOUDSDK_CORE_PROJECT}
+        gcloud config set project "${CLOUDSDK_CORE_PROJECT}"
 
         # FIXME: DISABLED FOR NOW
         # gcloud auth configure-docker -q

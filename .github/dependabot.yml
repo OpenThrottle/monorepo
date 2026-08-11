@@ -26,3 +26,30 @@ updates:
       time: '07:00'
       timezone: 'America/Los_Angeles'
     target-branch: 'main'
+
+  # GitHub Actions are all SHA-pinned (see .github/workflows + .github/actions),
+  # so they never update on their own — Dependabot is the ONLY thing that will
+  # bump a pinned SHA when a new release ships (and surface a security advisory
+  # on the pinned version). `directory: /` makes the github-actions ecosystem
+  # scan every workflow AND composite action (.github/actions/*/action.yml) in
+  # the repo. Grouped into one PR with a small limit so the bumps stay
+  # manageable; intentionally NON-zero (unlike the npm block above) so Actions
+  # actually receive update PRs.
+  - cooldown:
+      default-days: 7
+    directory: '/'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    open-pull-requests-limit: 5
+    package-ecosystem: 'github-actions'
+    rebase-strategy: 'auto'
+    schedule:
+      interval: weekly
+      time: '07:00'
+      timezone: 'America/Los_Angeles'
+    target-branch: 'main'

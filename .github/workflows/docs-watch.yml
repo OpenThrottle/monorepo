@@ -13,6 +13,12 @@ on:
     paths:
       - 'docs/**'
 
+# Read-only: the job only checks out and diffs the merge commit to emit the
+# changed docs paths. No explicit block previously → it inherited the broad
+# repo default; pin it to read.
+permissions:
+  contents: read
+
 jobs:
   docs-changed:
     if: ${{ github.event_name == 'workflow_dispatch' }}
