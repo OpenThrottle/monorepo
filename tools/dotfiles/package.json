@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@eslint/js": "catalog:",
+    "@graphql-eslint/eslint-plugin": "catalog:",
     "@nx/eslint": "catalog:",
     "@nx/eslint-plugin": "catalog:",
     "@typescript-eslint/eslint-plugin": "catalog:",

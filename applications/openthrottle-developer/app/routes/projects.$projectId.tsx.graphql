@@ -19,29 +19,29 @@ query getProjectById($id: ID!, $limit: Float, $offset: Float) {
     ...ProjectPageDetails
   }
 
-  skillTagVocabulary {
-    tags {
-      dimension
-      id
-      tag
-    }
-    totalCount
-  }
-
   projectTasksResult: tasksByProjectId(
     input: { projectId: $id, limit: $limit, offset: $offset }
   ) {
     tasks {
       assignee
-      requirementsJson
-      summary
-      title
-      updatedAt
       category
       createdAt
       description
       id
       planId
+      requirementsJson
+      summary
+      title
+      updatedAt
+    }
+    totalCount
+  }
+
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
     }
     totalCount
   }

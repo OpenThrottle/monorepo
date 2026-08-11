@@ -5076,8 +5076,8 @@ export type TaskFragment = {
   hookRole?: string | null;
   hookSource?: string | null;
   id: string;
-  planId: string;
   parentTaskId?: string | null;
+  planId: string;
   project?: string | null;
   projectId?: string | null;
   requirementsJson: string;
@@ -5225,8 +5225,8 @@ export type CreateTaskMutation = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5256,8 +5256,8 @@ export type CreateTasksMutation = {
       hookRole?: string | null;
       hookSource?: string | null;
       id: string;
-      planId: string;
       parentTaskId?: string | null;
+      planId: string;
       project?: string | null;
       projectId?: string | null;
       requirementsJson: string;
@@ -5313,8 +5313,8 @@ export type UpdateTaskMutation = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5364,8 +5364,8 @@ export type ReorderPlanTasksMutation = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5646,8 +5646,8 @@ export type GetTaskQuery = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5674,8 +5674,8 @@ export type GetTasksByPlanIdQuery = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5702,8 +5702,8 @@ export type GetRemainingTasksByPlanIdQuery = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5730,8 +5730,8 @@ export type GetTasksQuery = {
     hookRole?: string | null;
     hookSource?: string | null;
     id: string;
-    planId: string;
     parentTaskId?: string | null;
+    planId: string;
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
@@ -5754,16 +5754,16 @@ export type GetWorkArtifactsByPlanQuery = {
     totalCount: number;
     artifacts: Array<{
       __typename?: 'WorkArtifactObject';
-      id: string;
-      type: string;
+      createdAt: any;
       externalKey: string;
-      message?: string | null;
+      id: string;
       lifecycle?: string | null;
-      verification: string;
-      source: string;
+      message?: string | null;
       payloadJson: string;
       producedAt: any;
-      createdAt: any;
+      source: string;
+      type: string;
+      verification: string;
     }>;
   };
 };
@@ -5776,36 +5776,36 @@ export type GetActivityByDateQuery = {
   __typename?: 'Query';
   activityByDate: {
     __typename?: 'ActivityByDateResultObject';
-    totalCount: number;
     hasNext: boolean;
+    totalCount: number;
     commits: Array<{
       __typename?: 'ActivityCommitRowObject';
+      createdAt: any;
       id: string;
+      message?: string | null;
       planId: string;
-      taskId?: string | null;
+      planTitle: string;
       repo: string;
       sha: string;
-      message?: string | null;
-      planTitle: string;
+      taskId?: string | null;
       taskTitle?: string | null;
-      createdAt: any;
     }>;
     outputChunks: Array<{
       __typename?: 'ActivityOutputChunkRowObject';
-      id: string;
-      planId: string;
-      iteration?: number | null;
       content: string;
-      planTitle: string;
       createdAt: any;
+      id: string;
+      iteration?: number | null;
+      planId: string;
+      planTitle: string;
     }>;
     tasksUpdated: Array<{
       __typename?: 'ActivityTaskUpdatedRowObject';
       id: string;
       planId: string;
-      title: string;
-      status: string;
       planTitle: string;
+      status: string;
+      title: string;
       updatedAt: any;
     }>;
   };
@@ -5819,36 +5819,36 @@ export type GetActivityByDateRangeQuery = {
   __typename?: 'Query';
   activityByDateRange: {
     __typename?: 'ActivityByDateResultObject';
-    totalCount: number;
     hasNext: boolean;
+    totalCount: number;
     commits: Array<{
       __typename?: 'ActivityCommitRowObject';
+      createdAt: any;
       id: string;
+      message?: string | null;
       planId: string;
-      taskId?: string | null;
+      planTitle: string;
       repo: string;
       sha: string;
-      message?: string | null;
-      planTitle: string;
+      taskId?: string | null;
       taskTitle?: string | null;
-      createdAt: any;
     }>;
     outputChunks: Array<{
       __typename?: 'ActivityOutputChunkRowObject';
-      id: string;
-      planId: string;
-      iteration?: number | null;
       content: string;
-      planTitle: string;
       createdAt: any;
+      id: string;
+      iteration?: number | null;
+      planId: string;
+      planTitle: string;
     }>;
     tasksUpdated: Array<{
       __typename?: 'ActivityTaskUpdatedRowObject';
       id: string;
       planId: string;
-      title: string;
-      status: string;
       planTitle: string;
+      status: string;
+      title: string;
       updatedAt: any;
     }>;
   };
@@ -5865,8 +5865,8 @@ export type GetLastActivityQuery = {
     at: any;
     kind: string;
     planId: string;
-    taskId?: string | null;
     summary: string;
+    taskId?: string | null;
     commit?: {
       __typename?: 'LastActivityCommitPartObject';
       message?: string | null;
@@ -5895,11 +5895,11 @@ export type GetPlanOutputStreamChunksQuery = {
   __typename?: 'Query';
   planOutputStreamChunks: Array<{
     __typename?: 'PlanOutputStreamChunkObject';
-    id: string;
-    planId: string;
-    iteration?: number | null;
     content: string;
     createdAt: any;
+    id: string;
+    iteration?: number | null;
+    planId: string;
   }>;
 };
 
@@ -5913,8 +5913,8 @@ export type SearchQuery = {
     __typename?: 'SearchResult';
     chunks: Array<{
       __typename?: 'SearchChunk';
-      id: string;
       content: string;
+      id: string;
       planId?: string | null;
       planTitle?: string | null;
       similarity: number;
@@ -5936,8 +5936,8 @@ export type GetDocumentQuery = {
   __typename?: 'Query';
   getDocument?: {
     __typename?: 'SearchChunk';
-    id: string;
     content: string;
+    id: string;
     planId?: string | null;
     planTitle?: string | null;
     similarity: number;
@@ -5956,15 +5956,15 @@ export type ListSourcesQuery = {
   __typename?: 'Query';
   listSources: {
     __typename?: 'ListSourcesResultObject';
-    sources: Array<{
-      __typename?: 'ListSourceInfoObject';
-      name: string;
-      description: string;
-    }>;
     plans: Array<{
       __typename?: 'ListPlanSourceObject';
       id: string;
       title: string;
+    }>;
+    sources: Array<{
+      __typename?: 'ListSourceInfoObject';
+      description: string;
+      name: string;
     }>;
   };
 };
@@ -6090,8 +6090,8 @@ export const TaskFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -6639,8 +6639,8 @@ export const CreateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -6733,8 +6733,8 @@ export const CreateTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -6907,8 +6907,8 @@ export const UpdateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -7092,8 +7092,8 @@ export const ReorderPlanTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -8148,8 +8148,8 @@ export const GetTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -8232,8 +8232,8 @@ export const GetTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -8319,8 +8319,8 @@ export const GetRemainingTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -8400,8 +8400,8 @@ export const GetTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
@@ -8463,27 +8463,22 @@ export const GetWorkArtifactsByPlanDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'externalKey' },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'message' },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lifecycle' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'verification' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'source' },
+                        name: { kind: 'Name', value: 'message' },
                       },
                       {
                         kind: 'Field',
@@ -8495,7 +8490,12 @@ export const GetWorkArtifactsByPlanDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
+                        name: { kind: 'Name', value: 'source' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'verification' },
                       },
                     ],
                   },
@@ -8560,62 +8560,63 @@ export const GetActivityByDateDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'taskId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'message' },
                       },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'planTitle' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskId' },
                       },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'taskTitle' },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'outputChunks' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'iteration' },
-                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'planTitle' },
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'iteration' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planTitle' },
                       },
                     ],
                   },
@@ -8631,15 +8632,15 @@ export const GetActivityByDateDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planId' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planTitle' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'updatedAt' },
@@ -8648,7 +8649,6 @@ export const GetActivityByDateDocument = {
                   },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
               ],
             },
           },
@@ -8708,62 +8708,63 @@ export const GetActivityByDateRangeDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'taskId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'message' },
                       },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'planTitle' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskId' },
                       },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'taskTitle' },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'outputChunks' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'iteration' },
-                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'planTitle' },
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'iteration' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'planTitle' },
                       },
                     ],
                   },
@@ -8779,15 +8780,15 @@ export const GetActivityByDateRangeDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planId' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planTitle' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'updatedAt' },
@@ -8796,7 +8797,6 @@ export const GetActivityByDateRangeDocument = {
                   },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
               ],
             },
           },
@@ -8851,10 +8851,6 @@ export const GetLastActivityDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'at' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'commit' },
@@ -8870,6 +8866,7 @@ export const GetLastActivityDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'outputChunk' },
@@ -8887,6 +8884,9 @@ export const GetLastActivityDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'taskUpdate' },
@@ -8961,11 +8961,11 @@ export const GetPlanOutputStreamChunksDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
               ],
             },
           },
@@ -9025,11 +9025,11 @@ export const SearchDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planId' },
@@ -9116,8 +9116,8 @@ export const GetDocumentDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'similarity' } },
@@ -9153,26 +9153,26 @@ export const ListSourcesDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'sources' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
                   name: { kind: 'Name', value: 'plans' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'sources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     ],
                   },
                 },

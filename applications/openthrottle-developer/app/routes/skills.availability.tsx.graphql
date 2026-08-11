@@ -10,8 +10,8 @@ query SkillAvailabilityAuthoringRuleSet($projectId: ID!) {
   skillAvailabilityRuleSet(projectId: $projectId) {
     posture
     rules {
-      id
       environment
+      id
       slugAllow
       slugDeny
       tagAllow

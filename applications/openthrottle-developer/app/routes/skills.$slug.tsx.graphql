@@ -1,13 +1,13 @@
 fragment SkillDetailUsageBySkill on SkillUsageBySkillObject {
-  skillName
-  scope
-  count
-  outcomeCount
-  successCount
   abandonedCount
-  errorCount
   avgDurationMs
+  count
+  errorCount
   lastUsedAt
+  outcomeCount
+  scope
+  skillName
+  successCount
 }
 
 fragment SkillDetailUsageByDay on SkillUsageByDayObject {
@@ -19,11 +19,11 @@ fragment SkillDetailUsageByDay on SkillUsageByDayObject {
 
 query getSkillDetailUsage($start: String!, $end: String!, $skillName: String!) {
   skillUsage(start: $start, end: $end, skillName: $skillName) {
-    bySkill {
-      ...SkillDetailUsageBySkill
-    }
     byDay {
       ...SkillDetailUsageByDay
+    }
+    bySkill {
+      ...SkillDetailUsageBySkill
     }
   }
 }

@@ -1,17 +1,17 @@
 # plans.$planId.create
 mutation createPlan($input: CreatePlanInput!) {
   createPlan(input: $input) {
-    id
-    title
+    assignee
     author
     category
-    status
     createdAt
-    updatedAt
     description
-    assignee
+    id
     project
     projectId
+    status
     summary
+    title
+    updatedAt
   }
 }

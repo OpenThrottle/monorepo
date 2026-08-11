@@ -5776,21 +5776,21 @@ export type GetDashboardGithubStatsQueryVariables = Exact<{
 
 export type GetDashboardGithubStatsQuery = {
   __typename?: 'Query';
-  openPrCountByAuthor: Array<{
+  closedPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
     openCount: number;
   }>;
-  closedPrCountByAuthor: Array<{
+  openPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
     openCount: number;
   }>;
   prTimeInStateSummary: Array<{
     __typename?: 'PrTimeInStateSummaryObject';
-    state: string;
-    count: number;
     avgDaysInState?: number | null;
+    count: number;
+    state: string;
   }>;
 };
 
@@ -6016,21 +6016,13 @@ export type PlanDetailsFragment = {
   description?: string | null;
   id: string;
   jobRunHooksJson: string;
-  runConfigJson: string;
   project?: string | null;
   projectId?: string | null;
+  runConfigJson: string;
   status: string;
   summary?: string | null;
   title: string;
   updatedAt: any;
-  tags: Array<{
-    __typename?: 'PlanTagObject';
-    confidence?: number | null;
-    dimension: string;
-    id: string;
-    source: string;
-    tag: string;
-  }>;
   afterHooks: Array<{
     __typename?: 'TaskObject';
     hookRole?: string | null;
@@ -6056,6 +6048,14 @@ export type PlanDetailsFragment = {
     id: string;
     name: string;
   } | null;
+  tags: Array<{
+    __typename?: 'PlanTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  }>;
 };
 
 export type GetPlanByIdQueryVariables = Exact<{
@@ -6073,21 +6073,13 @@ export type GetPlanByIdQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
-    runConfigJson: string;
     project?: string | null;
     projectId?: string | null;
+    runConfigJson: string;
     status: string;
     summary?: string | null;
     title: string;
     updatedAt: any;
-    tags: Array<{
-      __typename?: 'PlanTagObject';
-      confidence?: number | null;
-      dimension: string;
-      id: string;
-      source: string;
-      tag: string;
-    }>;
     afterHooks: Array<{
       __typename?: 'TaskObject';
       hookRole?: string | null;
@@ -6113,6 +6105,14 @@ export type GetPlanByIdQuery = {
       id: string;
       name: string;
     } | null;
+    tags: Array<{
+      __typename?: 'PlanTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
   } | null;
 };
 
@@ -6295,6 +6295,19 @@ export type PlanDetailIndexLoaderQueryVariables = Exact<{
 
 export type PlanDetailIndexLoaderQuery = {
   __typename?: 'Query';
+  metrics: {
+    __typename?: 'MetricsObject';
+    recentPlanRunsMetrics: Array<{
+      __typename?: 'PlanRunMetricsEntry';
+      executionBackend?: string | null;
+      finishedOn?: number | null;
+      jobId: string;
+      taskRunMetrics?: {
+        __typename?: 'TaskRunMetrics';
+        atEnd: { __typename?: 'ProcessMetricsSnapshot'; rssMb: number };
+      } | null;
+    }>;
+  };
   plan?: {
     __typename?: 'PlanObject';
     assignee?: string | null;
@@ -6304,21 +6317,13 @@ export type PlanDetailIndexLoaderQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
-    runConfigJson: string;
     project?: string | null;
     projectId?: string | null;
+    runConfigJson: string;
     status: string;
     summary?: string | null;
     title: string;
     updatedAt: any;
-    tags: Array<{
-      __typename?: 'PlanTagObject';
-      confidence?: number | null;
-      dimension: string;
-      id: string;
-      source: string;
-      tag: string;
-    }>;
     afterHooks: Array<{
       __typename?: 'TaskObject';
       hookRole?: string | null;
@@ -6344,28 +6349,50 @@ export type PlanDetailIndexLoaderQuery = {
       id: string;
       name: string;
     } | null;
+    tags: Array<{
+      __typename?: 'PlanTagObject';
+      confidence?: number | null;
+      dimension: string;
+      id: string;
+      source: string;
+      tag: string;
+    }>;
   } | null;
-  workspaceRepositories: Array<{
-    __typename?: 'RepositoryObject';
+  planOutputStreamChunks: Array<{
+    __typename?: 'PlanOutputStreamChunkObject';
+    content: string;
+    createdAt: any;
     id: string;
-    name: string;
-    normalizedRemoteUrl?: string | null;
-    projectId?: string | null;
-    checkouts: Array<{
-      __typename?: 'RepositoryCheckoutObject';
+    iteration?: number | null;
+    planId: string;
+    taskId?: string | null;
+  }>;
+  planRunsByPlanId: Array<{
+    __typename?: 'PlanRunObject';
+    branch?: string | null;
+    bullmqJobId?: string | null;
+    createdAt: any;
+    executionBackend: string;
+    id: string;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
+    model?: string | null;
+    runConfigSnapshotJson?: string | null;
+    runKind: string;
+    status: string;
+    checkout?: {
+      __typename?: 'PlanRunCheckoutObject';
       displayName: string;
       filesystemPath: string;
-      id: string;
       kind: string;
-      managed: boolean;
-      inspection?: {
-        __typename?: 'RepositoryInspectionObject';
-        git: {
-          __typename?: 'RepositoryInspectionGitObject';
-          currentBranch?: string | null;
-        };
-      } | null;
-    }>;
+    } | null;
+    pullRequest?: {
+      __typename?: 'PlanRunPullRequestObject';
+      number: number;
+      repo: string;
+      state?: string | null;
+      url: string;
+    } | null;
   }>;
   ruleApplications: Array<{
     __typename?: 'RuleApplicationObject';
@@ -6408,55 +6435,6 @@ export type PlanDetailIndexLoaderQuery = {
       name: string;
     } | null;
   }>;
-  planOutputStreamChunks: Array<{
-    __typename?: 'PlanOutputStreamChunkObject';
-    id: string;
-    content: string;
-    createdAt: any;
-    iteration?: number | null;
-    planId: string;
-    taskId?: string | null;
-  }>;
-  metrics: {
-    __typename?: 'MetricsObject';
-    recentPlanRunsMetrics: Array<{
-      __typename?: 'PlanRunMetricsEntry';
-      executionBackend?: string | null;
-      finishedOn?: number | null;
-      jobId: string;
-      taskRunMetrics?: {
-        __typename?: 'TaskRunMetrics';
-        atEnd: { __typename?: 'ProcessMetricsSnapshot'; rssMb: number };
-      } | null;
-    }>;
-  };
-  planRunsByPlanId: Array<{
-    __typename?: 'PlanRunObject';
-    branch?: string | null;
-    bullmqJobId?: string | null;
-    createdAt: any;
-    executionBackend: string;
-    id: string;
-    isStale: boolean;
-    lastHeartbeatAt?: any | null;
-    model?: string | null;
-    runConfigSnapshotJson?: string | null;
-    runKind: string;
-    status: string;
-    checkout?: {
-      __typename?: 'PlanRunCheckoutObject';
-      displayName: string;
-      filesystemPath: string;
-      kind: string;
-    } | null;
-    pullRequest?: {
-      __typename?: 'PlanRunPullRequestObject';
-      number: number;
-      repo: string;
-      state?: string | null;
-      url: string;
-    } | null;
-  }>;
   workArtifactsByPlan: {
     __typename?: 'WorkArtifactListResult';
     totalCount: number;
@@ -6471,6 +6449,28 @@ export type PlanDetailIndexLoaderQuery = {
       verification: string;
     }>;
   };
+  workspaceRepositories: Array<{
+    __typename?: 'RepositoryObject';
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+    projectId?: string | null;
+    checkouts: Array<{
+      __typename?: 'RepositoryCheckoutObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+      kind: string;
+      managed: boolean;
+      inspection?: {
+        __typename?: 'RepositoryInspectionObject';
+        git: {
+          __typename?: 'RepositoryInspectionGitObject';
+          currentBranch?: string | null;
+        };
+      } | null;
+    }>;
+  }>;
 };
 
 export type LinkedArtifactFragment = {
@@ -6492,9 +6492,9 @@ export type PlanOutputChunkAddedSubscription = {
   __typename?: 'Subscription';
   planOutputChunkAdded: {
     __typename?: 'PlanOutputStreamChunkObject';
-    id: string;
     content: string;
     createdAt: any;
+    id: string;
     iteration?: number | null;
     planId: string;
     taskId?: string | null;
@@ -6610,6 +6610,16 @@ export type GetTaskByIdQueryVariables = Exact<{
 
 export type GetTaskByIdQuery = {
   __typename?: 'Query';
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   task?: {
     __typename?: 'TaskObject';
     assignee?: string | null;
@@ -6659,16 +6669,6 @@ export type GetTaskByIdQuery = {
       name: string;
     } | null;
   } | null;
-  skillTagVocabulary: {
-    __typename?: 'SkillTagVocabularyResult';
-    totalCount: number;
-    tags: Array<{
-      __typename?: 'SkillTagObject';
-      dimension: string;
-      id: string;
-      tag: string;
-    }>;
-  };
 };
 
 export type TaskTagChipFragment = {
@@ -6749,9 +6749,9 @@ export type TaskOutputStreamChunksQuery = {
   __typename?: 'Query';
   planOutputStreamChunks: Array<{
     __typename?: 'PlanOutputStreamChunkObject';
-    id: string;
     content: string;
     createdAt: any;
+    id: string;
     iteration?: number | null;
     planId: string;
     taskId?: string | null;
@@ -6793,15 +6793,15 @@ export type UpdateTaskMutation = {
   __typename?: 'Mutation';
   updateTask?: {
     __typename?: 'TaskObject';
-    id: string;
-    title: string;
-    planId: string;
-    status: string;
     assignee?: string | null;
     category?: string | null;
-    description?: string | null;
-    summary?: string | null;
     createdAt: any;
+    description?: string | null;
+    id: string;
+    planId: string;
+    status: string;
+    summary?: string | null;
+    title: string;
     updatedAt: any;
   } | null;
 };
@@ -6814,15 +6814,15 @@ export type CreateTaskMutation = {
   __typename?: 'Mutation';
   createTask: {
     __typename?: 'TaskObject';
-    id: string;
-    title: string;
-    planId: string;
-    status: string;
     assignee?: string | null;
     category?: string | null;
-    description?: string | null;
-    summary?: string | null;
     createdAt: any;
+    description?: string | null;
+    id: string;
+    planId: string;
+    status: string;
+    summary?: string | null;
+    title: string;
     updatedAt: any;
   };
 };
@@ -6882,10 +6882,6 @@ export type GetPlansByStatusQuery = {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
   };
-  queuedPlansCount: {
-    __typename?: 'ListPlansByStatusResultObject';
-    totalCount: number;
-  };
   listPlansByStatus: {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
@@ -6916,6 +6912,10 @@ export type GetPlansByStatusQuery = {
       }>;
     }>;
   };
+  queuedPlansCount: {
+    __typename?: 'ListPlansByStatusResultObject';
+    totalCount: number;
+  };
 };
 
 export type CreatePlanMutationVariables = Exact<{
@@ -6926,18 +6926,18 @@ export type CreatePlanMutation = {
   __typename?: 'Mutation';
   createPlan: {
     __typename?: 'PlanObject';
-    id: string;
-    title: string;
+    assignee?: string | null;
     author: string;
     category: string;
-    status: string;
     createdAt: any;
-    updatedAt: any;
     description?: string | null;
-    assignee?: string | null;
+    id: string;
     project?: string | null;
     projectId?: string | null;
+    status: string;
     summary?: string | null;
+    title: string;
+    updatedAt: any;
   };
 };
 
@@ -6998,6 +6998,23 @@ export type GetProjectByIdQuery = {
       tag: string;
     }>;
   } | null;
+  projectTasksResult: {
+    __typename?: 'TasksByProjectIdResultObject';
+    totalCount: number;
+    tasks: Array<{
+      __typename?: 'TaskObject';
+      assignee?: string | null;
+      category?: string | null;
+      createdAt: any;
+      description?: string | null;
+      id: string;
+      planId: string;
+      requirementsJson: string;
+      summary?: string | null;
+      title: string;
+      updatedAt: any;
+    }>;
+  };
   skillTagVocabulary: {
     __typename?: 'SkillTagVocabularyResult';
     totalCount: number;
@@ -7006,23 +7023,6 @@ export type GetProjectByIdQuery = {
       dimension: string;
       id: string;
       tag: string;
-    }>;
-  };
-  projectTasksResult: {
-    __typename?: 'TasksByProjectIdResultObject';
-    totalCount: number;
-    tasks: Array<{
-      __typename?: 'TaskObject';
-      assignee?: string | null;
-      requirementsJson: string;
-      summary?: string | null;
-      title: string;
-      updatedAt: any;
-      category?: string | null;
-      createdAt: any;
-      description?: string | null;
-      id: string;
-      planId: string;
     }>;
   };
 };
@@ -7098,11 +7098,11 @@ export type CreateProjectMutation = {
   __typename?: 'Mutation';
   createProject: {
     __typename?: 'ProjectObject';
+    createdAt: any;
+    description?: string | null;
     id: string;
     name: string;
-    description?: string | null;
     nxProjectName?: string | null;
-    createdAt: any;
     updatedAt: any;
   };
 };
@@ -7610,9 +7610,9 @@ export type CreateQueueMutation = {
   __typename?: 'Mutation';
   createQueue: {
     __typename?: 'CreateQueueResultObject';
-    success: boolean;
-    queueName?: string | null;
     error?: string | null;
+    queueName?: string | null;
+    success: boolean;
   };
 };
 
@@ -7650,6 +7650,26 @@ export type RulesIndexLoaderQueryVariables = Exact<{ [key: string]: never }>;
 
 export type RulesIndexLoaderQuery = {
   __typename?: 'Query';
+  skillAvailability: {
+    __typename?: 'SkillAvailabilityResolutionResult';
+    totalCount: number;
+    warnings: Array<string>;
+    skills: Array<{
+      __typename?: 'SkillAvailabilityResolvedSkillObject';
+      effectiveDisableModelInvocation: boolean;
+      slug: string;
+    }>;
+  };
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   tagActionRules: Array<{
     __typename?: 'TagActionRuleObject';
     actionPayloadJson: string;
@@ -7665,16 +7685,14 @@ export type RulesIndexLoaderQuery = {
     updatedAt: any;
     userId: string;
   }>;
-  skillTagVocabulary: {
-    __typename?: 'SkillTagVocabularyResult';
-    totalCount: number;
-    tags: Array<{
-      __typename?: 'SkillTagObject';
-      dimension: string;
-      id: string;
-      tag: string;
-    }>;
-  };
+};
+
+export type RuleEditLoaderQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type RuleEditLoaderQuery = {
+  __typename?: 'Query';
   skillAvailability: {
     __typename?: 'SkillAvailabilityResolutionResult';
     totalCount: number;
@@ -7685,14 +7703,16 @@ export type RulesIndexLoaderQuery = {
       slug: string;
     }>;
   };
-};
-
-export type RuleEditLoaderQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type RuleEditLoaderQuery = {
-  __typename?: 'Query';
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
   tagActionRule?: {
     __typename?: 'TagActionRuleObject';
     actionPayloadJson: string;
@@ -7708,26 +7728,6 @@ export type RuleEditLoaderQuery = {
     updatedAt: any;
     userId: string;
   } | null;
-  skillTagVocabulary: {
-    __typename?: 'SkillTagVocabularyResult';
-    totalCount: number;
-    tags: Array<{
-      __typename?: 'SkillTagObject';
-      dimension: string;
-      id: string;
-      tag: string;
-    }>;
-  };
-  skillAvailability: {
-    __typename?: 'SkillAvailabilityResolutionResult';
-    totalCount: number;
-    warnings: Array<string>;
-    skills: Array<{
-      __typename?: 'SkillAvailabilityResolvedSkillObject';
-      effectiveDisableModelInvocation: boolean;
-      slug: string;
-    }>;
-  };
 };
 
 export type RulesUpsertTagActionRuleMutationVariables = Exact<{
@@ -7943,6 +7943,11 @@ export type ScheduledAgentJobRunDetailQueryVariables = Exact<{
 
 export type ScheduledAgentJobRunDetailQuery = {
   __typename?: 'Query';
+  scheduledAgentJob?: {
+    __typename?: 'ScheduledAgentJobObject';
+    id: string;
+    name: string;
+  } | null;
   scheduledAgentJobRun?: {
     __typename?: 'ScheduledAgentJobRunObject';
     bullmqJobId?: string | null;
@@ -7966,11 +7971,6 @@ export type ScheduledAgentJobRunDetailQuery = {
     status: string;
     totalTokens?: number | null;
     trigger: string;
-  } | null;
-  scheduledAgentJob?: {
-    __typename?: 'ScheduledAgentJobObject';
-    id: string;
-    name: string;
   } | null;
 };
 
@@ -8112,14 +8112,6 @@ export type GetSettingsKeysQueryVariables = Exact<{
 
 export type GetSettingsKeysQuery = {
   __typename?: 'Query';
-  serviceAccounts: Array<{
-    __typename?: 'ServiceAccountObject';
-    createdAt: any;
-    description?: string | null;
-    disabledAt?: any | null;
-    id: string;
-    name: string;
-  }>;
   serviceAccountCredentials: Array<{
     __typename?: 'ServiceAccountCredentialObject';
     createdAt: any;
@@ -8130,6 +8122,14 @@ export type GetSettingsKeysQuery = {
     prefix: string;
     revokedAt?: any | null;
     serviceAccountId: string;
+  }>;
+  serviceAccounts: Array<{
+    __typename?: 'ServiceAccountObject';
+    createdAt: any;
+    description?: string | null;
+    disabledAt?: any | null;
+    id: string;
+    name: string;
   }>;
 };
 
@@ -8248,6 +8248,17 @@ export type GetSettingsMcpQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetSettingsMcpQuery = {
   __typename?: 'Query';
+  mcpConnectorConnections: Array<{
+    __typename?: 'McpConnectorConnectionObject';
+    authType: string;
+    connectedAt: any;
+    connectorKey: string;
+    credentialLabel?: string | null;
+    credentialPrefix?: string | null;
+    enabled: boolean;
+    id: string;
+    lastUsedAt?: any | null;
+  }>;
   mcpConnectors: Array<{
     __typename?: 'McpConnectorObject';
     authType: string;
@@ -8260,17 +8271,6 @@ export type GetSettingsMcpQuery = {
     name: string;
     provider: string;
     transport: string;
-  }>;
-  mcpConnectorConnections: Array<{
-    __typename?: 'McpConnectorConnectionObject';
-    authType: string;
-    connectedAt: any;
-    connectorKey: string;
-    credentialLabel?: string | null;
-    credentialPrefix?: string | null;
-    enabled: boolean;
-    id: string;
-    lastUsedAt?: any | null;
   }>;
 };
 
@@ -9261,15 +9261,15 @@ export type UpdateRepositoryMutation = {
 
 export type SkillDetailUsageBySkillFragment = {
   __typename?: 'SkillUsageBySkillObject';
-  skillName: string;
-  scope: string;
-  count: number;
-  outcomeCount: number;
-  successCount: number;
   abandonedCount: number;
-  errorCount: number;
   avgDurationMs?: number | null;
+  count: number;
+  errorCount: number;
   lastUsedAt?: any | null;
+  outcomeCount: number;
+  scope: string;
+  skillName: string;
+  successCount: number;
 };
 
 export type SkillDetailUsageByDayFragment = {
@@ -9290,24 +9290,24 @@ export type GetSkillDetailUsageQuery = {
   __typename?: 'Query';
   skillUsage: {
     __typename?: 'SkillUsageResultObject';
-    bySkill: Array<{
-      __typename?: 'SkillUsageBySkillObject';
-      skillName: string;
-      scope: string;
-      count: number;
-      outcomeCount: number;
-      successCount: number;
-      abandonedCount: number;
-      errorCount: number;
-      avgDurationMs?: number | null;
-      lastUsedAt?: any | null;
-    }>;
     byDay: Array<{
       __typename?: 'SkillUsageByDayObject';
       date: string;
       oursCount: number;
       thirdPartyCount: number;
       totalCount: number;
+    }>;
+    bySkill: Array<{
+      __typename?: 'SkillUsageBySkillObject';
+      abandonedCount: number;
+      avgDurationMs?: number | null;
+      count: number;
+      errorCount: number;
+      lastUsedAt?: any | null;
+      outcomeCount: number;
+      scope: string;
+      skillName: string;
+      successCount: number;
     }>;
   };
 };
@@ -9341,14 +9341,14 @@ export type SkillAvailabilityQuery = {
   __typename?: 'Query';
   skillAvailability: {
     __typename?: 'SkillAvailabilityResolutionResult';
-    warnings: Array<string>;
     totalCount: number;
+    warnings: Array<string>;
     skills: Array<{
       __typename?: 'SkillAvailabilityResolvedSkillObject';
-      slug: string;
-      staticDisableModelInvocation?: boolean | null;
       effectiveDisableModelInvocation: boolean;
       provenance: string;
+      slug: string;
+      staticDisableModelInvocation?: boolean | null;
     }>;
   };
 };
@@ -9378,8 +9378,8 @@ export type SkillAvailabilityAuthoringRuleSetQuery = {
     posture: string;
     rules: Array<{
       __typename?: 'SkillAvailabilityRuleObject';
-      id: string;
       environment?: string | null;
+      id: string;
       slugAllow: Array<string>;
       slugDeny: Array<string>;
       tagAllow: Array<string>;
@@ -9520,28 +9520,28 @@ export type GetUsageDailyStatsQuery = {
 
 export type UsageTokenUsageRowFragment = {
   __typename?: 'TokenUsageRowObject';
-  id: string;
-  provider: string;
-  model?: string | null;
-  inputTokens?: number | null;
-  outputTokens?: number | null;
   cacheReadTokens?: number | null;
   cacheWriteTokens?: number | null;
-  reasoningTokens?: number | null;
-  totalTokens?: number | null;
   costUsd?: number | null;
   createdAt: any;
+  id: string;
+  inputTokens?: number | null;
+  model?: string | null;
+  outputTokens?: number | null;
+  provider: string;
+  reasoningTokens?: number | null;
+  totalTokens?: number | null;
 };
 
 export type UsageTokenUsageTotalsFragment = {
   __typename?: 'TokenUsageTotalsObject';
-  inputTokens: number;
-  outputTokens: number;
   cacheReadTokens: number;
   cacheWriteTokens: number;
+  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
   reasoningTokens: number;
   totalTokens: number;
-  costUsd: number;
   turnCount: number;
 };
 
@@ -9557,27 +9557,27 @@ export type GetUsageTokenUsageQuery = {
     __typename?: 'TokenUsageResultObject';
     items: Array<{
       __typename?: 'TokenUsageRowObject';
-      id: string;
-      provider: string;
-      model?: string | null;
-      inputTokens?: number | null;
-      outputTokens?: number | null;
       cacheReadTokens?: number | null;
       cacheWriteTokens?: number | null;
-      reasoningTokens?: number | null;
-      totalTokens?: number | null;
       costUsd?: number | null;
       createdAt: any;
+      id: string;
+      inputTokens?: number | null;
+      model?: string | null;
+      outputTokens?: number | null;
+      provider: string;
+      reasoningTokens?: number | null;
+      totalTokens?: number | null;
     }>;
     totals: {
       __typename?: 'TokenUsageTotalsObject';
-      inputTokens: number;
-      outputTokens: number;
       cacheReadTokens: number;
       cacheWriteTokens: number;
+      costUsd: number;
+      inputTokens: number;
+      outputTokens: number;
       reasoningTokens: number;
       totalTokens: number;
-      costUsd: number;
       turnCount: number;
     };
   };
@@ -9585,20 +9585,20 @@ export type GetUsageTokenUsageQuery = {
 
 export type UsageSkillUsageBySkillFragment = {
   __typename?: 'SkillUsageBySkillObject';
-  skillName: string;
-  scope: string;
-  count: number;
-  outcomeCount: number;
-  successCount: number;
   abandonedCount: number;
-  errorCount: number;
   avgDurationMs?: number | null;
+  count: number;
+  errorCount: number;
+  outcomeCount: number;
+  scope: string;
+  skillName: string;
+  successCount: number;
 };
 
 export type UsageSkillUsageByScopeFragment = {
   __typename?: 'SkillUsageByScopeObject';
-  scope: string;
   count: number;
+  scope: string;
 };
 
 export type UsageSkillUsageByDayFragment = {
@@ -9611,8 +9611,8 @@ export type UsageSkillUsageByDayFragment = {
 
 export type UsageSkillUsageFilterOptionsFragment = {
   __typename?: 'SkillUsageFilterOptionsObject';
-  gitBranches: Array<string>;
   cwds: Array<string>;
+  gitBranches: Array<string>;
 };
 
 export type GetUsageSkillUsageQueryVariables = Exact<{
@@ -9628,22 +9628,6 @@ export type GetUsageSkillUsageQuery = {
   skillUsage: {
     __typename?: 'SkillUsageResultObject';
     totalCount: number;
-    bySkill: Array<{
-      __typename?: 'SkillUsageBySkillObject';
-      skillName: string;
-      scope: string;
-      count: number;
-      outcomeCount: number;
-      successCount: number;
-      abandonedCount: number;
-      errorCount: number;
-      avgDurationMs?: number | null;
-    }>;
-    byScope: Array<{
-      __typename?: 'SkillUsageByScopeObject';
-      scope: string;
-      count: number;
-    }>;
     byDay: Array<{
       __typename?: 'SkillUsageByDayObject';
       date: string;
@@ -9651,10 +9635,26 @@ export type GetUsageSkillUsageQuery = {
       thirdPartyCount: number;
       totalCount: number;
     }>;
+    byScope: Array<{
+      __typename?: 'SkillUsageByScopeObject';
+      count: number;
+      scope: string;
+    }>;
+    bySkill: Array<{
+      __typename?: 'SkillUsageBySkillObject';
+      abandonedCount: number;
+      avgDurationMs?: number | null;
+      count: number;
+      errorCount: number;
+      outcomeCount: number;
+      scope: string;
+      skillName: string;
+      successCount: number;
+    }>;
     filterOptions: {
       __typename?: 'SkillUsageFilterOptionsObject';
-      gitBranches: Array<string>;
       cwds: Array<string>;
+      gitBranches: Array<string>;
     };
   };
 };
@@ -10086,29 +10086,6 @@ export const PlanTaskRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanTaskRowFragment, unknown>;
-export const PlanTagChipFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanTagChip' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanTagObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<PlanTagChipFragment, unknown>;
 export const HookTaskFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -10154,88 +10131,9 @@ export const ProjectDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProjectDetailsFragment, unknown>;
-export const PlanDetailsFragmentDoc = {
+export const PlanTagChipFragmentDoc = {
   kind: 'Document',
   definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanDetails' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tags' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTagChip' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'afterHooks' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'HookTask' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'beforeHooks' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'HookTask' },
-                },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'projectRelation' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'ProjectDetails' },
-                },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
     {
       kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanTagChip' },
@@ -10251,6 +10149,90 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanTagChipFragment, unknown>;
+export const PlanDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectDetails' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
@@ -10286,6 +10268,24 @@ export const PlanDetailsFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
         ],
       },
     },
@@ -11514,15 +11514,15 @@ export const SkillDetailUsageBySkillFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
       },
     },
@@ -11588,17 +11588,17 @@ export const UsageTokenUsageRowFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
     },
@@ -11617,13 +11617,13 @@ export const UsageTokenUsageTotalsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
         ],
       },
@@ -11643,14 +11643,14 @@ export const UsageSkillUsageBySkillFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
       },
     },
@@ -11669,8 +11669,8 @@ export const UsageSkillUsageByScopeFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
         ],
       },
     },
@@ -11711,8 +11711,8 @@ export const UsageSkillUsageFilterOptionsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
         ],
       },
     },
@@ -13589,54 +13589,6 @@ export const GetDashboardGithubStatsDocument = {
         selections: [
           {
             kind: 'Field',
-            alias: { kind: 'Name', value: 'openPrCountByAuthor' },
-            name: { kind: 'Name', value: 'openPrCountByAuthor' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'owner' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'owner' },
-                      },
-                    },
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'repo' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'repo' },
-                      },
-                    },
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'state' },
-                      value: {
-                        kind: 'StringValue',
-                        value: 'open',
-                        block: false,
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             alias: { kind: 'Name', value: 'closedPrCountByAuthor' },
             name: { kind: 'Name', value: 'openPrCountByAuthor' },
             arguments: [
@@ -13668,6 +13620,54 @@ export const GetDashboardGithubStatsDocument = {
                       value: {
                         kind: 'StringValue',
                         value: 'closed',
+                        block: false,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            alias: { kind: 'Name', value: 'openPrCountByAuthor' },
+            name: { kind: 'Name', value: 'openPrCountByAuthor' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'open',
                         block: false,
                       },
                     },
@@ -13725,12 +13725,12 @@ export const GetDashboardGithubStatsDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'avgDaysInState' },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
               ],
             },
           },
@@ -14364,24 +14364,6 @@ export const GetPlanByIdDocument = {
     },
     {
       kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanTagChip' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanTagObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'HookTask' },
       typeCondition: {
         kind: 'NamedType',
@@ -14417,6 +14399,24 @@ export const GetPlanByIdDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -14425,19 +14425,6 @@ export const GetPlanByIdDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tags' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTagChip' },
-                },
-              ],
-            },
-          },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'afterHooks' },
@@ -14451,6 +14438,8 @@ export const GetPlanByIdDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'beforeHooks' },
@@ -14464,14 +14453,11 @@ export const GetPlanByIdDocument = {
               ],
             },
           },
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
@@ -14487,8 +14473,22 @@ export const GetPlanByIdDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -15080,162 +15080,6 @@ export const PlanDetailIndexLoaderDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'plan' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'planId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanDetails' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'workspaceRepositories' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: {
-                    kind: 'Name',
-                    value: 'PlanRunConfigRepositoryFields',
-                  },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'ruleApplications' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'planId' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'planId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'detailsJson' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'ruleId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'skillTagVocabulary' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'tags' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'dimension' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tasksByPlanId' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'planId' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTaskRow' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'planOutputStreamChunks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'planId' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             name: { kind: 'Name', value: 'metrics' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -15295,6 +15139,63 @@ export const PlanDetailIndexLoaderDocument = {
                     ],
                   },
                 },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanDetails' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planOutputStreamChunks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
               ],
             },
           },
@@ -15387,6 +15288,89 @@ export const PlanDetailIndexLoaderDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'ruleApplications' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'planId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'detailsJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ruleId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTaskRow' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'workArtifactsByPlan' },
             arguments: [
               {
@@ -15427,24 +15411,22 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanTagChip' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanTagObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'PlanRunConfigRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -15485,6 +15467,24 @@ export const PlanDetailIndexLoaderDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'PlanDetails' },
       typeCondition: {
         kind: 'NamedType',
@@ -15493,19 +15493,6 @@ export const PlanDetailIndexLoaderDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tags' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTagChip' },
-                },
-              ],
-            },
-          },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'afterHooks' },
@@ -15519,6 +15506,8 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'beforeHooks' },
@@ -15532,14 +15521,11 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
@@ -15555,10 +15541,81 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTagChip' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LinkedArtifact' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkArtifactObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
         ],
       },
     },
@@ -15621,63 +15678,6 @@ export const PlanDetailIndexLoaderDocument = {
         ],
       },
     },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanTaskRow' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'projectRelation' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'LinkedArtifact' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'WorkArtifactObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
-        ],
-      },
-    },
   ],
 } as unknown as DocumentNode<
   PlanDetailIndexLoaderQuery,
@@ -15722,9 +15722,9 @@ export const PlanOutputChunkAddedDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
@@ -16171,6 +16171,31 @@ export const GetTaskByIdDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'task' },
             arguments: [
               {
@@ -16185,10 +16210,6 @@ export const GetTaskByIdDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTaskRow' },
-                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'afterHooks' },
@@ -16216,6 +16237,10 @@ export const GetTaskByIdDocument = {
                   },
                 },
                 {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTaskRow' },
+                },
+                {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'tags' },
                   selectionSet: {
@@ -16231,31 +16256,26 @@ export const GetTaskByIdDocument = {
               ],
             },
           },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'skillTagVocabulary' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'tags' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'dimension' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
@@ -16293,26 +16313,6 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'HookTask' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
@@ -16656,9 +16656,9 @@ export const TaskOutputStreamChunksDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'content' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
@@ -16787,15 +16787,15 @@ export const UpdateTaskDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -16847,15 +16847,15 @@ export const CreateTaskDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -16971,6 +16971,39 @@ export const GetPlansByStatusDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'listPlansByStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'plans' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'PlanCard' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             alias: { kind: 'Name', value: 'queuedPlansCount' },
             name: { kind: 'Name', value: 'listPlansByStatus' },
             arguments: [
@@ -17001,39 +17034,6 @@ export const GetPlansByStatusDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'listPlansByStatus' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'plans' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'PlanCard' },
-                      },
-                    ],
-                  },
-                },
                 { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
@@ -17139,18 +17139,18 @@ export const CreatePlanDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'author' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'project' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
           },
@@ -17279,31 +17279,6 @@ export const GetProjectByIdDocument = {
           },
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'skillTagVocabulary' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'tags' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'dimension' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             alias: { kind: 'Name', value: 'projectTasksResult' },
             name: { kind: 'Name', value: 'tasksByProjectId' },
             arguments: [
@@ -17356,19 +17331,6 @@ export const GetProjectByIdDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'requirementsJson' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'summary' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                      {
-                        kind: 'Field',
                         name: { kind: 'Name', value: 'category' },
                       },
                       {
@@ -17384,6 +17346,44 @@ export const GetProjectByIdDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'planId' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'requirementsJson' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'summary' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
                     ],
                   },
                 },
@@ -17661,14 +17661,14 @@ export const CreateProjectDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'nxProjectName' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -19111,9 +19111,9 @@ export const CreateQueueDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
               ],
             },
           },
@@ -19187,14 +19187,29 @@ export const RulesIndexLoaderDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'tagActionRules' },
+            name: { kind: 'Name', value: 'skillAvailability' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'TagActionRuleRow' },
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'effectiveDisableModelInvocation',
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -19225,29 +19240,14 @@ export const RulesIndexLoaderDocument = {
           },
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'skillAvailability' },
+            name: { kind: 'Name', value: 'tagActionRules' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'skills' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: {
-                          kind: 'Name',
-                          value: 'effectiveDisableModelInvocation',
-                        },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TagActionRuleRow' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -19306,24 +19306,29 @@ export const RuleEditLoaderDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'tagActionRule' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
+            name: { kind: 'Name', value: 'skillAvailability' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'TagActionRuleRow' },
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'skills' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'effectiveDisableModelInvocation',
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -19354,29 +19359,24 @@ export const RuleEditLoaderDocument = {
           },
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'skillAvailability' },
+            name: { kind: 'Name', value: 'tagActionRule' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'skills' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: {
-                          kind: 'Name',
-                          value: 'effectiveDisableModelInvocation',
-                        },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TagActionRuleRow' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -19576,13 +19576,13 @@ export const ScheduledAgentJobDetailDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
                 {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'ScheduledJobCard' },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'settingsJson' },
@@ -20004,6 +20004,27 @@ export const ScheduledAgentJobRunDetailDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'jobId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobRun' },
             arguments: [
               {
@@ -20022,27 +20043,6 @@ export const ScheduledAgentJobRunDetailDocument = {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'ScheduledJobRunDetail' },
                 },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'scheduledAgentJob' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'jobId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
               ],
             },
           },
@@ -20450,19 +20450,6 @@ export const GetSettingsKeysDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'serviceAccounts' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'ServiceAccountListItem' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             name: { kind: 'Name', value: 'serviceAccountCredentials' },
             arguments: [
               {
@@ -20487,24 +20474,19 @@ export const GetSettingsKeysDocument = {
               ],
             },
           },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ServiceAccountListItem' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ServiceAccountObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'serviceAccounts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ServiceAccountListItem' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -20526,6 +20508,24 @@ export const GetSettingsKeysDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'prefix' } },
           { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'serviceAccountId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountListItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
         ],
       },
     },
@@ -20910,19 +20910,6 @@ export const GetSettingsMcpDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'mcpConnectors' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'McpConnectorFields' },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             name: { kind: 'Name', value: 'mcpConnectorConnections' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -20934,6 +20921,40 @@ export const GetSettingsMcpDocument = {
               ],
             },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mcpConnectors' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'McpConnectorFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
         ],
       },
     },
@@ -20957,27 +20978,6 @@ export const GetSettingsMcpDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
           { kind: 'Field', name: { kind: 'Name', value: 'transport' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'McpConnectorConnectionFields' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'McpConnectorConnectionObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'authType' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'connectedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'connectorKey' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'credentialLabel' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'credentialPrefix' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
         ],
       },
     },
@@ -23597,6 +23597,19 @@ export const GetSkillDetailUsageDocument = {
               selections: [
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'byDay' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'bySkill' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -23611,44 +23624,9 @@ export const GetSkillDetailUsageDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'byDay' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
         ],
       },
     },
@@ -23666,6 +23644,28 @@ export const GetSkillDetailUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
       },
     },
@@ -23803,14 +23803,6 @@ export const SkillAvailabilityDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                      {
-                        kind: 'Field',
-                        name: {
-                          kind: 'Name',
-                          value: 'staticDisableModelInvocation',
-                        },
-                      },
                       {
                         kind: 'Field',
                         name: {
@@ -23822,11 +23814,19 @@ export const SkillAvailabilityDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'provenance' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: {
+                          kind: 'Name',
+                          value: 'staticDisableModelInvocation',
+                        },
+                      },
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
               ],
             },
           },
@@ -23917,11 +23917,11 @@ export const SkillAvailabilityAuthoringRuleSetDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'environment' },
                       },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'slugAllow' },
@@ -24679,17 +24679,17 @@ export const GetUsageTokenUsageDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
     },
@@ -24703,13 +24703,13 @@ export const GetUsageTokenUsageDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheReadTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cacheWriteTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
           { kind: 'Field', name: { kind: 'Name', value: 'turnCount' } },
         ],
       },
@@ -24827,13 +24827,13 @@ export const GetUsageSkillUsageDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'bySkill' },
+                  name: { kind: 'Name', value: 'byDay' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       {
                         kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+                        name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
                       },
                     ],
                   },
@@ -24853,13 +24853,13 @@ export const GetUsageSkillUsageDocument = {
                 },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'byDay' },
+                  name: { kind: 'Name', value: 'bySkill' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       {
                         kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
+                        name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
                       },
                     ],
                   },
@@ -24889,42 +24889,6 @@ export const GetUsageSkillUsageDocument = {
     },
     {
       kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'UsageSkillUsageByDay' },
       typeCondition: {
         kind: 'NamedType',
@@ -24942,6 +24906,42 @@ export const GetUsageSkillUsageDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageByScope' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByScopeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageSkillUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'UsageSkillUsageFilterOptions' },
       typeCondition: {
         kind: 'NamedType',
@@ -24950,8 +24950,8 @@ export const GetUsageSkillUsageDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitBranches' } },
         ],
       },
     },

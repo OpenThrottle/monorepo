@@ -9,7 +9,7 @@ name: personal-general
 
 ### Updating Existing Files
 
-- Alphabetize arrays and object keys when their order doesn't matter.
+- Alphabetize arrays and object keys when their order doesn't matter. This extends to **GraphQL selection sets and fragment fields** in `*.graphql` documents — enforced by `@graphql-eslint/alphabetize` (fixable: `pnpm exec eslint --fix <file>.graphql`, or the project's `nx run <project>:lint`). Exemplar: [applications/openthrottle-developer/app/routes/skills.$slug.tsx.graphql](../../applications/openthrottle-developer/app/routes/skills.$slug.tsx.graphql). Does not apply to the generated `schema.gql` or NestJS `@ObjectType`/`@InputType` decorator order.
 - Avoid type casing using `as` and using `any` as much as possible.
 - Do not introduce new TypeScript enums; use `as const` objects for enum-like values (see [enums.mdc](./coding/enums.mdc)). Retain existing enums.
 - Use `const` instead of `let` or `var` when possible.

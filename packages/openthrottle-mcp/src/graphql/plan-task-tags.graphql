@@ -6,13 +6,13 @@
 
 mutation AddPlanTag($input: AddPlanTagInput!) {
   addPlanTag(input: $input) {
-    id
-    planId
-    tag
-    dimension
-    source
     confidence
     createdAt
+    dimension
+    id
+    planId
+    source
+    tag
     updatedAt
   }
 }
@@ -23,13 +23,13 @@ mutation RemovePlanTag($input: RemovePlanTagInput!) {
 
 mutation AddProjectTag($input: AddProjectTagInput!) {
   addProjectTag(input: $input) {
-    id
-    projectId
-    tag
-    dimension
-    source
     confidence
     createdAt
+    dimension
+    id
+    projectId
+    source
+    tag
     updatedAt
   }
 }
@@ -40,13 +40,13 @@ mutation RemoveProjectTag($input: RemoveProjectTagInput!) {
 
 mutation AddTaskTag($input: AddTaskTagInput!) {
   addTaskTag(input: $input) {
-    id
-    taskId
-    tag
-    dimension
-    source
     confidence
     createdAt
+    dimension
+    id
+    source
+    tag
+    taskId
     updatedAt
   }
 }

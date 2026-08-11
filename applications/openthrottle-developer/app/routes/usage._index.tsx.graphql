@@ -17,27 +17,27 @@ query getUsageDailyStats($start: String!, $end: String!) {
 }
 
 fragment UsageTokenUsageRow on TokenUsageRowObject {
-  id
-  provider
-  model
-  inputTokens
-  outputTokens
   cacheReadTokens
   cacheWriteTokens
-  reasoningTokens
-  totalTokens
   costUsd
   createdAt
+  id
+  inputTokens
+  model
+  outputTokens
+  provider
+  reasoningTokens
+  totalTokens
 }
 
 fragment UsageTokenUsageTotals on TokenUsageTotalsObject {
-  inputTokens
-  outputTokens
   cacheReadTokens
   cacheWriteTokens
+  costUsd
+  inputTokens
+  outputTokens
   reasoningTokens
   totalTokens
-  costUsd
   turnCount
 }
 
@@ -53,19 +53,19 @@ query getUsageTokenUsage($start: String!, $end: String!, $provider: String) {
 }
 
 fragment UsageSkillUsageBySkill on SkillUsageBySkillObject {
-  skillName
-  scope
-  count
-  outcomeCount
-  successCount
   abandonedCount
-  errorCount
   avgDurationMs
+  count
+  errorCount
+  outcomeCount
+  scope
+  skillName
+  successCount
 }
 
 fragment UsageSkillUsageByScope on SkillUsageByScopeObject {
-  scope
   count
+  scope
 }
 
 fragment UsageSkillUsageByDay on SkillUsageByDayObject {
@@ -76,8 +76,8 @@ fragment UsageSkillUsageByDay on SkillUsageByDayObject {
 }
 
 fragment UsageSkillUsageFilterOptions on SkillUsageFilterOptionsObject {
-  gitBranches
   cwds
+  gitBranches
 }
 
 query getUsageSkillUsage(
@@ -94,14 +94,14 @@ query getUsageSkillUsage(
     gitBranch: $gitBranch
     cwd: $cwd
   ) {
-    bySkill {
-      ...UsageSkillUsageBySkill
+    byDay {
+      ...UsageSkillUsageByDay
     }
     byScope {
       ...UsageSkillUsageByScope
     }
-    byDay {
-      ...UsageSkillUsageByDay
+    bySkill {
+      ...UsageSkillUsageBySkill
     }
     filterOptions {
       ...UsageSkillUsageFilterOptions

@@ -23,12 +23,12 @@ fragment ScheduledJobRunDetail on ScheduledAgentJobRunObject {
 }
 
 query scheduledAgentJobRunDetail($runId: ID!, $jobId: ID!) {
-  scheduledAgentJobRun(runId: $runId) {
-    ...ScheduledJobRunDetail
-  }
   scheduledAgentJob(id: $jobId) {
     id
     name
+  }
+  scheduledAgentJobRun(runId: $runId) {
+    ...ScheduledJobRunDetail
   }
 }
 

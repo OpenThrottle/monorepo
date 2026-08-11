@@ -1,5 +1,8 @@
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
+import graphqlEslint, {
+  parser as graphqlParser,
+} from '@graphql-eslint/eslint-plugin';
 import js from '@eslint/js';
 import pluginImport from 'eslint-plugin-import';
 import pluginImportSort from 'eslint-plugin-simple-import-sort';
@@ -14,6 +17,7 @@ import pluginComments from 'eslint-plugin-eslint-comments';
 import pluginJson from 'eslint-plugin-json';
 import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
+import type { Linter } from 'eslint';
 
 /** @public */
 export type { Config as EslintFlatConfig } from 'eslint/config';
@@ -36,6 +40,31 @@ export {
   type CreateVitestConfigOptions,
   type TestEnvironment,
 } from './vitest-config.ts';
+
+/**
+ * ESLint processor that drops `.graphql` documents with no lintable content so
+ * the graphql-eslint parser is never handed one it throws on. The parser errors
+ * on both empty files and documents that contain only `#` comments (no
+ * definitions) — both are common placeholders under the `.tsx.graphql`
+ * co-location convention. A document is "meaningful" once it has a non-blank,
+ * non-comment line; only then is it linted (as a single block, so the parser
+ * and rules run normally). `supportsAutofix` keeps `eslint --fix` working
+ * through the processor.
+ */
+const skipEmptyGraphqlProcessor: Linter.Processor = {
+  meta: { name: 'skip-empty-graphql', version: '1.0.0' },
+  postprocess(messages) {
+    return messages.flat();
+  },
+  preprocess(code) {
+    const hasContent = code
+      .split('\n')
+      .map((line) => line.trim())
+      .some((line) => line.length > 0 && !line.startsWith('#'));
+    return hasContent ? [code] : [];
+  },
+  supportsAutofix: true,
+};
 
 /**
  * ESLint and the new "flat config" system
@@ -316,6 +345,45 @@ export const eslintConfig = tslint.config([
         { profile: 'primitive' },
       ],
       'react/no-multi-comp': 'off',
+    },
+  },
+
+  /**
+   * GraphQL operation documents — alphabetize selection-set fields.
+   *
+   * `@graphql-eslint/alphabetize` (fixable via `eslint --fix`) recursively
+   * sorts fields in operations and fragments, matching the monorepo's
+   * "alphabetize when order doesn't matter" convention for TS object keys.
+   * The `selections` option is purely syntactic, so no GraphQL schema wiring
+   * is required. Scoped to authored `.graphql` documents only — the generated
+   * `schema.gql` (a `.gql`, and in `.prettierignore`), NestJS
+   * `@ObjectType`/`@InputType` decorator order, and codegen output under
+   * `__generated__` are all out of scope (`ignores` here plus the global
+   * `__generated__` ignore above). Runs per-project under the existing
+   * `nx run <project>:lint` (which invokes `eslint .`).
+   */
+  {
+    files: ['**/*.graphql'],
+    ignores: ['**/__generated__/**'],
+    languageOptions: {
+      parser: graphqlParser,
+    },
+    plugins: {
+      '@graphql-eslint': graphqlEslint,
+    },
+    // Many routes co-locate an empty placeholder `.graphql` (the `.tsx.graphql`
+    // convention) that holds no operations yet. The graphql-eslint parser
+    // throws on an empty document, so skip whitespace-only files by yielding no
+    // lintable block; non-empty documents pass through unchanged. `--fix` still
+    // works via `supportsAutofix`.
+    processor: skipEmptyGraphqlProcessor,
+    rules: {
+      '@graphql-eslint/alphabetize': [
+        'error',
+        {
+          selections: ['OperationDefinition', 'FragmentDefinition'],
+        },
+      ],
     },
   },
 ]);

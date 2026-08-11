@@ -5,48 +5,48 @@
 
 query TagActionRules {
   tagActionRules {
-    id
-    userId
-    projectId
-    title
-    tagAll
-    status
-    environment
-    actionType
     actionPayloadJson
-    enabled
+    actionType
     createdAt
+    enabled
+    environment
+    id
+    projectId
+    status
+    tagAll
+    title
     updatedAt
+    userId
   }
 }
 
 query RuleApplications($planId: ID!) {
   ruleApplications(planId: $planId) {
-    id
-    ruleId
-    planId
-    taskId
-    state
-    detailsJson
     createdAt
+    detailsJson
+    id
+    planId
+    ruleId
+    state
+    taskId
     updatedAt
   }
 }
 
 mutation UpsertTagActionRule($input: UpsertTagActionRuleInput!) {
   upsertTagActionRule(input: $input) {
-    id
-    userId
-    projectId
-    title
-    tagAll
-    status
-    environment
-    actionType
     actionPayloadJson
-    enabled
+    actionType
     createdAt
+    enabled
+    environment
+    id
+    projectId
+    status
+    tagAll
+    title
     updatedAt
+    userId
   }
 }
 

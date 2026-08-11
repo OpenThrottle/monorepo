@@ -1,15 +1,15 @@
 fragment RoleDetails on RoleObject {
+  createdAt
+  description
   id
   name
-  description
-  createdAt
-  updatedAt
   permissions {
+    createdAt
+    description
     id
     name
-    description
-    createdAt
   }
+  updatedAt
 }
 
 query getRole($id: ID!) {
@@ -20,9 +20,9 @@ query getRole($id: ID!) {
 
 query getRolePermissions {
   permissions {
+    description
     id
     name
-    description
   }
 }
 

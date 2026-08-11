@@ -38,15 +38,15 @@ query getPlansByStatus($input: ListPlansByStatusInput!) {
     totalCount
   }
 
-  queuedPlansCount: listPlansByStatus(input: { statuses: ["QUEUED"] }) {
-    totalCount
-  }
-
   listPlansByStatus(input: $input) {
     plans {
       ...PlanCard
     }
 
+    totalCount
+  }
+
+  queuedPlansCount: listPlansByStatus(input: { statuses: ["QUEUED"] }) {
     totalCount
   }
 }

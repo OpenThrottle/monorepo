@@ -3,8 +3,8 @@
 # openthrottle-server. See docs/monorepo/skill-availability-design.md ("Rules").
 
 fragment SkillAvailabilityRuleFields on SkillAvailabilityRuleObject {
-  id
   environment
+  id
   slugAllow
   slugDeny
   tagAllow
@@ -38,16 +38,16 @@ query SkillAvailability(
     taskId: $taskId
     relevantOnly: $relevantOnly
   ) {
-    totalCount
-    warnings
     skills {
-      slug
-      staticDisableModelInvocation
       effectiveDisableModelInvocation
-      provenance
       matchedPlanTags
       planRelevant
+      provenance
+      slug
+      staticDisableModelInvocation
     }
+    totalCount
+    warnings
   }
 }
 

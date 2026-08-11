@@ -14,8 +14,13 @@ fragment TagActionRuleRow on TagActionRuleObject {
 }
 
 query RulesIndexLoader {
-  tagActionRules {
-    ...TagActionRuleRow
+  skillAvailability {
+    skills {
+      effectiveDisableModelInvocation
+      slug
+    }
+    totalCount
+    warnings
   }
   skillTagVocabulary {
     tags {
@@ -25,19 +30,19 @@ query RulesIndexLoader {
     }
     totalCount
   }
-  skillAvailability {
-    skills {
-      effectiveDisableModelInvocation
-      slug
-    }
-    totalCount
-    warnings
+  tagActionRules {
+    ...TagActionRuleRow
   }
 }
 
 query RuleEditLoader($id: ID!) {
-  tagActionRule(id: $id) {
-    ...TagActionRuleRow
+  skillAvailability {
+    skills {
+      effectiveDisableModelInvocation
+      slug
+    }
+    totalCount
+    warnings
   }
   skillTagVocabulary {
     tags {
@@ -47,13 +52,8 @@ query RuleEditLoader($id: ID!) {
     }
     totalCount
   }
-  skillAvailability {
-    skills {
-      effectiveDisableModelInvocation
-      slug
-    }
-    totalCount
-    warnings
+  tagActionRule(id: $id) {
+    ...TagActionRuleRow
   }
 }
 
