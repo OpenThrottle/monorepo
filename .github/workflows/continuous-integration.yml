@@ -59,12 +59,18 @@ env:
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
 
+# Least-privilege default GITHUB_TOKEN. This workflow only reads the repo,
+# queries prior runs, and reads GitHub Packages — it never pushes commits,
+# publishes packages, comments on PRs, or edits projects:
+#   - actions: read   → nrwl/nx-set-shas queries the last successful `main` run
+#   - contents: read  → actions/checkout
+#   - packages: read  → node-setup authenticates the @openthrottle GitHub
+#                       Packages registry (`.npmrc`) for `pnpm install`
+# nx-dependency-graph only uploads an artifact (no extra scope needed).
 permissions:
-  actions: write
-  contents: write
-  packages: write
-  pull-requests: write
-  repository-projects: write
+  actions: read
+  contents: read
+  packages: read
 
 jobs:
   build:
