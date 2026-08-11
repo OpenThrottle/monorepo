@@ -136,15 +136,10 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <ProjectsStats
-        plansLinkedCount={plansLinkedCount}
-        totalProjects={totalCount}
-      />
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
-          <Button asChild={true} variant="outline">
+          <Button asChild={true} size="xs" variant="outline">
             <Link to="/settings/workspace">
               <FolderPlusIcon aria-hidden={true} className="size-4" />
               Add folder
@@ -160,6 +155,11 @@ export default function Component(
           work.
         </p>
       </div>
+
+      <ProjectsStats
+        plansLinkedCount={plansLinkedCount}
+        totalProjects={totalCount}
+      />
 
       <div className="flex flex-col gap-4">
         <ProjectsToolbar

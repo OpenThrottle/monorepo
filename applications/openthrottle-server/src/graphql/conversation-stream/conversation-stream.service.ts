@@ -280,6 +280,19 @@ export class ConversationStreamService {
 
     try {
       for await (const chunk of guarded) {
+        // Keepalive chunks are pure liveness: a spawned CLI backend emitted
+        // stdout that mapped to no chunk (plugin startup hooks, status/rate-limit
+        // events, a slow first token). Reaching this loop at all has already
+        // reset the idle backstop above (any yielded chunk does), which is their
+        // sole purpose — so drop them here, before publish/persist/buffer, so
+        // they never pollute the transcript or token accounting.
+        if (
+          !chunk.done &&
+          chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.keepalive
+        ) {
+          continue;
+        }
+
         if (chunk.done) {
           // A terminal chunk can still carry token accounting — claude and
           // cursor-agent ride their usage on the `done:true` chunk (kind

@@ -2,7 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { FileUpIcon, PlusIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
@@ -94,11 +94,11 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
             sortOrder={sortOrder}
           />
           <div className="min-w-0 flex-1" />
-          <Button asChild={true} className="shrink-0" variant="outline">
+          {/* <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/plans/upload-decompose">
               <FileUpIcon className="h-4 w-4" /> Upload document
             </Link>
-          </Button>
+          </Button> */}
           <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/plans/create">
               <PlusIcon className="h-4 w-4" /> Create plan

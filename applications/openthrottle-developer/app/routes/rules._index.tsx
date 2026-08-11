@@ -142,12 +142,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <RulesIntroduction />
       <RulesStats
         disabledCount={disabledCount}
         enabledCount={enabledCount}
         totalCount={totalCount}
       />
-      <RulesIntroduction />
 
       {ruleError != null ? (
         <p className="text-destructive text-sm" role="alert">

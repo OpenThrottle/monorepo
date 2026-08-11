@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { CLAUDE_BIN_ENV } from '../argv.ts';
-import { claudeConversationBackend } from '../claude.ts';
+import { CLAUDE_CONFIG_DIR_ENV, claudeConversationBackend } from '../claude.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
@@ -95,6 +95,34 @@ const hangBin = (): string =>
     setInterval(() => {}, 1000000);`,
   );
 
+// Emits ONLY null-mapped liveness events (system/hook_*, rate_limit_event) —
+// each on its own stdout write (own data event) — before finally streaming text
+// and a terminal result. Models the reported defect: `claude` is alive and
+// emitting stdout (its own 120s idle never fires), but mapClaudeEvent returns
+// null for these events, so nothing reaches the server's chunk-based idle timer.
+const keepaliveBin = (): string =>
+  writeFakeBin(
+    'claude-keepalive.js',
+    `const emit = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
+    emit({ type: 'system', subtype: 'hook_started', hook: 'SessionStart' });
+    setTimeout(() => {
+      emit({ type: 'rate_limit_event', status: 'throttled' });
+      setTimeout(() => {
+        emit({ type: 'stream_event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'hi' } } });
+        emit({ type: 'result', subtype: 'success', is_error: false, result: 'hi' });
+      }, 25);
+    }, 25);`,
+  );
+
+// Echoes the CLAUDE_CONFIG_DIR the child was spawned with (or 'none'), so a test
+// can assert whether the headless turn was isolated onto a dedicated config dir.
+const configDirBin = (): string =>
+  writeFakeBin(
+    'claude-configdir.js',
+    `const configDir = process.env.CLAUDE_CONFIG_DIR || 'none';
+    process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: configDir }) + '\\n');`,
+  );
+
 async function collect(
   run: Parameters<typeof claudeConversationBackend.stream>[0],
 ): Promise<ConversationStreamChunk[]> {
@@ -137,6 +165,35 @@ describe('claudeConversationBackend', () => {
     const terminal = chunks.at(-1);
     expect(terminal).toMatchObject({ done: true, error: null });
     expect(terminal?.metadata?.result).toBe('hello world');
+  });
+
+  it('emits keepalive liveness chunks for null-mapped-but-alive stdout so the server idle backstop tracks the CLI stdout timer', async () => {
+    process.env[CLAUDE_BIN_ENV] = keepaliveBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    const kinds = chunks.map((chunk) => chunk.kind);
+    // Without keepalive emission the null-mapped events (hook_started,
+    // rate_limit_event) produce NO chunk, so the server's chunk-based idle timer
+    // sees no activity and trips mid-turn. A keepalive stands in for the quiet.
+    expect(kinds).toContain(CONVERSATION_STREAM_CHUNK_KINDS.keepalive);
+    // Keepalives are pure liveness: empty delta, non-terminal, no payload.
+    const keepalive = chunks.find(
+      (chunk) => chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.keepalive,
+    );
+    expect(keepalive).toMatchObject({ delta: '', done: false });
+    // A keepalive precedes the first real text (it covered a quiet stretch).
+    expect(
+      kinds.indexOf(CONVERSATION_STREAM_CHUNK_KINDS.keepalive),
+    ).toBeLessThan(kinds.indexOf(CONVERSATION_STREAM_CHUNK_KINDS.text));
+    // The turn still completes normally with its text + terminal result.
+    expect(chunks.some((chunk) => chunk.delta === 'hi')).toBe(true);
+    expect(chunks.at(-1)).toMatchObject({ done: true, error: null });
   });
 
   it('synthesizes a terminal error chunk from stderr when the process fails with no result', async () => {
@@ -191,6 +248,43 @@ describe('claudeConversationBackend', () => {
       expect(terminal?.metadata?.result).toBe('clean|home:y');
     } finally {
       delete process.env.FAKE_SERVER_SECRET;
+    }
+  });
+
+  it('isolates a headless turn onto a dedicated CLAUDE_CONFIG_DIR when OPENTHROTTLE_CLAUDE_CONFIG_DIR is set (skips user plugin hooks)', async () => {
+    process.env[CLAUDE_BIN_ENV] = configDirBin();
+    const isolated = join(dir, 'isolated-claude-config');
+    process.env[CLAUDE_CONFIG_DIR_ENV] = isolated;
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'auto',
+        sessionId: 'sess-1',
+      });
+      expect(chunks.at(-1)?.metadata?.result).toBe(isolated);
+    } finally {
+      delete process.env[CLAUDE_CONFIG_DIR_ENV];
+    }
+  });
+
+  it('leaves CLAUDE_CONFIG_DIR unset by default so subscription auth on the real config dir is preserved', async () => {
+    process.env[CLAUDE_BIN_ENV] = configDirBin();
+    const previous = process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env[CLAUDE_CONFIG_DIR_ENV];
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'auto',
+        sessionId: 'sess-1',
+      });
+      expect(chunks.at(-1)?.metadata?.result).toBe('none');
+    } finally {
+      if (previous !== undefined) {
+        process.env.CLAUDE_CONFIG_DIR = previous;
+      }
     }
   });
 

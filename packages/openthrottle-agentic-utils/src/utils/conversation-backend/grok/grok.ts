@@ -28,6 +28,7 @@ import {
 } from '../types.ts';
 import { GROK_BIN_ENV, GROK_DEFAULT_BIN, buildGrokArgv } from './argv.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import { mapGrokEvent } from './events.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -206,7 +207,9 @@ async function* streamGrok(
     if (child.stdout !== null) {
       for await (const data of child.stdout) {
         resetIdle();
-        yield* emit(buffer.push(data));
+        // A stdout read that maps to no chunk still reset the child's idle timer
+        // above; surface it as a keepalive so the server backstop stays in step.
+        yield* withKeepalive(emit(buffer.push(data)));
       }
 
       yield* emit(buffer.flush());

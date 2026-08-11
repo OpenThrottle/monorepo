@@ -30,6 +30,7 @@ import {
   buildOpencodeArgv,
 } from './argv.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import { createOpencodeEventMapper } from './events.ts';
 import {
   LOCAL_ENDPOINT_PROVIDER_ID,
@@ -227,7 +228,9 @@ async function* streamOpencode(
     if (child.stdout !== null) {
       for await (const data of child.stdout) {
         resetIdle();
-        yield* emit(buffer.push(data));
+        // A stdout read that maps to no chunk still reset the child's idle timer
+        // above; surface it as a keepalive so the server backstop stays in step.
+        yield* withKeepalive(emit(buffer.push(data)));
       }
 
       yield* emit(buffer.flush());

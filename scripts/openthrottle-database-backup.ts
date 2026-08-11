@@ -12,7 +12,7 @@ import { pathToFileURL } from 'node:url';
  * Uses POSTGRES_URL or POSTGRES_* env vars. Requires openthrottle Postgres to be running (e.g. docker-compose).
  * Writes to databases/backups/openthrottle-YYYYMMDD-HHMMSS.zip (plain SQL inside).
  *
- * When the docker-compose `postgres` container is running, pg_dump executes
+ * When the docker-compose `postgres` service is running, pg_dump executes
  * inside the container so the client version always matches the server
  * (a host pg_dump older than the server — e.g. Homebrew 17 vs Postgres 18 —
  * aborts with a server version mismatch). Falls back to the host pg_dump
@@ -20,7 +20,13 @@ import { pathToFileURL } from 'node:url';
  */
 
 const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');
-const POSTGRES_CONTAINER = 'postgres';
+
+/**
+ * The docker-compose *service* name. The running *container* is named by
+ * compose (`<project>-postgres-1`), so we resolve it via the service label
+ * rather than assuming `docker exec postgres` works.
+ */
+const POSTGRES_SERVICE = 'postgres';
 
 /** Default number of scheduled backups to retain when the env var is unset. */
 const DEFAULT_BACKUP_RETENTION_COUNT = 14;
@@ -100,17 +106,30 @@ function timestamp(): string {
   return `${y}${m}${day}-${h}${min}${s}`;
 }
 
-function isPostgresContainerRunning(): boolean {
-  const inspect = spawnSync(
+/**
+ * @description Resolves the running container ID for the compose `postgres`
+ * service via its compose label, or null when no such container is running.
+ * Uses the label rather than a hardcoded name because compose names the
+ * container `<project>-postgres-1`, not `postgres`.
+ */
+function resolvePostgresContainerId(): string | null {
+  const ps = spawnSync(
     'docker',
-    ['inspect', '--format', '{{.State.Running}}', POSTGRES_CONTAINER],
+    [
+      'ps',
+      '-q',
+      '--filter',
+      `label=com.docker.compose.service=${POSTGRES_SERVICE}`,
+    ],
     { encoding: 'utf8', shell: false },
   );
 
-  return inspect.status === 0 && inspect.stdout.trim() === 'true';
+  const id = ps.status === 0 ? ps.stdout.trim().split('\n')[0] : '';
+
+  return id === '' ? null : id;
 }
 
-function dumpViaContainer(sqlPath: string): number | null {
+function dumpViaContainer(containerId: string, sqlPath: string): number | null {
   const sqlFile = openSync(sqlPath, 'w');
 
   try {
@@ -120,7 +139,7 @@ function dumpViaContainer(sqlPath: string): number | null {
       'docker',
       [
         'exec',
-        POSTGRES_CONTAINER,
+        containerId,
         'sh',
         '-c',
         'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F p',
@@ -152,15 +171,15 @@ async function main(): Promise<void> {
   const sqlPath = join(BACKUPS_DIR, `openthrottle-${ts}.sql`);
   const zipPath = join(BACKUPS_DIR, `openthrottle-${ts}.zip`);
 
-  const useContainer = isPostgresContainerRunning();
-  const dumpStatus = useContainer
-    ? dumpViaContainer(sqlPath)
+  const containerId = resolvePostgresContainerId();
+  const dumpStatus = containerId
+    ? dumpViaContainer(containerId, sqlPath)
     : dumpViaHost(connectionString, sqlPath);
 
   if (dumpStatus !== 0) {
     await unlink(sqlPath).catch(() => {});
     throw new Error(
-      `pg_dump (${useContainer ? 'container' : 'host'}) exited with code ${dumpStatus}`,
+      `pg_dump (${containerId ? 'container' : 'host'}) exited with code ${dumpStatus}`,
     );
   }
 
