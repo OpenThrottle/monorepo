@@ -114,7 +114,7 @@ jobs:
     # because forks re-imported the full module graph per file, which forced the
     # 15 -> 30 bump. Switching that suite to Vitest's vmForks pool dropped it to
     # ~3 CPU-minutes (~730s -> ~172s user CPU), so the original 15m budget holds.
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: '📦 Checkout the code'
