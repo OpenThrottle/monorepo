@@ -21,15 +21,15 @@ query getTaskForEditById($id: ID!) {
 
 mutation updateTask($input: UpdateTaskInput!) {
   updateTask(input: $input) {
-    id
-    title
-    planId
-    status
     assignee
     category
-    description
-    summary
     createdAt
+    description
+    id
+    planId
+    status
+    summary
+    title
     updatedAt
   }
 }

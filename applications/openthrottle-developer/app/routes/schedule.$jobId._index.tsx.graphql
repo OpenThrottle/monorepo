@@ -21,10 +21,10 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
 
 query scheduledAgentJobDetail($id: ID!) {
   scheduledAgentJob(id: $id) {
-    ...ScheduledJobCard
     createdAt
     cwd
     prompt
+    ...ScheduledJobCard
     settingsJson
     timeoutMs
   }

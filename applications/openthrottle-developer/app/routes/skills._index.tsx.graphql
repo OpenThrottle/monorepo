@@ -14,12 +14,12 @@ query ProjectSkills($projectId: ID) {
 query SkillAvailability($projectId: ID, $environment: String) {
   skillAvailability(projectId: $projectId, environment: $environment) {
     skills {
-      slug
-      staticDisableModelInvocation
       effectiveDisableModelInvocation
       provenance
+      slug
+      staticDisableModelInvocation
     }
-    warnings
     totalCount
+    warnings
   }
 }

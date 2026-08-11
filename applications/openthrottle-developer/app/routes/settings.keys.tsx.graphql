@@ -18,11 +18,11 @@ fragment ServiceAccountListItem on ServiceAccountObject {
 }
 
 query getSettingsKeys($serviceAccountId: ID!) {
-  serviceAccounts {
-    ...ServiceAccountListItem
-  }
   serviceAccountCredentials(serviceAccountId: $serviceAccountId) {
     ...ServiceAccountCredentialFields
+  }
+  serviceAccounts {
+    ...ServiceAccountListItem
   }
 }
 

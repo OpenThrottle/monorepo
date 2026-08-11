@@ -1,9 +1,9 @@
 fragment UserRow on UserObject {
-  id
   createdAt
   disabledAt
   email
   githubUsername
+  id
   updatedAt
 }
 

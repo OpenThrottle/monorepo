@@ -1,18 +1,6 @@
 # plans.$planId.tasks.$taskId
 
 query getTaskById($id: ID!) {
-  task(id: $id) {
-    ...PlanTaskRow
-    afterHooks {
-      ...HookTask
-    }
-    beforeHooks {
-      ...HookTask
-    }
-    tags {
-      ...TaskTagChip
-    }
-  }
   skillTagVocabulary {
     tags {
       dimension
@@ -20,6 +8,18 @@ query getTaskById($id: ID!) {
       tag
     }
     totalCount
+  }
+  task(id: $id) {
+    afterHooks {
+      ...HookTask
+    }
+    beforeHooks {
+      ...HookTask
+    }
+    ...PlanTaskRow
+    tags {
+      ...TaskTagChip
+    }
   }
 }
 
@@ -64,9 +64,9 @@ query TaskLinkedArtifacts($taskId: ID!) {
 # A server-side taskId filter is a possible follow-up if plan streams grow large.
 query TaskOutputStreamChunks($planId: ID!) {
   planOutputStreamChunks(input: { planId: $planId }) {
-    id
     content
     createdAt
+    id
     iteration
     planId
     taskId

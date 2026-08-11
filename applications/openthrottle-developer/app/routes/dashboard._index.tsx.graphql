@@ -78,15 +78,15 @@ query getDashboard(
 }
 
 query getDashboardGithubStats($owner: String!, $repo: String!) {
-  openPrCountByAuthor: openPrCountByAuthor(
-    input: { owner: $owner, repo: $repo, state: "open" }
+  closedPrCountByAuthor: openPrCountByAuthor(
+    input: { owner: $owner, repo: $repo, state: "closed" }
   ) {
     author
     openCount
   }
 
-  closedPrCountByAuthor: openPrCountByAuthor(
-    input: { owner: $owner, repo: $repo, state: "closed" }
+  openPrCountByAuthor: openPrCountByAuthor(
+    input: { owner: $owner, repo: $repo, state: "open" }
   ) {
     author
     openCount
@@ -95,9 +95,9 @@ query getDashboardGithubStats($owner: String!, $repo: String!) {
   prTimeInStateSummary(
     input: { owner: $owner, repo: $repo, state: "open" }
   ) {
-    state
-    count
     avgDaysInState
+    count
+    state
   }
 }
 

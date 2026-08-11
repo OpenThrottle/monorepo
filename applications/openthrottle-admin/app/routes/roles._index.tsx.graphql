@@ -1,13 +1,13 @@
 fragment RoleRow on RoleObject {
+  createdAt
+  description
   id
   name
-  description
-  createdAt
-  updatedAt
   permissions {
     id
     name
   }
+  updatedAt
 }
 
 query getRoles {

@@ -30,8 +30,8 @@ fragment Task on TaskObject {
   hookRole
   hookSource
   id
-  planId
   parentTaskId
+  planId
   project
   projectId
   requirementsJson

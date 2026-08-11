@@ -5,11 +5,11 @@
 query SkillTagVocabulary {
   skillTagVocabulary {
     tags {
+      createdAt
       id
       tag
-      userId
-      createdAt
       updatedAt
+      userId
     }
     totalCount
   }
@@ -17,21 +17,21 @@ query SkillTagVocabulary {
 
 mutation AddSkillTag($input: AddSkillTagInput!) {
   addSkillTag(input: $input) {
+    createdAt
     id
     tag
-    userId
-    createdAt
     updatedAt
+    userId
   }
 }
 
 mutation RenameSkillTag($input: RenameSkillTagInput!) {
   renameSkillTag(input: $input) {
+    createdAt
     id
     tag
-    userId
-    createdAt
     updatedAt
+    userId
   }
 }
 

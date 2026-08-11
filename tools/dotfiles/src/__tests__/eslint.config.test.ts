@@ -114,4 +114,14 @@ describe('eslintConfig flat config', () => {
     expect(ignoreEntry?.ignores).toContain('**/node_modules/**/*');
     expect(ignoreEntry?.ignores).toContain('**/__generated__/**/*');
   });
+
+  it('skips GraphQL alphabetize for files under __generated__', () => {
+    const graphqlEntry = entries.find((entry) =>
+      flattenFiles(entry.files).some((pattern) => pattern.endsWith('.graphql')),
+    );
+
+    expect(graphqlEntry).toBeDefined();
+    expect(graphqlEntry?.ignores).toContain('**/__generated__/**');
+    expect(graphqlEntry?.rules?.['@graphql-eslint/alphabetize']).toBeDefined();
+  });
 });

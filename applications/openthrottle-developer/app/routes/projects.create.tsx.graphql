@@ -1,10 +1,10 @@
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
+    createdAt
+    description
     id
     name
-    description
     nxProjectName
-    createdAt
     updatedAt
   }
 }

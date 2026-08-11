@@ -1,9 +1,9 @@
 # Used by users.$userId for roles section
 query getRolesForUser($userId: ID!) {
   rolesForUser(userId: $userId) {
+    description
     id
     name
-    description
   }
 }
 

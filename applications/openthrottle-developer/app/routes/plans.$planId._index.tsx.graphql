@@ -42,30 +42,30 @@ fragment PlanTagChip on PlanTagObject {
 }
 
 fragment PlanDetails on PlanObject {
-  tags {
-    ...PlanTagChip
-  }
   afterHooks {
-    ...HookTask
-  }
-  beforeHooks {
     ...HookTask
   }
   assignee
   author
+  beforeHooks {
+    ...HookTask
+  }
   category
   createdAt
   description
   id
   jobRunHooksJson
-  runConfigJson
   project
   projectId
   projectRelation {
     ...ProjectDetails
   }
+  runConfigJson
   status
   summary
+  tags {
+    ...PlanTagChip
+  }
   title
   updatedAt
 }
@@ -164,40 +164,6 @@ fragment PlanRunConfigRepositoryFields on RepositoryObject {
 }
 
 query PlanDetailIndexLoader($planId: ID!) {
-  plan(id: $planId) {
-    ...PlanDetails
-  }
-  workspaceRepositories {
-    ...PlanRunConfigRepositoryFields
-  }
-  ruleApplications(planId: $planId) {
-    createdAt
-    detailsJson
-    id
-    planId
-    ruleId
-    state
-    taskId
-  }
-  skillTagVocabulary {
-    tags {
-      dimension
-      id
-      tag
-    }
-    totalCount
-  }
-  tasksByPlanId(input: { planId: $planId }) {
-    ...PlanTaskRow
-  }
-  planOutputStreamChunks(input: { planId: $planId }) {
-    id
-    content
-    createdAt
-    iteration
-    planId
-    taskId
-  }
   metrics {
     recentPlanRunsMetrics(planId: $planId, limit: 25) {
       executionBackend
@@ -209,6 +175,17 @@ query PlanDetailIndexLoader($planId: ID!) {
         }
       }
     }
+  }
+  plan(id: $planId) {
+    ...PlanDetails
+  }
+  planOutputStreamChunks(input: { planId: $planId }) {
+    content
+    createdAt
+    id
+    iteration
+    planId
+    taskId
   }
   planRunsByPlanId(input: { planId: $planId, limit: 10 }) {
     branch
@@ -234,11 +211,34 @@ query PlanDetailIndexLoader($planId: ID!) {
     runKind
     status
   }
+  ruleApplications(planId: $planId) {
+    createdAt
+    detailsJson
+    id
+    planId
+    ruleId
+    state
+    taskId
+  }
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
+  tasksByPlanId(input: { planId: $planId }) {
+    ...PlanTaskRow
+  }
   workArtifactsByPlan(input: { planId: $planId }) {
     artifacts {
       ...LinkedArtifact
     }
     totalCount
+  }
+  workspaceRepositories {
+    ...PlanRunConfigRepositoryFields
   }
 }
 
@@ -254,9 +254,9 @@ fragment LinkedArtifact on WorkArtifactObject {
 
 subscription PlanOutputChunkAdded($planId: ID!) {
   planOutputChunkAdded(planId: $planId) {
-    id
     content
     createdAt
+    id
     iteration
     planId
     taskId
