@@ -126,6 +126,12 @@ export class SkillUsageBySkillObject {
   })
   errorCount!: number;
 
+  @Field(() => Date, {
+    description: `Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations.`,
+    nullable: true,
+  })
+  lastUsedAt!: Date | null;
+
   @Field(() => Int, {
     description: `Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.`,
   })

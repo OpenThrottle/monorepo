@@ -3,23 +3,23 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UsageSkillUsageChart } from '../UsageSkillUsageChart';
-import type { UsageSkillUsageChartProps } from '../UsageSkillUsageChart';
+import { SkillUsageDailyChart } from '../SkillUsageDailyChart';
+import type { SkillUsageDailyChartProps } from '../SkillUsageDailyChart';
 
-const renderComponent = (props: UsageSkillUsageChartProps): RenderResult => {
+const renderComponent = (props: SkillUsageDailyChartProps): RenderResult => {
   const Component = (): React.ReactElement => (
-    <UsageSkillUsageChart {...props} />
+    <SkillUsageDailyChart {...props} />
   );
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
 };
 
-describe('UsageSkillUsageChart Component', () => {
+describe('SkillUsageDailyChart Component', () => {
   test('renders empty-state markup when there is no daily series', () => {
     const component = renderComponent({ data: [] });
 
-    expect(component.getByTestId('UsageSkillUsageChart')).toHaveTextContent(
+    expect(component.getByTestId('SkillUsageDailyChart')).toHaveTextContent(
       /No daily skill usage in range/i,
     );
   });
@@ -37,7 +37,7 @@ describe('UsageSkillUsageChart Component', () => {
     });
 
     // jsdom draws no Recharts geometry — assert the wrapper mounts only.
-    expect(component.getByTestId('UsageSkillUsageChart')).toBeInTheDocument();
+    expect(component.getByTestId('SkillUsageDailyChart')).toBeInTheDocument();
     expect(
       component.queryByText(/No daily skill usage in range/i),
     ).not.toBeInTheDocument();

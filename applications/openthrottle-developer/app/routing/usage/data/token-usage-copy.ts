@@ -46,49 +46,48 @@ export interface TokenUsageStatDefinition {
 /** The headline stat tiles, in display order. */
 export const TOKEN_USAGE_STATS: readonly TokenUsageStatDefinition[] = [
   {
-    field: 'totalTokens',
-    hint: 'Input + output across every turn in range.',
-    kind: 'tokens',
-    label: 'Total tokens',
+    field: `totalTokens`,
+    hint: `Input + output across every turn in range.`,
+    kind: `tokens`,
+    label: `Total tokens`,
   },
   {
-    field: 'inputTokens',
-    hint: 'Prompt tokens sent to the model.',
-    kind: 'tokens',
-    label: 'Input',
+    field: `inputTokens`,
+    hint: `Prompt tokens sent to the model.`,
+    kind: `tokens`,
+    label: `Input`,
   },
   {
-    field: 'outputTokens',
-    hint: 'Completion tokens generated.',
-    kind: 'tokens',
-    label: 'Output',
+    field: `outputTokens`,
+    hint: `Completion tokens generated.`,
+    kind: `tokens`,
+    label: `Output`,
   },
   {
-    field: 'cacheReadTokens',
-    hint: 'Tokens served from the prompt cache.',
-    kind: 'tokens',
-    label: 'Cache read',
+    field: `cacheReadTokens`,
+    hint: `Tokens served from the prompt cache.`,
+    kind: `tokens`,
+    label: `Cache read`,
   },
   {
-    field: 'reasoningTokens',
-    hint: 'Reasoning tokens, when a backend accounts them separately.',
-    kind: 'tokens',
-    label: 'Reasoning',
+    field: `reasoningTokens`,
+    hint: `Reasoning tokens, when a backend accounts them separately.`,
+    kind: `tokens`,
+    label: `Reasoning`,
   },
   {
-    field: 'costUsd',
-    hint: 'Reported cost, for backends that price a turn.',
-    kind: 'cost',
-    label: 'Cost',
+    field: `costUsd`,
+    hint: `Reported cost, for backends that price a turn.`,
+    kind: `cost`,
+    label: `Cost`,
   },
 ];
 
 export const TOKEN_USAGE_COPY = {
-  emptyAllProviders:
-    'No token usage recorded yet in this range. Usage is captured from persisted chat turns (Private-mode turns are not recorded).',
+  emptyAllProviders: `No token usage recorded yet in this range. Usage is captured from persisted chat turns (Private-mode turns are not recorded).`,
   emptyForProvider: (label: string): string =>
     `No ${label} token usage in this range.`,
-  heading: 'Model token usage',
+  heading: `Model token usage`,
   intro: (rangeDays: number): string =>
     `Per-turn token and cost accounting from persisted agent chat over the last ${rangeDays} days, normalized across every provider. Private-mode turns are excluded.`,
 } as const;

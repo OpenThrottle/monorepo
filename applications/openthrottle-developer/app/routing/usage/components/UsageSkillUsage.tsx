@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { Link } from 'react-router';
 import {
   Badge,
   Table,
@@ -10,7 +11,7 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { UsageSkillUsageChart } from '~/routing/usage/components/UsageSkillUsageChart';
+import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
 import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
 import {
@@ -34,6 +35,12 @@ export interface UsageSkillUsageProps {
   bySkill: readonly UsageSkillUsageBySkillFragment[];
   className?: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
+  /**
+   * Skill names that resolve to an on-disk `/skills/$slug` detail page. A row is
+   * rendered as a link only when its `skillName` is in this set — third-party /
+   * plugin-namespaced ids with no on-disk skill stay plain text (no 404 links).
+   */
+  linkableSlugs: readonly string[];
   /** Current `?provider=` (token usage); preserved when skill filters change. */
   providerParam: string | null;
   rangeDays: number;
@@ -52,6 +59,7 @@ export const UsageSkillUsage = (
     bySkill,
     className,
     filterOptions,
+    linkableSlugs,
     providerParam,
     rangeDays,
     selectedCwd,
@@ -63,6 +71,10 @@ export const UsageSkillUsage = (
   // Hooks
 
   // Setup
+  const linkableSlugSet = React.useMemo(
+    () => new Set(linkableSlugs),
+    [linkableSlugs],
+  );
   const hasFilters =
     selectedScope != null || selectedGitBranch != null || selectedCwd != null;
   const emptyMessage = hasFilters
@@ -103,7 +115,7 @@ export const UsageSkillUsage = (
         heading="h3"
         title={SKILL_USAGE_COPY.overTimeHeading}
       />
-      <UsageSkillUsageChart className="mb-8" data={byDay} />
+      <SkillUsageDailyChart className="mb-8" data={byDay} />
 
       <GlobalHeading
         className="mb-3"
@@ -136,7 +148,18 @@ export const UsageSkillUsage = (
             <TableBody>
               {bySkill.map((row) => (
                 <TableRow key={`${row.skillName}:${row.scope}`}>
-                  <TableCell className="font-medium">{row.skillName}</TableCell>
+                  <TableCell className="font-medium">
+                    {linkableSlugSet.has(row.skillName) ? (
+                      <Link
+                        className="hover:underline"
+                        to={`/skills/${encodeURIComponent(row.skillName)}`}
+                      >
+                        {row.skillName}
+                      </Link>
+                    ) : (
+                      row.skillName
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       color={

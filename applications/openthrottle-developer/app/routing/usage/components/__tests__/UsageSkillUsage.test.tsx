@@ -68,6 +68,7 @@ const baseProps = (): UsageSkillUsageProps => ({
   byScope: [],
   bySkill: [],
   filterOptions: buildFilterOptions(),
+  linkableSlugs: [],
   providerParam: null,
   rangeDays: 30,
   selectedCwd: null,
@@ -145,6 +146,48 @@ describe('UsageSkillUsage Component', () => {
     expect(component.getByText('7')).toBeInTheDocument();
   });
 
+  test('links only rows whose skillName matches a discovered on-disk slug', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [
+        buildBySkill({ scope: SKILL_USAGE_SCOPES.OURS, skillName: 'ot-plans' }),
+        buildBySkill({
+          scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          skillName: 'vercel:deploy',
+        }),
+      ],
+      linkableSlugs: ['ot-plans'],
+    });
+
+    const link = component.getByRole('link', { name: 'ot-plans' });
+    expect(link).toHaveAttribute('href', '/skills/ot-plans');
+
+    // Third-party row with no on-disk skill stays plain text (no 404 link).
+    expect(
+      component.queryByRole('link', { name: 'vercel:deploy' }),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByRole('cell', { name: 'vercel:deploy' }),
+    ).toBeInTheDocument();
+  });
+
+  test('percent-encodes a linkable slug containing a colon in the href', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [
+        buildBySkill({
+          scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          skillName: 'engineering:code-review',
+        }),
+      ],
+      linkableSlugs: ['engineering:code-review'],
+    });
+
+    expect(
+      component.getByRole('link', { name: 'engineering:code-review' }),
+    ).toHaveAttribute('href', '/skills/engineering%3Acode-review');
+  });
+
   test('scope filter links target skillScope and mark the active one', () => {
     const component = renderComponent({
       ...baseProps(),
@@ -220,6 +263,6 @@ describe('UsageSkillUsage Component', () => {
         name: SKILL_USAGE_COPY.overTimeHeading,
       }),
     ).toBeInTheDocument();
-    expect(component.getByTestId('UsageSkillUsageChart')).toBeInTheDocument();
+    expect(component.getByTestId('SkillUsageDailyChart')).toBeInTheDocument();
   });
 });

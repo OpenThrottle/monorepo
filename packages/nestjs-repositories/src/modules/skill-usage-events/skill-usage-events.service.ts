@@ -69,6 +69,8 @@ export interface SkillUsageRangeQuery {
   readonly end: string;
   readonly gitBranch?: string | null;
   readonly scope?: SkillUsageScope | null;
+  /** Restrict every aggregate to a single skill (detail view); omit for all. */
+  readonly skillName?: string | null;
   readonly start: string;
 }
 
@@ -78,6 +80,8 @@ export interface SkillUsageBySkillRow {
   readonly avgDurationMs: number | null;
   readonly count: number;
   readonly errorCount: number;
+  /** Most recent start (invocation) time in the filtered window; null if none. */
+  readonly lastUsedAt: Date | null;
   readonly outcomeCount: number;
   readonly scope: SkillUsageScope;
   readonly skillName: string;
@@ -139,16 +143,34 @@ const exclusiveEndInstant = (end: string): string => {
 };
 
 /** COUNT/SUM raw → number, coalescing NULL (no rows) to 0. */
-const toNumber = (value: unknown): number =>
-  value == null ? 0 : Number(value);
+const toNumber = (value: unknown): number => {
+  return value == null ? 0 : Number(value);
+};
 
 /** AVG raw → number | null (NULL when no duration samples). */
 const toAvgOrNull = (value: unknown): number | null => {
   if (value == null) {
     return null;
   }
+
   const n = Number(value);
+
   return Number.isFinite(n) ? Math.round(n) : null;
+};
+
+/** MAX(timestamptz) raw → Date | null (pg may hand back a Date or an ISO string). */
+const toDateOrNull = (value: unknown): Date | null => {
+  if (value == null) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const date = new Date(String(value));
+
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 /** Narrow a raw SQL scope value to SkillUsageScope; fall back to ours. */
@@ -247,7 +269,11 @@ export class SkillUsageEventsService {
         this.listByScope(query),
         this.listByDay(query),
         this.countInRange(query),
-        this.listFilterOptions({ end: query.end, start: query.start }),
+        this.listFilterOptions({
+          end: query.end,
+          skillName: query.skillName ?? null,
+          start: query.start,
+        }),
       ]);
 
     return { byDay, byScope, bySkill, filterOptions, totalCount };
@@ -273,6 +299,7 @@ export class SkillUsageEventsService {
         avgDurationMs: outcomes.avgDurationMs,
         count: row.count,
         errorCount: outcomes.errorCount,
+        lastUsedAt: row.lastUsedAt,
         outcomeCount: outcomes.outcomeCount,
         scope: row.scope,
         skillName: row.skillName,
@@ -341,16 +368,28 @@ export class SkillUsageEventsService {
    */
   async listFilterOptions(query: {
     readonly end: string;
+    readonly skillName?: string | null;
     readonly start: string;
   }): Promise<SkillUsageFilterOptions> {
+    const withSkill = (
+      qb: SelectQueryBuilder<SkillUsageEvent>,
+    ): SelectQueryBuilder<SkillUsageEvent> => {
+      if (query.skillName != null && query.skillName !== '') {
+        qb.andWhere('e.skill_name = :skillName', {
+          skillName: query.skillName,
+        });
+      }
+      return qb;
+    };
+
     const [branchRows, cwdRows] = await Promise.all([
-      this.dateRangeQuery(query)
+      withSkill(this.dateRangeQuery(query))
         .select('DISTINCT e.git_branch', 'value')
         .andWhere('e.git_branch IS NOT NULL')
         .andWhere(`e.git_branch <> ''`)
         .orderBy('e.git_branch', 'ASC')
         .getRawMany<{ value: string }>(),
-      this.dateRangeQuery(query)
+      withSkill(this.dateRangeQuery(query))
         .select('DISTINCT e.cwd', 'value')
         .andWhere('e.cwd IS NOT NULL')
         .andWhere(`e.cwd <> ''`)
@@ -368,6 +407,7 @@ export class SkillUsageEventsService {
   private async listStartCountsBySkill(query: SkillUsageRangeQuery): Promise<
     ReadonlyArray<{
       readonly count: number;
+      readonly lastUsedAt: Date | null;
       readonly scope: SkillUsageScope;
       readonly skillName: string;
     }>
@@ -376,6 +416,7 @@ export class SkillUsageEventsService {
       .select('e.skill_name', 'skillName')
       .addSelect('e.scope', 'scope')
       .addSelect('COUNT(*)', 'count')
+      .addSelect('MAX(e.occurred_at)', 'lastUsedAt')
       .groupBy('e.skill_name')
       .addGroupBy('e.scope')
       .orderBy('count', 'DESC')
@@ -385,6 +426,7 @@ export class SkillUsageEventsService {
 
     return rows.map((row) => ({
       count: toNumber(row.count),
+      lastUsedAt: toDateOrNull(row.lastUsedAt),
       scope: toSkillUsageScope(row.scope),
       skillName: String(row.skillName),
     }));
@@ -427,6 +469,10 @@ export class SkillUsageEventsService {
 
     if (query.cwd != null && query.cwd !== '') {
       qb.andWhere('o.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    if (query.skillName != null && query.skillName !== '') {
+      qb.andWhere('o.skill_name = :skillName', { skillName: query.skillName });
     }
 
     const rows = await qb.getRawMany<Record<string, unknown>>();
@@ -474,6 +520,10 @@ export class SkillUsageEventsService {
 
     if (query.cwd != null && query.cwd !== '') {
       qb.andWhere('e.cwd = :cwd', { cwd: query.cwd });
+    }
+
+    if (query.skillName != null && query.skillName !== '') {
+      qb.andWhere('e.skill_name = :skillName', { skillName: query.skillName });
     }
 
     return qb;

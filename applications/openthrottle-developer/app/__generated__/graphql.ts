@@ -2858,7 +2858,7 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
-  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
@@ -3153,6 +3153,7 @@ export type QuerySkillUsageArgs = {
   end: Scalars['String']['input'];
   gitBranch?: InputMaybe<Scalars['String']['input']>;
   scope?: InputMaybe<Scalars['String']['input']>;
+  skillName?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
 };
 
@@ -4181,6 +4182,8 @@ export type SkillUsageBySkillObject = {
   count: Scalars['Int']['output'];
   /** Opt-in error outcomes for this skill in the filtered range. */
   errorCount: Scalars['Int']['output'];
+  /** Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations. */
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
   outcomeCount: Scalars['Int']['output'];
   /** ours | third-party for this skill row. */
@@ -9256,6 +9259,59 @@ export type UpdateRepositoryMutation = {
   };
 };
 
+export type SkillDetailUsageBySkillFragment = {
+  __typename?: 'SkillUsageBySkillObject';
+  skillName: string;
+  scope: string;
+  count: number;
+  outcomeCount: number;
+  successCount: number;
+  abandonedCount: number;
+  errorCount: number;
+  avgDurationMs?: number | null;
+  lastUsedAt?: any | null;
+};
+
+export type SkillDetailUsageByDayFragment = {
+  __typename?: 'SkillUsageByDayObject';
+  date: string;
+  oursCount: number;
+  thirdPartyCount: number;
+  totalCount: number;
+};
+
+export type GetSkillDetailUsageQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+  skillName: Scalars['String']['input'];
+}>;
+
+export type GetSkillDetailUsageQuery = {
+  __typename?: 'Query';
+  skillUsage: {
+    __typename?: 'SkillUsageResultObject';
+    bySkill: Array<{
+      __typename?: 'SkillUsageBySkillObject';
+      skillName: string;
+      scope: string;
+      count: number;
+      outcomeCount: number;
+      successCount: number;
+      abandonedCount: number;
+      errorCount: number;
+      avgDurationMs?: number | null;
+      lastUsedAt?: any | null;
+    }>;
+    byDay: Array<{
+      __typename?: 'SkillUsageByDayObject';
+      date: string;
+      oursCount: number;
+      thirdPartyCount: number;
+      totalCount: number;
+    }>;
+  };
+};
+
 export type ProjectSkillsQueryVariables = Exact<{
   projectId?: InputMaybe<Scalars['ID']['input']>;
 }>;
@@ -11445,6 +11501,55 @@ export const UserWorkspaceProfileFieldsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UserWorkspaceProfileFieldsFragment, unknown>;
+export const SkillDetailUsageBySkillFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SkillDetailUsageBySkillFragment, unknown>;
+export const SkillDetailUsageByDayFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SkillDetailUsageByDayFragment, unknown>;
 export const UsageDailyStatsRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -23406,6 +23511,168 @@ export const UpdateRepositoryDocument = {
 } as unknown as DocumentNode<
   UpdateRepositoryMutation,
   UpdateRepositoryMutationVariables
+>;
+export const GetSkillDetailUsageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSkillDetailUsage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'skillName' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillUsage' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'skillName' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'skillName' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'bySkill' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'SkillDetailUsageBySkill',
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'byDay' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageBySkill' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageBySkillObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'abandonedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avgDurationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SkillDetailUsageByDay' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageByDayObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSkillDetailUsageQuery,
+  GetSkillDetailUsageQueryVariables
 >;
 export const ProjectSkillsDocument = {
   kind: 'Document',

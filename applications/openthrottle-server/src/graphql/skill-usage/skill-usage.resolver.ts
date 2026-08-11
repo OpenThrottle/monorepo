@@ -182,7 +182,7 @@ export class SkillUsageResolver {
   }
 
   @Query(() => SkillUsageResultObject, {
-    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.`,
+    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.`,
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_READ)
@@ -210,9 +210,19 @@ export class SkillUsageResolver {
       type: () => String,
     })
     cwd?: string | null,
+    @Args('skillName', {
+      description:
+        'Restrict every aggregate to a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.',
+      nullable: true,
+      type: () => String,
+    })
+    skillName?: string | null,
   ): Promise<SkillUsageResultObject> {
     assertYyyyMmDd('start', start);
     assertYyyyMmDd('end', end);
+
+    const resolvedSkillName =
+      skillName != null && skillName.trim() !== '' ? skillName.trim() : null;
 
     let resolvedScope: SkillUsageScope | null = null;
     if (scope != null && scope !== '') {
@@ -229,6 +239,7 @@ export class SkillUsageResolver {
       end,
       gitBranch: gitBranch ?? null,
       scope: resolvedScope,
+      skillName: resolvedSkillName,
       start,
     });
 

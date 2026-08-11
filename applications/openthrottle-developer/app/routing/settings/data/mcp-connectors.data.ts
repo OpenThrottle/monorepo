@@ -13,15 +13,15 @@ export interface McpProviderDisplay {
 /** Display label + sort order for each catalog provider group. */
 export const MCP_PROVIDER_DISPLAY: Record<string, McpProviderDisplay> = {
   'anthropic-directory': {
-    label: 'Anthropic connector directory',
+    label: `Anthropic connector directory`,
     order: 0,
   },
   'mcp-registry': {
-    label: 'Official MCP registry',
+    label: `Official MCP registry`,
     order: 1,
   },
   'vendor-remote': {
-    label: 'Vendor-hosted remote MCP',
+    label: `Vendor-hosted remote MCP`,
     order: 2,
   },
 };

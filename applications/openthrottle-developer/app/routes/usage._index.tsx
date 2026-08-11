@@ -45,6 +45,19 @@ const parseSkillScope = (raw: string | null): SkillUsageScopeFilter => {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
+  // Disk discovery is the exact gate `/skills/$slug` uses to 404 (see
+  // `readSkillFileBySlug`): a Top-skills row links through only when its
+  // `skillName` matches a discovered slug. Reuse it here rather than the
+  // `projectSkills` query so links never depend on DB ingest/auth state.
+  const { discoverRepoSkills } =
+    await import('~/routing/agents/data/discover-repo-skills.server');
+  const { getMonorepoRoot } =
+    await import('~/routing/agents/data/resolve-monorepo-root.server');
+
+  const linkableSkillSlugs = discoverRepoSkills(getMonorepoRoot()).map(
+    (entry) => entry.slug,
+  );
+
   const searchParams = new URL(args.request.url).searchParams;
   const providerParam = searchParams.get('provider');
   const selectedProvider =
@@ -94,6 +107,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return {
     dailyStats,
+    linkableSkillSlugs,
     rangeDays: 30,
     rangeEndIso: endIso,
     rangeStartIso: startIso,
@@ -121,6 +135,7 @@ export default function Component(
   const { loaderData } = props;
   const {
     dailyStats,
+    linkableSkillSlugs,
     rangeDays,
     rangeEndIso,
     rangeStartIso,
@@ -163,6 +178,7 @@ export default function Component(
         byScope={skillUsage.byScope}
         bySkill={skillUsage.bySkill}
         filterOptions={skillUsage.filterOptions}
+        linkableSlugs={linkableSkillSlugs}
         providerParam={selectedProvider}
         rangeDays={rangeDays}
         selectedCwd={selectedSkillCwd}

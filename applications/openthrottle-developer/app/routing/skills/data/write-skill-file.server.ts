@@ -66,6 +66,7 @@ export const writeSkillFileBySlug = (
     kind: 'skill',
     path: entry.repoRelativePath,
   });
+
   if (errors.length > 0) {
     const detail = errors
       .map((issue) => `${issue.field}: ${issue.message}`)

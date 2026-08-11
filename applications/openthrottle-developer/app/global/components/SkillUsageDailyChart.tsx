@@ -10,19 +10,20 @@ import {
   formatSkillUsageChartDate,
   SKILL_USAGE_CHART_CONFIG,
   type SkillUsageChartDatum,
-} from '~/routing/usage/data/skill-usage-chart';
+} from '~/global/data/skill-usage-chart';
 
-export interface UsageSkillUsageChartProps {
+export interface SkillUsageDailyChartProps {
   className?: string;
   data: readonly SkillUsageChartDatum[];
 }
 
 /**
  * @description Stacked daily bar chart: ours vs third-party skill invocations.
- * Under jsdom, Recharts draws no geometry — tests assert the wrapper mounts.
+ * Shared by the /usage route and the /skills/$slug detail route. Under jsdom,
+ * Recharts draws no geometry — tests assert the wrapper mounts.
  */
-export const UsageSkillUsageChart = (
-  props: UsageSkillUsageChartProps,
+export const SkillUsageDailyChart = (
+  props: SkillUsageDailyChartProps,
 ): React.ReactElement => {
   const { className, data } = props;
 
@@ -42,7 +43,7 @@ export const UsageSkillUsageChart = (
     return (
       <div
         className={clsx('text-muted-foreground text-sm', className)}
-        data-testid="UsageSkillUsageChart"
+        data-testid="SkillUsageDailyChart"
       >
         No daily skill usage in range.
       </div>
@@ -52,7 +53,7 @@ export const UsageSkillUsageChart = (
   return (
     <div
       className={clsx('w-full', className)}
-      data-testid="UsageSkillUsageChart"
+      data-testid="SkillUsageDailyChart"
     >
       <ChartContainer
         className="min-h-[220px] w-full"

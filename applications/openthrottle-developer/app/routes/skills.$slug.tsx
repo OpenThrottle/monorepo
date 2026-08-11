@@ -1,25 +1,63 @@
 import * as React from 'react';
-import { useFetcher } from 'react-router';
+import { Await, useFetcher } from 'react-router';
 import { ChatDialog } from '@openthrottle/react-router-chat';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { GetSkillDetailUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   loadComposerModels,
   loadRepositories,
 } from '~/routing/home/data/models.server';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
+import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
 import {
   SKILL_DETAIL_COPY,
   SKILL_RUN_COPY,
   SKILL_WRITE_COPY,
 } from '~/routing/skills/data/data.copy';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
+import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/skills.$slug';
+
+/** Fixed detail-route window, matching the /usage 30-day contract. */
+const SKILL_USAGE_RANGE_DAYS = 30;
+
+/** Map the deferred usage query → the component's discriminated prop. */
+const toSkillDetailUsageData = (
+  skillUsage: GetSkillDetailUsageQuery['skillUsage'],
+): SkillDetailUsageData => {
+  const row = skillUsage.bySkill[0];
+
+  return {
+    available: true,
+    byDay: skillUsage.byDay.map((day) => ({
+      date: day.date,
+      oursCount: day.oursCount,
+      thirdPartyCount: day.thirdPartyCount,
+      totalCount: day.totalCount,
+    })),
+    skill: row
+      ? {
+          abandonedCount: row.abandonedCount,
+          avgDurationMs: row.avgDurationMs ?? null,
+          count: row.count,
+          errorCount: row.errorCount,
+          lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
+          outcomeCount: row.outcomeCount,
+          scope: row.scope,
+          skillName: row.skillName,
+          successCount: row.successCount,
+        }
+      : null,
+  };
+};
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -55,7 +93,28 @@ export const loader = async (args: Route.LoaderArgs) => {
     loadRepositories(args.request),
   ]).then(([models, repositories]) => ({ models, repositories }));
 
-  return { content, editable, entry, runOptions };
+  // Deferred per-skill usage over a fixed 30-day window (YYYY-MM-DD, matching
+  // the /usage contract). Streamed as a naked promise so the SKILL.md shell
+  // paints immediately. `skillUsage` is guarded by SETTINGS_READ; any failure
+  // (missing permission, server error) resolves to the unavailable sentinel so
+  // the route still renders 200 and degrades to a notice instead of throwing.
+  const end = new Date();
+  const start = new Date(
+    end.getTime() - SKILL_USAGE_RANGE_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const usage: Promise<SkillDetailUsageData> = executeGraphqlWithAuth(
+    args.request,
+    GetSkillDetailUsageDocument,
+    {
+      end: end.toISOString().slice(0, 10),
+      skillName: entry.slug,
+      start: start.toISOString().slice(0, 10),
+    },
+  )
+    .then(({ skillUsage }) => toSkillDetailUsageData(skillUsage))
+    .catch(() => ({ available: false as const }));
+
+  return { content, editable, entry, runOptions, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -69,7 +128,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { content, editable, entry, runOptions } = props.loaderData;
+  const { content, editable, entry, runOptions, usage } = props.loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -103,6 +162,22 @@ export default function Component(
         saveError={saveError}
         saving={saving}
       />
+
+      {/* Deferred per-skill usage: RR8 streams the loader promise, so the
+          SKILL.md shell above paints first and the stats hydrate in. The loader
+          already caught failures into the unavailable sentinel, so no
+          errorElement is needed here. */}
+      <React.Suspense
+        fallback={
+          <p className="text-muted-foreground mt-8 text-sm">Loading usage…</p>
+        }
+      >
+        <Await resolve={usage}>
+          {(data) => (
+            <SkillDetailUsage rangeDays={SKILL_USAGE_RANGE_DAYS} usage={data} />
+          )}
+        </Await>
+      </React.Suspense>
 
       {/* Controlled conversation surface: the run streams here once started. The
           trigger is visually hidden — the skill header's Run-now button drives

@@ -279,6 +279,7 @@ describe('SkillUsageResolver', () => {
         end: '2026-07-31',
         gitBranch: null,
         scope: null,
+        skillName: null,
         start: '2026-07-01',
       });
       expect(result.totalCount).toBe(3);
@@ -311,8 +312,59 @@ describe('SkillUsageResolver', () => {
           end: '2026-07-31',
           gitBranch: 'example-usage-tracking',
           scope: SKILL_USAGE_SCOPES.OURS,
+          skillName: null,
           start: '2026-07-01',
         });
+      });
+    });
+
+    describe('when skillName is provided', () => {
+      test('trims it and forwards it to the service', async () => {
+        getUsageAggregation.mockResolvedValue({
+          byDay: [],
+          byScope: [],
+          bySkill: [],
+          filterOptions: { cwds: [], gitBranches: [] },
+          totalCount: 0,
+        });
+
+        await resolver.skillUsage(
+          '2026-07-01',
+          '2026-07-31',
+          null,
+          null,
+          null,
+          '  ot-plans  ',
+        );
+
+        expect(getUsageAggregation).toHaveBeenCalledWith(
+          expect.objectContaining({ skillName: 'ot-plans' }),
+        );
+      });
+    });
+
+    describe('when skillName is blank', () => {
+      test('treats it as omitted (null) on the service call', async () => {
+        getUsageAggregation.mockResolvedValue({
+          byDay: [],
+          byScope: [],
+          bySkill: [],
+          filterOptions: { cwds: [], gitBranches: [] },
+          totalCount: 0,
+        });
+
+        await resolver.skillUsage(
+          '2026-07-01',
+          '2026-07-31',
+          null,
+          null,
+          null,
+          '   ',
+        );
+
+        expect(getUsageAggregation).toHaveBeenCalledWith(
+          expect.objectContaining({ skillName: null }),
+        );
       });
     });
 

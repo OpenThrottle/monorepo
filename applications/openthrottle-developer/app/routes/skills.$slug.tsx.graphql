@@ -1,0 +1,29 @@
+fragment SkillDetailUsageBySkill on SkillUsageBySkillObject {
+  skillName
+  scope
+  count
+  outcomeCount
+  successCount
+  abandonedCount
+  errorCount
+  avgDurationMs
+  lastUsedAt
+}
+
+fragment SkillDetailUsageByDay on SkillUsageByDayObject {
+  date
+  oursCount
+  thirdPartyCount
+  totalCount
+}
+
+query getSkillDetailUsage($start: String!, $end: String!, $skillName: String!) {
+  skillUsage(start: $start, end: $end, skillName: $skillName) {
+    bySkill {
+      ...SkillDetailUsageBySkill
+    }
+    byDay {
+      ...SkillDetailUsageByDay
+    }
+  }
+}
