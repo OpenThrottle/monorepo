@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2636** third-party packages.
+**2640** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2212 |
+| MIT | 2216 |
 | Apache-2.0 | 118 |
 | ISC | 92 |
 | MIT-0 | 67 |
@@ -380,6 +380,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@graphql-codegen/typescript` | 5.0.10 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
 | `@graphql-codegen/typescript-operations` | 5.1.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
 | `@graphql-codegen/visitor-plugin-common` | 6.3.0 | MIT | [source](https://github.com/dotansimha/graphql-code-generator#readme) |
+| `@graphql-eslint/eslint-plugin` | 4.4.1 | MIT | [Dotan Simha](https://github.com/graphql-hive/graphql-eslint#readme) |
 | `@graphql-hive/signal` | 2.0.0 | MIT | [The Guild](https://github.com/graphql-hive/gateway#readme) |
 | `@graphql-tools/apollo-engine-loader` | 8.0.34 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/batch-execute` | 10.0.9 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
@@ -1077,7 +1078,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `array.prototype.flatmap` | 1.3.3 | MIT | [Jordan Harband](https://github.com/es-shims/Array.prototype.flatMap#readme) |
 | `array.prototype.tosorted` | 1.1.4 | MIT | [Jordan Harband](https://github.com/es-shims/Array.prototype.toSorted#readme) |
 | `arraybuffer.prototype.slice` | 1.0.4 | MIT | [Jordan Harband](https://github.com/es-shims/ArrayBuffer.prototype.slice#readme) |
-| `arrify` | 2.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/arrify#readme) |
+| `arrify` | 1.0.1, 2.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/arrify#readme) |
 | `assertion-error` | 2.0.1 | MIT | [Jake Luer](https://github.com/chaijs/assertion-error#readme) |
 | `ast-types` | 0.16.1 | MIT | [Ben Newman](http://github.com/benjamn/ast-types) |
 | `ast-v8-to-istanbul` | 1.0.5 | MIT | [Ari Perkkiö](https://github.com/AriPerkkio/ast-v8-to-istanbul) |
@@ -1342,7 +1343,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
-| `deslop-js` | 0.9.3 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `deslop-js` | 0.9.4 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
@@ -1560,6 +1561,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `graphql` | 16.14.2 | MIT | [source](https://github.com/graphql/graphql-js) |
 | `graphql-codegen-typescript-validation-schema` | 0.18.1 | MIT | codehex |
 | `graphql-config` | 5.1.6 | MIT | [Kamil Kisiela](https://graphql-config.com) |
+| `graphql-depth-limit` | 1.1.0 | MIT | [Andrew Carlson](https://github.com/stems/graphql-depth-limit#readme) |
 | `graphql-request` | 7.4.0 | MIT | [Jason Kuhrt](https://github.com/graffle-js/graffle/tree/graphql-request) |
 | `graphql-scalars` | 1.25.0 | MIT | [source](https://github.com/Urigo/graphql-scalars#readme) |
 | `graphql-subscriptions` | 2.0.0 | MIT | [source](https://github.com/apollostack/graphql-subscriptions#readme) |
@@ -1570,7 +1572,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `happy-dom` | 20.11.1 | MIT | [David Ortner](https://github.com/capricorn86/happy-dom) |
 | `harmony-reflect` | 1.6.2 | (Apache-2.0 OR MPL-1.1) | [source](https://github.com/tvcutsem/harmony-reflect) |
 | `has-bigints` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/has-bigints#readme) |
-| `has-flag` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/has-flag#readme) |
+| `has-flag` | 4.0.0, 5.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/has-flag#readme) |
 | `has-property-descriptors` | 1.0.2 | MIT | [Jordan Harband](https://github.com/inspect-js/has-property-descriptors#readme) |
 | `has-proto` | 1.2.0 | MIT | [Jordan Harband](https://github.com/inspect-js/has-proto#readme) |
 | `has-symbols` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/has-symbols#readme) |
@@ -1634,6 +1636,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `inherits` | 2.0.4 | ISC | [source](https://github.com/isaacs/inherits#readme) |
 | `ini` | 1.3.8, 6.0.0 | ISC | [GitHub Inc.](https://github.com/npm/ini#readme) |
 | `ink` | 7.1.1 | MIT | [Vadim Demedes](https://github.com/vadimdemedes/ink#readme) |
+| `ink-link` | 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/ink-link#readme) |
 | `ink-spinner` | 5.0.0 | MIT | [Vadim Demedes](https://github.com/vadimdemedes/ink-spinner#readme) |
 | `inline-style-parser` | 0.2.7 | MIT | [source](https://github.com/remarkablemark/inline-style-parser#readme) |
 | `inline-style-prefixer` | 7.0.1 | MIT | [Robin Weser](https://github.com/robinweser/inline-style-prefixer#readme) |
@@ -1818,6 +1821,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lodash.isnumber` | 3.0.3 | MIT | [John-David Dalton](https://lodash.com/) |
 | `lodash.isplainobject` | 4.0.6 | MIT | [John-David Dalton](https://lodash.com/) |
 | `lodash.isstring` | 4.0.1 | MIT | [John-David Dalton](https://lodash.com/) |
+| `lodash.lowercase` | 4.3.0 | MIT | [John-David Dalton](https://lodash.com/) |
 | `lodash.merge` | 4.6.2 | MIT | [John-David Dalton](https://lodash.com/) |
 | `lodash.mergewith` | 4.6.2 | MIT | [John-David Dalton](https://lodash.com/) |
 | `lodash.omit` | 4.18.0 | MIT | [John-David Dalton](https://lodash.com/) |
@@ -2018,7 +2022,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `oxc-parser` | 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
 | `oxlint` | 1.76.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
-| `oxlint-plugin-react-doctor` | 0.9.3 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `oxlint-plugin-react-doctor` | 0.9.4 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `p-cancelable` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
@@ -2213,7 +2217,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-diff-viewer-continued` | 3.4.0 | MIT | [source](https://github.com/aeolun/react-diff-viewer-continued#readme) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-doctor` | 0.9.3 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
+| `react-doctor` | 0.9.4 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
 | `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
@@ -2440,7 +2444,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `sucrase` | 3.35.1 | MIT | [Alan Pierce](https://github.com/alangpierce/sucrase#readme) |
 | `superjson` | 2.2.6 | MIT | [Simon Knott](https://github.com/blitz-js/superjson#readme) |
 | `supports-color` | 10.2.2, 7.2.0, 8.1.1 | MIT | [Sindre Sorhus](https://github.com/chalk/supports-color#readme) |
-| `supports-hyperlinks` | 3.2.0 | MIT | [source](https://github.com/chalk/supports-hyperlinks#readme) |
+| `supports-hyperlinks` | 3.2.0, 4.5.0 | MIT | [source](https://github.com/chalk/supports-hyperlinks#readme) |
 | `supports-preserve-symlinks-flag` | 1.0.0 | MIT | [Jordan Harband](https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme) |
 | `svg-parser` | 2.0.4 | MIT | [Rich Harris](https://github.com/Rich-Harris/svg-parser#README) |
 | `svgo` | 3.3.4, 4.0.2 | MIT | [Kir Belevich](https://svgo.dev) |
@@ -2465,7 +2469,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `teex` | 1.0.1 | MIT | [Mathias Buus](https://github.com/mafintosh/teex) |
 | `temporal-polyfill` | 0.3.0 | MIT | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
 | `temporal-spec` | 0.3.0 | ISC | [Adam Shaw](https://github.com/fullcalendar/temporal-polyfill#readme) |
-| `terminal-link` | 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/terminal-link#readme) |
+| `terminal-link` | 4.0.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/terminal-link#readme) |
 | `terminal-size` | 4.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/terminal-size#readme) |
 | `terser` | 5.49.0 | BSD-2-Clause | [Mihai Bazon](https://terser.org) |
 | `terser-webpack-plugin` | 5.6.1 | MIT | [webpack Contrib Team](https://github.com/webpack/minimizer-webpack-plugin) |
