@@ -24,6 +24,11 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource, IsNull } from 'typeorm';
 
+import {
+  LOCAL_SECRETS_FILENAME,
+  upsertLocalSecrets,
+} from './local-secrets-file';
+
 const BOOTSTRAP_ACCOUNTS = [
   {
     envVar: 'OPENTHROTTLE_MCP_AUTH_TOKEN',
@@ -138,6 +143,10 @@ async function mintBootstrapCredential(
   console.log(`${account.envVar}=${created.token}`);
   console.log('');
 
+  // Secrets only exist at mint time and cannot be re-derived later, so persist
+  // a durable copy to the git-ignored local file here in the mint branch.
+  await upsertLocalSecrets({ [account.envVar]: created.token });
+
   return 'minted';
 }
 
@@ -207,7 +216,7 @@ async function main(): Promise<void> {
       );
 
       console.log(
-        'Tokens are shown once; store them securely and rotate via admin GraphQL when needed.',
+        `Tokens are shown once; a durable copy was also written to the git-ignored ${LOCAL_SECRETS_FILENAME} at the repo root. Store them securely and rotate via admin GraphQL when needed.`,
       );
     } else if (
       !outcomes.some(

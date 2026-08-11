@@ -8,12 +8,16 @@ import {
 
 describe('roles', () => {
   describe('ROLE_PERMISSIONS', () => {
-    it('admin has all permissions', () => {
+    it('admin has every defined permission (full superset, no drift)', () => {
       const adminPerms = ROLE_PERMISSIONS[ROLES.ADMIN];
-      expect(adminPerms).toContain(PERMISSIONS.SETTINGS_READ);
-      expect(adminPerms).toContain(PERMISSIONS.SETTINGS_WRITE);
-      expect(adminPerms).toContain(PERMISSIONS.USERS_READ);
-      expect(adminPerms).toContain(PERMISSIONS.USERS_WRITE);
+      const allPermissions = Object.values(PERMISSIONS);
+
+      for (const permission of allPermissions) {
+        expect(adminPerms).toContain(permission);
+      }
+
+      // Guards against a new permission being added without admin picking it up.
+      expect([...adminPerms].sort()).toEqual([...allPermissions].sort());
     });
 
     it('user can read and edit workspace settings', () => {

@@ -18,6 +18,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
+import { upsertLocalSecrets } from './local-secrets-file';
+
 // Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
 // / _PASSWORD (see .env.default); defaults to the known local dev account.
 const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai'; // prettier-ignore
@@ -29,6 +31,11 @@ const DEFAULT_USER = {
   githubUsername: USER_GITHUB,
   password: USER_PASSWORD,
 } as const;
+
+// Login URLs honor the same env the apps read (see .env.default), falling back
+// to the known local dev ports so the recorded file is useful out of the box.
+const ADMIN_URL: string = process.env.OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN?.trim() || 'http://localhost:6022'; // prettier-ignore
+const DEVELOPER_URL: string = process.env.OPENTHROTTLE_DEVELOPER_APP_URL?.trim() || 'http://localhost:6020'; // prettier-ignore
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
@@ -114,6 +121,16 @@ async function main(): Promise<void> {
 
     const user = await ensureDefaultUser(usersService);
     await ensureAllRoles(rolesService, user.id);
+
+    // Record the login to the git-ignored local file so a fresh machine can
+    // sign in without scrolling back through setup output. Upsert semantics
+    // mean this coexists with the credentials script's token keys.
+    await upsertLocalSecrets({
+      OPENTHROTTLE_ADMIN_URL: ADMIN_URL,
+      OPENTHROTTLE_BOOTSTRAP_USER_EMAIL: DEFAULT_USER.email,
+      OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD: DEFAULT_USER.password,
+      OPENTHROTTLE_DEVELOPER_URL: DEVELOPER_URL,
+    });
 
     console.log('');
     console.log(`Default user ready: ${DEFAULT_USER.email}`);

@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   buildPayloads,
+  isServerInstalled,
   renderInstructions,
 } from '../setup_mcp-instructions.ts';
 
 const ROOT = '/tmp/checkout';
 const LAUNCHER = `${ROOT}/scripts/run-openthrottle-mcp.sh`;
+const NEITHER = { claude: false, cursor: false } as const;
 
 describe('buildPayloads', () => {
   it('injects the resolved root into the launcher path for both clients', () => {
@@ -68,16 +73,73 @@ describe('buildPayloads', () => {
   });
 });
 
+describe('isServerInstalled', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'ot-mcp-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { force: true, recursive: true });
+  });
+
+  const write = (name: string, contents: string): string => {
+    const path = join(dir, name);
+    writeFileSync(path, contents);
+    return path;
+  };
+
+  it('is true when our node is present, ignoring other servers', () => {
+    const path = write(
+      'with.json',
+      JSON.stringify({
+        mcpServers: { 'openthrottle-mcp': {}, 'some-other-mcp': {} },
+      }),
+    );
+    expect(isServerInstalled(path)).toBe(true);
+  });
+
+  it('is false when only other servers are registered', () => {
+    const path = write(
+      'others.json',
+      JSON.stringify({ mcpServers: { 'some-other-mcp': {} } }),
+    );
+    expect(isServerInstalled(path)).toBe(false);
+  });
+
+  it('is false for a missing file or malformed JSON', () => {
+    expect(isServerInstalled(join(dir, 'does-not-exist.json'))).toBe(false);
+    expect(isServerInstalled(write('bad.json', '{ not json'))).toBe(false);
+  });
+});
+
 describe('renderInstructions', () => {
   it('names both clients and embeds the resolved launcher path', () => {
-    const output = renderInstructions(ROOT);
+    const output = renderInstructions(ROOT, NEITHER);
     expect(output).toContain('Claude Code');
     expect(output).toContain('Cursor');
     expect(output).toContain(LAUNCHER);
   });
 
+  it('reports an already-installed client as complete instead of printing its block', () => {
+    const output = renderInstructions(ROOT, { claude: true, cursor: false });
+    expect(output).toContain('✓ Claude Code');
+    expect(output).not.toContain('claude mcp add-json');
+    // Cursor still needs setup, so its install block is present.
+    expect(output).toContain('~/.cursor/mcp.json');
+  });
+
+  it('reports all clients complete when everything is installed', () => {
+    const output = renderInstructions(ROOT, { claude: true, cursor: true });
+    expect(output).toContain('✓ Claude Code');
+    expect(output).toContain('✓ Cursor');
+    expect(output).not.toContain('claude mcp add-json');
+    expect(output).toMatch(/already set up in every client/);
+  });
+
   it('contains a parseable Cursor mcp.json block', () => {
-    const output = renderInstructions(ROOT);
+    const output = renderInstructions(ROOT, NEITHER);
     // The Cursor block is the pretty-printed object; pull it out and parse it.
     const start = output.indexOf('{\n  "mcpServers"');
     expect(start).toBeGreaterThan(-1);

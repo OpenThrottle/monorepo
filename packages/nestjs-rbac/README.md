@@ -33,7 +33,7 @@ Roles and permissions are defined in the package and used by guards (see task �
 
 ### Mapping (role → permissions)
 
-- **admin:** `flags:read`, `flags:write`, `settings:read`, `settings:write`, `users:read`, `users:write`
+- **admin:** every defined permission (full superset — derived from `PERMISSIONS`, so new permissions are granted automatically)
 - **user:** `flags:read`, `settings:read`, `settings:write`, `users:read`
 - **viewer:** `flags:read`, `settings:read`, `users:read`
 - **mcp:** `plans:read`, `plans:write`
