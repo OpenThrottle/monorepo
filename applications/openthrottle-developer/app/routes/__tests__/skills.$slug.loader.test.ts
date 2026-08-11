@@ -1,27 +1,23 @@
-// @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { Route } from '@/app/routes/+types/skills.$slug';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import * as readSkillFile from '~/routing/skills/data/read-skill-file.server';
+import * as modelsServer from '~/routing/home/data/models.server';
+import { loader } from '../skills.$slug';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-vi.mock('~/routing/skills/data/read-skill-file.server', () => ({
-  readSkillFileBySlug: vi.fn(),
-}));
+vi.mock('@openthrottle/react-router-graphql');
+vi.mock('~/routing/skills/data/read-skill-file.server');
+vi.mock('~/routing/home/data/models.server');
 
-vi.mock('~/routing/skills/data/write-skill-file.server', () => ({
-  writeSkillFileBySlug: vi.fn(),
-}));
+const mockExecuteGraphqlWithAuth = vi.mocked(
+  graphqlWithAuth.executeGraphqlWithAuth,
+);
+const mockReadSkillFileBySlug = vi.mocked(readSkillFile.readSkillFileBySlug);
+const mockLoadComposerModels = vi.mocked(modelsServer.loadComposerModels);
+const mockLoadRepositories = vi.mocked(modelsServer.loadRepositories);
 
-const { readSkillFileBySlug } =
-  await import('~/routing/skills/data/read-skill-file.server');
-const { writeSkillFileBySlug } =
-  await import('~/routing/skills/data/write-skill-file.server');
-const { action, loader } = await import('../skills.$slug');
-
-const mockReadSkillFileBySlug = vi.mocked(readSkillFileBySlug);
-const mockWriteSkillFileBySlug = vi.mocked(writeSkillFileBySlug);
-
-const SAMPLE_ENTRY: RepoSkillEntry = {
+const entry: RepoSkillEntry = {
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/ot-plans/SKILL.md',
@@ -31,120 +27,118 @@ const SAMPLE_ENTRY: RepoSkillEntry = {
   tags: ['openthrottle'],
 };
 
-const loaderArgsForSlug = (slug: string): Route.LoaderArgs => {
-  const request = new Request(`http://localhost/skills/${slug}`);
-  return {
+const runLoader = (slug: string) => {
+  const request = new Request('http://localhost/skills/ot-plans');
+
+  return loader({
     context: createTestRouterContext(),
     params: { slug },
     pattern: '/skills/:slug',
     request,
     url: new URL(request.url),
-  };
+  });
 };
 
 describe('routes/skills.$slug loader', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  test('returns entry, content, and editable for a known slug', async () => {
-    mockReadSkillFileBySlug.mockReturnValue({
-      content: '---\nname: ot-plans\n---\n\n# OT plans\n',
+    mockReadSkillFileBySlug.mockReset().mockReturnValue({
+      content: '# body',
       editable: true,
-      entry: SAMPLE_ENTRY,
+      entry,
     });
-
-    const result = await loader(loaderArgsForSlug('ot-plans'));
-
-    expect(mockReadSkillFileBySlug).toHaveBeenCalledWith('ot-plans');
-    expect(result.content).toBe('---\nname: ot-plans\n---\n\n# OT plans\n');
-    expect(result.editable).toBe(true);
-    expect(result.entry).toEqual(SAMPLE_ENTRY);
-    // The Run-skill modal's deferred discovery bundle: model + repository
-    // discovery degrade to [] here (no authed GraphQL in the node test env).
-    await expect(result.runOptions).resolves.toEqual({
-      models: [],
-      repositories: [],
-    });
+    mockLoadComposerModels.mockReset().mockResolvedValue([]);
+    mockLoadRepositories.mockReset().mockResolvedValue([]);
+    mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('throws a 404 Response for an unknown slug', async () => {
-    mockReadSkillFileBySlug.mockReturnValue({
-      content: '',
-      editable: true,
-      entry: undefined,
+  test('resolves populated usage for a skill with recorded invocations', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      skillUsage: {
+        byDay: [
+          {
+            date: '2026-08-05',
+            oursCount: 5,
+            thirdPartyCount: 0,
+            totalCount: 5,
+          },
+        ],
+        bySkill: [
+          {
+            abandonedCount: 0,
+            avgDurationMs: 1500,
+            count: 5,
+            errorCount: 0,
+            lastUsedAt: '2026-08-05T12:00:00.000Z',
+            outcomeCount: 3,
+            scope: 'ours',
+            skillName: 'ot-plans',
+            successCount: 3,
+          },
+        ],
+      },
     });
 
-    const thrown = await loader(loaderArgsForSlug('does-not-exist')).then(
-      () => undefined,
-      (error: unknown) => error,
-    );
+    const result = await runLoader('ot-plans');
+    const usage = await result.usage;
 
-    expect(thrown).toBeInstanceOf(Response);
-    if (thrown instanceof Response) {
-      expect(thrown.status).toBe(404);
-    }
-  });
-
-  test('delegates saves to writeSkillFileBySlug via the action', async () => {
-    mockWriteSkillFileBySlug.mockReturnValue({ ok: true });
-    // URL-encoded body (matching fetcher.submit's default) keeps \n intact;
-    // multipart FormData would normalize newlines to \r\n.
-    const request = new Request('http://localhost/skills/ot-plans', {
-      body: new URLSearchParams({
-        content: '---\nname: ot-plans\n---\n\n# Edited\n',
+    // Queried on YYYY-MM-DD with the discovered slug as skillName.
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      expect.anything(),
+      expect.objectContaining({
+        end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        skillName: 'ot-plans',
+        start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       }),
-      method: 'POST',
-    });
-
-    const result = await action({
-      context: createTestRouterContext(),
-      params: { slug: 'ot-plans' },
-      pattern: '/skills/:slug',
-      request,
-      url: new URL(request.url),
-    });
-
-    expect(mockWriteSkillFileBySlug).toHaveBeenCalledWith(
-      'ot-plans',
-      '---\nname: ot-plans\n---\n\n# Edited\n',
     );
-    expect(result).toEqual({ ok: true });
+    expect(usage).toEqual({
+      available: true,
+      byDay: [
+        { date: '2026-08-05', oursCount: 5, thirdPartyCount: 0, totalCount: 5 },
+      ],
+      skill: {
+        abandonedCount: 0,
+        avgDurationMs: 1500,
+        count: 5,
+        errorCount: 0,
+        lastUsedAt: '2026-08-05T12:00:00.000Z',
+        outcomeCount: 3,
+        scope: 'ours',
+        skillName: 'ot-plans',
+        successCount: 3,
+      },
+    });
   });
 
-  test('action rejects a submission without content and never writes', async () => {
-    const request = new Request('http://localhost/skills/ot-plans', {
-      body: new URLSearchParams({}),
-      method: 'POST',
+  test('resolves the empty usage state when the skill has no invocations', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      skillUsage: { byDay: [], bySkill: [] },
     });
 
-    const result = await action({
-      context: createTestRouterContext(),
-      params: { slug: 'ot-plans' },
-      pattern: '/skills/:slug',
-      request,
-      url: new URL(request.url),
-    });
+    const result = await runLoader('ot-plans');
+    const usage = await result.usage;
 
-    expect(result.ok).toBe(false);
-    expect(mockWriteSkillFileBySlug).not.toHaveBeenCalled();
+    expect(usage).toEqual({ available: true, byDay: [], skill: null });
   });
 
-  test('throws a 404 Response when no monorepo root resolves (deployed app)', async () => {
+  test('degrades to the unavailable sentinel when the query fails (still 200)', async () => {
+    mockExecuteGraphqlWithAuth.mockRejectedValue(
+      new Error('permission denied: settings:read'),
+    );
+
+    const result = await runLoader('ot-plans');
+    const usage = await result.usage;
+
+    expect(usage).toEqual({ available: false });
+  });
+
+  test('throws a 404 Response when the slug is not a discovered skill', async () => {
     mockReadSkillFileBySlug.mockReturnValue({
       content: '',
-      editable: false,
+      editable: true,
       entry: undefined,
     });
 
-    const thrown = await loader(loaderArgsForSlug('ot-plans')).then(
-      () => undefined,
-      (error: unknown) => error,
-    );
-
-    expect(thrown).toBeInstanceOf(Response);
-    if (thrown instanceof Response) {
-      expect(thrown.status).toBe(404);
-    }
+    await expect(runLoader('does-not-exist')).rejects.toBeInstanceOf(Response);
   });
 });

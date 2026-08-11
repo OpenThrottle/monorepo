@@ -40,6 +40,31 @@ export const SKILL_DETAIL_COPY = {
 } as const;
 
 /**
+ * Copy for the per-skill usage detail card on /skills/:slug (last 30 days,
+ * single skill). Formatting helpers live in `data/skill-usage-detail.ts`; the
+ * "missing outcomes are normal" hint is reused from the /usage `SKILL_USAGE_COPY`.
+ */
+export const SKILL_USAGE_DETAIL_COPY = {
+  abandonedTile: `Abandoned`,
+  avgDurationTile: `Avg duration`,
+  backToUsage: `Back to usage`,
+  emptyNotice: `No recorded invocations for this skill in the selected window.`,
+  errorTile: `Error`,
+  heading: `Usage`,
+  intro: (rangeDays: number): string =>
+    `Harness-captured invocations for this skill over the last ${rangeDays} days.`,
+  lastUsedTile: `Last used`,
+  outcomeBreakdownHeading: `Outcome breakdown`,
+  outcomesTile: `Outcomes reported`,
+  overTimeHeading: `Usage over time`,
+  scopeTile: `Scope`,
+  successRateTile: `Success rate`,
+  successTile: `Success`,
+  totalTile: `Total invocations`,
+  unavailableNotice: `Usage stats couldn't be loaded — this view needs the settings:read permission, or the server was unreachable. The skill content above is unaffected.`,
+} as const;
+
+/**
  * Copy for the /skills/:slug "Run skill" modal (interactive stream v1). The run
  * button mirrors the schedule detail Run-now affordance; the modal composes a
  * `/<slug> <args>` invocation and streams the result via the shared chat path.

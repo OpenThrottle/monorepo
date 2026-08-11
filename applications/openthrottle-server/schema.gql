@@ -2355,6 +2355,11 @@ type SkillUsageBySkillObject {
   errorCount: Int!
 
   """
+  Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations.
+  """
+  lastUsedAt: DateTime
+
+  """
   Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.
   """
   outcomeCount: Int!
@@ -3446,7 +3451,7 @@ type Query {
   skillTagVocabulary: SkillTagVocabularyResult!
 
   """
-  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates.
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.
   """
   skillUsage(
     """Start date (inclusive), YYYY-MM-DD"""
@@ -3463,6 +3468,11 @@ type Query {
 
     """Restrict to one working directory (project path proxy); omit for all."""
     cwd: String
+
+    """
+    Restrict every aggregate to a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.
+    """
+    skillName: String
   ): SkillUsageResultObject!
 
   """The authenticated user's tag→action rules, oldest first."""

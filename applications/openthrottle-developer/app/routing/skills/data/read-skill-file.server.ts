@@ -26,6 +26,7 @@ const isPathInsideRoot = (root: string, candidate: string): boolean => {
   try {
     const realRoot = realpathSync(root);
     const realCandidate = realpathSync(candidate);
+
     // realpath resolves the `.claude`/`.cursor` → `.agents` skill symlinks to
     // their in-repo targets, so containment under the real root is sufficient.
     return realCandidate.startsWith(`${realRoot}${sep}`);

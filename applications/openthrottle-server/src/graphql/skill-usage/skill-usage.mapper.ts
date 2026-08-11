@@ -76,6 +76,7 @@ export const toSkillUsageBySkillObject = (
   object.avgDurationMs = row.avgDurationMs;
   object.count = row.count;
   object.errorCount = row.errorCount;
+  object.lastUsedAt = row.lastUsedAt;
   object.outcomeCount = row.outcomeCount;
   object.scope = row.scope;
   object.skillName = row.skillName;

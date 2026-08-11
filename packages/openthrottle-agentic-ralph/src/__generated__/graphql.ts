@@ -2858,7 +2858,7 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
-  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd narrow the aggregates. */
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
@@ -3153,6 +3153,7 @@ export type QuerySkillUsageArgs = {
   end: Scalars['String']['input'];
   gitBranch?: InputMaybe<Scalars['String']['input']>;
   scope?: InputMaybe<Scalars['String']['input']>;
+  skillName?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
 };
 
@@ -4181,6 +4182,8 @@ export type SkillUsageBySkillObject = {
   count: Scalars['Int']['output'];
   /** Opt-in error outcomes for this skill in the filtered range. */
   errorCount: Scalars['Int']['output'];
+  /** Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations. */
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
   outcomeCount: Scalars['Int']['output'];
   /** ours | third-party for this skill row. */

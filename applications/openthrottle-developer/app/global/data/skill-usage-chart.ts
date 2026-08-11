@@ -1,6 +1,7 @@
 /**
  * @description Chart config + datum shape for the skill-usage over-time
- * stacked bar chart (ours vs third-party per UTC day).
+ * stacked bar chart (ours vs third-party per UTC day). Shared by the /usage
+ * route and the /skills/$slug detail route.
  */
 
 import type { ChartConfig } from '@openthrottle/react-router-shadcn';

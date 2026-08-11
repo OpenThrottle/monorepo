@@ -286,11 +286,13 @@ describe('SkillUsageEventsService', () => {
         getRawMany: vi.fn().mockResolvedValue([
           {
             count: '12',
+            lastUsedAt: '2026-07-30T09:00:00.000Z',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
           },
           {
             count: '3',
+            lastUsedAt: '2026-07-28T09:00:00.000Z',
             scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
             skillName: 'vercel:deploy',
           },
@@ -326,6 +328,7 @@ describe('SkillUsageEventsService', () => {
           avgDurationMs: 1500,
           count: 12,
           errorCount: 0,
+          lastUsedAt: new Date('2026-07-30T09:00:00.000Z'),
           outcomeCount: 8,
           scope: SKILL_USAGE_SCOPES.OURS,
           skillName: 'ot-plans',
@@ -336,6 +339,7 @@ describe('SkillUsageEventsService', () => {
           avgDurationMs: null,
           count: 3,
           errorCount: 0,
+          lastUsedAt: new Date('2026-07-28T09:00:00.000Z'),
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
           skillName: 'vercel:deploy',
@@ -353,6 +357,7 @@ describe('SkillUsageEventsService', () => {
         getRawMany: vi.fn().mockResolvedValue([
           {
             count: '20',
+            lastUsedAt: '2026-07-31T00:00:00.000Z',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
           },
@@ -391,6 +396,7 @@ describe('SkillUsageEventsService', () => {
           avgDurationMs: 2000,
           count: 20,
           errorCount: 1,
+          lastUsedAt: new Date('2026-07-31T00:00:00.000Z'),
           outcomeCount: 10,
           scope: SKILL_USAGE_SCOPES.OURS,
           skillName: 'ot-plans',
@@ -455,6 +461,99 @@ describe('SkillUsageEventsService', () => {
           cwd: '/repo',
         });
       });
+    });
+  });
+
+  describe('when a skillName filter is set', () => {
+    it('applies e.skill_name to starts and o.skill_name to outcomes', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listBySkill({
+        end: '2026-07-31',
+        skillName: 'ot-plans',
+        start: '2026-07-01',
+      });
+
+      expect(eventsQb.andWhere).toHaveBeenCalledWith(
+        'e.skill_name = :skillName',
+        { skillName: 'ot-plans' },
+      );
+      expect(outcomesQb.andWhere).toHaveBeenCalledWith(
+        'o.skill_name = :skillName',
+        { skillName: 'ot-plans' },
+      );
+    });
+
+    it('computes lastUsedAt from the filtered window as a Date', async () => {
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            count: '4',
+            lastUsedAt: '2026-07-29T18:30:00.000Z',
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+          },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listBySkill({
+        end: '2026-07-31',
+        skillName: 'ot-plans',
+        start: '2026-07-01',
+      });
+
+      expect(eventsQb.addSelect).toHaveBeenCalledWith(
+        'MAX(e.occurred_at)',
+        'lastUsedAt',
+      );
+      expect(rows[0]?.lastUsedAt).toEqual(new Date('2026-07-29T18:30:00.000Z'));
+    });
+
+    it('returns empty aggregates (no error) for an unknown skillName', async () => {
+      // Every builder resolves to no rows: an unknown skill filters everything out.
+      const service = await buildService({});
+
+      const result = await service.getUsageAggregation({
+        end: '2026-07-31',
+        skillName: 'does-not-exist',
+        start: '2026-07-01',
+      });
+
+      expect(result.bySkill).toEqual([]);
+      expect(result.byScope).toEqual([]);
+      expect(result.byDay).toEqual([]);
+      expect(result.totalCount).toBe(0);
+      expect(result.filterOptions).toEqual({ cwds: [], gitBranches: [] });
+    });
+  });
+
+  describe('when skillName is omitted', () => {
+    it('adds no skill_name predicate on the start query', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listBySkill({ end: '2026-07-31', start: '2026-07-01' });
+
+      const skillNamePredicate = eventsQb.andWhere.mock.calls.find(
+        (call) => call[0] === 'e.skill_name = :skillName',
+      );
+      expect(skillNamePredicate).toBeUndefined();
     });
   });
 
@@ -580,6 +679,7 @@ describe('SkillUsageEventsService', () => {
           avgDurationMs: null,
           count: 5,
           errorCount: 0,
+          lastUsedAt: null,
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.OURS,
           skillName: 'ot-plans',
