@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
 import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
+import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';
 
 /**
  * Contract test: the `@tools/generators` component template MUST pass the
@@ -21,6 +22,8 @@ const REACT_TEMPLATE =
   'generators/src/generators/react/files/component/__name__.tsx';
 const REACT_ROUTER_TEMPLATE =
   'generators/src/generators/react-router/files/component/__name__.tsx';
+const ROUTE_TEMPLATE =
+  'generators/src/generators/react-router/files/route/__name__.tsx';
 
 // The two component templates are byte-identical; assert that so the single
 // RuleTester run below genuinely covers both.
@@ -52,6 +55,21 @@ ruleTester.run('generator-template-contract', componentPrimitiveShape, {
         'SampleWidget',
       ),
       filename: 'SampleWidget.tsx',
+    },
+  ],
+});
+
+// The route template MUST pass the route-primitive-shape rule — same drift
+// guard for the routing layer. Fill both EJS placeholders (`<%= name %>` and
+// `<%= namePascal %>`) with a valid route/segment name.
+ruleTester.run('route-template-contract', routePrimitiveShape, {
+  invalid: [],
+  valid: [
+    {
+      code: readTemplate(ROUTE_TEMPLATE)
+        .replace(/<%= namePascal %>/g, 'SampleRoute')
+        .replace(/<%= name %>/g, 'sample-route'),
+      filename: 'sample-route.tsx',
     },
   ],
 });

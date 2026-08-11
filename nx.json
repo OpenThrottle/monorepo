@@ -316,7 +316,7 @@
       "description": "Check workspace formatting with Prettier without writing — CI parity for format-write.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
+        "command": "prettier --check \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
       }
     },

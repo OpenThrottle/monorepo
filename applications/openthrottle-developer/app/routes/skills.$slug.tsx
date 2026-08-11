@@ -16,48 +16,16 @@ import {
 } from '~/routing/home/data/models.server';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
 import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
+import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import {
   SKILL_DETAIL_COPY,
   SKILL_RUN_COPY,
   SKILL_WRITE_COPY,
 } from '~/routing/skills/data/data.copy';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
-import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+import { toSkillDetailUsageData } from '~/routing/skills/utils/to-skill-detail-usage-data';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import type { Route } from '@/app/routes/+types/skills.$slug';
-
-/** Fixed detail-route window, matching the /usage 30-day contract. */
-const SKILL_USAGE_RANGE_DAYS = 30;
-
-/** Map the deferred usage query → the component's discriminated prop. */
-const toSkillDetailUsageData = (
-  skillUsage: GetSkillDetailUsageQuery['skillUsage'],
-): SkillDetailUsageData => {
-  const row = skillUsage.bySkill[0];
-
-  return {
-    available: true,
-    byDay: skillUsage.byDay.map((day) => ({
-      date: day.date,
-      oursCount: day.oursCount,
-      thirdPartyCount: day.thirdPartyCount,
-      totalCount: day.totalCount,
-    })),
-    skill: row
-      ? {
-          abandonedCount: row.abandonedCount,
-          avgDurationMs: row.avgDurationMs ?? null,
-          count: row.count,
-          errorCount: row.errorCount,
-          lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
-          outcomeCount: row.outcomeCount,
-          scope: row.scope,
-          skillName: row.skillName,
-          successCount: row.successCount,
-        }
-      : null,
-  };
-};
 
 type HandleData = Route.ComponentProps['loaderData'];
 
