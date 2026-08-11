@@ -402,6 +402,8 @@ pnpm run database:bootstrap-service-accounts  # mint the service-account token (
 
 `bootstrap-service-accounts` prints a new token exactly once; put it in your root `.env` (and `applications/openthrottle-server/.env`) as `OPENTHROTTLE_MCP_AUTH_TOKEN` so the MCP server and CLIs authenticate against the fresh database.
 
+Both bootstrap scripts also write a durable copy of their values (the minted tokens plus the default-user email/password and developer/admin login URLs) to a git-ignored `.bootstrap-secrets.local` at the repo root. If you miss the once-only stdout, recover the values from that file instead of revoking and re-minting. The file is local-only and never committed (same rationale as `databases/seed.sql`); to rotate a token, revoke it via admin GraphQL, delete its line in the file, and re-run `bootstrap-service-accounts`.
+
 ### Bootstrapping a fully-Dockerized install (default user + service accounts)
 
 The host flow above assumes a local pnpm/node toolchain. A **fully-Dockerized** install (`docker compose up --build`) has none, and `docker compose up` deliberately runs **no** bootstrap — provisioning a (possibly shared) database is always an explicit, manual step. On `up`, the `migrations` service applies the schema; the login user and the service-account bearer credentials are provisioned once by the manually-invoked `bootstrap` service (`docker compose run --rm bootstrap`). There is **no** `server depends_on bootstrap`.

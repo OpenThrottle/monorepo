@@ -41,18 +41,27 @@
 OpenThrottle at its core is an AI Harness built within an NX monorepo. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
 
 ```bash
-# OpenThrottle
+# From the repository root
 pnpm run database:start
 pnpm run database:migrate
 
-# NestJS + GraphQL Server (API)
-pnpm nx run openthrottle-server:start
-
-# Server + Developer (UI)
-pnpm nx run openthrottle-developer:start
-
 # Import our skills into our DB
 pnpm run database:import-agent-assets
+
+# Setup the MCP servers globally
+pnpm setup:mcp-instructions
+```
+
+**Server (API) only:**
+
+```bash
+pnpm nx run openthrottle-server:start
+```
+
+**Server (API) and Developer (UI):**
+
+```bash
+pnpm nx run openthrottle-developer:start
 ```
 
 ## 🧑‍💻 Development
@@ -60,10 +69,7 @@ pnpm run database:import-agent-assets
 Monorepos streamline our development process by centralizing code management, enabling faster feedback cycles, and promoting code reuse. With shared tooling, consistent standards, and atomic commits, we can maintain high velocity while ensuring quality. The unified build system and dependency management reduce context switching and eliminate version conflicts, making the development experience both efficient and enjoyable.
 
 ```bash
-# OpenThrottle local stack (full walkthrough: docs/openthrottle/local-quickstart.md)
-pnpm run database:start
-pnpm run database:migrate
-
+# full walkthrough: docs/openthrottle/local-quickstart.md
 pnpm nx run openthrottle-server:dev
 pnpm nx run openthrottle-developer:dev
 
@@ -72,19 +78,6 @@ pnpm run database:stop
 
 # Developer UI on the local network
 pnpm nx run openthrottle-developer:dev -- --host
-```
-
-### Common Commands
-
-```bash
-# 📦 Adding a package to monorepo root
-pnpm add <PROJECT_NAME> -w -S
-
-# 📦 Adding a package to a specific project
-pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
-
-# 🧪 Run only the changed tests and watch for changes
-pnpm nx run @tools/generators:test --changed --watch
 ```
 
 ## 🚦 Project status

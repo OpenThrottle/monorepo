@@ -42,6 +42,12 @@ databases/backups/**/*.zip
 # A locally-generated databases/seed.sql is still baked into your own postgres
 # image (see .dockerignore) — it just never gets committed.
 databases/seed.sql
+# Durable local copy of the values the bootstrap scripts otherwise print only
+# once (service-account tokens + default-user login). Holds credential material,
+# local-only, never committed — same rationale as databases/seed.sql above. NOT
+# covered by the .env* glob (it does not start with .env), so it is listed here
+# explicitly. See scripts/local-secrets-file.ts and databases/README.md.
+.bootstrap-secrets.local
 vite.config.*.timestamp*
 vite.config.ts.timestamp*
 vitest.config.*.timestamp*

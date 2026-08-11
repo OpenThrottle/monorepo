@@ -47,14 +47,11 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
  * @see README.md — keep the documented mapping in sync with this table.
  */
 export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
-  [ROLES.ADMIN]: [
-    PERMISSIONS.FLAGS_READ,
-    PERMISSIONS.FLAGS_WRITE,
-    PERMISSIONS.SETTINGS_READ,
-    PERMISSIONS.SETTINGS_WRITE,
-    PERMISSIONS.USERS_READ,
-    PERMISSIONS.USERS_WRITE,
-  ],
+  // Admin is always the full superset — derived from PERMISSIONS rather than
+  // enumerated, so any newly-added permission is granted automatically and this
+  // mapping can never drift behind the "Full access (all permissions)" contract
+  // (mirrors the DB seed's `CROSS JOIN permissions` for admin in migration 034).
+  [ROLES.ADMIN]: Object.values(PERMISSIONS),
   [ROLES.USER]: [
     PERMISSIONS.FLAGS_READ,
     PERMISSIONS.SETTINGS_READ,

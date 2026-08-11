@@ -9,10 +9,6 @@ describe('routes/_index.tsx', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    // The home Component reads its own route loader via `props.loaderData`, so
-    // the loader lives on the index route itself. It supplies `introduction`
-    // (the random landing-page intro copy) and `repo`, which seeds the clone
-    // command shown on the page.
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -29,15 +25,10 @@ describe('routes/_index.tsx', () => {
   });
 
   test('renders the public landing page with the GitHub CTA and clone command', async () => {
-    // The landing page is now public (no beta gate): the "View on GitHub" CTA is
-    // shown directly. `findByRole` waits for the stubbed route loader to resolve
-    // past initial hydration.
     expect(
       await component.findByRole('link', { name: /view on github/i }),
     ).toBeInTheDocument();
 
-    // The clone command is derived from the root loader's `repo` and rendered as
-    // the label of the copy-to-clipboard button.
     expect(
       component.getByRole('button', {
         name: 'git clone https://github.com/openthrottle/openthrottle.git',

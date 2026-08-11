@@ -21,14 +21,14 @@ This playbook is for someone who has already configured the **openthrottle-mcp**
 
 Before MCP tools can create or list plans, you need a long-lived **service account** bearer token — not a human JWT from the developer UI.
 
-| Step                                            | Command / doc                                                                                                                                 |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Migrate (includes service-account seed **045**) | `pnpm run database:migrate` — see [local-quickstart § Database](./local-quickstart.md#2-database-start-and-migrate)                           |
-| Mint tokens (shown once)                        | `pnpm run database:bootstrap-service-accounts` — see [local-quickstart § Bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) |
-| Set env                                         | Copy `OPENTHROTTLE_MCP_AUTH_TOKEN` into `applications/openthrottle-server/.env` and Cursor MCP `env` for **openthrottle-mcp**                 |
-| Understand token types, rotation, Cursor `env`  | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                                       |
+| Step                                                                           | Command / doc                                                                                                                                 |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migrate (includes service-account seed **045**)                                | `pnpm run database:migrate` — see [local-quickstart § Database](./local-quickstart.md#2-database-start-and-migrate)                           |
+| Mint tokens (shown once; also saved to git-ignored `.bootstrap-secrets.local`) | `pnpm run database:bootstrap-service-accounts` — see [local-quickstart § Bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) |
+| Set env                                                                        | Copy `OPENTHROTTLE_MCP_AUTH_TOKEN` into `applications/openthrottle-server/.env` and Cursor MCP `env` for **openthrottle-mcp**                 |
+| Understand token types, rotation, Cursor `env`                                 | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                                       |
 
-If bootstrap skips an account because a credential already exists, rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation) or revoke in admin GraphQL, then re-run the script.
+If bootstrap skips an account because a credential already exists, rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation) or revoke in admin GraphQL, then re-run the script. If you simply missed the once-only stdout, the values are also in the git-ignored `.bootstrap-secrets.local` at the repo root — no need to re-mint.
 
 ---
 
