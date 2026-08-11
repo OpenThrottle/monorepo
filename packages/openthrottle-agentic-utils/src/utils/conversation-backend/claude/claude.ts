@@ -24,6 +24,7 @@ import {
 } from '../types.ts';
 import { CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN, buildClaudeArgv } from './argv.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import { mapClaudeEvent } from './events.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -31,9 +32,34 @@ import {
   terminateChild,
 } from '../cursor-agent/teardown.ts';
 
-/** Env vars the child is allowed to inherit (host login + locale), nothing else. */
+/**
+ * Env var pointing headless chat spawns at a dedicated claude config directory
+ * (`CLAUDE_CONFIG_DIR`) that loads NO user plugins. Every headless `--print`
+ * turn otherwise re-runs the host user's plugin SessionStart hooks (verified:
+ * warp + vercel) and injects their CLAUDE.md before the model answers — pure
+ * per-turn overhead on the critical path, and one source of the null-mapped
+ * `system/hook_*` events behind the idle-backstop symptom.
+ *
+ * Opt-in and unset by default so subscription auth (OAuth creds under the real
+ * config dir) keeps working out of the box. To isolate, point this at a stable,
+ * server-owned directory that carries auth (a copied `.credentials.json`, or set
+ * `ANTHROPIC_API_KEY`) but has no `plugins/`/`settings.json` hooks. It must be
+ * STABLE across turns: turn one writes the session transcript there under
+ * `--session-id`, and `--resume` reads it back from the same place.
+ */
+export const CLAUDE_CONFIG_DIR_ENV = 'OPENTHROTTLE_CLAUDE_CONFIG_DIR';
+
+/** The env key claude itself reads to relocate its config/plugins directory. */
+const CLAUDE_CONFIG_DIR_KEY = 'CLAUDE_CONFIG_DIR';
+
+/**
+ * Env vars the child is allowed to inherit (host login + locale), nothing else.
+ * `CLAUDE_CONFIG_DIR` is inherited too, so an operator who already isolates the
+ * host claude config dir gets that isolation without the OT-specific override.
+ */
 const ALLOWED_ENV_KEYS = [
   'ANTHROPIC_API_KEY',
+  CLAUDE_CONFIG_DIR_KEY,
   'HOME',
   'LANG',
   'LC_ALL',
@@ -52,6 +78,19 @@ function resolveClaudeBin(env: NodeJS.ProcessEnv = process.env): string {
   return override !== undefined && override !== ''
     ? override
     : CLAUDE_DEFAULT_BIN;
+}
+
+/**
+ * The dedicated plugin-free config dir for headless chat, or undefined to leave
+ * claude on its default (`~/.claude` via HOME). The OT override wins over any
+ * inherited `CLAUDE_CONFIG_DIR` so chat turns can isolate independently of the
+ * server's own claude config.
+ */
+function resolveClaudeConfigDir(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
+  const override = env[CLAUDE_CONFIG_DIR_ENV]?.trim();
+  return override !== undefined && override !== '' ? override : undefined;
 }
 
 /**
@@ -115,6 +154,8 @@ async function* streamClaude(
     throw new Error('The claude backend requires a sessionId.');
   }
 
+  const claudeConfigDir = resolveClaudeConfigDir();
+
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. stdin is
   // ignored: claude otherwise waits on stdin and can error "Input must be
@@ -133,7 +174,15 @@ async function* streamClaude(
     }),
     {
       cwd: run.cwd,
-      env: buildScrubbedEnv(process.env, run.mcpEnv),
+      env: buildScrubbedEnv(process.env, {
+        ...run.mcpEnv,
+        // When set, isolate this headless turn onto a plugin-free config dir so
+        // it skips the host user's plugin SessionStart hooks entirely. Merged
+        // via `extra` so it overrides any inherited CLAUDE_CONFIG_DIR.
+        ...(claudeConfigDir !== undefined
+          ? { [CLAUDE_CONFIG_DIR_KEY]: claudeConfigDir }
+          : {}),
+      }),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );
@@ -200,7 +249,10 @@ async function* streamClaude(
     if (child.stdout !== null) {
       for await (const data of child.stdout) {
         resetIdle();
-        yield* emit(buffer.push(data));
+        // A stdout read that maps to no chunk (startup hooks, status/rate-limit
+        // events, a partial line) still resets the child's idle timer above, so
+        // surface it as a keepalive to keep the server backstop in lockstep.
+        yield* withKeepalive(emit(buffer.push(data)));
       }
 
       yield* emit(buffer.flush());

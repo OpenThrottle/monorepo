@@ -24,6 +24,7 @@ import {
   buildCursorAgentArgv,
 } from './argv.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import { mapCursorEvent } from './events.ts';
 import { NdjsonBuffer } from './ndjson.ts';
 import {
@@ -265,7 +266,9 @@ async function* streamCursorAgent(
     if (child.stdout !== null) {
       for await (const data of child.stdout) {
         resetIdle();
-        yield* emit(buffer.push(data));
+        // A stdout read that maps to no chunk still reset the child's idle timer
+        // above; surface it as a keepalive so the server backstop stays in step.
+        yield* withKeepalive(emit(buffer.push(data)));
       }
 
       yield* emit(buffer.flush());

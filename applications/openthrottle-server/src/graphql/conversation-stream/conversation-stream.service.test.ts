@@ -474,6 +474,74 @@ describe('ConversationStreamService', () => {
     expect(service.cancel('conv-1')).toBe(false);
   });
 
+  it('treats keepalive liveness chunks as backstop-resetting only: never published/persisted, and they hold off the idle timeout', async () => {
+    vi.useFakeTimers();
+    process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
+
+    const sleep = (ms: number): Promise<void> =>
+      new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+
+    // A backend that is ALIVE the whole time but only surfaces keepalive
+    // liveness chunks for four idle-length stretches (4s < 5s each) before it
+    // finally streams text. Total quiet time (16s) far exceeds the 5s backstop:
+    // it only completes because each keepalive resets the idle timer in lockstep
+    // with the CLI's own stdout timer.
+    async function* aliveButQuiet(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+    }> {
+      for (let i = 0; i < 4; i += 1) {
+        // Spacing the keepalives out in sequence is the whole point — each must
+        // arrive before the prior idle window elapses; the awaits are ordered.
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(4000);
+        yield { delta: '', done: false, kind: 'keepalive' };
+      }
+      await sleep(4000);
+      yield { delta: 'Hello', done: false, kind: 'text' };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockImplementation(aliveButQuiet);
+    const { conversations, publish, service } = buildService();
+
+    const done = service.runStream(baseRun);
+    await vi.advanceTimersByTimeAsync(30000);
+    await done;
+
+    const published = publish.mock.calls.map(
+      ([, payload]) => payload.conversationStreamChunkAdded,
+    );
+    // Keepalives are dropped: only the single text delta + terminal done reach
+    // the transcript, and the turn is NOT a timeout.
+    expect(published).toEqual([
+      expect.objectContaining({ delta: 'Hello', done: false, sortOrder: 0 }),
+      expect.objectContaining({
+        delta: '',
+        done: true,
+        error: null,
+        sortOrder: 1,
+      }),
+    ]);
+    expect(published.some((chunk) => chunk.kind === 'keepalive')).toBe(false);
+    // The persisted assistant message is the clean text — no keepalive noise in
+    // tool_metadata.
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        {
+          content: 'Hello',
+          id: 'assistant-msg-1',
+          role: 'assistant',
+          toolMetadata: null,
+        },
+      ],
+    );
+  });
+
   it('terminates a backend that ignores its abort signal (the race, not abort propagation)', async () => {
     vi.useFakeTimers();
     process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';

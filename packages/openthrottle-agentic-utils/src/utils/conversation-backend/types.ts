@@ -158,9 +158,17 @@ export function toConversationServiceTier(
  * describe richer agentic events (reasoning, tool use, token accounting, the
  * backend's session handle). Values are snake_case to match the wire payload.
  *
+ * `keepalive` is special: a pure liveness signal a spawned CLI backend emits
+ * when it produced stdout that mapped to no other chunk (plugin startup hooks,
+ * status/rate-limit events, a slow first token). It exists ONLY so the server's
+ * idle backstop advances in lockstep with the CLI's own stdout-based idle timer
+ * — the orchestrator consumes it to reset that timer and then drops it, so it is
+ * never published, persisted, or shown to the client.
+ *
  * @public
  */
 export const CONVERSATION_STREAM_CHUNK_KINDS = {
+  keepalive: 'keepalive',
   session: 'session',
   text: 'text',
   thinking: 'thinking',

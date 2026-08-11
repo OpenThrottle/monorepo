@@ -177,6 +177,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <PlansIntroduction />
       <PlansStats
         countCompleted={countCompleted}
         countInProgress={countInProgress}
@@ -184,7 +185,6 @@ export default function Component(
         totalCountAll={totalCountAll}
         totalCountQueued={totalCountQueued}
       />
-      <PlansIntroduction />
       <div className="flex flex-col gap-4">
         <PlansToolbar
           assigneeOptions={assigneeOptions}

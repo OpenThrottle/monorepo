@@ -24,16 +24,4 @@ describe('QueuesIntroduction Component', () => {
     // No leaked GraphQL operation names in user-facing copy.
     expect(hint.textContent ?? '').not.toMatch(/retryJob|cancelPlanRun/);
   });
-
-  test('renders the ops toolbar with search and a create-queue action', () => {
-    const component = renderIntroduction({});
-
-    expect(component.getByTestId('QueueOpsToolbar')).toBeInTheDocument();
-    expect(
-      component.getByRole('searchbox', { name: 'Search queues' }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('link', { name: /Create queue/i }),
-    ).toHaveAttribute('href', '/queues/create');
-  });
 });

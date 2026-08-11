@@ -111,18 +111,59 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 
 ### Tuning (env)
 
-| Var                                       | Meaning                                                       | Default        |
-| ----------------------------------------- | ------------------------------------------------------------- | -------------- |
-| `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod) | unset          |
-| `OPENTHROTTLE_CURSOR_AGENT_BIN`           | Absolute path to `cursor-agent` (else PATH)                   | `cursor-agent` |
-| `OPENTHROTTLE_CLAUDE_BIN`                 | Absolute path to `claude` (else PATH)                         | `claude`       |
-| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH); discovery/plan-run only | `codex`        |
-| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH); discovery/plan-run only  | `grok`         |
-| `OPENTHROTTLE_OPENCODE_BIN`               | Absolute path to `opencode` (else PATH)                       | `opencode`     |
-| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Kill after this much silence                                  | 120000         |
-| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                  | 900000         |
-| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                         | 5000           |
-| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)      | 30000          |
+| Var                                       | Meaning                                                        | Default            |
+| ----------------------------------------- | -------------------------------------------------------------- | ------------------ |
+| `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod)  | unset              |
+| `OPENTHROTTLE_CURSOR_AGENT_BIN`           | Absolute path to `cursor-agent` (else PATH)                    | `cursor-agent`     |
+| `OPENTHROTTLE_CLAUDE_BIN`                 | Absolute path to `claude` (else PATH)                          | `claude`           |
+| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH); discovery/plan-run only  | `codex`            |
+| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH); discovery/plan-run only   | `grok`             |
+| `OPENTHROTTLE_OPENCODE_BIN`               | Absolute path to `opencode` (else PATH)                        | `opencode`         |
+| `OPENTHROTTLE_CLAUDE_CONFIG_DIR`          | Dedicated plugin-free `CLAUDE_CONFIG_DIR` for headless claude  | unset (uses HOME)  |
+| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Per-agent idle: kill the child after this much stdout silence  | 120000             |
+| `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`       | Server chat backstop: abort a turn with no chunk for this long | agent idle + 30000 |
+| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                   | 900000             |
+| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                          | 5000               |
+| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)       | 30000              |
+
+Two idle timers guard every chat turn and must measure the **same** signal:
+the per-agent idle (`OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`, resets on any child
+stdout byte) and the server backstop (`OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`,
+resolved by `resolveChatIdleTimeoutMs` = agent idle + a 30s margin unless the
+chat knob is set to a positive integer, which overrides it wholesale). Backends
+now emit a keepalive per stdout read that maps to no chunk, so the backstop
+already tracks the child's stdout timer — the reported "response timed out after
+150s with no activity" on live-but-quiet turns (slow first token, rate limits,
+plugin startup hooks) is fixed at the source.
+
+These knobs are a **headroom stopgap, not the fix**. If a deployment still needs
+more slack (e.g. consistently slow first tokens behind a proxy), raise both in
+lockstep — e.g. `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS=300000` with
+`OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS=330000` (or leave the chat knob unset to let
+the +30s margin derive it). Keep the backstop **≥** the agent idle so the CLI's
+own cleaner self-terminated terminal chunk fires first.
+
+### Isolating headless claude from user plugins
+
+By default the `claude` child inherits the host `HOME`, so every headless chat
+turn re-runs the host user's enabled **plugin SessionStart hooks** and injects
+their `CLAUDE.md` before the model answers — pure per-turn overhead, and a source
+of the null-mapped `system/hook_*` events. (MCP is already isolated: managed
+servers are injected inline with `--strict-mcp-config`, so the project `.mcp.json`
+and `~/.claude.json` never load.)
+
+Set `OPENTHROTTLE_CLAUDE_CONFIG_DIR` to a dedicated, server-owned config
+directory to skip plugin startup entirely — it is forwarded as `CLAUDE_CONFIG_DIR`
+to the child (overriding any inherited value). Requirements:
+
+- **Auth must live there.** Copy `.credentials.json` from the real config dir, or
+  set `ANTHROPIC_API_KEY` (already allowlisted). Otherwise subscription auth
+  breaks — which is why this is **opt-in and unset by default**.
+- **No plugins/hooks.** Leave out `plugins/` and any `settings.json`
+  `SessionStart` hooks — that is the whole point.
+- **Stable across turns.** claude writes the session transcript here under
+  `--session-id` on turn one and reads it back under `--resume`; a per-turn or
+  ephemeral dir would break multi-turn resume.
 
 ## Adding a new CLI
 

@@ -12,11 +12,15 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
-import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
+import { PlusIcon } from 'lucide-react';
+import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
 import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
+import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
+import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
 import { SITE_TITLE } from '~/global/config/settings';
 import { summarizeQueues } from '~/routing/queues/utils/summarize-queues';
 import type { Route } from '@/app/routes/+types/queues._index';
@@ -73,7 +77,6 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
-
       <QueueStatRow
         columns={4}
         stats={[
@@ -88,7 +91,22 @@ export default function Component(
         ]}
       />
 
-      <QueuesTable className="bg-card" queues={filteredQueues} />
+      <div>
+        <QueueOpsToolbar
+          actions={
+            <Button asChild={true} className="shrink-0" variant="outline">
+              <Link to="/queues/create">
+                <PlusIcon className="h-4 w-4" /> Create queue
+              </Link>
+            </Button>
+          }
+          className="mb-4"
+          searchAriaLabel="Search queues"
+          searchPlaceholder="Search queues"
+        />
+
+        <QueuesTable className="bg-card" queues={filteredQueues} />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-8">
         <QueueStateChart queues={filteredQueues} />
