@@ -1,4 +1,5 @@
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
 import graphqlEslint, {
   parser as graphqlParser,
@@ -190,7 +191,10 @@ export const eslintConfig = tslint.config([
       jest: pluginJest,
       json: pluginJson,
       openthrottle: {
-        rules: { 'component-primitive-shape': componentPrimitiveShape },
+        rules: {
+          'component-primitive-shape': componentPrimitiveShape,
+          'route-primitive-shape': routePrimitiveShape,
+        },
       },
       react: pluginReact,
       'react-hooks': pluginReactHooks,
@@ -324,6 +328,36 @@ export const eslintConfig = tslint.config([
   },
 
   /**
+   * The route primitive shape (docs/monorepo/route-primitive-shape.md).
+   * Scoped to React Router route modules under `app/routes/`. Enabled
+   * **warn-first** repo-wide during rollout — the baseline inventory found 39
+   * route files with R1/R3 violations, so `error` would break every app's lint
+   * at once (out of scope to remediate in one PR). Warnings surface every
+   * violation in `nx lint` + the editor without failing the build; each app
+   * ratchets to `error` in its own `eslint.config.ts` once its routes are
+   * clean (the same per-project ratchet the component shape uses). ESLint owns
+   * R1 (allowed exports), R2 (markers), R3 (module-scope hoist); R4 is the
+   * `max-lines` cap. Use the first-line `route-shape: opt-out` block-comment
+   * pragma for the genuinely-irreducible route (R5).
+   */
+  {
+    files: ['**/app/routes/**/*.{ts,tsx}'],
+    ignores: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      '**/root.tsx',
+    ],
+    rules: {
+      'max-lines': [
+        'warn',
+        { max: 210, skipBlankLines: false, skipComments: false },
+      ],
+      'openthrottle/route-primitive-shape': 'warn',
+    },
+  },
+
+  /**
    * The shadcn primitive variant — root-cwd coverage
    * (docs/monorepo/component-shape-shadcn-variant.md). `nx lint` runs each
    * project with cwd at the package, where a `packages/react-router-shadcn/**`
@@ -371,11 +405,13 @@ export const eslintConfig = tslint.config([
     plugins: {
       '@graphql-eslint': graphqlEslint,
     },
-    // Many routes co-locate an empty placeholder `.graphql` (the `.tsx.graphql`
-    // convention) that holds no operations yet. The graphql-eslint parser
-    // throws on an empty document, so skip whitespace-only files by yielding no
-    // lintable block; non-empty documents pass through unchanged. `--fix` still
-    // works via `supportsAutofix`.
+    /**
+     * Many routes co-locate an empty placeholder `.graphql` (the `.tsx.graphql`
+     * convention) that holds no operations yet. The graphql-eslint parser
+     * throws on an empty document, so skip whitespace-only files by yielding no
+     * lintable block; non-empty documents pass through unchanged. `--fix` still
+     * works via `supportsAutofix`.
+     */
     processor: skipEmptyGraphqlProcessor,
     rules: {
       '@graphql-eslint/alphabetize': [

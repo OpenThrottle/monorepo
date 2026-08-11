@@ -158,5 +158,18 @@ your first PR.
   (`pnpm run audit:component-shape:strict`) is a **commit gate** — it runs at
   pre-commit, pre-push, and CI on one identical command; fix any R4/R5 violation
   rather than bypassing with `--no-verify`.
+- [docs/monorepo/route-primitive-shape.md](./docs/monorepo/route-primitive-shape.md)
+  — the routing-layer sibling of the component shape: keeps React Router route
+  modules under `app/routes/*.tsx` thin (only the framework surface + type
+  aliases), hoisting module-scope helpers/config/data into
+  `app/routing/<area>/{utils,config,data,hooks}`. Enforced by the
+  `openthrottle/route-primitive-shape` ESLint rule, currently at **`warn`**
+  during rollout. A repo-wide inventory / future gate mirrors the component
+  audit: `pnpm run audit:route-shape` (report-only) and
+  `pnpm run audit:route-shape:strict` (exit non-zero on R1/R3). The strict
+  audit is **not** wired into `check:local` yet — the baseline still has route
+  files to remediate; wire it in (and flip the rule to `error` per app) once an
+  app's routes are clean, then fix violations rather than bypassing with
+  `--no-verify`.
 - [docs/Skills.md](./docs/Skills.md) — agent skills and rules (`.agents/` is the
   source of truth; run `skill-sync`, never hand-edit generated trees).
