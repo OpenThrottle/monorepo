@@ -13,16 +13,16 @@ import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateM
 import { DocumentDecomposePreview } from '~/routing/plans/components/DocumentDecomposePreview';
 import { DocumentUploadProgress } from '~/routing/plans/components/DocumentUploadProgress';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  ACCEPT_EXTENSIONS,
+  MAX_UPLOAD_BYTES,
+} from '~/routing/plans/config/upload';
+import { buildStubProposal } from '~/routing/plans/utils/document-decompose';
 import type {
   DocumentDecomposeActionData,
   ProposedPlanDecomposition,
 } from '~/routing/plans/types/document-decompose';
 import type { Route } from '@/app/routes/+types/plans.upload-decompose';
-
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
-
-const ACCEPT_EXTENSIONS =
-  '.csv,.htm,.html,.json,.md,.markdown,.xls,.xlsx,text/csv,text/html,text/markdown';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -42,28 +42,6 @@ export const links: Route.LinksFunction = () => {
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Upload document | ${SITE_TITLE}` }];
 });
-
-const buildStubProposal = (file: File): ProposedPlanDecomposition => {
-  return {
-    planDescription: `Stub preview for «${file.name}» (${String(file.size)} bytes). The ingest API will replace this output.`,
-    planTitle: `Imported: ${file.name}`,
-    tasks: [
-      {
-        requirements: [
-          'Confirm each task matches sections in the source file.',
-          'Adjust titles before creating the plan in OpenThrottle.',
-        ],
-        title: 'Review imported tasks',
-      },
-      {
-        requirements: [
-          'Ensure requirement bullets map correctly from the document.',
-        ],
-        title: 'Validate requirements',
-      },
-    ],
-  };
-};
 
 export const action = async (
   args: Route.ActionArgs,

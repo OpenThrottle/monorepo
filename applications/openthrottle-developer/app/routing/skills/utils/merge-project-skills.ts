@@ -18,6 +18,13 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
  * (`null` = frontmatter omits the key).
  */
 export interface ProjectSkillFlagRow {
+  /**
+   * Ingested frontmatter description; `null` when the ingested row omits it.
+   * Used only by the deployed-app fallback in the `/skills/autocomplete` route
+   * when filesystem discovery is unavailable (no local checkout). The disk-first
+   * merge does not read it — disk `summary` wins there.
+   */
+  readonly description?: string | null;
   readonly slug: string;
   /**
    * Ingested provenance (`openthrottle` | `external`); any other/absent value

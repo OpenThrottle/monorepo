@@ -220,8 +220,8 @@ jobs:
       - name: '🎨 Prettier format-check'
         run: pnpm exec nx run monorepo:format-check --verbose
 
-      - name: '🧱 Component primitive-shape audit (R4/R5/R6/R7)'
-        run: pnpm run audit:component-shape:strict
+      - name: '🧩 Template compliance audit'
+        run: pnpm run audit:strict
 
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
       #   run: pnpm exec nx run monorepo:check-migration-table-comments

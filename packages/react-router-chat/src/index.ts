@@ -2,6 +2,7 @@ export * from './agents-chat-footer';
 export * from './conversation-stream';
 export * from './file-mentions';
 export * from './map-persisted-messages';
+export * from './slash-commands';
 export * from './components/ChatCheckoutSelector';
 export * from './components/ChatComposer';
 export * from './components/ChatComposerToolbar';

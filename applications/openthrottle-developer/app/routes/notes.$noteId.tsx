@@ -23,10 +23,10 @@ import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
-
-/** Search param toggling the note detail between read (absent) and edit modes. */
-const NOTE_MODE_PARAM = 'mode';
-const NOTE_EDIT_MODE = 'edit';
+import {
+  NOTE_EDIT_MODE,
+  NOTE_MODE_PARAM,
+} from '~/routing/notes/config/note-mode';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

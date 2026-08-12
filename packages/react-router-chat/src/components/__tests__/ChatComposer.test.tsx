@@ -321,4 +321,198 @@ describe('ChatComposer Component', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('/-command slash autocomplete', () => {
+    const makeProvider = (
+      skills: ReadonlyArray<{
+        readonly description: string;
+        readonly disabledForModel?: boolean;
+        readonly slug: string;
+      }>,
+    ) => ({
+      onQuerySkills: vi.fn(async (query: string) =>
+        skills.filter(
+          (skill) =>
+            skill.slug.toLowerCase().includes(query.toLowerCase()) ||
+            skill.description.toLowerCase().includes(query.toLowerCase()),
+        ),
+      ),
+    });
+
+    const graphify = { description: 'Build a graph', slug: 'graphify' };
+    const improve = { description: 'Audit the codebase', slug: 'improve' };
+
+    test('typing / opens the popover with provider results', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify, improve]);
+      mountComposer({ slashCommandProvider });
+
+      await user.type(component!.getByLabelText('Message'), '/');
+
+      expect(
+        await component!.findByTestId('ChatSlashCommandPopover'),
+      ).toBeInTheDocument();
+      expect(await component!.findByText('/graphify')).toBeInTheDocument();
+      expect(slashCommandProvider.onQuerySkills).toHaveBeenCalledWith('');
+    });
+
+    test('typing after / passes the query to the provider and filters', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify, improve]);
+      mountComposer({ slashCommandProvider });
+
+      await user.type(component!.getByLabelText('Message'), '/gra');
+
+      expect(slashCommandProvider.onQuerySkills).toHaveBeenLastCalledWith(
+        'gra',
+      );
+      expect(await component!.findByText('/graphify')).toBeInTheDocument();
+      expect(component!.queryByText('/improve')).not.toBeInTheDocument();
+    });
+
+    test('does not trigger for a mid-line / after text (start-of-line rule)', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify]);
+      mountComposer({ slashCommandProvider });
+
+      await user.type(component!.getByLabelText('Message'), 'hi /gra');
+
+      expect(
+        component!.queryByTestId('ChatSlashCommandPopover'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('Enter inserts the active /slug and closes without submitting', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify, improve]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '/');
+      await component!.findByText('/graphify');
+      await user.keyboard('{Enter}');
+
+      expect(input.value).toBe('/graphify ');
+      expect(
+        component!.queryByTestId('ChatSlashCommandPopover'),
+      ).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    test('ArrowDown then Enter inserts the second skill', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify, improve]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '/');
+      await component!.findByText('/improve');
+      await user.keyboard('{ArrowDown}{Enter}');
+
+      expect(input.value).toBe('/improve ');
+    });
+
+    test('Tab commits the active skill', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '/');
+      await component!.findByText('/graphify');
+      await user.keyboard('{Tab}');
+
+      expect(input.value).toBe('/graphify ');
+    });
+
+    test('clicking a skill inserts its slug (mousedown keeps focus)', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify, improve]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '/');
+      await user.click(await component!.findByText('/improve'));
+
+      expect(input.value).toBe('/improve ');
+    });
+
+    test('Escape closes the popover without inserting', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+
+      await user.type(input, '/');
+      await component!.findByText('/graphify');
+      await user.keyboard('{Escape}');
+
+      expect(
+        component!.queryByTestId('ChatSlashCommandPopover'),
+      ).not.toBeInTheDocument();
+      expect(input.value).toBe('/');
+    });
+
+    test('submit forwards /slug verbatim after selection (popover closed)', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify]);
+      mountComposer({ slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+
+      await user.type(input, '/');
+      await component!.findByText('/graphify');
+      await user.keyboard('{Enter}'); // inserts the command
+      await user.keyboard('{Enter}'); // now submits
+
+      expect(onSubmit).toHaveBeenCalledWith('/graphify');
+    });
+
+    test('marks a model-disabled skill but still lists it', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([
+        { description: 'Manual only', disabledForModel: true, slug: 'manual' },
+      ]);
+      mountComposer({ slashCommandProvider });
+
+      await user.type(component!.getByLabelText('Message'), '/');
+
+      expect(await component!.findByText('/manual')).toBeInTheDocument();
+      expect(component!.getByText('Manual')).toBeInTheDocument();
+    });
+
+    test('does not open a popover when no slash provider is supplied', async () => {
+      const user = userEvent.setup();
+      mountComposer();
+
+      await user.type(component!.getByLabelText('Message'), '/');
+
+      expect(
+        component!.queryByTestId('ChatSlashCommandPopover'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('coexists with @-mention without key-handling conflicts', async () => {
+      const user = userEvent.setup();
+      const slashCommandProvider = makeProvider([graphify]);
+      const mentionProvider = {
+        onQueryFiles: vi.fn(async () => ['src/app.ts']),
+      };
+      mountComposer({ mentionProvider, slashCommandProvider });
+      const input = component!.getByLabelText('Message');
+
+      // A mid-text @ opens the mention popover, not the slash one.
+      await user.type(input, 'see @');
+      expect(
+        await component!.findByTestId('ChatMentionPopover'),
+      ).toBeInTheDocument();
+      expect(
+        component!.queryByTestId('ChatSlashCommandPopover'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

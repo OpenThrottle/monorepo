@@ -4,14 +4,12 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { DocsNav, buildDocsNav } from '@openthrottle/react-router-docs';
+import { DocsNav } from '@openthrottle/react-router-docs';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsNav } from '~/routing/docs/data/docs-navigation';
 import type { Route } from '@/app/routes/+types/docs';
 
 type HandleData = Route.ComponentProps['loaderData'];
-
-const docsNav = buildDocsNav(docsManifest, 'docs');
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Docs',

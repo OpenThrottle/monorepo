@@ -1,14 +1,8 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
+import { MAX_FILE_MENTION_RESULTS } from '~/routing/ide/config/file-mention';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
 import type { Route } from '@/app/routes/+types/ide.files';
-
-/**
- * Cap on paths returned for a filtered `@`-mention query so the popover payload
- * (and DOM) stays bounded on large repositories. Only applies when `q` is set;
- * an unfiltered listing returns in full for the client to cache and fuzzy-filter.
- */
-export const MAX_FILE_MENTION_RESULTS = 50;
 
 /** JSON shape returned to the composer's `@`-mention file provider. */
 export interface IdeFilesResponse {

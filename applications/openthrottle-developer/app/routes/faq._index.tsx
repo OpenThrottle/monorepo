@@ -5,23 +5,14 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  DocsSearch,
-  FaqHero,
-  FaqView,
-  buildFaqCategories,
-} from '@openthrottle/react-router-docs';
+import { DocsSearch, FaqHero, FaqView } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { faqCategories, faqEntries } from '~/routing/faq/data/faq-navigation';
+import { FAQ_INTRO } from '~/routing/faq/data/data.copy';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/faq._index';
-
-const faqEntries = docsManifest.filter((entry) => entry.section === 'faq');
-const faqCategories = buildFaqCategories(faqEntries);
-
-const FAQ_INTRO =
-  'Answers to common questions about running OpenThrottle locally, how plans and tasks work, and the agentic workflows behind the developer app. Search above or jump to a category below.';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

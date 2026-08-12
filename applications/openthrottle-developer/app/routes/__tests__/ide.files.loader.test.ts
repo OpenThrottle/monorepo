@@ -15,7 +15,9 @@ vi.mock('~/routing/ide/data/ide-engine.server', () => ({
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { listFilesVM } = await import('~/routing/ide/data/ide-engine.server');
-const { loader, MAX_FILE_MENTION_RESULTS } = await import('../ide.files');
+const { loader } = await import('../ide.files');
+const { MAX_FILE_MENTION_RESULTS } =
+  await import('~/routing/ide/config/file-mention');
 
 const mockGraphql = vi.mocked(executeGraphqlWithAuth);
 const mockListFilesVM = vi.mocked(listFilesVM);

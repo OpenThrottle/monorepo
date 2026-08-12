@@ -448,3 +448,50 @@ export interface ChatMentionProvider {
    */
   readonly onQueryFiles: (query: string) => Promise<readonly string[]>;
 }
+
+/**
+ * A skill offered by the composer's `/`-command popover. `slug` is the command
+ * token inserted into the draft (the in-draft token is the plain text
+ * `/<slug>`); `description` is a short summary shown muted beside it.
+ * `disabledForModel` marks a skill the model may not auto-invoke — it stays
+ * user-selectable via `/`, but the popover surfaces a subtle marker rather than
+ * dropping it. See {@link parseSlashCommand} for extracting the slug/args from a
+ * submitted message.
+ *
+ * @public
+ */
+export interface ChatSlashCommand {
+  /** Short summary shown beside the slug in the popover. */
+  readonly description: string;
+  /**
+   * True when the model is barred from auto-invoking this skill. The command
+   * remains user-selectable; renderers surface a marker instead of hiding it.
+   */
+  readonly disabledForModel?: boolean;
+  /** Command token inserted after `/`, e.g. `skills` or `vercel:ai-sdk`. */
+  readonly slug: string;
+}
+
+/**
+ * Async skill-source contract the composer consumes to back the `/`-command
+ * popover. Presentational only — the package embeds NO transport; a consumer
+ * (e.g. openthrottle-developer's `/skills/autocomplete` resource route) supplies
+ * {@link onQuerySkills}. When no provider is passed, the composer behaves
+ * exactly as before (no `/`-trigger). Parallel to {@link ChatMentionProvider}.
+ *
+ * @public
+ */
+export interface ChatSlashCommandProvider {
+  /** Shown in the popover when a query resolves to zero skills. */
+  readonly emptyLabel?: string;
+  /** Shown in the popover while {@link onQuerySkills} is pending. */
+  readonly loadingLabel?: string;
+  /**
+   * Resolve skills matching `query` (the text typed after `/`, empty string for
+   * the initial listing). The consumer owns the transport, filtering,
+   * debouncing across it, and any result cap.
+   */
+  readonly onQuerySkills: (
+    query: string,
+  ) => Promise<readonly ChatSlashCommand[]>;
+}

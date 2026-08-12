@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { Outlet } from 'react-router';
-import { DocsNav, buildDocsNav } from '@openthrottle/react-router-docs';
+import { DocsNav } from '@openthrottle/react-router-docs';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsNav } from '~/routing/docs/data/docs-navigation';
 import type { Route } from '@/app/routes/+types/docs';
-
-const docsNav = buildDocsNav(docsManifest, 'docs');
 
 export const loader = async (_args: Route.LoaderArgs) => {
   return {};

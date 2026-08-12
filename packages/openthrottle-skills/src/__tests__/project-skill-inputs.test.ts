@@ -31,6 +31,7 @@ describe('toProjectSkillInputs', () => {
 
     expect(inputs).toEqual([
       {
+        description: 'A skill.',
         disableModelInvocation: true,
         slug: 'github-commit',
         source: 'external',
@@ -39,6 +40,18 @@ describe('toProjectSkillInputs', () => {
         tags: ['github', 'commit'],
       },
     ]);
+  });
+
+  test('carries the frontmatter description, including a null description', () => {
+    const [withDescription] = toProjectSkillInputs([
+      skillRecord({ description: 'Does a thing.', labels: ['thing'] }),
+    ]);
+    expect(withDescription?.description).toBe('Does a thing.');
+
+    const [withoutDescription] = toProjectSkillInputs([
+      skillRecord({ description: null, labels: ['bare'] }),
+    ]);
+    expect(withoutDescription?.description).toBeNull();
   });
 
   test('derives openthrottle for an authored (symlinked) skill', () => {

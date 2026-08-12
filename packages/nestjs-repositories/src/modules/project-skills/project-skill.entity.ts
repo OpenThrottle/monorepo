@@ -31,6 +31,9 @@ export class ProjectSkill {
   @Column({ name: 'slug', type: 'text' })
   slug!: string;
 
+  @Column({ name: 'description', nullable: true, type: 'text' })
+  description!: string | null;
+
   @Column({ array: true, default: () => "'{}'", name: 'tags', type: 'text' })
   tags!: string[];
 

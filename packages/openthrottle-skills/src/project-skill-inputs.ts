@@ -17,6 +17,12 @@ import {
  */
 export interface ProjectSkillInput {
   /**
+   * Frontmatter `description`; `null` when the skill omits it. Ingested so the
+   * developer app's `/skills` menu can show descriptions in deployed
+   * environments with no local checkout.
+   */
+  readonly description: string | null;
+  /**
    * Static `disable-model-invocation`, tri-state (`true` | `false` |
    * `undefined`); `undefined` when the skill omits the key.
    */
@@ -81,6 +87,7 @@ export const toProjectSkillInputs = (
 
     const authored = record.authored === true;
     inputs.push({
+      description: record.description,
       disableModelInvocation: record.disableModelInvocation,
       slug,
       source: authored ? 'openthrottle' : 'external',

@@ -1,31 +1,5 @@
 import * as React from 'react';
-import { redirect } from 'react-router';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-  Label,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
-import { formatDate } from 'date-fns';
+import { redirect, useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
@@ -36,17 +10,15 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import {
-  AddPermissionToRoleDocument,
-  DeleteRoleDocument,
   GetPermissionsDocument,
   GetRoleDocument,
-  RemovePermissionFromRoleDocument,
-  UpdateRoleDocument,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { RoleDetailCard } from '~/routing/roles/components/RoleDetailCard';
+import { RolePermissionsCard } from '~/routing/roles/components/RolePermissionsCard';
+import { runRoleDetailAction } from '~/routing/roles/actions/roleId';
 import { ShieldCheckIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
-import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissionSelectForm';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -113,10 +85,6 @@ export default function Component(
   const role = loaderData?.role ?? null;
   const permissions = loaderData?.permissions ?? [];
 
-  const UpdateForm = fetcher.Form;
-  const RemovePermissionForm = fetcher.Form;
-  const DeleteForm = fetcher.Form;
-
   const rolePermissionIds = new Set(role?.permissions.map((p) => p.id));
   const availablePermissions = permissions.filter(
     (p) => !rolePermissionIds.has(p.id),
@@ -159,224 +127,23 @@ export default function Component(
         </p>
       </div>
 
-      <Card data-testid="role-detail">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">{role.name}</CardTitle>
-          <div className="flex gap-2">
-            <Sheet onOpenChange={setEditOpen} open={editOpen}>
-              <SheetTrigger asChild={true}>
-                <Button type="button" variant="outline">
-                  Edit role
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Edit role</SheetTitle>
-                </SheetHeader>
-                <UpdateForm method="post">
-                  <input name="intent" type="hidden" value="updateRole" />
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-name">Name</Label>
-                      <Input
-                        defaultValue={role.name}
-                        id="edit-name"
-                        name="name"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-description">Description</Label>
-                      <Input
-                        defaultValue={role.description ?? ''}
-                        id="edit-description"
-                        name="description"
-                      />
-                    </div>
-                  </div>
-                  {fetcher.data != null && 'error' in fetcher.data ? (
-                    <p className="text-destructive text-sm" role="alert">
-                      {fetcher.data.error}
-                    </p>
-                  ) : null}
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      onClick={() => setEditOpen(false)}
-                      type="button"
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
-                    <Button disabled={fetcher.state !== 'idle'} type="submit">
-                      {fetcher.state !== 'idle' ? 'Saving…' : 'Save'}
-                    </Button>
-                  </div>
-                </UpdateForm>
-              </SheetContent>
-            </Sheet>
-            <AlertDialog>
-              <AlertDialogTrigger asChild={true}>
-                <Button
-                  disabled={fetcher.state !== 'idle'}
-                  type="button"
-                  variant="destructive"
-                >
-                  Delete role
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete role</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this role and remove it from
-                    all users. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <DeleteForm method="post">
-                    <input name="intent" type="hidden" value="deleteRole" />
-                    <AlertDialogAction asChild={true}>
-                      <button disabled={fetcher.state !== 'idle'} type="submit">
-                        {fetcher.state !== 'idle' ? 'Deleting…' : 'Delete'}
-                      </button>
-                    </AlertDialogAction>
-                  </DeleteForm>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div>
-            <span className="text-muted-foreground text-sm">Description</span>
-            <p>{role.description ?? '—'}</p>
-          </div>
-          <div>
-            <span className="text-muted-foreground text-sm">Updated</span>
-            <p>{formatDate(role.updatedAt, 'MMM d, yyyy')}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <RoleDetailCard
+        editOpen={editOpen}
+        fetcher={fetcher}
+        onEditOpenChange={setEditOpen}
+        role={role}
+      />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Permissions</CardTitle>
-          {availablePermissions.length > 0 ? (
-            <AddPermissionSelectForm
-              availablePermissions={availablePermissions}
-              fetcher={fetcher}
-            />
-          ) : null}
-        </CardHeader>
-        <CardContent>
-          {role.permissions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No permissions assigned. Add one above.
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {role.permissions.map((p) => (
-                <div className="flex items-center gap-1" key={p.id}>
-                  <Badge variant="secondary">{p.name}</Badge>
-                  <RemovePermissionForm method="post">
-                    <input name="permissionId" type="hidden" value={p.id} />
-                    <input
-                      name="intent"
-                      type="hidden"
-                      value="removePermission"
-                    />
-                    <Button
-                      aria-label={`Remove ${p.name}`}
-                      disabled={fetcher.state !== 'idle'}
-                      size="icon"
-                      type="submit"
-                      variant="ghost"
-                    >
-                      ×
-                    </Button>
-                  </RemovePermissionForm>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <RolePermissionsCard
+        availablePermissions={availablePermissions}
+        fetcher={fetcher}
+        permissions={role.permissions}
+      />
     </GlobalScreen>
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const { request, params } = args;
-  const roleId = params.roleId;
-
-  if (!roleId) {
-    return { error: 'Role not found' };
-  }
-
-  const formData = await request.formData();
-  const intent = formData.get('intent');
-
-  try {
-    if (intent === 'addPermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(request, AddPermissionToRoleDocument, {
-          input: { permissionId, roleId },
-        });
-
-        return { ok: true };
-      }
-    }
-
-    if (intent === 'deleteRole') {
-      await executeGraphqlWithAuth(request, DeleteRoleDocument, { id: roleId });
-      throw redirect('/roles');
-    }
-
-    if (intent === 'removePermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(
-          request,
-          RemovePermissionFromRoleDocument,
-          { input: { permissionId, roleId } },
-        );
-        return { ok: true };
-      }
-    }
-
-    if (intent === 'updateRole') {
-      const name = formData.get('name');
-      const description = formData.get('description');
-      const hasDescription = typeof description === 'string';
-      const hasName = typeof name === 'string';
-
-      await executeGraphqlWithAuth(request, UpdateRoleDocument, {
-        input: {
-          description: hasDescription ? description.trim() || null : undefined,
-          id: roleId,
-          name: hasName && name.trim() ? name.trim() : undefined,
-        },
-      });
-
-      return { ok: true };
-    }
-  } catch (error) {
-    // 🚨 Let redirects (and other Responses) escape — they are control flow, not failures.
-    if (error instanceof Response) {
-      throw error;
-    }
-
-    const isError = error instanceof Error;
-    const message = isError ? error.message : 'Action failed';
-
-    return { error: message };
-  }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  throw new Error('Invalid intent');
-};
+export const action = async (args: Route.ActionArgs) =>
+  runRoleDetailAction(args.request, args.params.roleId);
 
 export const ErrorBoundary = GlobalErrorBoundary;

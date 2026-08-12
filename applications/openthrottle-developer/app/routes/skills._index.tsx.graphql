@@ -1,6 +1,7 @@
 query ProjectSkills($projectId: ID) {
   projectSkills(projectId: $projectId) {
     skills {
+      description
       slug
       source
       sourceUrl

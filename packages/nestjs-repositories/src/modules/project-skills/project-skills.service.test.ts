@@ -59,6 +59,7 @@ describe('ProjectSkillsService', () => {
     it('projects rows and preserves the tri-state static flag', async () => {
       vi.mocked(mockRepository.find).mockResolvedValue([
         makeRow({
+          description: 'Commit helper.',
           disableModelInvocation: true,
           slug: 'github-commit',
           tags: ['github'],
@@ -71,6 +72,7 @@ describe('ProjectSkillsService', () => {
 
       expect(result).toEqual([
         {
+          description: 'Commit helper.',
           slug: 'github-commit',
           source: 'external',
           sourceUrl: undefined,
@@ -78,6 +80,7 @@ describe('ProjectSkillsService', () => {
           tags: ['github'],
         },
         {
+          description: undefined,
           slug: 'agents-ralph',
           source: 'external',
           sourceUrl: undefined,
@@ -85,6 +88,7 @@ describe('ProjectSkillsService', () => {
           tags: [],
         },
         {
+          description: undefined,
           slug: 'improve',
           source: 'external',
           sourceUrl: undefined,
@@ -131,6 +135,7 @@ describe('ProjectSkillsService', () => {
     const input = (
       overrides: Partial<ProjectSkillInput> & Pick<ProjectSkillInput, 'slug'>,
     ): ProjectSkillInput => ({
+      description: null,
       disableModelInvocation: undefined,
       source: 'external',
       sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
@@ -148,7 +153,12 @@ describe('ProjectSkillsService', () => {
       vi.mocked(mockRepository.delete).mockResolvedValue({ affected: 2 });
 
       const result = await service.reconcileProjectSkills(projectId, [
-        input({ disableModelInvocation: true, slug: 'kept', tags: ['github'] }),
+        input({
+          description: 'Keeps things.',
+          disableModelInvocation: true,
+          slug: 'kept',
+          tags: ['github'],
+        }),
       ]);
 
       expect(mockRepository.upsert).toHaveBeenCalledTimes(1);
@@ -157,6 +167,7 @@ describe('ProjectSkillsService', () => {
       expect(options).toEqual({ conflictPaths: ['projectId', 'slug'] });
       expect(rows).toEqual([
         expect.objectContaining({
+          description: 'Keeps things.',
           disableModelInvocation: true,
           projectId,
           slug: 'kept',

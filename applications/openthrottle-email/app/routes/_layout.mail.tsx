@@ -2,10 +2,9 @@ import * as React from 'react';
 import { Outlet, useRouteLoaderData } from 'react-router';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { MailLayout } from '~/global/components/MailLayout';
+import { SIDEBAR_COOKIE_NAME } from '~/routing/inbox/config/mail-shell';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail';
-
-const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 
 /**
  * @description Pathless layout for mail-area routes. Renders {@link MailLayout} (sidebar + main) with an `<Outlet />` for child routes (inbox, compose, sent, drafts, trash, search).

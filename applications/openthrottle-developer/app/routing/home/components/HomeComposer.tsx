@@ -66,6 +66,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     setReasoning,
     setRepositoryId,
     setServiceTier,
+    slashCommandProvider,
     voice,
   } = useHomeComposer({
     conversationList,
@@ -151,6 +152,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         onSubmit={onSubmit}
         readOnly={voice.isDraftFrozen}
         sessionUsage={turn.sessionUsage}
+        slashCommandProvider={slashCommandProvider}
         textAreaRef={composerTextAreaRef}
         toolbar={toolbar}
       />

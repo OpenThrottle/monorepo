@@ -7,10 +7,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { useSearchParams } from 'react-router';
-import {
-  CustomPromptType,
-  SearchAgentAssetsDocument,
-} from '~/__generated__/graphql';
+import { SearchAgentAssetsDocument } from '~/__generated__/graphql';
 import { AGENT_SEARCH_LIMIT } from '~/routing/agent-search/config';
 import { AgentAssetCard } from '~/routing/agent-search/components/AgentAssetCard';
 import { AgentSearchEmpty } from '~/routing/agent-search/components/AgentSearchEmpty';
@@ -18,9 +15,13 @@ import { AgentSearchForm } from '~/routing/agent-search/components/AgentSearchFo
 import { AgentSearchIntroduction } from '~/routing/agent-search/components/AgentSearchIntroduction';
 import { AgentSearchTabs } from '~/routing/agent-search/components/AgentSearchTabs';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
+import { EMPTY_COUNTS } from '~/routing/agent-search/data/empty-counts';
+import {
+  GQL_TO_PROMPT_TYPE,
+  PROMPT_TYPE_TO_GQL,
+} from '~/routing/agent-search/data/prompt-type-maps';
 import {
   AGENT_ASSET_PROMPT_TYPES,
-  type AgentAssetPromptType,
   type AgentAssetResult,
   type AgentSearchCounts,
 } from '~/routing/agent-search/types';
@@ -40,29 +41,6 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     if (query === '') return [];
     return [{ children: 'Agent search', to: '/agent-search' }];
   },
-};
-
-const PROMPT_TYPE_TO_GQL: Readonly<
-  Record<AgentAssetPromptType, CustomPromptType>
-> = {
-  personas: CustomPromptType.Personas,
-  rules: CustomPromptType.Rules,
-  skills: CustomPromptType.Skills,
-};
-
-const GQL_TO_PROMPT_TYPE: Readonly<
-  Partial<Record<CustomPromptType, AgentAssetPromptType>>
-> = {
-  [CustomPromptType.Personas]: 'personas',
-  [CustomPromptType.Rules]: 'rules',
-  [CustomPromptType.Skills]: 'skills',
-};
-
-const EMPTY_COUNTS: AgentSearchCounts = {
-  all: 0,
-  personas: 0,
-  rules: 0,
-  skills: 0,
 };
 
 export const loader = async (args: Route.LoaderArgs) => {

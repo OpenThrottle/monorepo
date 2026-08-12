@@ -28,6 +28,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
   const views: ProjectSkillView[] = [
     {
+      description: undefined,
       slug: 'agents-ralph',
       source: 'openthrottle',
       sourceUrl: undefined,
@@ -35,6 +36,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       tags: [],
     },
     {
+      description: undefined,
       slug: 'git-commit',
       source: 'external',
       sourceUrl: undefined,
@@ -42,6 +44,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       tags: [],
     },
     {
+      description: undefined,
       slug: 'github-deep-review',
       source: 'external',
       sourceUrl: undefined,
@@ -254,6 +257,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   test('surfaces a warning for a skill tag outside the vocabulary', async () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
       {
+        description: undefined,
         slug: 'mystery-skill',
         source: 'external',
         sourceUrl: undefined,

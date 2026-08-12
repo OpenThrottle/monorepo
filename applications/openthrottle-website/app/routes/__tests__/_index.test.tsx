@@ -15,7 +15,7 @@ describe('routes/_index.tsx', () => {
         index: true,
         loader: () => ({
           introduction: 'This is a test intro',
-          repo: 'openthrottle/openthrottle',
+          repo: 'openthrottle/example-repo',
         }),
         path: '/',
       },
@@ -31,7 +31,7 @@ describe('routes/_index.tsx', () => {
 
     expect(
       component.getByRole('button', {
-        name: 'git clone https://github.com/openthrottle/openthrottle.git',
+        name: 'git clone https://github.com/openthrottle/example-repo.git',
       }),
     ).toBeInTheDocument();
 

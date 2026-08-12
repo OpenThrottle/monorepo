@@ -21,6 +21,12 @@ export class ProjectSkillObject {
   slug!: string;
 
   @Field(() => String, {
+    description: `Skill description from SKILL.md frontmatter; null when the ingested row omits it. Lets the developer app's \`/skills\` slash-command menu show descriptions in deployed environments with no local checkout for filesystem discovery.`,
+    nullable: true,
+  })
+  description!: string | null;
+
+  @Field(() => String, {
     description: `Skill provenance from frontmatter \`source\`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external').`,
   })
   source!: string;

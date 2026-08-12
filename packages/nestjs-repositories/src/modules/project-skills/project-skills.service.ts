@@ -27,6 +27,8 @@ import { ProjectSkill } from './project-skill.entity';
  * `disable-model-invocation`, preserved distinct from an explicit `false`).
  */
 export interface ProjectSkillView {
+  /** Frontmatter description; `undefined` when the ingested row has none. */
+  readonly description: string | undefined;
   readonly slug: string;
   readonly source: SkillSource;
   readonly sourceUrl: string | undefined;
@@ -69,6 +71,7 @@ export class ProjectSkillsService {
     });
 
     return rows.map((row) => ({
+      description: row.description ?? undefined,
       slug: row.slug,
       // The CHECK constraint pins the column to the SkillSource values; the
       // ternary narrows string → SkillSource without a cast.
@@ -90,6 +93,7 @@ export class ProjectSkillsService {
   ): Promise<ProjectSkillReconciliation> {
     const ingestedAt = new Date();
     const rows = inputs.map((input) => ({
+      description: input.description ?? null,
       disableModelInvocation: input.disableModelInvocation ?? null,
       ingestedAt,
       projectId,

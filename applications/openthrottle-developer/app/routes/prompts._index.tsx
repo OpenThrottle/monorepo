@@ -16,6 +16,7 @@ import {
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
+import { isCustomPromptType } from '~/routing/prompts/utils/prompt-type-guards';
 import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
 import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
@@ -30,9 +31,6 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Prompts',
   links: (_match) => [],
 };
-
-const isCustomPromptType = (value: string): value is CustomPromptType =>
-  Object.values(CustomPromptType).some((type) => type === value);
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.url;

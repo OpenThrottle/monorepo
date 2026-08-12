@@ -19,6 +19,7 @@ describe('ProjectSkillsResolver', () => {
 
   const views: ProjectSkillView[] = [
     {
+      description: 'Ralph loop.',
       slug: 'agents-ralph',
       source: 'openthrottle',
       sourceUrl: undefined,
@@ -26,6 +27,7 @@ describe('ProjectSkillsResolver', () => {
       tags: ['planning'],
     },
     {
+      description: undefined,
       slug: 'git-commit',
       source: 'external',
       sourceUrl: undefined,
@@ -33,6 +35,7 @@ describe('ProjectSkillsResolver', () => {
       tags: [],
     },
     {
+      description: 'Commit helper.',
       slug: 'github-commit',
       source: 'external',
       sourceUrl: 'https://example.com/skills/github-commit',
@@ -78,6 +81,7 @@ describe('ProjectSkillsResolver', () => {
     expect(result).toEqual({
       skills: [
         {
+          description: 'Ralph loop.',
           slug: 'agents-ralph',
           source: 'openthrottle',
           sourceUrl: null,
@@ -85,6 +89,7 @@ describe('ProjectSkillsResolver', () => {
           tags: ['planning'],
         },
         {
+          description: null,
           slug: 'git-commit',
           source: 'external',
           sourceUrl: null,
@@ -92,6 +97,7 @@ describe('ProjectSkillsResolver', () => {
           tags: [],
         },
         {
+          description: 'Commit helper.',
           slug: 'github-commit',
           source: 'external',
           sourceUrl: 'https://example.com/skills/github-commit',
