@@ -657,6 +657,147 @@ describe('PlansResolver', () => {
         { titlePattern: '%foo%' },
       );
     });
+
+    test('rejects an unknown status with an actionable error and never queries', async () => {
+      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
+
+      const input: ListPlansByStatusInput = {
+        assignees: null,
+        limit: 20,
+        offset: 0,
+        project: null,
+        projectId: null,
+        sortBy: 'created',
+        sortOrder: 'desc',
+        // 'cancelled' (double-L) normalizes to CANCELLED — not a valid enum member.
+        statuses: ['IN_PROGRESS', 'cancelled'],
+        titleSubstring: null,
+      };
+
+      await expect(resolver.listPlansByStatus(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.listPlansByStatus(input)).rejects.toThrow(
+        /Unknown plan status: "CANCELLED"\. Valid statuses: .*CANCELED/,
+      );
+      // Validation short-circuits before the DB round-trip.
+      expect(qbMock.getManyAndCount).not.toHaveBeenCalled();
+    });
+
+    test('treats "all" as no status filter (no validation, no status clause)', async () => {
+      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
+
+      const input: ListPlansByStatusInput = {
+        assignees: null,
+        limit: 20,
+        offset: 0,
+        project: null,
+        projectId: null,
+        sortBy: 'created',
+        sortOrder: 'desc',
+        // 'garbage' would be invalid, but 'all' short-circuits to no filter.
+        statuses: ['all', 'garbage'],
+        titleSubstring: null,
+      };
+
+      const result = await resolver.listPlansByStatus(input);
+
+      expect(result.totalCount).toBe(1);
+      expect(qbMock.andWhere).not.toHaveBeenCalled();
+    });
+
+    test('accepts the typed statusesEnum arg and builds the IN filter', async () => {
+      const qbMock = createQueryBuilderMock([[mockPlan], 1]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.createQueryBuilder).mockReturnValue(qbMock.chain);
+
+      const input: ListPlansByStatusInput = {
+        assignees: null,
+        limit: 20,
+        offset: 0,
+        project: null,
+        projectId: null,
+        sortBy: 'created',
+        sortOrder: 'desc',
+        statuses: null,
+        statusesEnum: ['COMPLETED'],
+        titleSubstring: null,
+      };
+
+      await resolver.listPlansByStatus(input);
+
+      expect(qbMock.andWhere).toHaveBeenCalledWith(
+        'plan.status IN (:status_0)',
+        { status_0: 'COMPLETED' },
+      );
+    });
+  });
+
+  describe('setPlanStatus', () => {
+    test('rejects an unknown status with an actionable error, before touching the DB', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockClear();
+
+      await expect(
+        resolver.setPlanStatus({ planId: mockPlan.id, status: 'draft' }),
+      ).rejects.toThrow(/Unknown plan status: "DRAFT"\. Valid statuses: /);
+      expect(repo.findOne).not.toHaveBeenCalled();
+    });
+
+    test('requires either status or statusEnum', async () => {
+      await expect(
+        resolver.setPlanStatus({ planId: mockPlan.id }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('accepts a valid lowercase status (normalized) and delegates to setStatus', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockClear();
+      vi.mocked(repo.findOne).mockResolvedValueOnce(null);
+
+      const result = await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        status: 'completed',
+      });
+
+      expect(result).toBeNull();
+      expect(repo.findOne).toHaveBeenCalledWith({
+        where: { id: mockPlan.id },
+      });
+    });
+
+    test('accepts the typed statusEnum arg', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockClear();
+      vi.mocked(repo.findOne).mockResolvedValueOnce(null);
+
+      const result = await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        statusEnum: 'COMPLETED',
+      });
+
+      expect(result).toBeNull();
+      expect(repo.findOne).toHaveBeenCalled();
+    });
+  });
+
+  describe('status vocabulary queries', () => {
+    test('planStatuses returns the full set including QUEUED', () => {
+      const result = resolver.planStatuses();
+      expect(result).toContain('QUEUED');
+      expect(result).toContain('CANCELED');
+      expect(result).not.toContain('CANCELLED');
+    });
+
+    test('taskStatuses excludes QUEUED (plans-only)', () => {
+      const result = resolver.taskStatuses();
+      expect(result).not.toContain('QUEUED');
+      expect(result).toContain('PENDING');
+    });
   });
 
   describe('searchPlans', () => {

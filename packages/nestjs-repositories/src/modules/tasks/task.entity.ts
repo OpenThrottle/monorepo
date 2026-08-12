@@ -15,6 +15,10 @@ import {
 import type { Plan } from '../plans/plan.entity';
 import type { Project } from '../projects/project.entity';
 import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
+import {
+  PLAN_STATUS,
+  PLAN_STATUS_VALUES,
+} from '../../common/plan-task-status.constants';
 
 /** Lifecycle-hook role marker: NULL = regular task; 'before'/'after' = hook task. */
 export type TaskHookRole = 'after' | 'before';
@@ -67,7 +71,19 @@ export class Task {
   @Column({ name: 'category', nullable: true, type: 'text' })
   category!: string | null;
 
-  @Column({ default: 'pending', name: 'status', type: 'text' })
+  /**
+   * @description The `plan_task_status` Postgres enum (databases/migrations 028,
+   * 029). Tasks never take QUEUED (plans-only), but the column shares the same DB
+   * enum type. Typed as the shared SSOT enum rather than free text; default
+   * matches the migration (`PENDING`, uppercase).
+   */
+  @Column({
+    default: PLAN_STATUS.PENDING,
+    enum: [...PLAN_STATUS_VALUES],
+    enumName: 'plan_task_status',
+    name: 'status',
+    type: 'enum',
+  })
   status!: string;
 
   @Column({ default: () => "'[]'::jsonb", name: 'requirements', type: 'jsonb' })

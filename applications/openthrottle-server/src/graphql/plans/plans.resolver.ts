@@ -32,8 +32,11 @@ import {
 } from '@openthrottle/nestjs-auth';
 import {
   getDefaultPlanRunConfigStorage,
+  isPlanStatus,
   parsePlanRunConfigJson,
   planHasCustomRunConfig,
+  PLAN_STATUS_LIST,
+  PLAN_STATUS_VALUES,
   PlansService,
   PlanRunsService,
   planRunConfigFromPlanStorage,
@@ -41,8 +44,11 @@ import {
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   STALE_CUTOFF_MS,
+  TASK_STATUS_VALUES,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
+import { PlanTaskStatus } from './plan-task-status.enum';
 import type {
   PlanJobRunHooksStorage,
   PlanRun,
@@ -210,6 +216,24 @@ function isPlanRunExecutionBackend(
 /** @description Terminal statuses a detached-CLI run may be settled to. */
 function isTerminalCliRunStatus(value: string): boolean {
   return value === 'CANCELLED' || value === 'COMPLETED' || value === 'FAILED';
+}
+
+/**
+ * @description Validates that every (already normalized/uppercased) label is a
+ * canonical plan status, throwing an actionable BadRequestException listing the
+ * valid set. Guards the `status IN (...)` filter and the setPlanStatus mutation
+ * so an unknown value never reaches Postgres and surfaces as a raw
+ * `invalid input value for enum plan_task_status` error.
+ */
+function assertValidPlanStatuses(statuses: readonly string[]): void {
+  const unknown = statuses.filter((status) => !isPlanStatus(status));
+  if (unknown.length > 0) {
+    throw new BadRequestException(
+      `Unknown plan status: ${unknown
+        .map((status) => `"${status}"`)
+        .join(', ')}. Valid statuses: ${PLAN_STATUS_LIST}.`,
+    );
+  }
 }
 
 /**
@@ -554,10 +578,17 @@ export class PlansResolver {
     const orderDir = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
     const take = input.limit ?? 20;
     const skip = input.offset ?? 0;
-    const statusList =
-      input.statuses
-        ?.filter((s) => s != null && String(s).trim() !== '')
-        .map((s) => String(s).trim().toUpperCase()) ?? [];
+    // Merge the typed `statusesEnum` (already canonical) with the deprecated
+    // free-string `statuses` (normalized to uppercase). Dedupe so the IN (...)
+    // clause carries each status once.
+    const statusList = [
+      ...new Set([
+        ...(input.statusesEnum ?? []),
+        ...(input.statuses
+          ?.filter((s) => s != null && String(s).trim() !== '')
+          .map((s) => String(s).trim().toUpperCase()) ?? []),
+      ]),
+    ];
 
     const showAllStatuses =
       statusList.length === 0 ||
@@ -589,6 +620,7 @@ export class PlansResolver {
 
     // Use explicit param names (e.g. status_0, status_1) instead of :...statuses so TypeORM binds arrays correctly.
     if (!showAllStatuses && statusList.length > 0) {
+      assertValidPlanStatuses(statusList);
       const statusParams = statusList.map((_, i) => `status_${i}`);
       qb.andWhere(
         `plan.status IN (${statusParams.map((p) => `:${p}`).join(', ')})`,
@@ -736,6 +768,20 @@ export class PlansResolver {
     );
 
     return rows.map((r) => r.person);
+  }
+
+  @Query(() => [PlanTaskStatus], {
+    description: `The canonical set of valid plan statuses (introspectable status vocabulary). Includes QUEUED (plans-only).`,
+  })
+  planStatuses(): PlanStatus[] {
+    return [...PLAN_STATUS_VALUES];
+  }
+
+  @Query(() => [PlanTaskStatus], {
+    description: `The canonical set of valid task statuses. Excludes QUEUED, which is plans-only.`,
+  })
+  taskStatuses(): TaskStatus[] {
+    return [...TASK_STATUS_VALUES];
   }
 
   // @ProfileResponseTime('PlansResolver.createPlan')
@@ -1006,9 +1052,17 @@ export class PlansResolver {
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
   ): Promise<PlanObject | null> {
+    const rawStatus = input.statusEnum ?? input.status;
+    if (rawStatus == null || String(rawStatus).trim() === '') {
+      throw new BadRequestException(
+        'setPlanStatus requires either statusEnum or status.',
+      );
+    }
+    const nextStatus = String(rawStatus).trim().toUpperCase();
+    assertValidPlanStatuses([nextStatus]);
     const plan = await this.planStatusService.setStatus(
       input.planId,
-      input.status,
+      nextStatus,
     );
     if (plan != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(

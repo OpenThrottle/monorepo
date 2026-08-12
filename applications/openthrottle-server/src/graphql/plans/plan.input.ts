@@ -3,6 +3,8 @@
  */
 
 import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
+import { PLAN_STATUS_LIST } from '@openthrottle/nestjs-repositories';
+import { PlanTaskStatus } from './plan-task-status.enum';
 
 /**
  * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
@@ -165,10 +167,17 @@ export class ListPlansByStatusInput {
   sortOrder?: 'asc' | 'desc' | null;
 
   @Field(() => [String], {
-    description: `Filter by plan status. Empty or including "all" means no status filter.`,
+    deprecationReason: `Use statusesEnum (typed PlanTaskStatus) for an introspectable, validated filter. String statuses are still accepted (case-insensitive) and merged with statusesEnum.`,
+    description: `Filter by plan status. Empty or including "all" means no status filter. Values must be canonical PlanTaskStatus labels (uppercase, e.g. IN_PROGRESS).`,
     nullable: 'itemsAndList',
   })
   statuses?: string[] | null;
+
+  @Field(() => [PlanTaskStatus], {
+    description: `Filter by plan status using the typed PlanTaskStatus enum (preferred over statuses). Merged with any values passed in statuses.`,
+    nullable: 'itemsAndList',
+  })
+  statusesEnum?: PlanTaskStatus[] | null;
 
   @Field(() => String, {
     description: `Filter plans whose title contains this substring (case-insensitive)`,
@@ -483,7 +492,15 @@ export class SetPlanStatusInput {
   planId!: string;
 
   @Field(() => String, {
-    description: `New status (e.g. COMPLETED, IN_PROGRESS, PENDING, QUEUED). Normalized to uppercase.`,
+    deprecationReason: `Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.`,
+    description: `New plan status — one of: ${PLAN_STATUS_LIST}. Normalized to uppercase. Provide this OR statusEnum.`,
+    nullable: true,
   })
-  status!: string;
+  status?: string | null;
+
+  @Field(() => PlanTaskStatus, {
+    description: `New plan status as the typed PlanTaskStatus enum (preferred over status). Provide this OR status.`,
+    nullable: true,
+  })
+  statusEnum?: PlanTaskStatus | null;
 }

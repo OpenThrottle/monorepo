@@ -1,11 +1,15 @@
 /**
- * @description Status filter options for the plans list (PlansToolbar).
- * Aligns with PlanStatusBadge / format-status.
+ * @description Status filter options for the plans list (PlansToolbar). Values and
+ * labels come from the shared SSOT ({@link PlanStatusKey} / {@link planStatusValues},
+ * derived from the generated PlanTaskStatus GraphQL enum) so this filter cannot
+ * drift from the canonical status vocabulary. Only the display ORDER is local.
  */
+import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
+
 export const DEFAULT_PLAN_STATUS = 'PENDING' as const;
 
 /** Default statuses when none are in the URL (aligns with API PlansListFilters). */
-export const DEFAULT_STATUSES: readonly string[] = [
+export const DEFAULT_STATUSES: readonly PlanStatusKey[] = [
   'BACKLOG',
   // 'COMPLETED',
   'IN_PROGRESS',
@@ -13,28 +17,37 @@ export const DEFAULT_STATUSES: readonly string[] = [
   'QUEUED',
 ];
 
-export const PLAN_STATUS_FILTER_OPTIONS = [
-  { label: 'Backlog', value: 'BACKLOG' },
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Queued', value: 'QUEUED' },
-  { label: 'Completed', value: 'COMPLETED' },
-  { label: 'Blocked', value: 'BLOCKED' },
-  { label: 'Canceled', value: 'CANCELED' },
-  { label: 'Skipped', value: 'SKIPPED' },
-] as const;
+/**
+ * Display order for the plans filter (distinct from the DB enum order). Typed as
+ * `PlanStatusKey[]` so every entry must be a canonical status — a misspelled or
+ * removed status fails to compile here.
+ */
+const PLAN_STATUS_FILTER_ORDER = [
+  'BACKLOG',
+  'PENDING',
+  'IN_PROGRESS',
+  'QUEUED',
+  'COMPLETED',
+  'BLOCKED',
+  'CANCELED',
+  'SKIPPED',
+] as const satisfies readonly PlanStatusKey[];
 
-export type PlanStatusFilterValue =
-  (typeof PLAN_STATUS_FILTER_OPTIONS)[number]['value'];
+export const PLAN_STATUS_FILTER_OPTIONS: readonly {
+  label: string;
+  value: PlanStatusKey;
+}[] = PLAN_STATUS_FILTER_ORDER.map((value) => ({
+  label: planStatusValues[value],
+  value,
+}));
+
+export type PlanStatusFilterValue = PlanStatusKey;
 
 /** All valid status values as a string array (for multi-select options). */
-export const STATUS_OPTIONS: readonly string[] = PLAN_STATUS_FILTER_OPTIONS.map(
-  (opt) => opt.value,
-);
+export const STATUS_OPTIONS: readonly PlanStatusKey[] =
+  PLAN_STATUS_FILTER_OPTIONS.map((opt) => opt.value);
 
-export const VALID_STATUSES: ReadonlySet<string> = new Set(
-  PLAN_STATUS_FILTER_OPTIONS.map((opt) => opt.value),
-);
+export const VALID_STATUSES: ReadonlySet<string> = new Set(STATUS_OPTIONS);
 
 /** Type guard: narrows an arbitrary string to a valid {@link PlanStatusFilterValue}. */
 export function isPlanStatusFilterValue(

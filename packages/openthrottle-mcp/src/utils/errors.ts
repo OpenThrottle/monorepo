@@ -118,6 +118,45 @@ export function sanitizedMessageForCategory(category: ErrorCategory): string {
   return sanitizedMessageByCategory[category];
 }
 
+/** Max length of a surfaced application-error detail (keeps the one-liner, bounds any leakage). */
+const MAX_APP_ERROR_DETAIL_LEN = 300;
+
+/**
+ * @description Extracts the resolver-authored detail from an APPLICATION-level
+ * error and returns it verbatim (safe to surface), or null when the error is a
+ * transport/internal failure that must stay sanitized.
+ *
+ * `executeGraphqlWithAuth` (nodejs-graphql) surfaces a server HttpException as
+ * `GraphQL errors: <message>` (HTTP 200 + errors array) or, for a 400/422 client
+ * error, `openthrottle-server GraphQL error 400: <message>`. Those messages are
+ * client-facing by construction (e.g. a BadRequest listing the valid statuses), so
+ * we return them so the caller sees the actionable reason instead of the generic
+ * "rejected as invalid". Transport/HTTP 5xx errors (target URL, port, stack-ish
+ * text) do NOT match and remain sanitized. Only the first line is returned, length
+ * capped, so a dev-mode server that appends a stack trace cannot leak it.
+ */
+export function extractApplicationErrorDetail(
+  rawMessage: string,
+): string | null {
+  const match =
+    rawMessage.match(/^GraphQL errors:\s*([\s\S]+)$/) ??
+    rawMessage.match(
+      /^openthrottle-server GraphQL error (?:400|422):\s*([\s\S]+)$/,
+    );
+
+  if (match == null) return null;
+
+  const detail = match[1].trim();
+  if (detail === '' || detail.toLowerCase() === 'unknown') return null;
+
+  const firstLine = detail.split('\n', 1)[0]?.trim() ?? '';
+  if (firstLine === '') return null;
+
+  return firstLine.length > MAX_APP_ERROR_DETAIL_LEN
+    ? `${firstLine.slice(0, MAX_APP_ERROR_DETAIL_LEN)}…`
+    : firstLine;
+}
+
 /**
  * @description Classifies an error, logs the full detail to stderr (server-side
  * only — never returned to the client), and returns the sanitized client-facing
@@ -133,6 +172,16 @@ export function toSanitizedClientMessage(
   // Author-controlled messages (e.g. not-found signals) are safe to surface.
   if (error instanceof SafeToolError) {
     return error.message;
+  }
+
+  // Application-level (resolver-authored) validation/business errors carry an
+  // actionable, client-facing message — surface it instead of the generic string.
+  const raw = error instanceof Error ? error.message : String(error);
+  const appDetail = extractApplicationErrorDetail(raw);
+  if (appDetail != null) {
+    // stderr only; stdout is the MCP protocol channel on stdio transports.
+    console.error(`[openthrottle-mcp] ${context} failed (validation):`, error);
+    return appDetail;
   }
 
   const category = classifyError(error);

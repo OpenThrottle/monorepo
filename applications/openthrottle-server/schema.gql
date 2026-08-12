@@ -3321,6 +3321,16 @@ type Query {
 
   """Distinct author and assignee values from plans and tasks for filters"""
   listDistinctAuthorsAndAssignees: [String!]!
+
+  """
+  The canonical set of valid plan statuses (introspectable status vocabulary). Includes QUEUED (plans-only).
+  """
+  planStatuses: [PlanTaskStatus!]!
+
+  """
+  The canonical set of valid task statuses. Excludes QUEUED, which is plans-only.
+  """
+  taskStatuses: [PlanTaskStatus!]!
   workSession(id: String!): WorkSessionObject
   workSessionsByPlan(input: WorkSessionsByPlanInput!): WorkSessionListResult!
   workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
@@ -3894,12 +3904,31 @@ input ListPlansByStatusInput {
   sortOrder: String
 
   """
-  Filter by plan status. Empty or including "all" means no status filter.
+  Filter by plan status. Empty or including "all" means no status filter. Values must be canonical PlanTaskStatus labels (uppercase, e.g. IN_PROGRESS).
   """
-  statuses: [String]
+  statuses: [String] @deprecated(reason: "Use statusesEnum (typed PlanTaskStatus) for an introspectable, validated filter. String statuses are still accepted (case-insensitive) and merged with statusesEnum.")
+
+  """
+  Filter by plan status using the typed PlanTaskStatus enum (preferred over statuses). Merged with any values passed in statuses.
+  """
+  statusesEnum: [PlanTaskStatus]
 
   """Filter plans whose title contains this substring (case-insensitive)"""
   titleSubstring: String
+}
+
+"""
+Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED is plans-only. Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge.
+"""
+enum PlanTaskStatus {
+  BACKLOG
+  BLOCKED
+  CANCELED
+  COMPLETED
+  IN_PROGRESS
+  PENDING
+  QUEUED
+  SKIPPED
 }
 
 input SearchPlansInput {
@@ -4928,9 +4957,14 @@ input SetPlanStatusInput {
   planId: ID!
 
   """
-  New status (e.g. COMPLETED, IN_PROGRESS, PENDING, QUEUED). Normalized to uppercase.
+  New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
   """
-  status: String!
+  status: String @deprecated(reason: "Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.")
+
+  """
+  New plan status as the typed PlanTaskStatus enum (preferred over status). Provide this OR status.
+  """
+  statusEnum: PlanTaskStatus
 }
 
 input DeletePlanInput {

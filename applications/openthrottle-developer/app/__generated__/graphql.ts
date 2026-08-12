@@ -1300,8 +1300,13 @@ export type ListPlansByStatusInput = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   /** Sort order "asc" or "desc" */
   sortOrder?: InputMaybe<Scalars['String']['input']>;
-  /** Filter by plan status. Empty or including "all" means no status filter. */
+  /**
+   * Filter by plan status. Empty or including "all" means no status filter. Values must be canonical PlanTaskStatus labels (uppercase, e.g. IN_PROGRESS).
+   * @deprecated Use statusesEnum (typed PlanTaskStatus) for an introspectable, validated filter. String statuses are still accepted (case-insensitive) and merged with statusesEnum.
+   */
   statuses?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  /** Filter by plan status using the typed PlanTaskStatus enum (preferred over statuses). Merged with any values passed in statuses. */
+  statusesEnum?: InputMaybe<Array<InputMaybe<PlanTaskStatus>>>;
   /** Filter plans whose title contains this substring (case-insensitive) */
   titleSubstring?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2468,6 +2473,18 @@ export type PlanTagObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED is plans-only. Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge. */
+export enum PlanTaskStatus {
+  Backlog = 'BACKLOG',
+  Blocked = 'BLOCKED',
+  Canceled = 'CANCELED',
+  Completed = 'COMPLETED',
+  InProgress = 'IN_PROGRESS',
+  Pending = 'PENDING',
+  Queued = 'QUEUED',
+  Skipped = 'SKIPPED',
+}
+
 export type PlanUpdatedNotification = NotificationEvent & {
   __typename?: 'PlanUpdatedNotification';
   /** Well-known event name (e.g. task.completed). */
@@ -2784,6 +2801,8 @@ export type Query = {
   planOutputStreamChunks: Array<PlanOutputStreamChunkObject>;
   /** Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend. */
   planRunsByPlanId: Array<PlanRunObject>;
+  /** The canonical set of valid plan statuses (introspectable status vocabulary). Includes QUEUED (plans-only). */
+  planStatuses: Array<PlanTaskStatus>;
   /** List plans, newest first. Capped at 100 by default (max 500); pass limit to override. Use listPlansByStatus for full pagination/filtering. */
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
@@ -2872,6 +2891,8 @@ export type Query = {
   taskEmbedding?: Maybe<TaskEmbeddingObject>;
   /** List task embeddings by task ID, ordered by createdAt ascending */
   taskEmbeddings: Array<TaskEmbeddingObject>;
+  /** The canonical set of valid task statuses. Excludes QUEUED, which is plans-only. */
+  taskStatuses: Array<PlanTaskStatus>;
   /** List tasks, ordered by planId then sortOrder then createdAt ascending. Capped at 100 by default (max 500); pass limit to override. Use tasksByPlanId/tasksByProjectId for scoped lists. */
   tasks: Array<TaskObject>;
   /** List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending */
@@ -4037,8 +4058,13 @@ export type SetMcpConnectorEnabledInput = {
 export type SetPlanStatusInput = {
   /** Plan id to update status for */
   planId: Scalars['ID']['input'];
-  /** New status (e.g. COMPLETED, IN_PROGRESS, PENDING, QUEUED). Normalized to uppercase. */
-  status: Scalars['String']['input'];
+  /**
+   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+   * @deprecated Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.
+   */
+  status?: InputMaybe<Scalars['String']['input']>;
+  /** New plan status as the typed PlanTaskStatus enum (preferred over status). Provide this OR status. */
+  statusEnum?: InputMaybe<PlanTaskStatus>;
 };
 
 export type SetScheduledAgentJobEnabledInputType = {
