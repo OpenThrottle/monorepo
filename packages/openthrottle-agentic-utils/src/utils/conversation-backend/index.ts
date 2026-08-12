@@ -3,6 +3,7 @@
  * OpenAI-compatible endpoint and spawned agentic CLIs (e.g. cursor-agent).
  */
 export * from './agent-discovery.ts';
+export * from './agent-setup-executor.ts';
 export * from './claude/index.ts';
 export * from './codex/index.ts';
 export * from './cursor-agent/index.ts';

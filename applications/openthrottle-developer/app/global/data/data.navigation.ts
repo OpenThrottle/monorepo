@@ -30,6 +30,7 @@ import {
   TerminalSquareIcon,
   ToggleRightIcon,
   WandSparklesIcon,
+  WrenchIcon,
 } from 'lucide-react';
 
 const linksLegal = [
@@ -151,6 +152,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         icon: Search,
         to: '/search',
       },
+      {
+        children: 'Usage',
+        disabled: false, // 🔴 🟠
+        icon: ChartAreaIcon,
+        to: '/usage',
+      },
     ],
     Settings: [
       {
@@ -201,31 +208,17 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/rollout',
       },
       {
+        beta: true,
+        children: 'Setup',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: WrenchIcon,
+        to: '/settings/setup',
+      },
+      {
         children: 'Workspace',
         disabled: false, // 🔴 🟠 🟡
         icon: MonitorCogIcon,
         to: '/settings/workspace',
-      },
-    ],
-    User: [
-      {
-        children: 'Notes',
-        disabled: false, // 🔴 🟠
-        icon: StickyNoteIcon,
-        to: '/notes',
-      },
-      {
-        beta: true,
-        children: 'Notifications',
-        disabled: true, // 🔴 🟠 🟡 🟢
-        icon: BellIcon,
-        to: '/notifications',
-      },
-      {
-        children: 'Usage',
-        disabled: false, // 🔴 🟠
-        icon: ChartAreaIcon,
-        to: '/usage',
       },
     ],
     Workspace: [
@@ -240,6 +233,19 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: false, // 🔴 🟠
         icon: CircleHelpIcon,
         to: '/faq',
+      },
+      {
+        children: 'Notes',
+        disabled: false, // 🔴 🟠
+        icon: StickyNoteIcon,
+        to: '/notes',
+      },
+      {
+        beta: true,
+        children: 'Notifications',
+        disabled: true, // 🔴 🟠 🟡 🟢
+        icon: BellIcon,
+        to: '/notifications',
       },
     ],
     Legal: linksLegal,

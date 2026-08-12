@@ -237,6 +237,14 @@ export type AgentCliOptionObject = {
   version?: Maybe<Scalars['String']['output']>;
 };
 
+export type AgentCliSetupConfigObject = {
+  __typename?: 'AgentCliSetupConfigObject';
+  /** True when the current user may run installs/updates (has the SETTINGS_WRITE permission). The UI disables the controls when false. */
+  canManage: Scalars['Boolean']['output'];
+  /** True when server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Default-off; the UI explains disabled controls when false. */
+  installEnabled: Scalars['Boolean']['output'];
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
   content: Scalars['String']['output'];
@@ -279,6 +287,26 @@ export type AgentConversationObject = {
   title?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
+};
+
+export type AgentSetupStreamChunkObject = {
+  __typename?: 'AgentSetupStreamChunkObject';
+  /** Incremental stdout/stderr text for this chunk (empty on the terminal chunk). */
+  data: Scalars['String']['output'];
+  /** True exactly once, on the terminal chunk of the run. */
+  done: Scalars['Boolean']['output'];
+  /** Executor failure classifier when the run failed; null otherwise. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Child exit code on the terminal chunk; null while running or when killed by signal. */
+  exitCode?: Maybe<Scalars['Int']['output']>;
+  /** Unique id for this chunk (subscription dedupe / cursor). */
+  id: Scalars['String']['output'];
+  /** The install/update run id these chunks belong to. */
+  runId: Scalars['String']['output'];
+  /** Monotonic index within the run. */
+  sortOrder: Scalars['Int']['output'];
+  /** Which stream the text came from: stdout | stderr. */
+  stream: Scalars['String']['output'];
 };
 
 export type AgentsChatTurnResult = {
@@ -1585,6 +1613,8 @@ export type Mutation = {
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
   indexCodeRepository: IndexCodeRepositoryResult;
+  /** Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
+  installAgentCli: StartAgentSetupResult;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -1668,6 +1698,8 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
+  updateAgentCli: StartAgentSetupResult;
   /** Update the title on an owned agent conversation. */
   updateAgentConversationTitle: AgentConversationObject;
   /** Update an existing custom prompt */
@@ -1971,6 +2003,10 @@ export type MutationIndexCodeRepositoryArgs = {
   repositoryId: Scalars['ID']['input'];
 };
 
+export type MutationInstallAgentCliArgs = {
+  backend: Scalars['String']['input'];
+};
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -2115,6 +2151,10 @@ export type MutationStartWorkSessionArgs = {
 
 export type MutationStopTranscriptionStreamArgs = {
   sessionId: Scalars['ID']['input'];
+};
+
+export type MutationUpdateAgentCliArgs = {
+  backend: Scalars['String']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
@@ -2702,6 +2742,8 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
+  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating. */
+  agentCliSetupConfig: AgentCliSetupConfigObject;
   /** Immediate subdirectories of a path within the configured workspace roots (server-host paths). */
   browseDirectory: Array<BrowseDirectoryEntryObject>;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
@@ -4308,6 +4350,20 @@ export type SkillUsageResultObject = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type StartAgentSetupResult = {
+  __typename?: 'StartAgentSetupResult';
+  /** The backend (driver id) this run targeted. */
+  backend: Scalars['String']['output'];
+  /** True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED). */
+  disabled: Scalars['Boolean']['output'];
+  /** Validation or policy error (no throw). Null on success. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** install | update — the mode that was started. */
+  mode: Scalars['String']['output'];
+  /** Correlation id to subscribe to via agentSetupChunkAdded. Null when the request was rejected. */
+  runId?: Maybe<Scalars['String']['output']>;
+};
+
 export type StartConversationStreamInput = {
   /** Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai. */
   backend?: InputMaybe<Scalars['String']['input']>;
@@ -4374,6 +4430,8 @@ export type StartWorkSessionInput = {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  /** Live stdout/stderr for an agent-CLI install/update run (topic agent-setup:<runId>:stream). Requires an authenticated connection. */
+  agentSetupChunkAdded: AgentSetupStreamChunkObject;
   /** Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation. */
   conversationStreamChunkAdded: ConversationStreamChunkObject;
   /** Firehose of all real-time notification events. Identity comes from the authenticated ws connection. */
@@ -4386,6 +4444,10 @@ export type Subscription = {
   queueJobLogTail: QueueJobLogEventObject;
   /** Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session. */
   transcriptionStreamChunkAdded: TranscriptionStreamChunkObject;
+};
+
+export type SubscriptionAgentSetupChunkAddedArgs = {
+  runId: Scalars['ID']['input'];
 };
 
 export type SubscriptionConversationStreamChunkAddedArgs = {

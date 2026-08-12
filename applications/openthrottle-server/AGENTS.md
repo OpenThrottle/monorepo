@@ -58,6 +58,14 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   for ws and on `req` for HTTP. Guards/resolvers must handle both shapes.
 - Bull Board sits behind a single static basic-auth credential — it stays disabled in
   production (`isBullBoardEnabled()` gate in `app.module.ts`).
+- **Agent-CLI install/update** (`graphql/agent-setup/`): `installAgentCli`/`updateAgentCli` run
+  the registry-defined `curl | shell` installers on the server host — RCE-on-demand, so they are
+  double-gated: the `SETTINGS_WRITE` permission AND the default-OFF `OT_AGENT_CLI_INSTALL_ENABLED`
+  env flag (`readAgentCliInstallEnabledFromConfig`). Leave the flag unset in hosted/multi-tenant
+  deploys — this is a **local-developer-machine** feature. The mutation takes only a `backend` id
+  validated against `ALL_DRIVERS`; never a URL/command from the client. Output streams over the
+  `agentSetupChunkAdded` subscription; a successful run invalidates the shared
+  `AgentDiscoveryService` cache. CLI auth/login is out of scope (install ≠ authenticated).
 
 ## Don't
 

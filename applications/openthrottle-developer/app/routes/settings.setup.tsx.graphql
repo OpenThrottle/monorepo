@@ -1,0 +1,32 @@
+query SettingsSetupAgentClis {
+  discoverAgentClis {
+    agents {
+      backend
+      label
+      models
+      version
+    }
+    scannedAt
+    totalCount
+  }
+}
+
+query AgentCliSetupConfig {
+  agentCliSetupConfig {
+    canManage
+    installEnabled
+  }
+}
+
+subscription AgentSetupChunkAdded($runId: ID!) {
+  agentSetupChunkAdded(runId: $runId) {
+    data
+    done
+    error
+    exitCode
+    id
+    runId
+    sortOrder
+    stream
+  }
+}

@@ -73,6 +73,14 @@ installSoftware () {
   # installBrewPackage "terraform"
 
   # 👨‍💻 Agent CLIs (skip if present; otherwise prompt)
+  # CANONICAL SOURCE: the install URL + installer shell for each agent CLI also
+  # lives on the drivers registry (packages/openthrottle-drivers, each driver's
+  # `install` descriptor), which powers the in-stack /settings/setup install/update
+  # feature. Keep these two in lockstep — the guard test
+  # packages/openthrottle-drivers/src/drivers/__tests__/install-metadata.test.ts
+  # asserts the registry matches the (name/binary/shell/URL) tuples below, so a
+  # drift here or there fails CI. (Only the 5 agent CLIs are in scope; the brew
+  # items above are not.)
   installCliIfNeeded "Claude" "claude" "bash" "https://claude.ai/install.sh"
   installCliIfNeeded "Cursor" "cursor-agent" "bash" "https://cursor.com/install"
   installCliIfNeeded "Codex" "codex" "sh" "https://chatgpt.com/codex/install.sh"

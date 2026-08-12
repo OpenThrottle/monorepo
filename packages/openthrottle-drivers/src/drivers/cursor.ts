@@ -55,6 +55,12 @@ export const cursorDriver = defineDriver({
   capabilities,
   discoverModels,
   id: 'cursor',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://cursor.com/install',
+  },
   label: 'cursor-agent',
+  update: { method: 'curl-shell' },
   versionArgs: ['--version'],
 });

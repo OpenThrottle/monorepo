@@ -237,6 +237,14 @@ export type AgentCliOptionObject = {
   version?: Maybe<Scalars['String']['output']>;
 };
 
+export type AgentCliSetupConfigObject = {
+  __typename?: 'AgentCliSetupConfigObject';
+  /** True when the current user may run installs/updates (has the SETTINGS_WRITE permission). The UI disables the controls when false. */
+  canManage: Scalars['Boolean']['output'];
+  /** True when server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Default-off; the UI explains disabled controls when false. */
+  installEnabled: Scalars['Boolean']['output'];
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
   content: Scalars['String']['output'];
@@ -279,6 +287,26 @@ export type AgentConversationObject = {
   title?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
+};
+
+export type AgentSetupStreamChunkObject = {
+  __typename?: 'AgentSetupStreamChunkObject';
+  /** Incremental stdout/stderr text for this chunk (empty on the terminal chunk). */
+  data: Scalars['String']['output'];
+  /** True exactly once, on the terminal chunk of the run. */
+  done: Scalars['Boolean']['output'];
+  /** Executor failure classifier when the run failed; null otherwise. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Child exit code on the terminal chunk; null while running or when killed by signal. */
+  exitCode?: Maybe<Scalars['Int']['output']>;
+  /** Unique id for this chunk (subscription dedupe / cursor). */
+  id: Scalars['String']['output'];
+  /** The install/update run id these chunks belong to. */
+  runId: Scalars['String']['output'];
+  /** Monotonic index within the run. */
+  sortOrder: Scalars['Int']['output'];
+  /** Which stream the text came from: stdout | stderr. */
+  stream: Scalars['String']['output'];
 };
 
 export type AgentsChatTurnResult = {
@@ -1585,6 +1613,8 @@ export type Mutation = {
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
   indexCodeRepository: IndexCodeRepositoryResult;
+  /** Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
+  installAgentCli: StartAgentSetupResult;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -1668,6 +1698,8 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
+  updateAgentCli: StartAgentSetupResult;
   /** Update the title on an owned agent conversation. */
   updateAgentConversationTitle: AgentConversationObject;
   /** Update an existing custom prompt */
@@ -1971,6 +2003,10 @@ export type MutationIndexCodeRepositoryArgs = {
   repositoryId: Scalars['ID']['input'];
 };
 
+export type MutationInstallAgentCliArgs = {
+  backend: Scalars['String']['input'];
+};
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -2115,6 +2151,10 @@ export type MutationStartWorkSessionArgs = {
 
 export type MutationStopTranscriptionStreamArgs = {
   sessionId: Scalars['ID']['input'];
+};
+
+export type MutationUpdateAgentCliArgs = {
+  backend: Scalars['String']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
@@ -2702,6 +2742,8 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
+  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating. */
+  agentCliSetupConfig: AgentCliSetupConfigObject;
   /** Immediate subdirectories of a path within the configured workspace roots (server-host paths). */
   browseDirectory: Array<BrowseDirectoryEntryObject>;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
@@ -4308,6 +4350,20 @@ export type SkillUsageResultObject = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type StartAgentSetupResult = {
+  __typename?: 'StartAgentSetupResult';
+  /** The backend (driver id) this run targeted. */
+  backend: Scalars['String']['output'];
+  /** True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED). */
+  disabled: Scalars['Boolean']['output'];
+  /** Validation or policy error (no throw). Null on success. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** install | update — the mode that was started. */
+  mode: Scalars['String']['output'];
+  /** Correlation id to subscribe to via agentSetupChunkAdded. Null when the request was rejected. */
+  runId?: Maybe<Scalars['String']['output']>;
+};
+
 export type StartConversationStreamInput = {
   /** Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai. */
   backend?: InputMaybe<Scalars['String']['input']>;
@@ -4374,6 +4430,8 @@ export type StartWorkSessionInput = {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  /** Live stdout/stderr for an agent-CLI install/update run (topic agent-setup:<runId>:stream). Requires an authenticated connection. */
+  agentSetupChunkAdded: AgentSetupStreamChunkObject;
   /** Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation. */
   conversationStreamChunkAdded: ConversationStreamChunkObject;
   /** Firehose of all real-time notification events. Identity comes from the authenticated ws connection. */
@@ -4386,6 +4444,10 @@ export type Subscription = {
   queueJobLogTail: QueueJobLogEventObject;
   /** Live transcript snapshots for an owned transcription session (topic transcription:<sessionId>:stream). Snapshot-replace: each chunk carries the full transcript so far; clients keep the highest sortOrder. Requires an authenticated connection that owns the session. */
   transcriptionStreamChunkAdded: TranscriptionStreamChunkObject;
+};
+
+export type SubscriptionAgentSetupChunkAddedArgs = {
+  runId: Scalars['ID']['input'];
 };
 
 export type SubscriptionConversationStreamChunkAddedArgs = {
@@ -7644,6 +7706,38 @@ export type CreateQueueMutation = {
   };
 };
 
+export type InstallAgentCliMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+}>;
+
+export type InstallAgentCliMutation = {
+  __typename?: 'Mutation';
+  installAgentCli: {
+    __typename?: 'StartAgentSetupResult';
+    backend: string;
+    disabled: boolean;
+    errorMessage?: string | null;
+    mode: string;
+    runId?: string | null;
+  };
+};
+
+export type UpdateAgentCliMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+}>;
+
+export type UpdateAgentCliMutation = {
+  __typename?: 'Mutation';
+  updateAgentCli: {
+    __typename?: 'StartAgentSetupResult';
+    backend: string;
+    disabled: boolean;
+    errorMessage?: string | null;
+    mode: string;
+    runId?: string | null;
+  };
+};
+
 export type ResolvePlanRefQueryVariables = Exact<{
   prefix: Scalars['String']['input'];
 }>;
@@ -8470,6 +8564,56 @@ export type DeleteRolloutFlagMutationVariables = Exact<{
 export type DeleteRolloutFlagMutation = {
   __typename?: 'Mutation';
   deleteRolloutFlag: boolean;
+};
+
+export type SettingsSetupAgentClisQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SettingsSetupAgentClisQuery = {
+  __typename?: 'Query';
+  discoverAgentClis: {
+    __typename?: 'DiscoverAgentClisResult';
+    scannedAt: string;
+    totalCount: number;
+    agents: Array<{
+      __typename?: 'AgentCliOptionObject';
+      backend: string;
+      label: string;
+      models: Array<string>;
+      version?: string | null;
+    }>;
+  };
+};
+
+export type AgentCliSetupConfigQueryVariables = Exact<{ [key: string]: never }>;
+
+export type AgentCliSetupConfigQuery = {
+  __typename?: 'Query';
+  agentCliSetupConfig: {
+    __typename?: 'AgentCliSetupConfigObject';
+    canManage: boolean;
+    installEnabled: boolean;
+  };
+};
+
+export type AgentSetupChunkAddedSubscriptionVariables = Exact<{
+  runId: Scalars['ID']['input'];
+}>;
+
+export type AgentSetupChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  agentSetupChunkAdded: {
+    __typename?: 'AgentSetupStreamChunkObject';
+    data: string;
+    done: boolean;
+    error?: string | null;
+    exitCode?: number | null;
+    id: string;
+    runId: string;
+    sortOrder: number;
+    stream: string;
+  };
 };
 
 export type RepositoryCheckoutFieldsFragment = {
@@ -19151,6 +19295,128 @@ export const CreateQueueDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateQueueMutation, CreateQueueMutationVariables>;
+export const InstallAgentCliDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'InstallAgentCli' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'installAgentCli' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'disabled' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  InstallAgentCliMutation,
+  InstallAgentCliMutationVariables
+>;
+export const UpdateAgentCliDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateAgentCli' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateAgentCli' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'disabled' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateAgentCliMutation,
+  UpdateAgentCliMutationVariables
+>;
 export const ResolvePlanRefDocument = {
   kind: 'Document',
   definitions: [
@@ -21486,6 +21752,147 @@ export const DeleteRolloutFlagDocument = {
 } as unknown as DocumentNode<
   DeleteRolloutFlagMutation,
   DeleteRolloutFlagMutationVariables
+>;
+export const SettingsSetupAgentClisDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SettingsSetupAgentClis' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverAgentClis' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agents' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'models' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'version' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SettingsSetupAgentClisQuery,
+  SettingsSetupAgentClisQueryVariables
+>;
+export const AgentCliSetupConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'AgentCliSetupConfig' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentCliSetupConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'canManage' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'installEnabled' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AgentCliSetupConfigQuery,
+  AgentCliSetupConfigQueryVariables
+>;
+export const AgentSetupChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'AgentSetupChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'runId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentSetupChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'runId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'runId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AgentSetupChunkAddedSubscription,
+  AgentSetupChunkAddedSubscriptionVariables
 >;
 export const GetWorkspaceSettingsDocument = {
   kind: 'Document',

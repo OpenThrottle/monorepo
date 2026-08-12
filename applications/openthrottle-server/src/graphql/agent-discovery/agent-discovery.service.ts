@@ -64,6 +64,15 @@ export class AgentDiscoveryService {
     });
   }
 
+  /**
+   * Drop the cached snapshot so the next {@link discover} call blocks on a fresh
+   * sweep. Called after a successful install/update so newly present (or updated)
+   * binaries are reflected immediately rather than after the soft TTL elapses.
+   */
+  invalidate(): void {
+    this.cache.invalidate();
+  }
+
   /** Run a fresh CLI sweep and stamp `scannedAt`. */
   private async scan(): Promise<AgentCliDiscoveryResult> {
     const result = await discoverAgentClis({

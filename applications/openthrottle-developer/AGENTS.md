@@ -62,6 +62,13 @@ for devtools/profiling/troubleshooting.
   testing package.
 - Prompts: routes live at `/prompts/*` (legacy `/custom-prompts/*` redirect), but GraphQL still
   uses the `customPrompt`/`customPrompts` fields — don't rename the operations to match the URLs.
+- **Agent-CLI setup** (`/settings/setup`): read-only status of the agent CLIs (installed/version
+  from `discoverAgentClis`) always renders; the Install/Update controls are gated by the
+  server-computed `agentCliSetupConfig { canManage, installEnabled }` — the client has no
+  permission data, so the loader must fetch those booleans and pass them down (never infer from
+  client identity). Runs stream over `agentSetupChunkAdded` via `useAgentSetupStream`. The feature
+  is default-off on the server (`OT_AGENT_CLI_INSTALL_ENABLED`) — a local-dev tool, not for
+  hosted deploys. CLI auth/login is out of scope.
 
 ## Don't
 
