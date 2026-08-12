@@ -1,3 +1,5 @@
+import type { ResolvedRunPhase } from './run-phase';
+import { ChatRunPhase } from './types';
 import type { ChatMessage, ChatTurnEvent } from './types';
 import {
   appendTurnTextEvent,
@@ -9,6 +11,46 @@ import {
   parseChunkMetadata,
   toolLabelFromMetadataJson,
 } from './turn-events';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+/**
+ * Server-reported phase carried on a live-only `keepalive` ping's `metadataJson`
+ * (`{ model?, tool? }`). A named tool → running that tool; otherwise a model →
+ * waiting for it. Returns null when the ping carries nothing usable, so the
+ * client falls back to its elapsed-based guess.
+ */
+const serverPhaseFromKeepalive = (
+  metadataJson: string | null | undefined,
+): ResolvedRunPhase | null => {
+  if (metadataJson === null || metadataJson === undefined) {
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(metadataJson);
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const tool = typeof parsed.tool === 'string' ? parsed.tool.trim() : '';
+  if (tool !== '') {
+    return { detail: tool, phase: ChatRunPhase.runningTool };
+  }
+
+  const model = typeof parsed.model === 'string' ? parsed.model.trim() : '';
+  if (model !== '') {
+    return { detail: model, phase: ChatRunPhase.waiting };
+  }
+
+  return null;
+};
 
 /**
  * The subset of a streamed conversation chunk the reducer reads. Kept as a
@@ -40,6 +82,13 @@ export interface StreamState {
   /** True while a stream is in flight (between the first delta and `done`). */
   readonly isStreaming: boolean;
   /**
+   * Server-reported run phase keyed by messageId, folded from live-only
+   * `keepalive` pings. Lets the running indicator name the model/tool during the
+   * pre-content gap; absent when no ping has arrived (client falls back to its
+   * elapsed-based guess).
+   */
+  readonly phaseByMessageId: ReadonlyMap<string, ResolvedRunPhase>;
+  /**
    * messageIds whose terminal chunk carried the server's retryable timeout
    * marker (`TerminalTimeoutMetadata`) — the turn stalled and was safely
    * interrupted, so the client may auto-retry it (vs a fatal error, which is
@@ -56,6 +105,7 @@ export const INITIAL_STREAM_STATE: StreamState = {
   completedIds: new Set(),
   events: new Map(),
   isStreaming: false,
+  phaseByMessageId: new Map(),
   retryableIds: new Set(),
   seen: new Set(),
 };
@@ -71,6 +121,22 @@ export function reduceStreamChunk(
   state: StreamState,
   chunk: ChatStreamChunk,
 ): StreamState {
+  // A `keepalive` is a live-only liveness/phase ping: it carries no transcript
+  // content and no stable sortOrder, so handle it before dedupe — record the
+  // server-reported phase (if any) and return without touching `seen`, bodies,
+  // or events, so it can never block a real chunk that reuses its sortOrder.
+  if (chunk.kind === 'keepalive') {
+    const phase = serverPhaseFromKeepalive(chunk.metadataJson);
+    if (phase === null) {
+      return state.isStreaming ? state : { ...state, isStreaming: true };
+    }
+
+    const phaseByMessageId = new Map(state.phaseByMessageId);
+    phaseByMessageId.set(chunk.messageId, phase);
+
+    return { ...state, isStreaming: true, phaseByMessageId };
+  }
+
   const dedupeKey = `${chunk.messageId}:${chunk.sortOrder}`;
   if (state.seen.has(dedupeKey)) {
     return state;
@@ -122,6 +188,7 @@ export function reduceStreamChunk(
       completedIds,
       events,
       isStreaming: false,
+      phaseByMessageId: state.phaseByMessageId,
       retryableIds,
       seen,
     };
@@ -196,6 +263,7 @@ export function reduceStreamChunk(
     completedIds: state.completedIds,
     events,
     isStreaming: true,
+    phaseByMessageId: state.phaseByMessageId,
     retryableIds: state.retryableIds,
     seen,
   };

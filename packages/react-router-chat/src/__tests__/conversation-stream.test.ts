@@ -146,6 +146,65 @@ describe('reduceStreamChunk', () => {
   });
 });
 
+describe('reduceStreamChunk — keepalive phase pings', () => {
+  it('folds a keepalive model ping into a waiting phase and marks streaming', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        kind: 'keepalive',
+        metadataJson: JSON.stringify({ model: 'llama3' }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.phaseByMessageId.get('assistant-1')).toEqual({
+      detail: 'llama3',
+      phase: 'waiting',
+    });
+    expect(state.isStreaming).toBe(true);
+  });
+
+  it('folds a keepalive tool ping into a running-tool phase', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        kind: 'keepalive',
+        metadataJson: JSON.stringify({ model: 'llama3', tool: 'shell' }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.phaseByMessageId.get('assistant-1')).toEqual({
+      detail: 'shell',
+      phase: 'running-tool',
+    });
+  });
+
+  it('adds no body/events and does not dedupe-block a real chunk reusing the sortOrder', () => {
+    let state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({ kind: 'keepalive', sortOrder: 0 }),
+    );
+    // No transcript content from the ping.
+    expect(state.bodies.get('assistant-1')).toBeUndefined();
+    expect(state.events.get('assistant-1')).toBeUndefined();
+
+    // A real text chunk at the SAME sortOrder still lands (ping never entered `seen`).
+    state = reduceStreamChunk(state, chunk({ delta: 'Hello', sortOrder: 0 }));
+    expect(state.bodies.get('assistant-1')).toBe('Hello');
+  });
+
+  it('leaves the phase absent when a keepalive carries no usable metadata', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({ kind: 'keepalive', metadataJson: null, sortOrder: 0 }),
+    );
+
+    expect(state.phaseByMessageId.has('assistant-1')).toBe(false);
+    expect(state.isStreaming).toBe(true);
+  });
+});
+
 describe('reduceStreamChunk — structured events', () => {
   const eventsOf = (
     state: ReturnType<typeof reduceStreamChunk>,

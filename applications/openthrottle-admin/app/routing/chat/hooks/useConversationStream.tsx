@@ -6,7 +6,10 @@
  * with no browser ws client it returns just the seed.
  */
 import * as React from 'react';
-import type { ChatMessage } from '@openthrottle/react-router-chat';
+import type {
+  ChatMessage,
+  ResolvedRunPhase,
+} from '@openthrottle/react-router-chat';
 import {
   INITIAL_STREAM_STATE,
   reduceStreamChunk,
@@ -33,6 +36,11 @@ export interface UseConversationStreamResult {
    */
   readonly lastActivityAt: number | null;
   readonly messages: ChatMessage[];
+  /**
+   * Server-reported run phase keyed by messageId (from live `keepalive` pings),
+   * so the running indicator can name the model/tool during the pre-content gap.
+   */
+  readonly phaseByMessageId: ReadonlyMap<string, ResolvedRunPhase>;
   /**
    * messageIds whose terminal chunk was a retryable timeout (safe to auto-retry
    * rather than a fatal error). Subset of {@link completedIds}.
@@ -92,6 +100,7 @@ export function useConversationStream(
     isStreaming: state.isStreaming,
     lastActivityAt,
     messages,
+    phaseByMessageId: state.phaseByMessageId,
     retryableIds: state.retryableIds,
   };
 }

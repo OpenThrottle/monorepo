@@ -81,7 +81,10 @@ const ChatThreadMessageComponent = (
         {hasTimeline && message.events !== undefined ? (
           <ChatTurnTimeline events={message.events} />
         ) : isPending ? (
-          <RunningIndicator />
+          <RunningIndicator
+            detail={message.phaseDetail}
+            phase={message.phase}
+          />
         ) : (
           <ChatMessageBody body={message.body} role={message.role} />
         )}

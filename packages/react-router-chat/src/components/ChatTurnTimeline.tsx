@@ -2,8 +2,11 @@ import * as React from 'react';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
+import { ChatToolCallGroup } from './ChatToolCallGroup';
 import { ChatTurnUsageSummary } from './ChatTurnUsageSummary';
 import { RunningIndicator } from './RunningIndicator';
+import { deriveRunPhaseFromEvents } from '../run-phase';
+import { buildTurnTimeline } from '../turn-tool-groups';
 import type { ChatTurnEvent } from '../types';
 
 export interface ChatTurnTimelineProps {
@@ -34,6 +37,15 @@ export const ChatTurnTimeline = (
     () => [...events].sort((a, b) => a.sortOrder - b.sortOrder),
     [events],
   );
+  // Fold runs of consecutive tool events into groups so a burst of actions
+  // collapses into one expandable row instead of flooding the timeline.
+  const items = React.useMemo(() => buildTurnTimeline(ordered), [ordered]);
+  // While the turn is still in flight, name what it is currently doing (running
+  // a tool, thinking, …) instead of a generic spinner.
+  const runPhase = React.useMemo(
+    () => deriveRunPhaseFromEvents(ordered),
+    [ordered],
+  );
 
   // Handlers
 
@@ -45,7 +57,20 @@ export const ChatTurnTimeline = (
 
   return (
     <div className="flex flex-col gap-1" data-testid="ChatTurnTimeline">
-      {ordered.map((event) => {
+      {items.map((item) => {
+        if (item.kind === 'tools') {
+          const first = item.tools[0];
+          const key = `tools-${first?.sortOrder ?? 0}`;
+
+          // A lone tool renders as a single card; a run of ≥2 folds into a group.
+          return item.tools.length === 1 && first !== undefined ? (
+            <ChatToolCall event={first} key={key} />
+          ) : (
+            <ChatToolCallGroup key={key} tools={item.tools} />
+          );
+        }
+
+        const { event } = item;
         const key = `${event.kind}-${event.sortOrder}`;
 
         switch (event.kind) {
@@ -57,15 +82,15 @@ export const ChatTurnTimeline = (
             );
           case 'thinking':
             return <ChatThinkingBlock key={key} text={event.text} />;
-          case 'tool':
-            return <ChatToolCall event={event} key={key} />;
           case 'usage':
             return <ChatTurnUsageSummary event={event} key={key} />;
           default:
             return null;
         }
       })}
-      {isDone ? null : <RunningIndicator />}
+      {isDone ? null : (
+        <RunningIndicator detail={runPhase.detail} phase={runPhase.phase} />
+      )}
     </div>
   );
 };
