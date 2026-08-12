@@ -17,9 +17,13 @@ on:
   pull_request:
     # ready_for_review: ensures CI fires when a draft PR is marked ready (see draft-skip `if`s below)
     types: [opened, ready_for_review, synchronize]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
+    # ⚠️ NO paths-ignore here — see the `changes` gate job below.
+    # A workflow-level `paths-ignore` means a docs-only PR never TRIGGERS the
+    # workflow at all, so `build` (or the `ci-success` gate) never reports a
+    # status. Once that check is REQUIRED in branch protection, GitHub shows it
+    # as "Expected — waiting for status" forever and the PR can't merge. Instead
+    # we always let the workflow run and skip the expensive build *inside* via
+    # the `changes` job, while `ci-success` still reports green on docs-only PRs.
   push:
     branches:
       - 'main'
@@ -73,10 +77,60 @@ permissions:
   packages: read
 
 jobs:
+  # Cheap path-filter gate. Replaces the old workflow-level `paths-ignore` so the
+  # workflow always TRIGGERS (required checks can report), but the expensive
+  # `build` below still skips when a PR touches only docs/markdown. Non-PR events
+  # (merge_group, push, workflow_dispatch) always run the full build.
+  # Native git diff (no third-party action) to match the repo's SHA-pinning posture.
+  changes:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.filter.outputs.run }}
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: '🔎 Detect non-docs changes'
+        id: filter
+        run: |
+          set -euo pipefail
+
+          # Only PRs need doc-only detection; everything else runs the full build.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "event=${{ github.event_name }} → run=true (not a pull_request)"
+            exit 0
+          fi
+
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+
+          git fetch --no-tags origin "$base" >/dev/null 2>&1 || true
+
+          changed="$(git diff --name-only "$base" "$head")"
+          echo "Changed files:"; echo "$changed"
+
+          # Mirror the old paths-ignore (docs/** and **/*.md): if ANY changed file
+          # is neither under docs/ nor a .md file, it's real code → run the build.
+          if echo "$changed" | grep -vE '(^docs/|\.md$)' | grep -q .; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "→ run=true (non-docs changes present)"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "→ run=false (docs/markdown only)"
+          fi
+
   build:
+    needs: changes
     # 💰 Skip CI on draft PRs — push freely while iterating; CI fires when marked
     # "Ready for review". Always runs for merge_group and push (no PR payload there).
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # Also skips when the `changes` gate found only docs/markdown edits.
+    if: |
+      needs.changes.outputs.run == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     # FIXME: 💰 Re-enable when we want to spend more
     concurrency:
@@ -240,6 +294,36 @@ jobs:
       #         echo "🧠 Running for $tags | $target";
       #         pnpm exec nx affected --exclude="*,$tags" --target=$target --parallel --verbose
       #     done
+
+  # Stable required-check target. Branch protection should require THIS job
+  # ("ci-success"), not the matrix-suffixed `build (1, lint,typecheck,test)`.
+  # It reports green when the build succeeded OR was legitimately skipped
+  # (docs-only PR / draft), and red only when the build failed or was cancelled.
+  ci-success:
+    needs: [changes, build]
+    if: always()
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    timeout-minutes: 2
+    steps:
+      - name: '✅ Verify CI outcome'
+        run: |
+          changes_result="${{ needs.changes.result }}"
+          build_result="${{ needs.build.result }}"
+
+          echo "changes: $changes_result | build: $build_result"
+
+          if [ "$changes_result" != "success" ]; then
+            echo "❌ changes gate did not succeed ($changes_result)"
+            exit 1
+          fi
+
+          if [ "$build_result" = "success" ] || [ "$build_result" = "skipped" ]; then
+            echo "✅ CI gate satisfied (build: $build_result)"
+            exit 0
+          fi
+
+          echo "❌ CI gate failed (build: $build_result)"
+          exit 1
 
   nx-dependency-graph:
     # 💰 Cost-gated: manual-only via workflow_dispatch (was `if: false`) so the job stays
