@@ -20,6 +20,10 @@ import type {
   PlanJobRunHooksStorage,
   PlanRunConfigStorage,
 } from '@openthrottle/openthrottle-plan-config';
+import {
+  PLAN_STATUS,
+  PLAN_STATUS_VALUES,
+} from '../../common/plan-task-status.constants';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
 export type PlanData = Pick<
@@ -56,7 +60,19 @@ export class Plan {
   @Column({ name: 'description', nullable: true, type: 'text' })
   description!: string | null;
 
-  @Column({ default: 'pending', name: 'status', type: 'text' })
+  /**
+   * @description The `plan_task_status` Postgres enum (databases/migrations 028,
+   * 029). QUEUED is plans-only. Typed as the shared SSOT enum rather than free
+   * text so the ORM metadata matches the DB; default matches the migration
+   * (`PENDING`, uppercase).
+   */
+  @Column({
+    default: PLAN_STATUS.PENDING,
+    enum: [...PLAN_STATUS_VALUES],
+    enumName: 'plan_task_status',
+    name: 'status',
+    type: 'enum',
+  })
   status!: string;
 
   @Column({ name: 'assignee', nullable: true, type: 'text' })

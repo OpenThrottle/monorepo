@@ -1,20 +1,14 @@
 /**
- * @description Maps plan/task status enum (uppercase) to a display label for the UI.
+ * @description Maps a plan/task status to its display label. Delegates to the
+ * single UI label source ({@link planStatusValues}) so labels never drift; falls
+ * back to the raw value for an unknown status.
  */
-const STATUS_LABELS: Record<string, string> = {
-  BACKLOG: 'Backlog',
-  BLOCKED: 'Blocked',
-  CANCELED: 'Canceled',
-  COMPLETED: 'Completed',
-  IN_PROGRESS: 'In progress',
-  PENDING: 'Pending',
-  QUEUED: 'Queued',
-  SKIPPED: 'Skipped',
-};
+import { planStatusValues } from '~/routing/plans/types';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 /**
- * @description Returns a human-readable label for a plan/task status (e.g. IN_PROGRESS → "In progress"). Falls back to the raw value if unknown.
+ * @description Returns a human-readable label for a plan/task status (e.g. IN_PROGRESS → "In Progress"). Falls back to the raw value if unknown.
  */
 export function formatPlanTaskStatus(status: string): string {
-  return STATUS_LABELS[status] ?? status;
+  return isPlanStatusKey(status) ? planStatusValues[status] : status;
 }

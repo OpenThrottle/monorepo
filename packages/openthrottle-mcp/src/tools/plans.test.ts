@@ -5,14 +5,41 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  createPlanToolDescription,
   createPlanToolHandler,
   createPlansToolHandler,
+  listPlansByStatusToolDescription,
   listPlansByStatusToolHandler,
 } from './plans.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
+
+describe('tool descriptions reflect the canonical status set', () => {
+  it('list_plans_by_status lists the uppercase canonical statuses, not the stale lowercase trio', () => {
+    for (const status of [
+      'BACKLOG',
+      'BLOCKED',
+      'CANCELED',
+      'COMPLETED',
+      'IN_PROGRESS',
+      'PENDING',
+      'QUEUED',
+      'SKIPPED',
+    ]) {
+      expect(listPlansByStatusToolDescription).toContain(status);
+    }
+    // Stale lowercase examples must be gone.
+    expect(listPlansByStatusToolDescription).not.toContain('["pending"]');
+    expect(listPlansByStatusToolDescription).not.toContain('["in_progress"]');
+  });
+
+  it('create_plan documents the canonical status set', () => {
+    expect(createPlanToolDescription).toContain('IN_PROGRESS');
+    expect(createPlanToolDescription).toContain('CANCELED');
+  });
+});
 
 describe('createPlanToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';

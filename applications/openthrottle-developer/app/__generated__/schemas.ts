@@ -72,6 +72,7 @@ import {
   PlanEmbeddingsByPlanInput,
   PlanRalphWorkflowMode,
   PlanRunsByPlanIdInput,
+  PlanTaskStatus,
   PrCountByLabelInput,
   PressureLevel,
   PromoteTaskToPlanInput,
@@ -163,6 +164,8 @@ export const definedNonNullAnySchema = z
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
+
+export const PlanTaskStatusSchema = z.nativeEnum(PlanTaskStatus);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
 
@@ -864,6 +867,7 @@ export function ListPlansByStatusInputSchema(): z.ZodObject<
     sortBy: z.string().nullish(),
     sortOrder: z.string().nullish(),
     statuses: z.array(z.string().nullable()).nullish(),
+    statusesEnum: z.array(PlanTaskStatusSchema.nullable()).nullish(),
     titleSubstring: z.string().nullish(),
   });
 }
@@ -1274,7 +1278,8 @@ export function SetPlanStatusInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
-    status: z.string(),
+    status: z.string().nullish(),
+    statusEnum: PlanTaskStatusSchema.nullish(),
   });
 }
 

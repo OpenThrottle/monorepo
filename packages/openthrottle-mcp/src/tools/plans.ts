@@ -10,6 +10,7 @@ import {
   DeletePlanDocument,
   GetPlanDocument,
   ListPlansByStatusDocument,
+  PlanTaskStatus,
   UpdatePlanDocument,
 } from '../__generated__/graphql.js';
 import type {
@@ -64,17 +65,24 @@ export const getPlanToolParameters = z.object({ id: z.string().min(1) });
 export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
 export const updatePlanToolParameters = UpdatePlanInputSchema();
 
-export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`;
+/**
+ * Canonical plan/task status labels, derived from the generated PlanTaskStatus
+ * GraphQL enum (the SSOT) so these tool descriptions never carry a stale,
+ * hand-maintained status list. QUEUED is plans-only.
+ */
+const PLAN_TASK_STATUS_VALUES = Object.values(PlanTaskStatus).join(', ');
 
-export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status, assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
+export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary.`;
+
+export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
 
 export const deletePlanToolDescription = `Delete a plan by id. Returns whether a row was deleted.`;
 
 export const getPlanToolDescription = `Fetch a plan by id (UUID). Returns the plan row or not found.`;
 
-export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /openthrottle/pending or list by status.`;
+export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Valid statuses (uppercase): ${PLAN_TASK_STATUS_VALUES}. Pass statuses (e.g. ["IN_PROGRESS","PENDING"]); an empty array or "all" means no status filter. Unknown values are rejected with the valid set. Optional: limit/offset, project, assignees, titleSubstring. Use for /openthrottle/pending or list by status.`;
 
-export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.`;
+export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), author, assignee, category, project, projectId, summary.`;
 
 export async function listPlansByStatusToolHandler(
   args: z.infer<typeof listPlansByStatusToolParameters>,
