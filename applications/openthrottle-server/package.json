@@ -105,6 +105,10 @@
             "target": "ensure-worktree",
             "projects": "monorepo"
           },
+          {
+            "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
           "^dev"
         ],
         "executor": "nx:run-commands",
@@ -119,6 +123,10 @@
       "dev-api": {
         "continuous": true,
         "dependsOn": [
+          {
+            "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
           "^dev"
         ],
         "description": "dev (watch) restricted to PROCESS_ROLE=api: HTTP/GraphQL + queue producers, no BullMQ processors. Pair with the `worker` target so API edits never restart in-flight jobs or detach the worker debugger.",
@@ -152,6 +160,10 @@
       "start": {
         "continuous": true,
         "dependsOn": [
+          {
+            "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
           "^build"
         ],
         "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build.",
@@ -166,6 +178,10 @@
       "worker": {
         "continuous": true,
         "dependsOn": [
+          {
+            "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
           "^build"
         ],
         "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch — deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop.",

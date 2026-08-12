@@ -199,6 +199,24 @@
       },
       "outputs": ["{projectRoot}/dist/package.json"]
     },
+    "check-agent-assets-ssot": {
+      "cache": true,
+      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./scripts/check-agent-assets-ssot.sh",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-migration-table-comments": {
+      "cache": true,
+      "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-migration-table-comments.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "codegen-graphql": {
       "cache": true,
       "description": "Generate GraphQL types and typed operations for the project with graphql-codegen.",
@@ -265,42 +283,6 @@
         "codegen-react-router-watch"
       ],
       "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies. Depends on monorepo:ensure-worktree so any `dev` in an unprovisioned linked worktree self-heals on first use (no-op in the primary checkout and on provisioned worktrees)."
-    },
-    "check-agent-assets-ssot": {
-      "cache": true,
-      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh.",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bash ./scripts/check-agent-assets-ssot.sh",
-        "cwd": "{workspaceRoot}"
-      }
-    },
-    "validate-licenses": {
-      "cache": false,
-      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsx ./scripts/validate-license-compliance.ts",
-        "cwd": "{workspaceRoot}"
-      }
-    },
-    "validate-agent-assets-frontmatter": {
-      "cache": true,
-      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts.",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
-        "cwd": "{workspaceRoot}"
-      }
-    },
-    "check-migration-table-comments": {
-      "cache": true,
-      "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts.",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsx ./scripts/check-migration-table-comments.ts",
-        "cwd": "{workspaceRoot}"
-      }
     },
     "generate-third-party-notices": {
       "cache": false,
@@ -454,6 +436,24 @@
         "codegen-react-router"
       ],
       "description": "Type-check the project with tsc; runs after build and codegen. Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
+    },
+    "validate-licenses": {
+      "cache": false,
+      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/validate-license-compliance.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "validate-agent-assets-frontmatter": {
+      "cache": true,
+      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
+        "cwd": "{workspaceRoot}"
+      }
     }
   },
   "tui": {

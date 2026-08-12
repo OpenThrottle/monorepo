@@ -40,6 +40,8 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
+   **Dev/start auto-migrates.** Booting the server locally (`openthrottle-server` `dev`/`dev-api`/`worker`/`start`) runs the `monorepo:ensure-migrations` Nx gate first: it waits briefly for Postgres, then applies any pending migrations (the same idempotent runner as `database:migrate`) against the DB the server connects to. If Postgres is unreachable it fails fast and tells you to run `pnpm run database:start`. `pnpm run database:migrate` above remains the manual/standalone entrypoint. The Docker path is unchanged and stays authoritative for container installs — migrations there are guaranteed by `Dockerfile.Migrations` + the compose `migrations` init service; the gate is dev/start-only.
+
    **Service account bootstrap:** Migration `045_seed_service_accounts_bootstrap.sql` creates `openthrottle-mcp` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
 
    ```bash
