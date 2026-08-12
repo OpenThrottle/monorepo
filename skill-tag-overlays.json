@@ -7,9 +7,6 @@
     "agents-ralph": {
       "tags": ["commit", "openthrottle", "planning"]
     },
-    "brag-sheet": {
-      "tags": ["docs", "git", "github"]
-    },
     "create-cli": {
       "tags": []
     },
@@ -18,9 +15,6 @@
     },
     "frontend-design": {
       "tags": ["frontend", "ui"]
-    },
-    "git-commit": {
-      "tags": ["commit", "git"]
     },
     "github-branch": {
       "tags": ["git", "github"]

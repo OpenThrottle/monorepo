@@ -1,12 +1,6 @@
 {
   "version": 1,
   "skills": {
-    "brag-sheet": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/brag-sheet/SKILL.md",
-      "computedHash": "235eebe934fdf6348d018178d13ccbf2c36307ba6030d79561f44887322043e9"
-    },
     "create-cli": {
       "source": "steipete/agent-scripts",
       "sourceType": "github",
@@ -24,12 +18,6 @@
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "ab3a76798c9fae60d475a796c979d2878b769ab4de3aadc5459a0f134eee5158"
-    },
-    "git-commit": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/git-commit/SKILL.md",
-      "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
     },
     "grill-me": {
       "source": "mattpocock/skills",

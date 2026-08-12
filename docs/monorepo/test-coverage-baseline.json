@@ -25,15 +25,15 @@
       "category": "utils",
       "file": "applications/openthrottle-admin/app/global/utils/utils.agents-chat.ts",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/global/utils/__tests__/utils.agents-chat.test.tsx"
     },
     {
       "category": "routes",
       "file": "applications/openthrottle-admin/app/routes/_index.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routes/__tests__/_index.test.tsx"
     },
     {
       "category": "routes",
@@ -53,8 +53,8 @@
       "category": "routes",
       "file": "applications/openthrottle-admin/app/routes/auth.ws-token.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routes/__tests__/auth.ws-token.test.tsx"
     },
     {
       "category": "routes",
@@ -102,8 +102,8 @@
       "category": "routes",
       "file": "applications/openthrottle-admin/app/routes/resources.agent-conversations.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routes/__tests__/resources.agent-conversations.test.tsx"
     },
     {
       "category": "routes",
@@ -123,8 +123,8 @@
       "category": "routes",
       "file": "applications/openthrottle-admin/app/routes/robots[.]txt.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routes/__tests__/robots[.]txt.test.tsx"
     },
     {
       "category": "routes",
@@ -165,22 +165,22 @@
       "category": "hooks",
       "file": "applications/openthrottle-admin/app/routing/chat/hooks/useAgenticChatTurn.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/chat/hooks/__tests__/useAgenticChatTurn.test.tsx"
     },
     {
       "category": "hooks",
       "file": "applications/openthrottle-admin/app/routing/chat/hooks/useConversationList.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/chat/hooks/__tests__/useConversationList.test.tsx"
     },
     {
       "category": "hooks",
       "file": "applications/openthrottle-admin/app/routing/chat/hooks/useConversationStream.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/chat/hooks/__tests__/useConversationStream.test.tsx"
     },
     {
       "category": "hooks",
@@ -228,36 +228,36 @@
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/roles/components/AddPermissionSelectForm.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/roles/components/__tests__/AddPermissionSelectForm.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/roles/components/RoleDeleteDialog.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/roles/components/__tests__/RoleDeleteDialog.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/roles/components/RoleDetailCard.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/roles/components/__tests__/RoleDetailCard.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/roles/components/RoleEditSheet.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/roles/components/__tests__/RoleEditSheet.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/roles/components/RolePermissionsCard.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/roles/components/__tests__/RolePermissionsCard.test.tsx"
     },
     {
       "category": "components",
@@ -270,29 +270,29 @@
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/users/components/AssignRoleSelectForm.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/users/components/__tests__/AssignRoleSelectForm.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/users/components/UserDetailSummary.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/users/components/__tests__/UserDetailSummary.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/users/components/UserEditSheet.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/users/components/__tests__/UserEditSheet.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/users/components/UserRolesCard.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/users/components/__tests__/UserRolesCard.test.tsx"
     },
     {
       "category": "components",
@@ -305,8 +305,8 @@
       "category": "components",
       "file": "applications/openthrottle-admin/app/routing/users/components/UserStatusActions.tsx",
       "project": "applications/openthrottle-admin",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-admin/app/routing/users/components/__tests__/UserStatusActions.test.tsx"
     },
     {
       "category": "components",
@@ -4848,8 +4848,8 @@
       "category": "components",
       "file": "applications/openthrottle-email/app/global/components/MailGlobalErrorBoundary.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/global/components/__tests__/MailGlobalErrorBoundary.test.tsx"
     },
     {
       "category": "components",
@@ -4876,8 +4876,8 @@
       "category": "components",
       "file": "applications/openthrottle-email/app/global/components/MailToolbarActions.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/global/components/__tests__/MailToolbarActions.test.tsx"
     },
     {
       "category": "components",
@@ -4925,36 +4925,36 @@
       "category": "hooks",
       "file": "applications/openthrottle-email/app/global/hooks/useMailToolbar.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/global/hooks/__tests__/useMailToolbar.test.tsx"
     },
     {
       "category": "utils",
       "file": "applications/openthrottle-email/app/global/utils/mail-breadcrumb.ts",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/global/utils/__tests__/mail-breadcrumb.test.tsx"
     },
     {
       "category": "utils",
       "file": "applications/openthrottle-email/app/global/utils/mail-navigation.ts",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/global/utils/__tests__/mail-navigation.test.tsx"
     },
     {
       "category": "routes",
       "file": "applications/openthrottle-email/app/routes/_index.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routes/__tests__/_index.test.tsx"
     },
     {
       "category": "routes",
       "file": "applications/openthrottle-email/app/routes/_layout.mail._index.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routes/__tests__/_layout.mail._index.test.tsx"
     },
     {
       "category": "routes",
@@ -5037,8 +5037,8 @@
       "category": "routes",
       "file": "applications/openthrottle-email/app/routes/robots[.]txt.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routes/__tests__/robots[.]txt.test.tsx"
     },
     {
       "category": "routes",
@@ -5093,15 +5093,15 @@
       "category": "components",
       "file": "applications/openthrottle-email/app/routing/inbox/components/MessageDetailActions.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/components/__tests__/MessageDetailActions.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-email/app/routing/inbox/components/MessageDetailSkeleton.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/components/__tests__/MessageDetailSkeleton.test.tsx"
     },
     {
       "category": "components",
@@ -5114,15 +5114,15 @@
       "category": "components",
       "file": "applications/openthrottle-email/app/routing/inbox/components/MessageListBulkActions.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/components/__tests__/MessageListBulkActions.test.tsx"
     },
     {
       "category": "components",
       "file": "applications/openthrottle-email/app/routing/inbox/components/MessageListSkeleton.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/components/__tests__/MessageListSkeleton.test.tsx"
     },
     {
       "category": "config",
@@ -5142,15 +5142,15 @@
       "category": "hooks",
       "file": "applications/openthrottle-email/app/routing/inbox/hooks/useMessageDetail.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/hooks/__tests__/useMessageDetail.test.tsx"
     },
     {
       "category": "hooks",
       "file": "applications/openthrottle-email/app/routing/inbox/hooks/useMessageListSelection.tsx",
       "project": "applications/openthrottle-email",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-email/app/routing/inbox/hooks/__tests__/useMessageListSelection.test.tsx"
     },
     {
       "category": "components",
@@ -5191,15 +5191,15 @@
       "category": "routes",
       "file": "applications/openthrottle-website/app/routes/robots[.]txt.tsx",
       "project": "applications/openthrottle-website",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-website/app/routes/__tests__/robots[.]txt.test.ts"
     },
     {
       "category": "routes",
       "file": "applications/openthrottle-website/app/routes/sitemap[.]xml.tsx",
       "project": "applications/openthrottle-website",
-      "status": "missing",
-      "testFile": null
+      "status": "tested",
+      "testFile": "applications/openthrottle-website/app/routes/__tests__/sitemap[.]xml.test.ts"
     },
     {
       "category": "data",
@@ -9532,24 +9532,13 @@
     {
       "category": "components",
       "enforced": true,
-      "missing": 10,
-      "missingFiles": [
-        "applications/openthrottle-admin/app/routing/roles/components/AddPermissionSelectForm.tsx",
-        "applications/openthrottle-admin/app/routing/roles/components/RoleDeleteDialog.tsx",
-        "applications/openthrottle-admin/app/routing/roles/components/RoleDetailCard.tsx",
-        "applications/openthrottle-admin/app/routing/roles/components/RoleEditSheet.tsx",
-        "applications/openthrottle-admin/app/routing/roles/components/RolePermissionsCard.tsx",
-        "applications/openthrottle-admin/app/routing/users/components/AssignRoleSelectForm.tsx",
-        "applications/openthrottle-admin/app/routing/users/components/UserDetailSummary.tsx",
-        "applications/openthrottle-admin/app/routing/users/components/UserEditSheet.tsx",
-        "applications/openthrottle-admin/app/routing/users/components/UserRolesCard.tsx",
-        "applications/openthrottle-admin/app/routing/users/components/UserStatusActions.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-admin",
       "stub": 0,
       "stubFiles": [],
-      "tested": 3,
+      "tested": 13,
       "total": 13
     },
     {
@@ -9588,48 +9577,37 @@
     {
       "category": "hooks",
       "enforced": true,
-      "missing": 3,
-      "missingFiles": [
-        "applications/openthrottle-admin/app/routing/chat/hooks/useAgenticChatTurn.tsx",
-        "applications/openthrottle-admin/app/routing/chat/hooks/useConversationList.tsx",
-        "applications/openthrottle-admin/app/routing/chat/hooks/useConversationStream.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-admin",
       "stub": 0,
       "stubFiles": [],
-      "tested": 1,
+      "tested": 4,
       "total": 4
     },
     {
       "category": "routes",
       "enforced": true,
-      "missing": 4,
-      "missingFiles": [
-        "applications/openthrottle-admin/app/routes/_index.tsx",
-        "applications/openthrottle-admin/app/routes/auth.ws-token.tsx",
-        "applications/openthrottle-admin/app/routes/resources.agent-conversations.tsx",
-        "applications/openthrottle-admin/app/routes/robots[.]txt.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-admin",
       "stub": 0,
       "stubFiles": [],
-      "tested": 14,
+      "tested": 18,
       "total": 18
     },
     {
       "category": "utils",
       "enforced": true,
-      "missing": 1,
-      "missingFiles": [
-        "applications/openthrottle-admin/app/global/utils/utils.agents-chat.ts"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-admin",
       "stub": 0,
       "stubFiles": [],
-      "tested": 1,
+      "tested": 2,
       "total": 2
     },
     {
@@ -9978,20 +9956,13 @@
     {
       "category": "components",
       "enforced": true,
-      "missing": 6,
-      "missingFiles": [
-        "applications/openthrottle-email/app/global/components/MailGlobalErrorBoundary.tsx",
-        "applications/openthrottle-email/app/global/components/MailToolbarActions.tsx",
-        "applications/openthrottle-email/app/routing/inbox/components/MessageDetailActions.tsx",
-        "applications/openthrottle-email/app/routing/inbox/components/MessageDetailSkeleton.tsx",
-        "applications/openthrottle-email/app/routing/inbox/components/MessageListBulkActions.tsx",
-        "applications/openthrottle-email/app/routing/inbox/components/MessageListSkeleton.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-email",
       "stub": 0,
       "stubFiles": [],
-      "tested": 10,
+      "tested": 16,
       "total": 16
     },
     {
@@ -10034,48 +10005,37 @@
     {
       "category": "hooks",
       "enforced": true,
-      "missing": 3,
-      "missingFiles": [
-        "applications/openthrottle-email/app/global/hooks/useMailToolbar.tsx",
-        "applications/openthrottle-email/app/routing/inbox/hooks/useMessageDetail.tsx",
-        "applications/openthrottle-email/app/routing/inbox/hooks/useMessageListSelection.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-email",
       "stub": 0,
       "stubFiles": [],
-      "tested": 0,
+      "tested": 3,
       "total": 3
     },
     {
       "category": "routes",
       "enforced": true,
-      "missing": 3,
-      "missingFiles": [
-        "applications/openthrottle-email/app/routes/_index.tsx",
-        "applications/openthrottle-email/app/routes/_layout.mail._index.tsx",
-        "applications/openthrottle-email/app/routes/robots[.]txt.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-email",
       "stub": 0,
       "stubFiles": [],
-      "tested": 12,
+      "tested": 15,
       "total": 15
     },
     {
       "category": "utils",
       "enforced": true,
-      "missing": 2,
-      "missingFiles": [
-        "applications/openthrottle-email/app/global/utils/mail-breadcrumb.ts",
-        "applications/openthrottle-email/app/global/utils/mail-navigation.ts"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-email",
       "stub": 0,
       "stubFiles": [],
-      "tested": 0,
+      "tested": 2,
       "total": 2
     },
     {
@@ -10122,16 +10082,13 @@
     {
       "category": "routes",
       "enforced": true,
-      "missing": 2,
-      "missingFiles": [
-        "applications/openthrottle-website/app/routes/robots[.]txt.tsx",
-        "applications/openthrottle-website/app/routes/sitemap[.]xml.tsx"
-      ],
+      "missing": 0,
+      "missingFiles": [],
       "optOut": 0,
       "project": "applications/openthrottle-website",
       "stub": 0,
       "stubFiles": [],
-      "tested": 1,
+      "tested": 3,
       "total": 3
     },
     {

@@ -11,10 +11,10 @@ const mockEntries: readonly RepoSkillEntry[] = [
   {
     disableModelInvocation: undefined,
     layout: 'agents',
-    repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
-    slug: 'brag-sheet',
+    repoRelativePath: '.agents/skills/grilling/SKILL.md',
+    slug: 'grilling',
     source: 'external',
-    summary: 'Build impact statements from commits and PR activity.',
+    summary: 'Grill the user relentlessly',
     tags: undefined,
   },
   {
@@ -88,8 +88,9 @@ describe('SkillsTable Component', () => {
 
       expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();
       expect(screen.getByRole('table')).toBeInTheDocument();
+
       expect(
-        screen.getByRole('columnheader', { name: 'Owner' }),
+        screen.getByRole('columnheader', { name: 'Source' }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole('columnheader', { name: 'Summary' }),
@@ -105,13 +106,11 @@ describe('SkillsTable Component', () => {
     test('renders table rows from entries', () => {
       renderRoutesStub(<SkillsTable {...props} />);
 
-      expect(screen.getAllByText('Agents')).toHaveLength(2);
-      expect(screen.getByText('/brag-sheet')).toBeInTheDocument();
+      // expect(screen.getAllByText('Agents')).toHaveLength(2);
+      expect(screen.getByText('/grilling')).toBeInTheDocument();
       expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
       expect(
-        screen.getByText(
-          'Build impact statements from commits and PR activity.',
-        ),
+        screen.getByText('Grill the user relentlessly'),
       ).toBeInTheDocument();
       expect(
         screen.getByText('Explore Nx projects, targets, and dependency graph.'),
@@ -133,10 +132,10 @@ describe('SkillsTable Component', () => {
       {
         disableModelInvocation: undefined,
         layout: 'agents',
-        repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
-        slug: 'brag-sheet',
+        repoRelativePath: '.agents/skills/grilling/SKILL.md',
+        slug: 'grilling',
         source: 'external',
-        sourceUrl: 'https://example.com/skills/brag-sheet',
+        sourceUrl: 'https://example.com/skills/grilling',
         summary: 'Vendored skill with an origin URL.',
         tags: undefined,
       },
@@ -179,7 +178,7 @@ describe('SkillsTable Component', () => {
 
       expect(link).toHaveAttribute(
         'href',
-        'https://example.com/skills/brag-sheet',
+        'https://example.com/skills/grilling',
       );
       expect(link).toHaveAttribute('target', '_blank');
     });

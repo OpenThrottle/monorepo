@@ -11,12 +11,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
-import { formatPromptType } from '~/routing/prompts/utils/formatters';
 import {
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+// import { formatPromptType } from '~/routing/prompts/utils/formatters';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']
@@ -41,37 +41,21 @@ export const skillsTableColumns: ColumnDef<
   RepoSkillEntry,
   SkillsTableColumnValue
 >[] = [
-  {
-    accessorKey: 'owner',
-    cell: ({ row }) => {
-      const isAgent = row.original.layout === 'agents';
-
-      return (
-        <div className="p-2">
-          <Badge color={isAgent ? 'blue' : 'green'} size="xs">
-            {formatPromptType(row.original.layout)}
-          </Badge>
-        </div>
-      );
-    },
-    header: () => <div className="p-2">Owner</div>,
-  },
-  {
-    accessorKey: 'summary',
-    cell: ({ row }) => (
-      <div className="p-2">
-        <h3 className="text-foreground mb-2 line-clamp-1">
-          <Link className="hover:underline" to={`/skills/${row.original.slug}`}>
-            /{row.original.slug}
-          </Link>
-        </h3>
-        <p className="text-muted-foreground line-clamp-2 text-xs">
-          {row.original.summary}
-        </p>
-      </div>
-    ),
-    header: () => <div className="p-2">Summary</div>,
-  },
+  // {
+  //   accessorKey: 'owner',
+  //   cell: ({ row }) => {
+  //     const isAgent = row.original.layout === 'agents';
+  //
+  //     return (
+  //       <div className="p-2">
+  //         <Badge color={isAgent ? 'blue' : 'green'} size="xs">
+  //           {formatPromptType(row.original.layout)}
+  //         </Badge>
+  //       </div>
+  //     );
+  //   },
+  //   header: () => <div className="p-2">Owner</div>,
+  // },
   {
     accessorKey: 'source',
     cell: ({ row }) => {
@@ -80,7 +64,7 @@ export const skillsTableColumns: ColumnDef<
 
       const badge = (
         <Badge
-          color={isOpenThrottle ? 'violet' : 'slate'}
+          color={isOpenThrottle ? 'default' : 'yellow'}
           data-testid="skill-source-badge"
           size="xs"
         >
@@ -121,6 +105,22 @@ export const skillsTableColumns: ColumnDef<
       );
     },
     header: () => <div className="p-2">{SKILLS_SOURCE_COPY.columnHeader}</div>,
+  },
+  {
+    accessorKey: 'summary',
+    cell: ({ row }) => (
+      <div className="p-2">
+        <h3 className="text-foreground mb-2 line-clamp-1">
+          <Link className="hover:underline" to={`/skills/${row.original.slug}`}>
+            /{row.original.slug}
+          </Link>
+        </h3>
+        <p className="text-muted-foreground line-clamp-2 text-xs">
+          {row.original.summary}
+        </p>
+      </div>
+    ),
+    header: () => <div className="p-2">Summary</div>,
   },
   {
     accessorKey: 'modelInvocation',

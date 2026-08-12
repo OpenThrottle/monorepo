@@ -62,7 +62,7 @@ describe('routing/skills config skills-table-columns', () => {
         return header;
       });
 
-      expect(headers).toHaveLength(5);
+      expect(headers).toHaveLength(4);
     });
   });
 });

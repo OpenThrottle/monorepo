@@ -129,15 +129,15 @@ description: |-
     expect(result.description).toContain('NX_ISOLATE_PLUGINS=false');
   });
 
-  test('parses real brag-sheet SKILL.md folded description', () => {
+  test('parses real grilling SKILL.md folded description', () => {
     const content = readFileSync(
-      join(monorepoRoot, '.agents/skills/brag-sheet/SKILL.md'),
+      join(monorepoRoot, '.agents/skills/grilling/SKILL.md'),
       'utf8',
     );
 
     const result = parseSkillFrontmatter(content);
 
-    expect(result.name).toBe('brag-sheet');
-    expect(result.description).toContain('evidence-backed impact statements');
+    expect(result.name).toBe('grilling');
+    expect(result.description).toContain('Grill the user relentlessly');
   });
 });
