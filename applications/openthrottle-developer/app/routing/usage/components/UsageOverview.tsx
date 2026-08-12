@@ -44,15 +44,6 @@ export const UsageOverview = (
           </Link>{' '}
           and the versioning panel on a prompt detail page.
         </p>
-
-        {/* <p>
-          <span className="font-medium text-foreground">
-            Not in this chart:{' '}
-          </span>
-          per-skill or per-prompt invocations, IDE-only runs, token or cost
-          usage, and skill picks from user-local{' '}
-          <code className="text-xs">~/.cursor/skills-cursor</code>.
-        </p> */}
       </div>
 
       {FEATURE_BETA_PREVIEW ? (
