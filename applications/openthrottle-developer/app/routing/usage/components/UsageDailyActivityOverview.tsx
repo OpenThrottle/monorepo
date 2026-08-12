@@ -10,7 +10,7 @@ export interface UsageDailyActivityOverviewProps {
 }
 
 /**
- * @description Explains what the Usage chart includes, defines each stacked series, and lists deliberate analytics gaps (prompt runs, tokens, local IDE skills).
+ * @description Explains what the daily plan/task chart includes and defines each stacked series, with the historical completion-attribution caveat.
  */
 export const UsageDailyActivityOverview = (
   props: UsageDailyActivityOverviewProps,

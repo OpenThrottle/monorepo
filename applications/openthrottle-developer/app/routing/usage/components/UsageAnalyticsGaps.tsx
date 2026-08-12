@@ -28,8 +28,9 @@ export const UsageAnalyticsGaps = (
           title="Analytics gaps (by design today)"
         />
         <p className="text-muted-foreground text-sm">
-          Use other surfaces when you need finer-grained debugging—the Usage
-          chart is a coarse workload signal only.
+          Token and skill usage above cover model spend and harness-captured
+          skill runs; these are the gaps that remain—reach for other surfaces
+          when you need what isn&apos;t here.
         </p>
       </div>
 
@@ -41,14 +42,15 @@ export const UsageAnalyticsGaps = (
             <span className="text-foreground">Skill usage</span> above.
           </li>
           <li>
-            No latency or outcome metrics yet (Phase 4 enrichment is optional).
-            Token and cost usage is captured — see{' '}
+            Outcome and duration are opt-in enrichment for skills we author, so{' '}
+            <span className="text-foreground">Skill usage</span> above may show
+            no outcomes for third-party or uninstrumented skills. Model token
+            and cost usage is captured — see{' '}
             <span className="text-foreground">Model token usage</span> above.
           </li>
           <li>
-            No visibility into user-local skills under{' '}
-            <code className="text-xs">~/.cursor/skills-cursor</code> (not
-            in-repo) unless the harness invokes them via the Skill tool.
+            No visibility into user-local skills (outside the repo) unless the
+            harness invokes them via the Skill tool.
           </li>
           <li>
             For prompt identity and version drift, open a prompt and expand{' '}
@@ -72,8 +74,8 @@ export const UsageAnalyticsGaps = (
             <Link className="text-primary underline" to="/skills">
               Skills
             </Link>{' '}
-            (<code className="text-xs">.agents/skills</code> vs{' '}
-            <code className="text-xs">.cursor/skills</code>).
+            (authored under <code className="text-xs">skills/</code>, synced
+            into <code className="text-xs">.agents/skills</code>).
           </li>
         </ul>
       </div>
